@@ -89,10 +89,18 @@ fn (mut view View) draw(mut ctx tui.Context) {
 fn (mut view View) on_key_down(e &tui.Event) {
 	match e.code {
 		.escape { exit(0) }
-		.j { view.cursor.pos.y += 1 }
-		.k { view.cursor.pos.y -= 1; if view.cursor.pos.y < 0 { view.cursor.pos.y = 0 } }
+		.j { view.j() }
+		.k { view.k() }
 		else {}
 	}
+}
+
+fn (mut view View) j() {
+	view.cursor.pos.y += 1
+}
+
+fn (mut view View) k() {
+	view.cursor.pos.y -= 1; if view.cursor.pos.y < 0 { view.cursor.pos.y = 0 }
 }
 
 fn get_clean_words(line string) []string {
