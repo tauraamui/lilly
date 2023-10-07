@@ -16,6 +16,7 @@ mut:
 	views     []View
 	cur_split int
 	words     []string
+	changed   bool
 }
 
 fn (mut app App) update_view() {
@@ -46,24 +47,30 @@ fn event(e &tui.Event, mut app &App) {
 }
 
 fn frame(mut app &App) {
-    app.tui.clear()
+	if app.changed {
+		app.changed = false
+		app.tui.clear()
 
-	mut view := app.view
-	view.draw(mut app.tui)
+		mut view := app.view
+		view.draw(mut app.tui)
+		app.tui.set_cursor_position(0, 0)
 
-    app.tui.reset()
-    app.tui.flush()
+		app.tui.reset()
+		app.tui.flush()
+	}
 }
 
 [console]
 fn main() {
     mut app := &App{
 		mode: .normal
+		changed: true
 	}
     app.tui = tui.init(
         user_data: app
         event_fn: event
         frame_fn: frame
+		frame_rate: 30
         hide_cursor: true
 		capture_events: true
     )
