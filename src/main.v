@@ -8,35 +8,33 @@ enum Mode as u8 {
 	insert
 }
 
-struct Pos {
-mut:
-	x int
-	y int
-}
-
-struct Cursor {
-mut:
-	pos Pos
-}
-
-fn (cursor Cursor) draw(mut ctx tui.Context) {
-    ctx.set_bg_color(r: 53, g: 53, b: 53)
-	ctx.draw_rect(0, cursor.pos.y, ctx.window_width - 1, cursor.pos.y)
-
-}
-
 struct App {
 mut:
-    tui    &tui.Context = unsafe { nil }
-	mode   Mode
-	cursor Cursor
+    tui       &tui.Context = unsafe { nil }
+	mode      Mode
+	view      &View = unsafe { nil }
+	views     []View
+	cur_split int
+	words     []string
 }
 
+fn (mut app App) update_view() {
+	$if debug {
+		println('update view len=${app.views.len}')
+	}
+	unsafe {
+		app.view = &app.views[app.cur_split]
+	}
+}
+
+
 fn event(e &tui.Event, mut app &App) {
-    if e.typ == .key_down && e.code == .escape {
-        exit(0)
+    if e.typ == .key_down {
+		mut view := app.view
+		view.on_key_down(e)
     }
 
+	/*
 	if e.typ == .key_down {
 		match e.code {
 			.j { app.cursor.pos.y += 1 }
@@ -44,20 +42,22 @@ fn event(e &tui.Event, mut app &App) {
 			else {}
 		}
 	}
+	*/
 }
 
 fn frame(mut app &App) {
     app.tui.clear()
 
-	app.cursor.draw(mut app.tui)
+	mut view := app.view
+	view.draw(mut app.tui)
 
     app.tui.reset()
     app.tui.flush()
 }
 
+[console]
 fn main() {
     mut app := &App{
-		cursor: Cursor{ pos: Pos{ x: 1, y: 1 } }
 		mode: .normal
 	}
     app.tui = tui.init(
@@ -67,5 +67,10 @@ fn main() {
         hide_cursor: true
 		capture_events: true
     )
+	app.views << app.new_view()
+	app.update_view()
+
+	app.view.open_file("./src/main.v")
+
     app.tui.run()!
 }
