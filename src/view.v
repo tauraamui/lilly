@@ -15,10 +15,6 @@ mut:
 	y int
 }
 
-fn (cursor Cursor) draw(mut ctx tui.Context) {
-	ctx.draw_rect(0, cursor.pos.y, ctx.window_width - 1, cursor.pos.y)
-}
-
 struct View {
 mut:
 	log    &log.Log
@@ -27,6 +23,7 @@ mut:
 	cursor Cursor
 	height int
 	from   int
+	to     int
 }
 
 fn (app &App) new_view() View {
@@ -57,38 +54,22 @@ fn (mut view View) open_file(path string) {
 fn (mut view View) draw(mut ctx tui.Context) {
 	view.height = ctx.window_height
 
+	ctx.set_bg_color(r: 53, g: 53, b: 53)
+	ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
+
 	mut to := view.lines.len
 	to -= (to - view.height)
 	to += view.from
 	if to > view.lines.len { to = view.lines.len }
+	view.to = to
 	from := if view.from > view.lines.len { view.lines.len - 1 } else { view.from }
 	for i, line in view.lines[from..to] {
+		ctx.reset_bg_color()
 		if i == view.cursor.pos.y {
 			ctx.set_bg_color(r: 53, g: 53, b: 53)
-			ctx.draw_rect(0, i+1, ctx.window_width - 1, i+1)
 		}
 		ctx.draw_text(0, i+1, line)
-		ctx.reset_bg_color()
 	}
-
-	/*
-	for i := 0; i < y; i++ {
-		mut line_cpy := view.lines[i]
-
-		if i == view.cursor.pos.y {
-			ctx.set_bg_color(r: 53, g: 53, b: 53)
-			view.cursor.draw(mut ctx)
-
-			view.log.debug("[${i}] LINE LEN: ${line_cpy.len} WIN WIDTH: ${ctx.window_width}")
-			view.log.flush()
-		}
-
-		if line_cpy.len == 0 { ctx.set_bg_color(r: 230, g: 20, b: 20) }
-		ctx.draw_text(0, i, line_cpy)
-		if line_cpy.len == 0 { view.log.debug("${i} is blank"); view.log.flush() }
-	}
-		ctx.reset_bg_color()
-		*/
 }
 
 fn (mut view View) on_key_down(e &tui.Event) {
@@ -102,12 +83,19 @@ fn (mut view View) on_key_down(e &tui.Event) {
 
 fn (mut view View) j() {
 	view.cursor.pos.y += 1
-	if view.cursor.pos.y > view.from + view.height { view.from += 1 }
+
+	if view.cursor.pos.y >= view.to {
+		view.from += 1
+	}
 }
 
 fn (mut view View) k() {
 	view.cursor.pos.y -= 1
-	if view.cursor.pos.y < 0 { view.cursor.pos.y = 0 }
+	if view.cursor.pos.y < 0 {
+		view.cursor.pos.y = 0
+		view.from -= 1
+		if view.from < 0 { view.from = 0 }
+	}
 }
 
 fn get_clean_words(line string) []string {
