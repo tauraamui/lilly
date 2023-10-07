@@ -95,12 +95,18 @@ fn (mut view View) on_key_down(e &tui.Event) {
 
 fn (mut view View) j() {
 	view.cursor.pos.y += 1
-	if view.cursor.pos.y > view.to { view.cursor.pos.y = view.to - 1 }
+	if view.cursor.pos.y > view.to - 1 {
+		view.cursor.pos.y = view.to - 1
+	}
 }
 
 fn (mut view View) k() {
 	view.cursor.pos.y -= 1
-	if view.cursor.pos.y < view.from { view.cursor.pos.y = view.from }
+	if view.cursor.pos.y < view.from {
+		view.cursor.pos.y = view.from
+		view.from -= 1
+		if view.from < 0 { view.from = 0 }
+	}
 }
 
 fn get_clean_words(line string) []string {
