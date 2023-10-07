@@ -25,6 +25,7 @@ mut:
 	lines  []string
 	words  []string
 	cursor Cursor
+	height int
 	from   int
 }
 
@@ -54,10 +55,10 @@ fn (mut view View) open_file(path string) {
 }
 
 fn (mut view View) draw(mut ctx tui.Context) {
-	mut y := ctx.window_height - 1
-	y = if y > view.lines.len { view.lines.len } else { y }
+	view.height = ctx.window_height
 
-	for i, line in view.lines[..y] {
+	mut to := ctx.window_height - view.from
+	for i, line in view.lines[view.from..to] {
 		if i == view.cursor.pos.y {
 			ctx.set_bg_color(r: 53, g: 53, b: 53)
 			ctx.draw_rect(0, i+1, ctx.window_width - 1, i+1)
@@ -97,10 +98,12 @@ fn (mut view View) on_key_down(e &tui.Event) {
 
 fn (mut view View) j() {
 	view.cursor.pos.y += 1
+	if view.cursor.pos.y > view.from + view.height { view.from += 1 }
 }
 
 fn (mut view View) k() {
-	view.cursor.pos.y -= 1; if view.cursor.pos.y < 0 { view.cursor.pos.y = 0 }
+	view.cursor.pos.y -= 1
+	if view.cursor.pos.y < 0 { view.cursor.pos.y = 0 }
 }
 
 fn get_clean_words(line string) []string {
