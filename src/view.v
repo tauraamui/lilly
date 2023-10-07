@@ -2,6 +2,7 @@ module main
 
 import os
 import term.ui as tui
+import log
 
 struct Cursor {
 mut:
@@ -15,13 +16,12 @@ mut:
 }
 
 fn (cursor Cursor) draw(mut ctx tui.Context) {
-    ctx.set_bg_color(r: 53, g: 53, b: 53)
 	ctx.draw_rect(0, cursor.pos.y, ctx.window_width - 1, cursor.pos.y)
-	ctx.reset()
 }
 
 struct View {
 mut:
+	log    &log.Log
 	lines  []string
 	words  []string
 	cursor Cursor
@@ -29,7 +29,7 @@ mut:
 }
 
 fn (app &App) new_view() View {
-	res := View{}
+	res := View{ log: app.log }
 	return res
 }
 
@@ -53,25 +53,44 @@ fn (mut view View) open_file(path string) {
 	}
 }
 
-fn (view View) draw(mut ctx &tui.Context) {
-	//view.cursor.draw(mut ctx)
-	mut y := ctx.window_height
+fn (mut view View) draw(mut ctx tui.Context) {
+	mut y := ctx.window_height - 1
 	y = if y > view.lines.len { view.lines.len } else { y }
-	for i := 0; i < y; i++ {
-		// if i == view.cursor.pos.y { ctx.set_bg_color(r: 53, g: 53, b: 53) } else { ctx.reset() }
-		mut line := view.lines[i]
-		if line.len > ctx.window_width {
-			line = line[..ctx.window_width]
+
+	for i, line in view.lines[..y] {
+		if i == view.cursor.pos.y {
+			ctx.set_bg_color(r: 53, g: 53, b: 53)
+			ctx.draw_rect(0, i+1, ctx.window_width - 1, i+1)
 		}
-		ctx.draw_text(0, i, line)
+		ctx.draw_text(0, i+1, line)
+		ctx.reset_bg_color()
 	}
+
+	/*
+	for i := 0; i < y; i++ {
+		mut line_cpy := view.lines[i]
+
+		if i == view.cursor.pos.y {
+			ctx.set_bg_color(r: 53, g: 53, b: 53)
+			view.cursor.draw(mut ctx)
+
+			view.log.debug("[${i}] LINE LEN: ${line_cpy.len} WIN WIDTH: ${ctx.window_width}")
+			view.log.flush()
+		}
+
+		if line_cpy.len == 0 { ctx.set_bg_color(r: 230, g: 20, b: 20) }
+		ctx.draw_text(0, i, line_cpy)
+		if line_cpy.len == 0 { view.log.debug("${i} is blank"); view.log.flush() }
+	}
+		ctx.reset_bg_color()
+		*/
 }
 
 fn (mut view View) on_key_down(e &tui.Event) {
 	match e.code {
 		.escape { exit(0) }
 		.j { view.cursor.pos.y += 1 }
-		.k { view.cursor.pos.y -= 1; if view.cursor.pos.y < 1 { view.cursor.pos.y = 1 } }
+		.k { view.cursor.pos.y -= 1; if view.cursor.pos.y < 0 { view.cursor.pos.y = 0 } }
 		else {}
 	}
 }

@@ -1,6 +1,7 @@
 module main
 
 import term.ui as tui
+import log
 
 enum Mode as u8 {
 	normal
@@ -10,6 +11,7 @@ enum Mode as u8 {
 
 struct App {
 mut:
+	log       &log.Log
     tui       &tui.Context = unsafe { nil }
 	mode      Mode
 	view      &View = unsafe { nil }
@@ -30,10 +32,17 @@ fn (mut app App) update_view() {
 
 
 fn event(e &tui.Event, mut app &App) {
-    if e.typ == .key_down {
-		mut view := app.view
-		view.on_key_down(e)
-    }
+	match e.typ {
+		.key_down {
+			app.changed = true
+			mut view := app.view
+			view.on_key_down(e)
+		}
+		.resized {
+			app.changed = true
+		}
+		else {}
+	}
 
 	/*
 	if e.typ == .key_down {
@@ -62,10 +71,20 @@ fn frame(mut app &App) {
 
 [console]
 fn main() {
+	mut l := log.Log{}
+	l.set_level(.debug)
+	l.set_full_logpath("./debug.log")
+	defer {
+		l.flush()
+		l.close()
+	}
+
     mut app := &App{
+		log: &l
 		mode: .normal
 		changed: true
 	}
+
     app.tui = tui.init(
         user_data: app
         event_fn: event
