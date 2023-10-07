@@ -54,10 +54,16 @@ fn (mut view View) open_file(path string) {
 }
 
 fn (view View) draw(mut ctx &tui.Context) {
-	view.cursor.draw(mut ctx)
-	for i := 0; i < view.lines.len; i++ {
-		if i == view.cursor.pos.y { ctx.set_bg_color(r: 53, g: 53, b: 53) } else { ctx.reset() }
-		ctx.draw_text(0, i, view.lines[i])
+	//view.cursor.draw(mut ctx)
+	mut y := ctx.window_height
+	y = if y > view.lines.len { view.lines.len } else { y }
+	for i := 0; i < y; i++ {
+		// if i == view.cursor.pos.y { ctx.set_bg_color(r: 53, g: 53, b: 53) } else { ctx.reset() }
+		mut line := view.lines[i]
+		if line.len > ctx.window_width {
+			line = line[..ctx.window_width]
+		}
+		ctx.draw_text(0, i, line)
 	}
 }
 
