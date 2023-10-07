@@ -56,6 +56,17 @@ fn (mut view View) draw(mut ctx tui.Context) {
 
 	ctx.set_bg_color(r: 53, g: 53, b: 53)
 	ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
+	ctx.reset_bg_color()
+
+	mut to := view.lines.len
+	if to > view.height { to = view.height }
+	view.to = to
+	for i := view.from; i < to; i++ {
+		ctx.draw_text(0, i+1, view.lines[i])
+	}
+	/*
+	ctx.set_bg_color(r: 53, g: 53, b: 53)
+	ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
 
 	mut to := view.lines.len
 	to -= (to - view.height)
@@ -70,6 +81,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 		}
 		ctx.draw_text(0, i+1, line)
 	}
+	*/
 }
 
 fn (mut view View) on_key_down(e &tui.Event) {
@@ -83,19 +95,12 @@ fn (mut view View) on_key_down(e &tui.Event) {
 
 fn (mut view View) j() {
 	view.cursor.pos.y += 1
-
-	if view.cursor.pos.y >= view.to {
-		view.from += 1
-	}
+	if view.cursor.pos.y > view.to { view.cursor.pos.y = view.to - 1 }
 }
 
 fn (mut view View) k() {
 	view.cursor.pos.y -= 1
-	if view.cursor.pos.y < 0 {
-		view.cursor.pos.y = 0
-		view.from -= 1
-		if view.from < 0 { view.from = 0 }
-	}
+	if view.cursor.pos.y < view.from { view.cursor.pos.y = view.from }
 }
 
 fn get_clean_words(line string) []string {
