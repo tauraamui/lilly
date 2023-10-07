@@ -58,9 +58,12 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
 	ctx.reset_bg_color()
 
-	mut to := view.lines.len
+	mut to := view.from
+	/*
+	if to > view.lines.len { to = view.lines.len }
 	if to > view.height { to = view.height }
 	view.to = to
+	*/
 	for i := view.from; i < to; i++ {
 		ctx.draw_text(0, i+1, view.lines[i])
 	}
