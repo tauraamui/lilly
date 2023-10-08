@@ -59,6 +59,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 
 	mut to := view.height + view.from
 	if to > view.lines.len { to = view.lines.len }
+	view.to = to
 	for i, line in view.lines[view.from..to] {
 		ctx.reset_bg_color()
 		if i == view.cursor.pos.y {
@@ -81,7 +82,9 @@ fn (mut view View) j() {
 	view.cursor.pos.y += 1
 	if view.cursor.pos.y > view.height - 1 {
 		view.cursor.pos.y = view.height - 1
-		view.from += 1
+		if view.lines.len - view.to > 0 {
+			view.from += 1
+		}
 	}
 }
 
