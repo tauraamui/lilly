@@ -58,15 +58,16 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	if to > view.lines.len { to = view.lines.len }
 	view.to = to
 	for i, line in view.lines[view.from..to] {
+		line_cpy := line.replace("\t", " ")
 		if i == view.cursor.pos.y {
 			ctx.set_bg_color(r: 53, g: 53, b: 53)
 			ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
-			ctx.draw_text(0, i+1, line)
+			ctx.draw_text(0, i+1, line_cpy)
 			ctx.set_bg_color(r: 230, g: 230, b: 230)
-			ctx.draw_point(view.cursor.pos.x, view.cursor.pos.y+1)
+			ctx.draw_point(view.cursor.pos.x+1, view.cursor.pos.y+1)
 			ctx.reset_bg_color()
 		} else {
-			ctx.draw_text(0, i+1, line)
+			ctx.draw_text(0, i+1, line_cpy)
 		}
 	}
 }
