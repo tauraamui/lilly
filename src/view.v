@@ -62,6 +62,8 @@ fn (mut view View) draw(mut ctx tui.Context) {
 			ctx.set_bg_color(r: 53, g: 53, b: 53)
 			ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
 			ctx.draw_text(0, i+1, line)
+			ctx.set_bg_color(r: 230, g: 230, b: 230)
+			ctx.draw_point(view.cursor.pos.x, view.cursor.pos.y+1)
 			ctx.reset_bg_color()
 		} else {
 			ctx.draw_text(0, i+1, line)
