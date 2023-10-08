@@ -54,18 +54,18 @@ fn (mut view View) open_file(path string) {
 fn (mut view View) draw(mut ctx tui.Context) {
 	view.height = ctx.window_height
 
-	ctx.set_bg_color(r: 53, g: 53, b: 53)
-	ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
-
 	mut to := view.height + view.from
 	if to > view.lines.len { to = view.lines.len }
 	view.to = to
 	for i, line in view.lines[view.from..to] {
-		ctx.reset_bg_color()
 		if i == view.cursor.pos.y {
 			ctx.set_bg_color(r: 53, g: 53, b: 53)
+			ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
+			ctx.draw_text(0, i+1, line)
+			ctx.reset_bg_color()
+		} else {
+			ctx.draw_text(0, i+1, line)
 		}
-		ctx.draw_text(0, i+1, line)
 	}
 }
 
