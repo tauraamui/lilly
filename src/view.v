@@ -74,10 +74,27 @@ fn (mut view View) draw(mut ctx tui.Context) {
 fn (mut view View) on_key_down(e &tui.Event) {
 	match e.code {
 		.escape { exit(0) }
+		.h { view.h() }
+		.l { view.l() }
 		.j { view.j() }
 		.k { view.k() }
 		else {}
 	}
+}
+
+fn (mut view View) h() {
+	if view.lines[view.from+view.cursor.pos.y].len > 0 {
+		view.cursor.pos.x -= 1
+	}
+	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
+}
+
+fn (mut view View) l() {
+	line := view.lines[view.from+view.cursor.pos.y]
+	if line.len > 0 {
+		view.cursor.pos.x += 1
+	}
+	if view.cursor.pos.x > line.len { view.cursor.pos.x = line.len }
 }
 
 fn (mut view View) j() {
@@ -88,6 +105,8 @@ fn (mut view View) j() {
 			view.from += 1
 		}
 	}
+	line := view.lines[view.from+view.cursor.pos.y]
+	if view.cursor.pos.x > line.len { view.cursor.pos.x = line.len }
 }
 
 fn (mut view View) k() {
@@ -97,6 +116,8 @@ fn (mut view View) k() {
 		view.from -= 1
 		if view.from < 0 { view.from = 0 }
 	}
+	line := view.lines[view.from+view.cursor.pos.y]
+	if view.cursor.pos.x > line.len { view.cursor.pos.x = line.len }
 }
 
 fn get_clean_words(line string) []string {
