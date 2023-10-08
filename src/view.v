@@ -84,18 +84,23 @@ fn (mut view View) on_key_down(e &tui.Event) {
 }
 
 fn (mut view View) h() {
-	if view.lines[view.from+view.cursor.pos.y].len > 0 {
+	line := view.lines[view.from+view.cursor.pos.y]
+	view.log.debug("LINE: ${view.from+view.cursor.pos.y}, CUR_X: ${view.cursor.pos.x}, IS TAB: ${line[view.cursor.pos.x] == `\t`}")
+	if line.len > 0 {
 		view.cursor.pos.x -= 1
 	}
 	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
+	view.log.flush()
 }
 
 fn (mut view View) l() {
 	line := view.lines[view.from+view.cursor.pos.y]
+	view.log.debug("LINE: ${view.from+view.cursor.pos.y}, CUR_X: ${view.cursor.pos.x}, IS TAB: ${line[view.cursor.pos.x] == `\t`}")
 	if line.len > 0 {
 		view.cursor.pos.x += 1
 	}
 	if view.cursor.pos.x > line.len { view.cursor.pos.x = line.len }
+	view.log.flush()
 }
 
 fn (mut view View) j() {
