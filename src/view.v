@@ -62,25 +62,50 @@ fn (mut view View) draw(mut ctx tui.Context) {
 		if i == view.cursor.pos.y {
 			ctx.set_bg_color(r: 53, g: 53, b: 53)
 			ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
-			ctx.draw_text(0, i+1, line_cpy.replace("\t", " "))
+			//ctx.draw_text(0, i+1, line_cpy.replace("\t", " "))
+			mut xx := 0
+			for c in line_cpy {
+				match c {
+					`\t` {
+						ctx.set_color(r: 80, g: 80, b: 80)
+						ctx.draw_text(xx+1, i+1, "->")
+						ctx.reset_color()
+						xx += 2
+					}
+					` ` {
+						ctx.set_color(r: 80, g: 80, b: 80)
+						ctx.draw_text(xx+1, i+1, "·")
+						ctx.reset_color()
+						xx += 1
+					}
+					else {
+						ctx.draw_text(xx+1, i+1, c.ascii_str())
+						xx += 1
+					}
+				}
+			}
 			ctx.set_bg_color(r: 230, g: 230, b: 230)
 			ctx.draw_point(view.cursor.pos.x+1, view.cursor.pos.y+1)
 			ctx.reset_bg_color()
 		} else {
-			for x, c in line_cpy {
+			mut xx := 0
+			for c in line_cpy {
 				match c {
 					`\t` {
-						ctx.set_bg_color(r: 230, g: 80, b: 80)
-						ctx.draw_text(x+1, i+1, " ")
-						ctx.reset_bg_color()
+						ctx.set_color(r: 80, g: 80, b: 80)
+						ctx.draw_text(xx+1, i+1, "->")
+						ctx.reset_color()
+						xx += 2
 					}
 					` ` {
-						ctx.set_bg_color(r: 80, g: 230, b: 80)
-						ctx.draw_text(x+1, i+1, " ")
-						ctx.reset_bg_color()
+						ctx.set_color(r: 80, g: 80, b: 80)
+						ctx.draw_text(xx+1, i+1, "·")
+						ctx.reset_color()
+						xx += 1
 					}
 					else {
-						ctx.draw_text(x+1, i+1, c.ascii_str())
+						ctx.draw_text(xx+1, i+1, c.ascii_str())
+						xx += 1
 					}
 				}
 			}
@@ -101,7 +126,6 @@ fn (mut view View) on_key_down(e &tui.Event) {
 
 fn (mut view View) h() {
 	line := view.lines[view.from+view.cursor.pos.y]
-	view.log.debug("LINE: ${view.from+view.cursor.pos.y}, CUR_X: ${view.cursor.pos.x}, IS TAB: ${line[view.cursor.pos.x] == `\t`}")
 	if line.len > 0 {
 		view.cursor.pos.x -= 1
 	}
@@ -111,7 +135,6 @@ fn (mut view View) h() {
 
 fn (mut view View) l() {
 	line := view.lines[view.from+view.cursor.pos.y]
-	view.log.debug("LINE: ${view.from+view.cursor.pos.y}, CUR_X: ${view.cursor.pos.x}, IS TAB: ${line[view.cursor.pos.x] == `\t`}")
 	if line.len > 0 {
 		view.cursor.pos.x += 1
 	}
