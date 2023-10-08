@@ -62,18 +62,17 @@ fn (mut view View) draw(mut ctx tui.Context) {
 		if i == view.cursor.pos.y {
 			ctx.set_bg_color(r: 53, g: 53, b: 53)
 			ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
-			//ctx.draw_text(0, i+1, line_cpy.replace("\t", " "))
 			mut xx := 0
 			for c in line_cpy {
 				match c {
 					`\t` {
-						ctx.set_color(r: 80, g: 80, b: 80)
-						ctx.draw_text(xx+1, i+1, "->")
+						ctx.set_color(r: 120, g: 120, b: 120)
+						ctx.draw_text(xx+1, i+1, "->->")
 						ctx.reset_color()
-						xx += 2
+						xx += 4
 					}
 					` ` {
-						ctx.set_color(r: 80, g: 80, b: 80)
+						ctx.set_color(r: 120, g: 120, b: 120)
 						ctx.draw_text(xx+1, i+1, "·")
 						ctx.reset_color()
 						xx += 1
@@ -84,21 +83,19 @@ fn (mut view View) draw(mut ctx tui.Context) {
 					}
 				}
 			}
-			ctx.set_bg_color(r: 230, g: 230, b: 230)
-			ctx.draw_point(view.cursor.pos.x+1, view.cursor.pos.y+1)
 			ctx.reset_bg_color()
 		} else {
 			mut xx := 0
 			for c in line_cpy {
 				match c {
 					`\t` {
-						ctx.set_color(r: 80, g: 80, b: 80)
-						ctx.draw_text(xx+1, i+1, "->")
+						ctx.set_color(r: 120, g: 120, b: 120)
+						ctx.draw_text(xx+1, i+1, "->->")
 						ctx.reset_color()
-						xx += 2
+						xx += 4
 					}
 					` ` {
-						ctx.set_color(r: 80, g: 80, b: 80)
+						ctx.set_color(r: 120, g: 120, b: 120)
 						ctx.draw_text(xx+1, i+1, "·")
 						ctx.reset_color()
 						xx += 1
@@ -111,6 +108,12 @@ fn (mut view View) draw(mut ctx tui.Context) {
 			}
 		}
 	}
+	ctx.set_bg_color(r: 230, g: 230, b: 230)
+	cursor_line := view.lines[view.cursor.pos.y]
+	if cursor_line.len > 0  {
+		ctx.draw_point(view.cursor.pos.x+1, view.cursor.pos.y+1)
+	}
+	ctx.reset_bg_color()
 }
 
 fn (mut view View) on_key_down(e &tui.Event) {
