@@ -72,7 +72,6 @@ fn (mode Mode) draw(mut ctx tui.Context) {
 	mut offset := 0
 	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, "█")
 	offset += 2
-	ctx.bold()
 	paint_text_on_background(mut ctx, status_line_x + offset, status_line_y, status_color, Color{ 0, 0, 0}, label)
 	offset += label.len
 	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, "█")
@@ -254,7 +253,7 @@ fn paint_text_on_background(mut ctx tui.Context, x int, y int, bg_color Color, f
 }
 
 fn (mut view View) cmd_put_char(c string) {
-	view.cmd = "${view.cmd}${c}"
+	view.cmd += c
 }
 
 fn (mut view View) on_key_down(e &tui.Event) {
@@ -265,9 +264,10 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.l { view.l() }
 				.j { view.j() }
 				.k { view.k() }
-				.i { if view.mode == .normal { view.i() } }
-				.colon { if view.mode == .normal { view.cmd() } }
+				.i { view.i() }
+				.colon { view.cmd() }
 				.left_square_bracket { if e.modifiers == .ctrl { view.mode = .normal } }
+				.escape { view.mode = .normal }
 				.enter {
 					if view.mode == .command {
 						if view.cmd == ":q" { exit(0) }
@@ -293,7 +293,8 @@ fn (mut view View) on_key_down(e &tui.Event) {
 		}
 		.command {
 			match e.code {
-				.left_square_bracket { if e.modifiers == .ctrl { view.mode = .normal } }
+				.left_square_bracket { if e.modifiers == .ctrl { view.cmd = ""; view.mode = .normal } }
+				.escape { view.cmd = ""; view.mode = .normal }
 				.enter { if view.cmd == ":q" { exit(0) }; view.cmd = "unknown cmd ${view.cmd}"; view.mode = .normal }
 				48...57, 97...122 { // 0-9a-zA-Z
 					view.cmd_put_char(e.ascii.ascii_str())
@@ -301,7 +302,20 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				else {}
 			}
 		}
-		else {}
+		.insert {
+			match e.code {
+				.left_square_bracket { if e.modifiers == .ctrl { view.mode = .normal } }
+				.escape { view.mode = .normal }
+				else {}
+			}
+		}
+		.visual {
+			match e.code {
+				.left_square_bracket { if e.modifiers == .ctrl { view.mode = .normal } }
+				.escape { view.mode = .normal }
+				else {}
+			}
+		}
 	}
 }
 
@@ -315,20 +329,17 @@ fn (mut view View) cmd() {
 }
 
 fn (mut view View) h() {
-	if view.mode == .insert || view.mode == .command { return }
 	view.cursor.pos.x -= 1
 	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
 }
 
 fn (mut view View) l() {
-	if view.mode == .insert || view.mode == .command { return }
 	view.cursor.pos.x += 1
 	line_len := view.lines[view.from+view.cursor.pos.y].len
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
 }
 
 fn (mut view View) j() {
-	if view.mode == .insert || view.mode == .command { return }
 	view.cursor.pos.y += 1
 	if view.cursor.pos.y > view.height - 1 {
 		view.cursor.pos.y = view.height - 1
@@ -341,7 +352,6 @@ fn (mut view View) j() {
 }
 
 fn (mut view View) k() {
-	if view.mode == .insert || view.mode == .command { return }
 	view.cursor.pos.y -= 1
 	if view.cursor.pos.y < 0 {
 		view.cursor.pos.y = 0
