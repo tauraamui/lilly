@@ -198,7 +198,9 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 		mut line_cpy := line
 		if !view.show_whitespace {
 			line_cpy = line_cpy.replace("\t", " ".repeat(4))
-			ctx.draw_text(1, i+1, line_cpy)
+			mut max_width := ctx.window_width
+			if max_width > line_cpy.len { max_width = line_cpy.len }
+			ctx.draw_text(1, i+1, line_cpy[..max_width])
 			continue
 		}
 		view.draw_line_show_whitespace(mut ctx, i, line_cpy)
