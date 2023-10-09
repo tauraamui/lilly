@@ -24,10 +24,10 @@ const (
 	right_rounded           = ""
 	slant_right_flat_top    = ""
 
-	status_green            = Color { 160, 230, 160 }
-	status_orange           = Color { 230, 230, 110 }
-	status_lilac            = Color { 230, 110, 230 }
-	status_cyan             = Color { 135, 135, 230   }
+	status_green            = Color { 145, 237, 145 }
+	status_orange           = Color { 237, 207, 123 }
+	status_lilac            = Color { 194, 110, 230 }
+	status_cyan             = Color { 138, 222, 237   }
 )
 
 enum Mode as u8 {
@@ -45,6 +45,7 @@ fn (mode Mode) draw(mut ctx tui.Context) {
 	mut offset := 0
 	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, "█")
 	offset += 2
+	ctx.bold()
 	paint_text_on_background(mut ctx, status_line_x + offset, status_line_y, status_color, Color{ 0, 0, 0}, label)
 	offset += label.len
 	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, "█")
