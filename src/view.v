@@ -110,12 +110,18 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	}
 	ctx.set_bg_color(r: 230, g: 230, b: 230)
 	cursor_line := view.lines[view.from+view.cursor.pos.y]
-	mut tab_count := 0
+	mut offset := 0
 	if cursor_line.len > 0  {
-		for c in cursor_line[..view.cursor.pos.x] {
-			if c == `\t` { tab_count += 1 }
+		mut scanto := view.cursor.pos.x
+		if scanto + 1 > cursor_line.len { scanto = cursor_line.len - 1 }
+
+		for c in cursor_line[..scanto+1] {
+			match c {
+				`\t` { offset += 4 }
+				else { offset += 1 }
+			}
 		}
-		ctx.draw_point(view.cursor.pos.x+1+(tab_count*4), view.cursor.pos.y+1)
+		ctx.draw_point(offset, view.cursor.pos.y+1)
 	}
 	ctx.reset_bg_color()
 }
@@ -132,6 +138,8 @@ fn (mut view View) on_key_down(e &tui.Event) {
 }
 
 fn (mut view View) h() {
+	view.cursor.pos.x -= 1
+	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
 	/*
 	line := view.lines[view.from+view.cursor.pos.y]
 	if line.len > 0 {
@@ -142,13 +150,9 @@ fn (mut view View) h() {
 }
 
 fn (mut view View) l() {
-	/*
-	line := view.lines[view.from+view.cursor.pos.y]
-	if line.len > 0 {
-		view.cursor.pos.x += 1
-	}
-	if view.cursor.pos.x > line.len - 1 { view.cursor.pos.x = line.len - 1 }
-	*/
+	view.cursor.pos.x += 1
+	line_len := view.lines[view.from+view.cursor.pos.y].len
+	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
 }
 
 fn (mut view View) j() {
