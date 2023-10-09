@@ -140,22 +140,35 @@ fn (mut view View) draw(mut ctx tui.Context) {
 		}
 		ctx.draw_point(offset, view.cursor.pos.y+1)
 	}
-	ctx.set_color(r: 160, g: 230, b: 160)
-	ctx.reset_bg_color()
-	ctx.draw_text(1, ctx.window_height - 1, "█")
-	ctx.set_color(r: 0, g: 0, b: 0)
-	ctx.set_bg_color(r: 160, g: 230, b: 160)
-	ctx.draw_text(3, ctx.window_height - 1, "NORMAL")
-	ctx.reset_bg_color()
-	ctx.set_color(r: 160, g: 230, b: 160)
-	ctx.draw_text(9, ctx.window_height - 1, "█")
-	ctx.reset_bg_color()
-	ctx.set_color(r: 25, g: 25, b: 25)
-	ctx.draw_text(11, ctx.window_height - 1, "")
+
+	status_line_y := ctx.window_height - 1
+	status_line_x := 1
+	paint_shape_text(mut ctx, status_line_x, status_line_y, Color{ 160, 230, 160 }, "█")
+	paint_text_on_background(mut ctx, status_line_x + 2, status_line_y, Color{ 160, 230, 160 }, Color{ 0, 0, 0}, "NORMAL")
+	paint_shape_text(mut ctx, status_line_x + 8, status_line_y, Color{ 160, 230, 160 }, "█")
+	paint_shape_text(mut ctx, status_line_x + 10, status_line_y, Color{ 25, 25, 25 }, "")
 	ctx.set_bg_color(r: 25, g: 25, b: 25)
 	ctx.draw_rect(12, ctx.window_height - 1, ctx.window_width - 1, ctx.window_height - 1)
-	ctx.reset_color()
+	// ctx.reset_color()
+	//ctx.reset_bg_color()
+}
+
+struct Color {
+	r u8
+	g u8
+	b u8
+}
+
+fn paint_shape_text(mut ctx tui.Context, x int, y int, color Color, text string) {
+	ctx.set_color(r: color.r, g: color.g, b: color.b)
 	ctx.reset_bg_color()
+	ctx.draw_text(x, y, text)
+}
+
+fn paint_text_on_background(mut ctx tui.Context, x int, y int, bg_color Color, fg_color Color, text string) {
+	ctx.set_bg_color(r: bg_color.r, g: bg_color.g, b: bg_color.b)
+	ctx.set_color(r: fg_color.r, g: fg_color.g, b: fg_color.b)
+	ctx.draw_text(x, y, text)
 }
 
 fn (mut view View) on_key_down(e &tui.Event) {
