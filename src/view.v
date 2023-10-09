@@ -109,9 +109,13 @@ fn (mut view View) draw(mut ctx tui.Context) {
 		}
 	}
 	ctx.set_bg_color(r: 230, g: 230, b: 230)
-	cursor_line := view.lines[view.cursor.pos.y]
+	cursor_line := view.lines[view.from+view.cursor.pos.y]
+	mut tab_count := 0
 	if cursor_line.len > 0  {
-		ctx.draw_point(view.cursor.pos.x+1, view.cursor.pos.y+1)
+		for c in cursor_line[..view.cursor.pos.x] {
+			if c == `\t` { tab_count += 1 }
+		}
+		ctx.draw_point(view.cursor.pos.x+1+(tab_count*4), view.cursor.pos.y+1)
 	}
 	ctx.reset_bg_color()
 }
@@ -128,19 +132,23 @@ fn (mut view View) on_key_down(e &tui.Event) {
 }
 
 fn (mut view View) h() {
+	/*
 	line := view.lines[view.from+view.cursor.pos.y]
 	if line.len > 0 {
 		view.cursor.pos.x -= 1
 	}
 	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
+	*/
 }
 
 fn (mut view View) l() {
+	/*
 	line := view.lines[view.from+view.cursor.pos.y]
 	if line.len > 0 {
 		view.cursor.pos.x += 1
 	}
 	if view.cursor.pos.x > line.len - 1 { view.cursor.pos.x = line.len - 1 }
+	*/
 }
 
 fn (mut view View) j() {
@@ -151,8 +159,10 @@ fn (mut view View) j() {
 			view.from += 1
 		}
 	}
+	/*
 	line := view.lines[view.from+view.cursor.pos.y]
 	if view.cursor.pos.x > line.len - 1 { view.cursor.pos.x = line.len - 1}
+	*/
 }
 
 fn (mut view View) k() {
@@ -162,8 +172,10 @@ fn (mut view View) k() {
 		view.from -= 1
 		if view.from < 0 { view.from = 0 }
 	}
+	/*
 	line := view.lines[view.from+view.cursor.pos.y]
 	if view.cursor.pos.x > line.len - 1 { view.cursor.pos.x = line.len - 1 }
+	*/
 }
 
 fn get_clean_words(line string) []string {
