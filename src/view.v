@@ -15,6 +15,16 @@ mut:
 	y int
 }
 
+const (
+	block                   = "█"
+	slant_left_flat_bottom  = ""
+	left_rounded            = ""
+	slant_left_flat_top     = ""
+	slant_right_flat_bottom = ""
+	right_rounded           = ""
+	slant_right_flat_top    = ""
+)
+
 enum Mode as u8 {
 	normal
 	visual
