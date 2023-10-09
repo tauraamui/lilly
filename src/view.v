@@ -274,20 +274,6 @@ fn (mut view View) on_key_down(e &tui.Event) {
 						view.cmd = "unrecognised command ${view.cmd}"
 					}
 				}
-				48...57, 97...122 { // 0-9a-zA-Z
-					if view.mode == .command {
-						view.cmd_put_char(e.ascii.ascii_str())
-					}
-					// buffer.put(e.ascii.ascii_str())
-					/*
-					if e.modifiers == .ctrl {
-						if e.code == .left_bracket {
-							view.mode = .normal
-						}
-					} else if !(e.modifiers.has(.ctrl | .alt) || e.code == .null) {
-					}
-					*/
-				}
 				else {}
 			}
 		}
@@ -295,7 +281,8 @@ fn (mut view View) on_key_down(e &tui.Event) {
 			match e.code {
 				.left_square_bracket { if e.modifiers == .ctrl { view.cmd = ""; view.mode = .normal } }
 				.escape { view.cmd = ""; view.mode = .normal }
-				.enter { if view.cmd == ":q" { exit(0) }; view.cmd = "unknown cmd ${view.cmd}"; view.mode = .normal }
+				.enter { if !view.exec_cmd() { view.cmd = "unknown cmd ${view.cmd}" }; view.mode = .normal }
+				.space { view.cmd_put_char(" ") }
 				48...57, 97...122 { // 0-9a-zA-Z
 					view.cmd_put_char(e.ascii.ascii_str())
 				}
@@ -326,6 +313,14 @@ fn (mut view View) i() {
 fn (mut view View) cmd() {
 	view.mode = .command
 	view.cmd = ":"
+}
+
+fn (mut view View) exec_cmd() bool {
+	return match view.cmd {
+		":q" { exit(0); true }
+		":toggle whitespace" { view.show_whitespace = !view.show_whitespace; true }
+		else { false }
+	}
 }
 
 fn (mut view View) h() {
