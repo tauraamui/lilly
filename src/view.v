@@ -23,12 +23,45 @@ const (
 	slant_right_flat_bottom = ""
 	right_rounded           = ""
 	slant_right_flat_top    = ""
+
+	status_green            = Color{ 160, 230, 160 }
+	status_orange           = Color{ 230, 230, 110 }
+	status_lilac            = Color{ 230, 110, 230 }
 )
 
 enum Mode as u8 {
 	normal
 	visual
 	insert
+}
+
+fn (mode Mode) draw(mut ctx tui.Context) {
+	label := mode.str()
+	status_line_y := ctx.window_height - 1
+	status_line_x := 1
+	status_color := mode.color()
+	paint_shape_text(mut ctx, status_line_x, status_line_y, status_color, "█")
+	paint_text_on_background(mut ctx, status_line_x + 2, status_line_y, status_color, Color{ 0, 0, 0}, label)
+	paint_shape_text(mut ctx, status_line_x + 8, status_line_y, status_color, "█")
+	paint_shape_text(mut ctx, status_line_x + 10, status_line_y, Color{ 25, 25, 25 }, "")
+	ctx.set_bg_color(r: 25, g: 25, b: 25)
+	ctx.draw_rect(12, ctx.window_height - 1, ctx.window_width - 1, ctx.window_height - 1)
+}
+
+fn (mode Mode) color() Color {
+	return match mode {
+		.normal { status_green }
+		.visual { status_lilac }
+		.insert { status_orange }
+	}
+}
+
+fn (mode Mode) str() string {
+	return match mode {
+		.normal { "NORMAL" }
+		.visual { "VISUAL" }
+		.insert { "INSERT" }
+	}
 }
 
 struct View {
@@ -141,16 +174,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 		ctx.draw_point(offset, view.cursor.pos.y+1)
 	}
 
-	status_line_y := ctx.window_height - 1
-	status_line_x := 1
-	paint_shape_text(mut ctx, status_line_x, status_line_y, Color{ 160, 230, 160 }, "█")
-	paint_text_on_background(mut ctx, status_line_x + 2, status_line_y, Color{ 160, 230, 160 }, Color{ 0, 0, 0}, "NORMAL")
-	paint_shape_text(mut ctx, status_line_x + 8, status_line_y, Color{ 160, 230, 160 }, "█")
-	paint_shape_text(mut ctx, status_line_x + 10, status_line_y, Color{ 25, 25, 25 }, "")
-	ctx.set_bg_color(r: 25, g: 25, b: 25)
-	ctx.draw_rect(12, ctx.window_height - 1, ctx.window_width - 1, ctx.window_height - 1)
-	// ctx.reset_color()
-	//ctx.reset_bg_color()
+	view.mode.draw(mut ctx)
 }
 
 struct Color {
