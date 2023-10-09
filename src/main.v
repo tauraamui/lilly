@@ -3,17 +3,10 @@ module main
 import term.ui as tui
 import log
 
-enum Mode as u8 {
-	normal
-	visual
-	insert
-}
-
 struct App {
 mut:
 	log       &log.Log
     tui       &tui.Context = unsafe { nil }
-	mode      Mode
 	view      &View = unsafe { nil }
 	views     []View
 	cur_split int
@@ -81,7 +74,6 @@ fn main() {
 
     mut app := &App{
 		log: &l
-		mode: .normal
 		changed: true
 	}
 

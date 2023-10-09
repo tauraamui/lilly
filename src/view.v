@@ -15,9 +15,16 @@ mut:
 	y int
 }
 
+enum Mode as u8 {
+	normal
+	visual
+	insert
+}
+
 struct View {
 mut:
 	log    &log.Log
+	mode   Mode
 	lines  []string
 	words  []string
 	cursor Cursor
@@ -27,7 +34,7 @@ mut:
 }
 
 fn (app &App) new_view() View {
-	res := View{ log: app.log }
+	res := View{ log: app.log, mode: .normal }
 	return res
 }
 
@@ -52,7 +59,7 @@ fn (mut view View) open_file(path string) {
 }
 
 fn (mut view View) draw(mut ctx tui.Context) {
-	view.height = ctx.window_height
+	view.height = ctx.window_height - 2
 
 	mut to := view.height + view.from
 	if to > view.lines.len { to = view.lines.len }
@@ -123,6 +130,21 @@ fn (mut view View) draw(mut ctx tui.Context) {
 		}
 		ctx.draw_point(offset, view.cursor.pos.y+1)
 	}
+	ctx.set_color(r: 160, g: 230, b: 160)
+	ctx.reset_bg_color()
+	ctx.draw_text(1, ctx.window_height - 1, "█")
+	ctx.set_color(r: 0, g: 0, b: 0)
+	ctx.set_bg_color(r: 160, g: 230, b: 160)
+	ctx.draw_text(3, ctx.window_height - 1, "NORMAL")
+	ctx.reset_bg_color()
+	ctx.set_color(r: 160, g: 230, b: 160)
+	ctx.draw_text(9, ctx.window_height - 1, "█")
+	ctx.reset_bg_color()
+	ctx.set_color(r: 25, g: 25, b: 25)
+	ctx.draw_text(11, ctx.window_height - 1, "")
+	ctx.set_bg_color(r: 25, g: 25, b: 25)
+	ctx.draw_rect(12, ctx.window_height - 1, ctx.window_width - 1, ctx.window_height - 1)
+	ctx.reset_color()
 	ctx.reset_bg_color()
 }
 
@@ -133,6 +155,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 		.l { view.l() }
 		.j { view.j() }
 		.k { view.k() }
+		.i { if view.mode == .normal { view.i() } }
 		else {}
 	}
 }
@@ -169,6 +192,10 @@ fn (mut view View) k() {
 	}
 	line_len := view.lines[view.from+view.cursor.pos.y].len
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
+}
+
+fn (mut view View) i() {
+	view.mode = .insert
 }
 
 fn get_clean_words(line string) []string {
