@@ -115,8 +115,6 @@ fn (mut view View) open_file(path string) {
 fn (mut view View) draw(mut ctx tui.Context) {
 	view.height = ctx.window_height - 2
 
-	ctx.set_bg_color(r: 53, g: 53, b: 53)
-	ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
 	view.draw_document(mut ctx)
 
 	ctx.set_bg_color(r: 230, g: 230, b: 230)
@@ -140,7 +138,10 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 	mut to := view.height + view.from
 	if to > view.lines.len { to = view.lines.len }
 	view.to = to
+	ctx.set_bg_color(r: 53, g: 53, b: 53)
+	ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
 	for i, line in view.lines[view.from..to] {
+		if i == view.cursor.pos.y { ctx.set_bg_color(r: 53, g: 53, b: 53) } else { ctx.reset_bg_color() }
 		mut line_cpy := line
 		if !view.show_whitespace {
 			line_cpy = line_cpy.replace("\t", " ".repeat(4))
