@@ -52,6 +52,7 @@ fn (mode Mode) draw(mut ctx tui.Context) {
 	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, Color{ 25, 25, 25 }, "")
 	ctx.set_bg_color(r: 25, g: 25, b: 25)
 	ctx.draw_rect(12, ctx.window_height - 1, ctx.window_width - 1, ctx.window_height - 1)
+	ctx.reset()
 }
 
 fn (mode Mode) color() Color {
