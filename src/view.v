@@ -161,9 +161,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 
 	view.mode.draw(mut ctx)
 
-	if view.mode == .command {
-		ctx.draw_text(1, ctx.window_height, view.cmd)
-	}
+	ctx.draw_text(1, ctx.window_height, view.cmd)
 }
 
 fn (mut view View) draw_document(mut ctx tui.Context) {
@@ -296,7 +294,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 		.command {
 			match e.code {
 				.left_square_bracket { if e.modifiers == .ctrl { view.mode = .normal } }
-				.enter { if view.cmd == ":q" { exit(0) }; view.cmd = "unknown cmd ${view.cmd}" }
+				.enter { if view.cmd == ":q" { exit(0) }; view.cmd = "unknown cmd ${view.cmd}"; view.mode = .normal }
 				48...57, 97...122 { // 0-9a-zA-Z
 					view.cmd_put_char(e.ascii.ascii_str())
 				}
