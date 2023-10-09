@@ -163,6 +163,8 @@ fn (mut view View) j() {
 			view.from += 1
 		}
 	}
+	line_len := view.lines[view.from+view.cursor.pos.y].len
+	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
 	/*
 	line := view.lines[view.from+view.cursor.pos.y]
 	if view.cursor.pos.x > line.len - 1 { view.cursor.pos.x = line.len - 1}
@@ -176,6 +178,8 @@ fn (mut view View) k() {
 		view.from -= 1
 		if view.from < 0 { view.from = 0 }
 	}
+	line_len := view.lines[view.from+view.cursor.pos.y].len
+	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
 	/*
 	line := view.lines[view.from+view.cursor.pos.y]
 	if view.cursor.pos.x > line.len - 1 { view.cursor.pos.x = line.len - 1 }
