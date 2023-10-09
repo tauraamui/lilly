@@ -76,14 +76,15 @@ fn (mode Mode) str() string {
 
 struct View {
 mut:
-	log    &log.Log
-	mode   Mode
-	lines  []string
-	words  []string
-	cursor Cursor
-	height int
-	from   int
-	to     int
+	log             &log.Log
+	mode            Mode
+	lines           []string
+	words           []string
+	cursor          Cursor
+	height          int
+	from            int
+	to              int
+	show_whitespace bool
 }
 
 fn (app &App) new_view() View {
@@ -118,7 +119,10 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	if to > view.lines.len { to = view.lines.len }
 	view.to = to
 	for i, line in view.lines[view.from..to] {
-		line_cpy := line
+		mut line_cpy := line
+		line_cpy = line_cpy.replace("\t", " ".repeat(4))
+		ctx.draw_text(1, i+1, line_cpy)
+		/*
 		if i == view.cursor.pos.y {
 			ctx.set_bg_color(r: 53, g: 53, b: 53)
 			ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
@@ -167,24 +171,89 @@ fn (mut view View) draw(mut ctx tui.Context) {
 				}
 			}
 		}
+		*/
 	}
 	ctx.set_bg_color(r: 230, g: 230, b: 230)
 	cursor_line := view.lines[view.from+view.cursor.pos.y]
 	mut offset := 0
-	if cursor_line.len > 0  {
-		mut scanto := view.cursor.pos.x
-		if scanto + 1 > cursor_line.len { scanto = cursor_line.len - 1 }
+	mut scanto := view.cursor.pos.x
+	if scanto + 1 > cursor_line.len { scanto = cursor_line.len - 1 }
 
-		for c in cursor_line[..scanto+1] {
-			match c {
-				`\t` { offset += 4 }
-				else { offset += 1 }
-			}
+	for c in cursor_line[..scanto+1] {
+		match c {
+			`\t` { offset += 4 }
+			else { offset += 1 }
 		}
-		ctx.draw_point(offset, view.cursor.pos.y+1)
 	}
+	ctx.draw_point(offset, view.cursor.pos.y+1)
 
 	view.mode.draw(mut ctx)
+}
+
+fn (mut view View) draw_document(mut ctx tui.Context) {
+	mut to := view.height + view.from
+	if to > view.lines.len { to = view.lines.len }
+	view.to = to
+	for i, line in view.lines[view.from..to] {
+		mut line_cpy := line
+		if !view.show_whitespace {
+			line_cpy = line_cpy.replace("\t", " ".repeat(4))
+			ctx.draw_text(1, i+1, line_cpy)
+			continue
+		}
+		view.draw_line_show_whitespace(mut ctx, i, line_cpy)
+	}
+}
+
+fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cpy string) {
+	if i == view.cursor.pos.y {
+		ctx.set_bg_color(r: 53, g: 53, b: 53)
+		ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
+		mut xx := 0
+		for c in line_cpy {
+			match c {
+				`\t` {
+					ctx.set_color(r: 120, g: 120, b: 120)
+					ctx.draw_text(xx+1, i+1, "->->")
+					ctx.reset_color()
+					xx += 4
+				}
+				` ` {
+					ctx.set_color(r: 120, g: 120, b: 120)
+					ctx.draw_text(xx+1, i+1, "·")
+					ctx.reset_color()
+					xx += 1
+				}
+				else {
+					ctx.draw_text(xx+1, i+1, c.ascii_str())
+					xx += 1
+				}
+			}
+		}
+		ctx.reset_bg_color()
+	} else {
+		mut xx := 0
+		for c in line_cpy {
+			match c {
+				`\t` {
+					ctx.set_color(r: 120, g: 120, b: 120)
+					ctx.draw_text(xx+1, i+1, "->->")
+					ctx.reset_color()
+					xx += 4
+				}
+				` ` {
+					ctx.set_color(r: 120, g: 120, b: 120)
+					ctx.draw_text(xx+1, i+1, "·")
+					ctx.reset_color()
+					xx += 1
+				}
+				else {
+					ctx.draw_text(xx+1, i+1, c.ascii_str())
+					xx += 1
+				}
+			}
+		}
+	}
 }
 
 struct Color {
