@@ -24,15 +24,17 @@ const (
 	right_rounded           = ""
 	slant_right_flat_top    = ""
 
-	status_green            = Color{ 160, 230, 160 }
-	status_orange           = Color{ 230, 230, 110 }
-	status_lilac            = Color{ 230, 110, 230 }
+	status_green            = Color { 160, 230, 160 }
+	status_orange           = Color { 230, 230, 110 }
+	status_lilac            = Color { 230, 110, 230 }
+	status_cyan             = Color { 135, 135, 230   }
 )
 
 enum Mode as u8 {
 	normal
 	visual
 	insert
+	command
 }
 
 fn (mode Mode) draw(mut ctx tui.Context) {
@@ -40,10 +42,14 @@ fn (mode Mode) draw(mut ctx tui.Context) {
 	status_line_y := ctx.window_height - 1
 	status_line_x := 1
 	status_color := mode.color()
-	paint_shape_text(mut ctx, status_line_x, status_line_y, status_color, "█")
-	paint_text_on_background(mut ctx, status_line_x + 2, status_line_y, status_color, Color{ 0, 0, 0}, label)
-	paint_shape_text(mut ctx, status_line_x + 8, status_line_y, status_color, "█")
-	paint_shape_text(mut ctx, status_line_x + 10, status_line_y, Color{ 25, 25, 25 }, "")
+	mut offset := 0
+	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, "█")
+	offset += 2
+	paint_text_on_background(mut ctx, status_line_x + offset, status_line_y, status_color, Color{ 0, 0, 0}, label)
+	offset += label.len
+	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, "█")
+	offset += 2
+	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, Color{ 25, 25, 25 }, "")
 	ctx.set_bg_color(r: 25, g: 25, b: 25)
 	ctx.draw_rect(12, ctx.window_height - 1, ctx.window_width - 1, ctx.window_height - 1)
 }
@@ -53,14 +59,16 @@ fn (mode Mode) color() Color {
 		.normal { status_green }
 		.visual { status_lilac }
 		.insert { status_orange }
+		.command { status_cyan }
 	}
 }
 
 fn (mode Mode) str() string {
 	return match mode {
-		.normal { "NORMAL" }
-		.visual { "VISUAL" }
-		.insert { "INSERT" }
+		.normal  { "NORMAL" }
+		.visual  { "VISUAL" }
+		.insert  { "INSERT" }
+		.command { "COMMAND" }
 	}
 }
 
@@ -203,8 +211,17 @@ fn (mut view View) on_key_down(e &tui.Event) {
 		.j { view.j() }
 		.k { view.k() }
 		.i { if view.mode == .normal { view.i() } }
+		.colon { if view.mode == .normal { view.cmd() } }
 		else {}
 	}
+}
+
+fn (mut view View) i() {
+	view.mode = .insert
+}
+
+fn (mut view View) cmd() {
+	view.mode = .command
 }
 
 fn (mut view View) h() {
@@ -239,10 +256,6 @@ fn (mut view View) k() {
 	}
 	line_len := view.lines[view.from+view.cursor.pos.y].len
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
-}
-
-fn (mut view View) i() {
-	view.mode = .insert
 }
 
 fn get_clean_words(line string) []string {
