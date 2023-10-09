@@ -3,17 +3,10 @@ module main
 import term.ui as tui
 import log
 
-enum Mode as u8 {
-	normal
-	visual
-	insert
-}
-
 struct App {
 mut:
 	log       &log.Log
     tui       &tui.Context = unsafe { nil }
-	mode      Mode
 	view      &View = unsafe { nil }
 	views     []View
 	cur_split int
@@ -64,7 +57,6 @@ fn frame(mut app &App) {
 		view.draw(mut app.tui)
 		app.tui.set_cursor_position(0, 0)
 
-		app.tui.reset()
 		app.tui.flush()
 	}
 }
@@ -81,7 +73,6 @@ fn main() {
 
     mut app := &App{
 		log: &l
-		mode: .normal
 		changed: true
 	}
 
@@ -89,9 +80,9 @@ fn main() {
         user_data: app
         event_fn: event
         frame_fn: frame
-		frame_rate: 30
         hide_cursor: true
 		capture_events: true
+		use_alternate_buffer: true
     )
 	app.views << app.new_view()
 	app.update_view()
