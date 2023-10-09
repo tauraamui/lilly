@@ -28,6 +28,33 @@ const (
 	status_orange           = Color { 237, 207, 123 }
 	status_lilac            = Color { 194, 110, 230 }
 	status_cyan             = Color { 138, 222, 237   }
+
+	rune_digits             = [`0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`]
+
+	zero_width_unicode      = [
+		`\u034f`, // U+034F COMBINING GRAPHEME JOINER
+		`\u061c`, // U+061C ARABIC LETTER MARK
+		`\u17b4`, // U+17B4 KHMER VOWEL INHERENT AQ
+		`\u17b5`, // U+17B5 KHMER VOWEL INHERENT AA
+		`\u200a`, // U+200A HAIR SPACE
+		`\u200b`, // U+200B ZERO WIDTH SPACE
+		`\u200c`, // U+200C ZERO WIDTH NON-JOINER
+		`\u200d`, // U+200D ZERO WIDTH JOINER
+		`\u200e`, // U+200E LEFT-TO-RIGHT MARK
+		`\u200f`, // U+200F RIGHT-TO-LEFT MARK
+		`\u2060`, // U+2060 WORD JOINER
+		`\u2061`, // U+2061 FUNCTION APPLICATION
+		`\u2062`, // U+2062 INVISIBLE TIMES
+		`\u2063`, // U+2063 INVISIBLE SEPARATOR
+		`\u2064`, // U+2064 INVISIBLE PLUS
+		`\u206a`, // U+206A INHIBIT SYMMETRIC SWAPPING
+		`\u206b`, // U+206B ACTIVATE SYMMETRIC SWAPPING
+		`\u206c`, // U+206C INHIBIT ARABIC FORM SHAPING
+		`\u206d`, // U+206D ACTIVATE ARABIC FORM SHAPING
+		`\u206e`, // U+206E NATIONAL DIGIT SHAPES
+		`\u206f`, // U+206F NOMINAL DIGIT SHAPES
+		`\ufeff`, // U+FEFF ZERO WIDTH NO-BREAK SPACE
+	]
 )
 
 enum Mode as u8 {
@@ -85,6 +112,7 @@ mut:
 	from            int
 	to              int
 	show_whitespace bool
+	cmd             string
 }
 
 fn (app &App) new_view() View {
@@ -132,6 +160,10 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	ctx.draw_point(offset, view.cursor.pos.y+1)
 
 	view.mode.draw(mut ctx)
+
+	if view.mode == .command {
+		ctx.draw_text(1, ctx.window_height, view.cmd)
+	}
 }
 
 fn (mut view View) draw_document(mut ctx tui.Context) {
@@ -223,15 +255,54 @@ fn paint_text_on_background(mut ctx tui.Context, x int, y int, bg_color Color, f
 	ctx.draw_text(x, y, text)
 }
 
+fn (mut view View) cmd_put_char(c string) {
+	view.cmd = "${view.cmd}${c}"
+}
+
 fn (mut view View) on_key_down(e &tui.Event) {
-	match e.code {
-		.escape { exit(0) }
-		.h { view.h() }
-		.l { view.l() }
-		.j { view.j() }
-		.k { view.k() }
-		.i { if view.mode == .normal { view.i() } }
-		.colon { if view.mode == .normal { view.cmd() } }
+	match view.mode {
+		.normal {
+			match e.code {
+				.h { view.h() }
+				.l { view.l() }
+				.j { view.j() }
+				.k { view.k() }
+				.i { if view.mode == .normal { view.i() } }
+				.colon { if view.mode == .normal { view.cmd() } }
+				.left_square_bracket { if e.modifiers == .ctrl { view.mode = .normal } }
+				.enter {
+					if view.mode == .command {
+						if view.cmd == ":q" { exit(0) }
+						view.cmd = "unrecognised command ${view.cmd}"
+					}
+				}
+				48...57, 97...122 { // 0-9a-zA-Z
+					if view.mode == .command {
+						view.cmd_put_char(e.ascii.ascii_str())
+					}
+					// buffer.put(e.ascii.ascii_str())
+					/*
+					if e.modifiers == .ctrl {
+						if e.code == .left_bracket {
+							view.mode = .normal
+						}
+					} else if !(e.modifiers.has(.ctrl | .alt) || e.code == .null) {
+					}
+					*/
+				}
+				else {}
+			}
+		}
+		.command {
+			match e.code {
+				.left_square_bracket { if e.modifiers == .ctrl { view.mode = .normal } }
+				.enter { if view.cmd == ":q" { exit(0) }; view.cmd = "unknown cmd ${view.cmd}" }
+				48...57, 97...122 { // 0-9a-zA-Z
+					view.cmd_put_char(e.ascii.ascii_str())
+				}
+				else {}
+			}
+		}
 		else {}
 	}
 }
@@ -242,20 +313,24 @@ fn (mut view View) i() {
 
 fn (mut view View) cmd() {
 	view.mode = .command
+	view.cmd = ":"
 }
 
 fn (mut view View) h() {
+	if view.mode == .insert || view.mode == .command { return }
 	view.cursor.pos.x -= 1
 	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
 }
 
 fn (mut view View) l() {
+	if view.mode == .insert || view.mode == .command { return }
 	view.cursor.pos.x += 1
 	line_len := view.lines[view.from+view.cursor.pos.y].len
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
 }
 
 fn (mut view View) j() {
+	if view.mode == .insert || view.mode == .command { return }
 	view.cursor.pos.y += 1
 	if view.cursor.pos.y > view.height - 1 {
 		view.cursor.pos.y = view.height - 1
@@ -268,6 +343,7 @@ fn (mut view View) j() {
 }
 
 fn (mut view View) k() {
+	if view.mode == .insert || view.mode == .command { return }
 	view.cursor.pos.y -= 1
 	if view.cursor.pos.y < 0 {
 		view.cursor.pos.y = 0
