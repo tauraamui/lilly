@@ -140,13 +140,6 @@ fn (mut view View) on_key_down(e &tui.Event) {
 fn (mut view View) h() {
 	view.cursor.pos.x -= 1
 	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
-	/*
-	line := view.lines[view.from+view.cursor.pos.y]
-	if line.len > 0 {
-		view.cursor.pos.x -= 1
-	}
-	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
-	*/
 }
 
 fn (mut view View) l() {
@@ -165,10 +158,6 @@ fn (mut view View) j() {
 	}
 	line_len := view.lines[view.from+view.cursor.pos.y].len
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
-	/*
-	line := view.lines[view.from+view.cursor.pos.y]
-	if view.cursor.pos.x > line.len - 1 { view.cursor.pos.x = line.len - 1}
-	*/
 }
 
 fn (mut view View) k() {
@@ -180,10 +169,6 @@ fn (mut view View) k() {
 	}
 	line_len := view.lines[view.from+view.cursor.pos.y].len
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
-	/*
-	line := view.lines[view.from+view.cursor.pos.y]
-	if view.cursor.pos.x > line.len - 1 { view.cursor.pos.x = line.len - 1 }
-	*/
 }
 
 fn get_clean_words(line string) []string {
