@@ -88,7 +88,7 @@ mut:
 }
 
 fn (app &App) new_view() View {
-	res := View{ log: app.log, mode: .normal }
+	res := View{ log: app.log, mode: .normal, show_whitespace: false }
 	return res
 }
 
@@ -115,64 +115,10 @@ fn (mut view View) open_file(path string) {
 fn (mut view View) draw(mut ctx tui.Context) {
 	view.height = ctx.window_height - 2
 
-	mut to := view.height + view.from
-	if to > view.lines.len { to = view.lines.len }
-	view.to = to
-	for i, line in view.lines[view.from..to] {
-		mut line_cpy := line
-		line_cpy = line_cpy.replace("\t", " ".repeat(4))
-		ctx.draw_text(1, i+1, line_cpy)
-		/*
-		if i == view.cursor.pos.y {
-			ctx.set_bg_color(r: 53, g: 53, b: 53)
-			ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
-			mut xx := 0
-			for c in line_cpy {
-				match c {
-					`\t` {
-						ctx.set_color(r: 120, g: 120, b: 120)
-						ctx.draw_text(xx+1, i+1, "->->")
-						ctx.reset_color()
-						xx += 4
-					}
-					` ` {
-						ctx.set_color(r: 120, g: 120, b: 120)
-						ctx.draw_text(xx+1, i+1, "·")
-						ctx.reset_color()
-						xx += 1
-					}
-					else {
-						ctx.draw_text(xx+1, i+1, c.ascii_str())
-						xx += 1
-					}
-				}
-			}
-			ctx.reset_bg_color()
-		} else {
-			mut xx := 0
-			for c in line_cpy {
-				match c {
-					`\t` {
-						ctx.set_color(r: 120, g: 120, b: 120)
-						ctx.draw_text(xx+1, i+1, "->->")
-						ctx.reset_color()
-						xx += 4
-					}
-					` ` {
-						ctx.set_color(r: 120, g: 120, b: 120)
-						ctx.draw_text(xx+1, i+1, "·")
-						ctx.reset_color()
-						xx += 1
-					}
-					else {
-						ctx.draw_text(xx+1, i+1, c.ascii_str())
-						xx += 1
-					}
-				}
-			}
-		}
-		*/
-	}
+	ctx.set_bg_color(r: 53, g: 53, b: 53)
+	ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
+	view.draw_document(mut ctx)
+
 	ctx.set_bg_color(r: 230, g: 230, b: 230)
 	cursor_line := view.lines[view.from+view.cursor.pos.y]
 	mut offset := 0
@@ -209,10 +155,9 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 
 fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cpy string) {
 	if i == view.cursor.pos.y {
-		ctx.set_bg_color(r: 53, g: 53, b: 53)
-		ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
 		mut xx := 0
-		for c in line_cpy {
+		for ci, c in line_cpy {
+			if ci > ctx.window_width { return }
 			match c {
 				`\t` {
 					ctx.set_color(r: 120, g: 120, b: 120)
@@ -235,7 +180,8 @@ fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cp
 		ctx.reset_bg_color()
 	} else {
 		mut xx := 0
-		for c in line_cpy {
+		for ci, c in line_cpy {
+			if ci > ctx.window_width { return }
 			match c {
 				`\t` {
 					ctx.set_color(r: 120, g: 120, b: 120)
