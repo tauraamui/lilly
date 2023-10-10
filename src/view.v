@@ -93,9 +93,9 @@ fn (mode Mode) color() Color {
 
 fn (mode Mode) str() string {
 	return match mode {
-		.normal  { "NORMAL" }
-		.visual  { "VISUAL" }
-		.insert  { "INSERT" }
+		.normal  { "NORMAL"  }
+		.visual  { "VISUAL"  }
+		.insert  { "INSERT"  }
 		.command { "COMMAND" }
 	}
 }
@@ -107,11 +107,50 @@ mut:
 	lines           []string
 	words           []string
 	cursor          Cursor
+	cmd_buf         CmdBuffer
 	height          int
 	from            int
 	to              int
 	show_whitespace bool
-	cmd             string
+}
+
+struct CmdBuffer {
+mut:
+	line     string
+	err_msg  string
+	cursor_x int
+}
+
+fn (mut cmd_buf CmdBuffer) draw(mut ctx tui.Context) {
+	if cmd_buf.err_msg.len > 0 {
+		ctx.set_color(r: 230, g: 110, b: 100)
+		ctx.draw_text(1, ctx.window_height, cmd_buf.err_msg)
+		ctx.reset_color()
+		return
+	}
+	ctx.draw_text(1, ctx.window_height, cmd_buf.line)
+}
+
+fn (mut cmd_buf CmdBuffer) prepare_for_input() {
+	cmd_buf.err_msg = ""
+	cmd_buf.line = ":"
+	cmd_buf.cursor_x = 1
+}
+
+fn (mut cmd_buf CmdBuffer) put_char(c string) {
+	first := cmd_buf.line[..cmd_buf.cursor_x]
+	last  := cmd_buf.line[cmd_buf.cursor_x..]
+	cmd_buf.line = "${first}${c}${last}"
+	cmd_buf.cursor_x += 1
+}
+
+fn (mut cmd_buf CmdBuffer) set_error(msg string) {
+	cmd_buf.err_msg = msg
+}
+
+fn (mut cmd_buf CmdBuffer) clear() {
+	cmd_buf.line = ""
+	cmd_buf.cursor_x = 0
 }
 
 fn (app &App) new_view() View {
@@ -159,8 +198,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	ctx.draw_point(offset, view.cursor.pos.y+1)
 
 	view.mode.draw(mut ctx)
-
-	ctx.draw_text(1, ctx.window_height, view.cmd)
+	view.cmd_buf.draw(mut ctx)
 }
 
 fn (mut view View) draw_document(mut ctx tui.Context) {
@@ -252,9 +290,6 @@ fn paint_text_on_background(mut ctx tui.Context, x int, y int, bg_color Color, f
 	ctx.draw_text(x, y, text)
 }
 
-fn (mut view View) cmd_put_char(c string) {
-	view.cmd += c
-}
 
 fn (mut view View) on_key_down(e &tui.Event) {
 	match view.mode {
@@ -270,8 +305,8 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.escape { view.mode = .normal }
 				.enter {
 					if view.mode == .command {
-						if view.cmd == ":q" { exit(0) }
-						view.cmd = "unrecognised command ${view.cmd}"
+						if view.cmd_buf.line == ":q" { exit(0) }
+						view.cmd_buf.set_error("unrecognised command ${view.cmd_buf.line}")
 					}
 				}
 				else {}
@@ -279,12 +314,12 @@ fn (mut view View) on_key_down(e &tui.Event) {
 		}
 		.command {
 			match e.code {
-				.left_square_bracket { if e.modifiers == .ctrl { view.cmd = ""; view.mode = .normal } }
-				.escape { view.cmd = ""; view.mode = .normal }
-				.enter { if !view.exec_cmd() { view.cmd = "unknown cmd ${view.cmd}" }; view.mode = .normal }
-				.space { view.cmd_put_char(" ") }
+				.left_square_bracket { if e.modifiers == .ctrl { view.cmd_buf.clear(); view.mode = .normal } }
+				.escape { view.cmd_buf.clear(); view.mode = .normal }
+				.enter { if !view.exec_cmd() { view.cmd_buf.set_error("unrecognised command ${view.cmd_buf.line}") }; view.mode = .normal }
+				.space { view.cmd_buf.put_char(" ") }
 				48...57, 97...122 { // 0-9a-zA-Z
-					view.cmd_put_char(e.ascii.ascii_str())
+					view.cmd_buf.put_char(e.ascii.ascii_str())
 				}
 				else {}
 			}
@@ -312,11 +347,11 @@ fn (mut view View) i() {
 
 fn (mut view View) cmd() {
 	view.mode = .command
-	view.cmd = ":"
+	view.cmd_buf.prepare_for_input()
 }
 
 fn (mut view View) exec_cmd() bool {
-	return match view.cmd {
+	return match view.cmd_buf.line {
 		":q" { exit(0); true }
 		":toggle whitespace" { view.show_whitespace = !view.show_whitespace; true }
 		else { false }
