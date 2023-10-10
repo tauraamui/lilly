@@ -78,7 +78,7 @@ fn (mode Mode) draw(mut ctx tui.Context) {
 	offset += 2
 	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, Color{ 25, 25, 25 }, "")
 	ctx.set_bg_color(r: 25, g: 25, b: 25)
-	ctx.draw_rect(12, ctx.window_height - 1, ctx.window_width - 1, ctx.window_height - 1)
+	ctx.draw_rect(12, ctx.window_height - 1, ctx.window_width, ctx.window_height - 1)
 	ctx.reset()
 }
 
@@ -121,7 +121,8 @@ mut:
 	cursor_x int
 }
 
-fn (mut cmd_buf CmdBuffer) draw(mut ctx tui.Context) {
+fn (mut cmd_buf CmdBuffer) draw(mut ctx tui.Context, draw_cursor bool) {
+	defer { ctx.reset_bg_color() }
 	if cmd_buf.err_msg.len > 0 {
 		ctx.set_color(r: 230, g: 110, b: 100)
 		ctx.draw_text(1, ctx.window_height, cmd_buf.err_msg)
@@ -129,6 +130,10 @@ fn (mut cmd_buf CmdBuffer) draw(mut ctx tui.Context) {
 		return
 	}
 	ctx.draw_text(1, ctx.window_height, cmd_buf.line)
+	if draw_cursor {
+		ctx.set_bg_color(r: 230, g: 230, b: 230)
+		ctx.draw_point(cmd_buf.cursor_x+1, ctx.window_height)
+	}
 }
 
 fn (mut cmd_buf CmdBuffer) prepare_for_input() {
@@ -142,6 +147,25 @@ fn (mut cmd_buf CmdBuffer) put_char(c string) {
 	last  := cmd_buf.line[cmd_buf.cursor_x..]
 	cmd_buf.line = "${first}${c}${last}"
 	cmd_buf.cursor_x += 1
+}
+
+fn (mut cmd_buf CmdBuffer) left() {
+	cmd_buf.cursor_x -= 1
+	if cmd_buf.cursor_x <= 0 { cmd_buf.cursor_x = 0 }
+}
+
+fn (mut cmd_buf CmdBuffer) right() {
+	cmd_buf.cursor_x += 1
+	if cmd_buf.cursor_x > cmd_buf.line.len { cmd_buf.cursor_x = cmd_buf.line.len }
+}
+
+fn (mut cmd_buf CmdBuffer) backspace() {
+	if cmd_buf.cursor_x == 0 { return }
+	first := cmd_buf.line[..cmd_buf.cursor_x-1]
+	last  := cmd_buf.line[cmd_buf.cursor_x..]
+	cmd_buf.line = "${first}${last}"
+	cmd_buf.cursor_x -= 1
+	if cmd_buf.cursor_x < 0 { cmd_buf.cursor_x = 0 }
 }
 
 fn (mut cmd_buf CmdBuffer) set_error(msg string) {
@@ -198,7 +222,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	ctx.draw_point(offset, view.cursor.pos.y+1)
 
 	view.mode.draw(mut ctx)
-	view.cmd_buf.draw(mut ctx)
+	view.cmd_buf.draw(mut ctx, view.mode == .command)
 }
 
 fn (mut view View) draw_document(mut ctx tui.Context) {
@@ -321,7 +345,12 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				48...57, 97...122 { // 0-9a-zA-Z
 					view.cmd_buf.put_char(e.ascii.ascii_str())
 				}
-				else {}
+				.left { view.cmd_buf.left() }
+				.right { view.cmd_buf.right() }
+				.backspace { view.cmd_buf.backspace() }
+				else {
+					view.cmd_buf.put_char(e.ascii.ascii_str())
+				}
 			}
 		}
 		.insert {
