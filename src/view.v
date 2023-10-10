@@ -3,6 +3,7 @@ module main
 import os
 import term.ui as tui
 import log
+import datatypes
 
 struct Cursor {
 mut:
@@ -116,9 +117,11 @@ mut:
 
 struct CmdBuffer {
 mut:
-	line     string
-	err_msg  string
-	cursor_x int
+	line        string
+	err_msg     string
+	cursor_x    int
+	cursor_y    int
+	cmd_history datatypes.Queue[string]
 }
 
 fn (mut cmd_buf CmdBuffer) draw(mut ctx tui.Context, draw_cursor bool) {
@@ -142,11 +145,33 @@ fn (mut cmd_buf CmdBuffer) prepare_for_input() {
 	cmd_buf.cursor_x = 1
 }
 
+fn (mut cmd_buf CmdBuffer) exec(mut view View) {
+	success := match view.cmd_buf.line {
+		":q" { exit(0); true }
+		":toggle whitespace" { view.show_whitespace = !view.show_whitespace; true }
+		else { false }
+	}
+	if success {
+		cmd_buf.cmd_history.push(cmd_buf.line)
+		return
+	}
+	cmd_buf.set_error("unrecognised command ${cmd_buf.line}")
+}
+
 fn (mut cmd_buf CmdBuffer) put_char(c string) {
 	first := cmd_buf.line[..cmd_buf.cursor_x]
 	last  := cmd_buf.line[cmd_buf.cursor_x..]
 	cmd_buf.line = "${first}${c}${last}"
 	cmd_buf.cursor_x += 1
+}
+
+fn (mut cmd_buf CmdBuffer) up() {
+	cmd_buf.cursor_y -= 1
+	if cmd_buf.cursor_y < 0 { cmd_buf.cursor_y = 0 }
+	if cmd_buf.cmd_history.len() > 0 {
+		cmd_buf.line = cmd_buf.cmd_history.index(cmd_buf.cursor_y) or { ":" }
+		cmd_buf.cursor_x = cmd_buf.line.len
+	}
 }
 
 fn (mut cmd_buf CmdBuffer) left() {
@@ -169,6 +194,7 @@ fn (mut cmd_buf CmdBuffer) backspace() {
 }
 
 fn (mut cmd_buf CmdBuffer) set_error(msg string) {
+	cmd_buf.line = ""
 	cmd_buf.err_msg = msg
 }
 
@@ -340,13 +366,15 @@ fn (mut view View) on_key_down(e &tui.Event) {
 			match e.code {
 				.left_square_bracket { if e.modifiers == .ctrl { view.cmd_buf.clear(); view.mode = .normal } }
 				.escape { view.cmd_buf.clear(); view.mode = .normal }
-				.enter { if !view.exec_cmd() { view.cmd_buf.set_error("unrecognised command ${view.cmd_buf.line}") }; view.mode = .normal }
+				.enter { view.cmd_buf.exec(mut view); view.mode = .normal }
 				.space { view.cmd_buf.put_char(" ") }
 				48...57, 97...122 { // 0-9a-zA-Z
 					view.cmd_buf.put_char(e.ascii.ascii_str())
 				}
 				.left { view.cmd_buf.left() }
 				.right { view.cmd_buf.right() }
+				.up { view.cmd_buf.up() }
+				.down { return }
 				.backspace { view.cmd_buf.backspace() }
 				else {
 					view.cmd_buf.put_char(e.ascii.ascii_str())
