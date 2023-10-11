@@ -454,6 +454,10 @@ fn (mut view View) j() {
 	count := strconv.atoi(view.jump_count) or { 1 }
 	view.cursor.pos.y += count
 	if view.cursor.pos.y > view.height - 1 {
+		difference := view.cursor.pos.y - view.height
+		view.log.debug("DIFF: ${difference}")
+		view.log.flush()
+		view.from += difference
 		view.cursor.pos.y = view.height - 1
 	}
 
