@@ -262,7 +262,7 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 	if to > view.lines.len { to = view.lines.len }
 	view.to = to
 	ctx.set_bg_color(r: 53, g: 53, b: 53)
-	ctx.draw_rect(0, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
+	ctx.draw_rect(view.x+1, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
 	for i, line in view.lines[view.from..to] {
 		if i == view.cursor.pos.y { ctx.set_bg_color(r: 53, g: 53, b: 53) } else { ctx.reset_bg_color() }
 		mut line_cpy := line
@@ -275,6 +275,10 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 		}
 		view.draw_line_show_whitespace(mut ctx, i, line_cpy)
 	}
+
+	ctx.set_bg_color(r: 80, g: 230, b: 80)
+	ctx.draw_line(1, 1, 1, view.height)
+	ctx.reset_bg_color()
 }
 
 fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cpy string) {
