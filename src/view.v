@@ -109,6 +109,8 @@ mut:
 	words           []string
 	cursor          Cursor
 	cmd_buf         CmdBuffer
+	x               int
+	width           int
 	height          int
 	from            int
 	to              int
@@ -230,6 +232,9 @@ fn (mut view View) open_file(path string) {
 
 fn (mut view View) draw(mut ctx tui.Context) {
 	view.height = ctx.window_height - 2
+	view.x = 5
+	view.width = ctx.window_width
+	view.width -= view.x
 
 	view.draw_document(mut ctx)
 
@@ -262,9 +267,9 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 		mut line_cpy := line
 		if !view.show_whitespace {
 			line_cpy = line_cpy.replace("\t", " ".repeat(4))
-			mut max_width := ctx.window_width
+			mut max_width := view.width
 			if max_width > line_cpy.len { max_width = line_cpy.len }
-			ctx.draw_text(1, i+1, line_cpy[..max_width])
+			ctx.draw_text(view.x, i+1, line_cpy[..max_width])
 			continue
 		}
 		view.draw_line_show_whitespace(mut ctx, i, line_cpy)
