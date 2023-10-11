@@ -427,12 +427,8 @@ fn (mut view View) move_cursor_up(amount int) {
 
 fn (mut view View) move_cursor_down(amount int) {
 	view.cursor.pos.y += amount
-	height := view.code_view_height()
-	if view.cursor.pos.y > view.from + height {
-		difference := view.cursor.pos.y - (view.from + height)
-		view.from += difference
-	}
 	view.clamp_cursor_within_document_bounds()
+	if view.cursor.pos.y > view.from + view.code_view_height() - 1 { view.cursor.pos.y = view.from + view.code_view_height() - 1 }
 }
 
 fn (mut view View) clamp_cursor_within_document_bounds() {
