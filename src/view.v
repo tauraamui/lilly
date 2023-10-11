@@ -250,7 +250,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 			else { offset += 1 }
 		}
 	}
-	ctx.draw_point(offset, view.cursor.pos.y+1)
+	ctx.draw_point(view.x+offset, view.cursor.pos.y+1)
 
 	view.mode.draw(mut ctx)
 	view.cmd_buf.draw(mut ctx, view.mode == .command)
@@ -269,7 +269,7 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 			line_cpy = line_cpy.replace("\t", " ".repeat(4))
 			mut max_width := view.width
 			if max_width > line_cpy.len { max_width = line_cpy.len }
-			ctx.draw_text(view.x, i+1, line_cpy[..max_width])
+			ctx.draw_text(view.x+1, i+1, line_cpy[..max_width])
 			continue
 		}
 		view.draw_line_show_whitespace(mut ctx, i, line_cpy)
@@ -428,6 +428,7 @@ fn (mut view View) h() {
 fn (mut view View) l() {
 	view.cursor.pos.x += 1
 	line_len := view.lines[view.from+view.cursor.pos.y].len
+	if line_len == 0 { view.cursor.pos.x = 0; return }
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
 }
 
@@ -440,6 +441,7 @@ fn (mut view View) j() {
 		}
 	}
 	line_len := view.lines[view.from+view.cursor.pos.y].len
+	if line_len == 0 { view.cursor.pos.x = 0; return }
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
 }
 
@@ -451,6 +453,7 @@ fn (mut view View) k() {
 		if view.from < 0 { view.from = 0 }
 	}
 	line_len := view.lines[view.from+view.cursor.pos.y].len
+	if line_len == 0 { view.cursor.pos.x = 0; return }
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
 }
 
