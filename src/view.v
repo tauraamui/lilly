@@ -428,18 +428,11 @@ fn (mut view View) escape() {
 fn (mut view View) move_cursor_up(amount int) {
 	view.cursor.pos.y -= amount
 	view.clamp_cursor_within_document_bounds()
-	cursor_screen_space_y := view.cursor.pos.y - view.from
-	view.log.debug("SCREEN HEIGHT: ${view.code_view_height()}, CURSOR Y IN SCREENSPACE: ${cursor_screen_space_y}")
-	view.log.flush()
 }
 
 fn (mut view View) move_cursor_down(amount int) {
 	view.cursor.pos.y += amount
 	view.clamp_cursor_within_document_bounds()
-	cursor_screen_space_y := view.cursor.pos.y - view.from
-	view.log.debug("SCREEN HEIGHT: ${view.code_view_height()}, CURSOR Y IN SCREENSPACE: ${cursor_screen_space_y}")
-	view.log.flush()
-	// if view.cursor.pos.y > view.from + view.code_view_height() - 1 { view.cursor.pos.y = view.from + view.code_view_height() - 1 }
 }
 
 fn (mut view View) clamp_cursor_within_document_bounds() {
