@@ -428,11 +428,15 @@ fn (mut view View) escape() {
 fn (mut view View) move_cursor_up(amount int) {
 	view.cursor.pos.y -= amount
 	view.clamp_cursor_within_document_bounds()
+	view.log.debug("POS Y: ${view.cursor.pos.y}, VIEW TO: ${view.to}")
+	view.log.flush()
 }
 
 fn (mut view View) move_cursor_down(amount int) {
 	view.cursor.pos.y += amount
 	view.clamp_cursor_within_document_bounds()
+	view.log.debug("POS Y: ${view.cursor.pos.y}, VIEW TO: ${view.to}")
+	view.log.flush()
 }
 
 fn (mut view View) clamp_cursor_within_document_bounds() {
