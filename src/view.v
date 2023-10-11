@@ -4,6 +4,7 @@ import os
 import term.ui as tui
 import log
 import datatypes
+import strconv
 
 struct Cursor {
 mut:
@@ -449,11 +450,13 @@ fn (mut view View) l() {
 }
 
 fn (mut view View) j() {
-	view.cursor.pos.y += 1
+	defer { view.jump_count = "" }
+	count := strconv.atoi(view.jump_count) or { 1 }
+	view.cursor.pos.y += count
 	if view.cursor.pos.y > view.height - 1 {
 		view.cursor.pos.y = view.height - 1
 		if view.lines.len - view.to > 0 {
-			view.from += 1
+			view.from += count
 		}
 	}
 	line_len := view.lines[view.from+view.cursor.pos.y].len
@@ -462,10 +465,12 @@ fn (mut view View) j() {
 }
 
 fn (mut view View) k() {
-	view.cursor.pos.y -= 1
+	defer { view.jump_count = "" }
+	count := strconv.atoi(view.jump_count) or { 1 }
+	view.cursor.pos.y -= count
 	if view.cursor.pos.y < 0 {
 		view.cursor.pos.y = 0
-		view.from -= 1
+		view.from -= count
 		if view.from < 0 { view.from = 0 }
 	}
 	line_len := view.lines[view.from+view.cursor.pos.y].len
