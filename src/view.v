@@ -253,7 +253,9 @@ fn (mut view View) draw(mut ctx tui.Context) {
 		}
 	}
 	if cursor_line.len == 0 { offset += 1 }
-	ctx.draw_point(view.x+offset, view.cursor.pos.y+1)
+	mut cursor_screen_space_y := view.cursor.pos.y - view.from
+	if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
+	ctx.draw_point(view.x+offset, cursor_screen_space_y+1)
 
 	view.mode.draw(mut ctx)
 	view.cmd_buf.draw(mut ctx, view.mode == .command)
@@ -266,14 +268,17 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 	if to > view.lines.len { to = view.lines.len }
 	view.to = to
 	ctx.set_bg_color(r: 53, g: 53, b: 53)
-	ctx.draw_rect(view.x+1, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
+
+	mut cursor_screen_space_y := view.cursor.pos.y - view.from
+	if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
+	ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width - 1, cursor_screen_space_y+1)
 	for i, line in view.lines[view.from..to] {
 		ctx.reset_bg_color()
 		mut line_cpy := line
 		ctx.set_color(r: 117, g: 118, b: 120)
 		ctx.draw_text(1, i+1, "${view.from+i+1}")
 		ctx.reset_color()
-		if i == view.cursor.pos.y { ctx.set_bg_color(r: 53, g: 53, b: 53) }
+		if i == cursor_screen_space_y { ctx.set_bg_color(r: 53, g: 53, b: 53) }
 		if !view.show_whitespace {
 			line_cpy = line_cpy.replace("\t", " ".repeat(4))
 			mut max_width := view.width
@@ -423,12 +428,18 @@ fn (mut view View) escape() {
 fn (mut view View) move_cursor_up(amount int) {
 	view.cursor.pos.y -= amount
 	view.clamp_cursor_within_document_bounds()
+	cursor_screen_space_y := view.cursor.pos.y - view.from
+	view.log.debug("SCREEN HEIGHT: ${view.code_view_height()}, CURSOR Y IN SCREENSPACE: ${cursor_screen_space_y}")
+	view.log.flush()
 }
 
 fn (mut view View) move_cursor_down(amount int) {
 	view.cursor.pos.y += amount
 	view.clamp_cursor_within_document_bounds()
-	if view.cursor.pos.y > view.from + view.code_view_height() - 1 { view.cursor.pos.y = view.from + view.code_view_height() - 1 }
+	cursor_screen_space_y := view.cursor.pos.y - view.from
+	view.log.debug("SCREEN HEIGHT: ${view.code_view_height()}, CURSOR Y IN SCREENSPACE: ${cursor_screen_space_y}")
+	view.log.flush()
+	// if view.cursor.pos.y > view.from + view.code_view_height() - 1 { view.cursor.pos.y = view.from + view.code_view_height() - 1 }
 }
 
 fn (mut view View) clamp_cursor_within_document_bounds() {
