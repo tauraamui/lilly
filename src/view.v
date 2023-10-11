@@ -109,6 +109,7 @@ mut:
 	words           []string
 	cursor          Cursor
 	cmd_buf         CmdBuffer
+	jump_count      string
 	x               int
 	width           int
 	height          int
@@ -255,6 +256,8 @@ fn (mut view View) draw(mut ctx tui.Context) {
 
 	view.mode.draw(mut ctx)
 	view.cmd_buf.draw(mut ctx, view.mode == .command)
+
+	ctx.draw_text(ctx.window_width-view.jump_count.len, ctx.window_height, view.jump_count)
 }
 
 fn (mut view View) draw_document(mut ctx tui.Context) {
@@ -350,7 +353,6 @@ fn paint_text_on_background(mut ctx tui.Context, x int, y int, bg_color Color, f
 	ctx.draw_text(x, y, text)
 }
 
-
 fn (mut view View) on_key_down(e &tui.Event) {
 	match view.mode {
 		.normal {
@@ -361,21 +363,24 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.k { view.k() }
 				.i { view.i() }
 				.colon { view.cmd() }
-				.left_square_bracket { if e.modifiers == .ctrl { view.mode = .normal } }
-				.escape { view.mode = .normal }
+				.left_square_bracket { if e.modifiers == .ctrl { view.escape() } }
+				.escape { view.escape() }
 				.enter {
 					if view.mode == .command {
 						if view.cmd_buf.line == ":q" { exit(0) }
 						view.cmd_buf.set_error("unrecognised command ${view.cmd_buf.line}")
 					}
 				}
+				48...57 { // 0-9a
+					view.jump_count = "${view.jump_count}${e.ascii.ascii_str()}"
+				}
 				else {}
 			}
 		}
 		.command {
 			match e.code {
-				.left_square_bracket { if e.modifiers == .ctrl { view.cmd_buf.clear(); view.mode = .normal } }
-				.escape { view.cmd_buf.clear(); view.mode = .normal }
+				.left_square_bracket { if e.modifiers == .ctrl { view.escape() } }
+				.escape { view.escape() }
 				.enter { view.cmd_buf.exec(mut view); view.mode = .normal }
 				.space { view.cmd_buf.put_char(" ") }
 				48...57, 97...122 { // 0-9a-zA-Z
@@ -393,19 +398,25 @@ fn (mut view View) on_key_down(e &tui.Event) {
 		}
 		.insert {
 			match e.code {
-				.left_square_bracket { if e.modifiers == .ctrl { view.mode = .normal } }
-				.escape { view.mode = .normal }
+				.left_square_bracket { if e.modifiers == .ctrl { view.escape() } }
+				.escape { view.escape() }
 				else {}
 			}
 		}
 		.visual {
 			match e.code {
-				.left_square_bracket { if e.modifiers == .ctrl { view.mode = .normal } }
-				.escape { view.mode = .normal }
+				.left_square_bracket { if e.modifiers == .ctrl { view.escape() } }
+				.escape { view.escape() }
 				else {}
 			}
 		}
 	}
+}
+
+fn (mut view View) escape() {
+	view.mode = .normal
+	view.jump_count = ""
+	view.cmd_buf.clear()
 }
 
 fn (mut view View) i() {
