@@ -455,10 +455,9 @@ fn (mut view View) j() {
 	view.cursor.pos.y += count
 	if view.cursor.pos.y > view.height - 1 {
 		view.cursor.pos.y = view.height - 1
-		if view.lines.len - view.to > 0 {
-			view.from += count
-		}
 	}
+
+	// line length pinning
 	line_len := view.lines[view.from+view.cursor.pos.y].len
 	if line_len == 0 { view.cursor.pos.x = 0; return }
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
@@ -473,6 +472,8 @@ fn (mut view View) k() {
 		view.from -= count
 		if view.from < 0 { view.from = 0 }
 	}
+
+	// line length pinning
 	line_len := view.lines[view.from+view.cursor.pos.y].len
 	if line_len == 0 { view.cursor.pos.x = 0; return }
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
