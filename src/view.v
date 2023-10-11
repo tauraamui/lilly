@@ -233,7 +233,7 @@ fn (mut view View) open_file(path string) {
 }
 
 fn (mut view View) draw(mut ctx tui.Context) {
-	view.height = ctx.window_height - 2
+	view.height = ctx.window_height
 	view.x = 5
 	view.width = ctx.window_width
 	view.width -= view.x
@@ -262,7 +262,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 }
 
 fn (mut view View) draw_document(mut ctx tui.Context) {
-	mut to := view.from + view.height
+	mut to := view.from + view.code_view_height()
 	if to > view.lines.len { to = view.lines.len }
 	view.to = to
 	ctx.set_bg_color(r: 53, g: 53, b: 53)
@@ -422,13 +422,25 @@ fn (mut view View) escape() {
 
 fn (mut view View) move_cursor_up(amount int) {
 	view.cursor.pos.y -= amount
-	if view.cursor.pos.y < 0 { view.cursor.pos.y = 0 }
+	view.clamp_cursor_within_document_bounds()
 }
 
 fn (mut view View) move_cursor_down(amount int) {
 	view.cursor.pos.y += amount
+	height := view.code_view_height()
+	if view.cursor.pos.y > view.from + height {
+		difference := view.cursor.pos.y - (view.from + height)
+		view.from += difference
+	}
+	view.clamp_cursor_within_document_bounds()
+}
+
+fn (mut view View) clamp_cursor_within_document_bounds() {
+	if view.cursor.pos.y < 0 { view.cursor.pos.y = 0}
 	if view.cursor.pos.y > view.lines.len - 1 { view.cursor.pos.y = view.lines.len - 1 }
 }
+
+fn (view View) code_view_height() int { return view.height - 2 }
 
 fn (mut view View) cmd() {
 	view.mode = .command
