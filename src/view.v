@@ -241,7 +241,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	view.draw_document(mut ctx)
 
 	ctx.set_bg_color(r: 230, g: 230, b: 230)
-	cursor_line := view.lines[view.from+view.cursor.pos.y]
+	cursor_line := view.lines[view.cursor.pos.y]
 	mut offset := 0
 	mut scanto := view.cursor.pos.x
 	if scanto + 1 > cursor_line.len { scanto = cursor_line.len - 1 }
@@ -262,7 +262,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 }
 
 fn (mut view View) draw_document(mut ctx tui.Context) {
-	mut to := view.height + view.from
+	mut to := view.from + view.height
 	if to > view.lines.len { to = view.lines.len }
 	view.to = to
 	ctx.set_bg_color(r: 53, g: 53, b: 53)
@@ -420,8 +420,14 @@ fn (mut view View) escape() {
 	view.cmd_buf.clear()
 }
 
-fn (mut view View) i() {
-	view.mode = .insert
+fn (mut view View) move_cursor_up(amount int) {
+	view.cursor.pos.y -= amount
+	if view.cursor.pos.y < 0 { view.cursor.pos.y = 0 }
+}
+
+fn (mut view View) move_cursor_down(amount int) {
+	view.cursor.pos.y += amount
+	if view.cursor.pos.y > view.lines.len - 1 { view.cursor.pos.y = view.lines.len - 1 }
 }
 
 fn (mut view View) cmd() {
@@ -437,6 +443,10 @@ fn (mut view View) exec_cmd() bool {
 	}
 }
 
+fn (mut view View) i() {
+	view.mode = .insert
+}
+
 fn (mut view View) h() {
 	view.cursor.pos.x -= 1
 	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
@@ -444,12 +454,14 @@ fn (mut view View) h() {
 
 fn (mut view View) l() {
 	view.cursor.pos.x += 1
-	line_len := view.lines[view.from+view.cursor.pos.y].len
+	line_len := view.lines[view.cursor.pos.y].len
 	if line_len == 0 { view.cursor.pos.x = 0; return }
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
 }
 
 fn (mut view View) j() {
+	view.move_cursor_down(1)
+	/*
 	defer { view.jump_count = "" }
 	count := strconv.atoi(view.jump_count) or { 1 }
 	view.cursor.pos.y += count
@@ -465,9 +477,12 @@ fn (mut view View) j() {
 	line_len := view.lines[view.from+view.cursor.pos.y].len
 	if line_len == 0 { view.cursor.pos.x = 0; return }
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
+	*/
 }
 
 fn (mut view View) k() {
+	view.move_cursor_up(1)
+	/*
 	defer { view.jump_count = "" }
 	count := strconv.atoi(view.jump_count) or { 1 }
 	view.cursor.pos.y -= count
@@ -481,6 +496,7 @@ fn (mut view View) k() {
 	line_len := view.lines[view.from+view.cursor.pos.y].len
 	if line_len == 0 { view.cursor.pos.x = 0; return }
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
+	*/
 }
 
 fn get_clean_words(line string) []string {
