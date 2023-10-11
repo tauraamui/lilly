@@ -250,6 +250,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 			else { offset += 1 }
 		}
 	}
+	if cursor_line.len == 0 { offset += 1 }
 	ctx.draw_point(view.x+offset, view.cursor.pos.y+1)
 
 	view.mode.draw(mut ctx)
