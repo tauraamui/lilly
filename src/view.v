@@ -264,8 +264,12 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 	ctx.set_bg_color(r: 53, g: 53, b: 53)
 	ctx.draw_rect(view.x+1, view.cursor.pos.y+1, ctx.window_width - 1, view.cursor.pos.y+1)
 	for i, line in view.lines[view.from..to] {
-		if i == view.cursor.pos.y { ctx.set_bg_color(r: 53, g: 53, b: 53) } else { ctx.reset_bg_color() }
+		ctx.reset_bg_color()
 		mut line_cpy := line
+		ctx.set_color(r: 117, g: 118, b: 120)
+		ctx.draw_text(1, i+1, "${view.from+i+1}")
+		ctx.reset_color()
+		if i == view.cursor.pos.y { ctx.set_bg_color(r: 53, g: 53, b: 53) }
 		if !view.show_whitespace {
 			line_cpy = line_cpy.replace("\t", " ".repeat(4))
 			mut max_width := view.width
@@ -275,10 +279,6 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 		}
 		view.draw_line_show_whitespace(mut ctx, i, line_cpy)
 	}
-
-	ctx.set_bg_color(r: 80, g: 230, b: 80)
-	ctx.draw_line(1, 1, 1, view.height)
-	ctx.reset_bg_color()
 }
 
 fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cpy string) {
