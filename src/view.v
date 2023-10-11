@@ -284,18 +284,18 @@ fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cp
 			match c {
 				`\t` {
 					ctx.set_color(r: 120, g: 120, b: 120)
-					ctx.draw_text(xx+1, i+1, "->->")
+					ctx.draw_text(view.x+xx+1, i+1, "->->")
 					ctx.reset_color()
 					xx += 4
 				}
 				` ` {
 					ctx.set_color(r: 120, g: 120, b: 120)
-					ctx.draw_text(xx+1, i+1, "·")
+					ctx.draw_text(view.x+xx+1, i+1, "·")
 					ctx.reset_color()
 					xx += 1
 				}
 				else {
-					ctx.draw_text(xx+1, i+1, c.ascii_str())
+					ctx.draw_text(view.x+xx+1, i+1, c.ascii_str())
 					xx += 1
 				}
 			}
@@ -308,18 +308,18 @@ fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cp
 			match c {
 				`\t` {
 					ctx.set_color(r: 120, g: 120, b: 120)
-					ctx.draw_text(xx+1, i+1, "->->")
+					ctx.draw_text(view.x+xx+1, i+1, "->->")
 					ctx.reset_color()
 					xx += 4
 				}
 				` ` {
 					ctx.set_color(r: 120, g: 120, b: 120)
-					ctx.draw_text(xx+1, i+1, "·")
+					ctx.draw_text(view.x+xx+1, i+1, "·")
 					ctx.reset_color()
 					xx += 1
 				}
 				else {
-					ctx.draw_text(xx+1, i+1, c.ascii_str())
+					ctx.draw_text(view.x+xx+1, i+1, c.ascii_str())
 					xx += 1
 				}
 			}
