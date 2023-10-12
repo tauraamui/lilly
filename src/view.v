@@ -523,7 +523,14 @@ fn (mut view View) jump_cursor_up_to_next_blank_line() {
 }
 
 fn (mut view View) jump_cursor_down_to_next_blank_line() {
+	view.clamp_cursor_within_document_bounds()
+	if view.lines.len == 0 { return }
+	if view.cursor.pos.y == view.lines.len { return }
 
+	for i := view.cursor.pos.y; i < view.lines.len; i++ {
+		if i == view.cursor.pos.y { continue }
+		if view.lines[i].len == 0 { view.move_cursor_down(i - view.cursor.pos.y); break }
+	}
 }
 
 fn get_clean_words(line string) []string {
