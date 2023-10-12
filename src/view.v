@@ -276,7 +276,7 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 		ctx.reset_bg_color()
 		mut line_cpy := line
 		ctx.set_color(r: 117, g: 118, b: 120)
-		ctx.draw_text(1, i+1, "${view.from+i+1}")
+		ctx.draw_text(1, i+1, "${view.from+i}")
 		ctx.reset_color()
 		if i == cursor_screen_space_y { ctx.set_bg_color(r: 53, g: 53, b: 53) }
 		if !view.show_whitespace {
