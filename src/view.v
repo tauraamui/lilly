@@ -496,45 +496,17 @@ fn (mut view View) l() {
 }
 
 fn (mut view View) j() {
-	view.move_cursor_down(1)
-	view.clamp_cursor_x_pos()
-	/*
 	defer { view.jump_count = "" }
 	count := strconv.atoi(view.jump_count) or { 1 }
-	view.cursor.pos.y += count
-	if view.cursor.pos.y > view.height - 1 {
-		difference := view.cursor.pos.y - view.height
-		view.log.debug("DIFF: ${difference}")
-		view.log.flush()
-		view.from += difference
-		view.cursor.pos.y = view.height - 1
-	}
-
-	// line length pinning
-	line_len := view.lines[view.from+view.cursor.pos.y].len
-	if line_len == 0 { view.cursor.pos.x = 0; return }
-	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
-	*/
+	view.move_cursor_down(count)
+	view.clamp_cursor_x_pos()
 }
 
 fn (mut view View) k() {
-	view.move_cursor_up(1)
-	view.clamp_cursor_x_pos()
-	/*
 	defer { view.jump_count = "" }
 	count := strconv.atoi(view.jump_count) or { 1 }
-	view.cursor.pos.y -= count
-	if view.cursor.pos.y < 0 {
-		view.cursor.pos.y = 0
-		view.from -= count
-		if view.from < 0 { view.from = 0 }
-	}
-
-	// line length pinning
-	line_len := view.lines[view.from+view.cursor.pos.y].len
-	if line_len == 0 { view.cursor.pos.x = 0; return }
-	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
-	*/
+	view.move_cursor_up(count)
+	view.clamp_cursor_x_pos()
 }
 
 fn get_clean_words(line string) []string {
