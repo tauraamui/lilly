@@ -87,7 +87,7 @@ fn main() {
 	app.views << app.new_view()
 	app.update_view()
 
-	app.view.open_file("./src/main.v")
+	app.view.open_file("./src/view.v")
 
     app.tui.run()!
 }
