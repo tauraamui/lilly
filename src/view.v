@@ -104,19 +104,21 @@ fn (mode Mode) str() string {
 
 struct View {
 mut:
-	log             &log.Log
-	mode            Mode
-	lines           []string
-	words           []string
-	cursor          Cursor
-	cmd_buf         CmdBuffer
-	jump_count      string
-	x               int
-	width           int
-	height          int
-	from            int
-	to              int
-	show_whitespace bool
+	log                      &log.Log
+	mode                     Mode
+	lines                    []string
+	words                    []string
+	cursor                   Cursor
+	cmd_buf                  CmdBuffer
+	jump_count               string
+	x                        int
+	width                    int
+	height                   int
+	from                     int
+	to                       int
+	show_whitespace          bool
+	left_bracket_press_count int
+	right_bracket_press_count int
 }
 
 struct CmdBuffer {
@@ -368,8 +370,11 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.j { view.j() }
 				.k { view.k() }
 				.i { view.i() }
+				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
+				.right_curly_bracket { view.jump_cursor_down_to_next_blank_line() }
 				.colon { view.cmd() }
-				.left_square_bracket { if e.modifiers == .ctrl { view.escape() } }
+				.left_square_bracket { view.right_bracket_press_count = 0; view.left_bracket_press_count += 1; if view.left_bracket_press_count >= 2 { view.move_cursor_up(view.cursor.pos.y); view.left_bracket_press_count = 0 } }
+				.right_square_bracket {view.left_bracket_press_count = 0; view.right_bracket_press_count += 1; if view.right_bracket_press_count >= 2 { view.move_cursor_down(view.lines.len - view.cursor.pos.y); view.right_bracket_press_count = 0 } }
 				.escape { view.escape() }
 				.enter {
 					if view.mode == .command {
@@ -507,6 +512,28 @@ fn (mut view View) k() {
 	count := strconv.atoi(view.jump_count) or { 1 }
 	view.move_cursor_up(count)
 	view.clamp_cursor_x_pos()
+}
+
+fn (mut view View) jump_cursor_up_to_next_blank_line() {
+	view.clamp_cursor_within_document_bounds()
+	if view.cursor.pos.y == 0 { return }
+	if view.lines.len == 0 { return }
+
+	for i := view.cursor.pos.y; i > 0; i-- {
+		if i == view.cursor.pos.y { continue }
+		if view.lines[i].len == 0 { view.move_cursor_up(view.cursor.pos.y - i); break }
+	}
+}
+
+fn (mut view View) jump_cursor_down_to_next_blank_line() {
+	view.clamp_cursor_within_document_bounds()
+	if view.lines.len == 0 { return }
+	if view.cursor.pos.y == view.lines.len { return }
+
+	for i := view.cursor.pos.y; i < view.lines.len; i++ {
+		if i == view.cursor.pos.y { continue }
+		if view.lines[i].len == 0 { view.move_cursor_down(i - view.cursor.pos.y); break }
+	}
 }
 
 fn get_clean_words(line string) []string {
