@@ -466,10 +466,14 @@ fn (mut view View) i() {
 fn (mut view View) h() {
 	view.cursor.pos.x -= 1
 	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
+
+	line_len := view.lines[view.cursor.pos.y].len
+	if line_len == 0 { view.cursor.pos.x = 0; return }
 }
 
 fn (mut view View) l() {
 	view.cursor.pos.x += 1
+
 	line_len := view.lines[view.cursor.pos.y].len
 	if line_len == 0 { view.cursor.pos.x = 0; return }
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
@@ -477,6 +481,10 @@ fn (mut view View) l() {
 
 fn (mut view View) j() {
 	view.move_cursor_down(1)
+
+	line_len := view.lines[view.cursor.pos.y].len
+	if line_len == 0 { view.cursor.pos.x = 0; return }
+	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
 	/*
 	defer { view.jump_count = "" }
 	count := strconv.atoi(view.jump_count) or { 1 }
@@ -498,6 +506,10 @@ fn (mut view View) j() {
 
 fn (mut view View) k() {
 	view.move_cursor_up(1)
+
+	line_len := view.lines[view.cursor.pos.y].len
+	if line_len == 0 { view.cursor.pos.x = 0; return }
+	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
 	/*
 	defer { view.jump_count = "" }
 	count := strconv.atoi(view.jump_count) or { 1 }
