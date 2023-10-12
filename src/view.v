@@ -368,6 +368,8 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.j { view.j() }
 				.k { view.k() }
 				.i { view.i() }
+				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
+				.right_curly_bracket { view.jump_cursor_down_to_next_blank_line() }
 				.colon { view.cmd() }
 				.left_square_bracket { if e.modifiers == .ctrl { view.escape() } }
 				.escape { view.escape() }
@@ -507,6 +509,14 @@ fn (mut view View) k() {
 	count := strconv.atoi(view.jump_count) or { 1 }
 	view.move_cursor_up(count)
 	view.clamp_cursor_x_pos()
+}
+
+fn (mut view View) jump_cursor_up_to_next_blank_line() {
+
+}
+
+fn (mut view View) jump_cursor_down_to_next_blank_line() {
+
 }
 
 fn get_clean_words(line string) []string {
