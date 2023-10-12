@@ -460,6 +460,12 @@ fn (mut view View) clamp_cursor_within_document_bounds() {
 	if view.cursor.pos.y > view.lines.len - 1 { view.cursor.pos.y = view.lines.len - 1 }
 }
 
+fn (mut view View) clamp_cursor_x_pos() {
+	line_len := view.lines[view.cursor.pos.y].len
+	if line_len == 0 { view.cursor.pos.x = 0; return }
+	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
+}
+
 fn (view View) code_view_height() int { return view.height - 2 }
 
 fn (mut view View) cmd() {
@@ -481,26 +487,17 @@ fn (mut view View) i() {
 
 fn (mut view View) h() {
 	view.cursor.pos.x -= 1
-	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
-
-	line_len := view.lines[view.cursor.pos.y].len
-	if line_len == 0 { view.cursor.pos.x = 0; return }
+	view.clamp_cursor_x_pos()
 }
 
 fn (mut view View) l() {
 	view.cursor.pos.x += 1
-
-	line_len := view.lines[view.cursor.pos.y].len
-	if line_len == 0 { view.cursor.pos.x = 0; return }
-	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
+	view.clamp_cursor_x_pos()
 }
 
 fn (mut view View) j() {
 	view.move_cursor_down(1)
-
-	line_len := view.lines[view.cursor.pos.y].len
-	if line_len == 0 { view.cursor.pos.x = 0; return }
-	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
+	view.clamp_cursor_x_pos()
 	/*
 	defer { view.jump_count = "" }
 	count := strconv.atoi(view.jump_count) or { 1 }
@@ -522,10 +519,7 @@ fn (mut view View) j() {
 
 fn (mut view View) k() {
 	view.move_cursor_up(1)
-
-	line_len := view.lines[view.cursor.pos.y].len
-	if line_len == 0 { view.cursor.pos.x = 0; return }
-	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
+	view.clamp_cursor_x_pos()
 	/*
 	defer { view.jump_count = "" }
 	count := strconv.atoi(view.jump_count) or { 1 }
