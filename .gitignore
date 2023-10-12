@@ -23,3 +23,4 @@ bin/
 *.db
 *.js
 debug.log
+src/src
