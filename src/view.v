@@ -449,8 +449,8 @@ fn (mut view View) scroll_from_and_to() {
 		return
 	}
 
-	if view.cursor.pos.y > view.to {
-		diff := view.cursor.pos.y - view.to
+	if view.cursor.pos.y+1 > view.to {
+		diff := view.cursor.pos.y+1 - view.to
 		view.from += diff
 	}
 }
