@@ -512,7 +512,14 @@ fn (mut view View) k() {
 }
 
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
+	view.clamp_cursor_within_document_bounds()
+	if view.cursor.pos.y == 0 { return }
+	if view.lines.len == 0 { return }
 
+	for i := view.cursor.pos.y; i > 0; i-- {
+		if i == view.cursor.pos.y { continue }
+		if view.lines[i].len == 0 { view.move_cursor_up(view.cursor.pos.y - i); break }
+	}
 }
 
 fn (mut view View) jump_cursor_down_to_next_blank_line() {
