@@ -428,6 +428,7 @@ fn (mut view View) escape() {
 fn (mut view View) move_cursor_up(amount int) {
 	view.cursor.pos.y -= amount
 	view.clamp_cursor_within_document_bounds()
+	view.scroll_from_and_to()
 	view.log.debug("POS Y: ${view.cursor.pos.y}, VIEW TO: ${view.to}")
 	view.log.flush()
 }
@@ -435,8 +436,23 @@ fn (mut view View) move_cursor_up(amount int) {
 fn (mut view View) move_cursor_down(amount int) {
 	view.cursor.pos.y += amount
 	view.clamp_cursor_within_document_bounds()
+	view.scroll_from_and_to()
 	view.log.debug("POS Y: ${view.cursor.pos.y}, VIEW TO: ${view.to}")
 	view.log.flush()
+}
+
+fn (mut view View) scroll_from_and_to() {
+	if view.cursor.pos.y < view.from {
+		diff := view.from - view.cursor.pos.y
+		view.from -= diff
+		if view.from < 0 { view.from = 0 }
+		return
+	}
+
+	if view.cursor.pos.y > view.to {
+		diff := view.cursor.pos.y - view.to
+		view.from += diff
+	}
 }
 
 fn (mut view View) clamp_cursor_within_document_bounds() {
