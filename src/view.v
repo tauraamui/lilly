@@ -540,35 +540,25 @@ fn (mut view View) w() {
 }
 
 fn (mut view View) e() {
+	defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
-	if line.len == 0 { return }
-	if view.cursor.pos.x == line.len { return }
 
-	mut started_on_alpha := false
-	mut found_change_point := 0
+	mut next_whitespace := 0
 	for i, c in line[view.cursor.pos.x..] {
-		if i == 0 { started_on_alpha = is_alpha_underscore(c) }
-
-		if started_on_alpha && is_alpha_underscore(c) { continue }
-		if !started_on_alpha && !is_alpha_underscore(c) { continue }
-
-		found_change_point += i
-
-		break
+		if is_whitespace(c) { next_whitespace = i; break }
 	}
 
-	if found_change_point == 1 {
-		for i, c in line[view.cursor.pos.x+found_change_point..] {
-			if started_on_alpha && is_alpha_underscore(c) { continue }
-			if !started_on_alpha && !is_alpha_underscore(c) { continue }
-
-			found_change_point += i
-
-			break
-		}
+	mut next_alpha := 0
+	for i, c in line[view.cursor.pos.x+next_whitespace..] {
+		if !is_whitespace(c) { next_alpha = i; break }
 	}
-	view.cursor.pos.x += found_change_point
-	view.clamp_cursor_x_pos()
+
+	mut next_trailing_whitespace := 0
+	for i, c in line[view.cursor.pos.x+next_whitespace+next_alpha..] {
+		if is_whitespace(c) { next_trailing_whitespace = i; break }
+	}
+
+	view.cursor.pos.x += next_whitespace + next_alpha + next_trailing_whitespace - 1
 }
 
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
