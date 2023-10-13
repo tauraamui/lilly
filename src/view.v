@@ -279,7 +279,7 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 		mut line_cpy := line
 		ctx.set_color(r: 117, g: 118, b: 120)
 		line_num_str := "${view.from+y}"
-		ctx.draw_text(1, y+1, line_num_str)
+		ctx.draw_text(view.x - line_num_str.len - 1, y+1, line_num_str)
 		ctx.reset_color()
 		if y == cursor_screen_space_y { ctx.set_bg_color(r: 53, g: 53, b: 53) }
 		if !view.show_whitespace {
@@ -435,16 +435,12 @@ fn (mut view View) move_cursor_up(amount int) {
 	view.cursor.pos.y -= amount
 	view.clamp_cursor_within_document_bounds()
 	view.scroll_from_and_to()
-	view.log.debug("POS Y: ${view.cursor.pos.y}, VIEW TO: ${view.to}")
-	view.log.flush()
 }
 
 fn (mut view View) move_cursor_down(amount int) {
 	view.cursor.pos.y += amount
 	view.clamp_cursor_within_document_bounds()
 	view.scroll_from_and_to()
-	view.log.debug("POS Y: ${view.cursor.pos.y}, VIEW TO: ${view.to}")
-	view.log.flush()
 }
 
 fn (mut view View) scroll_from_and_to() {
