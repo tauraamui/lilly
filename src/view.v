@@ -162,6 +162,7 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View) {
 		else { false }
 	}
 	if success {
+		if cmd_buf.cmd_history.last() or { "" } == cmd_buf.line { return }
 		cmd_buf.cmd_history.push(cmd_buf.line)
 		return
 	}
