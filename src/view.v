@@ -236,7 +236,7 @@ fn (mut view View) open_file(path string) {
 
 fn (mut view View) draw(mut ctx tui.Context) {
 	view.height = ctx.window_height
-	view.x = 5
+	view.x = "${view.lines.len}".len + 1
 	view.width = ctx.window_width
 	view.width -= view.x
 
@@ -279,7 +279,7 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 		mut line_cpy := line
 		ctx.set_color(r: 117, g: 118, b: 120)
 		line_num_str := "${view.from+y}"
-		ctx.draw_text(view.x - line_num_str.len - 1, y+1, line_num_str)
+		ctx.draw_text(view.x - line_num_str.len, y+1, line_num_str)
 		ctx.reset_color()
 		if y == cursor_screen_space_y { ctx.set_bg_color(r: 53, g: 53, b: 53) }
 		if !view.show_whitespace {
