@@ -553,11 +553,7 @@ fn calc_e_move_amount(cursor_pos Pos, line string) int {
 		if is_whitespace(c) { next_whitespace = i; break }
 	}
 
-	mut next_alpha := 0
-	for i, c in line[cursor_pos.x+next_whitespace..] {
-		if !is_whitespace(c) { next_alpha = i; break }
-	}
-	return next_whitespace + next_alpha
+	return next_whitespace - 1
 }
 
 fn (mut view View) jump_cursor_up_to_next_blank_line() {

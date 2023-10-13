@@ -49,8 +49,8 @@ fn test_calc_e_move_amount_code_line() {
 	fake_line := "fn (mut view View) w() {"
 	mut fake_cursor_pos := Pos{ x: 0 }
 
-	mut amount := calc_w_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 2
+	mut amount := calc_e_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 1
 	fake_cursor_pos.x += amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "n"
 }
