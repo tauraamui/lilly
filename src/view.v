@@ -542,25 +542,22 @@ fn calc_w_move_amount(cursor_pos Pos, line string) int {
 }
 
 fn (mut view View) e() {
-	defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
+	view.cursor.pos.x += calc_e_move_amount(view.cursor.pos, line)
+	view.clamp_cursor_x_pos()
+}
 
+fn calc_e_move_amount(cursor_pos Pos, line string) int {
 	mut next_whitespace := 0
-	for i, c in line[view.cursor.pos.x..] {
+	for i, c in line[cursor_pos.x..] {
 		if is_whitespace(c) { next_whitespace = i; break }
 	}
 
 	mut next_alpha := 0
-	for i, c in line[view.cursor.pos.x+next_whitespace..] {
+	for i, c in line[cursor_pos.x+next_whitespace..] {
 		if !is_whitespace(c) { next_alpha = i; break }
 	}
-
-	mut next_trailing_whitespace := 0
-	for i, c in line[view.cursor.pos.x+next_whitespace+next_alpha..] {
-		if is_whitespace(c) { next_trailing_whitespace = i; break }
-	}
-
-	view.cursor.pos.x += next_whitespace + next_alpha + next_trailing_whitespace - 1
+	return next_whitespace + next_alpha
 }
 
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
