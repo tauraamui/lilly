@@ -274,21 +274,22 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
 	if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
 	ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width - 1, cursor_screen_space_y+1)
-	for i, line in view.lines[view.from..to] {
+	for y, line in view.lines[view.from..to] {
 		ctx.reset_bg_color()
 		mut line_cpy := line
 		ctx.set_color(r: 117, g: 118, b: 120)
-		ctx.draw_text(1, i+1, "${view.from+i}")
+		line_num_str := "${view.from+y}"
+		ctx.draw_text(1, y+1, line_num_str)
 		ctx.reset_color()
-		if i == cursor_screen_space_y { ctx.set_bg_color(r: 53, g: 53, b: 53) }
+		if y == cursor_screen_space_y { ctx.set_bg_color(r: 53, g: 53, b: 53) }
 		if !view.show_whitespace {
 			line_cpy = line_cpy.replace("\t", " ".repeat(4))
 			mut max_width := view.width
 			if max_width > line_cpy.len { max_width = line_cpy.len }
-			ctx.draw_text(view.x+1, i+1, line_cpy[..max_width])
+			ctx.draw_text(view.x+1, y+1, line_cpy[..max_width])
 			continue
 		}
-		view.draw_line_show_whitespace(mut ctx, i, line_cpy)
+		view.draw_line_show_whitespace(mut ctx, y, line_cpy)
 	}
 }
 
@@ -469,6 +470,7 @@ fn (mut view View) clamp_cursor_x_pos() {
 	line_len := view.lines[view.cursor.pos.y].len
 	if line_len == 0 { view.cursor.pos.x = 0; return }
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
+	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
 }
 
 fn (view View) code_view_height() int { return view.height - 2 }
