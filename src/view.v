@@ -373,8 +373,8 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
 				.right_curly_bracket { view.jump_cursor_down_to_next_blank_line() }
 				.colon { view.cmd() }
-				.left_square_bracket { view.right_bracket_press_count = 0; view.left_bracket_press_count += 1; if view.left_bracket_press_count >= 2 { view.move_cursor_up(view.cursor.pos.y); view.left_bracket_press_count = 0 } }
-				.right_square_bracket {view.left_bracket_press_count = 0; view.right_bracket_press_count += 1; if view.right_bracket_press_count >= 2 { view.move_cursor_down(view.lines.len - view.cursor.pos.y); view.right_bracket_press_count = 0 } }
+				.left_square_bracket { view.left_square_bracket() }
+				.right_square_bracket { view.right_square_bracket() }
 				.escape { view.escape() }
 				.enter {
 					if view.mode == .command {
@@ -486,10 +486,6 @@ fn (mut view View) exec_cmd() bool {
 	}
 }
 
-fn (mut view View) i() {
-	view.mode = .insert
-}
-
 fn (mut view View) h() {
 	view.cursor.pos.x -= 1
 	view.clamp_cursor_x_pos()
@@ -514,6 +510,10 @@ fn (mut view View) k() {
 	view.clamp_cursor_x_pos()
 }
 
+fn (mut view View) i() {
+	view.mode = .insert
+}
+
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
 	view.clamp_cursor_within_document_bounds()
 	if view.cursor.pos.y == 0 { return }
@@ -533,6 +533,26 @@ fn (mut view View) jump_cursor_down_to_next_blank_line() {
 	for i := view.cursor.pos.y; i < view.lines.len; i++ {
 		if i == view.cursor.pos.y { continue }
 		if view.lines[i].len == 0 { view.move_cursor_down(i - view.cursor.pos.y); break }
+	}
+}
+
+fn (mut view View) left_square_bracket() {
+	view.right_bracket_press_count = 0
+	view.left_bracket_press_count += 1
+
+	if view.left_bracket_press_count >= 2 {
+		view.move_cursor_up(view.cursor.pos.y);
+		view.left_bracket_press_count = 0
+	}
+}
+
+fn (mut view View) right_square_bracket() {
+	view.left_bracket_press_count = 0
+	view.right_bracket_press_count += 1
+
+	if view.right_bracket_press_count >= 2 {
+		view.move_cursor_down(view.lines.len - view.cursor.pos.y)
+		view.right_bracket_press_count = 0
 	}
 }
 
