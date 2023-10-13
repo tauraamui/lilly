@@ -106,8 +106,7 @@ struct View {
 mut:
 	log                      &log.Log
 	mode                     Mode
-	lines                    []string
-	words                    []string
+	buffer                   Buffer
 	cursor                   Cursor
 	cmd_buf                  CmdBuffer
 	jump_count               string
@@ -119,6 +118,11 @@ mut:
 	show_whitespace          bool
 	left_bracket_press_count int
 	right_bracket_press_count int
+}
+
+struct Buffer {
+mut:
+	lines []string
 }
 
 struct CmdBuffer {
@@ -215,11 +219,12 @@ fn (app &App) new_view() View {
 }
 
 fn (mut view View) open_file(path string) {
-	view.lines = os.read_lines(path) or { []string{} }
+	view.buffer.lines = os.read_lines(path) or { []string{} }
 	// get words map
-	if view.lines.len < 1000 {
+	/*
+	if view.buffer.lines.len < 1000 {
 		println('getting words')
-		for line in view.lines {
+		for line in view.buffer.lines {
 			words := get_clean_words(line)
 			for word in words {
 				if word !in view.words {
@@ -228,22 +233,23 @@ fn (mut view View) open_file(path string) {
 			}
 		}
 	}
+	*/
 	// empty file, handle it
-	if view.lines.len == 0 {
-		view.lines << ''
+	if view.buffer.lines.len == 0 {
+		view.buffer.lines << ''
 	}
 }
 
 fn (mut view View) draw(mut ctx tui.Context) {
 	view.height = ctx.window_height
-	view.x = "${view.lines.len}".len + 1
+	view.x = "${view.buffer.lines.len}".len + 1
 	view.width = ctx.window_width
 	view.width -= view.x
 
 	view.draw_document(mut ctx)
 
 	ctx.set_bg_color(r: 230, g: 230, b: 230)
-	cursor_line := view.lines[view.cursor.pos.y]
+	cursor_line := view.buffer.lines[view.cursor.pos.y]
 	mut offset := 0
 	mut scanto := view.cursor.pos.x
 	if scanto + 1 > cursor_line.len { scanto = cursor_line.len - 1 }
@@ -267,14 +273,14 @@ fn (mut view View) draw(mut ctx tui.Context) {
 
 fn (mut view View) draw_document(mut ctx tui.Context) {
 	mut to := view.from + view.code_view_height()
-	if to > view.lines.len { to = view.lines.len }
+	if to > view.buffer.lines.len { to = view.buffer.lines.len }
 	view.to = to
 	ctx.set_bg_color(r: 53, g: 53, b: 53)
 
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
 	if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
 	ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width - 1, cursor_screen_space_y+1)
-	for y, line in view.lines[view.from..to] {
+	for y, line in view.buffer.lines[view.from..to] {
 		ctx.reset_bg_color()
 		mut line_cpy := line
 		ctx.set_color(r: 117, g: 118, b: 120)
@@ -459,11 +465,11 @@ fn (mut view View) scroll_from_and_to() {
 
 fn (mut view View) clamp_cursor_within_document_bounds() {
 	if view.cursor.pos.y < 0 { view.cursor.pos.y = 0}
-	if view.cursor.pos.y > view.lines.len - 1 { view.cursor.pos.y = view.lines.len - 1 }
+	if view.cursor.pos.y > view.buffer.lines.len - 1 { view.cursor.pos.y = view.buffer.lines.len - 1 }
 }
 
 fn (mut view View) clamp_cursor_x_pos() {
-	line_len := view.lines[view.cursor.pos.y].len
+	line_len := view.buffer.lines[view.cursor.pos.y].len
 	if line_len == 0 { view.cursor.pos.x = 0; return }
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
 	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
@@ -515,22 +521,22 @@ fn (mut view View) i() {
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
 	view.clamp_cursor_within_document_bounds()
 	if view.cursor.pos.y == 0 { return }
-	if view.lines.len == 0 { return }
+	if view.buffer.lines.len == 0 { return }
 
 	for i := view.cursor.pos.y; i > 0; i-- {
 		if i == view.cursor.pos.y { continue }
-		if view.lines[i].len == 0 { view.move_cursor_up(view.cursor.pos.y - i); break }
+		if view.buffer.lines[i].len == 0 { view.move_cursor_up(view.cursor.pos.y - i); break }
 	}
 }
 
 fn (mut view View) jump_cursor_down_to_next_blank_line() {
 	view.clamp_cursor_within_document_bounds()
-	if view.lines.len == 0 { return }
-	if view.cursor.pos.y == view.lines.len { return }
+	if view.buffer.lines.len == 0 { return }
+	if view.cursor.pos.y == view.buffer.lines.len { return }
 
-	for i := view.cursor.pos.y; i < view.lines.len; i++ {
+	for i := view.cursor.pos.y; i < view.buffer.lines.len; i++ {
 		if i == view.cursor.pos.y { continue }
-		if view.lines[i].len == 0 { view.move_cursor_down(i - view.cursor.pos.y); break }
+		if view.buffer.lines[i].len == 0 { view.move_cursor_down(i - view.cursor.pos.y); break }
 	}
 }
 
@@ -549,7 +555,7 @@ fn (mut view View) right_square_bracket() {
 	view.right_bracket_press_count += 1
 
 	if view.right_bracket_press_count >= 2 {
-		view.move_cursor_down(view.lines.len - view.cursor.pos.y)
+		view.move_cursor_down(view.buffer.lines.len - view.cursor.pos.y)
 		view.right_bracket_press_count = 0
 	}
 }
