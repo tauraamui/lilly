@@ -109,7 +109,7 @@ mut:
 	buffer                   Buffer
 	cursor                   Cursor
 	cmd_buf                  CmdBuffer
-	jump_count               string
+	repeat_amount               string
 	x                        int
 	width                    int
 	height                   int
@@ -269,7 +269,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	view.mode.draw(mut ctx)
 	view.cmd_buf.draw(mut ctx, view.mode == .command)
 
-	ctx.draw_text(ctx.window_width-view.jump_count.len, ctx.window_height, view.jump_count)
+	ctx.draw_text(ctx.window_width-view.repeat_amount.len, ctx.window_height, view.repeat_amount)
 }
 
 fn (mut view View) draw_document(mut ctx tui.Context) {
@@ -378,6 +378,9 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.j { view.j() }
 				.k { view.k() }
 				.i { view.i() }
+				.e { view.e() } // TODO:(tauraamui) -> implement
+				.w { view.w() } // TODO:(tauraamui) -> implement
+				// .b { view.b() } // TODO:(tauraamui) -> implement
 				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
 				.right_curly_bracket { view.jump_cursor_down_to_next_blank_line() }
 				.colon { view.cmd() }
@@ -391,7 +394,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 					}
 				}
 				48...57 { // 0-9a
-					view.jump_count = "${view.jump_count}${e.ascii.ascii_str()}"
+					view.repeat_amount = "${view.repeat_amount}${e.ascii.ascii_str()}"
 				}
 				else {}
 			}
@@ -434,7 +437,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 
 fn (mut view View) escape() {
 	view.mode = .normal
-	view.jump_count = ""
+	view.repeat_amount = ""
 	view.cmd_buf.clear()
 }
 
@@ -502,21 +505,70 @@ fn (mut view View) l() {
 }
 
 fn (mut view View) j() {
-	defer { view.jump_count = "" }
-	count := strconv.atoi(view.jump_count) or { 1 }
+	defer { view.repeat_amount = "" }
+	count := strconv.atoi(view.repeat_amount) or { 1 }
 	view.move_cursor_down(count)
 	view.clamp_cursor_x_pos()
 }
 
 fn (mut view View) k() {
-	defer { view.jump_count = "" }
-	count := strconv.atoi(view.jump_count) or { 1 }
+	defer { view.repeat_amount = "" }
+	count := strconv.atoi(view.repeat_amount) or { 1 }
 	view.move_cursor_up(count)
 	view.clamp_cursor_x_pos()
 }
 
 fn (mut view View) i() {
 	view.mode = .insert
+}
+
+fn (mut view View) w() {
+	line := view.buffer.lines[view.cursor.pos.y]
+
+	mut next_whitespace := 0
+	for i, c in line[view.cursor.pos.x..] {
+		if is_whitespace(c) { next_whitespace = i; break }
+	}
+
+	mut next_alpha := 0
+	for i, c in line[view.cursor.pos.x+next_whitespace..] {
+		if !is_whitespace(c) { next_alpha = i; break }
+	}
+
+	view.cursor.pos.x += next_whitespace + next_alpha
+	view.clamp_cursor_x_pos()
+}
+
+fn (mut view View) e() {
+	line := view.buffer.lines[view.cursor.pos.y]
+	if line.len == 0 { return }
+	if view.cursor.pos.x == line.len { return }
+
+	mut started_on_alpha := false
+	mut found_change_point := 0
+	for i, c in line[view.cursor.pos.x..] {
+		if i == 0 { started_on_alpha = is_alpha_underscore(c) }
+
+		if started_on_alpha && is_alpha_underscore(c) { continue }
+		if !started_on_alpha && !is_alpha_underscore(c) { continue }
+
+		found_change_point += i
+
+		break
+	}
+
+	if found_change_point == 1 {
+		for i, c in line[view.cursor.pos.x+found_change_point..] {
+			if started_on_alpha && is_alpha_underscore(c) { continue }
+			if !started_on_alpha && !is_alpha_underscore(c) { continue }
+
+			found_change_point += i
+
+			break
+		}
+	}
+	view.cursor.pos.x += found_change_point
+	view.clamp_cursor_x_pos()
 }
 
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
