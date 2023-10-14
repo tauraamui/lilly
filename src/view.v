@@ -529,6 +529,7 @@ fn (mut view View) w() {
 }
 
 fn calc_w_move_amount(cursor_pos Pos, line string) int {
+	if line.len == 0 { return 0 }
 	mut next_whitespace := 0
 	for i, c in line[cursor_pos.x..] {
 		if is_whitespace(c) { next_whitespace = i; break }
@@ -548,12 +549,7 @@ fn (mut view View) e() {
 }
 
 fn calc_e_move_amount(cursor_pos Pos, line string) int {
-	mut next_whitespace := 0
-	for i, c in line[cursor_pos.x..] {
-		if is_whitespace(c) { next_whitespace = i; break }
-	}
-
-	return next_whitespace - 1
+	return 0
 }
 
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
