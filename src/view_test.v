@@ -55,17 +55,17 @@ fn test_calc_e_move_amount_code_line() {
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "n"
 
 	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 2
-	fake_cursor_pos.x += amount
-	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
-
-	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 3
+	assert amount == 5
 	fake_cursor_pos.x += amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "t"
 
 	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 2
+	assert amount == 6
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "w"
+
+	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 6
 	fake_cursor_pos.x += amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "w"
 }

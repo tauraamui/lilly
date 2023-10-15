@@ -549,31 +549,9 @@ fn (mut view View) e() {
 }
 
 fn calc_e_move_amount(cursor_pos Pos, line string) int {
-	found_change, contiguous_same := scan_to_change(cursor_pos.x, line)
-	if contiguous_same > 0 { return found_change - 1 }
-	return found_change
-}
+	if line.len == 0 { return 0 }
 
-fn scan_to_change(x int, line string) (int, int) {
-	if line.len == 0 { return 0, 0 }
-	started_on_whitespace := is_whitespace(line[0])
-
-	mut contiguous_same := 0
-	mut found_change := 0
-	for i, c in line[x..] {
-		if started_on_whitespace && !is_whitespace(c) {
-			found_change = i
-			break
-		}
-
-		if !started_on_whitespace && is_whitespace(c) {
-			found_change = i
-			break
-		}
-
-		contiguous_same += 1
-	}
-	return found_change, contiguous_same
+    return 0
 }
 
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
