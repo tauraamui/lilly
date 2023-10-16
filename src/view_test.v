@@ -45,13 +45,13 @@ fn test_calc_w_move_amount_indented_code_line() {
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "i"
 }
 
-fn test_calc_e_move_amount_code_word_with_leading_whitespace() {
+fn test_calc_e_move_amount_word_with_leading_whitespace() {
 	fake_line := "    this"
 	mut fake_cursor_pos := Pos{ x: 0 }
 
 	mut amount := calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 4
+	assert amount == 7
 	fake_cursor_pos.x += amount
-	assert fake_line[fake_cursor_pos.x].ascii_str() == "t"
-
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "s"
 }
+
