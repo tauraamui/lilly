@@ -551,43 +551,45 @@ fn (mut view View) e() {
 fn calc_e_move_amount(cursor_pos Pos, line string) int {
     if line.len == 0 { return 0 }
 
-	if !is_alpha_underscore(line[cursor_pos.x]) {
+	if is_whitespace(line[cursor_pos.x]) {
 		mut word_start_offset := 0
 		for i, c in line[cursor_pos.x..] {
-			if is_alpha_underscore(c) { word_start_offset = i; break }
+			if !is_whitespace(c) { word_start_offset = i; break }
 			if cursor_pos.x + i == line.len - 1 { word_start_offset = i; break }
 		}
 
 		mut word_end_offset := 0
 		for i, c in line[cursor_pos.x+word_start_offset..] {
-			if !is_alpha_underscore(c) { word_end_offset = i - 1; break }
+			if is_whitespace(c) { word_end_offset = i - 1; break }
 			if cursor_pos.x + word_start_offset + i == line.len - 1 { word_end_offset = i; break }
 		}
 
 		return word_start_offset + word_end_offset
 	}
 
-	if is_alpha_underscore(line[cursor_pos.x]) {
+	if !is_whitespace(line[cursor_pos.x]) {
 		mut word_start_offset := 0
 		mut word_end_offset := 0
 		for i, c in line[cursor_pos.x..] {
-			if !is_alpha_underscore(c) { word_end_offset = i - 1; break }
+			if is_whitespace(c) { word_end_offset = i - 1; break }
 		}
 
 		// already at end of a word, find the start of next word
 		if word_end_offset == 0 {
 			for i, c in line[cursor_pos.x..] {
-				if i > 0 && is_alpha_underscore(c) { word_start_offset = i; break }
+				if i > 0 && !is_whitespace(c) { word_start_offset = i; break }
 			}
 
 			word_end_offset = 0
 			for i, c in line[cursor_pos.x+word_start_offset..] {
-				if !is_alpha_underscore(c) { word_end_offset = i - 1; break }
+				if is_whitespace(c) { word_end_offset = i - 1; break }
 				if cursor_pos.x + word_start_offset + i == line.len - 1 { word_end_offset = i; break }
 			}
 
 			return word_start_offset + word_end_offset
 		}
+
+		return word_end_offset
 	}
 
 	return 0
