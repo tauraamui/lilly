@@ -548,6 +548,7 @@ fn (mut view View) e() {
 	view.clamp_cursor_x_pos()
 }
 
+/*
 fn calc_e_move_amount(cursor_pos Pos, line string) int {
 	if line.len == 0 { return 0 }
 
@@ -561,6 +562,35 @@ fn calc_e_move_amount(cursor_pos Pos, line string) int {
 	if contiguous_alphas > 1 { return scan_end - 1 }
 
 	return 0
+}
+*/
+
+fn calc_e_move_amount(cursor_pos Pos, line string) int {
+    if line.len == 0 { return 0 }
+
+	jump_past_whitespace := skip_leading_whitespace(cursor_pos.x, line)
+	scan_start := cursor_pos.x + jump_past_whitespace
+
+	return find_end_of_word(scan_start, line)
+}
+
+fn skip_leading_whitespace(pos_x int, line string) int {
+	mut scan_end := 0
+	for i, c in line[pos_x..] {
+		if is_alpha_underscore(c) { scan_end = i; break }
+	}
+	return scan_end
+}
+
+fn find_end_of_word(start int, line string) int {
+	mut end := start
+	mut contiguous_alphas := 0
+	for i, c in line[start..] {
+		if !is_alpha_underscore(c) { end += i; break }
+		contiguous_alphas += 1
+	}
+	if contiguous_alphas > 1 { return end - 1 }
+	return end - 1
 }
 
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
