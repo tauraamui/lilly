@@ -59,49 +59,6 @@ const (
 	]
 )
 
-enum Mode as u8 {
-	normal
-	visual
-	insert
-	command
-}
-
-fn (mode Mode) draw(mut ctx tui.Context) {
-	label := mode.str()
-	status_line_y := ctx.window_height - 1
-	status_line_x := 1
-	status_color := mode.color()
-	mut offset := 0
-	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, "█")
-	offset += 2
-	paint_text_on_background(mut ctx, status_line_x + offset, status_line_y, status_color, Color{ 0, 0, 0}, label)
-	offset += label.len
-	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, "█")
-	offset += 2
-	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, Color{ 25, 25, 25 }, "")
-	ctx.set_bg_color(r: 25, g: 25, b: 25)
-	ctx.draw_rect(12, ctx.window_height - 1, ctx.window_width, ctx.window_height - 1)
-	ctx.reset()
-}
-
-fn (mode Mode) color() Color {
-	return match mode {
-		.normal { status_green }
-		.visual { status_lilac }
-		.insert { status_orange }
-		.command { status_cyan }
-	}
-}
-
-fn (mode Mode) str() string {
-	return match mode {
-		.normal  { "NORMAL"  }
-		.visual  { "VISUAL"  }
-		.insert  { "INSERT"  }
-		.command { "COMMAND" }
-	}
-}
-
 struct View {
 mut:
 	log                      &log.Log
@@ -109,7 +66,7 @@ mut:
 	buffer                   Buffer
 	cursor                   Cursor
 	cmd_buf                  CmdBuffer
-	repeat_amount               string
+	repeat_amount            string
 	x                        int
 	width                    int
 	height                   int
@@ -266,7 +223,8 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
 	ctx.draw_point(view.x+offset, cursor_screen_space_y+1)
 
-	view.mode.draw(mut ctx)
+	draw_status_line(mut ctx, Status{ view.mode, view.cursor.pos.x, view.cursor.pos.y, "view.v" })
+	// view.mode.draw(mut ctx)
 	view.cmd_buf.draw(mut ctx, view.mode == .command)
 
 	ctx.draw_text(ctx.window_width-view.repeat_amount.len, ctx.window_height, view.repeat_amount)
