@@ -142,3 +142,19 @@ fn test_calc_e_move_amount_multiple_words_with_leading_whitespace() {
 	fake_cursor_pos.x += amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "r"
 }
+
+fn test_calc_b_move_amount_code_line() {
+	fake_line := "status_green            = Color { 145, 237, 145 }"
+
+	mut fake_cursor_pos := Pos{ x: 42 }
+
+	mut amount := calc_b_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 3
+	fake_cursor_pos.x -= amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "2"
+
+	amount = calc_b_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 5
+	fake_cursor_pos.x -= amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "1"
+}

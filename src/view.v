@@ -580,6 +580,7 @@ fn calc_e_move_amount(cursor_pos Pos, line string) int {
 				if i > 0 && !is_whitespace(c) { word_start_offset = i; break }
 			}
 
+			// find the end of this word
 			word_end_offset = 0
 			for i, c in line[cursor_pos.x+word_start_offset..] {
 				if is_whitespace(c) { word_end_offset = i - 1; break }
@@ -593,6 +594,40 @@ fn calc_e_move_amount(cursor_pos Pos, line string) int {
 	}
 
 	return 0
+}
+
+fn calc_b_move_amount(cursor_pos Pos, line string) int {
+    if line.len == 0 || cursor_pos.x == 0 { return 0 }
+
+	if !is_whitespace(line[cursor_pos.x]) {
+		mut word_start_offset := 0
+		for i := cursor_pos.x - 1; i > 0; i-- {
+			if is_whitespace(line[i]) { break }
+			word_start_offset += 1
+		}
+
+		// we're already at the start of this word, find the end of the previous word
+		if word_start_offset == 0 {
+			mut word_end_offset := 0
+			for i := cursor_pos.x - 1; i > 0; i-- {
+				if !is_whitespace(line[i]) { break }
+				word_end_offset += 1
+			}
+
+			// first start of this word
+			word_start_offset = 0
+			for i := cursor_pos.x - 1 - word_end_offset; i > 0; i-- {
+				if is_whitespace(line[i]) { break }
+				word_start_offset += 1
+			}
+
+			return word_end_offset + word_start_offset
+		}
+
+		return word_start_offset
+	}
+
+	return -1
 }
 
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
