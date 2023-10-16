@@ -177,4 +177,9 @@ fn test_calc_b_move_amount_code_line() {
 	assert amount == 24
 	fake_cursor_pos.x -= amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "s"
+
+	amount = calc_b_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 0
+	fake_cursor_pos.x -= amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "s"
 }
