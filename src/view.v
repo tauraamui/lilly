@@ -601,7 +601,7 @@ fn calc_b_move_amount(cursor_pos Pos, line string) int {
 
 	if !is_whitespace(line[cursor_pos.x]) {
 		mut word_start_offset := 0
-		for i := cursor_pos.x - 1; i > 0; i-- {
+		for i := cursor_pos.x - 1; i >= 0; i-- {
 			if is_whitespace(line[i]) { break }
 			word_start_offset += 1
 		}
@@ -609,14 +609,14 @@ fn calc_b_move_amount(cursor_pos Pos, line string) int {
 		// we're already at the start of this word, find the end of the previous word
 		if word_start_offset == 0 {
 			mut word_end_offset := 0
-			for i := cursor_pos.x - 1; i > 0; i-- {
+			for i := cursor_pos.x - 1; i >= 0; i-- {
 				if !is_whitespace(line[i]) { break }
 				word_end_offset += 1
 			}
 
 			// first start of this word
 			word_start_offset = 0
-			for i := cursor_pos.x - 1 - word_end_offset; i > 0; i-- {
+			for i := cursor_pos.x - 1 - word_end_offset; i >= 0; i-- {
 				if is_whitespace(line[i]) { break }
 				word_start_offset += 1
 			}
