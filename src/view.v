@@ -378,9 +378,9 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.j { view.j() }
 				.k { view.k() }
 				.i { view.i() }
-				.e { view.e() } // TODO:(tauraamui) -> implement
-				.w { view.w() } // TODO:(tauraamui) -> implement
-				// .b { view.b() } // TODO:(tauraamui) -> implement
+				.e { view.e() }
+				.w { view.w() }
+				.b { view.b() }
 				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
 				.right_curly_bracket { view.jump_cursor_down_to_next_blank_line() }
 				.colon { view.cmd() }
@@ -524,7 +524,29 @@ fn (mut view View) i() {
 
 fn (mut view View) w() {
 	line := view.buffer.lines[view.cursor.pos.y]
+	amount := calc_w_move_amount(view.cursor.pos, line)
+	if amount == 0 { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
 	view.cursor.pos.x += calc_w_move_amount(view.cursor.pos, line)
+	view.clamp_cursor_x_pos()
+}
+
+fn (mut view View) e() {
+	line := view.buffer.lines[view.cursor.pos.y]
+	amount := calc_e_move_amount(view.cursor.pos, line)
+	if amount == 0 { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
+	view.cursor.pos.x += amount
+	view.clamp_cursor_x_pos()
+}
+
+fn (mut view View) b() {
+	line := view.buffer.lines[view.cursor.pos.y]
+	amount := calc_b_move_amount(view.cursor.pos, line)
+	if amount == 0 && view.cursor.pos.y > 0 {
+		view.move_cursor_up(1)
+		view.cursor.pos.x = view.buffer.lines[view.cursor.pos.y].len - 1
+		return
+	}
+	view.cursor.pos.x -= amount
 	view.clamp_cursor_x_pos()
 }
 
@@ -540,12 +562,6 @@ fn calc_w_move_amount(cursor_pos Pos, line string) int {
 		if !is_whitespace(c) { next_alpha = i; break }
 	}
 	return next_whitespace + next_alpha
-}
-
-fn (mut view View) e() {
-	line := view.buffer.lines[view.cursor.pos.y]
-	view.cursor.pos.x += calc_e_move_amount(view.cursor.pos, line)
-	view.clamp_cursor_x_pos()
 }
 
 fn calc_e_move_amount(cursor_pos Pos, line string) int {
