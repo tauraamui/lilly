@@ -238,7 +238,7 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
 	if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
-	ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width - 1, cursor_screen_space_y+1)
+	ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width, cursor_screen_space_y+1)
 	for y, line in view.buffer.lines[view.from..to] {
 		ctx.reset_bg_color()
 		mut line_cpy := line
