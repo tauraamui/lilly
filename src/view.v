@@ -548,61 +548,24 @@ fn (mut view View) e() {
 	view.clamp_cursor_x_pos()
 }
 
-/*
-fn calc_e_move_amount(cursor_pos Pos, line string) int {
-	if line.len == 0 { return 0 }
-
-	mut contiguous_alphas := 0
-	mut scan_end := 0
-	for i, c in line[cursor_pos.x..] {
-		if !is_alpha_underscore(c) { scan_end = i; break }
-		contiguous_alphas += 1
-	}
-
-	if contiguous_alphas > 1 { return scan_end - 1 }
-
-	return 0
-}
-*/
-
 fn calc_e_move_amount(cursor_pos Pos, line string) int {
     if line.len == 0 { return 0 }
-	if cursor_pos.x > line.len { return 0 }
 
-	next_word_start := skip_leading_whitespace(cursor_pos.x, line)
-	println("WORD START: ${next_word_start}")
-	next_word_end := find_word_end(next_word_start, line)
-	println("WORD END: ${next_word_end}")
+	if !is_alpha_underscore(line[cursor_pos.x]) {
+		mut word_start_offset := 0
+		for i, c in line[cursor_pos.x..] {
+			if is_alpha_underscore(c) || cursor_pos.x + i == line.len - 1 { word_start_offset = i; break }
+		}
 
-	return next_word_end - 1
-}
+		mut word_end_offset := 0
+		for i, c in line[cursor_pos.x+word_start_offset..] {
+			if !is_alpha_underscore(c) || cursor_pos.x + word_start_offset + i == line.len - 1 { word_end_offset = i - 1; break }
+		}
 
-fn find_word_end(pos_x int, line string) int {
-	mut len := 0
-	for i, c in line[pos_x..] {
-		if !is_alpha_underscore(c) || i == line.len { break }
-		len += 1
+		return word_start_offset + word_end_offset
 	}
-	return pos_x + len
-}
 
-fn skip_leading_whitespace(pos_x int, line string) int {
-	mut scan_end := 0
-	for i, c in line[pos_x..] {
-		if is_alpha_underscore(c) { scan_end = i; break }
-	}
-	return pos_x + scan_end
-}
-
-fn find_end_of_word(start int, line string) int {
-	mut end := start
-	mut contiguous_alphas := 0
-	for i, c in line[start..] {
-		if !is_alpha_underscore(c) { end += i; break }
-		contiguous_alphas += 1
-	}
-	if contiguous_alphas > 1 { return end - 1 }
-	return end - 1
+	return -1
 }
 
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
