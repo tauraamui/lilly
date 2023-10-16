@@ -627,7 +627,7 @@ fn calc_b_move_amount(cursor_pos Pos, line string) int {
 		return word_start_offset
 	}
 
-	return -1
+	return 0
 }
 
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
