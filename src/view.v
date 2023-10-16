@@ -551,7 +551,16 @@ fn (mut view View) e() {
 fn calc_e_move_amount(cursor_pos Pos, line string) int {
 	if line.len == 0 { return 0 }
 
-    return 0
+	mut contiguous_alphas := 0
+	mut scan_end := 0
+	for i, c in line[cursor_pos.x..] {
+		if !is_alpha_underscore(c) { scan_end = i; break }
+		contiguous_alphas += 1
+	}
+
+	if contiguous_alphas > 1 { return scan_end - 1 }
+
+	return 0
 }
 
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
