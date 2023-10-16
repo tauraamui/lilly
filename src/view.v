@@ -106,11 +106,10 @@ struct View {
 mut:
 	log                      &log.Log
 	mode                     Mode
-	lines                    []string
-	words                    []string
+	buffer                   Buffer
 	cursor                   Cursor
 	cmd_buf                  CmdBuffer
-	jump_count               string
+	repeat_amount               string
 	x                        int
 	width                    int
 	height                   int
@@ -119,6 +118,11 @@ mut:
 	show_whitespace          bool
 	left_bracket_press_count int
 	right_bracket_press_count int
+}
+
+struct Buffer {
+mut:
+	lines []string
 }
 
 struct CmdBuffer {
@@ -158,6 +162,7 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View) {
 		else { false }
 	}
 	if success {
+		if cmd_buf.cmd_history.last() or { "" } == cmd_buf.line { return }
 		cmd_buf.cmd_history.push(cmd_buf.line)
 		return
 	}
@@ -215,11 +220,12 @@ fn (app &App) new_view() View {
 }
 
 fn (mut view View) open_file(path string) {
-	view.lines = os.read_lines(path) or { []string{} }
+	view.buffer.lines = os.read_lines(path) or { []string{} }
 	// get words map
-	if view.lines.len < 1000 {
+	/*
+	if view.buffer.lines.len < 1000 {
 		println('getting words')
-		for line in view.lines {
+		for line in view.buffer.lines {
 			words := get_clean_words(line)
 			for word in words {
 				if word !in view.words {
@@ -228,22 +234,23 @@ fn (mut view View) open_file(path string) {
 			}
 		}
 	}
+	*/
 	// empty file, handle it
-	if view.lines.len == 0 {
-		view.lines << ''
+	if view.buffer.lines.len == 0 {
+		view.buffer.lines << ''
 	}
 }
 
 fn (mut view View) draw(mut ctx tui.Context) {
 	view.height = ctx.window_height
-	view.x = "${view.lines.len}".len + 1
+	view.x = "${view.buffer.lines.len}".len + 1
 	view.width = ctx.window_width
 	view.width -= view.x
 
 	view.draw_document(mut ctx)
 
 	ctx.set_bg_color(r: 230, g: 230, b: 230)
-	cursor_line := view.lines[view.cursor.pos.y]
+	cursor_line := view.buffer.lines[view.cursor.pos.y]
 	mut offset := 0
 	mut scanto := view.cursor.pos.x
 	if scanto + 1 > cursor_line.len { scanto = cursor_line.len - 1 }
@@ -262,19 +269,19 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	view.mode.draw(mut ctx)
 	view.cmd_buf.draw(mut ctx, view.mode == .command)
 
-	ctx.draw_text(ctx.window_width-view.jump_count.len, ctx.window_height, view.jump_count)
+	ctx.draw_text(ctx.window_width-view.repeat_amount.len, ctx.window_height, view.repeat_amount)
 }
 
 fn (mut view View) draw_document(mut ctx tui.Context) {
 	mut to := view.from + view.code_view_height()
-	if to > view.lines.len { to = view.lines.len }
+	if to > view.buffer.lines.len { to = view.buffer.lines.len }
 	view.to = to
 	ctx.set_bg_color(r: 53, g: 53, b: 53)
 
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
 	if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
 	ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width - 1, cursor_screen_space_y+1)
-	for y, line in view.lines[view.from..to] {
+	for y, line in view.buffer.lines[view.from..to] {
 		ctx.reset_bg_color()
 		mut line_cpy := line
 		ctx.set_color(r: 117, g: 118, b: 120)
@@ -371,6 +378,9 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.j { view.j() }
 				.k { view.k() }
 				.i { view.i() }
+				.e { view.e() } // TODO:(tauraamui) -> implement
+				.w { view.w() } // TODO:(tauraamui) -> implement
+				// .b { view.b() } // TODO:(tauraamui) -> implement
 				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
 				.right_curly_bracket { view.jump_cursor_down_to_next_blank_line() }
 				.colon { view.cmd() }
@@ -384,7 +394,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 					}
 				}
 				48...57 { // 0-9a
-					view.jump_count = "${view.jump_count}${e.ascii.ascii_str()}"
+					view.repeat_amount = "${view.repeat_amount}${e.ascii.ascii_str()}"
 				}
 				else {}
 			}
@@ -427,7 +437,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 
 fn (mut view View) escape() {
 	view.mode = .normal
-	view.jump_count = ""
+	view.repeat_amount = ""
 	view.cmd_buf.clear()
 }
 
@@ -459,11 +469,11 @@ fn (mut view View) scroll_from_and_to() {
 
 fn (mut view View) clamp_cursor_within_document_bounds() {
 	if view.cursor.pos.y < 0 { view.cursor.pos.y = 0}
-	if view.cursor.pos.y > view.lines.len - 1 { view.cursor.pos.y = view.lines.len - 1 }
+	if view.cursor.pos.y > view.buffer.lines.len - 1 { view.cursor.pos.y = view.buffer.lines.len - 1 }
 }
 
 fn (mut view View) clamp_cursor_x_pos() {
-	line_len := view.lines[view.cursor.pos.y].len
+	line_len := view.buffer.lines[view.cursor.pos.y].len
 	if line_len == 0 { view.cursor.pos.x = 0; return }
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
 	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
@@ -495,15 +505,15 @@ fn (mut view View) l() {
 }
 
 fn (mut view View) j() {
-	defer { view.jump_count = "" }
-	count := strconv.atoi(view.jump_count) or { 1 }
+	defer { view.repeat_amount = "" }
+	count := strconv.atoi(view.repeat_amount) or { 1 }
 	view.move_cursor_down(count)
 	view.clamp_cursor_x_pos()
 }
 
 fn (mut view View) k() {
-	defer { view.jump_count = "" }
-	count := strconv.atoi(view.jump_count) or { 1 }
+	defer { view.repeat_amount = "" }
+	count := strconv.atoi(view.repeat_amount) or { 1 }
 	view.move_cursor_up(count)
 	view.clamp_cursor_x_pos()
 }
@@ -512,25 +522,133 @@ fn (mut view View) i() {
 	view.mode = .insert
 }
 
+fn (mut view View) w() {
+	line := view.buffer.lines[view.cursor.pos.y]
+	view.cursor.pos.x += calc_w_move_amount(view.cursor.pos, line)
+	view.clamp_cursor_x_pos()
+}
+
+fn calc_w_move_amount(cursor_pos Pos, line string) int {
+	if line.len == 0 { return 0 }
+	mut next_whitespace := 0
+	for i, c in line[cursor_pos.x..] {
+		if is_whitespace(c) { next_whitespace = i; break }
+	}
+
+	mut next_alpha := 0
+	for i, c in line[cursor_pos.x+next_whitespace..] {
+		if !is_whitespace(c) { next_alpha = i; break }
+	}
+	return next_whitespace + next_alpha
+}
+
+fn (mut view View) e() {
+	line := view.buffer.lines[view.cursor.pos.y]
+	view.cursor.pos.x += calc_e_move_amount(view.cursor.pos, line)
+	view.clamp_cursor_x_pos()
+}
+
+fn calc_e_move_amount(cursor_pos Pos, line string) int {
+    if line.len == 0 { return 0 }
+
+	if is_whitespace(line[cursor_pos.x]) {
+		mut word_start_offset := 0
+		for i, c in line[cursor_pos.x..] {
+			if !is_whitespace(c) { word_start_offset = i; break }
+			if cursor_pos.x + i == line.len - 1 { word_start_offset = i; break }
+		}
+
+		mut word_end_offset := 0
+		for i, c in line[cursor_pos.x+word_start_offset..] {
+			if is_whitespace(c) { word_end_offset = i - 1; break }
+			if cursor_pos.x + word_start_offset + i == line.len - 1 { word_end_offset = i; break }
+		}
+
+		return word_start_offset + word_end_offset
+	}
+
+	if !is_whitespace(line[cursor_pos.x]) {
+		mut word_start_offset := 0
+		mut word_end_offset := 0
+		for i, c in line[cursor_pos.x..] {
+			if is_whitespace(c) { word_end_offset = i - 1; break }
+		}
+
+		// already at end of a word, find the start of next word
+		if word_end_offset == 0 {
+			for i, c in line[cursor_pos.x..] {
+				if i > 0 && !is_whitespace(c) { word_start_offset = i; break }
+			}
+
+			// find the end of this word
+			word_end_offset = 0
+			for i, c in line[cursor_pos.x+word_start_offset..] {
+				if is_whitespace(c) { word_end_offset = i - 1; break }
+				if cursor_pos.x + word_start_offset + i == line.len - 1 { word_end_offset = i; break }
+			}
+
+			return word_start_offset + word_end_offset
+		}
+
+		return word_end_offset
+	}
+
+	return 0
+}
+
+fn calc_b_move_amount(cursor_pos Pos, line string) int {
+    if line.len == 0 || cursor_pos.x == 0 { return 0 }
+
+	if !is_whitespace(line[cursor_pos.x]) {
+		mut word_start_offset := 0
+		for i := cursor_pos.x - 1; i >= 0; i-- {
+			if is_whitespace(line[i]) { break }
+			word_start_offset += 1
+		}
+
+		// we're already at the start of this word, find the end of the previous word
+		if word_start_offset == 0 {
+			mut word_end_offset := 0
+			for i := cursor_pos.x - 1; i >= 0; i-- {
+				if !is_whitespace(line[i]) { break }
+				word_end_offset += 1
+			}
+
+			// first start of this word
+			word_start_offset = 0
+			for i := cursor_pos.x - 1 - word_end_offset; i >= 0; i-- {
+				if is_whitespace(line[i]) { break }
+				word_start_offset += 1
+			}
+
+			return word_end_offset + word_start_offset
+		}
+
+		return word_start_offset
+	}
+
+	return 0
+}
+
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
 	view.clamp_cursor_within_document_bounds()
 	if view.cursor.pos.y == 0 { return }
-	if view.lines.len == 0 { return }
+	if view.buffer.lines.len == 0 { return }
 
 	for i := view.cursor.pos.y; i > 0; i-- {
 		if i == view.cursor.pos.y { continue }
-		if view.lines[i].len == 0 { view.move_cursor_up(view.cursor.pos.y - i); break }
+		if view.buffer.lines[i].len == 0 { view.move_cursor_up(view.cursor.pos.y - i); break }
 	}
 }
 
 fn (mut view View) jump_cursor_down_to_next_blank_line() {
 	view.clamp_cursor_within_document_bounds()
-	if view.lines.len == 0 { return }
-	if view.cursor.pos.y == view.lines.len { return }
+	if view.buffer.lines.len == 0 { return }
+	if view.cursor.pos.y == view.buffer.lines.len { return }
 
-	for i := view.cursor.pos.y; i < view.lines.len; i++ {
+	for i := view.cursor.pos.y; i < view.buffer.lines.len; i++ {
 		if i == view.cursor.pos.y { continue }
-		if view.lines[i].len == 0 { view.move_cursor_down(i - view.cursor.pos.y); break }
+		if view.buffer.lines[i].len == 0 { view.move_cursor_down(i - view.cursor.pos.y); break }
 	}
 }
 
@@ -549,7 +667,7 @@ fn (mut view View) right_square_bracket() {
 	view.right_bracket_press_count += 1
 
 	if view.right_bracket_press_count >= 2 {
-		view.move_cursor_down(view.lines.len - view.cursor.pos.y)
+		view.move_cursor_down(view.buffer.lines.len - view.cursor.pos.y)
 		view.right_bracket_press_count = 0
 	}
 }
