@@ -210,9 +210,9 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	cursor_line := view.buffer.lines[view.cursor.pos.y]
 	mut offset := 0
 	mut scanto := view.cursor.pos.x
-	if scanto + 1 > cursor_line.len { scanto = cursor_line.len - 1 }
+	if scanto + 1 > cursor_line.runes().len { scanto = cursor_line.len - 1 }
 
-	for c in cursor_line[..scanto+1] {
+	for c in cursor_line.runes()[..scanto+1] {
 		match c {
 			`\t` { offset += 4 }
 			else { offset += 1 }
@@ -244,13 +244,13 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 		mut line_cpy := line
 		ctx.set_color(r: 117, g: 118, b: 120)
 		line_num_str := "${view.from+y}"
-		ctx.draw_text(view.x - line_num_str.len, y+1, line_num_str)
+		ctx.draw_text(view.x - line_num_str.runes().len, y+1, line_num_str)
 		ctx.reset_color()
 		if y == cursor_screen_space_y { ctx.set_bg_color(r: 53, g: 53, b: 53) }
 		if !view.show_whitespace {
 			line_cpy = line_cpy.replace("\t", " ".repeat(4))
 			mut max_width := view.width
-			if max_width > line_cpy.len { max_width = line_cpy.len }
+			if max_width > line_cpy.runes().len { max_width = line_cpy.len }
 			ctx.draw_text(view.x+1, y+1, line_cpy[..max_width])
 			continue
 		}
@@ -339,6 +339,8 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.e { view.e() }
 				.w { view.w() }
 				.b { view.b() }
+				.caret { view.hat() }
+				.dollar { view.dollar() }
 				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
 				.right_curly_bracket { view.jump_cursor_down_to_next_blank_line() }
 				.colon { view.cmd() }
@@ -431,7 +433,7 @@ fn (mut view View) clamp_cursor_within_document_bounds() {
 }
 
 fn (mut view View) clamp_cursor_x_pos() {
-	line_len := view.buffer.lines[view.cursor.pos.y].len
+	line_len := view.buffer.lines[view.cursor.pos.y].runes().len
 	if line_len == 0 { view.cursor.pos.x = 0; return }
 	if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
 	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
@@ -508,15 +510,24 @@ fn (mut view View) b() {
 	view.clamp_cursor_x_pos()
 }
 
+fn (mut view View) hat() {
+	view.cursor.pos.x = 0
+}
+
+fn (mut view View) dollar() {
+	line := view.buffer.lines[view.cursor.pos.y]
+	view.cursor.pos.x = line.runes().len - 1
+}
+
 fn calc_w_move_amount(cursor_pos Pos, line string) int {
 	if line.len == 0 { return 0 }
 	mut next_whitespace := 0
-	for i, c in line[cursor_pos.x..] {
+	for i, c in line.runes()[cursor_pos.x..] {
 		if is_whitespace(c) { next_whitespace = i; break }
 	}
 
 	mut next_alpha := 0
-	for i, c in line[cursor_pos.x+next_whitespace..] {
+	for i, c in line.runes()[cursor_pos.x+next_whitespace..] {
 		if !is_whitespace(c) { next_alpha = i; break }
 	}
 	return next_whitespace + next_alpha
@@ -527,15 +538,15 @@ fn calc_e_move_amount(cursor_pos Pos, line string) int {
 
 	if is_whitespace(line[cursor_pos.x]) {
 		mut word_start_offset := 0
-		for i, c in line[cursor_pos.x..] {
+		for i, c in line.runes()[cursor_pos.x..] {
 			if !is_whitespace(c) { word_start_offset = i; break }
-			if cursor_pos.x + i == line.len - 1 { word_start_offset = i; break }
+			if cursor_pos.x + i == line.runes().len - 1 { word_start_offset = i; break }
 		}
 
 		mut word_end_offset := 0
-		for i, c in line[cursor_pos.x+word_start_offset..] {
+		for i, c in line.runes()[cursor_pos.x+word_start_offset..] {
 			if is_whitespace(c) { word_end_offset = i - 1; break }
-			if cursor_pos.x + word_start_offset + i == line.len - 1 { word_end_offset = i; break }
+			if cursor_pos.x + word_start_offset + i == line.runes().len - 1 { word_end_offset = i; break }
 		}
 
 		return word_start_offset + word_end_offset
@@ -544,21 +555,21 @@ fn calc_e_move_amount(cursor_pos Pos, line string) int {
 	if !is_whitespace(line[cursor_pos.x]) {
 		mut word_start_offset := 0
 		mut word_end_offset := 0
-		for i, c in line[cursor_pos.x..] {
+		for i, c in line.runes()[cursor_pos.x..] {
 			if is_whitespace(c) { word_end_offset = i - 1; break }
 		}
 
 		// already at end of a word, find the start of next word
 		if word_end_offset == 0 {
-			for i, c in line[cursor_pos.x..] {
+			for i, c in line.runes()[cursor_pos.x..] {
 				if i > 0 && !is_whitespace(c) { word_start_offset = i; break }
 			}
 
 			// find the end of this word
 			word_end_offset = 0
-			for i, c in line[cursor_pos.x+word_start_offset..] {
+			for i, c in line.runes()[cursor_pos.x+word_start_offset..] {
 				if is_whitespace(c) { word_end_offset = i - 1; break }
-				if cursor_pos.x + word_start_offset + i == line.len - 1 { word_end_offset = i; break }
+				if cursor_pos.x + word_start_offset + i == line.runes().len - 1 { word_end_offset = i; break }
 			}
 
 			return word_start_offset + word_end_offset
@@ -573,10 +584,10 @@ fn calc_e_move_amount(cursor_pos Pos, line string) int {
 fn calc_b_move_amount(cursor_pos Pos, line string) int {
     if line.len == 0 || cursor_pos.x == 0 { return 0 }
 
-	if !is_whitespace(line[cursor_pos.x]) {
+	if !is_whitespace(line.runes()[cursor_pos.x]) {
 		mut word_start_offset := 0
 		for i := cursor_pos.x - 1; i >= 0; i-- {
-			if is_whitespace(line[i]) { break }
+			if is_whitespace(line.runes()[i]) { break }
 			word_start_offset += 1
 		}
 
@@ -584,14 +595,14 @@ fn calc_b_move_amount(cursor_pos Pos, line string) int {
 		if word_start_offset == 0 {
 			mut word_end_offset := 0
 			for i := cursor_pos.x - 1; i >= 0; i-- {
-				if !is_whitespace(line[i]) { break }
+				if !is_whitespace(line.runes()[i]) { break }
 				word_end_offset += 1
 			}
 
 			// first start of this word
 			word_start_offset = 0
 			for i := cursor_pos.x - 1 - word_end_offset; i >= 0; i-- {
-				if is_whitespace(line[i]) { break }
+				if is_whitespace(line.runes()[i]) { break }
 				word_start_offset += 1
 			}
 
