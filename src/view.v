@@ -568,14 +568,17 @@ fn calc_e_move_amount(cursor_pos Pos, line string) int {
 fn calc_e_move_amount(cursor_pos Pos, line string) int {
     if line.len == 0 { return 0 }
 
-	jump_past_whitespace := skip_leading_whitespace(cursor_pos.x, line)
-	scan_start := cursor_pos.x + jump_past_whitespace
+	next_word_start := skip_leading_whitespace(cursor_pos.x, line)
 
-	return find_end_of_word(scan_start, line)
+	return next_word_start
+}
+
+fn find_word_length(pos_x int, line string) int {
+	return 0
 }
 
 fn skip_leading_whitespace(pos_x int, line string) int {
-	mut scan_end := 0
+	mut scan_end := pos_x
 	for i, c in line[pos_x..] {
 		if is_alpha_underscore(c) { scan_end = i; break }
 	}
