@@ -570,24 +570,28 @@ fn calc_e_move_amount(cursor_pos Pos, line string) int {
 	if cursor_pos.x > line.len { return 0 }
 
 	next_word_start := skip_leading_whitespace(cursor_pos.x, line)
-	next_word_length := find_word_length(cursor_pos.x + next_word_start, line)
+	println("WORD START: ${next_word_start}")
+	next_word_end := find_word_end(next_word_start, line)
+	println("WORD END: ${next_word_end}")
 
-	return cursor_pos.x + next_word_start + next_word_length
+	return next_word_end - 1
 }
 
-fn find_word_length(pos_x int, line string) int {
+fn find_word_end(pos_x int, line string) int {
+	mut len := 0
 	for i, c in line[pos_x..] {
-		if !is_alpha_underscore(c) || pos_x + i + 1 == line.len { return i }
+		if !is_alpha_underscore(c) || i == line.len { break }
+		len += 1
 	}
-	return 0
+	return pos_x + len
 }
 
 fn skip_leading_whitespace(pos_x int, line string) int {
-	mut scan_end := pos_x
+	mut scan_end := 0
 	for i, c in line[pos_x..] {
 		if is_alpha_underscore(c) { scan_end = i; break }
 	}
-	return scan_end
+	return pos_x + scan_end
 }
 
 fn find_end_of_word(start int, line string) int {

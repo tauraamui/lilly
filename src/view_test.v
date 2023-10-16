@@ -55,3 +55,18 @@ fn test_calc_e_move_amount_word_with_leading_whitespace() {
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "s"
 }
 
+fn test_calc_e_move_amount_two_words_with_leading_whitespace() {
+	fake_line := "    this sentance"
+
+	mut fake_cursor_pos := Pos{ x: 0 }
+
+	mut amount := calc_e_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 7
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "s"
+
+	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 7
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "e"
+}
