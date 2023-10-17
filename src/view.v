@@ -247,20 +247,23 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 	ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width, cursor_screen_space_y+1)
 	for y, line in view.buffer.lines[view.from..to] {
 		ctx.reset_bg_color()
-		mut line_cpy := line
 
 		view.draw_text_line_number(mut ctx, y)
 
 		if y == cursor_screen_space_y { ctx.set_bg_color(r: 53, g: 53, b: 53) }
 		if !view.show_whitespace {
-			line_cpy = line_cpy.replace("\t", " ".repeat(4))
-			mut max_width := view.width
-			if max_width > line_cpy.runes().len { max_width = line_cpy.len }
-			ctx.draw_text(view.x+1, y+1, line_cpy[..max_width])
+			view.draw_text_line(mut ctx, y, line)
 			continue
 		}
-		view.draw_line_show_whitespace(mut ctx, y, line_cpy)
+		view.draw_line_show_whitespace(mut ctx, y, line)
 	}
+}
+
+fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string) {
+	mut linex := line.replace("\t", " ".repeat(4))
+	mut max_width := view.width
+	if max_width > linex.runes().len { max_width = linex.runes().len }
+	ctx.draw_text(view.x+1, y+1, linex[..max_width])
 }
 
 fn (mut view View) draw_text_line_number(mut ctx tui.Context, y int) {
