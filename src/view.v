@@ -18,6 +18,10 @@ mut:
 }
 
 const (
+	home_dir          = os.home_dir()
+	settings_dir      = os.join_path(home_dir, '.lilly')
+	syntax_dir        = os.join_path(settings_dir, 'syntax')
+
 	block                   = "█"
 	slant_left_flat_bottom  = ""
 	left_rounded            = ""
@@ -61,20 +65,22 @@ const (
 
 struct View {
 mut:
-	log                      &log.Log
-	mode                     Mode
-	buffer                   Buffer
-	cursor                   Cursor
-	cmd_buf                  CmdBuffer
-	repeat_amount            string
-	x                        int
-	width                    int
-	height                   int
-	from                     int
-	to                       int
-	show_whitespace          bool
-	left_bracket_press_count int
+	log                       &log.Log
+	mode                      Mode
+	buffer                    Buffer
+	cursor                    Cursor
+	cmd_buf                   CmdBuffer
+	repeat_amount             string
+	x                         int
+	width                     int
+	height                    int
+	from                      int
+	to                        int
+	show_whitespace           bool
+	left_bracket_press_count  int
 	right_bracket_press_count int
+	syntaxes                  []Syntax
+	current_syntax_idx        int
 }
 
 struct Buffer {
