@@ -290,11 +290,7 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 		view.draw_text_line_number(mut ctx, y)
 
 		if y == cursor_screen_space_y { ctx.set_bg_color(r: 53, g: 53, b: 53) }
-		if !view.show_whitespace {
-			view.draw_text_line(mut ctx, y, line)
-			continue
-		}
-		view.draw_line_show_whitespace(mut ctx, y, line)
+		view.draw_text_line(mut ctx, y, line)
 	}
 }
 
