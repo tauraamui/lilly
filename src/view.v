@@ -503,7 +503,7 @@ fn (mut view View) b() {
 	amount := calc_b_move_amount(view.cursor.pos, line)
 	if amount == 0 && view.cursor.pos.y > 0 {
 		view.move_cursor_up(1)
-		view.cursor.pos.x = view.buffer.lines[view.cursor.pos.y].len - 1
+		view.cursor.pos.x = view.buffer.lines[view.cursor.pos.y].runes().len - 1
 		return
 	}
 	view.cursor.pos.x -= amount
