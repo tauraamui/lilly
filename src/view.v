@@ -287,6 +287,7 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 	ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width, cursor_screen_space_y+1)
 	for y, line in view.buffer.lines[view.from..to] {
 		ctx.reset_bg_color()
+		ctx.reset_color()
 
 		view.draw_text_line_number(mut ctx, y)
 
@@ -313,10 +314,20 @@ fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string) {
 	mut max_width := view.width
 	if max_width > linex.runes().len { max_width = linex.runes().len }
 
-	segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { Syntax{} }, linex[..max_width], view.is_multiline_comment)
+	linex = linex[..max_width]
+
+	segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { Syntax{} }, linex, view.is_multiline_comment)
 	view.is_multiline_comment = is_multiline_comment
 
-	ctx.draw_text(view.x+1, y+1, linex[..max_width])
+	if view.is_multiline_comment {
+		ctx.set_color(r: 130, g: 130, b: 130)
+		ctx.draw_text(view.x+1, y+1, linex)
+		return
+	}
+
+	//if segments.len == 0 {
+		ctx.draw_text(view.x+1, y+1, linex)
+	//}
 }
 
 fn resolve_line_segments(syntax Syntax, line string, is_multiline_comment bool) ([]LineSegment, bool) {
