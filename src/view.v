@@ -18,6 +18,10 @@ mut:
 }
 
 const (
+	home_dir          = os.home_dir()
+	settings_dir      = os.join_path(home_dir, '.lilly')
+	syntax_dir        = os.join_path(settings_dir, 'syntax')
+
 	block                   = "█"
 	slant_left_flat_bottom  = ""
 	left_rounded            = ""
@@ -29,7 +33,7 @@ const (
 	status_green            = Color { 145, 237, 145 }
 	status_orange           = Color { 237, 207, 123 }
 	status_lilac            = Color { 194, 110, 230 }
-	status_cyan             = Color { 138, 222, 237   }
+	status_cyan             = Color { 138, 222, 237 }
 
 	rune_digits             = [`0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`]
 
@@ -61,20 +65,23 @@ const (
 
 struct View {
 mut:
-	log                      &log.Log
-	mode                     Mode
-	buffer                   Buffer
-	cursor                   Cursor
-	cmd_buf                  CmdBuffer
-	repeat_amount            string
-	x                        int
-	width                    int
-	height                   int
-	from                     int
-	to                       int
-	show_whitespace          bool
-	left_bracket_press_count int
+	log                       &log.Log
+	mode                      Mode
+	buffer                    Buffer
+	cursor                    Cursor
+	cmd_buf                   CmdBuffer
+	repeat_amount             string
+	x                         int
+	width                     int
+	height                    int
+	from                      int
+	to                        int
+	show_whitespace           bool
+	left_bracket_press_count  int
 	right_bracket_press_count int
+	syntaxes                  []Syntax
+	current_syntax_idx        int
+	is_multiline_comment      bool
 }
 
 struct Buffer {
@@ -82,9 +89,38 @@ mut:
 	lines []string
 }
 
+enum CmdCode as u8 {
+	blank
+	successful
+	unsuccessful
+	unrecognised
+	disabled
+}
+
+fn (code CmdCode) color() Color {
+	return match code {
+		.blank        { Color{ 230, 230, 230 } }
+		.successful   { Color{ 100, 230, 110 } }
+		.unsuccessful { Color{ 230, 110, 100 } }
+		.unrecognised { Color{ 230, 110, 100 } }
+		.disabled     { Color{ 150, 150, 150 } }
+	}
+}
+
+fn (code CmdCode) str() string {
+	return match code {
+		.blank        { "" }
+		.successful   { "__ command completed successfully" }
+		.unsuccessful { "__ command was unsuccessful" }
+		.unrecognised { "unrecognised command __" }
+		.disabled     { "__ command is disabled" }
+	}
+}
+
 struct CmdBuffer {
 mut:
 	line        string
+	code        CmdCode
 	err_msg     string
 	cursor_x    int
 	cursor_y    int
@@ -93,8 +129,9 @@ mut:
 
 fn (mut cmd_buf CmdBuffer) draw(mut ctx tui.Context, draw_cursor bool) {
 	defer { ctx.reset_bg_color() }
-	if cmd_buf.err_msg.len > 0 {
-		ctx.set_color(r: 230, g: 110, b: 100)
+	if cmd_buf.code != .blank && cmd_buf.code != .successful {
+		color := cmd_buf.code.color()
+		ctx.set_color(r: color.r, g: color.g, b: color.b)
 		ctx.draw_text(1, ctx.window_height, cmd_buf.err_msg)
 		ctx.reset_color()
 		return
@@ -107,23 +144,27 @@ fn (mut cmd_buf CmdBuffer) draw(mut ctx tui.Context, draw_cursor bool) {
 }
 
 fn (mut cmd_buf CmdBuffer) prepare_for_input() {
-	cmd_buf.err_msg = ""
+	cmd_buf.clear_err()
 	cmd_buf.line = ":"
 	cmd_buf.cursor_x = 1
 }
 
 fn (mut cmd_buf CmdBuffer) exec(mut view View) {
-	success := match view.cmd_buf.line {
-		":q" { exit(0); true }
-		":toggle whitespace" { view.show_whitespace = !view.show_whitespace; true }
-		else { false }
+	match view.cmd_buf.line {
+		":q" { exit(0); cmd_buf.code = .successful }
+		":toggle whitespace" {
+			// view.show_whitespace = !view.show_whitespace
+			cmd_buf.code = .disabled
+		}
+		else { cmd_buf.code = .unrecognised }
 	}
-	if success {
+
+	if cmd_buf.code == .successful {
 		if cmd_buf.cmd_history.last() or { "" } == cmd_buf.line { return }
 		cmd_buf.cmd_history.push(cmd_buf.line)
 		return
 	}
-	cmd_buf.set_error("unrecognised command ${cmd_buf.line}")
+	cmd_buf.set_error(cmd_buf.code.str().replace("__", cmd_buf.line))
 }
 
 fn (mut cmd_buf CmdBuffer) put_char(c string) {
@@ -171,8 +212,15 @@ fn (mut cmd_buf CmdBuffer) clear() {
 	cmd_buf.cursor_x = 0
 }
 
+fn (mut cmd_buf CmdBuffer) clear_err() {
+	cmd_buf.err_msg = ""
+	cmd_buf.code = .blank
+}
+
 fn (app &App) new_view() View {
-	res := View{ log: app.log, mode: .normal, show_whitespace: false }
+	mut res := View{ log: app.log, mode: .normal, show_whitespace: false }
+	res.load_syntaxes()
+	res.set_current_syntax_idx(".v")
 	return res
 }
 
@@ -241,21 +289,154 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 	ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width, cursor_screen_space_y+1)
 	for y, line in view.buffer.lines[view.from..to] {
 		ctx.reset_bg_color()
-		mut line_cpy := line
-		ctx.set_color(r: 117, g: 118, b: 120)
-		line_num_str := "${view.from+y}"
-		ctx.draw_text(view.x - line_num_str.runes().len, y+1, line_num_str)
 		ctx.reset_color()
+
+		view.draw_text_line_number(mut ctx, y)
+
 		if y == cursor_screen_space_y { ctx.set_bg_color(r: 53, g: 53, b: 53) }
-		if !view.show_whitespace {
-			line_cpy = line_cpy.replace("\t", " ".repeat(4))
-			mut max_width := view.width
-			if max_width > line_cpy.runes().len { max_width = line_cpy.len }
-			ctx.draw_text(view.x+1, y+1, line_cpy[..max_width])
-			continue
-		}
-		view.draw_line_show_whitespace(mut ctx, y, line_cpy)
+		view.draw_text_line(mut ctx, y, line)
 	}
+}
+
+enum SegmentKind {
+	a_string = 1
+	a_comment = 2
+	a_key = 3
+	a_lit = 4
+}
+
+struct LineSegment {
+	start int
+	end   int
+	typ   SegmentKind
+}
+
+fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string) {
+	mut linex := line.replace("\t", " ".repeat(4))
+	mut max_width := view.width
+	if max_width > linex.runes().len { max_width = linex.runes().len }
+
+	linex = linex[..max_width]
+
+	segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { Syntax{} }, linex, view.is_multiline_comment)
+	view.is_multiline_comment = is_multiline_comment
+
+	/*
+	if view.is_multiline_comment {
+		ctx.set_color(r: 130, g: 130, b: 130)
+		ctx.draw_text(view.x+1, y+1, linex)
+		return
+	}
+	*/
+
+	if segments.len == 0 {
+		ctx.draw_text(view.x+1, y+1, linex)
+		return
+	}
+
+	mut pos := 0
+	for i, segment in segments {
+		// render text before next segment
+		if segment.start > pos {
+			s := linex[pos..segment.start]
+			ctx.draw_text(view.x+1+pos, y+1, s)
+		}
+
+		typ := segment.typ
+		color := match typ {
+			.a_key { Color{ 255, 126, 182 } }
+			.a_lit { Color{ 87, 215, 217 } }
+			.a_string { Color{ 87, 215, 217 } }
+			.a_comment { Color{ 130, 130, 130 } }
+		}
+		s := linex[segment.start..segment.end]
+		ctx.set_color(r: color.r, g: color.g, b: color.b)
+		ctx.draw_text(view.x+1+segment.start, y+1, s)
+		ctx.reset_color()
+		pos = segment.end
+		if i == segments.len - 1 && segment.end < linex.len {
+			final := linex[segment.end..linex.len]
+			ctx.draw_text(view.x+1+pos, y+1, final)
+		}
+	}
+}
+
+fn resolve_line_segments(syntax Syntax, line string, is_multiline_comment bool) ([]LineSegment, bool) {
+	mut segments := []LineSegment
+	mut is_multiline_commentx := is_multiline_comment
+	for i := 0; i < line.len; i++ {
+		start := i
+		// '//' comment
+		if i > 0 && line[i - 1] == `/` && line[i] == `/` {
+			segments << LineSegment{ start - 1, line.len, .a_comment }
+			break
+		}
+
+		// '#' comment
+		if line[i] == `#` {
+			segments << LineSegment{ start, line.len, .a_comment }
+			break
+		}
+
+		// /* comment
+		// (unless it's /* line */ which is a single line)
+		if i > 0 && line[i - 1] == `/` && line[i] == `*` && !(line[line.len - 2] == `*`
+			&& line[line.len - 1] == `/`) {
+			// all after /* is  a comment
+			segments << LineSegment{ start, line.len, .a_comment }
+			is_multiline_commentx = true
+			break
+		}
+		// end of /* */
+		if i > 0 && line[i - 1] == `*` && line[i] == `/` {
+			// all before */ is still a comment
+			segments << LineSegment{ 0, start + 1, .a_comment }
+			is_multiline_commentx = false
+			break
+		}
+
+		// string
+		if line[i] == `'` {
+			i++
+			for i < line.len - 1 && line[i] != `'` {
+				i++
+			}
+			if i >= line.len {
+				i = line.len - 1
+			}
+			segments << LineSegment{ start, i + 1, .a_string }
+		}
+
+		if line[i] == `"` {
+			i++
+			for i < line.len - 1 && line[i] != `"` {
+				i++
+			}
+			if i >= line.len {
+				i = line.len - 1
+			}
+			segments << LineSegment{ start, i + 1, .a_string }
+		}
+
+		// key
+		for i < line.len && is_alpha_underscore(int(line[i])) {
+			i++
+		}
+		word := line[start..i]
+		if word in syntax.literals {
+			segments << LineSegment{ start, i, .a_lit }
+		} else if word in syntax.keywords {
+			segments << LineSegment{ start, i, .a_key }
+		}
+	}
+	return segments, is_multiline_commentx
+}
+
+fn (mut view View) draw_text_line_number(mut ctx tui.Context, y int) {
+	ctx.set_color(r: 117, g: 118, b: 120)
+	line_num_str := "${view.from+y}"
+	ctx.draw_text(view.x - line_num_str.runes().len, y+1, line_num_str)
+	ctx.reset_color()
 }
 
 fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cpy string) {
