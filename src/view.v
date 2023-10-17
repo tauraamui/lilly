@@ -89,14 +89,26 @@ mut:
 }
 
 enum CmdCode as u8 {
+	blank
 	successful
 	unsuccessful
 	unrecognised
 	disabled
 }
 
+fn (code CmdCode) color() Color {
+	return match code {
+		.blank        { Color{ 230, 230, 230 } }
+		.successful   { Color{ 100, 230, 110 } }
+		.unsuccessful { Color{ 230, 110, 100 } }
+		.unrecognised { Color{ 230, 110, 100 } }
+		.disabled     { Color{ 150, 150, 150 } }
+	}
+}
+
 fn (code CmdCode) str() string {
 	return match code {
+		.blank        { "" }
 		.successful   { "__ command completed successfully" }
 		.unsuccessful { "__ command was unsuccessful" }
 		.unrecognised { "unrecognised command __" }
@@ -107,6 +119,7 @@ fn (code CmdCode) str() string {
 struct CmdBuffer {
 mut:
 	line        string
+	code        CmdCode
 	err_msg     string
 	cursor_x    int
 	cursor_y    int
@@ -115,8 +128,9 @@ mut:
 
 fn (mut cmd_buf CmdBuffer) draw(mut ctx tui.Context, draw_cursor bool) {
 	defer { ctx.reset_bg_color() }
-	if cmd_buf.err_msg.len > 0 {
-		ctx.set_color(r: 230, g: 110, b: 100)
+	if cmd_buf.code != .blank && cmd_buf.code != .successful {
+		color := cmd_buf.code.color()
+		ctx.set_color(r: color.r, g: color.g, b: color.b)
 		ctx.draw_text(1, ctx.window_height, cmd_buf.err_msg)
 		ctx.reset_color()
 		return
@@ -129,27 +143,27 @@ fn (mut cmd_buf CmdBuffer) draw(mut ctx tui.Context, draw_cursor bool) {
 }
 
 fn (mut cmd_buf CmdBuffer) prepare_for_input() {
-	cmd_buf.err_msg = ""
+	cmd_buf.clear_err()
 	cmd_buf.line = ":"
 	cmd_buf.cursor_x = 1
 }
 
 fn (mut cmd_buf CmdBuffer) exec(mut view View) {
-	code := match view.cmd_buf.line {
-		":q" { exit(0); CmdCode.successful }
+	match view.cmd_buf.line {
+		":q" { exit(0); cmd_buf.code = .successful }
 		":toggle whitespace" {
 			// view.show_whitespace = !view.show_whitespace
-			CmdCode.disabled
+			cmd_buf.code = .disabled
 		}
-		else { CmdCode.unrecognised }
+		else { cmd_buf.code = .unrecognised }
 	}
 
-	if code == .successful {
+	if cmd_buf.code == .successful {
 		if cmd_buf.cmd_history.last() or { "" } == cmd_buf.line { return }
 		cmd_buf.cmd_history.push(cmd_buf.line)
 		return
 	}
-	cmd_buf.set_error(code.str().replace("__", cmd_buf.line))
+	cmd_buf.set_error(cmd_buf.code.str().replace("__", cmd_buf.line))
 }
 
 fn (mut cmd_buf CmdBuffer) put_char(c string) {
@@ -195,6 +209,11 @@ fn (mut cmd_buf CmdBuffer) set_error(msg string) {
 fn (mut cmd_buf CmdBuffer) clear() {
 	cmd_buf.line = ""
 	cmd_buf.cursor_x = 0
+}
+
+fn (mut cmd_buf CmdBuffer) clear_err() {
+	cmd_buf.err_msg = ""
+	cmd_buf.code = .blank
 }
 
 fn (app &App) new_view() View {
