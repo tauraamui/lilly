@@ -248,10 +248,9 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 	for y, line in view.buffer.lines[view.from..to] {
 		ctx.reset_bg_color()
 		mut line_cpy := line
-		ctx.set_color(r: 117, g: 118, b: 120)
-		line_num_str := "${view.from+y}"
-		ctx.draw_text(view.x - line_num_str.runes().len, y+1, line_num_str)
-		ctx.reset_color()
+
+		view.draw_text_line_number(mut ctx, y)
+
 		if y == cursor_screen_space_y { ctx.set_bg_color(r: 53, g: 53, b: 53) }
 		if !view.show_whitespace {
 			line_cpy = line_cpy.replace("\t", " ".repeat(4))
@@ -262,6 +261,13 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 		}
 		view.draw_line_show_whitespace(mut ctx, y, line_cpy)
 	}
+}
+
+fn (mut view View) draw_text_line_number(mut ctx tui.Context, y int) {
+	ctx.set_color(r: 117, g: 118, b: 120)
+	line_num_str := "${view.from+y}"
+	ctx.draw_text(view.x - line_num_str.runes().len, y+1, line_num_str)
+	ctx.reset_color()
 }
 
 fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cpy string) {
