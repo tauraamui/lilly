@@ -294,11 +294,85 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 	}
 }
 
+enum SegmentKind {
+	a_string = 1
+	a_comment = 2
+	a_key = 3
+	a_lit = 4
+}
+
+struct LineSegment {
+	start int
+	end   int
+	typ   SegmentKind
+}
+
 fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string) {
 	mut linex := line.replace("\t", " ".repeat(4))
 	mut max_width := view.width
 	if max_width > linex.runes().len { max_width = linex.runes().len }
+	segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { Syntax{} }, linex[..max_width])
 	ctx.draw_text(view.x+1, y+1, linex[..max_width])
+}
+
+fn resolve_line_segments(syntax Syntax, line string) ([]LineSegment, bool) {
+	mut segments := []LineSegment
+	mut is_multiline_comment := false
+	for i := 0; i < line.len; i++ {
+		start := i
+		// '//' comment
+		if i > 0 && line[i - 1] == `/` && line[i] == `/` {
+			segments << LineSegment{ start - 1, line.len, .a_comment }
+			break
+		}
+
+		// '#' comment
+		if line[i] == `#` {
+			segments << LineSegment{ start, line.len, .a_comment }
+			break
+		}
+
+		// /* comment
+		// (unless it's /* line */ which is a single line)
+		if i > 0 && line[i - 1] == `/` && line[i] == `*` && !(line[line.len - 2] == `*`
+			&& line[line.len - 1] == `/`) {
+			// all after /* is  a comment
+			segments << LineSegment{ start, line.len, .a_comment }
+			is_multiline_comment = true
+			break
+		}
+		// end of /* */
+		if i > 0 && line[i - 1] == `*` && line[i] == `/` {
+			// all before */ is still a comment
+			segments << LineSegment{ 0, start + 1, .a_comment }
+			is_multiline_comment = false
+			break
+		}
+
+		// string
+		if line[i] == `'` {
+			i++
+			for i < line.len - 1 && line[i] != `'` {
+				i++
+			}
+			if i >= line.len {
+				i = line.len - 1
+			}
+			segments << LineSegment{ start, i + 1, .a_string }
+		}
+
+		if line[i] == `"` {
+			i++
+			for i < line.len - 1 && line[i] != `"` {
+				i++
+			}
+			if i >= line.len {
+				i = line.len - 1
+			}
+			segments << LineSegment{ start, i + 1, .a_string }
+		}
+	}
+	return segments, is_multiline_comment
 }
 
 fn (mut view View) draw_text_line_number(mut ctx tui.Context, y int) {
