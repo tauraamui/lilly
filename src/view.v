@@ -339,6 +339,8 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.e { view.e() }
 				.w { view.w() }
 				.b { view.b() }
+				.d { if e.modifiers == .ctrl { view.ctrl_d() } }
+				.u { if e.modifiers == .ctrl { view.ctrl_u() } }
 				.caret { view.hat() }
 				.dollar { view.dollar() }
 				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
@@ -507,6 +509,18 @@ fn (mut view View) b() {
 		return
 	}
 	view.cursor.pos.x -= amount
+	view.clamp_cursor_x_pos()
+}
+
+fn (mut view View) ctrl_d() {
+	ten_percent_of_total_lines := f32(view.buffer.lines.len) * .1
+	view.move_cursor_down(int(ten_percent_of_total_lines))
+	view.clamp_cursor_x_pos()
+}
+
+fn (mut view View) ctrl_u() {
+	ten_percent_of_total_lines := f32(view.buffer.lines.len) * .1
+	view.move_cursor_up(int(ten_percent_of_total_lines))
 	view.clamp_cursor_x_pos()
 }
 
