@@ -33,7 +33,7 @@ const (
 	status_green            = Color { 145, 237, 145 }
 	status_orange           = Color { 237, 207, 123 }
 	status_lilac            = Color { 194, 110, 230 }
-	status_cyan             = Color { 138, 222, 237   }
+	status_cyan             = Color { 138, 222, 237 }
 
 	rune_digits             = [`0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`]
 
@@ -218,7 +218,9 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 }
 
 fn (app &App) new_view() View {
-	res := View{ log: app.log, mode: .normal, show_whitespace: false }
+	mut res := View{ log: app.log, mode: .normal, show_whitespace: false }
+	res.load_syntaxes()
+	res.set_current_syntax_idx(".v")
 	return res
 }
 
@@ -319,15 +321,44 @@ fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string) {
 	segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { Syntax{} }, linex, view.is_multiline_comment)
 	view.is_multiline_comment = is_multiline_comment
 
+	/*
 	if view.is_multiline_comment {
 		ctx.set_color(r: 130, g: 130, b: 130)
 		ctx.draw_text(view.x+1, y+1, linex)
 		return
 	}
+	*/
 
-	//if segments.len == 0 {
+	if segments.len == 0 {
 		ctx.draw_text(view.x+1, y+1, linex)
-	//}
+		return
+	}
+
+	mut pos := 0
+	for i, segment in segments {
+		// render text before next segment
+		if segment.start > pos {
+			s := linex[pos..segment.start]
+			ctx.draw_text(view.x+1+pos, y+1, s)
+		}
+
+		typ := segment.typ
+		color := match typ {
+			.a_key { Color{ 255, 126, 182 } }
+			.a_lit { Color{ 87, 215, 217 } }
+			.a_string { Color{ 87, 215, 217 } }
+			.a_comment { Color{ 130, 130, 130 } }
+		}
+		s := linex[segment.start..segment.end]
+		ctx.set_color(r: color.r, g: color.g, b: color.b)
+		ctx.draw_text(view.x+1+segment.start, y+1, s)
+		ctx.reset_color()
+		pos = segment.end
+		if i == segments.len - 1 && segment.end < linex.len {
+			final := linex[segment.end..linex.len]
+			ctx.draw_text(view.x+1+pos, y+1, final)
+		}
+	}
 }
 
 fn resolve_line_segments(syntax Syntax, line string, is_multiline_comment bool) ([]LineSegment, bool) {
