@@ -81,6 +81,7 @@ mut:
 	right_bracket_press_count int
 	syntaxes                  []Syntax
 	current_syntax_idx        int
+	is_multiline_comment      bool
 }
 
 struct Buffer {
@@ -311,13 +312,16 @@ fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string) {
 	mut linex := line.replace("\t", " ".repeat(4))
 	mut max_width := view.width
 	if max_width > linex.runes().len { max_width = linex.runes().len }
-	segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { Syntax{} }, linex[..max_width])
+
+	segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { Syntax{} }, linex[..max_width], view.is_multiline_comment)
+	view.is_multiline_comment = is_multiline_comment
+
 	ctx.draw_text(view.x+1, y+1, linex[..max_width])
 }
 
-fn resolve_line_segments(syntax Syntax, line string) ([]LineSegment, bool) {
+fn resolve_line_segments(syntax Syntax, line string, is_multiline_comment bool) ([]LineSegment, bool) {
 	mut segments := []LineSegment
-	mut is_multiline_comment := false
+	mut is_multiline_commentx := is_multiline_comment
 	for i := 0; i < line.len; i++ {
 		start := i
 		// '//' comment
@@ -338,14 +342,14 @@ fn resolve_line_segments(syntax Syntax, line string) ([]LineSegment, bool) {
 			&& line[line.len - 1] == `/`) {
 			// all after /* is  a comment
 			segments << LineSegment{ start, line.len, .a_comment }
-			is_multiline_comment = true
+			is_multiline_commentx = true
 			break
 		}
 		// end of /* */
 		if i > 0 && line[i - 1] == `*` && line[i] == `/` {
 			// all before */ is still a comment
 			segments << LineSegment{ 0, start + 1, .a_comment }
-			is_multiline_comment = false
+			is_multiline_commentx = false
 			break
 		}
 
@@ -371,8 +375,19 @@ fn resolve_line_segments(syntax Syntax, line string) ([]LineSegment, bool) {
 			}
 			segments << LineSegment{ start, i + 1, .a_string }
 		}
+
+		// key
+		for i < line.len && is_alpha_underscore(int(line[i])) {
+			i++
+		}
+		word := line[start..i]
+		if word in syntax.literals {
+			segments << LineSegment{ start, i, .a_lit }
+		} else if word in syntax.keywords {
+			segments << LineSegment{ start, i, .a_key }
+		}
 	}
-	return segments, is_multiline_comment
+	return segments, is_multiline_commentx
 }
 
 fn (mut view View) draw_text_line_number(mut ctx tui.Context, y int) {
