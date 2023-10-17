@@ -88,6 +88,22 @@ mut:
 	lines []string
 }
 
+enum CmdCode as u8 {
+	successful
+	unsuccessful
+	unrecognised
+	disabled
+}
+
+fn (code CmdCode) str() string {
+	return match code {
+		.successful   { "__ command completed successfully" }
+		.unsuccessful { "__ command was unsuccessful" }
+		.unrecognised { "unrecognised command __" }
+		.disabled     { "__ command is disabled" }
+	}
+}
+
 struct CmdBuffer {
 mut:
 	line        string
@@ -119,17 +135,21 @@ fn (mut cmd_buf CmdBuffer) prepare_for_input() {
 }
 
 fn (mut cmd_buf CmdBuffer) exec(mut view View) {
-	success := match view.cmd_buf.line {
-		":q" { exit(0); true }
-		":toggle whitespace" { view.show_whitespace = !view.show_whitespace; true }
-		else { false }
+	code := match view.cmd_buf.line {
+		":q" { exit(0); CmdCode.successful }
+		":toggle whitespace" {
+			// view.show_whitespace = !view.show_whitespace
+			CmdCode.disabled
+		}
+		else { CmdCode.unrecognised }
 	}
-	if success {
+
+	if code == .successful {
 		if cmd_buf.cmd_history.last() or { "" } == cmd_buf.line { return }
 		cmd_buf.cmd_history.push(cmd_buf.line)
 		return
 	}
-	cmd_buf.set_error("unrecognised command ${cmd_buf.line}")
+	cmd_buf.set_error(code.str().replace("__", cmd_buf.line))
 }
 
 fn (mut cmd_buf CmdBuffer) put_char(c string) {
