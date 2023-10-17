@@ -2,7 +2,7 @@
 Custom Neovim replacement
 
 ![Screenshot 2023-10-17 01 37 15](https://github.com/tauraamui/lilly/assets/3159648/57cb9b58-1c7d-4648-855f-7fe05c74af01)
-| the code presented here is not valid at all, I ran `cat view.v | shuf >> view.v` a bunch of times to get a huge file
+> the code presented here is not valid at all, I ran `cat view.v | shuf >> view.v` a bunch of times to get a huge file
 
 # What?
 
