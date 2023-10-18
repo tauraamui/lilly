@@ -362,7 +362,7 @@ fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string) {
 }
 
 fn resolve_line_segments(syntax Syntax, line string, is_multiline_comment bool) ([]LineSegment, bool) {
-	mut segments := []LineSegment
+	mut segments := []LineSegment{}
 	mut is_multiline_commentx := is_multiline_comment
 	for i := 0; i < line.len; i++ {
 		start := i
@@ -410,6 +410,17 @@ fn resolve_line_segments(syntax Syntax, line string, is_multiline_comment bool) 
 		if line[i] == `"` {
 			i++
 			for i < line.len - 1 && line[i] != `"` {
+				i++
+			}
+			if i >= line.len {
+				i = line.len - 1
+			}
+			segments << LineSegment{ start, i + 1, .a_string }
+		}
+
+		if line[i] == `\`` {
+			i++
+			for i < line.len - 1 && line[i] != `\`` {
 				i++
 			}
 			if i >= line.len {
