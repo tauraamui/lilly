@@ -28,7 +28,7 @@ fn draw_status_line(mut ctx tui.Context, status Status) {
 	cursor_info_label := "${status.cursor_y}:${status.cursor_x}"
 	paint_shape_text(mut ctx, ctx.window_width - 1, y, Color { 245, 42, 42 }, "${block}${block}")
 	ctx.bold()
-	paint_text_on_background(mut ctx, ctx.window_width - 1 - cursor_info_label.len, y, Color{ 245, 42, 42 }, Color{ 230, 230, 230 }, cursor_info_label)
+	paint_text_on_background(mut ctx, ctx.window_width - 1 - cursor_info_label.len, y, Color{ 245, 42, 42 }, Color{ 255, 255, 255 }, cursor_info_label)
 	paint_shape_text(mut ctx, ctx.window_width - 1 - cursor_info_label.len - 2, y, Color { 245, 42, 42 }, "${slant_left_flat_bottom}${block}")
 }
 
