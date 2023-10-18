@@ -269,13 +269,12 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	if cursor_line.len == 0 { offset += 1 }
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
 	if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
-	ctx.draw_point(view.x+offset, cursor_screen_space_y+1)
 
 	draw_status_line(mut ctx, Status{ view.mode, view.cursor.pos.x, view.cursor.pos.y, "view.v" })
-	// view.mode.draw(mut ctx)
 	view.cmd_buf.draw(mut ctx, view.mode == .command)
 
 	ctx.draw_text(ctx.window_width-view.repeat_amount.len, ctx.window_height, view.repeat_amount)
+	ctx.set_cursor_position(view.x+offset, cursor_screen_space_y+1)
 }
 
 fn (mut view View) draw_document(mut ctx tui.Context) {
