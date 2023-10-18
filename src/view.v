@@ -531,6 +531,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.e { view.e() }
 				.w { view.w() }
 				.b { view.b() }
+				.o { view.o() }
 				.d { if e.modifiers == .ctrl { view.ctrl_d() } }
 				.u { if e.modifiers == .ctrl { view.ctrl_u() } }
 				.caret { view.hat() }
@@ -723,6 +724,14 @@ fn (mut view View) hat() {
 fn (mut view View) dollar() {
 	line := view.buffer.lines[view.cursor.pos.y]
 	view.cursor.pos.x = line.runes().len - 1
+}
+
+fn (mut view View) o() {
+	defer { view.move_cursor_down(1) }
+	view.mode = .insert
+	y := view.cursor.pos.y
+	if y >= view.buffer.lines.len { view.buffer.lines << ""; return }
+	view.buffer.lines.insert(view.cursor.pos.y+1, "")
 }
 
 fn calc_w_move_amount(cursor_pos Pos, line string) int {
