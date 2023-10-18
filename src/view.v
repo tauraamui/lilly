@@ -731,7 +731,7 @@ fn (mut view View) o() {
 	view.mode = .insert
 	y := view.cursor.pos.y
 	if y >= view.buffer.lines.len { view.buffer.lines << ""; return }
-	view.buffer.lines.insert(view.cursor.pos.y+1, "")
+	view.buffer.lines.insert(y+1, "")
 }
 
 fn calc_w_move_amount(cursor_pos Pos, line string) int {
