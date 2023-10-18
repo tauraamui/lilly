@@ -364,31 +364,32 @@ fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string) {
 fn resolve_line_segments(syntax Syntax, line string, is_multiline_comment bool) ([]LineSegment, bool) {
 	mut segments := []LineSegment{}
 	mut is_multiline_commentx := is_multiline_comment
-	for i := 0; i < line.len; i++ {
+	line_runes := line.runes()
+	for i := 0; i < line_runes.len; i++ {
 		start := i
 		// '//' comment
-		if i > 0 && line[i - 1] == `/` && line[i] == `/` {
-			segments << LineSegment{ start - 1, line.len, .a_comment }
+		if i > 0 && line_runes[i - 1] == `/` && line_runes[i] == `/` {
+			segments << LineSegment{ start - 1, line_runes.len, .a_comment }
 			break
 		}
 
 		// '#' comment
-		if line[i] == `#` {
-			segments << LineSegment{ start, line.len, .a_comment }
+		if line_runes[i] == `#` {
+			segments << LineSegment{ start, line_runes.len, .a_comment }
 			break
 		}
 
 		// /* comment
-		// (unless it's /* line */ which is a single line)
-		if i > 0 && line[i - 1] == `/` && line[i] == `*` && !(line[line.len - 2] == `*`
-			&& line[line.len - 1] == `/`) {
+		// (unless it's /* line_runes */ which is a single line_runes)
+		if i > 0 && line_runes[i - 1] == `/` && line_runes[i] == `*` && !(line_runes[line_runes.len - 2] == `*`
+			&& line_runes[line_runes.len - 1] == `/`) {
 			// all after /* is  a comment
 			segments << LineSegment{ start, line.len, .a_comment }
 			is_multiline_commentx = true
 			break
 		}
 		// end of /* */
-		if i > 0 && line[i - 1] == `*` && line[i] == `/` {
+		if i > 0 && line_runes[i - 1] == `*` && line_runes[i] == `/` {
 			// all before */ is still a comment
 			segments << LineSegment{ 0, start + 1, .a_comment }
 			is_multiline_commentx = false
@@ -396,35 +397,35 @@ fn resolve_line_segments(syntax Syntax, line string, is_multiline_comment bool) 
 		}
 
 		// string
-		if line[i] == `'` {
+		if line_runes[i] == `'` {
 			i++
-			for i < line.len - 1 && line[i] != `'` {
+			for i < line_runes.len - 1 && line_runes[i] != `'` {
 				i++
 			}
-			if i >= line.len {
-				i = line.len - 1
+			if i >= line_runes.len {
+				i = line_runes.len - 1
 			}
 			segments << LineSegment{ start, i + 1, .a_string }
 		}
 
-		if line[i] == `"` {
+		if line_runes[i] == `"` {
 			i++
-			for i < line.len - 1 && line[i] != `"` {
+			for i < line_runes.len - 1 && line_runes[i] != `"` {
 				i++
 			}
-			if i >= line.len {
-				i = line.len - 1
+			if i >= line_runes.len {
+				i = line_runes.len - 1
 			}
 			segments << LineSegment{ start, i + 1, .a_string }
 		}
 
-		if line[i] == `\`` {
+		if line_runes[i] == `\`` {
 			i++
-			for i < line.len - 1 && line[i] != `\`` {
+			for i < line_runes.len - 1 && line_runes[i] != `\`` {
 				i++
 			}
-			if i >= line.len {
-				i = line.len - 1
+			if i >= line_runes.len {
+				i = line_runes.len - 1
 			}
 			segments << LineSegment{ start, i + 1, .a_string }
 		}
