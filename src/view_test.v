@@ -1,5 +1,15 @@
 module main
 
+fn test_o_inserts_sentance_line() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	fake_view.buffer.lines = ["1. first line", "2. second line"]
+	fake_view.o()
+
+	assert fake_view.mode == .insert
+	assert fake_view.buffer.lines == ["1. first line", "", "2. second line"]
+	assert fake_view.cursor.pos.y == 1
+}
+
 fn test_calc_w_move_amount_simple_sentence_line() {
 	fake_line := "this is a line to test with"
 	mut fake_cursor_pos := Pos{ x: 0 }
