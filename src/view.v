@@ -274,6 +274,9 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	view.cmd_buf.draw(mut ctx, view.mode == .command)
 
 	ctx.draw_text(ctx.window_width-view.repeat_amount.len, ctx.window_height, view.repeat_amount)
+	if view.mode == .insert {
+		set_cursor_to_vertical_bar(mut ctx)
+	} else { set_cursor_to_block(mut ctx) }
 	ctx.set_cursor_position(view.x+offset, cursor_screen_space_y+1)
 }
 
@@ -499,6 +502,14 @@ fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cp
 			}
 		}
 	}
+}
+
+fn set_cursor_to_block(mut ctx tui.Context) {
+	ctx.write("\x1b[0 q")
+}
+
+fn set_cursor_to_vertical_bar(mut ctx tui.Context) {
+	ctx.write("\x1b[6 q")
 }
 
 struct Color {
