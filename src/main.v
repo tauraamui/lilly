@@ -55,7 +55,6 @@ fn frame(mut app &App) {
 
 		mut view := app.view
 		view.draw(mut app.tui)
-		app.tui.set_cursor_position(0, 0)
 
 		app.tui.flush()
 	}
@@ -80,7 +79,6 @@ fn main() {
         user_data: app
         event_fn: event
         frame_fn: frame
-        hide_cursor: true
 		capture_events: true
 		use_alternate_buffer: true
     )
