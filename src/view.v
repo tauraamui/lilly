@@ -777,6 +777,7 @@ fn (mut view View) backspace() {
 	view.buffer.lines[y - 1] = "${previous_line}${view.buffer.lines[y]}"
 	view.buffer.lines.delete(y)
 	view.cursor.pos.y -= 1
+	view.cursor.pos.x = previous_line.len
 
 	if view.cursor.pos.y < 0 { view.cursor.pos.y = 0 }
 }
