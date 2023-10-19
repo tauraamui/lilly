@@ -39,16 +39,16 @@ fn test_backspace_deletes_char_from_end_of_sentance() {
 
 fn test_backspace_deletes_char_from_start_of_sentance() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
-	fake_view.buffer.lines = ["single line of text!"]
-	fake_view.cursor.pos.y = 0
+	fake_view.buffer.lines = ["", "single line of text!"]
+	fake_view.cursor.pos.y = 1
 	fake_view.mode = .insert
 	fake_view.cursor.pos.x = 1
 
 	fake_view.backspace()
-	assert fake_view.buffer.lines == ["ingle line of text!"]
+	assert fake_view.buffer.lines == ["", "ingle line of text!"]
 
 	fake_view.backspace()
-	assert fake_view.buffer.lines == ["ngle line of tex"]
+	assert fake_view.buffer.lines == ["ingle line of text!"]
 }
 
 fn test_calc_w_move_amount_simple_sentence_line() {
