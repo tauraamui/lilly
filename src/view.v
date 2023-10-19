@@ -588,6 +588,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 			match e.code {
 				.left_square_bracket { if e.modifiers == .ctrl { view.escape() } }
 				.escape { view.escape() }
+				.enter { view.enter() }
 				else {}
 			}
 		}
@@ -743,6 +744,16 @@ fn (mut view View) o() {
 	y := view.cursor.pos.y
 	if y >= view.buffer.lines.len { view.buffer.lines << ""; return }
 	view.buffer.lines.insert(y+1, "")
+}
+
+fn (mut view View) enter() {
+	defer { view.move_cursor_down(1); view.cursor.pos.x = 0 }
+	y := view.cursor.pos.y
+	mut line := view.buffer.lines[y]
+	segment_to_move := line[view.cursor.pos.x..]
+	view.buffer.lines[y] = line[..view.cursor.pos.x]
+	if y >= view.buffer.lines.len { view.buffer.lines << "${segment_to_move}"; return }
+	view.buffer.lines.insert(y+1, "${segment_to_move}")
 }
 
 fn calc_w_move_amount(cursor_pos Pos, line string) int {
