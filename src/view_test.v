@@ -49,7 +49,7 @@ fn test_backspace_deletes_char_from_start_of_sentance() {
 	assert fake_view.buffer.lines == ["", "ingle line of text!"]
 }
 
-fn test_backspace_moves_line_up_to_next_line() {
+fn test_backspace_moves_line_up_to_previous_line() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 	fake_view.mode = .insert
 
@@ -59,6 +59,20 @@ fn test_backspace_moves_line_up_to_next_line() {
 
 	fake_view.backspace()
 	assert fake_view.buffer.lines == ["single line of text!"]
+}
+
+fn test_backspace_moves_line_up_to_end_of_previous_line() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	fake_view.mode = .insert
+
+	fake_view.buffer.lines = ["i am the first line", "single line of text!"]
+	fake_view.cursor.pos.y = 1
+	fake_view.cursor.pos.x = 0
+
+	fake_view.backspace()
+	assert fake_view.buffer.lines == ["i am the first linesingle line of text!"]
+	assert fake_view.cursor.pos.x == 19
+	assert fake_view.buffer.lines[0][fake_view.cursor.pos.x].ascii_str() == "s"
 }
 
 fn test_backspace_at_start_of_sentance_first_line_does_nothing() {
