@@ -23,6 +23,70 @@ fn test_o_inserts_sentance_line_end_of_document() {
 	assert fake_view.cursor.pos.y == 2
 }
 
+fn test_backspace_deletes_char_from_end_of_sentance() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	fake_view.buffer.lines = ["single line of text!"]
+	fake_view.cursor.pos.y = 0
+	fake_view.mode = .insert
+	fake_view.cursor.pos.x = fake_view.buffer.lines[fake_view.cursor.pos.y].len
+
+	fake_view.backspace()
+	assert fake_view.buffer.lines == ["single line of text"]
+
+	fake_view.backspace()
+	assert fake_view.buffer.lines == ["single line of tex"]
+}
+
+fn test_backspace_deletes_char_from_start_of_sentance() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	fake_view.mode = .insert
+
+	fake_view.buffer.lines = ["", "single line of text!"]
+	fake_view.cursor.pos.y = 1
+	fake_view.cursor.pos.x = 1
+
+	fake_view.backspace()
+	assert fake_view.buffer.lines == ["", "ingle line of text!"]
+}
+
+fn test_backspace_moves_line_up_to_previous_line() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	fake_view.mode = .insert
+
+	fake_view.buffer.lines = ["", "single line of text!"]
+	fake_view.cursor.pos.y = 1
+	fake_view.cursor.pos.x = 0
+
+	fake_view.backspace()
+	assert fake_view.buffer.lines == ["single line of text!"]
+}
+
+fn test_backspace_moves_line_up_to_end_of_previous_line() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	fake_view.mode = .insert
+
+	fake_view.buffer.lines = ["i am the first line", "single line of text!"]
+	fake_view.cursor.pos.y = 1
+	fake_view.cursor.pos.x = 0
+
+	fake_view.backspace()
+	assert fake_view.buffer.lines == ["i am the first linesingle line of text!"]
+	assert fake_view.cursor.pos.x == 19
+	assert fake_view.buffer.lines[0][fake_view.cursor.pos.x].ascii_str() == "s"
+}
+
+fn test_backspace_at_start_of_sentance_first_line_does_nothing() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	fake_view.mode = .insert
+
+	fake_view.buffer.lines = ["single line of text!", ""]
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 0
+
+	fake_view.backspace()
+	assert fake_view.buffer.lines == ["single line of text!", ""]
+}
+
 fn test_calc_w_move_amount_simple_sentence_line() {
 	fake_line := "this is a line to test with"
 	mut fake_cursor_pos := Pos{ x: 0 }
