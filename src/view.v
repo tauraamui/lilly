@@ -789,11 +789,11 @@ fn (mut view View) backspace() {
 		return
 	}
 
-	mut before := line[..view.cursor.pos.x]
-	if before.len > 0 { before = before[..before.len-1] }
-	after := line[view.cursor.pos.x..]
-	view.buffer.lines[y] = "${before}${after}"
-	view.clamp_cursor_x_pos()
+	if view.cursor.pos.x == line.len {
+		view.buffer.lines[y] = line[..line.len - 1]
+		view.cursor.pos.x = view.buffer.lines[y].len
+		return
+	}
 }
 
 fn (mut view View) left() {
