@@ -28,11 +28,13 @@ fn test_backspace_deletes_char_from_end_of_sentance() {
 	fake_view.buffer.lines = ["single line of text!"]
 	fake_view.cursor.pos.y = 0
 	fake_view.mode = .insert
-	fake_view.cursor.pos.x = fake_view.buffer.lines[fake_view.cursor.pos.y].len - 1
+	fake_view.cursor.pos.x = fake_view.buffer.lines[fake_view.cursor.pos.y].len
 
 	fake_view.backspace()
-
 	assert fake_view.buffer.lines == ["single line of text"]
+
+	fake_view.backspace()
+	assert fake_view.buffer.lines == ["single line of tex"]
 }
 
 fn test_calc_w_move_amount_simple_sentence_line() {

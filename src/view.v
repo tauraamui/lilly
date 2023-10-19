@@ -760,6 +760,11 @@ fn (mut view View) enter() {
 fn (mut view View) backspace() {
 	y := view.cursor.pos.y
 	mut line := view.buffer.lines[y]
+	before := line[..view.cursor.pos.x-1]
+	after := line[view.cursor.pos.x..]
+	view.buffer.lines[y] = "${before}${after}"
+	view.cursor.pos.x -= 1
+	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
 }
 
 fn calc_w_move_amount(cursor_pos Pos, line string) int {
