@@ -61,6 +61,18 @@ fn test_backspace_moves_line_up_to_next_line() {
 	assert fake_view.buffer.lines == ["single line of text!"]
 }
 
+fn test_backspace_at_start_of_sentance_first_line_does_nothing() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	fake_view.mode = .insert
+
+	fake_view.buffer.lines = ["single line of text!", ""]
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 0
+
+	fake_view.backspace()
+	assert fake_view.buffer.lines == ["single line of text!", ""]
+}
+
 fn test_calc_w_move_amount_simple_sentence_line() {
 	fake_line := "this is a line to test with"
 	mut fake_cursor_pos := Pos{ x: 0 }
