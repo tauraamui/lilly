@@ -254,19 +254,18 @@ fn (mut view View) draw(mut ctx tui.Context) {
 
 	view.draw_document(mut ctx)
 
-	ctx.set_bg_color(r: 230, g: 230, b: 230)
 	cursor_line := view.buffer.lines[view.cursor.pos.y]
 	mut offset := 0
 	mut scanto := view.cursor.pos.x
-	if scanto + 1 > cursor_line.runes().len { scanto = cursor_line.runes().len - 1 }
+	if scanto > cursor_line.runes().len { scanto = cursor_line.runes().len }
 
-	for c in cursor_line.runes()[..scanto+1] {
+	for c in cursor_line.runes()[..scanto] {
 		match c {
 			`\t` { offset += 4 }
 			else { offset += 1 }
 		}
 	}
-	if cursor_line.len == 0 { offset += 1 }
+
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
 	if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
 
@@ -277,8 +276,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	if view.mode == .insert {
 		set_cursor_to_vertical_bar(mut ctx)
 	} else { set_cursor_to_block(mut ctx) }
-	// offset += if view.mode == .insert { 1 } else { 0 }
-	ctx.set_cursor_position(view.x+offset, cursor_screen_space_y+1)
+	ctx.set_cursor_position(view.x+1+offset, cursor_screen_space_y+1)
 }
 
 fn (mut view View) draw_document(mut ctx tui.Context) {
