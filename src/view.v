@@ -652,7 +652,7 @@ fn (mut view View) clamp_cursor_within_document_bounds() {
 fn (mut view View) clamp_cursor_x_pos() {
 	line_len := view.buffer.lines[view.cursor.pos.y].runes().len
 	if line_len == 0 { view.cursor.pos.x = 0; return }
-	if view.mode != .insert {
+	if view.mode == .insert {
 		if view.cursor.pos.x > line_len { view.cursor.pos.x = line_len }
 	} else {
 		if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
