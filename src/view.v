@@ -599,6 +599,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.backspace { view.backspace() }
 				.left { view.left() }
 				.right { view.right() }
+				.tab { view.insert_text('\t') }
 				else {
 					buf := [5]u8{}
 					s := unsafe { utf32_to_str_no_malloc(u32(e.code), &buf[0]) }
