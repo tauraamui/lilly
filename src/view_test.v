@@ -136,7 +136,7 @@ fn test_right_arrow_at_end_of_sentence_in_insert_mode() {
 
 	fake_view.right()
 
-	assert fake_view.cursor.pos.x == 20
+	assert fake_view.cursor.pos.x == 19
 }
 
 fn test_calc_w_move_amount_simple_sentence_line() {

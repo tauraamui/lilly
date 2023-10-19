@@ -794,6 +794,12 @@ fn (mut view View) backspace() {
 		view.cursor.pos.x = view.buffer.lines[y].len
 		return
 	}
+
+	before := line[..view.cursor.pos.x-1]
+	after := line[view.cursor.pos.x..]
+	view.buffer.lines[y] = "${before}${after}"
+	view.cursor.pos.x -= 1
+	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
 }
 
 fn (mut view View) left() {
