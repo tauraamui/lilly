@@ -594,8 +594,8 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.escape { view.escape() }
 				.enter { view.enter() }
 				.backspace { view.backspace() }
-				.left {  }
-				.right {  }
+				.left { view.left() }
+				.right { view.right() }
 				else {}
 			}
 		}
@@ -786,6 +786,16 @@ fn (mut view View) backspace() {
 	view.cursor.pos.x = previous_line.len
 
 	if view.cursor.pos.y < 0 { view.cursor.pos.y = 0 }
+}
+
+fn (mut view View) left() {
+	view.cursor.pos.x -= 1
+	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
+}
+
+fn (mut view View) right() {
+	view.cursor.pos.x += 1
+	if view.cursor.pos.x > view.buffer.lines[view.cursor.pos.y].len { view.cursor.pos.x = view.buffer.lines[view.cursor.pos.y].len }
 }
 
 fn calc_w_move_amount(cursor_pos Pos, line string) int {
