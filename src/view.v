@@ -534,15 +534,19 @@ fn (mut view View) on_key_down(e &tui.Event) {
 	match view.mode {
 		.normal {
 			match e.code {
-				.h { view.h() }
-				.l { view.l() }
-				.j { view.j() }
-				.k { view.k() }
-				.i { view.i() }
-				.e { view.e() }
-				.w { view.w() }
-				.b { view.b() }
-				.o { view.o() }
+				.h     { view.h() }
+				.l     { view.l() }
+				.j     { view.j() }
+				.k     { view.k() }
+				.i     { view.i() }
+				.e     { view.e() }
+				.w     { view.w() }
+				.b     { view.b() }
+				.o     { view.o() }
+				.up    { view.k() }
+				.right { view.l() }
+				.down  { view.j() }
+				.left  { view.h() }
 				.d { if e.modifiers == .ctrl { view.ctrl_d() } }
 				.u { if e.modifiers == .ctrl { view.ctrl_u() } }
 				.caret { view.hat() }
@@ -590,6 +594,8 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.escape { view.escape() }
 				.enter { view.enter() }
 				.backspace { view.backspace() }
+				.left {  }
+				.right {  }
 				else {}
 			}
 		}
