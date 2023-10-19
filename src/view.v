@@ -778,6 +778,22 @@ fn (mut view View) backspace() {
 
 	mut line := view.buffer.lines[y]
 
+	if view.cursor.pos.x == 0 {
+		previous_line := view.buffer.lines[y - 1]
+		view.buffer.lines[y - 1] = "${previous_line}${view.buffer.lines[y]}"
+		view.buffer.lines.delete(y)
+		view.move_cursor_up(1)
+		view.cursor.pos.x = previous_line.len
+
+		if view.cursor.pos.y < 0 { view.cursor.pos.y = 0 }
+		return
+	}
+
+	mut before := line[..view.cursor.pos.x]
+	if before.len > 0 { before = before[..before.len-1] }
+	after := line[view.cursor.pos.x..]
+	view.buffer.lines[y] = "${before}${after}"
+	view.clamp_cursor_x_pos()
 }
 
 fn (mut view View) left() {
