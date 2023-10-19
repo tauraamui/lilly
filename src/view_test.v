@@ -43,7 +43,7 @@ fn test_backspace_deletes_char_from_start_of_sentance() {
 
 	fake_view.buffer.lines = ["", "single line of text!"]
 	fake_view.cursor.pos.y = 1
-	fake_view.cursor.pos.x = 1
+	fake_view.cursor.pos.x = 0
 
 	fake_view.backspace()
 	assert fake_view.buffer.lines == ["", "ingle line of text!"]

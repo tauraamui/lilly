@@ -277,7 +277,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	if view.mode == .insert {
 		set_cursor_to_vertical_bar(mut ctx)
 	} else { set_cursor_to_block(mut ctx) }
-	offset += if view.mode == .insert { 1 } else { 0 }
+	// offset += if view.mode == .insert { 1 } else { 0 }
 	ctx.set_cursor_position(view.x+offset, cursor_screen_space_y+1)
 }
 
@@ -613,6 +613,8 @@ fn (mut view View) on_key_down(e &tui.Event) {
 fn (mut view View) escape() {
 	view.mode = .normal
 	view.repeat_amount = ""
+	view.cursor.pos.x -= 1
+	view.clamp_cursor_x_pos()
 	view.cmd_buf.clear()
 }
 
@@ -651,7 +653,7 @@ fn (mut view View) clamp_cursor_x_pos() {
 	line_len := view.buffer.lines[view.cursor.pos.y].runes().len
 	if line_len == 0 { view.cursor.pos.x = 0; return }
 	if view.mode != .insert {
-		if view.cursor.pos.x+1 > line_len { view.cursor.pos.x = line_len }
+		if view.cursor.pos.x > line_len { view.cursor.pos.x = line_len }
 	} else {
 		if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
 	}
@@ -699,7 +701,6 @@ fn (mut view View) k() {
 
 fn (mut view View) i() {
 	view.mode = .insert
-	view.cursor.pos.x -= 1
 	view.clamp_cursor_x_pos()
 }
 
@@ -777,24 +778,6 @@ fn (mut view View) backspace() {
 
 	mut line := view.buffer.lines[y]
 
-	if view.cursor.pos.x > 0 {
-		before := line[..view.cursor.pos.x]
-		after := line[view.cursor.pos.x+1..]
-		view.buffer.lines[y] = "${before}${after}"
-		view.cursor.pos.x -= 1
-		if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
-		return
-	}
-
-	if view.cursor.pos.x == 0 {
-		previous_line := view.buffer.lines[y - 1]
-		view.buffer.lines[y - 1] = "${previous_line}${view.buffer.lines[y]}"
-		view.buffer.lines.delete(y)
-		view.cursor.pos.y -= 1
-		view.cursor.pos.x = previous_line.len
-
-		if view.cursor.pos.y < 0 { view.cursor.pos.y = 0 }
-	}
 }
 
 fn (mut view View) left() {
