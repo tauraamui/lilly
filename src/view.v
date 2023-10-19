@@ -599,7 +599,11 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.backspace { view.backspace() }
 				.left { view.left() }
 				.right { view.right() }
-				else {}
+				else {
+					buf := [5]u8{}
+					s := unsafe { utf32_to_str_no_malloc(u32(e.code), &buf[0]) }
+					view.insert_text(s)
+				}
 			}
 		}
 		.visual {
@@ -610,6 +614,35 @@ fn (mut view View) on_key_down(e &tui.Event) {
 			}
 		}
 	}
+}
+
+fn (mut view View) char_insert(s string) {
+	if int(s[0]) < 32 {
+		return
+	}
+	view.insert_text(s)
+}
+
+fn (mut view View) insert_text(s string) {
+	defer { view.clamp_cursor_x_pos() }
+	y := view.cursor.pos.y
+	line := view.buffer.lines[y]
+	if line.len == 0 {
+		view.buffer.lines[y] = '${s} '
+	} else {
+		if view.cursor.pos.x > line.len {
+			view.cursor.pos.x = line.len
+		}
+		uline := line.runes()
+		if view.cursor.pos.x > uline.len {
+			return
+		}
+		left := uline[..view.cursor.pos.x].string()
+		right := uline[view.cursor.pos.x..uline.len].string()
+		// insert char in the middle
+		view.buffer.lines[y] = '${left}${s}${right}'
+	}
+	view.cursor.pos.x += s.runes().len
 }
 
 fn (mut view View) escape() {
