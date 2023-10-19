@@ -2,7 +2,7 @@ run:
     v run ./src
 
 test:
-    v test ./src
+    v -g test ./src
 
 compile:
     v ./src -o lilly.bin -prod
