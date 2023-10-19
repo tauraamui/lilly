@@ -82,6 +82,7 @@ mut:
 	syntaxes                  []Syntax
 	current_syntax_idx        int
 	is_multiline_comment      bool
+	relative_line_numbers     bool
 }
 
 struct Buffer {
@@ -129,7 +130,7 @@ mut:
 
 fn (mut cmd_buf CmdBuffer) draw(mut ctx tui.Context, draw_cursor bool) {
 	defer { ctx.reset_bg_color() }
-	if cmd_buf.code != .blank && cmd_buf.code != .successful {
+	if cmd_buf.code != .blank {
 		color := cmd_buf.code.color()
 		ctx.set_color(r: color.r, g: color.g, b: color.b)
 		ctx.draw_text(1, ctx.window_height, cmd_buf.err_msg)
@@ -156,13 +157,16 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View) {
 			// view.show_whitespace = !view.show_whitespace
 			cmd_buf.code = .disabled
 		}
+		":toggle relative line numbers" {
+			view.relative_line_numbers = !view.relative_line_numbers
+			cmd_buf.code = .successful
+		}
 		else { cmd_buf.code = .unrecognised }
 	}
 
 	if cmd_buf.code == .successful {
 		if cmd_buf.cmd_history.last() or { "" } == cmd_buf.line { return }
 		cmd_buf.cmd_history.push(cmd_buf.line)
-		return
 	}
 	cmd_buf.set_error(cmd_buf.code.str().replace("__", cmd_buf.line))
 }
