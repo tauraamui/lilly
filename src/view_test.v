@@ -87,6 +87,58 @@ fn test_backspace_at_start_of_sentance_first_line_does_nothing() {
 	assert fake_view.buffer.lines == ["single line of text!", ""]
 }
 
+fn test_left_arrow_at_start_of_sentence_in_insert_mode() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	fake_view.mode = .insert
+
+	fake_view.buffer.lines = ["", "single line of text!", ""]
+	fake_view.cursor.pos.y = 1
+	fake_view.cursor.pos.x = 0
+
+	fake_view.left()
+
+	assert fake_view.cursor.pos.x == 0
+}
+
+fn test_right_arrow_at_start_of_sentence_in_insert_mode() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	fake_view.mode = .insert
+
+	fake_view.buffer.lines = ["", "single line of text!", ""]
+	fake_view.cursor.pos.y = 1
+	fake_view.cursor.pos.x = 0
+
+	fake_view.right()
+
+	assert fake_view.cursor.pos.x == 1
+}
+
+fn test_left_arrow_at_end_of_sentence_in_insert_mode() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	fake_view.mode = .insert
+
+	fake_view.buffer.lines = ["", "single line of text!", ""]
+	fake_view.cursor.pos.y = 1
+	fake_view.cursor.pos.x = fake_view.buffer.lines[fake_view.cursor.pos.y].len
+
+	fake_view.left()
+
+	assert fake_view.cursor.pos.x == 19
+}
+
+fn test_right_arrow_at_end_of_sentence_in_insert_mode() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	fake_view.mode = .insert
+
+	fake_view.buffer.lines = ["", "single line of text!", ""]
+	fake_view.cursor.pos.y = 1
+	fake_view.cursor.pos.x = fake_view.buffer.lines[fake_view.cursor.pos.y].len
+
+	fake_view.right()
+
+	assert fake_view.cursor.pos.x == 20
+}
+
 fn test_calc_w_move_amount_simple_sentence_line() {
 	fake_line := "this is a line to test with"
 	mut fake_cursor_pos := Pos{ x: 0 }
