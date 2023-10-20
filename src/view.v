@@ -84,6 +84,7 @@ mut:
 	current_syntax_idx        int
 	is_multiline_comment      bool
 	relative_line_numbers     bool
+	d_count                   int
 }
 
 struct Buffer {
@@ -556,7 +557,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.right { view.l() }
 				.down  { view.j() }
 				.left  { view.h() }
-				.d { if e.modifiers == .ctrl { view.ctrl_d() } }
+				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.d() } }
 				.u { if e.modifiers == .ctrl { view.ctrl_u() } }
 				.caret { view.hat() }
 				.dollar { view.dollar() }
@@ -809,6 +810,14 @@ fn (mut view View) hat() {
 fn (mut view View) dollar() {
 	line := view.buffer.lines[view.cursor.pos.y]
 	view.cursor.pos.x = line.runes().len - 1
+}
+
+fn (mut view View) d() {
+	view.d_count += 1
+	if view.d_count == 2 {
+		view.buffer.lines.delete(view.cursor.pos.y)
+		view.d_count = 0
+	}
 }
 
 fn (mut view View) o() {
