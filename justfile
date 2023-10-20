@@ -5,5 +5,6 @@ test:
     v -g test ./src
 
 compile:
-    v ./src -o lilly.bin -prod
+    v ./src -o lilly -prod
 
+build: compile
