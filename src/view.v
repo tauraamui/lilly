@@ -606,6 +606,9 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.left { view.left() }
 				.right { view.right() }
 				.tab { view.insert_text('\t') }
+				48...57, 97...122 { // 0-9a-zA-Z
+					view.insert_text(e.ascii.ascii_str())
+				}
 				else {
 					buf := [5]u8{}
 					s := unsafe { utf32_to_str_no_malloc(u32(e.code), &buf[0]) }
@@ -648,7 +651,7 @@ fn (mut view View) insert_text(s string) {
 	y := view.cursor.pos.y
 	line := view.buffer.lines[y]
 	if line.len == 0 {
-		view.buffer.lines[y] = '${s} '
+		view.buffer.lines[y] = '${s}'
 	} else {
 		if view.cursor.pos.x > line.len {
 			view.cursor.pos.x = line.len
