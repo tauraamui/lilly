@@ -66,6 +66,7 @@ const (
 struct View {
 mut:
 	log                       &log.Log
+	path                      string
 	mode                      Mode
 	buffer                    Buffer
 	cursor                    Cursor
@@ -161,6 +162,10 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View) {
 			view.relative_line_numbers = !view.relative_line_numbers
 			cmd_buf.code = .successful
 		}
+		":w" {
+			cmd_buf.code = .successful
+			view.save_file() or { cmd_buf.code = .unsuccessful }
+		}
 		else { cmd_buf.code = .unrecognised }
 	}
 
@@ -229,6 +234,7 @@ fn (app &App) new_view() View {
 }
 
 fn (mut view View) open_file(path string) {
+	view.path = path
 	view.buffer.lines = os.read_lines(path) or { []string{} }
 	// get words map
 	/*
@@ -616,6 +622,19 @@ fn (mut view View) on_key_down(e &tui.Event) {
 		}
 	}
 }
+
+fn (mut view View) save_file()! {
+	if view.path == '' {
+		return
+	}
+	path := view.path
+	mut file := os.create(path)!
+	for line in view.buffer.lines {
+		file.writeln(line.trim_right(' \t'))!
+	}
+	file.close()
+}
+
 
 fn (mut view View) char_insert(s string) {
 	if int(s[0]) < 32 {
