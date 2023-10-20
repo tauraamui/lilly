@@ -1,5 +1,6 @@
 module main
 
+import os
 import term.ui as tui
 import log
 
@@ -85,7 +86,8 @@ fn main() {
 	app.views << app.new_view()
 	app.update_view()
 
-	app.view.open_file("./src/view.v")
+	path := os.args[1] or { panic("missing file path") }
+	app.view.open_file(path)
 
     app.tui.run()!
 }

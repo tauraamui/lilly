@@ -600,7 +600,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 		}
 		.insert {
 			match e.code {
-				.left_square_bracket { if e.modifiers == .ctrl { view.escape() } }
+				.left_square_bracket { if e.modifiers == .ctrl { view.escape() } else { view.insert_text('[') } }
 				.escape { view.escape() }
 				.enter { view.enter() }
 				.backspace { view.backspace() }
@@ -815,7 +815,8 @@ fn (mut view View) dollar() {
 fn (mut view View) d() {
 	view.d_count += 1
 	if view.d_count == 2 {
-		view.buffer.lines.delete(view.cursor.pos.y)
+		index := if view.cursor.pos.y == view.buffer.lines.len { view.cursor.pos.y - 1 } else { view.cursor.pos.y }
+		view.buffer.lines.delete(index)
 		view.d_count = 0
 	}
 }
