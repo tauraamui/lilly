@@ -458,7 +458,7 @@ fn resolve_line_segments(syntax Syntax, line string, is_multiline_comment bool) 
 
 fn (mut view View) draw_text_line_number(mut ctx tui.Context, y int) {
 	ctx.set_color(r: 117, g: 118, b: 120)
-	line_num_str := "${view.from+y}"
+	line_num_str := "${view.from+y+1}"
 	ctx.draw_text(view.x - line_num_str.runes().len, y+1, line_num_str)
 	ctx.reset_color()
 }
