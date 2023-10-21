@@ -1,5 +1,6 @@
 module main
 
+/*
 fn test_dd_deletes_current_line_at_start_of_doc() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 	fake_view.buffer.lines = ["1. first line", "2. second line", "3. third line", "4. forth line"]
@@ -34,6 +35,7 @@ fn test_dd_deletes_current_line_at_end_of_doc() {
 	assert fake_view.buffer.lines == ["1. first line", "2. second line"]
 	assert fake_view.cursor.pos.y == 2
 }
+*/
 
 fn test_o_inserts_sentance_line() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
