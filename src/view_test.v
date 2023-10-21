@@ -26,9 +26,12 @@ fn test_dd_deletes_current_line_in_middle_of_doc() {
 
 fn test_dd_deletes_current_line_at_end_of_doc() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	// manually set the "document" contents
 	fake_view.buffer.lines = ["1. first line", "2. second line", "3. third line"]
+	// ensure the cursor is set to sit on the last line
 	fake_view.cursor.pos.y = fake_view.buffer.lines.len
 
+	// invoke dd
 	fake_view.d()
 	fake_view.d()
 
@@ -39,8 +42,12 @@ fn test_dd_deletes_current_line_at_end_of_doc() {
 
 fn test_o_inserts_sentance_line() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	// manually set the "document" contents
 	fake_view.buffer.lines = ["1. first line", "2. second line"]
+	// ensure cursor is set to sit on the first line
+	fake_view.cursor.pos.y = 0
 
+	// invoke the 'o' command
 	fake_view.o()
 
 	assert fake_view.mode == .insert
@@ -50,9 +57,12 @@ fn test_o_inserts_sentance_line() {
 
 fn test_o_inserts_sentance_line_end_of_document() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	// manually set the "document" contents
 	fake_view.buffer.lines = ["1. first line", "2. second line"]
+	// ensure cursor is set to sit on the first line
 	fake_view.cursor.pos.y = 1
 
+	// invoke the 'o' command
 	fake_view.o()
 
 	assert fake_view.mode == .insert
@@ -62,14 +72,18 @@ fn test_o_inserts_sentance_line_end_of_document() {
 
 fn test_backspace_deletes_char_from_end_of_sentance() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	// manually set the "document" contents
 	fake_view.buffer.lines = ["single line of text!"]
+	// ensure cursor is set to sit on the first line
 	fake_view.cursor.pos.y = 0
 	fake_view.mode = .insert
 	fake_view.cursor.pos.x = fake_view.buffer.lines[fake_view.cursor.pos.y].len
 
+	// invoke backspace
 	fake_view.backspace()
 	assert fake_view.buffer.lines == ["single line of text"]
 
+	// invoke backspace
 	fake_view.backspace()
 	assert fake_view.buffer.lines == ["single line of tex"]
 }
@@ -78,10 +92,14 @@ fn test_backspace_deletes_char_from_start_of_sentance() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 	fake_view.mode = .insert
 
+	// manually set the "document" contents
 	fake_view.buffer.lines = ["", "single line of text!"]
+	// ensure cursor is set to sit on the second line
 	fake_view.cursor.pos.y = 1
+	// ensure the cursor is set to sit on the second char of the line
 	fake_view.cursor.pos.x = 1
 
+	// invoke backspace
 	fake_view.backspace()
 	assert fake_view.buffer.lines == ["", "ingle line of text!"]
 }
@@ -90,10 +108,14 @@ fn test_backspace_moves_line_up_to_previous_line() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 	fake_view.mode = .insert
 
+	// manually set the document contents
 	fake_view.buffer.lines = ["", "single line of text!"]
+	// ensure cursor is set to sit on the second line
 	fake_view.cursor.pos.y = 1
+	// ensure the cursor is set to sit on the second char of the line
 	fake_view.cursor.pos.x = 0
 
+	// invoke backspace
 	fake_view.backspace()
 	assert fake_view.buffer.lines == ["single line of text!"]
 }
@@ -102,24 +124,33 @@ fn test_backspace_moves_line_up_to_end_of_previous_line() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 	fake_view.mode = .insert
 
+	// manually set the document contents
 	fake_view.buffer.lines = ["i am the first line", "single line of text!"]
+	// ensure cursor is set to sit on the second line
 	fake_view.cursor.pos.y = 1
+	// ensure the cursor is set to sit on the first char of the line
 	fake_view.cursor.pos.x = 0
 
+	// invoke backspace
 	fake_view.backspace()
 	assert fake_view.buffer.lines == ["i am the first linesingle line of text!"]
 	assert fake_view.cursor.pos.x == 19
-	assert fake_view.buffer.lines[0][fake_view.cursor.pos.x].ascii_str() == "s"
+	assert fake_view.cursor.pos.y == 0
+	assert fake_view.buffer.lines[fake_view.cursor.pos.y][fake_view.cursor.pos.x].ascii_str() == "s"
 }
 
 fn test_backspace_at_start_of_sentance_first_line_does_nothing() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 	fake_view.mode = .insert
 
+	// manually set the document contents
 	fake_view.buffer.lines = ["single line of text!", ""]
+	// ensure cursor is set to sit on the first line
 	fake_view.cursor.pos.y = 0
+	// ensure cursor is set to sit on the first char of the line
 	fake_view.cursor.pos.x = 0
 
+	// invoke backspace
 	fake_view.backspace()
 	assert fake_view.buffer.lines == ["single line of text!", ""]
 }
@@ -128,10 +159,14 @@ fn test_left_arrow_at_start_of_sentence_in_insert_mode() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 	fake_view.mode = .insert
 
+	// manually set the document contents
 	fake_view.buffer.lines = ["", "single line of text!", ""]
+	// ensure cursor is set to sit on the second line
 	fake_view.cursor.pos.y = 1
+	// ensure cursor is set to sit on the first char of the line
 	fake_view.cursor.pos.x = 0
 
+	// invoke left
 	fake_view.left()
 
 	assert fake_view.cursor.pos.x == 0
@@ -141,10 +176,14 @@ fn test_right_arrow_at_start_of_sentence_in_insert_mode() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 	fake_view.mode = .insert
 
+	// manually set the documents contents
 	fake_view.buffer.lines = ["", "single line of text!", ""]
+	// ensure cursor is set to sit on the second line
 	fake_view.cursor.pos.y = 1
+	// ensure cursor is set to sit on the first char of the line
 	fake_view.cursor.pos.x = 0
 
+	// invoke right
 	fake_view.right()
 
 	assert fake_view.cursor.pos.x == 1
@@ -154,10 +193,14 @@ fn test_left_arrow_at_end_of_sentence_in_insert_mode() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 	fake_view.mode = .insert
 
+	// manually set the documents contents
 	fake_view.buffer.lines = ["", "single line of text!", ""]
+	// ensure cursor is set to sit on the second line
 	fake_view.cursor.pos.y = 1
+	// ensure the cursor is set to sit on the last char of the line
 	fake_view.cursor.pos.x = fake_view.buffer.lines[fake_view.cursor.pos.y].len
 
+	// invoke left
 	fake_view.left()
 
 	assert fake_view.cursor.pos.x == 19
@@ -167,16 +210,21 @@ fn test_right_arrow_at_end_of_sentence_in_insert_mode() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 	fake_view.mode = .insert
 
+	// manually set the documents contents
 	fake_view.buffer.lines = ["", "single line of text!", ""]
+	// ensure cursor is set to sit on the second line
 	fake_view.cursor.pos.y = 1
+	// ensure the cursor is set to sit on the last char of the line
 	fake_view.cursor.pos.x = fake_view.buffer.lines[fake_view.cursor.pos.y].len
 
+	// invoke right
 	fake_view.right()
 
 	assert fake_view.cursor.pos.x == 20
 }
 
 fn test_calc_w_move_amount_simple_sentence_line() {
+	// manually set the documents contents
 	fake_line := "this is a line to test with"
 	mut fake_cursor_pos := Pos{ x: 0 }
 
@@ -192,6 +240,7 @@ fn test_calc_w_move_amount_simple_sentence_line() {
 }
 
 fn test_calc_w_move_amount_code_line() {
+	// manually set the documents contents
 	fake_line := "fn (mut view View) w() {"
 	mut fake_cursor_pos := Pos{ x: 0 }
 
@@ -207,6 +256,7 @@ fn test_calc_w_move_amount_code_line() {
 }
 
 fn test_calc_w_move_amount_indented_code_line() {
+	// manually set the document contents
 	fake_line := "		for i := 0; i < 100; i++ {"
 	mut fake_cursor_pos := Pos{ x: 0 }
 
@@ -222,6 +272,7 @@ fn test_calc_w_move_amount_indented_code_line() {
 }
 
 fn test_calc_e_move_amount_code_line() {
+	// manually set the document contents
 	fake_line := "status_green            = Color { 145, 237, 145 }"
 
 	mut fake_cursor_pos := Pos{ x: 0 }
@@ -253,6 +304,7 @@ fn test_calc_e_move_amount_code_line() {
 }
 
 fn test_calc_e_move_amount_word_with_leading_whitespace() {
+	// manually set the document contents
 	fake_line := "    this"
 	mut fake_cursor_pos := Pos{ x: 0 }
 
@@ -263,6 +315,7 @@ fn test_calc_e_move_amount_word_with_leading_whitespace() {
 }
 
 fn test_calc_e_move_amount_two_words_with_leading_whitespace() {
+	// manually set the document contents
 	fake_line := "    this sentence"
 
 	mut fake_cursor_pos := Pos{ x: 0 }
