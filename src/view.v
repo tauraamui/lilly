@@ -167,7 +167,13 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View) {
 			cmd_buf.code = .successful
 			view.save_file() or { cmd_buf.code = .unsuccessful }
 		}
-		else { cmd_buf.code = .unrecognised }
+		else {
+			jump_pos, parse_successful := try_to_parse_to_jump_to_line_num(view.cmd_buf.line)
+			if !parse_successful { cmd_buf.code = .unrecognised } else {
+				view.jump_cursor_to(jump_pos-1)
+				cmd_buf.code = .successful
+			}
+		}
 	}
 
 	if cmd_buf.code == .successful {
@@ -175,6 +181,11 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View) {
 		cmd_buf.cmd_history.push(cmd_buf.line)
 	}
 	cmd_buf.set_error(cmd_buf.code.str().replace("__", cmd_buf.line))
+}
+
+fn try_to_parse_to_jump_to_line_num(cmd_value string) (int, bool) {
+	line_to_jump_to := strconv.atoi(cmd_value.replace(":", "")) or { return 0, false }
+	return line_to_jump_to, true
 }
 
 fn (mut cmd_buf CmdBuffer) put_char(c string) {
@@ -600,7 +611,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 		}
 		.insert {
 			match e.code {
-				.left_square_bracket { if e.modifiers == .ctrl { view.escape() } else { view.insert_text('[') } }
+				.left_square_bracket { if e.modifiers == .ctrl { view.escape() } else { view.insert_text('[') } } // TODO(tauraamui): -> remove this
 				.escape { view.escape() }
 				.enter { view.enter() }
 				.backspace { view.backspace() }
@@ -675,6 +686,12 @@ fn (mut view View) escape() {
 	view.cursor.pos.x -= 1
 	view.clamp_cursor_x_pos()
 	view.cmd_buf.clear()
+}
+
+fn (mut view View) jump_cursor_to(position int) {
+	view.cursor.pos.y = position
+	view.clamp_cursor_within_document_bounds()
+	view.scroll_from_and_to()
 }
 
 fn (mut view View) move_cursor_up(amount int) {
