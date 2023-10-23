@@ -871,8 +871,10 @@ fn (mut view View) o() {
 	defer { view.move_cursor_down(1) }
 	view.mode = .insert
 	y := view.cursor.pos.y
-	if y >= view.buffer.lines.len { view.buffer.lines << ""; return }
-	view.buffer.lines.insert(y+1, "")
+	whitespace_prefix := resolve_whitespace_prefix(view.buffer.lines[y])
+	defer { view.cursor.pos.x = whitespace_prefix.len }
+	if y >= view.buffer.lines.len { view.buffer.lines << "${whitespace_prefix}"; return }
+	view.buffer.lines.insert(y+1, "${whitespace_prefix}")
 }
 
 fn (mut view View) enter() {
