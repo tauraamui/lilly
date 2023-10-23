@@ -32,10 +32,6 @@ mut:
 }
 
 const (
-	home_dir          = os.home_dir()
-	settings_dir      = os.join_path(home_dir, '.lilly')
-	syntax_dir        = os.join_path(settings_dir, 'syntax')
-
 	block                   = "█"
 	slant_left_flat_bottom  = ""
 	left_rounded            = ""
@@ -81,6 +77,7 @@ struct View {
 mut:
 	log                       &log.Log
 	path                      string
+	config                    Config
 	mode                      Mode
 	buffer                    Buffer
 	cursor                    Cursor
@@ -97,7 +94,6 @@ mut:
 	syntaxes                  []Syntax
 	current_syntax_idx        int
 	is_multiline_comment      bool
-	relative_line_numbers     bool
 	d_count                   int
 }
 
@@ -174,11 +170,11 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View) {
 			cmd_buf.code = .disabled
 		}
 		":toggle relative line numbers" {
-			view.relative_line_numbers = !view.relative_line_numbers
+			view.config.relative_line_numbers = !view.config.relative_line_numbers
 			cmd_buf.code = .successful
 		}
 		":toggle rln" {
-			view.relative_line_numbers = !view.relative_line_numbers
+			view.config.relative_line_numbers = !view.config.relative_line_numbers
 			cmd_buf.code = .successful
 		}
 		":w" {
@@ -259,6 +255,7 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 fn (app &App) new_view() View {
 	mut res := View{ log: app.log, mode: .normal, show_whitespace: false }
 	res.load_syntaxes()
+	res.load_config()
 	res.set_current_syntax_idx(".v")
 	return res
 }
@@ -490,7 +487,7 @@ fn (mut view View) draw_text_line_number(mut ctx tui.Context, y int) {
 	ctx.set_color(r: 117, g: 118, b: 120)
 
 	mut line_num_str := "${view.from+y+1}"
-	if view.relative_line_numbers {
+	if view.config.relative_line_numbers {
 		if y < cursor_screenspace_y {
 			line_num_str = "${cursor_screenspace_y - y}"
 		} else if cursor_screenspace_y == y {
