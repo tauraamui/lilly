@@ -883,6 +883,22 @@ fn (mut view View) o() {
 }
 
 fn (mut view View) enter() {
+	x := view.cursor.pos.x
+	y := view.cursor.pos.y
+
+	current_line := view.buffer.lines[y]
+	whitespace_prefix := resolve_whitespace_prefix(current_line)
+
+	mut segment_after := ""
+	if x > 0 { segment_after = current_line[x..] }
+
+	view.buffer.lines[y] = current_line[..x]
+	if y >= view.buffer.lines.len { view.buffer.lines << "${whitespace_prefix}${segment_after}" } else {
+		view.buffer.lines.insert(y+1, "${whitespace_prefix}${segment_after}")
+	}
+}
+
+fn (mut view View) enter_() {
 	defer { view.move_cursor_down(1) }
 	y := view.cursor.pos.y
 
