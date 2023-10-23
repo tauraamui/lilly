@@ -907,19 +907,6 @@ fn (mut view View) enter() {
 	}
 }
 
-fn (mut view View) enter_() {
-	defer { view.move_cursor_down(1) }
-	y := view.cursor.pos.y
-
-	mut line := view.buffer.lines[y]
-	whitespace_prefix := resolve_whitespace_prefix(line)
-	defer { view.cursor.pos.x = whitespace_prefix.len }
-	segment_to_move := line[view.cursor.pos.x..]
-	view.buffer.lines[y] = line[..view.cursor.pos.x]
-	if y >= view.buffer.lines.len { view.buffer.lines << "${whitespace_prefix}${segment_to_move}"; return }
-	view.buffer.lines.insert(y+1, "${whitespace_prefix}${segment_to_move}")
-}
-
 fn resolve_whitespace_prefix(line string) string {
 	mut prefix_ends := 0
 	for i, c in line {
