@@ -114,6 +114,23 @@ fn test_enter_inserts_line_at_cur_pos_and_auto_indents() {
 	assert fake_view.buffer.lines == ["	indented first line", "	"]
 }
 
+fn test_enter_auto_indents_but_clears_if_nothing_added_to_line() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
+	// manually set the "document" contents
+	fake_view.buffer.lines = ["	indented first line"]
+	// ensure cursor is set to sit on the first line
+	fake_view.cursor.pos.y = 0
+	// ensure cursor is set to sit on the end of the line
+	fake_view.cursor.pos.x = fake_view.buffer.lines[fake_view.cursor.pos.y].len
+
+	// invoke enter
+	fake_view.enter()
+	assert fake_view.buffer.lines == ["	indented first line", "	"]
+
+	fake_view.enter()
+	assert fake_view.buffer.lines == ["	indented first line", "", ""]
+}
+
 fn test_backspace_deletes_char_from_end_of_sentance() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 	// manually set the "document" contents
