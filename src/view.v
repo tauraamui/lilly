@@ -306,7 +306,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
 	if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
 
-	draw_status_line(mut ctx, Status{ view.mode, view.cursor.pos.x, view.cursor.pos.y, "view.v" })
+	draw_status_line(mut ctx, Status{ view.mode, view.cursor.pos.x, view.cursor.pos.y, os.base(view.path) })
 	view.cmd_buf.draw(mut ctx, view.mode == .command)
 
 	ctx.draw_text(ctx.window_width-view.repeat_amount.len, ctx.window_height, view.repeat_amount)
