@@ -644,6 +644,8 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.left { view.left() }
 				.right { view.right() }
 				.tab { view.insert_text('\t') }
+				.single_quote { view.insert_text("\'\'") }
+				.double_quote { view.insert_text("\"\"")}
 				.left_paren { view.insert_text('()') }
 				.left_curly_bracket { view.insert_text('{}') }
 				.left_square_bracket { view.insert_text('[]') }
