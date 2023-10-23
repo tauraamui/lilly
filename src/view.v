@@ -618,7 +618,6 @@ fn (mut view View) on_key_down(e &tui.Event) {
 		}
 		.command {
 			match e.code {
-				.left_square_bracket { if e.modifiers == .ctrl { view.escape() } }
 				.escape { view.escape() }
 				.enter { view.cmd_buf.exec(mut view); view.mode = .normal }
 				.space { view.cmd_buf.put_char(" ") }
@@ -637,7 +636,6 @@ fn (mut view View) on_key_down(e &tui.Event) {
 		}
 		.insert {
 			match e.code {
-				.left_square_bracket { if e.modifiers == .ctrl { view.escape() } else { view.insert_text('[') } } // TODO(tauraamui): -> remove this
 				.escape { view.escape() }
 				.enter { view.enter() }
 				.backspace { view.backspace() }

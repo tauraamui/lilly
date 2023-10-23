@@ -84,6 +84,21 @@ fn test_o_inserts_sentance_line_end_of_document() {
 	assert fake_view.cursor.pos.y == 2
 }
 
+fn test_enter_inserts_line_at_cur_pos() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
+	// manually set the "document" contents
+	fake_view.buffer.lines = ["	indented first line"]
+	// ensure cursor is set to sit on the first line
+	fake_view.cursor.pos.y = 0
+	// ensure cursor is set to sit on the end of the line
+	fake_view.cursor.pos.x = fake_view.buffer.lines[fake_view.cursor.pos.y].len
+
+	// invoke enter
+	fake_view.enter()
+
+	assert fake_view.buffer.lines == ["	indented first line", "	"]
+}
+
 fn test_backspace_deletes_char_from_end_of_sentance() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 	// manually set the "document" contents
