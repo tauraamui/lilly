@@ -177,6 +177,10 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View) {
 			view.relative_line_numbers = !view.relative_line_numbers
 			cmd_buf.code = .successful
 		}
+		":toggle rln" {
+			view.relative_line_numbers = !view.relative_line_numbers
+			cmd_buf.code = .successful
+		}
 		":w" {
 			cmd_buf.code = .successful
 			view.save_file() or { cmd_buf.code = .unsuccessful }
