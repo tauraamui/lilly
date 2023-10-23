@@ -177,6 +177,10 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View) {
 			view.relative_line_numbers = !view.relative_line_numbers
 			cmd_buf.code = .successful
 		}
+		":toggle rln" {
+			view.relative_line_numbers = !view.relative_line_numbers
+			cmd_buf.code = .successful
+		}
 		":w" {
 			cmd_buf.code = .successful
 			view.save_file() or { cmd_buf.code = .unsuccessful }
@@ -482,8 +486,19 @@ fn resolve_line_segments(syntax Syntax, line string, is_multiline_comment bool) 
 }
 
 fn (mut view View) draw_text_line_number(mut ctx tui.Context, y int) {
+	cursor_screenspace_y := view.cursor.pos.y - view.from
 	ctx.set_color(r: 117, g: 118, b: 120)
-	line_num_str := "${view.from+y+1}"
+
+	mut line_num_str := "${view.from+y+1}"
+	if view.relative_line_numbers {
+		if y < cursor_screenspace_y {
+			line_num_str = "${cursor_screenspace_y - y}"
+		} else if cursor_screenspace_y == y {
+			line_num_str = "${view.from+y+1}"
+		} else if y > cursor_screenspace_y {
+			line_num_str = "${y - cursor_screenspace_y}"
+		}
+	}
 	ctx.draw_text(view.x - line_num_str.runes().len, y+1, line_num_str)
 	ctx.reset_color()
 }
