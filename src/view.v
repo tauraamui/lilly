@@ -843,13 +843,13 @@ fn (mut view View) b() {
 }
 
 fn (mut view View) ctrl_d() {
-	ten_percent_of_total_lines := f32(view.buffer.lines.len) * .1
+	ten_percent_of_total_lines := f32(view.buffer.lines.len) * .05
 	view.move_cursor_down(int(ten_percent_of_total_lines))
 	view.clamp_cursor_x_pos()
 }
 
 fn (mut view View) ctrl_u() {
-	ten_percent_of_total_lines := f32(view.buffer.lines.len) * .1
+	ten_percent_of_total_lines := f32(view.buffer.lines.len) * .05
 	view.move_cursor_up(int(ten_percent_of_total_lines))
 	view.clamp_cursor_x_pos()
 }
@@ -883,18 +883,27 @@ fn (mut view View) o() {
 }
 
 fn (mut view View) enter() {
-	x := view.cursor.pos.x
+	defer { view.move_cursor_down(1) }
+	mut x := view.cursor.pos.x
 	y := view.cursor.pos.y
 
-	current_line := view.buffer.lines[y]
-	whitespace_prefix := resolve_whitespace_prefix(current_line)
+	mut current_line := view.buffer.lines[y]
+	mut whitespace_prefix := resolve_whitespace_prefix(current_line)
+	if whitespace_prefix.len == current_line.len {
+		whitespace_prefix = ""
+		view.buffer.lines[y] = ""
+		current_line = ""
+		x = 0
+	}
 
 	mut segment_after := ""
 	if x > 0 { segment_after = current_line[x..] }
 
 	view.buffer.lines[y] = current_line[..x]
-	if y >= view.buffer.lines.len { view.buffer.lines << "${whitespace_prefix}${segment_after}" } else {
-		view.buffer.lines.insert(y+1, "${whitespace_prefix}${segment_after}")
+	new_line := "${whitespace_prefix}${segment_after}"
+	defer { view.cursor.pos.x = new_line.len }
+	if y >= view.buffer.lines.len { view.buffer.lines << new_line } else {
+		view.buffer.lines.insert(y+1, new_line)
 	}
 }
 
