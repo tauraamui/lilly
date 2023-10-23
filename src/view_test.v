@@ -99,6 +99,16 @@ fn test_o_inserts_line_and_auto_indents() {
 	assert fake_view.cursor.pos.y == 1
 }
 
+fn test_resolve_whitespace_prefix_on_line_with_text() {
+	test_line := "    4 spaces precede this text"
+	assert resolve_whitespace_prefix(test_line) == "    "
+}
+
+fn test_resolve_whitespace_prefix_on_line_with_no_text() {
+	test_line_with_just_4_spaces := "    "
+	assert resolve_whitespace_prefix(test_line_with_just_4_spaces).len == 4
+}
+
 fn test_enter_inserts_line_at_cur_pos_and_auto_indents() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
 	// manually set the "document" contents

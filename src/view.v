@@ -715,6 +715,11 @@ fn (mut view View) escape() {
 	view.cursor.pos.x -= 1
 	view.clamp_cursor_x_pos()
 	view.cmd_buf.clear()
+	line := view.buffer.lines[view.cursor.pos.y]
+	whitespace_prefix := resolve_whitespace_prefix(line)
+	if whitespace_prefix.len == line.len {
+		view.buffer.lines[view.cursor.pos.y] = ""
+	}
 }
 
 fn (mut view View) jump_cursor_to(position int) {
@@ -893,9 +898,9 @@ fn (mut view View) enter() {
 fn resolve_whitespace_prefix(line string) string {
 	mut prefix_ends := 0
 	for i, c in line {
-		if !is_whitespace(c) { prefix_ends = i; break }
+		if !is_whitespace(c) { prefix_ends = i; return line[..prefix_ends] }
 	}
-	return line[..prefix_ends]
+	return line
 }
 
 fn (mut view View) backspace() {
