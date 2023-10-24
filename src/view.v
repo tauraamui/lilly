@@ -893,6 +893,7 @@ fn (mut view View) visual_d() {
 	after := view.buffer.lines[end..]
 	view.buffer.lines = before
 	view.buffer.lines << after
+	view.escape()
 }
 
 fn (mut view View) w() {
