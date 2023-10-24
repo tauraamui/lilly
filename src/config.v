@@ -16,6 +16,7 @@ module main
 
 import os
 import json
+import term.ui as tui
 
 const builtin_lilly_config_file_content = $embed_file('config/lilly.conf').to_string()
 
@@ -28,6 +29,7 @@ const (
 struct Config {
 mut:
 	relative_line_numbers bool
+	selection_highlight_color tui.Color
 }
 
 fn (mut view View) load_config() {

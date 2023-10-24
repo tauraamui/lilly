@@ -22,8 +22,26 @@ import strconv
 
 struct Cursor {
 mut:
-	pos Pos
+	pos             Pos
+	selection_start Pos
 }
+
+fn (cursor Cursor) line_is_within_selection(line_y int) bool {
+	start := if cursor.selection_start.y < cursor.pos.y { cursor.selection_start.y } else { cursor.pos.y }
+	end   := if cursor.pos.y > cursor.selection_start.y { cursor.pos.y } else { cursor.selection_start.y }
+
+	return line_y >= start && line_y <= end
+}
+
+fn (cursor Cursor) selection_start_y() int {
+	return if cursor.selection_start.y < cursor.pos.y { cursor.selection_start.y } else { cursor.pos.y }
+}
+
+fn (cursor Cursor) selection_end_y() int {
+	return if cursor.pos.y > cursor.selection_start.y { cursor.pos.y } else { cursor.selection_start.y }
+}
+
+fn (cursor Cursor) selection_active() bool { return cursor.selection_start.x >= 0 && cursor.selection_start.y >= 0 }
 
 struct Pos {
 mut:
@@ -95,6 +113,7 @@ mut:
 	current_syntax_idx        int
 	is_multiline_comment      bool
 	d_count                   int
+	y_lines                   []string
 }
 
 struct Buffer {
@@ -323,16 +342,32 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 	ctx.set_bg_color(r: 53, g: 53, b: 53)
 
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
-	if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
-	ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width, cursor_screen_space_y+1)
+	// draw cursor line
+	if view.mode != .visual {
+		if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
+		ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width, cursor_screen_space_y+1)
+	}
+
+	color := view.config.selection_highlight_color
+	mut within_selection := false
+	// draw document text
 	for y, line in view.buffer.lines[view.from..to] {
 		ctx.reset_bg_color()
 		ctx.reset_color()
 
 		view.draw_text_line_number(mut ctx, y)
 
-		if y == cursor_screen_space_y { ctx.set_bg_color(r: 53, g: 53, b: 53) }
-		view.draw_text_line(mut ctx, y, line)
+		document_space_y := view.from + y
+		if view.mode == .visual {
+			within_selection = view.cursor.line_is_within_selection(document_space_y)
+			if within_selection { ctx.set_bg_color(r: color.r, g: color.g, b: color.b) }
+		} else {
+			within_selection = false
+			if y == cursor_screen_space_y {
+				ctx.set_bg_color(r: 53, g: 53, b: 53)
+			}
+		}
+		view.draw_text_line(mut ctx, y, line, within_selection)
 	}
 }
 
@@ -349,7 +384,7 @@ struct LineSegment {
 	typ   SegmentKind
 }
 
-fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string) {
+fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string, within_selection bool) {
 	mut linex := line.replace("\t", " ".repeat(4))
 	mut max_width := view.width
 	if max_width > linex.runes().len { max_width = linex.runes().len }
@@ -367,7 +402,7 @@ fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string) {
 	}
 	*/
 
-	if segments.len == 0 {
+	if segments.len == 0 || within_selection {
 		ctx.draw_text(view.x+1, y+1, linex)
 		return
 	}
@@ -586,6 +621,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.j     { view.j() }
 				.k     { view.k() }
 				.i     { view.i() }
+				.v     { if e.modifiers == .shift { view.v() } }
 				.e     { view.e() }
 				.w     { view.w() }
 				.b     { view.b() }
@@ -605,6 +641,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.right_square_bracket { view.right_square_bracket() }
 				.escape { view.escape() }
 				.enter {
+					// TODO(tauraamui) -> what even is this, remove??
 					if view.mode == .command {
 						if view.cmd_buf.line == ":q" { exit(0) }
 						view.cmd_buf.set_error("unrecognised command ${view.cmd_buf.line}")
@@ -613,6 +650,27 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				48...57 { // 0-9a
 					view.repeat_amount = "${view.repeat_amount}${e.ascii.ascii_str()}"
 				}
+				else {}
+			}
+		}
+		.visual {
+			match e.code {
+				.escape { view.escape() }
+				.h      { view.h() }
+				.l      { view.l() }
+				.j      { view.j() }
+				.k      { view.k() }
+				.up     { view.k() }
+				.right  { view.l() }
+				.down   { view.j() }
+				.left   { view.h() }
+				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.visual_d() } }
+				.u { if e.modifiers == .ctrl { view.ctrl_u() } }
+				.caret { view.hat() }
+				.dollar { view.dollar() }
+				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
+				.right_curly_bracket { view.jump_cursor_down_to_next_blank_line() }
+				.y { view.visual_y() }
 				else {}
 			}
 		}
@@ -655,13 +713,6 @@ fn (mut view View) on_key_down(e &tui.Event) {
 					s := unsafe { utf32_to_str_no_malloc(u32(e.code), &buf[0]) }
 					view.insert_text(s)
 				}
-			}
-		}
-		.visual {
-			match e.code {
-				.left_square_bracket { if e.modifiers == .ctrl { view.escape() } }
-				.escape { view.escape() }
-				else {}
 			}
 		}
 	}
@@ -710,11 +761,22 @@ fn (mut view View) insert_text(s string) {
 }
 
 fn (mut view View) escape() {
+	// TODO(tauraamui) -> completely re-write this method
+	defer {
+		if view.cursor.selection_active() {
+			view.cursor.pos.y = view.cursor.selection_start_y()
+		}
+		view.cursor.selection_start = Pos{ -1, -1 }
+		view.clamp_cursor_within_document_bounds()
+		view.scroll_from_and_to()
+	}
 	view.mode = .normal
 	view.repeat_amount = ""
 	view.cursor.pos.x -= 1
 	view.clamp_cursor_x_pos()
 	view.cmd_buf.clear()
+
+	// if current line only contains whitespace prefix clear the line
 	line := view.buffer.lines[view.cursor.pos.y]
 	whitespace_prefix := resolve_whitespace_prefix(line)
 	if whitespace_prefix.len == line.len {
@@ -814,6 +876,34 @@ fn (mut view View) i() {
 	view.clamp_cursor_x_pos()
 }
 
+fn (mut view View) v() {
+	view.mode = .visual
+	view.cursor.selection_start = view.cursor.pos
+}
+
+fn (mut view View) visual_y() {
+	mut y_lines := []string{}
+	start := view.cursor.selection_start_y()
+	end   := view.cursor.selection_end_y()
+	y_lines = view.buffer.lines[start..end]
+	view.y_lines = y_lines
+	view.escape()
+}
+
+fn (mut view View) visual_d() {
+	mut y_lines := []string{}
+	start := view.cursor.selection_start_y()
+	end := view.cursor.selection_end_y()
+	y_lines = view.buffer.lines[start..end]
+	view.y_lines = y_lines
+
+	before := view.buffer.lines[..start]
+	after := view.buffer.lines[end..]
+	view.buffer.lines = before
+	view.buffer.lines << after
+	view.escape()
+}
+
 fn (mut view View) w() {
 	line := view.buffer.lines[view.cursor.pos.y]
 	amount := calc_w_move_amount(view.cursor.pos, line)
@@ -867,8 +957,11 @@ fn (mut view View) d() {
 	view.d_count += 1
 	if view.d_count == 2 {
 		index := if view.cursor.pos.y == view.buffer.lines.len { view.cursor.pos.y - 1 } else { view.cursor.pos.y }
+		view.y_lines = []string{}
+		view.y_lines << view.buffer.lines[index]
 		view.buffer.lines.delete(index)
 		view.d_count = 0
+		view.clamp_cursor_within_document_bounds()
 	}
 }
 

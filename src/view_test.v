@@ -14,7 +14,6 @@
 
 module main
 
-/*
 fn test_dd_deletes_current_line_at_start_of_doc() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 	fake_view.buffer.lines = ["1. first line", "2. second line", "3. third line", "4. forth line"]
@@ -24,6 +23,7 @@ fn test_dd_deletes_current_line_at_start_of_doc() {
 	fake_view.d()
 
 	assert fake_view.buffer.lines == ["2. second line", "3. third line", "4. forth line"]
+	assert fake_view.y_lines == ["1. first line"]
 }
 
 fn test_dd_deletes_current_line_in_middle_of_doc() {
@@ -35,7 +35,8 @@ fn test_dd_deletes_current_line_in_middle_of_doc() {
 	fake_view.d()
 
 	assert fake_view.buffer.lines == ["1. first line", "2. second line", "4. forth line"]
-	assert fake_view.cursor.pos.y == 1
+	assert fake_view.cursor.pos.y == 2
+	assert fake_view.y_lines == ["3. third line"]
 }
 
 fn test_dd_deletes_current_line_at_end_of_doc() {
@@ -50,9 +51,9 @@ fn test_dd_deletes_current_line_at_end_of_doc() {
 	fake_view.d()
 
 	assert fake_view.buffer.lines == ["1. first line", "2. second line"]
-	assert fake_view.cursor.pos.y == 2
+	assert fake_view.cursor.pos.y == 1
+	assert fake_view.y_lines == ["3. third line"]
 }
-*/
 
 fn test_o_inserts_sentance_line() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
@@ -112,7 +113,7 @@ fn test_o_auto_indents_but_clears_if_nothing_added_to_line() {
 
 	assert fake_view.mode == .normal
 	assert fake_view.buffer.lines == ["	1. first line", ""]
-	assert fake_view.cursor.pos.y == 1
+	assert fake_view.cursor.pos.y == 0 // cursor y set back to selection start pos
 }
 
 fn test_resolve_whitespace_prefix_on_line_with_text() {
@@ -123,6 +124,22 @@ fn test_resolve_whitespace_prefix_on_line_with_text() {
 fn test_resolve_whitespace_prefix_on_line_with_no_text() {
 	test_line_with_just_4_spaces := "    "
 	assert resolve_whitespace_prefix(test_line_with_just_4_spaces).len == 4
+}
+
+fn test_v_toggles_visual_mode_and_starts_selection() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	// manually set the "document" contents
+	fake_view.buffer.lines = ["1. first line"]
+	// ensure cursor is set to sit on sort of in the middle of the first line
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 6
+
+	// invoke the 'v' command
+	fake_view.v()
+
+	assert fake_view.mode == .visual
+	assert fake_view.cursor.selection_active()
+	assert fake_view.cursor.selection_start == Pos{ 6, 0 }
 }
 
 fn test_enter_inserts_line_at_cur_pos_and_auto_indents() {
