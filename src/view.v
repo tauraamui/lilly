@@ -26,6 +26,17 @@ mut:
 	selection_start Pos
 }
 
+fn (cursor Cursor) line_is_within_selection(line_y int) bool {
+	start := if cursor.selection_start.y < cursor.pos.y { cursor.selection_start.y } else { cursor.pos.y }
+	end   := if cursor.pos.y > cursor.selection_start.y { cursor.pos.y } else { cursor.selection_start.y }
+
+	return line_y >= start && line_y <= end
+}
+
+fn (cursor Cursor) selection_start_y() int {
+	return if cursor.selection_start.y < cursor.pos.y { cursor.selection_start.y } else { cursor.pos.y }
+}
+
 fn (cursor Cursor) selection_active() bool { return cursor.selection_start.x >= 0 && cursor.selection_start.y >= 0 }
 
 struct Pos {
@@ -344,8 +355,7 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 
 		document_space_y := view.from + y
 		if view.mode == .visual {
-			within_selection = view.cursor.selection_active() && document_space_y >= view.cursor.selection_start.y && document_space_y <= view.cursor.pos.y
-
+			within_selection = view.cursor.line_is_within_selection(document_space_y)
 			if within_selection { ctx.set_bg_color(r: color.r, g: color.g, b: color.b) }
 		} else {
 			within_selection = false
