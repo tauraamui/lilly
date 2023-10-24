@@ -22,8 +22,11 @@ import strconv
 
 struct Cursor {
 mut:
-	pos Pos
+	pos             Pos
+	selection_start Pos
 }
+
+fn (cursor Cursor) selection_active() bool { return cursor.selection_start.x >= 0 && cursor.selection_start.y >= 0 }
 
 struct Pos {
 mut:
@@ -586,6 +589,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.j     { view.j() }
 				.k     { view.k() }
 				.i     { view.i() }
+				.v     { view.v() }
 				.e     { view.e() }
 				.w     { view.w() }
 				.b     { view.b() }
@@ -715,6 +719,9 @@ fn (mut view View) escape() {
 	view.cursor.pos.x -= 1
 	view.clamp_cursor_x_pos()
 	view.cmd_buf.clear()
+	view.cursor.selection_start = Pos{ -1, -1 }
+
+	// if current line only contains whitespace prefix clear the line
 	line := view.buffer.lines[view.cursor.pos.y]
 	whitespace_prefix := resolve_whitespace_prefix(line)
 	if whitespace_prefix.len == line.len {
@@ -812,6 +819,11 @@ fn (mut view View) k() {
 fn (mut view View) i() {
 	view.mode = .insert
 	view.clamp_cursor_x_pos()
+}
+
+fn (mut view View) v() {
+	view.mode = .visual
+	view.cursor.selection_start = view.cursor.pos
 }
 
 fn (mut view View) w() {
