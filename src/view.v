@@ -332,6 +332,7 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 		ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width, cursor_screen_space_y+1)
 	}
 
+	color := view.config.selection_highlight_color
 	mut within_selection := false
 	// draw document text
 	for y, line in view.buffer.lines[view.from..to] {
@@ -343,7 +344,8 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 		document_space_y := view.from + y
 		if view.mode == .visual {
 			within_selection = view.cursor.selection_active() && document_space_y >= view.cursor.selection_start.y && document_space_y <= view.cursor.pos.y
-			if within_selection { ctx.set_bg_color(r: 230, g: 140, b: 230) }
+
+			if within_selection { ctx.set_bg_color(r: color.r, g: color.g, b: color.b) }
 		} else {
 			within_selection = false
 			if y == cursor_screen_space_y {
@@ -604,7 +606,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.j     { view.j() }
 				.k     { view.k() }
 				.i     { view.i() }
-				.v     { view.v() }
+				.v     { if e.modifiers == .shift { view.v() } }
 				.e     { view.e() }
 				.w     { view.w() }
 				.b     { view.b() }
