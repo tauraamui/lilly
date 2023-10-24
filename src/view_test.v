@@ -23,6 +23,7 @@ fn test_dd_deletes_current_line_at_start_of_doc() {
 	fake_view.d()
 
 	assert fake_view.buffer.lines == ["2. second line", "3. third line", "4. forth line"]
+	assert fake_view.y_lines == ["1. first line"]
 }
 
 fn test_dd_deletes_current_line_in_middle_of_doc() {
@@ -35,6 +36,7 @@ fn test_dd_deletes_current_line_in_middle_of_doc() {
 
 	assert fake_view.buffer.lines == ["1. first line", "2. second line", "4. forth line"]
 	assert fake_view.cursor.pos.y == 2
+	assert fake_view.y_lines == ["3. third line"]
 }
 
 fn test_dd_deletes_current_line_at_end_of_doc() {
@@ -50,6 +52,7 @@ fn test_dd_deletes_current_line_at_end_of_doc() {
 
 	assert fake_view.buffer.lines == ["1. first line", "2. second line"]
 	assert fake_view.cursor.pos.y == 1
+	assert fake_view.y_lines == ["3. third line"]
 }
 
 fn test_o_inserts_sentance_line() {
