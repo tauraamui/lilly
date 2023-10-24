@@ -85,7 +85,7 @@ fn test_o_inserts_sentance_line_end_of_document() {
 }
 
 fn test_o_inserts_line_and_auto_indents() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 	// manually set the "document" contents
 	fake_view.buffer.lines = ["	1. first line"]
 	// ensure cursor is set to sit on the first line
@@ -96,6 +96,22 @@ fn test_o_inserts_line_and_auto_indents() {
 
 	assert fake_view.mode == .insert
 	assert fake_view.buffer.lines == ["	1. first line", "	"]
+	assert fake_view.cursor.pos.y == 1
+}
+
+fn test_o_auto_indents_but_clears_if_nothing_added_to_line() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	// manually set the "document" contents
+	fake_view.buffer.lines = ["	1. first line"]
+	// ensure cursor is set to sit on the first line
+	fake_view.cursor.pos.y = 0
+
+	// invoke the 'o' command
+	fake_view.o()
+	fake_view.escape()
+
+	assert fake_view.mode == .normal
+	assert fake_view.buffer.lines == ["	1. first line", ""]
 	assert fake_view.cursor.pos.y == 1
 }
 
