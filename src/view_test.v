@@ -73,7 +73,7 @@ fn test_o_inserts_sentance_line_end_of_document() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 	// manually set the "document" contents
 	fake_view.buffer.lines = ["1. first line", "2. second line"]
-	// ensure cursor is set to sit on the first line
+	// ensure cursor is set to sit on the second line
 	fake_view.cursor.pos.y = 1
 
 	// invoke the 'o' command
@@ -82,6 +82,79 @@ fn test_o_inserts_sentance_line_end_of_document() {
 	assert fake_view.mode == .insert
 	assert fake_view.buffer.lines == ["1. first line", "2. second line", ""]
 	assert fake_view.cursor.pos.y == 2
+}
+
+fn test_o_inserts_line_and_auto_indents() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	// manually set the "document" contents
+	fake_view.buffer.lines = ["	1. first line"]
+	// ensure cursor is set to sit on the first line
+	fake_view.cursor.pos.y = 0
+
+	// invoke the 'o' command
+	fake_view.o()
+
+	assert fake_view.mode == .insert
+	assert fake_view.buffer.lines == ["	1. first line", "	"]
+	assert fake_view.cursor.pos.y == 1
+}
+
+fn test_o_auto_indents_but_clears_if_nothing_added_to_line() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	// manually set the "document" contents
+	fake_view.buffer.lines = ["	1. first line"]
+	// ensure cursor is set to sit on the first line
+	fake_view.cursor.pos.y = 0
+
+	// invoke the 'o' command
+	fake_view.o()
+	fake_view.escape()
+
+	assert fake_view.mode == .normal
+	assert fake_view.buffer.lines == ["	1. first line", ""]
+	assert fake_view.cursor.pos.y == 1
+}
+
+fn test_resolve_whitespace_prefix_on_line_with_text() {
+	test_line := "    4 spaces precede this text"
+	assert resolve_whitespace_prefix(test_line) == "    "
+}
+
+fn test_resolve_whitespace_prefix_on_line_with_no_text() {
+	test_line_with_just_4_spaces := "    "
+	assert resolve_whitespace_prefix(test_line_with_just_4_spaces).len == 4
+}
+
+fn test_enter_inserts_line_at_cur_pos_and_auto_indents() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
+	// manually set the "document" contents
+	fake_view.buffer.lines = ["	indented first line"]
+	// ensure cursor is set to sit on the first line
+	fake_view.cursor.pos.y = 0
+	// ensure cursor is set to sit on the end of the line
+	fake_view.cursor.pos.x = fake_view.buffer.lines[fake_view.cursor.pos.y].len
+
+	// invoke enter
+	fake_view.enter()
+
+	assert fake_view.buffer.lines == ["	indented first line", "	"]
+}
+
+fn test_enter_auto_indents_but_clears_if_nothing_added_to_line() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
+	// manually set the "document" contents
+	fake_view.buffer.lines = ["	indented first line"]
+	// ensure cursor is set to sit on the first line
+	fake_view.cursor.pos.y = 0
+	// ensure cursor is set to sit on the end of the line
+	fake_view.cursor.pos.x = fake_view.buffer.lines[fake_view.cursor.pos.y].len
+
+	// invoke enter
+	fake_view.enter()
+	assert fake_view.buffer.lines == ["	indented first line", "	"]
+
+	fake_view.enter()
+	assert fake_view.buffer.lines == ["	indented first line", "", ""]
 }
 
 fn test_backspace_deletes_char_from_end_of_sentance() {

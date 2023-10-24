@@ -618,7 +618,6 @@ fn (mut view View) on_key_down(e &tui.Event) {
 		}
 		.command {
 			match e.code {
-				.left_square_bracket { if e.modifiers == .ctrl { view.escape() } }
 				.escape { view.escape() }
 				.enter { view.cmd_buf.exec(mut view); view.mode = .normal }
 				.space { view.cmd_buf.put_char(" ") }
@@ -637,7 +636,6 @@ fn (mut view View) on_key_down(e &tui.Event) {
 		}
 		.insert {
 			match e.code {
-				.left_square_bracket { if e.modifiers == .ctrl { view.escape() } else { view.insert_text('[') } } // TODO(tauraamui): -> remove this
 				.escape { view.escape() }
 				.enter { view.enter() }
 				.backspace { view.backspace() }
@@ -717,6 +715,11 @@ fn (mut view View) escape() {
 	view.cursor.pos.x -= 1
 	view.clamp_cursor_x_pos()
 	view.cmd_buf.clear()
+	line := view.buffer.lines[view.cursor.pos.y]
+	whitespace_prefix := resolve_whitespace_prefix(line)
+	if whitespace_prefix.len == line.len {
+		view.buffer.lines[view.cursor.pos.y] = ""
+	}
 }
 
 fn (mut view View) jump_cursor_to(position int) {
@@ -840,13 +843,13 @@ fn (mut view View) b() {
 }
 
 fn (mut view View) ctrl_d() {
-	ten_percent_of_total_lines := f32(view.buffer.lines.len) * .1
+	ten_percent_of_total_lines := f32(view.buffer.lines.len) * .05
 	view.move_cursor_down(int(ten_percent_of_total_lines))
 	view.clamp_cursor_x_pos()
 }
 
 fn (mut view View) ctrl_u() {
-	ten_percent_of_total_lines := f32(view.buffer.lines.len) * .1
+	ten_percent_of_total_lines := f32(view.buffer.lines.len) * .05
 	view.move_cursor_up(int(ten_percent_of_total_lines))
 	view.clamp_cursor_x_pos()
 }
@@ -873,18 +876,43 @@ fn (mut view View) o() {
 	defer { view.move_cursor_down(1) }
 	view.mode = .insert
 	y := view.cursor.pos.y
-	if y >= view.buffer.lines.len { view.buffer.lines << ""; return }
-	view.buffer.lines.insert(y+1, "")
+	whitespace_prefix := resolve_whitespace_prefix(view.buffer.lines[y])
+	defer { view.cursor.pos.x = whitespace_prefix.len }
+	if y >= view.buffer.lines.len { view.buffer.lines << "${whitespace_prefix}"; return }
+	view.buffer.lines.insert(y+1, "${whitespace_prefix}")
 }
 
 fn (mut view View) enter() {
-	defer { view.move_cursor_down(1); view.cursor.pos.x = 0 }
+	defer { view.move_cursor_down(1) }
+	mut x := view.cursor.pos.x
 	y := view.cursor.pos.y
-	mut line := view.buffer.lines[y]
-	segment_to_move := line[view.cursor.pos.x..]
-	view.buffer.lines[y] = line[..view.cursor.pos.x]
-	if y >= view.buffer.lines.len { view.buffer.lines << "${segment_to_move}"; return }
-	view.buffer.lines.insert(y+1, "${segment_to_move}")
+
+	mut current_line := view.buffer.lines[y]
+	mut whitespace_prefix := resolve_whitespace_prefix(current_line)
+	if whitespace_prefix.len == current_line.len {
+		whitespace_prefix = ""
+		view.buffer.lines[y] = ""
+		current_line = ""
+		x = 0
+	}
+
+	mut segment_after := ""
+	if x > 0 { segment_after = current_line[x..] }
+
+	view.buffer.lines[y] = current_line[..x]
+	new_line := "${whitespace_prefix}${segment_after}"
+	defer { view.cursor.pos.x = new_line.len }
+	if y >= view.buffer.lines.len { view.buffer.lines << new_line } else {
+		view.buffer.lines.insert(y+1, new_line)
+	}
+}
+
+fn resolve_whitespace_prefix(line string) string {
+	mut prefix_ends := 0
+	for i, c in line {
+		if !is_whitespace(c) { prefix_ends = i; return line[..prefix_ends] }
+	}
+	return line
 }
 
 fn (mut view View) backspace() {
