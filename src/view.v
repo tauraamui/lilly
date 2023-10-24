@@ -37,6 +37,10 @@ fn (cursor Cursor) selection_start_y() int {
 	return if cursor.selection_start.y < cursor.pos.y { cursor.selection_start.y } else { cursor.pos.y }
 }
 
+fn (cursor Cursor) selection_end_y() int {
+	return if cursor.pos.y > cursor.selection_start.y { cursor.pos.y } else { cursor.selection_start.y }
+}
+
 fn (cursor Cursor) selection_active() bool { return cursor.selection_start.x >= 0 && cursor.selection_start.y >= 0 }
 
 struct Pos {
@@ -870,13 +874,17 @@ fn (mut view View) v() {
 }
 
 fn (mut view View) visual_y() {
-	if view.cursor.pos.y < view.cursor.selection_start.y { view.cursor.selection_start.y; return }
 	mut y_lines := []string{}
-	for i := view.cursor.selection_start.y; i < view.cursor.pos.y; i++ {
+	start := view.cursor.selection_start_y()
+	end   := view.cursor.selection_end_y()
+	for i := start; i < end; i++ {
 		y_lines << view.buffer.lines[i]
 	}
 	view.y_lines = y_lines
 	view.escape()
+}
+
+fn (mut view View) visual_d() {
 }
 
 fn (mut view View) w() {
