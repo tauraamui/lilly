@@ -926,6 +926,7 @@ fn (mut view View) d() {
 		view.y_lines << view.buffer.lines[index]
 		view.buffer.lines.delete(index)
 		view.d_count = 0
+		view.clamp_cursor_within_document_bounds()
 	}
 }
 
