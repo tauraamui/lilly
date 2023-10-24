@@ -761,12 +761,14 @@ fn (mut view View) insert_text(s string) {
 }
 
 fn (mut view View) escape() {
+	// TODO(tauraamui) -> completely re-write this method
 	defer {
 		if view.cursor.selection_active() {
 			view.cursor.pos.y = view.cursor.selection_start_y()
 		}
 		view.cursor.selection_start = Pos{ -1, -1 }
 		view.clamp_cursor_within_document_bounds()
+		view.scroll_from_and_to()
 	}
 	view.mode = .normal
 	view.repeat_amount = ""
