@@ -761,12 +761,18 @@ fn (mut view View) insert_text(s string) {
 }
 
 fn (mut view View) escape() {
+	defer {
+		if view.cursor.selection_active() {
+			view.cursor.pos.y = view.cursor.selection_start_y()
+		}
+		view.cursor.selection_start = Pos{ -1, -1 }
+		view.clamp_cursor_within_document_bounds()
+	}
 	view.mode = .normal
 	view.repeat_amount = ""
 	view.cursor.pos.x -= 1
 	view.clamp_cursor_x_pos()
 	view.cmd_buf.clear()
-	view.cursor.selection_start = Pos{ -1, -1 }
 
 	// if current line only contains whitespace prefix clear the line
 	line := view.buffer.lines[view.cursor.pos.y]

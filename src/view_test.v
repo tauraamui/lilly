@@ -113,7 +113,7 @@ fn test_o_auto_indents_but_clears_if_nothing_added_to_line() {
 
 	assert fake_view.mode == .normal
 	assert fake_view.buffer.lines == ["	1. first line", ""]
-	assert fake_view.cursor.pos.y == 1
+	assert fake_view.cursor.pos.y == 0 // cursor y set back to selection start pos
 }
 
 fn test_resolve_whitespace_prefix_on_line_with_text() {
