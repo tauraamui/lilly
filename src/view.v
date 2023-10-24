@@ -326,16 +326,31 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 	ctx.set_bg_color(r: 53, g: 53, b: 53)
 
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
-	if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
-	ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width, cursor_screen_space_y+1)
+	// draw cursor line
+	if view.mode != .visual {
+		if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
+		ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width, cursor_screen_space_y+1)
+	}
+
+	mut within_selection := false
+	// draw document text
 	for y, line in view.buffer.lines[view.from..to] {
 		ctx.reset_bg_color()
 		ctx.reset_color()
 
 		view.draw_text_line_number(mut ctx, y)
 
-		if y == cursor_screen_space_y { ctx.set_bg_color(r: 53, g: 53, b: 53) }
-		view.draw_text_line(mut ctx, y, line)
+		document_space_y := view.from + y
+		if view.mode == .visual {
+			within_selection = view.cursor.selection_active() && document_space_y >= view.cursor.selection_start.y && document_space_y <= view.cursor.pos.y
+			if within_selection { ctx.set_bg_color(r: 230, g: 140, b: 230) }
+		} else {
+			within_selection = false
+			if y == cursor_screen_space_y {
+				ctx.set_bg_color(r: 53, g: 53, b: 53)
+			}
+		}
+		view.draw_text_line(mut ctx, y, line, within_selection)
 	}
 }
 
@@ -352,7 +367,7 @@ struct LineSegment {
 	typ   SegmentKind
 }
 
-fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string) {
+fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string, within_selection bool) {
 	mut linex := line.replace("\t", " ".repeat(4))
 	mut max_width := view.width
 	if max_width > linex.runes().len { max_width = linex.runes().len }
@@ -370,7 +385,7 @@ fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string) {
 	}
 	*/
 
-	if segments.len == 0 {
+	if segments.len == 0 || within_selection {
 		ctx.draw_text(view.x+1, y+1, linex)
 		return
 	}
@@ -609,6 +624,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.right_square_bracket { view.right_square_bracket() }
 				.escape { view.escape() }
 				.enter {
+					// TODO(tauraamui) -> what even is this, remove??
 					if view.mode == .command {
 						if view.cmd_buf.line == ":q" { exit(0) }
 						view.cmd_buf.set_error("unrecognised command ${view.cmd_buf.line}")
@@ -617,6 +633,26 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				48...57 { // 0-9a
 					view.repeat_amount = "${view.repeat_amount}${e.ascii.ascii_str()}"
 				}
+				else {}
+			}
+		}
+		.visual {
+			match e.code {
+				.escape { view.escape() }
+				.h      { view.h() }
+				.l      { view.l() }
+				.j      { view.j() }
+				.k      { view.k() }
+				.up     { view.k() }
+				.right  { view.l() }
+				.down   { view.j() }
+				.left   { view.h() }
+				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.d() } }
+				.u { if e.modifiers == .ctrl { view.ctrl_u() } }
+				.caret { view.hat() }
+				.dollar { view.dollar() }
+				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
+				.right_curly_bracket { view.jump_cursor_down_to_next_blank_line() }
 				else {}
 			}
 		}
@@ -659,13 +695,6 @@ fn (mut view View) on_key_down(e &tui.Event) {
 					s := unsafe { utf32_to_str_no_malloc(u32(e.code), &buf[0]) }
 					view.insert_text(s)
 				}
-			}
-		}
-		.visual {
-			match e.code {
-				.left_square_bracket { if e.modifiers == .ctrl { view.escape() } }
-				.escape { view.escape() }
-				else {}
 			}
 		}
 	}
