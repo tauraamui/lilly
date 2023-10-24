@@ -125,6 +125,22 @@ fn test_resolve_whitespace_prefix_on_line_with_no_text() {
 	assert resolve_whitespace_prefix(test_line_with_just_4_spaces).len == 4
 }
 
+fn test_v_toggles_visual_mode_and_starts_selection() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	// manually set the "document" contents
+	fake_view.buffer.lines = ["1. first line"]
+	// ensure cursor is set to sit on sort of in the middle of the first line
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 6
+
+	// invoke the 'v' command
+	fake_view.v()
+
+	assert fake_view.mode == .visual
+	assert fake_view.cursor.selection_active()
+	assert fake_view.cursor.selection_start == Pos{ 6, 0 }
+}
+
 fn test_enter_inserts_line_at_cur_pos_and_auto_indents() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
 	// manually set the "document" contents
