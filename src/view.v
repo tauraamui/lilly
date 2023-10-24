@@ -98,6 +98,7 @@ mut:
 	current_syntax_idx        int
 	is_multiline_comment      bool
 	d_count                   int
+	y_lines                   []string
 }
 
 struct Buffer {
@@ -655,6 +656,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.dollar { view.dollar() }
 				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
 				.right_curly_bracket { view.jump_cursor_down_to_next_blank_line() }
+				.y { view.visual_y() }
 				else {}
 			}
 		}
@@ -857,6 +859,16 @@ fn (mut view View) v() {
 	view.cursor.selection_start = view.cursor.pos
 }
 
+fn (mut view View) visual_y() {
+	if view.cursor.pos.y < view.cursor.selection_start.y { view.cursor.selection_start.y; return }
+	mut y_lines := []string{}
+	for i := view.cursor.selection_start.y; i < view.cursor.pos.y; i++ {
+		y_lines << view.buffer.lines[i]
+	}
+	view.y_lines = y_lines
+	view.escape()
+}
+
 fn (mut view View) w() {
 	line := view.buffer.lines[view.cursor.pos.y]
 	amount := calc_w_move_amount(view.cursor.pos, line)
@@ -910,6 +922,8 @@ fn (mut view View) d() {
 	view.d_count += 1
 	if view.d_count == 2 {
 		index := if view.cursor.pos.y == view.buffer.lines.len { view.cursor.pos.y - 1 } else { view.cursor.pos.y }
+		view.y_lines = []string{}
+		view.y_lines << view.buffer.lines[index]
 		view.buffer.lines.delete(index)
 		view.d_count = 0
 	}
