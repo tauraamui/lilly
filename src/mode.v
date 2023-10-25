@@ -21,6 +21,7 @@ enum Mode as u8 {
 	visual
 	insert
 	command
+	search
 }
 
 fn (mode Mode) draw(mut ctx tui.Context, x int, y int) int {
@@ -44,6 +45,7 @@ fn (mode Mode) color() Color {
 		.visual { status_lilac }
 		.insert { status_orange }
 		.command { status_cyan }
+		.search { status_cyan }
 	}
 }
 
@@ -53,6 +55,7 @@ fn (mode Mode) str() string {
 		.visual  { "VISUAL"  }
 		.insert  { "INSERT"  }
 		.command { "COMMAND" }
+		.search  { "COMMAND"  }
 	}
 }
 

@@ -100,6 +100,7 @@ mut:
 	buffer                    Buffer
 	cursor                    Cursor
 	cmd_buf                   CmdBuffer
+	search                    Search
 	repeat_amount             string
 	x                         int
 	width                     int
@@ -114,6 +115,42 @@ mut:
 	is_multiline_comment      bool
 	d_count                   int
 	y_lines                   []string
+}
+
+struct Search {
+mut:
+	to_find  string
+	cursor_x int
+	finds    []Find
+}
+
+fn (mut search Search) draw(mut ctx tui.Context, draw_cursor bool) {
+	ctx.draw_text(1, ctx.window_height, search.to_find)
+}
+
+fn (mut search Search) prepare_for_input() {
+	search.to_find = "/"
+	search.cursor_x = 1
+}
+
+fn (mut search Search) put_char(c string, lines []string) {
+	first := search.to_find[..search.cursor_x]
+	last  := search.to_find[search.cursor_x..]
+	search.to_find = "${first}${c}${last}"
+	search.cursor_x += 1
+}
+
+fn (mut search Search) find(lines []string) {
+}
+
+fn (mut search Search) clear() {
+	search.to_find = ""
+	search.cursor_x = 0
+}
+
+struct Find {
+mut:
+	location Pos
 }
 
 struct Buffer {
@@ -276,6 +313,7 @@ fn (app &App) new_view() View {
 	res.load_syntaxes()
 	res.load_config()
 	res.set_current_syntax_idx(".v")
+	res.cursor.selection_start = Pos{ -1, -1 }
 	return res
 }
 
@@ -327,6 +365,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 
 	draw_status_line(mut ctx, Status{ view.mode, view.cursor.pos.x, view.cursor.pos.y, os.base(view.path) })
 	view.cmd_buf.draw(mut ctx, view.mode == .command)
+	if view.mode == .search { view.search.draw(mut ctx, view.mode == .search) }
 
 	ctx.draw_text(ctx.window_width-view.repeat_amount.len, ctx.window_height, view.repeat_amount)
 	if view.mode == .insert {
@@ -639,6 +678,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.colon { view.cmd() }
 				.left_square_bracket { view.left_square_bracket() }
 				.right_square_bracket { view.right_square_bracket() }
+				.slash { view.search() }
 				.escape { view.escape() }
 				.enter {
 					// TODO(tauraamui) -> what even is this, remove??
@@ -692,11 +732,22 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				}
 			}
 		}
+		.search {
+			match e.code {
+				.escape { view.escape() }
+				48...57, 97...122 { // 0-9a-zA-Z
+					view.search.put_char(e.ascii.ascii_str(), view.buffer.lines)
+				}
+				else {}
+			}
+		}
 		.insert {
 			match e.code {
 				.escape { view.escape() }
 				.enter { view.enter() }
 				.backspace { view.backspace() }
+				.up {}
+				.down {}
 				.left { view.left() }
 				.right { view.right() }
 				.tab { view.insert_text('\t') }
@@ -775,6 +826,7 @@ fn (mut view View) escape() {
 	view.cursor.pos.x -= 1
 	view.clamp_cursor_x_pos()
 	view.cmd_buf.clear()
+	view.search.clear()
 
 	// if current line only contains whitespace prefix clear the line
 	line := view.buffer.lines[view.cursor.pos.y]
@@ -845,6 +897,11 @@ fn (mut view View) exec_cmd() bool {
 		":toggle whitespace" { view.show_whitespace = !view.show_whitespace; true }
 		else { false }
 	}
+}
+
+fn (mut view View) search() {
+	view.mode = .search
+	view.search.prepare_for_input()
 }
 
 fn (mut view View) h() {
