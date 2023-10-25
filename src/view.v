@@ -19,6 +19,7 @@ import term.ui as tui
 import log
 import datatypes
 import strconv
+import regex
 
 struct Cursor {
 mut:
@@ -140,7 +141,13 @@ fn (mut search Search) put_char(c string, lines []string) {
 	search.cursor_x += 1
 }
 
-fn (mut search Search) find(lines []string) {
+fn (mut search Search) find(lines []string) int {
+	mut re := regex.regex_opt(search.to_find.replace("/", "")) or { return 0 }
+	mut count := 0
+	for line in lines {
+		count += re.find_all(line).len / 2
+	}
+	return count
 }
 
 fn (mut search Search) clear() {
