@@ -206,6 +206,8 @@ fn (mut search Search) next_find_pos() ?Match {
 fn (mut search Search) clear() {
 	search.to_find = ""
 	search.cursor_x = 0
+	search.finds.clear()
+	search.current_find = FindCursor{}
 }
 
 struct Find {
@@ -806,7 +808,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.down {}
 				.backspace { view.search.backspace() }
 				.enter { view.search.find(view.buffer.lines) }
-				.tab { pos := view.search.next_find_pos() or { return }; view.jump_cursor_to(pos.line-1) }
+				.tab { pos := view.search.next_find_pos() or { return }; view.jump_cursor_to(pos.line) }
 				else {
 					view.search.put_char(e.ascii.ascii_str())
 				}
