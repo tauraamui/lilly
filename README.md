@@ -1,6 +1,8 @@
-[<p align="center"><img src="docs/lilly-banner.png" width="445.4"/></p>]()
+<div align="center">
+  <img src="docs/lilly-banner.png" width="445.4" alt="Lilly">
+</div>
 
-## A VIM-Like editor for your terminal
+## A VIM-Like editor for your terminal (<a href="https://discord.gg/N4UG2TfDfd">chat on Discord</a>)
 ![Screenshot 2023-10-18 00 14 02](https://github.com/tauraamui/lilly/assets/3159648/7d585274-1ec4-42fe-b213-9421aedd4771)
 
 
