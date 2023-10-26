@@ -118,11 +118,17 @@ mut:
 	y_lines                   []string
 }
 
-struct Found {
+struct FindCursor {
 mut:
 	key_index int
 	line      int
 	index     int
+}
+
+struct Match {
+	start  int
+	end    int
+	line   int
 }
 
 struct Search {
@@ -130,7 +136,7 @@ mut:
 	to_find      string
 	cursor_x     int
 	finds        map[int][]int
-	current_find Found
+	current_find FindCursor
 }
 
 fn (mut search Search) draw(mut ctx tui.Context, draw_cursor bool) {
@@ -182,14 +188,13 @@ fn (mut search Search) find(lines []string) {
 	search.finds = finds.move()
 }
 
-fn (mut search Search) next_find_pos() ?Pos {
+fn (mut search Search) next_find_pos() ?Match {
 	if search.finds.len == 0 { return none }
 
 	line_num := search.finds.keys()[search.current_find.key_index]
 	search.current_find.key_index += 1
 	if search.current_find.key_index >= search.finds.keys().len { search.current_find.key_index = 0 }
-	//search.finds[line]
-	return Pos{ search.finds[line_num][0], line_num }
+	return Match{ line: line_num, start: search.finds[line_num][0], end: search.finds[line_num][1] }
 }
 
 fn (mut search Search) clear() {
@@ -795,7 +800,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.down {}
 				.backspace { view.search.backspace() }
 				.enter { view.search.find(view.buffer.lines) }
-				.tab { pos := view.search.next_find_pos() or { return }; view.jump_cursor_to(pos.y-1) }
+				.tab { pos := view.search.next_find_pos() or { return }; view.jump_cursor_to(pos.line-1) }
 				else {
 					view.search.put_char(e.ascii.ascii_str())
 				}
