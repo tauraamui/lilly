@@ -118,11 +118,16 @@ mut:
 	y_lines                   []string
 }
 
+struct Found {
+	line     int
+	index    int
+}
+
 struct Search {
 mut:
 	to_find  string
 	cursor_x int
-	finds    []Find
+	finds    map[int][]int
 }
 
 fn (mut search Search) draw(mut ctx tui.Context, draw_cursor bool) {
@@ -163,13 +168,18 @@ fn (mut search Search) backspace() {
 	if search.cursor_x < 1 { search.cursor_x = 1 }
 }
 
-fn (mut search Search) find(lines []string) map[int][]int {
+fn (mut search Search) find(lines []string) {
 	mut finds := map[int][]int{}
-	mut re := regex.regex_opt(search.to_find.replace_once("/", "")) or { return finds }
+	mut re := regex.regex_opt(search.to_find.replace_once("/", "")) or { return }
 	for i, line in lines {
 		finds[i] = re.find_all(line)
 	}
-	return finds
+	search.finds = finds.move()
+}
+
+fn (mut search Search) jump_to_next_find() {
+	for line_num in search.finds.keys() {
+	}
 }
 
 fn (mut search Search) clear() {
@@ -774,6 +784,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.up {}
 				.down {}
 				.backspace { view.search.backspace() }
+				.tab { view.search.jump_to_next_find() }
 				else {
 					view.search.put_char(e.ascii.ascii_str(), view.buffer.lines)
 				}

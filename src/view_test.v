@@ -337,8 +337,8 @@ fn test_search_is_toggled() {
 
 fn test_search_within_for() {
 	mut fake_search := Search{ to_find: "/efg" }
-	finds := fake_search.find(["abcdefg"])
-	assert finds[0] == [4, 7]
+	fake_search.find(["abcdefg"])
+	assert fake_search.finds[0] == [4, 7]
 }
 
 fn test_calc_w_move_amount_simple_sentence_line() {
