@@ -121,7 +121,6 @@ mut:
 struct FindCursor {
 mut:
 	key_index int
-	line      int
 	index     int
 }
 
@@ -192,11 +191,17 @@ fn (mut search Search) next_find_pos() ?Match {
 	if search.finds.len == 0 { return none }
 
 	line_num := search.finds.keys()[search.current_find.key_index]
-	search.current_find.key_index += 1
-	if search.current_find.key_index >= search.finds.keys().len { search.current_find.key_index = 0 }
+	line_finds := search.finds[line_num]
+	if search.current_find.index + 1 < line_finds.len / 2 {
+		search.current_find.index + 1
+	} else {
+		search.current_find.index = 0
+		search.current_find.key_index += 1
+	}
+	if search.current_find.key_index >= search.finds.keys().len { search.current_find.key_index = 0; search.current_find.index = 0 }
 
 	// TODO(tauraamui) -> need to proceed through all of a given lines matches
-	return Match{ line: line_num, start: search.finds[line_num][0], end: search.finds[line_num][1] }
+	return Match{ line: line_num, start: line_finds[search.current_find.index], end: line_finds[search.current_find.index+1] }
 }
 
 fn (mut search Search) clear() {

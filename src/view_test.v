@@ -358,6 +358,7 @@ fn test_search_within_for_multiple_lines() {
 
 	first_result := fake_search.next_find_pos() or { panic("") }
 	assert first_result.start == 36
+	assert first_result.end == 44
 	assert first_result.line == 1
 
 	second_result := fake_search.next_find_pos() or { panic("") }
