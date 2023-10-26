@@ -349,7 +349,7 @@ fn test_search_within_for_multiple_lines() {
 	mut fake_search := Search{ to_find: "/redpanda" }
 	fake_search.find([
 		"This is a fake document that doesn't talk about anything.",
-		"It might mention animals like bats, redpandas and goats, but that's all."
+		"It might mention animals like bats, redpandas and goats, but that's all.",
 		"Trees are where redpandas hang out, literally."
 	])
 	assert fake_search.finds[0] == []
@@ -368,7 +368,26 @@ fn test_search_within_for_multiple_lines() {
 
 	scrolled_back_around_result := fake_search.next_find_pos() or { panic("") }
 	assert scrolled_back_around_result.start == 36
+	assert scrolled_back_around_result.end == 44
 	assert scrolled_back_around_result.line == 1
+}
+
+fn test_search_within_for_multiple_lines_multiple_matches_per_line() {
+	mut fake_search := Search{ to_find: "/redpanda" }
+	fake_search.find([
+		"This is a fake document about redpandas, it mentions redpandas multiple times.",
+		"Any animal like redpandas might be referred to more than once, who knows?"
+	])
+
+	first_result := fake_search.next_find_pos() or { panic("") }
+	assert first_result.start == 30
+	assert first_result.end == 38
+	assert first_result.line == 0
+
+	second_result := fake_search.next_find_pos() or { panic("") }
+	assert second_result.start == 53
+	assert second_result.end == 61
+	assert second_result.line == 0
 }
 
 fn test_calc_w_move_amount_simple_sentence_line() {
