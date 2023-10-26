@@ -335,10 +335,29 @@ fn test_search_is_toggled() {
 	assert fake_view.mode == .search
 }
 
-fn test_search_within_for() {
+fn test_search_within_for_single_line() {
 	mut fake_search := Search{ to_find: "/efg" }
 	fake_search.find(["abcdefg"])
 	assert fake_search.finds[0] == [4, 7]
+	result := fake_search.next_find_pos() or { panic("") }
+	assert result.x == 4
+	assert result.y == 0
+}
+
+fn test_search_within_for_multiple_lines() {
+	mut fake_search := Search{ to_find: "/redpanda" }
+	fake_search.find([
+		"This is a fake document that doesn't talk about anything.",
+		"It might mention animals like bats, redpandas and goats, but that's all."
+		"Trees are where redpandas hang out, literally."
+	])
+	assert fake_search.finds[0] == []
+	assert fake_search.finds[1] == [36, 44]
+	assert fake_search.finds[2] == [16, 24]
+
+	first_result := fake_search.next_find_pos() or { panic("") }
+	assert first_result.x == 36
+	assert first_result.y == 1
 }
 
 fn test_calc_w_move_amount_simple_sentence_line() {

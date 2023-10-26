@@ -119,15 +119,18 @@ mut:
 }
 
 struct Found {
-	line     int
-	index    int
+mut:
+	key_index int
+	line      int
+	index     int
 }
 
 struct Search {
 mut:
-	to_find  string
-	cursor_x int
-	finds    map[int][]int
+	to_find      string
+	cursor_x     int
+	finds        map[int][]int
+	current_find Found
 }
 
 fn (mut search Search) draw(mut ctx tui.Context, draw_cursor bool) {
@@ -142,7 +145,7 @@ fn (mut search Search) prepare_for_input() {
 	search.cursor_x = 1
 }
 
-fn (mut search Search) put_char(c string, lines []string) {
+fn (mut search Search) put_char(c string) {
 	first := search.to_find[..search.cursor_x]
 	last  := search.to_find[search.cursor_x..]
 	search.to_find = "${first}${c}${last}"
@@ -172,14 +175,21 @@ fn (mut search Search) find(lines []string) {
 	mut finds := map[int][]int{}
 	mut re := regex.regex_opt(search.to_find.replace_once("/", "")) or { return }
 	for i, line in lines {
-		finds[i] = re.find_all(line)
+		found := re.find_all(line)
+		if found.len == 0 { continue }
+		finds[i] = found
 	}
 	search.finds = finds.move()
 }
 
-fn (mut search Search) jump_to_next_find() {
-	for line_num in search.finds.keys() {
-	}
+fn (mut search Search) next_find_pos() ?Pos {
+	if search.finds.len == 0 { return none }
+
+	line_num := search.finds.keys()[search.current_find.key_index]
+	search.current_find.key_index += 1
+	if search.current_find.key_index >= search.finds.keys().len { search.current_find.key_index = 0 }
+	//search.finds[line]
+	return Pos{ search.finds[line_num][0], line_num }
 }
 
 fn (mut search Search) clear() {
@@ -775,18 +785,19 @@ fn (mut view View) on_key_down(e &tui.Event) {
 		.search {
 			match e.code {
 				.escape { view.escape() }
-				.space { view.search.put_char(" ", view.buffer.lines) }
+				.space { view.search.put_char(" ") }
 				48...57, 97...122 { // 0-9a-zA-Z
-					view.search.put_char(e.ascii.ascii_str(), view.buffer.lines)
+					view.search.put_char(e.ascii.ascii_str())
 				}
 				.left { view.search.left() }
 				.right { view.search.right() }
 				.up {}
 				.down {}
 				.backspace { view.search.backspace() }
-				.tab { view.search.jump_to_next_find() }
+				.enter { view.search.find(view.buffer.lines) }
+				.tab { pos := view.search.next_find_pos() or { return }; view.jump_cursor_to(pos.y-1) }
 				else {
-					view.search.put_char(e.ascii.ascii_str(), view.buffer.lines)
+					view.search.put_char(e.ascii.ascii_str())
 				}
 			}
 		}
