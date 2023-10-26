@@ -362,6 +362,10 @@ fn test_search_within_for_multiple_lines() {
 	second_result := fake_search.next_find_pos() or { panic("") }
 	assert second_result.x == 16
 	assert second_result.y == 2
+
+	scrolled_back_around_result := fake_search.next_find_pos() or { panic("") }
+	assert scrolled_back_around_result.x == 36
+	assert scrolled_back_around_result.y == 1
 }
 
 fn test_calc_w_move_amount_simple_sentence_line() {
