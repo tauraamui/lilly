@@ -329,7 +329,8 @@ fn test_right_arrow_at_end_of_sentence_in_insert_mode() {
 
 fn test_search_within_for() {
 	mut fake_search := Search{ to_find: "/efg" }
-	assert fake_search.find(["abcdefg"]) == 1
+	finds := fake_search.find(["abcdefg"])
+	assert finds[0] == [4, 7]
 }
 
 fn test_calc_w_move_amount_simple_sentence_line() {
