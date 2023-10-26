@@ -327,6 +327,14 @@ fn test_right_arrow_at_end_of_sentence_in_insert_mode() {
 	assert fake_view.cursor.pos.x == 20
 }
 
+fn test_search_is_toggled() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+
+	fake_view.search()
+
+	assert fake_view.mode == .search
+}
+
 fn test_search_within_for() {
 	mut fake_search := Search{ to_find: "/efg" }
 	finds := fake_search.find(["abcdefg"])

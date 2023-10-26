@@ -127,6 +127,9 @@ mut:
 
 fn (mut search Search) draw(mut ctx tui.Context, draw_cursor bool) {
 	ctx.draw_text(1, ctx.window_height, search.to_find)
+	ctx.set_bg_color(r: 230, g: 230, b: 230)
+	ctx.draw_point(search.cursor_x+1, ctx.window_height)
+	ctx.reset_bg_color()
 }
 
 fn (mut search Search) prepare_for_input() {
@@ -141,10 +144,28 @@ fn (mut search Search) put_char(c string, lines []string) {
 	search.cursor_x += 1
 }
 
+fn (mut search Search) left() {
+	search.cursor_x -= 1
+	if search.cursor_x <= 1 { search.cursor_x = 1 }
+}
+
+fn (mut search Search) right() {
+	search.cursor_x += 1
+	if search.cursor_x > search.to_find.len { search.cursor_x = search.to_find.len }
+}
+
+fn (mut search Search) backspace() {
+	if search.cursor_x == 1 { return }
+	first := search.to_find[..search.cursor_x-1]
+	last  := search.to_find[search.cursor_x..]
+	search.to_find = "${first}${last}"
+	search.cursor_x -= 1
+	if search.cursor_x < 1 { search.cursor_x = 1 }
+}
+
 fn (mut search Search) find(lines []string) map[int][]int {
 	mut finds := map[int][]int{}
 	mut re := regex.regex_opt(search.to_find.replace_once("/", "")) or { return finds }
-	mut count := 0
 	for i, line in lines {
 		finds[i] = re.find_all(line)
 	}
@@ -744,10 +765,18 @@ fn (mut view View) on_key_down(e &tui.Event) {
 		.search {
 			match e.code {
 				.escape { view.escape() }
+				.space { view.search.put_char(" ", view.buffer.lines) }
 				48...57, 97...122 { // 0-9a-zA-Z
 					view.search.put_char(e.ascii.ascii_str(), view.buffer.lines)
 				}
-				else {}
+				.left { view.search.left() }
+				.right { view.search.right() }
+				.up {}
+				.down {}
+				.backspace { view.search.backspace() }
+				else {
+					view.search.put_char(e.ascii.ascii_str(), view.buffer.lines)
+				}
 			}
 		}
 		.insert {
