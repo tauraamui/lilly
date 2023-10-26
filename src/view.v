@@ -194,6 +194,8 @@ fn (mut search Search) next_find_pos() ?Match {
 	line_num := search.finds.keys()[search.current_find.key_index]
 	search.current_find.key_index += 1
 	if search.current_find.key_index >= search.finds.keys().len { search.current_find.key_index = 0 }
+
+	// TODO(tauraamui) -> need to proceed through all of a given lines matches
 	return Match{ line: line_num, start: search.finds[line_num][0], end: search.finds[line_num][1] }
 }
 
