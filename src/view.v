@@ -120,8 +120,8 @@ mut:
 
 struct FindCursor {
 mut:
-	key_index int
-	index     int
+	line        int
+	match_index int
 }
 
 struct Match {
@@ -177,6 +177,7 @@ fn (mut search Search) backspace() {
 }
 
 fn (mut search Search) find(lines []string) {
+	search.current_find = FindCursor{}
 	mut finds := map[int][]int{}
 	mut re := regex.regex_opt(search.to_find.replace_once("/", "")) or { return }
 	for i, line in lines {
@@ -190,17 +191,21 @@ fn (mut search Search) find(lines []string) {
 fn (mut search Search) next_find_pos() ?Match {
 	if search.finds.len == 0 { return none }
 
-	line_num := search.finds.keys()[search.current_find.key_index]
-	line_finds := search.finds[line_num]
-	if search.current_find.index + 1 < line_finds.len / 2 {
-		search.current_find.index + 1
-	} else {
-		search.current_find.index = 0
-		search.current_find.key_index += 1
-	}
-	if search.current_find.key_index >= search.finds.keys().len { search.current_find.key_index = 0; search.current_find.index = 0 }
+	line_number := search.finds.keys()[search.current_find.line]
+	line_matches := search.finds[line_number]
+	start := line_matches[search.current_find.match_index]
+	end   := line_matches[search.current_find.match_index + 1]
 
-	return Match{ line: line_num, start: line_finds[search.current_find.index], end: line_finds[search.current_find.index+1] }
+	search.current_find.match_index += 2
+	if search.current_find.match_index + 1 >= line_matches.len {
+		search.current_find.match_index = 0
+		search.current_find.line += 1
+		if search.current_find.line >= search.finds.keys().len {
+			search.current_find.line = 0
+		}
+	}
+
+	return Match{ start, end, line_number }
 }
 
 fn (mut search Search) clear() {
