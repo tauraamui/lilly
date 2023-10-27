@@ -396,6 +396,11 @@ fn test_search_within_for_multiple_lines_multiple_matches_per_line() {
 	assert third_result.start == 16
 	assert third_result.end == 24
 	assert third_result.line == 1
+
+	looped_back_first_result := fake_search.next_find_pos() or { panic("") }
+	assert looped_back_first_result.start == 30
+	assert looped_back_first_result.end == 38
+	assert looped_back_first_result.line == 0
 }
 
 fn test_calc_w_move_amount_simple_sentence_line() {
