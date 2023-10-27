@@ -379,6 +379,9 @@ fn test_search_within_for_multiple_lines_multiple_matches_per_line() {
 		"Any animal like redpandas might be referred to more than once, who knows?"
 	])
 
+	assert fake_search.finds[0] == [30, 38, 53, 61]
+	assert fake_search.finds[1] == [16, 24]
+
 	first_result := fake_search.next_find_pos() or { panic("") }
 	assert first_result.start == 30
 	assert first_result.end == 38
