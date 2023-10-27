@@ -465,13 +465,16 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 		view.draw_text_line_number(mut ctx, y)
 
 		document_space_y := view.from + y
-		if view.mode == .visual {
-			within_selection = view.cursor.line_is_within_selection(document_space_y)
-			if within_selection { ctx.set_bg_color(r: color.r, g: color.g, b: color.b) }
-		} else {
-			within_selection = false
-			if y == cursor_screen_space_y {
-				ctx.set_bg_color(r: 53, g: 53, b: 53)
+		match view.mode {
+			.visual {
+				within_selection = view.cursor.line_is_within_selection(document_space_y)
+				if within_selection { ctx.set_bg_color(r: color.r, g: color.g, b: color.b) }
+			}
+			else {
+				within_selection = false
+				if y == cursor_screen_space_y {
+					ctx.set_bg_color(r: 53, g: 53, b: 53)
+				}
 			}
 		}
 		view.draw_text_line(mut ctx, y, line, within_selection)
