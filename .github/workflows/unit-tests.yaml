@@ -1,0 +1,32 @@
+name: "Unit Tests"
+
+on:
+  pull_request:
+  push: 
+    branches: 
+      - master
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: ["ubuntu-latest"]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Install V
+        uses: vlang/setup-v@v1
+        with:
+          check-latest: true
+
+      - name: Checkout lilly
+        uses: actions/checkout@v2
+
+      - name: Check if code is formatted
+        run: |
+          v fmt -diff .
+          v fmt -verify .
+      - name: Build lilly
+        run: v .
+
+      - name: Run Tests
+        run: v test .
