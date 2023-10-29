@@ -327,6 +327,82 @@ fn test_right_arrow_at_end_of_sentence_in_insert_mode() {
 	assert fake_view.cursor.pos.x == 20
 }
 
+fn test_search_is_toggled() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+
+	fake_view.search()
+
+	assert fake_view.mode == .search
+}
+
+fn test_search_within_for_single_line() {
+	mut fake_search := Search{ to_find: "/efg" }
+	fake_search.find(["abcdefg"])
+	assert fake_search.finds[0] == [4, 7]
+	result := fake_search.next_find_pos() or { panic("") }
+	assert result.start == 4
+	assert result.end == 7
+	assert result.line == 0
+}
+
+fn test_search_within_for_multiple_lines() {
+	mut fake_search := Search{ to_find: "/redpanda" }
+	fake_search.find([
+		"This is a fake document that doesn't talk about anything.",
+		"It might mention animals like bats, redpandas and goats, but that's all.",
+		"Trees are where redpandas hang out, literally."
+	])
+	assert fake_search.finds[0] == []
+	assert fake_search.finds[1] == [36, 44]
+	assert fake_search.finds[2] == [16, 24]
+
+	first_result := fake_search.next_find_pos() or { panic("") }
+	assert first_result.start == 36
+	assert first_result.end == 44
+	assert first_result.line == 1
+
+	second_result := fake_search.next_find_pos() or { panic("") }
+	assert second_result.start == 16
+	assert second_result.end == 24
+	assert second_result.line == 2
+
+	scrolled_back_around_result := fake_search.next_find_pos() or { panic("") }
+	assert scrolled_back_around_result.start == 36
+	assert scrolled_back_around_result.end == 44
+	assert scrolled_back_around_result.line == 1
+}
+
+fn test_search_within_for_multiple_lines_multiple_matches_per_line() {
+	mut fake_search := Search{ to_find: "/redpanda" }
+	fake_search.find([
+		"This is a fake document about redpandas, it mentions redpandas multiple times.",
+		"Any animal like redpandas might be referred to more than once, who knows?"
+	])
+
+	assert fake_search.finds[0] == [30, 38, 53, 61]
+	assert fake_search.finds[1] == [16, 24]
+
+	first_result := fake_search.next_find_pos() or { panic("") }
+	assert first_result.start == 30
+	assert first_result.end == 38
+	assert first_result.line == 0
+
+	second_result := fake_search.next_find_pos() or { panic("") }
+	assert second_result.start == 53
+	assert second_result.end == 61
+	assert second_result.line == 0
+
+	third_result := fake_search.next_find_pos() or { panic("") }
+	assert third_result.start == 16
+	assert third_result.end == 24
+	assert third_result.line == 1
+
+	looped_back_first_result := fake_search.next_find_pos() or { panic("") }
+	assert looped_back_first_result.start == 30
+	assert looped_back_first_result.end == 38
+	assert looped_back_first_result.line == 0
+}
+
 fn test_calc_w_move_amount_simple_sentence_line() {
 	// manually set the documents contents
 	fake_line := "this is a line to test with"
