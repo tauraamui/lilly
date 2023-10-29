@@ -45,7 +45,7 @@ fn (mode Mode) color() Color {
 		.visual { status_lilac }
 		.insert { status_orange }
 		.command { status_cyan }
-		.search { status_cyan }
+		.search { status_purple }
 	}
 }
 
@@ -55,7 +55,7 @@ fn (mode Mode) str() string {
 		.visual  { "VISUAL"  }
 		.insert  { "INSERT"  }
 		.command { "COMMAND" }
-		.search  { "COMMAND"  }
+		.search  { "SEARCH"  }
 	}
 }
 

@@ -63,6 +63,7 @@ const (
 	status_orange           = Color { 237, 207, 123 }
 	status_lilac            = Color { 194, 110, 230 }
 	status_cyan             = Color { 138, 222, 237 }
+	status_purple           = Color { 130, 144, 250 }
 
 	rune_digits             = [`0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`]
 
