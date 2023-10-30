@@ -35,7 +35,7 @@ fn test_dd_deletes_current_line_in_middle_of_doc() {
 	fake_view.d()
 
 	assert fake_view.buffer.lines == ["1. first line", "2. second line", "4. forth line"]
-	assert fake_view.cursor.pos.y == 1
+	assert fake_view.cursor.pos.y == 2
 	assert fake_view.y_lines == ["3. third line"]
 }
 
