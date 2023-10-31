@@ -16,7 +16,7 @@ fn run_diff(a []string, b []string) {
 	mut oa := []HeckelSymbolTableEntryType{}
 
 	// pass one
-	for idx, i in b {
+	for _, i in a {
 		if i in st {
 			v := st[i]
 			if v is HeckelSymbolTableEntry {
@@ -31,7 +31,7 @@ fn run_diff(a []string, b []string) {
 	}
 
 	// pass two
-	for idx, i in a {
+	for idx, i in b {
 		if i in st {
 			if st[i] is HeckelSymbolTableEntry {
 				mut v := st[i] as HeckelSymbolTableEntry
@@ -84,5 +84,6 @@ fn run_diff(a []string, b []string) {
 	}
 
 	println("NA => ${na}")
+	println("OA => ${oa}")
 }
 
