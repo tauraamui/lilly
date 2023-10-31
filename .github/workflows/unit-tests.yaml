@@ -1,0 +1,25 @@
+name: "Unit Tests"
+
+on:
+  pull_request:
+  push: 
+    branches: 
+      - master
+jobs:
+  unit_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install V
+        uses: vlang/setup-v@v1
+        with:
+          check-latest: true
+
+      - name: Checkout lilly
+        uses: actions/checkout@v2
+
+      - name: Build lilly
+        run: v .
+
+      - name: Run Tests
+        run: v -stats test ./src
