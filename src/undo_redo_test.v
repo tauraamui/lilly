@@ -16,8 +16,8 @@ fn test_undo_redo_history_inits() {
 }
 
 fn test_build_map_of_files() {
-	old := ["1. first line has"]
-	new := ["1. first line has an unfinished sentence.", "2. a brand new line!"]
+	old := ["1. first line has", "2. old line still here"]
+	new := ["1. first line has an unfinished sentence.", "2. old line still here", "3. a brand new line!"]
 
 	build_map_of_files(old, new)
 

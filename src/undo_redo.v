@@ -87,5 +87,12 @@ fn build_map_of_files(old []string, new []string) {
 			}
 		}
 	}
+
+	for i, n in na {
+		if n.actually_other_line_num_ref { continue }
+		key := table.keys()[i]
+		line := table[key]
+		if line.old_occurances == 0 && line.new_occurances > 0 { println("+ ${key}") }
+	}
 }
 
