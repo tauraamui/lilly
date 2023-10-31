@@ -22,6 +22,22 @@ mut:
 	yield_last_block  bool
 }
 
+fn new_non_integers_block_sequence_extractor(seq []SequenceType) SequenceExtractor {
+	return SequenceExtractor{
+		seq: seq
+		prev: none
+		block_start_idx: 0
+		block_len: 0
+		in_block: false
+		open_block_cond: fn(prev ?SequenceType, curr SequenceType) bool {
+			return !(curr is int)
+		}
+		close_block_cond: fn(prev ?SequenceType, curr SequenceType) bool {
+			return curr is int
+		}
+	}
+}
+
 fn (mut sequence_extractor SequenceExtractor) extract_blocks() BlocksType {
 	mut blocks := []Block{}
 	sequence_extractor.yield_last_block = true
