@@ -92,7 +92,10 @@ fn build_map_of_files(old []string, new []string) {
 		if n.actually_other_line_num_ref { continue }
 		key := table.keys()[i]
 		line := table[key]
-		if line.old_occurances == 0 && line.new_occurances > 0 { println("+ ${key}") }
+		if line.old_occurances == 0 && line.new_occurances > 0 { println("\e[0;32m + ${key}") }
+		if line.old_occurances > 0 && line.new_occurances == 0 { println("\e[0;31m - ${key}") }
+		if line.old_occurances > 0 && line.new_occurances > 0 { println("\e[0;33m ~ ${key}‚") }
 	}
+	println("\e[0m")
 }
 
