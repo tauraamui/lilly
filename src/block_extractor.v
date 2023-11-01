@@ -1,7 +1,5 @@
 module main
 
-type BlocksType = []Block
-
 struct Block {
 	start_idx int
 	length    int
@@ -72,7 +70,7 @@ fn new_empty_string_block_sequence_extractor(seq []HeckelSymbolTableEntryType) S
 	}
 }
 
-fn (mut sequence_extractor SequenceExtractor) extract_blocks() BlocksType {
+fn (mut sequence_extractor SequenceExtractor) extract_blocks() []Block {
 	mut blocks := []Block{}
 	sequence_extractor.yield_last_block = true
 

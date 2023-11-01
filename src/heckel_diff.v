@@ -83,11 +83,64 @@ fn run_diff(a []string, b []string) {
 		}
 	}
 
-	println("NA => ${na}")
-	println("OA => ${oa}")
+	insert_opcodes := generate_insert_opcodes(oa)
+	delete_opcodes := generate_delete_opcodes(na)
+	mut move_opcodes := []OpCode{}
+	mut moved_opcodes := []OpCode{}
+	mut equal_opcodes := []OpCode{}
+
+	dict := { "move": move_opcodes, "moved": moved_opcodes, "equal": equal_opcodes }
 }
 
-fn generate_insert_opcodes(oa []HeckelSymbolTableEntryType) {
-	block_extractor := new_non_integers_block_sequence_extractor(oa)
+struct OpCode {
+	tag string
+	i1  int
+	i2  int
+	j1  int
+	j2  int
+}
+
+struct OpBlock {
+	i int
+	n HeckelSymbolTableEntryType
+	w int
+}
+
+fn generate_insert_opcodes(oa []HeckelSymbolTableEntryType) []OpCode {
+	mut block_extractor := new_non_integers_block_sequence_extractor(oa)
+	insert_blocks := block_extractor.extract_blocks().map(fn [oa] (block Block) OpBlock {
+		return OpBlock{
+			i: block.start_idx
+			n: oa[block.start_idx]
+			w: block.length
+		}
+	})
+	mut opcodes := []OpCode{}
+	for b in insert_blocks {
+		if b.n is HeckelSymbolTableEntry {
+			bn := b.n as HeckelSymbolTableEntry
+			opcodes << OpCode{ tag: "insert", i1: bn.olno, i2: bn.olno, j1: b.i, j2: b.i + b.w }
+		}
+	}
+	return opcodes
+}
+
+fn generate_delete_opcodes(na []HeckelSymbolTableEntryType) []OpCode {
+	mut block_extractor := new_non_integers_block_sequence_extractor(na)
+	delete_blocks := block_extractor.extract_blocks().map(fn [na] (block Block) OpBlock {
+		return OpBlock{
+			i: block.start_idx
+			n: na[block.start_idx]
+			w: block.length
+		}
+	})
+	mut opcodes := []OpCode{}
+	for b in delete_blocks {
+		if b.n is HeckelSymbolTableEntry {
+			bn := b.n as HeckelSymbolTableEntry
+			opcodes << OpCode{ tag: "delete", i1: b.i, i2: b.i + b.w, j1: bn.olno, j2: bn.olno }
+		}
+	}
+	return opcodes
 }
 
