@@ -87,3 +87,7 @@ fn run_diff(a []string, b []string) {
 	println("OA => ${oa}")
 }
 
+fn generate_insert_opcodes(oa []HeckelSymbolTableEntryType) {
+	//block_extractor := new_non_integers_block_sequence_extractor(oa)
+}
+
