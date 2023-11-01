@@ -106,6 +106,9 @@ struct OpBlock {
 	w int
 }
 
+fn generate_move_and_equal_opcodes() []OpCode {
+}
+
 fn generate_insert_opcodes(oa []HeckelSymbolTableEntryType) []OpCode {
 	mut block_extractor := new_non_integers_block_sequence_extractor(oa)
 	insert_blocks := block_extractor.extract_blocks().map(fn [oa] (block Block) OpBlock {
