@@ -7,14 +7,12 @@ struct Block {
 	length    int
 }
 
-type SequenceType = int | string
-
 struct SequenceExtractor {
 mut:
-	seq               []SequenceType
-	prev              ?SequenceType
-	open_block_cond   ?fn(prev ?SequenceType, curr SequenceType) bool
-	close_block_cond  ?fn(prev ?SequenceType, curr SequenceType) bool
+	seq               []HeckelSymbolTableEntryType
+	prev              ?HeckelSymbolTableEntryType
+	open_block_cond   ?fn(prev ?HeckelSymbolTableEntryType, curr HeckelSymbolTableEntryType) bool
+	close_block_cond  ?fn(prev ?HeckelSymbolTableEntryType, curr HeckelSymbolTableEntryType) bool
 	return_block_cond ?fn(block_start_idx int, block_len int) Block
 	block_start_idx   int
 	block_len         int
@@ -22,17 +20,17 @@ mut:
 	yield_last_block  bool
 }
 
-fn new_non_integers_block_sequence_extractor(seq []SequenceType) SequenceExtractor {
+fn new_non_integers_block_sequence_extractor(seq []HeckelSymbolTableEntryType) SequenceExtractor {
 	return SequenceExtractor{
 		seq: seq
 		prev: none
 		block_start_idx: 0
 		block_len: 0
 		in_block: false
-		open_block_cond: fn(prev ?SequenceType, curr SequenceType) bool {
+		open_block_cond: fn(prev ?HeckelSymbolTableEntryType, curr HeckelSymbolTableEntryType) bool {
 			return !(curr is int)
 		}
-		close_block_cond: fn(prev ?SequenceType, curr SequenceType) bool {
+		close_block_cond: fn(prev ?HeckelSymbolTableEntryType, curr HeckelSymbolTableEntryType) bool {
 			return curr is int
 		}
 	}
@@ -69,13 +67,13 @@ fn (mut sequence_extractor SequenceExtractor) extract_blocks() BlocksType {
 	return blocks
 }
 
-fn (sequence_extractor SequenceExtractor) open_block(prev ?SequenceType, curr SequenceType) bool {
-	cond := sequence_extractor.open_block_cond or { fn (prev ?SequenceType, curr SequenceType) bool { return false } }
+fn (sequence_extractor SequenceExtractor) open_block(prev ?HeckelSymbolTableEntryType, curr HeckelSymbolTableEntryType) bool {
+	cond := sequence_extractor.open_block_cond or { fn (prev ?HeckelSymbolTableEntryType, curr HeckelSymbolTableEntryType) bool { return false } }
 	return cond(prev, curr)
 }
 
-fn (sequence_extractor SequenceExtractor) close_block(prev ?SequenceType, curr SequenceType) bool {
-	cond := sequence_extractor.close_block_cond or { fn (prev ?SequenceType, curr SequenceType) bool { return false } }
+fn (sequence_extractor SequenceExtractor) close_block(prev ?HeckelSymbolTableEntryType, curr HeckelSymbolTableEntryType) bool {
+	cond := sequence_extractor.close_block_cond or { fn (prev ?HeckelSymbolTableEntryType, curr HeckelSymbolTableEntryType) bool { return false } }
 	return cond(prev, curr)
 }
 
