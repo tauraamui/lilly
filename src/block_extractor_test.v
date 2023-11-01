@@ -19,3 +19,18 @@ fn test_non_integers_block_sequence_extractor() {
 	)
 	assert sext.extract_blocks() == [Block{start_idx: 2, length: 1}, Block{start_idx: 4, length: 2}]
 }
+
+fn test_empty_string_block_sequence_extractor() {
+	mut sext := new_empty_string_block_sequence_extractor([
+		HeckelSymbolTableEntry{ value: "a" },
+		HeckelSymbolTableEntry{ value: "b" },
+		HeckelSymbolTableEntry{ value: "" },
+		HeckelSymbolTableEntry{ value: "c" },
+		HeckelSymbolTableEntry{ value: "" },
+		HeckelSymbolTableEntry{ value: "" },
+		HeckelSymbolTableEntry{ value: "d" },
+		HeckelSymbolTableEntry{ value: "" }
+	])
+	assert sext.extract_blocks() == [Block{start_idx: 2, length: 1}, Block{start_idx: 4, length: 2}, Block{start_idx: 7, length: 1}]
+}
+

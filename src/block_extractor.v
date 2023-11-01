@@ -56,6 +56,22 @@ fn new_non_integers_block_sequence_extractor(seq []HeckelSymbolTableEntryType) S
 	}
 }
 
+fn new_empty_string_block_sequence_extractor(seq []HeckelSymbolTableEntryType) SequenceExtractor {
+	return SequenceExtractor{
+		seq: seq
+		prev: none
+		block_start_idx: 0
+		block_len: 0
+		in_block: false
+		open_block_cond: fn(prev ?HeckelSymbolTableEntryType, curr HeckelSymbolTableEntryType) bool {
+			return curr is HeckelSymbolTableEntry && curr.value == ""
+		}
+		close_block_cond: fn(prev ?HeckelSymbolTableEntryType, curr HeckelSymbolTableEntryType) bool {
+			return curr is HeckelSymbolTableEntry && curr.value != ""
+		}
+	}
+}
+
 fn (mut sequence_extractor SequenceExtractor) extract_blocks() BlocksType {
 	mut blocks := []Block{}
 	sequence_extractor.yield_last_block = true
