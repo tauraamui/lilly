@@ -20,6 +20,26 @@ mut:
 	yield_last_block  bool
 }
 
+fn new_consecutive_integer_block_sequence_extractor(seq []HeckelSymbolTableEntryType) SequenceExtractor {
+	return SequenceExtractor{
+		seq: seq
+		prev: none
+		block_start_idx: 0
+		block_len: 0
+		in_block: false
+		open_block_cond: fn(prev ?HeckelSymbolTableEntryType, curr HeckelSymbolTableEntryType) bool {
+			return curr is int
+		}
+		close_block_cond: fn(prev ?HeckelSymbolTableEntryType, curr HeckelSymbolTableEntryType) bool {
+			prev_v := prev or { return true }
+			if prev_v is int && curr is int {
+				return prev_v + 1 != curr
+			}
+			return true
+		}
+	}
+}
+
 fn new_non_integers_block_sequence_extractor(seq []HeckelSymbolTableEntryType) SequenceExtractor {
 	return SequenceExtractor{
 		seq: seq
