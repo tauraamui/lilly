@@ -12,3 +12,17 @@ fn test_sequence_matcher() {
 	assert 1 == 2
 }
 
+fn test_sequence_matcher_comparison() {
+	a := ["LIKE", "SNOW", ",",
+             "A", "MASS", "OF", "WORDS",
+             "FALLS", "UPON", "THE", "RELEVANT",
+             "FACTS", "COVERING", "UP", "THE", "DETAILS", "."]
+
+	b := ["A", "MASS", "OF", "WORDS", "FALLS",
+             "UPON", "THE", "RELEVANT", "FACTS", "LIKE",
+             "SNOW", ",", "COVERING", "UP", "THE", "DETAILS", "."]
+
+	run_diff(a, b)
+	assert 1 == 2
+}
+

@@ -15,6 +15,8 @@ fn run_diff(a []string, b []string) {
 	mut na := []HeckelSymbolTableEntryType{}
 	mut oa := []HeckelSymbolTableEntryType{}
 
+	// FIX(tauraamui) -> not sure what, but something to do with pass three four and five are incorrect
+
 	// pass one
 	for _, i in a {
 		if i in st {
@@ -35,6 +37,7 @@ fn run_diff(a []string, b []string) {
 		if i in st {
 			if st[i] is HeckelSymbolTableEntry {
 				mut v := st[i] as HeckelSymbolTableEntry
+				println("occurance increase")
 				v.oc += 1
 				v.olno = idx
 				st[i] = v
@@ -50,6 +53,7 @@ fn run_diff(a []string, b []string) {
 		if na[i] is HeckelSymbolTableEntry {
 			nae := na[i] as HeckelSymbolTableEntry
 			if nae.nc == 1 && nae.oc == 1 {
+				println("lines are same")
 				olno := nae.olno
 				na[i] = olno
 				oa[olno] = i
@@ -63,6 +67,7 @@ fn run_diff(a []string, b []string) {
 			j := na[i] as int
 			if na[i + 1] is HeckelSymbolTableEntry {
 				if na[i + 1] == oa[j + 1] {
+					println("swapping thing")
 					oa[j + 1] = i + 1
 					na[i + 1] = j + 1
 				}
@@ -76,6 +81,7 @@ fn run_diff(a []string, b []string) {
 			j := na[i] as int
 			if na[i - 1] is HeckelSymbolTableEntry {
 				if na[i - 1] == oa[j - 1] && i >= 1 && j >= 1 {
+					println("swapping thing 2")
 					oa[j - 1] = i - 1
 					na[i - 1] = j - 1
 				}
