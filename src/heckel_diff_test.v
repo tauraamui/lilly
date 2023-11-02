@@ -9,7 +9,6 @@ fn test_sequence_matcher() {
              "UPON", "THE", "RELEVANT", "FACTS", "LIKE", "SOFT",
              "SNOW", ",", "COVERING", "UP", "THE", "DETAILS", "."]
 	run_diff(a, b)
-	assert 1 == 2
 }
 
 fn test_sequence_matcher_comparison() {
@@ -23,6 +22,5 @@ fn test_sequence_matcher_comparison() {
              "SNOW", ",", "COVERING", "UP", "THE", "DETAILS", "."]
 
 	run_diff(a, b)
-	assert 1 == 2
 }
 
