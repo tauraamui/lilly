@@ -84,12 +84,30 @@ fn run_diff(a []string, b []string) {
 	}
 
 	insert_opcodes := generate_insert_opcodes(oa)
-	delete_opcodes := generate_delete_opcodes(na)
+	println("${insert_opcodes}")
+	mut delete_opcodes := generate_delete_opcodes(na)
+	println("${delete_opcodes}")
 	mut move_opcodes := []OpCode{}
 	mut moved_opcodes := []OpCode{}
 	mut equal_opcodes := []OpCode{}
 
 	dict := { "move": move_opcodes, "moved": moved_opcodes, "equal": equal_opcodes }
+
+	generate_move_and_equal_opcodes(na)
+
+	mut ipos := 0
+	mut jpos := 0
+	mut result := []OpCode{}
+	for {
+		if delete_opcodes.len == 0 { break }
+		if delete_opcodes.len > 0 && delete_opcodes[0].i1 == ipos {
+			opcode := delete_opcodes.pop()
+			result << OpCode{ tag: opcode.tag, i1: opcode.i1, i2: opcode.i2, j1: jpos, j2: jpos }
+			ipos = opcode.i2
+			continue
+		}
+	}
+	println("${result}")
 }
 
 struct OpCode {
@@ -106,7 +124,17 @@ struct OpBlock {
 	w int
 }
 
-fn generate_move_and_equal_opcodes() []OpCode {
+struct IndexedMove {
+	idx int
+	i   int
+}
+
+fn generate_move_and_equal_opcodes(na []HeckelSymbolTableEntryType) []OpCode {
+	mut na_indexed_moves := []HeckelSymbolTableEntryType{}
+	for idx, i in na {
+		if i is int { na_indexed_moves << [int(idx), i] }
+	}
+	mut sext := new_consecutive_vector_block_sequence_extractor(na_indexed_moves)
 	return []
 }
 
