@@ -1117,7 +1117,7 @@ fn (mut view View) o() {
 
 fn (mut view View) a() {
 	view.mode = .insert
-	defer { view.cursor.pos.x++ }
+	view.cursor.pos.x += 1
 }
 
 fn (mut view View) shift_a() {
