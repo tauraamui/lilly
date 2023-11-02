@@ -38,6 +38,30 @@ fn new_consecutive_integer_block_sequence_extractor(seq []HeckelSymbolTableEntry
 	}
 }
 
+fn new_consecutive_vector_block_sequence_extractor(seq []HeckelSymbolTableEntryType) SequenceExtractor {
+	return SequenceExtractor{
+		seq: seq
+		prev: none
+		block_start_idx: 0
+		block_len: 0
+		in_block: false
+		open_block_cond: fn(prev ?HeckelSymbolTableEntryType, curr HeckelSymbolTableEntryType) bool {
+			return true
+		}
+		close_block_cond: fn(prev ?HeckelSymbolTableEntryType, curr HeckelSymbolTableEntryType) bool {
+			prev_v := prev or { return true }
+			if !(prev_v is []int) || !(curr is []int) { return true }
+
+			prev_plus_one := (prev_v as []int).map(it + 1)
+			return !sequences_equal(curr as []int, prev_plus_one)
+		}
+	}
+}
+
+fn sequences_equal(a []int, b []int) bool {
+	return a == b
+}
+
 fn new_non_integers_block_sequence_extractor(seq []HeckelSymbolTableEntryType) SequenceExtractor {
 	return SequenceExtractor{
 		seq: seq

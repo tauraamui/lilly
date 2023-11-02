@@ -8,7 +8,7 @@ mut:
 	olno  int
 }
 
-type HeckelSymbolTableEntryType = int | HeckelSymbolTableEntry
+type HeckelSymbolTableEntryType = []int | int | HeckelSymbolTableEntry
 
 fn run_diff(a []string, b []string) {
 	mut st := map[string]HeckelSymbolTableEntryType{}
@@ -107,6 +107,7 @@ struct OpBlock {
 }
 
 fn generate_move_and_equal_opcodes() []OpCode {
+	return []
 }
 
 fn generate_insert_opcodes(oa []HeckelSymbolTableEntryType) []OpCode {
