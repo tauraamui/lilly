@@ -23,8 +23,6 @@ fn test_add_to_table() {
 	add_to_table(mut table, right_entries, "right")
 
 	assert table == {'a': {1: {'left': 0, 'right': 0}}, 'b': {1: {'left': -1, 'right': 1}}}
-	find_unique(mut table, mut left_entries, mut right_entries)
-	assert 1 == 2
 }
 
 fn test_diff_left_empty_right_not() {
@@ -38,6 +36,7 @@ fn test_diff_right_empty_left_not() {
 }
 
 fn test_diff_left_and_right() {
-	ops := diff(["c", "b", "c", "d"], ["a", "b", "c"])
+	ops := diff(["c", "c", "b", "c", "d"], ["a", "b", "c"])
+	assert 1 == 2
 	assert ops == []
 }
