@@ -37,6 +37,5 @@ fn test_diff_right_empty_left_not() {
 
 fn test_diff_left_and_right() {
 	ops := diff(["c", "c", "b", "c", "d"], ["a", "b", "c"])
-	assert 1 == 2
 	assert ops == []
 }
