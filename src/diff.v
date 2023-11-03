@@ -28,7 +28,7 @@ fn add_to_table(mut table map[string]map[int]map[string]int, arr []Entry, kind s
 		if !(token.value in table) { table[token.value] = map[int]map[string]int{} }
 		if !(token.count in table[token.value]) { table[token.value][token.count] = { "left": -1, "right": -1 } }
 		v := table[token.value][token.count][kind]
-		if v == - 1 { table[token.value][token.count][kind] = idx } else if v >= 0 { table[token.value][token.count][kind] = -2 }
+		if v == -1 { table[token.value][token.count][kind] = idx } else if v >= 0 { table[token.value][token.count][kind] = -2 }
 	})
 }
 
