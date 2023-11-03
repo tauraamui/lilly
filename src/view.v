@@ -225,7 +225,6 @@ mut:
 struct Buffer {
 mut:
 	lines   []string
-	history UndoRedoHistory
 }
 
 enum CmdCode as u8 {
