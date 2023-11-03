@@ -15,11 +15,16 @@ fn test_diff_same() {
 
 fn test_add_to_table() {
 	mut table := map[string]map[int]map[string]int{}
-	left_entries := [Entry{value: "a", ref: -1, count: 1}]
-	right_entries := [Entry{value: "a", ref: -1, count: 1}, Entry{value: "b", ref: -1, count: 1}]
+
+	mut left_entries := [Entry{value: "a", ref: -1, count: 1}]
+	mut right_entries := [Entry{value: "a", ref: -1, count: 1}, Entry{value: "b", ref: -1, count: 1}]
+
 	add_to_table(mut table, left_entries, "left")
 	add_to_table(mut table, right_entries, "right")
+
 	assert table == {'a': {1: {'left': 0, 'right': 0}}, 'b': {1: {'left': -1, 'right': 1}}}
+	find_unique(mut table, mut left_entries, mut right_entries)
+	assert 1 == 2
 }
 
 fn test_diff_left_empty_right_not() {

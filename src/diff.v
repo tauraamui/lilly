@@ -31,6 +31,18 @@ fn add_to_table(mut table map[string]map[int]map[string]int, arr []Entry, kind s
 	})
 }
 
+fn find_unique(mut table map[string]map[int]map[string]int, mut left []Entry, mut right []Entry) {
+	for token in left {
+		ref := table[token.value][token.count].clone()
+		if ref["left"] >= 0 && ref["right"] >= 0 {
+			left_token := left[ref["left"]]
+			right_token := right[ref["right"]]
+			left[ref["left"]] = Entry{ value: left_token.value, ref: ref["right"], count: left_token.count }
+			right[ref["right"]] = Entry{ value: right_token.value, ref: ref["left"], count: right_token.count }
+		}
+	}
+}
+
 fn diff(a []string, b []string) []Op {
 	if same(a, b) { return a.map(fn (v string) Op { return Op{ kind: "same", value: v } })}
 	if a.len == 0 { return b.map(fn (v string) Op { return Op{ kind: "ins", value: v } }) }
@@ -65,6 +77,8 @@ fn diff(a []string, b []string) []Op {
 	mut table := map[string]map[int]map[string]int{}
 	add_to_table(mut table, left, "left")
 	add_to_table(mut table, right, "right")
+
+	find_unique(mut table, mut left, mut right)
 
 	return []
 }
