@@ -22,6 +22,15 @@ mut:
 	count int
 }
 
+fn add_to_table(mut table &map[string]map[int]map[string]int, arr []Entry, kind string) {
+	arrays.each_indexed[Entry](arr, fn [mut table, kind] (idx int, token Entry) {
+		if !(token.value in table) { table[token.value] = map[int]map[string]int{} }
+		if !(token.count in table[token.value]) { table[token.value][token.count] = { "left": -1, "right": -1 } }
+		v := table[token.value][token.count][kind]
+		if v == - 1 { table[token.value][token.count][kind] = idx } else if v >= 0 { table[token.value][token.count][kind] = -2 }
+	})
+}
+
 fn diff(a []string, b []string) []Op {
 	if same(a, b) { return a.map(fn (v string) Op { return Op{ kind: "same", value: v } })}
 	if a.len == 0 { return b.map(fn (v string) Op { return Op{ kind: "ins", value: v } }) }
@@ -52,6 +61,10 @@ fn diff(a []string, b []string) []Op {
 			count: 1
 		}
 	})
+
+	mut table := map[string]map[int]map[string]int{}
+	add_to_table(mut table, left, "left")
+	add_to_table(mut table, right, "right")
 
 	return []
 }
