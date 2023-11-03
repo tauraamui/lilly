@@ -1,6 +1,7 @@
 module main
 
 import arrays
+import math
 
 fn same(left []string, right []string) bool {
 	if left.len != right.len { return false }
@@ -64,6 +65,90 @@ fn expand_unique(mut left []Entry, mut right []Entry, dir int) {
 	}
 }
 
+fn append_multiple(mut acc []Op, token Entry, kind string) {
+	mut n := token.count
+	for _ in 0..n {
+		acc << Op{ kind: kind, value: token.value }
+	}
+}
+
+fn calc_dist(l_target int, l_pos int, r_target int, r_pos int) int {
+	return (l_target - l_pos) + (r_target - r_pos) + math.abs((l_target - l_pos) - (r_target - r_pos))
+}
+
+fn process_diff(left []Entry, right []Entry) []Op {
+	mut acc := []Op{}
+	mut l_pos := 0
+	mut r_pos := 0
+	lx := left.len
+	rx := right.len
+	mut l_token := Entry{}
+	mut r_token := Entry{}
+	mut l_target := 0
+	mut r_target := 0
+
+	for l_pos < lx {
+		l_target = l_pos
+
+		for left[l_target].ref < 0 {
+			l_target += 1
+		}
+
+		r_target = left[l_target].ref
+
+		if r_target < r_pos {
+			for l_pos < l_target {
+				append_multiple(mut acc, left[l_pos], "del")
+			}
+
+			append_multiple(mut acc, left[l_pos++], "del")
+			continue
+		}
+
+		r_token = right[r_target - 1]
+
+		mut dist_1 := calc_dist(l_target, l_pos, r_target, r_pos)
+
+		for r_seek := r_target - 1; dist_1 > 0 && r_seek >= r_pos; r_seek-- {
+			if right[r_seek].ref < 0 { continue }
+			if right[r_seek].ref < l_pos { continue }
+
+			mut dist_2 := calc_dist(right[r_seek].ref, l_pos, r_seek, r_pos)
+			if dist_2 < dist_1 {
+				dist_1 = dist_2
+				r_target = r_seek
+				l_target = right[r_seek].ref
+			}
+		}
+
+		for l_pos < l_target {
+			append_multiple(mut acc, left[l_pos++], "del")
+		}
+
+		for r_pos < r_target {
+			append_multiple(mut acc, right[r_pos++], "ins")
+		}
+
+		if left[l_pos].eof { break }
+
+		count_diff := left[l_pos].count - right[r_pos].count
+
+		if count_diff == 0 {
+			append_multiple(mut acc, left[l_pos], "same")
+		} else if count_diff < 0 {
+			append_multiple(mut acc, Entry{ count: right[r_pos].count + count_diff, value: right[r_pos].value }, "same")
+			append_multiple(mut acc, Entry{ count: -count_diff, value: right[r_pos].value }, "ins")
+		} else if count_diff > 0 {
+			append_multiple(mut acc, Entry{ count: left[l_pos].count - count_diff, value: left[l_pos].value }, "same")
+			append_multiple(mut acc, Entry{ count: count_diff, value: left[l_pos].value }, "del")
+		}
+
+		l_pos += 1
+		r_pos += 1
+	}
+	return acc
+}
+
 fn diff(a []string, b []string) []Op {
 	if same(a, b) { return a.map(fn (v string) Op { return Op{ kind: "same", value: v } })}
 	if a.len == 0 { return b.map(fn (v string) Op { return Op{ kind: "ins", value: v } }) }
@@ -106,6 +191,6 @@ fn diff(a []string, b []string) []Op {
 
 	left << Entry{ ref: right.len, eof: true }
 
-	return []
+	return process_diff(left, right)
 }
 
