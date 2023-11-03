@@ -35,6 +35,14 @@ fn test_diff_right_empty_left_not() {
 	assert ops == [Op{kind: "del", value: "a"}, Op{kind: "del", value: "b"}, Op{kind: "del", value: "c"}]
 }
 
+fn test_diff_single_char() {
+	ops := diff(["x"], ["s"])
+	assert ops == [
+		Op{kind: "del", value: "x"},
+		Op{kind: "ins", value: "s"}
+	]
+}
+
 fn test_diff_left_and_right() {
 	ops := diff(["c", "c", "b", "c", "d"], ["a", "b", "c"])
 	assert ops == [
