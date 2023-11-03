@@ -37,5 +37,12 @@ fn test_diff_right_empty_left_not() {
 
 fn test_diff_left_and_right() {
 	ops := diff(["c", "c", "b", "c", "d"], ["a", "b", "c"])
-	assert ops == []
+	assert ops == [
+		Op{kind: "del", value: "c"},
+		Op{kind: "del", value: "c"},
+		Op{kind: "ins", value: "a"},
+		Op{kind: "same", value: "b"},
+		Op{kind: "same", value: "c"},
+		Op{kind: "del", value: "d"}
+	]
 }
