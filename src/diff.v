@@ -152,6 +152,18 @@ fn process_diff(left []Entry, right []Entry) []Op {
 	return acc
 }
 
+fn reduce(mut acc []Entry, cur string) {
+	if acc.len != 0 && acc[acc.len - 1].value == cur {
+		acc[acc.len - 1].count += 1
+		return
+	}
+	acc << Entry{
+		value: cur,
+		ref: -1,
+		count: 1
+	}
+}
+
 fn diff(a []string, b []string) []Op {
 	if same(a, b) { return a.map(fn (v string) Op { return Op{ kind: "same", value: v } })}
 	if a.len == 0 { return b.map(fn (v string) Op { return Op{ kind: "ins", value: v } }) }
@@ -159,29 +171,13 @@ fn diff(a []string, b []string) []Op {
 
 	// TODO(tauraamui) -> comapre this population logic with JS reduce
 	mut left := []Entry{}
-	for i, cur in a {
-		if left.len > 0 && left[left.len - 1].value == cur {
-			left[left.len - 1].count += 1
-			continue
-		}
-		left << Entry{
-			value: cur,
-			ref: -1,
-			count: 1
-		}
+	for cur in a {
+		reduce(mut left, cur)
 	}
 
 	mut right := []Entry{}
-	for i, cur in b {
-		if right.len > 0 && right[right.len - 1].value == cur {
-			right[right.len - 1].count += 1
-			continue
-		}
-		right << Entry{
-			value: cur,
-			ref: -1,
-			count: 1
-		}
+	for cur in b {
+		reduce(mut right, cur)
 	}
 
 	mut table := map[string]map[int]map[string]int{}
