@@ -47,6 +47,14 @@ fn test_should_return_all_deletions_including_repeats() {
 	]
 }
 
+fn test_should_return_deletions_at_beginning() {
+	assert diff(["a", "b", "c"], ["b", "c"]) == [
+		Op{ value: "a", kind: "del" },
+		Op{ value: "b", kind: "same" },
+		Op{ value: "c", kind: "same" }
+	]
+}
+
 fn test_add_to_table() {
 	mut table := map[string]map[int]map[string]int{}
 
@@ -59,50 +67,3 @@ fn test_add_to_table() {
 	assert table == {'a': {1: {'left': 0, 'right': 0}}, 'b': {1: {'left': -1, 'right': 1}}}
 }
 
-fn test_diff_left_empty_right_not() {
-	ops := diff([], ["a", "b", "c"])
-	assert ops == [Op{kind: "ins", value: "a"}, Op{kind: "ins", value: "b"}, Op{kind: "ins", value: "c"}]
-}
-
-fn test_diff_right_empty_left_not() {
-	ops := diff(["a", "b", "c"], [])
-	assert ops == [Op{kind: "del", value: "a"}, Op{kind: "del", value: "b"}, Op{kind: "del", value: "c"}]
-}
-
-/*
-fn test_diff_single_char() {
-	ops := diff(["x"], ["s"])
-	assert ops == [
-		Op{kind: "del", value: "x"},
-		Op{kind: "ins", value: "s"}
-	]
-}
-*/
-
-/*
-fn test_diff_left_and_right() {
-	ops := diff(["c", "c", "b", "c", "d"], ["a", "b", "c"])
-	assert ops == [
-		Op{kind: "del", value: "c"},
-		Op{kind: "del", value: "c"},
-		Op{kind: "ins", value: "a"},
-		Op{kind: "same", value: "b"},
-		Op{kind: "same", value: "c"},
-		Op{kind: "del", value: "d"}
-	]
-}
-*/
-
-/*
-fn test_diff_buffer_pre_edit_to_buffer_post_edit() {
-	ops := diff([
-		"2. second line",
-		"1. first line",
-	], [
-		"1. first lined",
-		"2. second line"
-	])
-
-	assert ops == []
-}
-*/
