@@ -109,8 +109,6 @@ fn process_diff(left []Entry, right []Entry) []Op {
 			continue
 		}
 
-		r_token = right[r_target]
-
 		mut dist_1 := calc_dist(l_target, l_pos, r_target, r_pos)
 
 		for r_seek := r_target - 1; dist_1 > 0 && r_seek >= r_pos; r_seek-- {

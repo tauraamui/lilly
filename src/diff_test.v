@@ -47,7 +47,6 @@ fn test_should_return_all_deletions_including_repeats() {
 	]
 }
 
-/*
 fn test_should_return_deletions_at_beginning() {
 	assert diff(["a", "b", "c"], ["b", "c"]) == [
 		Op{ value: "a", kind: "del" },
@@ -55,7 +54,6 @@ fn test_should_return_deletions_at_beginning() {
 		Op{ value: "c", kind: "same" }
 	]
 }
-*/
 
 fn test_append_multiple() {
 	mut acc := []Op{}
