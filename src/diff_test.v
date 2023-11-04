@@ -54,3 +54,16 @@ fn test_diff_left_and_right() {
 		Op{kind: "del", value: "d"}
 	]
 }
+
+fn test_diff_buffer_pre_edit_to_buffer_post_edit() {
+	ops := diff([
+		"2. second line",
+		"1. first line",
+	], [
+		"1. first lined",
+		"2. second line"
+	])
+
+	assert ops == []
+}
+
