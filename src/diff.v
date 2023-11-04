@@ -70,8 +70,9 @@ fn expand_unique(mut left []Entry, mut right []Entry, dir int) {
 
 fn append_multiple(mut acc []Op, token Entry, kind string) {
 	mut n := token.count
-	for _ in 0..n {
+	for n > 0 {
 		acc << Op{ kind: kind, value: token.value }
+		n--
 	}
 }
 
@@ -152,7 +153,7 @@ fn process_diff(left []Entry, right []Entry) []Op {
 	return acc
 }
 
-fn reduce(mut acc []Entry, cur string) {
+fn add_new_count_existing(mut acc []Entry, cur string) {
 	if acc.len != 0 && acc[acc.len - 1].value == cur {
 		acc[acc.len - 1].count += 1
 		return
@@ -172,12 +173,12 @@ fn diff(a []string, b []string) []Op {
 	// TODO(tauraamui) -> comapre this population logic with JS reduce
 	mut left := []Entry{}
 	for cur in a {
-		reduce(mut left, cur)
+		add_new_count_existing(mut left, cur)
 	}
 
 	mut right := []Entry{}
 	for cur in b {
-		reduce(mut right, cur)
+		add_new_count_existing(mut right, cur)
 	}
 
 	mut table := map[string]map[int]map[string]int{}

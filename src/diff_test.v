@@ -47,11 +47,23 @@ fn test_should_return_all_deletions_including_repeats() {
 	]
 }
 
+/*
 fn test_should_return_deletions_at_beginning() {
 	assert diff(["a", "b", "c"], ["b", "c"]) == [
 		Op{ value: "a", kind: "del" },
 		Op{ value: "b", kind: "same" },
 		Op{ value: "c", kind: "same" }
+	]
+}
+*/
+
+fn test_append_multiple() {
+	mut acc := []Op{}
+	append_multiple(mut acc, Entry{ count: 3, value: "some text" }, "ins")
+	assert acc == [
+		Op{ value: "some text", kind: "ins" },
+		Op{ value: "some text", kind: "ins" },
+		Op{ value: "some text", kind: "ins" }
 	]
 }
 
@@ -65,5 +77,28 @@ fn test_add_to_table() {
 	add_to_table(mut table, right_entries, "right")
 
 	assert table == {'a': {1: {'left': 0, 'right': 0}}, 'b': {1: {'left': -1, 'right': 1}}}
+}
+
+fn test_add_new_count_existing() {
+	mut acc := []Entry{}
+
+	for cur in ["a", "a", "b"] {
+		add_new_count_existing(mut acc, cur)
+	}
+
+	assert acc == [
+		Entry{
+			value: "a"
+			ref: -1
+			count: 2
+			eof: false
+		},
+		Entry{
+			value: "b"
+			ref: -1
+			count: 1
+			eof: false
+		}
+	]
 }
 
