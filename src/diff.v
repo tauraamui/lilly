@@ -108,7 +108,7 @@ fn process_diff(left []Entry, right []Entry) []Op {
 			continue
 		}
 
-		r_token = right[r_target - 1]
+		r_token = right[r_target]
 
 		mut dist_1 := calc_dist(l_target, l_pos, r_target, r_pos)
 
@@ -157,6 +157,7 @@ fn diff(a []string, b []string) []Op {
 	if a.len == 0 { return b.map(fn (v string) Op { return Op{ kind: "ins", value: v } }) }
 	if b.len == 0 { return a.map(fn (v string) Op { return Op{ kind: "del", value: v } }) }
 
+	// TODO(tauraamui) -> comapre this population logic with JS reduce
 	mut left := []Entry{}
 	for i, cur in a {
 		if left.len > 0 && left[left.len - 1].value == cur {
