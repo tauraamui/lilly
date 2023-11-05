@@ -77,6 +77,14 @@ fn calc_dist(l_target int, l_pos int, r_target int, r_pos int) int {
 	return (l_target - l_pos) + (r_target - r_pos) + math.abs((l_target - l_pos) - (r_target - r_pos))
 }
 
+fn split_inclusive(str string, sep string) []string {
+	if str.len == 0 { return [] }
+	split := str.split(sep)
+	return arrays.map_indexed(split, fn [split, sep] (idx int, line string) string {
+		return if idx < split.len -1 { "${line}${sep}" } else { line }
+	})
+}
+
 fn process_diff(left []Entry, right []Entry) []Op {
 	mut acc := []Op{}
 	mut l_pos := 0
