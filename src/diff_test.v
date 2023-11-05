@@ -210,6 +210,19 @@ fn test_should_handle_extra_deletions_with_previously_emitted_change() {
 	]
 }
 
+fn test_should_handle_neighbouring_transposition() {
+	assert diff(
+		["a", "b", "c", "d"],
+		["a", "c", "b", "d"]
+	) == [
+		Op{ value: "a", kind: "same" },
+		Op{ value: "c", kind: "ins" },
+		Op{ value: "b", kind: "same" },
+		Op{ value: "c", kind: "del" },
+		Op{ value: "d", kind: "same" }
+	]
+}
+
 fn test_append_multiple() {
 	mut acc := []Op{}
 	append_multiple(mut acc, Entry{ count: 3, value: "some text" }, "ins")
