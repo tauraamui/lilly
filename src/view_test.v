@@ -142,6 +142,25 @@ fn test_v_toggles_visual_mode_and_starts_selection() {
 	assert fake_view.cursor.selection_start == Pos{ 6, 0 }
 }
 
+fn test_enter_moves_trailing_segment_to_next_line_and_moves_cursor_in_front() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
+	// manually set the "document" contents
+	fake_view.buffer.lines = [
+		"1. first line with some trailing content"
+	]
+
+	fake_view.cursor.pos.x = 8
+	fake_view.cursor.pos.y = 0
+
+	fake_view.enter()
+
+	assert fake_view.buffer.lines == [
+		"1. first",
+		" line with some trailing content"
+	]
+	assert fake_view.cursor.pos.x == 0
+}
+
 fn test_enter_inserts_line_at_cur_pos_and_auto_indents() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
 	// manually set the "document" contents
