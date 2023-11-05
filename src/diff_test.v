@@ -165,6 +165,34 @@ fn test_should_handle_a_more_complex_transposition() {
 	]
 }
 
+fn test_should_handle_a_more_complex_transposition_with_large_offset() {
+	assert diff(
+		["a", "b", "c", "u", "x", "d", "e"],
+		["z", "z", "z", "z", "z", "z", "z", "z", "z", "z", "a", "d", "u", "c", "x", "b", "e"]
+	) == [
+		Op{ value: "z", kind: "ins" },
+		Op{ value: "z", kind: "ins" },
+		Op{ value: "z", kind: "ins" },
+		Op{ value: "z", kind: "ins" },
+		Op{ value: "z", kind: "ins" },
+		Op{ value: "z", kind: "ins" },
+		Op{ value: "z", kind: "ins" },
+		Op{ value: "z", kind: "ins" },
+		Op{ value: "z", kind: "ins" },
+		Op{ value: "z", kind: "ins" },
+		Op{ value: "a", kind: "same" },
+		Op{ value: "b", kind: "del" },
+		Op{ value: "d", kind: "ins" },
+		Op{ value: "u", kind: "ins" },
+		Op{ value: "c", kind: "same" },
+		Op{ value: "u", kind: "del" },
+		Op{ value: "x", kind: "same" },
+		Op{ value: "d", kind: "del" },
+		Op{ value: "b", kind: "ins" },
+		Op{ value: "e", kind: "same" }
+	]
+}
+
 fn test_append_multiple() {
 	mut acc := []Op{}
 	append_multiple(mut acc, Entry{ count: 3, value: "some text" }, "ins")
