@@ -92,14 +92,14 @@ fn process_diff(left []Entry, right []Entry) []Op {
 		l_target = l_pos
 
 		for left[l_target].ref < 0 {
-			l_target += 1
+			l_target++
 		}
 
 		r_target = left[l_target].ref
 
 		if r_target < r_pos {
 			for l_pos < l_target {
-				append_multiple(mut acc, left[l_pos], "del")
+				append_multiple(mut acc, left[l_pos++], "del")
 			}
 
 			append_multiple(mut acc, left[l_pos++], "del")
