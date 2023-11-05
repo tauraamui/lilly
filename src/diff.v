@@ -199,3 +199,7 @@ fn diff(a []string, b []string) []Op {
 	return process_diff(left, right)
 }
 
+fn diff_lines(a string, b string) []Op {
+	return diff(split_inclusive(a, "\n"), split_inclusive(b, "\n"))
+}
+

@@ -242,6 +242,18 @@ fn test_should_handle_multiple_repeats_of_different_lengths() {
 	]
 }
 
+fn test_should_diff_text_by_lines() {
+	assert diff_lines(
+		"a\nb\nc",
+		"a\nd\nc"
+	) == [
+		Op{ value: "a\n", kind: "same" },
+		Op{ value: "b\n", kind: "del" },
+		Op{ value: "d\n", kind: "ins" },
+		Op{ value: "c", kind: "same" }
+	]
+}
+
 fn test_append_multiple() {
 	mut acc := []Op{}
 	append_multiple(mut acc, Entry{ count: 3, value: "some text" }, "ins")
