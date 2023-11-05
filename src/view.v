@@ -225,7 +225,6 @@ mut:
 struct Buffer {
 mut:
 	lines   []string
-	history UndoRedoHistory
 }
 
 enum CmdCode as u8 {
@@ -1138,7 +1137,7 @@ fn (mut view View) enter() {
 		view.buffer.lines.insert(y+1, new_line)
 	}
 
-	view.cursor.pos.x = 0
+	view.cursor.pos.x = whitespace_prefix.len
 }
 
 fn resolve_whitespace_prefix(line string) string {
