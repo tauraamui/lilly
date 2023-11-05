@@ -223,6 +223,25 @@ fn test_should_handle_neighbouring_transposition() {
 	]
 }
 
+fn test_should_handle_multiple_repeats_of_different_lengths() {
+	assert diff(
+		["a", "b", "b", "c", "b", "b", "b", "d"],
+		["e", "b", "b", "f", "b", "b", "b", "g"]
+	) == [
+		Op{ value: "a", kind: "del" },
+		Op{ value: "e", kind: "ins" },
+		Op{ value: "b", kind: "same" },
+		Op{ value: "b", kind: "same" },
+		Op{ value: "c", kind: "del" },
+		Op{ value: "f", kind: "ins" },
+		Op{ value: "b", kind: "same" },
+		Op{ value: "b", kind: "same" },
+		Op{ value: "b", kind: "same" },
+		Op{ value: "d", kind: "del" },
+		Op{ value: "g", kind: "ins" }
+	]
+}
+
 fn test_append_multiple() {
 	mut acc := []Op{}
 	append_multiple(mut acc, Entry{ count: 3, value: "some text" }, "ins")
