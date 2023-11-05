@@ -133,6 +133,19 @@ fn test_should_reduce_equivalant_del_ins_sequences() {
 */
 
 fn test_should_recognise_transpositions_as_individual_edits() {
+	mut acc := []Op{}
+	assert diff(
+		["a", "b", "c", "d", "e"],
+		["a", "d", "c", "b", "e"]
+	) == [
+		Op{ value: "a", kind: "same" },
+		Op{ value: "b", kind: "del" },
+		Op{ value: "d", kind: "ins" },
+		Op{ value: "c", kind: "same" },
+		Op{ value: "d", kind: "del" },
+		Op{ value: "b", kind: "ins" },
+		Op{ value: "e", kind: "same" }
+	]
 }
 
 fn test_append_multiple() {
