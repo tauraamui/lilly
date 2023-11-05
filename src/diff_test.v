@@ -55,6 +55,14 @@ fn test_should_return_deletions_at_beginning() {
 	]
 }
 
+fn test_should_return_deletions_at_end() {
+	assert diff(["a", "b", "c"], ["a", "b"]) == [
+		Op{ value: "a", kind: "same" },
+		Op{ value: "b", kind: "same" },
+		Op{ value: "c", kind: "del" }
+	]
+}
+
 fn test_append_multiple() {
 	mut acc := []Op{}
 	append_multiple(mut acc, Entry{ count: 3, value: "some text" }, "ins")
