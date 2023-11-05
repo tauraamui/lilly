@@ -132,6 +132,9 @@ fn test_should_reduce_equivalant_del_ins_sequences() {
 }
 */
 
+fn test_should_recognise_transpositions_as_individual_edits() {
+}
+
 fn test_append_multiple() {
 	mut acc := []Op{}
 	append_multiple(mut acc, Entry{ count: 3, value: "some text" }, "ins")
