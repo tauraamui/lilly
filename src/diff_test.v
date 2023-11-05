@@ -193,6 +193,23 @@ fn test_should_handle_a_more_complex_transposition_with_large_offset() {
 	]
 }
 
+fn test_should_handle_extra_deletions_with_previously_emitted_change() {
+	assert diff(
+		["a", "b", "c", "v", "v", "d", "e"],
+		["a", "d", "c", "b", "e"]
+	) == [
+		Op{ value: "a", kind: "same" },
+		Op{ value: "b", kind: "del" },
+		Op{ value: "d", kind: "ins" },
+		Op{ value: "c", kind: "same" },
+		Op{ value: "v", kind: "del" },
+		Op{ value: "v", kind: "del" },
+		Op{ value: "d", kind: "del" },
+		Op{ value: "b", kind: "ins" },
+		Op{ value: "e", kind: "same" }
+	]
+}
+
 fn test_append_multiple() {
 	mut acc := []Op{}
 	append_multiple(mut acc, Entry{ count: 3, value: "some text" }, "ins")
