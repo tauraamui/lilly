@@ -82,9 +82,6 @@ fn process_diff(left []Entry, right []Entry) []Op {
 	mut l_pos := 0
 	mut r_pos := 0
 	lx := left.len
-	rx := right.len
-	mut l_token := Entry{}
-	mut r_token := Entry{}
 	mut l_target := 0
 	mut r_target := 0
 
@@ -99,10 +96,12 @@ fn process_diff(left []Entry, right []Entry) []Op {
 
 		if r_target < r_pos {
 			for l_pos < l_target {
-				append_multiple(mut acc, left[l_pos++], "del")
+				append_multiple(mut acc, left[l_pos], "del")
+				l_pos += 1
 			}
 
-			append_multiple(mut acc, left[l_pos++], "del")
+			append_multiple(mut acc, left[l_pos], "del")
+			l_pos += 1
 			continue
 		}
 
@@ -121,11 +120,13 @@ fn process_diff(left []Entry, right []Entry) []Op {
 		}
 
 		for l_pos < l_target {
-			append_multiple(mut acc, left[l_pos++], "del")
+			append_multiple(mut acc, left[l_pos], "del")
+			l_pos += 1
 		}
 
 		for r_pos < r_target {
-			append_multiple(mut acc, right[r_pos++], "ins")
+			append_multiple(mut acc, right[r_pos], "ins")
+			r_pos += 1
 		}
 
 		if left[l_pos].eof { break }
