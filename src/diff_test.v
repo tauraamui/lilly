@@ -133,7 +133,6 @@ fn test_should_reduce_equivalant_del_ins_sequences() {
 */
 
 fn test_should_recognise_transpositions_as_individual_edits() {
-	mut acc := []Op{}
 	assert diff(
 		["a", "b", "c", "d", "e"],
 		["a", "d", "c", "b", "e"]
@@ -142,6 +141,24 @@ fn test_should_recognise_transpositions_as_individual_edits() {
 		Op{ value: "b", kind: "del" },
 		Op{ value: "d", kind: "ins" },
 		Op{ value: "c", kind: "same" },
+		Op{ value: "d", kind: "del" },
+		Op{ value: "b", kind: "ins" },
+		Op{ value: "e", kind: "same" }
+	]
+}
+
+fn test_should_handle_a_more_complex_transposition() {
+	assert diff(
+		["a", "b", "c", "u", "x", "d", "e"],
+		["a", "d", "u", "c", "x", "b", "e"]
+	) == [
+		Op{ value: "a", kind: "same" },
+		Op{ value: "b", kind: "del" },
+		Op{ value: "d", kind: "ins" },
+		Op{ value: "u", kind: "ins" },
+		Op{ value: "c", kind: "same" },
+		Op{ value: "u", kind: "del" },
+		Op{ value: "x", kind: "same" },
 		Op{ value: "d", kind: "del" },
 		Op{ value: "b", kind: "ins" },
 		Op{ value: "e", kind: "same" }
