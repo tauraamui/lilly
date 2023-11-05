@@ -224,7 +224,7 @@ mut:
 
 struct Buffer {
 mut:
-	lines   []string
+	lines []string
 }
 
 enum CmdCode as u8 {
