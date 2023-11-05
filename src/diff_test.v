@@ -56,10 +56,64 @@ fn test_should_return_deletions_at_beginning() {
 }
 
 fn test_should_return_deletions_at_end() {
-	assert diff(["a", "b", "c"], ["a", "b"]) == [
+	assert diff(
+			["a", "b", "c"],
+			["a", "b"]
+		) == [
+			Op{ value: "a", kind: "same" },
+			Op{ value: "b", kind: "same" },
+			Op{ value: "c", kind: "del" }
+		]
+}
+
+fn test_should_return_insertions_at_beginning() {
+	assert diff(
+			["a", "b", "c"],
+			["z", "a", "b", "c"]
+		) == [
+			Op{ value: "z", kind: "ins" },
+			Op{ value: "a", kind: "same" },
+			Op{ value: "b", kind: "same" },
+			Op{ value: "c", kind: "same" }
+		]
+}
+
+fn test_should_return_insertions_at_end() {
+	assert diff(
+		["a", "b", "c"],
+		["a", "b", "c", "z"]
+	) == [
 		Op{ value: "a", kind: "same" },
 		Op{ value: "b", kind: "same" },
-		Op{ value: "c", kind: "del" }
+		Op{ value: "c", kind: "same" },
+		Op{ value: "z", kind: "ins" }
+	]
+}
+
+fn test_should_deal_with_repeats() {
+	assert diff(
+		["a", "b", "b", "b", "a"],
+		["c", "b", "b", "b", "c"]
+	) == [
+		Op{ value: "a", kind: "del" },
+		Op{ value: "c", kind: "ins" },
+		Op{ value: "b", kind: "same" },
+		Op{ value: "b", kind: "same" },
+		Op{ value: "b", kind: "same" },
+		Op{ value: "a", kind: "del" },
+		Op{ value: "c", kind: "ins" }
+	]
+}
+
+fn test_should_treat_repeat_tokens_as_different_in_passes_4_and_5() {
+	assert diff(
+		["f", "f", "c"],
+		["f", "c"]
+	) == [
+		Op{ value: "f", kind: "del" },
+		Op{ value: "f", kind: "del" },
+		Op{ value: "f", kind: "ins" },
+		Op{ value: "c", kind: "same" }
 	]
 }
 

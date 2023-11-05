@@ -36,11 +36,11 @@ fn add_to_table(mut table map[string]map[int]map[string]int, arr []Entry, kind s
 fn find_unique(mut table map[string]map[int]map[string]int, mut left []Entry, mut right []Entry) {
 	for token in left {
 		ref := table[token.value][token.count].clone()
-		if ref["left"] >= 0 && ref["right"] >= 0 {
-			left_token := left[ref["left"]]
-			right_token := right[ref["right"]]
-			left[ref["left"]] = Entry{ value: left_token.value, ref: ref["right"], count: left_token.count }
-			right[ref["right"]] = Entry{ value: right_token.value, ref: ref["left"], count: right_token.count }
+		left_ref := ref["left"]
+		right_ref := ref["right"]
+		if left_ref >= 0 && right_ref >= 0 {
+			left[left_ref].ref = right_ref
+			right[right_ref].ref = left_ref
 		}
 	}
 }
