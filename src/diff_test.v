@@ -254,6 +254,18 @@ fn test_should_diff_text_by_lines() {
 	]
 }
 
+fn test_should_diff_text_by_words() {
+	assert diff_words(
+		"a b c",
+		"a d c"
+	) == [
+		Op{ value: "a ", kind: "same" },
+		Op{ value: "b ", kind: "del" },
+		Op{ value: "d ", kind: "ins" },
+		Op{ value: "c", kind: "same" }
+	]
+}
+
 fn test_append_multiple() {
 	mut acc := []Op{}
 	append_multiple(mut acc, Entry{ count: 3, value: "some text" }, "ins")

@@ -203,3 +203,7 @@ fn diff_lines(a string, b string) []Op {
 	return diff(split_inclusive(a, "\n"), split_inclusive(b, "\n"))
 }
 
+fn diff_words(a string, b string) []Op {
+	return diff(split_inclusive(a, " "), split_inclusive(b, " "))
+}
+
