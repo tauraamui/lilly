@@ -55,16 +55,13 @@ fn expand_unique(mut left []Entry, mut right []Entry, dir int) {
 
 		for i >= 0 && j >= 0 && i < lx && j < rx {
 			if left[i].value != right[j].value { break }
+
+			left[i].ref = j
+			right[j].ref = i
+
+			i += dir
+			j += dir
 		}
-
-		if i == lx || i < 0 { break }
-		if j == rx || j < 0 { break }
-
-		left[i].ref = j
-		right[j].ref = i
-
-		i += dir
-		j += dir
 	}
 }
 
