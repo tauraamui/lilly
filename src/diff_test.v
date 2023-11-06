@@ -282,6 +282,18 @@ fn test_should_preserve_spaces_when_trim_is_false() {
 	]
 }
 
+fn test_should_ignore_consecutive_spaces_when_trim_is_true() {
+	assert diff_words(
+		"a  b  c",
+		"a b c",
+		true
+	) == [
+		Op{ value: "a ", kind: "same" },
+		Op{ value: "b ", kind: "same" },
+		Op{ value: "c", kind: "same" }
+	]
+}
+
 fn test_should_diff_text_by_lines_and_words() {
 	assert diff_hybrid(
 		"a b\nc d\nz z\ne f\ng h",
