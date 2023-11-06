@@ -322,7 +322,9 @@ fn test_should_support_deletions_at_beginning() {
 		"z z\nk f\ng h",
 		false
 	) == [
-		Op{ value: "a b\n", kind: "same" }
+		Op{ value: "a b\n", kind: "del" },
+		Op{ value: "c d\n", kind: "del" },
+		Op{ value: "z z\n", kind: "same" }
 		// should have more, passing for now to finish the rest of the tests
 	]
 }
@@ -355,8 +357,8 @@ fn test_should_support_insertions_at_start() {
 		"y y\na b\ni j\nz z\nk f\ng h",
 		false
 	) == [
-		Op{ value: "a b\n", kind: "same" }
-		// should have more, passing for now to finish the rest of the tests
+		Op{ value: "y y\n", kind: "ins", eof: false },
+		Op{ value: "a b\n", kind: "same", eof: false },
 	]
 }
 
