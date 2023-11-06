@@ -245,7 +245,8 @@ fn test_should_handle_multiple_repeats_of_different_lengths() {
 fn test_should_diff_text_by_lines() {
 	assert diff_lines(
 		"a\nb\nc",
-		"a\nd\nc"
+		"a\nd\nc",
+		false
 	) == [
 		Op{ value: "a\n", kind: "same" },
 		Op{ value: "b\n", kind: "del" },
@@ -257,12 +258,37 @@ fn test_should_diff_text_by_lines() {
 fn test_should_diff_text_by_words() {
 	assert diff_words(
 		"a b c",
-		"a d c"
+		"a d c",
+		false
 	) == [
 		Op{ value: "a ", kind: "same" },
 		Op{ value: "b ", kind: "del" },
 		Op{ value: "d ", kind: "ins" },
 		Op{ value: "c", kind: "same" }
+	]
+}
+
+fn test_should_preserve_spaces_when_trim_is_false() {
+	assert diff_words(
+		"a  b  c",
+		"a b c",
+		false
+	) == [
+		Op{ value: "a ", kind: "same" },
+		Op{ value: " ", kind: "del" },
+		Op{ value: "b ", kind: "same" },
+		Op{ value: " ", kind: "del" },
+		Op{ value: "c", kind: "same" }
+	]
+}
+
+fn test_should_diff_text_by_lines_and_words() {
+	assert diff_hybrid(
+		"a b\nc d\nz z\ne f\ng h",
+		"a b\ni j\nz z\nk f\ng h",
+		false
+	) == [
+		Op{ value: "a b\n", kind: "same" }
 	]
 }
 

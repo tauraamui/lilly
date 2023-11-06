@@ -14,6 +14,7 @@ fn same(left []string, right []string) bool {
 struct Op {
 	kind  string
 	value string
+	eof   bool
 }
 
 struct Entry {
@@ -77,12 +78,58 @@ fn calc_dist(l_target int, l_pos int, r_target int, r_pos int) int {
 	return (l_target - l_pos) + (r_target - r_pos) + math.abs((l_target - l_pos) - (r_target - r_pos))
 }
 
-fn split_inclusive(str string, sep string) []string {
+fn split_inclusive(str string, sep string, trim bool) []string {
 	if str.len == 0 { return [] }
-	split := str.split(sep)
+	mut split := str.split(sep)
+	if trim {
+		split = split.filter(it.len > 0)
+	}
 	return arrays.map_indexed(split, fn [split, sep] (idx int, line string) string {
 		return if idx < split.len -1 { "${line}${sep}" } else { line }
 	})
+}
+
+fn accumulate_changes(changes []Op, ffn fn (del string, ins string) []Op) []Op {
+	mut del := []string{}
+	mut ins := []string{}
+
+	for ch in changes {
+		match ch.kind {
+			"del" { del << ch.value }
+			"ins" { ins << ch.value }
+			else {}
+		}
+	}
+
+	if del.len == 0 || ins.len == 0 { return changes }
+
+	return ffn(arrays.join_to_string(del, "", fn (elem string) string { return elem }), arrays.join_to_string(ins, "", fn (elem string) string { return elem }))
+}
+
+fn refine_changed(mut changes []Op, ffn fn(del string, ins string) []Op) []Op {
+	mut ptr := -1
+
+	mut acc := []Op{}
+	changes << Op{ kind: "same", eof: true }
+
+	for idx, cur in changes {
+		mut part := []Op{}
+		if cur.kind == "same" {
+			if ptr >= 0 {
+				part = accumulate_changes(changes[ptr..idx], ffn)
+				if changes[idx - 1].kind != "ins" {
+					part = changes[ptr..idx].clone()
+				}
+				ptr = -1
+			}
+			acc << part
+			if !cur.eof { acc << cur }
+			return acc
+		} else if ptr < 0 {
+			ptr = idx
+		}
+	}
+	return acc
 }
 
 fn process_diff(left []Entry, right []Entry) []Op {
@@ -199,11 +246,21 @@ fn diff(a []string, b []string) []Op {
 	return process_diff(left, right)
 }
 
-fn diff_lines(a string, b string) []Op {
-	return diff(split_inclusive(a, "\n"), split_inclusive(b, "\n"))
+fn diff_lines(a string, b string, trim bool) []Op {
+	return diff(split_inclusive(a, "\n", trim), split_inclusive(b, "\n", trim))
 }
 
-fn diff_words(a string, b string) []Op {
-	return diff(split_inclusive(a, " "), split_inclusive(b, " "))
+fn diff_words(a string, b string, trim bool) []Op {
+	return diff(split_inclusive(a, " ", trim), split_inclusive(b, " ", trim))
+}
+
+fn diff_hybrid(a string, b string, trim bool) []Op {
+	mut lines_diff := diff_lines(a, b, trim)
+	return refine_changed(
+		mut lines_diff,
+		fn [trim] (del string, ins string) []Op {
+			return diff_words(del, ins, trim)
+		}
+	)
 }
 
