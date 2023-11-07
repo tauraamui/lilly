@@ -956,6 +956,7 @@ fn (mut view View) clamp_cursor_within_document_bounds() {
 }
 
 fn (mut view View) clamp_cursor_x_pos() {
+	view.clamp_cursor_within_document_bounds()
 	line_len := view.buffer.lines[view.cursor.pos.y].runes().len
 	if line_len == 0 { view.cursor.pos.x = 0; return }
 	if view.mode == .insert {
@@ -1030,6 +1031,22 @@ fn (mut view View) visual_y() {
 }
 
 fn (mut view View) visual_d() {
+	mut start := view.cursor.selection_start_y()
+	mut end := view.cursor.selection_end_y()
+
+	println("START ${start}, END: ${end}")
+	if start < 0 { start = 0 }
+	if end+1 >= view.buffer.lines.len { end = view.buffer.lines.len-1 }
+	before := view.buffer.lines[..start]
+	after := view.buffer.lines[end+1..]
+
+	view.buffer.lines = before
+	view.buffer.lines << after
+	view.escape()
+}
+
+/*
+fn (mut view View) visual_d() {
 	mut y_lines := []string{}
 	start := view.cursor.selection_start_y()
 	end := view.cursor.selection_end_y()
@@ -1042,6 +1059,7 @@ fn (mut view View) visual_d() {
 	view.buffer.lines << after
 	view.escape()
 }
+*/
 
 fn (mut view View) w() {
 	line := view.buffer.lines[view.cursor.pos.y]
