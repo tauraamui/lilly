@@ -576,6 +576,26 @@ fn test_move_cursor_with_b_from_start_of_line_which_preceeds_a_blank_line() {
 	assert fake_view.cursor.pos.y == 1
 }
 
+fn test_jump_cursor_up_to_next_blank_line() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	fake_view.buffer.lines = [
+		"# Top of the file"
+		"",
+		"Some fake block of text which may or may not be",
+		"more than one line in size, so it can be used for",
+		"this testing scenario.",
+		"",
+		"this is the last line of the document"
+	]
+
+	fake_view.cursor.pos.y = 4
+	assert "this testing scenario." == fake_view.buffer.lines[fake_view.cursor.pos.y]
+	fake_view.jump_cursor_up_to_next_blank_line()
+	assert "" == fake_view.buffer.lines[fake_view.cursor.pos.y]
+	fake_view.jump_cursor_up_to_next_blank_line()
+	assert "# Top of the file" == fake_view.buffer.lines[fake_view.cursor.pos.y]
+}
+
 fn test_calc_w_move_amount_simple_sentence_line() {
 	// manually set the documents contents
 	fake_line := "this is a line to test with"
