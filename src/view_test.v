@@ -473,6 +473,19 @@ fn test_search_within_for_multiple_lines_multiple_matches_per_line() {
 	assert looped_back_first_result.line == 0
 }
 
+fn test_move_cursor_with_b_from_start_of_line_which_preceeds_a_blank_line() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	fake_view.buffer.lines = ["1. first line", "", "3. third line"]
+
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 2
+
+	fake_view.b()
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 1
+}
+
 fn test_calc_w_move_amount_simple_sentence_line() {
 	// manually set the documents contents
 	fake_line := "this is a line to test with"

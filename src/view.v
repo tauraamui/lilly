@@ -1061,6 +1061,7 @@ fn (mut view View) e() {
 }
 
 fn (mut view View) b() {
+	defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
 	amount := calc_b_move_amount(view.cursor.pos, line)
 	if amount == 0 && view.cursor.pos.y > 0 {
@@ -1069,7 +1070,6 @@ fn (mut view View) b() {
 		return
 	}
 	view.cursor.pos.x -= amount
-	view.clamp_cursor_x_pos()
 }
 
 fn (mut view View) ctrl_d() {
