@@ -1,3 +1,17 @@
+// Copyright 2023 The Lilly Editor contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 module main
 
 import arrays
@@ -14,6 +28,7 @@ fn same(left []string, right []string) bool {
 struct Op {
 	kind  string
 	value string
+	eof   bool
 }
 
 struct Entry {
@@ -36,11 +51,11 @@ fn add_to_table(mut table map[string]map[int]map[string]int, arr []Entry, kind s
 fn find_unique(mut table map[string]map[int]map[string]int, mut left []Entry, mut right []Entry) {
 	for token in left {
 		ref := table[token.value][token.count].clone()
-		if ref["left"] >= 0 && ref["right"] >= 0 {
-			left_token := left[ref["left"]]
-			right_token := right[ref["right"]]
-			left[ref["left"]] = Entry{ value: left_token.value, ref: ref["right"], count: left_token.count }
-			right[ref["right"]] = Entry{ value: right_token.value, ref: ref["left"], count: right_token.count }
+		left_ref := ref["left"]
+		right_ref := ref["right"]
+		if left_ref >= 0 && right_ref >= 0 {
+			left[left_ref].ref = right_ref
+			right[right_ref].ref = left_ref
 		}
 	}
 }
@@ -55,20 +70,21 @@ fn expand_unique(mut left []Entry, mut right []Entry, dir int) {
 
 		for i >= 0 && j >= 0 && i < lx && j < rx {
 			if left[i].value != right[j].value { break }
+
+			left[i].ref = j
+			right[j].ref = i
+
+			i += dir
+			j += dir
 		}
-
-		left[i].ref = j
-		right[j].ref = i
-
-		i += dir
-		j += dir
 	}
 }
 
 fn append_multiple(mut acc []Op, token Entry, kind string) {
 	mut n := token.count
-	for _ in 0..n {
+	for n > 0 {
 		acc << Op{ kind: kind, value: token.value }
+		n -= 1
 	}
 }
 
@@ -76,14 +92,65 @@ fn calc_dist(l_target int, l_pos int, r_target int, r_pos int) int {
 	return (l_target - l_pos) + (r_target - r_pos) + math.abs((l_target - l_pos) - (r_target - r_pos))
 }
 
+fn split_inclusive(str string, sep string, trim bool) []string {
+	if str.len == 0 { return [] }
+	mut split := str.split(sep)
+	if trim {
+		split = split.filter(it.len > 0)
+	}
+	return arrays.map_indexed(split, fn [split, sep] (idx int, line string) string {
+		return if idx < split.len -1 { "${line}${sep}" } else { line }
+	})
+}
+
+fn accumulate_changes(changes []Op, ffn fn (del string, ins string) []Op) []Op {
+	mut del := []string{}
+	mut ins := []string{}
+
+	for ch in changes {
+		match ch.kind {
+			"del" { del << ch.value }
+			"ins" { ins << ch.value }
+			else {}
+		}
+	}
+
+	if del.len == 0 || ins.len == 0 { return changes }
+
+	return ffn(arrays.join_to_string(del, "", fn (elem string) string { return elem }), arrays.join_to_string(ins, "", fn (elem string) string { return elem }))
+}
+
+fn refine_changed(mut changes []Op, ffn fn(del string, ins string) []Op) []Op {
+	mut ptr := -1
+
+	mut acc := []Op{}
+	changes << Op{ kind: "same", eof: true }
+
+	for idx, cur in changes {
+		mut part := []Op{}
+		if cur.kind == "same" {
+			if ptr >= 0 {
+				part = accumulate_changes(changes[ptr..idx], ffn)
+				if changes[idx - 1].kind != "ins" {
+					part = changes[ptr..idx].clone()
+				}
+				ptr = -1
+			}
+			acc << part
+			if !cur.eof { acc << cur }
+			return acc
+		} else if ptr < 0 {
+			ptr = idx
+		}
+	}
+	return acc
+}
+
 fn process_diff(left []Entry, right []Entry) []Op {
 	mut acc := []Op{}
 	mut l_pos := 0
 	mut r_pos := 0
 	lx := left.len
-	rx := right.len
-	mut l_token := Entry{}
-	mut r_token := Entry{}
 	mut l_target := 0
 	mut r_target := 0
 
@@ -99,13 +166,13 @@ fn process_diff(left []Entry, right []Entry) []Op {
 		if r_target < r_pos {
 			for l_pos < l_target {
 				append_multiple(mut acc, left[l_pos], "del")
+				l_pos += 1
 			}
 
-			append_multiple(mut acc, left[l_pos++], "del")
+			append_multiple(mut acc, left[l_pos], "del")
+			l_pos += 1
 			continue
 		}
-
-		r_token = right[r_target - 1]
 
 		mut dist_1 := calc_dist(l_target, l_pos, r_target, r_pos)
 
@@ -122,11 +189,13 @@ fn process_diff(left []Entry, right []Entry) []Op {
 		}
 
 		for l_pos < l_target {
-			append_multiple(mut acc, left[l_pos++], "del")
+			append_multiple(mut acc, left[l_pos], "del")
+			l_pos += 1
 		}
 
 		for r_pos < r_target {
-			append_multiple(mut acc, right[r_pos++], "ins")
+			append_multiple(mut acc, right[r_pos], "ins")
+			r_pos += 1
 		}
 
 		if left[l_pos].eof { break }
@@ -149,35 +218,32 @@ fn process_diff(left []Entry, right []Entry) []Op {
 	return acc
 }
 
+fn add_new_count_existing(mut acc []Entry, cur string) {
+	if acc.len != 0 && acc[acc.len - 1].value == cur {
+		acc[acc.len - 1].count += 1
+		return
+	}
+	acc << Entry{
+		value: cur,
+		ref: -1,
+		count: 1
+	}
+}
+
 fn diff(a []string, b []string) []Op {
 	if same(a, b) { return a.map(fn (v string) Op { return Op{ kind: "same", value: v } })}
 	if a.len == 0 { return b.map(fn (v string) Op { return Op{ kind: "ins", value: v } }) }
 	if b.len == 0 { return a.map(fn (v string) Op { return Op{ kind: "del", value: v } }) }
 
+	// TODO(tauraamui) -> comapre this population logic with JS reduce
 	mut left := []Entry{}
-	for i, cur in a {
-		if left.len > 0 && left[left.len - 1].value == cur {
-			left[left.len - 1].count += 1
-			continue
-		}
-		left << Entry{
-			value: cur,
-			ref: -1,
-			count: 1
-		}
+	for cur in a {
+		add_new_count_existing(mut left, cur)
 	}
 
 	mut right := []Entry{}
-	for i, cur in b {
-		if right.len > 0 && right[right.len - 1].value == cur {
-			right[right.len - 1].count += 1
-			continue
-		}
-		right << Entry{
-			value: cur,
-			ref: -1,
-			count: 1
-		}
+	for cur in b {
+		add_new_count_existing(mut right, cur)
 	}
 
 	mut table := map[string]map[int]map[string]int{}
@@ -192,5 +258,23 @@ fn diff(a []string, b []string) []Op {
 	left << Entry{ ref: right.len, eof: true }
 
 	return process_diff(left, right)
+}
+
+fn diff_lines(a string, b string, trim bool) []Op {
+	return diff(split_inclusive(a, "\n", trim), split_inclusive(b, "\n", trim))
+}
+
+fn diff_words(a string, b string, trim bool) []Op {
+	return diff(split_inclusive(a, " ", trim), split_inclusive(b, " ", trim))
+}
+
+fn diff_hybrid(a string, b string, trim bool) []Op {
+	mut lines_diff := diff_lines(a, b, trim)
+	return refine_changed(
+		mut lines_diff,
+		fn [trim] (del string, ins string) []Op {
+			return diff_words(del, ins, trim)
+		}
+	)
 }
 
