@@ -364,6 +364,23 @@ fn test_right_arrow_at_end_of_sentence_in_insert_mode() {
 	assert fake_view.cursor.pos.x == 20
 }
 
+fn test_visual_insert_mode_selection_move_down_once_and_delete() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = ["1. first line", "2. second line", "3. third line", "4. forth line"]
+	// ensure cursor is set to sit on the start of second line
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+
+	fake_view.v()
+	fake_view.j()
+	fake_view.visual_d()
+	fake_view.escape()
+
+	assert fake_view.buffer.lines == ["1. first line", "3. third line", "4. forth line"]
+}
+
 fn test_search_is_toggled() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 
