@@ -777,7 +777,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.right  { view.l() }
 				.down   { view.j() }
 				.left   { view.h() }
-				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.visual_d() } }
+				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.visual_d(true) } }
 				.u { if e.modifiers == .ctrl { view.ctrl_u() } }
 				.caret { view.hat() }
 				.dollar { view.dollar() }
@@ -1032,12 +1032,13 @@ fn (mut view View) visual_y() {
 	view.escape()
 }
 
-fn (mut view View) visual_d() {
+fn (mut view View) visual_d(overwrite_y_lines bool) {
 	mut start := view.cursor.selection_start_y()
 	mut end := view.cursor.selection_end_y()
 
 	if start < 0 { start = 0 }
 	if end+1 >= view.buffer.lines.len { end = view.buffer.lines.len-1 }
+	view.y_lines = view.buffer.lines[start..end+1]
 	before := view.buffer.lines[..start]
 	after := view.buffer.lines[end+1..]
 

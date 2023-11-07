@@ -374,7 +374,7 @@ fn test_visual_insert_mode_and_delete_in_place() {
 	fake_view.cursor.pos.y = 1
 
 	fake_view.v()
-	fake_view.visual_d()
+	fake_view.visual_d(true)
 
 	assert fake_view.mode == .normal
 	assert fake_view.buffer.lines == ["1. first line", "3. third line", "4. forth line"]
@@ -391,7 +391,7 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 
 	fake_view.v()
 	fake_view.j()
-	fake_view.visual_d()
+	fake_view.visual_d(true)
 
 	assert fake_view.mode == .normal
 	assert fake_view.buffer.lines == ["1. first line", "4. forth line"]
