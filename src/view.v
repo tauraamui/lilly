@@ -1137,6 +1137,7 @@ fn (mut view View) visual_p() {
 	view.cursor.pos.y = start
 	view.buffer.lines.insert(view.cursor.pos.y, view.y_lines)
 	view.move_cursor_down(view.y_lines.len)
+	view.escape()
 }
 
 fn (mut view View) enter() {
