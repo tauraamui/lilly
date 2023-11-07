@@ -1318,8 +1318,10 @@ fn (mut view View) jump_cursor_up_to_next_blank_line() {
 
 	for i := view.cursor.pos.y; i > 0; i-- {
 		if i == view.cursor.pos.y { continue }
-		if view.buffer.lines[i].len == 0 { view.move_cursor_up(view.cursor.pos.y - i); break }
+		if view.buffer.lines[i].len == 0 { view.move_cursor_up(view.cursor.pos.y - i); return }
 	}
+
+	view.move_cursor_up(view.cursor.pos.y)
 }
 
 fn (mut view View) jump_cursor_down_to_next_blank_line() {
@@ -1329,8 +1331,10 @@ fn (mut view View) jump_cursor_down_to_next_blank_line() {
 
 	for i := view.cursor.pos.y; i < view.buffer.lines.len; i++ {
 		if i == view.cursor.pos.y { continue }
-		if view.buffer.lines[i].len == 0 { view.move_cursor_down(i - view.cursor.pos.y); break }
+		if view.buffer.lines[i].len == 0 { view.move_cursor_down(i - view.cursor.pos.y); return }
 	}
+
+	view.move_cursor_down(view.buffer.lines.len - view.cursor.pos.y)
 }
 
 fn (mut view View) left_square_bracket() {
