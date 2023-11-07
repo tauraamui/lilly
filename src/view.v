@@ -778,6 +778,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.down   { view.j() }
 				.left   { view.h() }
 				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.visual_d(true) } }
+				.p { view.visual_p() }
 				.u { if e.modifiers == .ctrl { view.ctrl_u() } }
 				.caret { view.hat() }
 				.dollar { view.dollar() }
@@ -1033,17 +1034,17 @@ fn (mut view View) visual_y() {
 }
 
 fn (mut view View) visual_d(overwrite_y_lines bool) {
+	defer { view.clamp_cursor_within_document_bounds() }
 	mut start := view.cursor.selection_start_y()
 	mut end := view.cursor.selection_end_y()
 
-	if start < 0 { start = 0 }
-	if end+1 >= view.buffer.lines.len { end = view.buffer.lines.len-1 }
 	view.y_lines = view.buffer.lines[start..end+1]
 	before := view.buffer.lines[..start]
 	after := view.buffer.lines[end+1..]
 
 	view.buffer.lines = before
 	view.buffer.lines << after
+	view.cursor.pos.y = start
 	view.escape()
 }
 
@@ -1120,6 +1121,22 @@ fn (mut view View) o() {
 
 fn (mut view View) p() {
 	view.buffer.lines.insert(view.cursor.pos.y+1, view.y_lines)
+	view.move_cursor_down(view.y_lines.len)
+}
+
+fn (mut view View) visual_p() {
+	defer { view.clamp_cursor_within_document_bounds() }
+	mut start := view.cursor.selection_start_y()
+	mut end := view.cursor.selection_end_y()
+
+	before := view.buffer.lines[..start]
+	after := view.buffer.lines[end+1..]
+
+	view.buffer.lines = before
+	view.buffer.lines << after
+	view.cursor.pos.y = start
+	view.buffer.lines.insert(view.cursor.pos.y, view.y_lines)
+	view.move_cursor_down(view.y_lines.len)
 }
 
 fn (mut view View) enter() {
