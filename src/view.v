@@ -1024,8 +1024,9 @@ fn (mut view View) v() {
 fn (mut view View) visual_y() {
 	mut y_lines := []string{}
 	start := view.cursor.selection_start_y()
-	end   := view.cursor.selection_end_y()
-	y_lines = view.buffer.lines[start..end]
+	mut end   := view.cursor.selection_end_y()
+	if end+1 >= view.buffer.lines.len { end = view.buffer.lines.len-1 }
+	y_lines = view.buffer.lines[start..end+1]
 	view.y_lines = y_lines
 	view.escape()
 }

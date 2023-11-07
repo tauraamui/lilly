@@ -397,6 +397,34 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 	assert fake_view.buffer.lines == ["1. first line", "4. forth line"]
 }
 
+fn test_visual_selection_copy() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = [
+		"1. first line",
+		"2. second line",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line"
+	]
+
+	assert fake_view.y_lines == []
+
+	// ensure cursor is set to sit on second line
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+
+	fake_view.v()
+	fake_view.j()
+	fake_view.visual_y()
+
+	assert fake_view.y_lines == [
+		"2. second line",
+		"3. third line"
+	]
+}
+
 fn test_search_is_toggled() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 
