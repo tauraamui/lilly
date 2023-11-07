@@ -737,6 +737,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.w     { view.w() }
 				.b     { view.b() }
 				.o     { view.o() }
+				.p     { view.p() }
 				.up    { view.k() }
 				.right { view.l() }
 				.down  { view.j() }
@@ -1114,6 +1115,10 @@ fn (mut view View) o() {
 	defer { view.cursor.pos.x = whitespace_prefix.len }
 	if y >= view.buffer.lines.len { view.buffer.lines << "${whitespace_prefix}"; return }
 	view.buffer.lines.insert(y+1, "${whitespace_prefix}")
+}
+
+fn (mut view View) p() {
+	view.buffer.lines.insert(view.cursor.pos.y+1, view.y_lines)
 }
 
 fn (mut view View) enter() {

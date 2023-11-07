@@ -425,6 +425,37 @@ fn test_visual_selection_copy() {
 	]
 }
 
+fn test_paste() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = [
+		"1. first line",
+		"2. second line",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line"
+	]
+
+	fake_view.y_lines = ["some new random contents", "with multiple lines"]
+
+	// ensure cursor is set to sit on second line
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+
+	fake_view.p()
+
+	assert fake_view.buffer.lines == [
+		"1. first line",
+		"2. second line",
+		"some new random contents",
+		"with multiple lines",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line"
+	]
+}
+
 fn test_search_is_toggled() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 
