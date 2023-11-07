@@ -374,7 +374,7 @@ fn test_visual_insert_mode_and_delete_in_place() {
 	fake_view.cursor.pos.y = 1
 
 	fake_view.v()
-	fake_view.visual_d()
+	fake_view.visual_d(true)
 
 	assert fake_view.mode == .normal
 	assert fake_view.buffer.lines == ["1. first line", "3. third line", "4. forth line"]
@@ -391,10 +391,100 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 
 	fake_view.v()
 	fake_view.j()
-	fake_view.visual_d()
+	fake_view.visual_d(true)
 
 	assert fake_view.mode == .normal
 	assert fake_view.buffer.lines == ["1. first line", "4. forth line"]
+}
+
+fn test_visual_selection_copy() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = [
+		"1. first line",
+		"2. second line",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line"
+	]
+
+	assert fake_view.y_lines == []
+
+	// ensure cursor is set to sit on second line
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+
+	fake_view.v()
+	fake_view.j()
+	fake_view.visual_y()
+
+	assert fake_view.y_lines == [
+		"2. second line",
+		"3. third line"
+	]
+}
+
+fn test_paste() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = [
+		"1. first line",
+		"2. second line",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line"
+	]
+
+	fake_view.y_lines = ["some new random contents", "with multiple lines"]
+
+	// ensure cursor is set to sit on second line
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+
+	fake_view.p()
+
+	assert fake_view.buffer.lines == [
+		"1. first line",
+		"2. second line",
+		"some new random contents",
+		"with multiple lines",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line"
+	]
+}
+
+fn test_visual_paste() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = [
+		"1. first line",
+		"2. second line",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line"
+	]
+
+	fake_view.y_lines = ["some new random contents", "with multiple lines"]
+
+	// ensure cursor is set to sit on second line
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+	fake_view.v()
+	fake_view.j()
+
+	fake_view.visual_p()
+
+	assert fake_view.buffer.lines == [
+		"1. first line",
+		"some new random contents",
+		"with multiple lines",
+		"4. forth line",
+		"5. fifth line"
+	]
 }
 
 fn test_search_is_toggled() {
