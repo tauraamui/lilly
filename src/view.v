@@ -139,6 +139,20 @@ mut:
 	current_find FindCursor
 }
 
+fn (mut search Search) get_line_matches(line_num int) []Match {
+	mut matches := []Match{}
+	if !(line_num in search.finds.keys()) { return matches }
+	line_finds := search.finds[line_num]
+	if line_finds.len % 2 != 0 { return matches }
+
+	num_of_finds_on_line := search.finds[line_num].len
+	for i in 0..num_of_finds_on_line {
+		if i + 1 == num_of_finds_on_line { continue }
+		matches << Match{ line: line_num, start: search.finds[line_num][i], end: search.finds[line_num][i+1] }
+	}
+	return matches
+}
+
 fn (mut search Search) draw(mut ctx tui.Context, draw_cursor bool) {
 	ctx.draw_text(1, ctx.window_height, search.to_find)
 	ctx.set_bg_color(r: 230, g: 230, b: 230)
