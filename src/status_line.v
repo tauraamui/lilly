@@ -16,11 +16,18 @@ module main
 
 import term.ui as tui
 
+struct Selection {
+	active  bool
+	total   int
+	current int
+}
+
 struct Status {
 	mode      Mode
 	cursor_x  int
 	cursor_y  int
 	file_name string
+	selection Selection
 }
 
 fn draw_status_line(mut ctx tui.Context, status Status) {
@@ -36,15 +43,22 @@ fn draw_status_line(mut ctx tui.Context, status Status) {
 
 	// if filename provided, render its segment next
 	if status.file_name.len > 0 { offset += draw_file_name_segment(mut ctx, offset, y, status.file_name) }
+
+	// draw leaning end of base status line bar
 	paint_shape_text(mut ctx, 1 + offset, y, Color{ 25, 25, 25 }, "${slant_left_flat_top}")
 
 	// render the cursor status as a right trailing segment
-	cursor_info_label := "${status.cursor_y+1}:${status.cursor_x+1}"
+	draw_cursor_position_segment(mut ctx, 1, y, status.cursor_x, status.cursor_y)
+}
+
+fn draw_cursor_position_segment(mut ctx tui.Context, x int, y int, cursor_x int, cursor_y int) int {
+	cursor_info_label := "${cursor_y+1}:${cursor_x+1}"
 	paint_shape_text(mut ctx, ctx.window_width - 1, y, Color { 245, 42, 42 }, "${block}${block}")
 	ctx.bold()
 	paint_text_on_background(mut ctx, ctx.window_width - 1 - cursor_info_label.len, y, Color{ 245, 42, 42 }, Color{ 255, 255, 255 }, cursor_info_label)
 	paint_shape_text(mut ctx, ctx.window_width - 2 - cursor_info_label.len - 2, y, Color { 245, 42, 42 }, "${slant_right_flat_top}${slant_left_flat_bottom}${block}")
 	paint_shape_text(mut ctx, ctx.window_width - 2 - cursor_info_label.len - 2, y, Color { 25, 25, 25 }, "${slant_right_flat_top}")
+	return 0
 }
 
 fn draw_file_name_segment(mut ctx tui.Context, x int, y int, file_name string) int {

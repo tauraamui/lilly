@@ -446,7 +446,17 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
 	if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
 
-	draw_status_line(mut ctx, Status{ view.mode, view.cursor.pos.x, view.cursor.pos.y, os.base(view.path) })
+	draw_status_line(mut ctx,
+		Status{
+			view.mode, view.cursor.pos.x,
+			view.cursor.pos.y, os.base(view.path)
+			Selection{
+				active: view.mode == .search,
+				total: view.search.finds.len,
+				current: view.search.current_find.line
+			}
+		}
+	)
 	view.cmd_buf.draw(mut ctx, view.mode == .command)
 	if view.mode == .search { view.search.draw(mut ctx, view.mode == .search) }
 
