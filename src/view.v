@@ -1205,11 +1205,26 @@ fn (mut view View) right() {
 	view.clamp_cursor_x_pos()
 }
 
+fn move_word_forward(cursor_pos Pos, line string) int {
+	if line.len == 0 { return 0 }
+	mut non_word_position := 0
+	for i, c in line.runes()[cursor_pos.x..]{
+		if !is_word_character(c) {
+			if is_whitespace(c) {
+					non_word_position =i; break
+				} else {
+					return i
+				}
+			}
+	}
+	return non_word_position+1
+}
+
 fn calc_w_move_amount(cursor_pos Pos, line string) int {
 	if line.len == 0 { return 0 }
 	mut next_whitespace := 0
 	for i, c in line.runes()[cursor_pos.x..] {
-		if is_whitespace(c) { next_whitespace = i; break }
+		if is_whitespace(c)   { next_whitespace = i; break }
 	}
 
 	mut next_alpha := 0
@@ -1378,5 +1393,10 @@ fn is_whitespace(r u8) bool {
 
 fn is_alpha_underscore(r int) bool {
 	return is_alpha(u8(r)) || u8(r) == `_` || u8(r) == `#` || u8(r) == `$`
+}
+
+fn is_word_character(r u8) bool {
+	// looks up rune on ascii value for [0-9a-zA-Z_]
+	return (r<=48 && r>=57) || (r>=65 && r<=90) || (r>=97 && r<=122) || r==95
 }
 
