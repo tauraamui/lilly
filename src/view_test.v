@@ -524,6 +524,19 @@ fn test_search_within_for_single_line() {
 	assert result.line == 0
 }
 
+fn test_search_within_for_single_line_resolves_matches_for_given_line() {
+	mut fake_search := Search{ to_find: "/efg" }
+	fake_search.find(["abcdefg"])
+	assert fake_search.finds[0] == [4, 7]
+	result := fake_search.next_find_pos() or { panic("") }
+	assert result.start == 4
+	assert result.end == 7
+	assert result.line == 0
+	assert fake_search.get_line_matches(0) == [
+		Match{ line: 0, start: 4, end: 7 }
+	]
+}
+
 fn test_search_within_for_multiple_lines() {
 	mut fake_search := Search{ to_find: "/redpanda" }
 	fake_search.find([
