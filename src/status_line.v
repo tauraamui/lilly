@@ -66,14 +66,13 @@ fn draw_file_name_segment(mut ctx tui.Context, x int, y int, file_name string) i
 }
 
 fn draw_search_selection_info_segment(mut ctx tui.Context, x int, y int, selection SearchSelection) int {
-	selection_info_label := "${selection.current+1}/${selection.total}"
+	selection_info_label := "${selection.current}/${selection.total}"
 	mut offset := 2
 	paint_shape_text(mut ctx, x, y, status_purple, "${slant_left_flat_top}${block}")
-	ctx.bold()
 	paint_text_on_background(mut ctx, x + offset, y, status_purple, Color{ 230, 230, 230 }, selection_info_label)
 	offset += selection_info_label.len
 	paint_shape_text(mut ctx, x + offset, y, status_purple, "${block}${slant_right_flat_bottom}")
-	offset += 1
+	offset += 2
 	return offset
 }
 
