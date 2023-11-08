@@ -450,7 +450,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 		Status{
 			view.mode, view.cursor.pos.x,
 			view.cursor.pos.y, os.base(view.path)
-			Selection{
+			SearchSelection{
 				active: view.mode == .search,
 				total: view.search.finds.len,
 				current: view.search.current_find.line
