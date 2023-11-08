@@ -1141,29 +1141,19 @@ fn (mut view View) visual_p() {
 }
 
 fn (mut view View) enter() {
-	defer { view.move_cursor_down(1) }
-	mut x := view.cursor.pos.x
 	y := view.cursor.pos.y
-
-	mut current_line := view.buffer.lines[y]
-	mut whitespace_prefix := resolve_whitespace_prefix(current_line)
-	if whitespace_prefix.len == current_line.len {
-		whitespace_prefix = ""
+	mut whitespace_prefix := resolve_whitespace_prefix(view.buffer.lines[y])
+	if whitespace_prefix.len == view.buffer.lines[y].len { // if the current line only has whitespace on it
 		view.buffer.lines[y] = ""
-		current_line = ""
-		x = 0
+		whitespace_prefix = ""
+		view.cursor.pos.x = 0
 	}
-
-	mut segment_after := ""
-	if x > 0 { segment_after = current_line[x..] }
-
-	view.buffer.lines[y] = current_line[..x]
-	new_line := "${whitespace_prefix}${segment_after}"
-	if y >= view.buffer.lines.len { view.buffer.lines << new_line } else {
-		view.buffer.lines.insert(y+1, new_line)
-	}
-
+	after_cursor := view.buffer.lines[y][view.cursor.pos.x..]
+	view.buffer.lines[y] = view.buffer.lines[y][..view.cursor.pos.x]
+	view.buffer.lines.insert(y + 1, "${whitespace_prefix}${after_cursor}")
+	view.move_cursor_down(1)
 	view.cursor.pos.x = whitespace_prefix.len
+	view.clamp_cursor_x_pos()
 }
 
 fn resolve_whitespace_prefix(line string) string {
