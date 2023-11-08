@@ -147,7 +147,7 @@ fn (mut search Search) get_line_matches(line_num int) []Match {
 
 	num_of_finds_on_line := search.finds[line_num].len
 	for i in 0..num_of_finds_on_line {
-		if i + 1 == num_of_finds_on_line { continue }
+		if i + 1 == num_of_finds_on_line { continue } // could break here obvs, but I like the idea of the loop terminating itself next time around
 		matches << Match{ line: line_num, start: search.finds[line_num][i], end: search.finds[line_num][i+1] }
 	}
 	return matches
