@@ -22,6 +22,7 @@ enum Mode as u8 {
 	insert
 	command
 	search
+	pending_delete
 }
 
 fn (mode Mode) draw(mut ctx tui.Context, x int, y int) int {
@@ -47,6 +48,7 @@ fn (mode Mode) color() Color {
 		.insert { status_orange }
 		.command { status_cyan }
 		.search { status_purple }
+		.pending_delete { status_green }
 	}
 }
 
@@ -57,6 +59,7 @@ fn (mode Mode) str() string {
 		.insert  { "INSERT"  }
 		.command { "COMMAND" }
 		.search  { "SEARCH"  }
+		.pending_delete { "NORMAL" }
 	}
 }
 

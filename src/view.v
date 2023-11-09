@@ -464,6 +464,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	if view.mode == .insert {
 		set_cursor_to_vertical_bar(mut ctx)
 	} else { set_cursor_to_block(mut ctx) }
+	if view.d_count == 1 { set_cursor_to_underline(mut ctx) }
 	ctx.set_cursor_position(view.x+1+offset, cursor_screen_space_y+1)
 }
 
@@ -724,8 +725,19 @@ fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cp
 	}
 }
 
+// 0 - Default
+// 1 - Block (blinking)
+// 2 - Block (steady)
+// 3 - Underline (blinking)
+// 4 - Underline (steady)
+// 5 - Bar (blinking)
+// 6 - Bar (steady)
 fn set_cursor_to_block(mut ctx tui.Context) {
 	ctx.write("\x1b[0 q")
+}
+
+fn set_cursor_to_underline(mut ctx tui.Context) {
+	ctx.write("\x1b[4 q")
 }
 
 fn set_cursor_to_vertical_bar(mut ctx tui.Context) {
@@ -877,6 +889,13 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				}
 			}
 		}
+		.pending_delete {
+			match e.code {
+				.escape { view.escape() }
+				.d { view.d() }
+				else {}
+			}
+		}
 	}
 }
 
@@ -938,6 +957,7 @@ fn (mut view View) escape() {
 	view.clamp_cursor_x_pos()
 	view.cmd_buf.clear()
 	view.search.clear()
+	view.d_count = 0
 
 	// if current line only contains whitespace prefix clear the line
 	line := view.buffer.lines[view.cursor.pos.y]
@@ -1126,6 +1146,7 @@ fn (mut view View) dollar() {
 
 fn (mut view View) d() {
 	view.d_count += 1
+	if view.d_count == 1 { view.mode = .pending_delete }
 	if view.d_count == 2 {
 		index := if view.cursor.pos.y == view.buffer.lines.len { view.cursor.pos.y - 1 } else { view.cursor.pos.y }
 		view.y_lines = []string{}
@@ -1133,6 +1154,7 @@ fn (mut view View) d() {
 		view.buffer.lines.delete(index)
 		view.d_count = 0
 		view.clamp_cursor_within_document_bounds()
+		view.mode = .normal
 	}
 }
 
