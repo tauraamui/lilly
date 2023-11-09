@@ -923,6 +923,7 @@ fn (mut view View) escape() {
 	view.clamp_cursor_x_pos()
 	view.cmd_buf.clear()
 	view.search.clear()
+	view.d_count = 0
 
 	// if current line only contains whitespace prefix clear the line
 	line := view.buffer.lines[view.cursor.pos.y]
