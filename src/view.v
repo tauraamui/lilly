@@ -121,8 +121,9 @@ mut:
 
 struct FindCursor {
 mut:
-	line        int
-	match_index int
+	line             int
+	line_match_index int
+	match_index      int
 }
 
 struct Match {
@@ -137,6 +138,7 @@ mut:
 	cursor_x     int
 	finds        map[int][]int
 	current_find FindCursor
+	total_finds  int
 }
 
 fn (mut search Search) get_line_matches(line_num int) []Match {
@@ -193,11 +195,13 @@ fn (mut search Search) backspace() {
 
 fn (mut search Search) find(lines []string) {
 	search.current_find = FindCursor{}
+	search.total_finds = 0
 	mut finds := map[int][]int{}
 	mut re := regex.regex_opt(search.to_find.replace_once("/", "")) or { return }
 	for i, line in lines {
 		found := re.find_all(line)
 		if found.len == 0 { continue }
+		search.total_finds += found.len / 2
 		finds[i] = found
 	}
 	search.finds = finds.move()
@@ -208,12 +212,14 @@ fn (mut search Search) next_find_pos() ?Match {
 
 	line_number := search.finds.keys()[search.current_find.line]
 	line_matches := search.finds[line_number]
-	start := line_matches[search.current_find.match_index]
-	end   := line_matches[search.current_find.match_index + 1]
+	start := line_matches[search.current_find.line_match_index]
+	end   := line_matches[search.current_find.line_match_index + 1]
 
-	search.current_find.match_index += 2
-	if search.current_find.match_index + 1 >= line_matches.len {
-		search.current_find.match_index = 0
+	search.current_find.line_match_index += 2
+	search.current_find.match_index += 1
+	if search.current_find.match_index > search.total_finds { search.current_find.match_index = 1 }
+	if search.current_find.line_match_index + 1 >= line_matches.len {
+		search.current_find.line_match_index = 0
 		search.current_find.line += 1
 		if search.current_find.line >= search.finds.keys().len {
 			search.current_find.line = 0
@@ -452,8 +458,8 @@ fn (mut view View) draw(mut ctx tui.Context) {
 			view.cursor.pos.y, os.base(view.path)
 			SearchSelection{
 				active: view.mode == .search,
-				total: view.search.finds.len,
-				current: view.search.current_find.line
+				total: view.search.total_finds,
+				current: view.search.current_find.match_index
 			}
 		}
 	)
@@ -968,6 +974,10 @@ fn (mut view View) escape() {
 }
 
 fn (mut view View) jump_cursor_to(position int) {
+	defer {
+		view.clamp_cursor_within_document_bounds()
+		view.clamp_cursor_x_pos()
+	}
 	view.cursor.pos.y = position
 	view.clamp_cursor_within_document_bounds()
 	view.scroll_from_and_to()
