@@ -440,6 +440,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	if view.mode == .insert {
 		set_cursor_to_vertical_bar(mut ctx)
 	} else { set_cursor_to_block(mut ctx) }
+	if view.d_count == 1 { set_cursor_to_underline(mut ctx) }
 	ctx.set_cursor_position(view.x+1+offset, cursor_screen_space_y+1)
 }
 
@@ -697,8 +698,19 @@ fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cp
 	}
 }
 
+// 0 - Default
+// 1 - Block (blinking)
+// 2 - Block (steady)
+// 3 - Underline (blinking)
+// 4 - Underline (steady)
+// 5 - Bar (blinking)
+// 6 - Bar (steady)
 fn set_cursor_to_block(mut ctx tui.Context) {
 	ctx.write("\x1b[0 q")
+}
+
+fn set_cursor_to_underline(mut ctx tui.Context) {
+	ctx.write("\x1b[4 q")
 }
 
 fn set_cursor_to_vertical_bar(mut ctx tui.Context) {
