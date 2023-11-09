@@ -862,6 +862,13 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				}
 			}
 		}
+		.pending_delete {
+			match e.code {
+				.escape { view.escape() }
+				.d { view.d() }
+				else {}
+			}
+		}
 	}
 }
 
@@ -1112,6 +1119,7 @@ fn (mut view View) dollar() {
 
 fn (mut view View) d() {
 	view.d_count += 1
+	if view.d_count == 1 { view.mode = .pending_delete }
 	if view.d_count == 2 {
 		index := if view.cursor.pos.y == view.buffer.lines.len { view.cursor.pos.y - 1 } else { view.cursor.pos.y }
 		view.y_lines = []string{}
@@ -1119,6 +1127,7 @@ fn (mut view View) d() {
 		view.buffer.lines.delete(index)
 		view.d_count = 0
 		view.clamp_cursor_within_document_bounds()
+		view.mode = .normal
 	}
 }
 
