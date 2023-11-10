@@ -28,7 +28,7 @@ fn (xclipboard XClipClipboard) paste() []string {
 	defer { cmd.close() or { } }
 	cmd.start() or { panic(err) }
 
-	mut out := []string
+	mut out := []string{}
 	for {
 		out << cmd.read_line()
 		if cmd.eof { break }
