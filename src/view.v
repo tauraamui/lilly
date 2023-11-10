@@ -782,6 +782,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.w     { view.w() }
 				.b     { view.b() }
 				.o     { view.o() }
+				.a     { if e.modifiers == .shift { view.shift_a() } else { view.a() } }
 				.p     { view.p() }
 				.up    { view.k() }
 				.right { view.l() }
@@ -1176,6 +1177,16 @@ fn (mut view View) o() {
 	defer { view.cursor.pos.x = whitespace_prefix.len }
 	if y >= view.buffer.lines.len { view.buffer.lines << "${whitespace_prefix}"; return }
 	view.buffer.lines.insert(y+1, "${whitespace_prefix}")
+}
+
+fn (mut view View) a() {
+	view.mode = .insert
+	view.cursor.pos.x += 1
+}
+
+fn (mut view View) shift_a() {
+	view.dollar()
+	view.a()
 }
 
 fn (mut view View) p() {
