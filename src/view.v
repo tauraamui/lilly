@@ -1095,7 +1095,7 @@ fn (mut view View) copy_lines_into_clipboard(start int, end int) {
 }
 
 fn (mut view View) read_lines_from_clipboard() []string {
-	return view.clipboard.paste().split_into_lines()
+	return view.clipboard.paste()
 }
 
 fn (mut view View) visual_d(overwrite_y_lines bool) {
@@ -1167,7 +1167,7 @@ fn (mut view View) d() {
 	if view.d_count == 1 { view.mode = .pending_delete }
 	if view.d_count == 2 {
 		index := if view.cursor.pos.y == view.buffer.lines.len { view.cursor.pos.y - 1 } else { view.cursor.pos.y }
-		view.copy_lines_into_clipboard(index, index - 1)
+		view.copy_lines_into_clipboard(index, index)
 		view.buffer.lines.delete(index)
 		view.d_count = 0
 		view.clamp_cursor_within_document_bounds()

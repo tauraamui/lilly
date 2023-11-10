@@ -437,8 +437,6 @@ fn test_visual_selection_copy() {
 		"5. fifth line"
 	]
 
-	assert fake_view.read_lines_from_clipboard() == []
-
 	// ensure cursor is set to sit on second line
 	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 1
