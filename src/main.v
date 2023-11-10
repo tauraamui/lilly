@@ -17,6 +17,7 @@ module main
 import os
 import term.ui as tui
 import log
+import lib.clipboard
 
 struct App {
 mut:
@@ -97,7 +98,9 @@ fn main() {
 		capture_events: true
 		use_alternate_buffer: true
     )
-	app.views << app.new_view()
+
+	clip := clipboard.new()
+	app.views << app.new_view(clip)
 	app.update_view()
 
 	path := os.args[1] or { panic("missing file path") }

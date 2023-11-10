@@ -20,6 +20,7 @@ import log
 import datatypes
 import strconv
 import regex
+import lib.clipboard
 
 struct Cursor {
 mut:
@@ -117,6 +118,7 @@ mut:
 	is_multiline_comment      bool
 	d_count                   int
 	y_lines                   []string
+	clipboard                 clipboard.Clipboard
 }
 
 struct FindCursor {
@@ -397,8 +399,8 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 	cmd_buf.code = .blank
 }
 
-fn (app &App) new_view() View {
-	mut res := View{ log: app.log, mode: .normal, show_whitespace: false }
+fn (app &App) new_view(_clipboard clipboard.Clipboard) View {
+	mut res := View{ log: app.log, mode: .normal, show_whitespace: false, clipboard: _clipboard }
 	res.load_syntaxes()
 	res.load_config()
 	res.set_current_syntax_idx(".v")
