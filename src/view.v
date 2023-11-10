@@ -121,8 +121,9 @@ mut:
 
 struct FindCursor {
 mut:
-	line        int
-	match_index int
+	line             int
+	line_match_index int
+	match_index      int
 }
 
 struct Match {
@@ -137,6 +138,21 @@ mut:
 	cursor_x     int
 	finds        map[int][]int
 	current_find FindCursor
+	total_finds  int
+}
+
+fn (mut search Search) get_line_matches(line_num int) []Match {
+	mut matches := []Match{}
+	if !(line_num in search.finds.keys()) { return matches }
+	line_finds := search.finds[line_num]
+	if line_finds.len % 2 != 0 { return matches }
+
+	num_of_finds_on_line := search.finds[line_num].len
+	for i in 0..num_of_finds_on_line {
+		if i + 1 == num_of_finds_on_line { continue } // could break here obvs, but I like the idea of the loop terminating itself next time around
+		matches << Match{ line: line_num, start: search.finds[line_num][i], end: search.finds[line_num][i+1] }
+	}
+	return matches
 }
 
 fn (mut search Search) draw(mut ctx tui.Context, draw_cursor bool) {
@@ -179,11 +195,13 @@ fn (mut search Search) backspace() {
 
 fn (mut search Search) find(lines []string) {
 	search.current_find = FindCursor{}
+	search.total_finds = 0
 	mut finds := map[int][]int{}
 	mut re := regex.regex_opt(search.to_find.replace_once("/", "")) or { return }
 	for i, line in lines {
 		found := re.find_all(line)
 		if found.len == 0 { continue }
+		search.total_finds += found.len / 2
 		finds[i] = found
 	}
 	search.finds = finds.move()
@@ -194,12 +212,14 @@ fn (mut search Search) next_find_pos() ?Match {
 
 	line_number := search.finds.keys()[search.current_find.line]
 	line_matches := search.finds[line_number]
-	start := line_matches[search.current_find.match_index]
-	end   := line_matches[search.current_find.match_index + 1]
+	start := line_matches[search.current_find.line_match_index]
+	end   := line_matches[search.current_find.line_match_index + 1]
 
-	search.current_find.match_index += 2
-	if search.current_find.match_index + 1 >= line_matches.len {
-		search.current_find.match_index = 0
+	search.current_find.line_match_index += 2
+	search.current_find.match_index += 1
+	if search.current_find.match_index > search.total_finds { search.current_find.match_index = 1 }
+	if search.current_find.line_match_index + 1 >= line_matches.len {
+		search.current_find.line_match_index = 0
 		search.current_find.line += 1
 		if search.current_find.line >= search.finds.keys().len {
 			search.current_find.line = 0
@@ -432,7 +452,17 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
 	if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
 
-	draw_status_line(mut ctx, Status{ view.mode, view.cursor.pos.x, view.cursor.pos.y, os.base(view.path) })
+	draw_status_line(mut ctx,
+		Status{
+			view.mode, view.cursor.pos.x,
+			view.cursor.pos.y, os.base(view.path)
+			SearchSelection{
+				active: view.mode == .search,
+				total: view.search.total_finds,
+				current: view.search.current_find.match_index
+			}
+		}
+	)
 	view.cmd_buf.draw(mut ctx, view.mode == .command)
 	if view.mode == .search { view.search.draw(mut ctx, view.mode == .search) }
 
@@ -440,6 +470,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	if view.mode == .insert {
 		set_cursor_to_vertical_bar(mut ctx)
 	} else { set_cursor_to_block(mut ctx) }
+	if view.d_count == 1 { set_cursor_to_underline(mut ctx) }
 	ctx.set_cursor_position(view.x+1+offset, cursor_screen_space_y+1)
 }
 
@@ -478,6 +509,9 @@ fn (mut view View) draw_document(mut ctx tui.Context) {
 				}
 			}
 		}
+
+		search_matches := view.search.get_line_matches(document_space_y)
+		if search_matches.len > 0 { ctx.set_bg_color(r: 53, g: 100, b: 230) }
 		view.draw_text_line(mut ctx, y, line, within_selection)
 	}
 }
@@ -697,8 +731,19 @@ fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cp
 	}
 }
 
+// 0 - Default
+// 1 - Block (blinking)
+// 2 - Block (steady)
+// 3 - Underline (blinking)
+// 4 - Underline (steady)
+// 5 - Bar (blinking)
+// 6 - Bar (steady)
 fn set_cursor_to_block(mut ctx tui.Context) {
 	ctx.write("\x1b[0 q")
+}
+
+fn set_cursor_to_underline(mut ctx tui.Context) {
+	ctx.write("\x1b[4 q")
 }
 
 fn set_cursor_to_vertical_bar(mut ctx tui.Context) {
@@ -738,6 +783,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.b     { view.b() }
 				.o     { view.o() }
 				.a     { if e.modifiers == .shift { view.shift_a() } else { view.a() } }
+				.p     { view.p() }
 				.up    { view.k() }
 				.right { view.l() }
 				.down  { view.j() }
@@ -777,7 +823,8 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.right  { view.l() }
 				.down   { view.j() }
 				.left   { view.h() }
-				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.visual_d() } }
+				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.visual_d(true) } }
+				.p { view.visual_p() }
 				.u { if e.modifiers == .ctrl { view.ctrl_u() } }
 				.caret { view.hat() }
 				.dollar { view.dollar() }
@@ -849,6 +896,13 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				}
 			}
 		}
+		.pending_delete {
+			match e.code {
+				.escape { view.escape() }
+				.d { view.d() }
+				else {}
+			}
+		}
 	}
 }
 
@@ -910,6 +964,7 @@ fn (mut view View) escape() {
 	view.clamp_cursor_x_pos()
 	view.cmd_buf.clear()
 	view.search.clear()
+	view.d_count = 0
 
 	// if current line only contains whitespace prefix clear the line
 	line := view.buffer.lines[view.cursor.pos.y]
@@ -920,6 +975,10 @@ fn (mut view View) escape() {
 }
 
 fn (mut view View) jump_cursor_to(position int) {
+	defer {
+		view.clamp_cursor_within_document_bounds()
+		view.clamp_cursor_x_pos()
+	}
 	view.cursor.pos.y = position
 	view.clamp_cursor_within_document_bounds()
 	view.scroll_from_and_to()
@@ -957,6 +1016,7 @@ fn (mut view View) clamp_cursor_within_document_bounds() {
 }
 
 fn (mut view View) clamp_cursor_x_pos() {
+	view.clamp_cursor_within_document_bounds()
 	line_len := view.buffer.lines[view.cursor.pos.y].runes().len
 	if line_len == 0 { view.cursor.pos.x = 0; return }
 	if view.mode == .insert {
@@ -1024,23 +1084,25 @@ fn (mut view View) v() {
 fn (mut view View) visual_y() {
 	mut y_lines := []string{}
 	start := view.cursor.selection_start_y()
-	end   := view.cursor.selection_end_y()
-	y_lines = view.buffer.lines[start..end]
-	view.y_lines = y_lines
+	mut end   := view.cursor.selection_end_y()
+	if end+1 >= view.buffer.lines.len { end = view.buffer.lines.len-1 }
+	y_lines = view.buffer.lines[start..end+1]
+	view.y_lines = y_lines.clone()
 	view.escape()
 }
 
-fn (mut view View) visual_d() {
-	mut y_lines := []string{}
-	start := view.cursor.selection_start_y()
-	end := view.cursor.selection_end_y()
-	y_lines = view.buffer.lines[start..end]
-	view.y_lines = y_lines
+fn (mut view View) visual_d(overwrite_y_lines bool) {
+	defer { view.clamp_cursor_within_document_bounds() }
+	mut start := view.cursor.selection_start_y()
+	mut end := view.cursor.selection_end_y()
 
+	view.y_lines = view.buffer.lines[start..end+1]
 	before := view.buffer.lines[..start]
-	after := view.buffer.lines[end..]
+	after := view.buffer.lines[end+1..]
+
 	view.buffer.lines = before
 	view.buffer.lines << after
+	view.cursor.pos.y = start
 	view.escape()
 }
 
@@ -1061,6 +1123,7 @@ fn (mut view View) e() {
 }
 
 fn (mut view View) b() {
+	defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
 	amount := calc_b_move_amount(view.cursor.pos, line)
 	if amount == 0 && view.cursor.pos.y > 0 {
@@ -1069,7 +1132,6 @@ fn (mut view View) b() {
 		return
 	}
 	view.cursor.pos.x -= amount
-	view.clamp_cursor_x_pos()
 }
 
 fn (mut view View) ctrl_d() {
@@ -1095,6 +1157,7 @@ fn (mut view View) dollar() {
 
 fn (mut view View) d() {
 	view.d_count += 1
+	if view.d_count == 1 { view.mode = .pending_delete }
 	if view.d_count == 2 {
 		index := if view.cursor.pos.y == view.buffer.lines.len { view.cursor.pos.y - 1 } else { view.cursor.pos.y }
 		view.y_lines = []string{}
@@ -1102,6 +1165,7 @@ fn (mut view View) d() {
 		view.buffer.lines.delete(index)
 		view.d_count = 0
 		view.clamp_cursor_within_document_bounds()
+		view.mode = .normal
 	}
 }
 
@@ -1125,29 +1189,41 @@ fn (mut view View) shift_a() {
 	view.a()
 }
 
+fn (mut view View) p() {
+	view.buffer.lines.insert(view.cursor.pos.y+1, view.y_lines)
+	view.move_cursor_down(view.y_lines.len)
+}
+
+fn (mut view View) visual_p() {
+	defer { view.clamp_cursor_within_document_bounds() }
+	mut start := view.cursor.selection_start_y()
+	mut end := view.cursor.selection_end_y()
+
+	before := view.buffer.lines[..start]
+	after := view.buffer.lines[end+1..]
+
+	view.buffer.lines = before
+	view.buffer.lines << after
+	view.cursor.pos.y = start
+	view.buffer.lines.insert(view.cursor.pos.y, view.y_lines)
+	view.move_cursor_down(view.y_lines.len)
+	view.escape()
+}
+
 fn (mut view View) enter() {
-	defer { view.move_cursor_down(1) }
-	mut x := view.cursor.pos.x
 	y := view.cursor.pos.y
-
-	mut current_line := view.buffer.lines[y]
-	mut whitespace_prefix := resolve_whitespace_prefix(current_line)
-	if whitespace_prefix.len == current_line.len {
-		whitespace_prefix = ""
+	mut whitespace_prefix := resolve_whitespace_prefix(view.buffer.lines[y])
+	if whitespace_prefix.len == view.buffer.lines[y].len { // if the current line only has whitespace on it
 		view.buffer.lines[y] = ""
-		current_line = ""
-		x = 0
+		whitespace_prefix = ""
+		view.cursor.pos.x = 0
 	}
-
-	mut segment_after := ""
-	if x > 0 { segment_after = current_line[x..] }
-
-	view.buffer.lines[y] = current_line[..x]
-	new_line := "${whitespace_prefix}${segment_after}"
-	defer { view.cursor.pos.x = new_line.len }
-	if y >= view.buffer.lines.len { view.buffer.lines << new_line } else {
-		view.buffer.lines.insert(y+1, new_line)
-	}
+	after_cursor := view.buffer.lines[y][view.cursor.pos.x..]
+	view.buffer.lines[y] = view.buffer.lines[y][..view.cursor.pos.x]
+	view.buffer.lines.insert(y + 1, "${whitespace_prefix}${after_cursor}")
+	view.move_cursor_down(1)
+	view.cursor.pos.x = whitespace_prefix.len
+	view.clamp_cursor_x_pos()
 }
 
 fn resolve_whitespace_prefix(line string) string {
@@ -1302,8 +1378,10 @@ fn (mut view View) jump_cursor_up_to_next_blank_line() {
 
 	for i := view.cursor.pos.y; i > 0; i-- {
 		if i == view.cursor.pos.y { continue }
-		if view.buffer.lines[i].len == 0 { view.move_cursor_up(view.cursor.pos.y - i); break }
+		if view.buffer.lines[i].len == 0 { view.move_cursor_up(view.cursor.pos.y - i); return }
 	}
+
+	view.move_cursor_up(view.cursor.pos.y)
 }
 
 fn (mut view View) jump_cursor_down_to_next_blank_line() {
@@ -1313,8 +1391,10 @@ fn (mut view View) jump_cursor_down_to_next_blank_line() {
 
 	for i := view.cursor.pos.y; i < view.buffer.lines.len; i++ {
 		if i == view.cursor.pos.y { continue }
-		if view.buffer.lines[i].len == 0 { view.move_cursor_down(i - view.cursor.pos.y); break }
+		if view.buffer.lines[i].len == 0 { view.move_cursor_down(i - view.cursor.pos.y); return }
 	}
+
+	view.move_cursor_down(view.buffer.lines.len - view.cursor.pos.y)
 }
 
 fn (mut view View) left_square_bracket() {

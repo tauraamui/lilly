@@ -142,6 +142,62 @@ fn test_v_toggles_visual_mode_and_starts_selection() {
 	assert fake_view.cursor.selection_start == Pos{ 6, 0 }
 }
 
+fn test_enter_from_start_of_line() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
+	// manually set the "document" contents
+	fake_view.buffer.lines = [
+		"1. first line with some trailing content"
+	]
+
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 0
+
+	fake_view.enter()
+
+	assert fake_view.buffer.lines == [
+		"",
+		"1. first line with some trailing content"
+	]
+	assert fake_view.cursor.pos.x == 0
+}
+
+fn test_enter_moves_trailing_segment_to_next_line_and_moves_cursor_in_front() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
+	// manually set the "document" contents
+	fake_view.buffer.lines = [
+		"1. first line with some trailing content"
+	]
+
+	fake_view.cursor.pos.x = 8
+	fake_view.cursor.pos.y = 0
+
+	fake_view.enter()
+
+	assert fake_view.buffer.lines == [
+		"1. first",
+		" line with some trailing content"
+	]
+	assert fake_view.cursor.pos.x == 0
+}
+
+fn test_enter_moves_trailing_segment_to_next_line_and_moves_cursor_to_past_prefix_whitespace() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
+	fake_view.buffer.lines = [
+		"    1. first line with whitespace prefix"
+	]
+
+	fake_view.cursor.pos.x = 10
+	fake_view.cursor.pos.y = 0
+
+	fake_view.enter()
+
+	assert fake_view.buffer.lines == [
+		"    1. fir",
+		"    st line with whitespace prefix"
+	]
+	assert fake_view.cursor.pos.x == 4
+}
+
 fn test_enter_inserts_line_at_cur_pos_and_auto_indents() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
 	// manually set the "document" contents
@@ -327,6 +383,129 @@ fn test_right_arrow_at_end_of_sentence_in_insert_mode() {
 	assert fake_view.cursor.pos.x == 20
 }
 
+fn test_visual_insert_mode_and_delete_in_place() {
+	mut fake_view := View{ log: unsafe{ nil }, mode: .normal }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = ["1. first line", "2. second line", "3. third line", "4. forth line"]
+	// ensure cursor is set to sit on the start of second line
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+
+	fake_view.v()
+	fake_view.visual_d(true)
+
+	assert fake_view.mode == .normal
+	assert fake_view.buffer.lines == ["1. first line", "3. third line", "4. forth line"]
+}
+
+fn test_visual_insert_mode_selection_move_down_once_and_delete() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = ["1. first line", "2. second line", "3. third line", "4. forth line"]
+	// ensure cursor is set to sit on the start of second line
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+
+	fake_view.v()
+	fake_view.j()
+	fake_view.visual_d(true)
+
+	assert fake_view.mode == .normal
+	assert fake_view.buffer.lines == ["1. first line", "4. forth line"]
+}
+
+fn test_visual_selection_copy() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = [
+		"1. first line",
+		"2. second line",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line"
+	]
+
+	assert fake_view.y_lines == []
+
+	// ensure cursor is set to sit on second line
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+
+	fake_view.v()
+	fake_view.j()
+	fake_view.visual_y()
+
+	assert fake_view.y_lines == [
+		"2. second line",
+		"3. third line"
+	]
+}
+
+fn test_paste() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = [
+		"1. first line",
+		"2. second line",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line"
+	]
+
+	fake_view.y_lines = ["some new random contents", "with multiple lines"]
+
+	// ensure cursor is set to sit on second line
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+
+	fake_view.p()
+
+	assert fake_view.buffer.lines == [
+		"1. first line",
+		"2. second line",
+		"some new random contents",
+		"with multiple lines",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line"
+	]
+}
+
+fn test_visual_paste() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = [
+		"1. first line",
+		"2. second line",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line"
+	]
+
+	fake_view.y_lines = ["some new random contents", "with multiple lines"]
+
+	// ensure cursor is set to sit on second line
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+	fake_view.v()
+	fake_view.j()
+
+	fake_view.visual_p()
+
+	assert fake_view.buffer.lines == [
+		"1. first line",
+		"some new random contents",
+		"with multiple lines",
+		"4. forth line",
+		"5. fifth line"
+	]
+}
+
 fn test_search_is_toggled() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
 
@@ -343,6 +522,19 @@ fn test_search_within_for_single_line() {
 	assert result.start == 4
 	assert result.end == 7
 	assert result.line == 0
+}
+
+fn test_search_within_for_single_line_resolves_matches_for_given_line() {
+	mut fake_search := Search{ to_find: "/efg" }
+	fake_search.find(["abcdefg"])
+	assert fake_search.finds[0] == [4, 7]
+	result := fake_search.next_find_pos() or { panic("") }
+	assert result.start == 4
+	assert result.end == 7
+	assert result.line == 0
+	assert fake_search.get_line_matches(0) == [
+		Match{ line: 0, start: 4, end: 7 }
+	]
 }
 
 fn test_search_within_for_multiple_lines() {
@@ -401,6 +593,61 @@ fn test_search_within_for_multiple_lines_multiple_matches_per_line() {
 	assert looped_back_first_result.start == 30
 	assert looped_back_first_result.end == 38
 	assert looped_back_first_result.line == 0
+}
+
+fn test_move_cursor_with_b_from_start_of_line_which_preceeds_a_blank_line() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	fake_view.buffer.lines = ["1. first line", "", "3. third line"]
+
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 2
+
+	fake_view.b()
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 1
+}
+
+fn test_jump_cursor_up_to_next_blank_line() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	fake_view.buffer.lines = [
+		"# Top of the file"
+		"",
+		"Some fake block of text which may or may not be",
+		"more than one line in size, so it can be used for",
+		"this testing scenario.",
+		"",
+		"this is the last line of the document"
+	]
+
+	fake_view.cursor.pos.y = 4
+	assert "this testing scenario." == fake_view.buffer.lines[fake_view.cursor.pos.y]
+	fake_view.jump_cursor_up_to_next_blank_line()
+	assert "" == fake_view.buffer.lines[fake_view.cursor.pos.y]
+	fake_view.jump_cursor_up_to_next_blank_line()
+	assert "# Top of the file" == fake_view.buffer.lines[fake_view.cursor.pos.y]
+}
+
+fn test_jump_cursor_down_to_next_blank_line() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	fake_view.buffer.lines = [
+		"# Top of the file"
+		"",
+		"Some fake block of text which may or may not be",
+		"more than one line in size, so it can be used for",
+		"this testing scenario.",
+		"",
+		"this is the last line of the document"
+	]
+
+	fake_view.cursor.pos.y = 0
+	assert "# Top of the file" == fake_view.buffer.lines[fake_view.cursor.pos.y]
+	fake_view.jump_cursor_down_to_next_blank_line()
+	assert "" == fake_view.buffer.lines[fake_view.cursor.pos.y]
+	fake_view.jump_cursor_down_to_next_blank_line()
+	assert "" == fake_view.buffer.lines[fake_view.cursor.pos.y]
+	fake_view.jump_cursor_down_to_next_blank_line()
+	assert "this is the last line of the document" == fake_view.buffer.lines[fake_view.cursor.pos.y]
 }
 
 fn test_calc_w_move_amount_simple_sentence_line() {
