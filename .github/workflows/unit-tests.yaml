@@ -15,6 +15,11 @@ jobs:
         with:
           check-latest: true
 
+      - name: Install xclip
+        run: |
+          sudo apt-get update
+          sudo apt-get install xclip
+
       - name: Checkout lilly
         uses: actions/checkout@v2
 
