@@ -3,10 +3,7 @@ module clipboard
 import os
 
 [heap]
-struct WaylandClipboard {
-mut:
-	content string
-}
+struct WaylandClipboard {}
 
 fn (mut wclipboard WaylandClipboard) copy(text string) bool {
 	mut cmd := os.Command{
