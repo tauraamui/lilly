@@ -924,7 +924,7 @@ fn (mut view View) visual_indent() {
 
     prefix := if view.config.insert_tabs_not_spaces { "\t" } else { " ".repeat(4) }
 
-    for i := start; i < end; i++ {
+    for i := start; i < end + 1; i++ {
         view.buffer.lines[i] = "${prefix}${view.buffer.lines[i]}"
     }
 }
@@ -935,7 +935,7 @@ fn (mut view View) visual_unindent() {
 
     prefix := if view.config.insert_tabs_not_spaces { "\t" } else { " ".repeat(4) }
 
-    for i := start; i < end; i++ {
+    for i := start; i < end + 1; i++ {
         view.buffer.lines[i] = subtract_prefix_from_line(prefix, view.buffer.lines[i])
     }
 }

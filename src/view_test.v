@@ -433,7 +433,7 @@ fn test_visual_indent_indents_highlighted_lines() {
 		"6. sixth line"
 	]
 
-	fake_view.cursor.pos.y = 2
+	fake_view.cursor.pos.y = 1
 
 	fake_view.v()
 	fake_view.j()
@@ -444,7 +444,7 @@ fn test_visual_indent_indents_highlighted_lines() {
 
 	assert fake_view.buffer.lines == [
 		"1. first line",
-		"2. second line",
+		"\t2. second line",
 		"\t3. third line",
 		"\t4. forth line",
 		"\t5. fifth line",
@@ -457,14 +457,14 @@ fn test_visual_unindent_unindents_highlighted_lines() {
 
 	fake_view.buffer.lines = [
 		"1. first line",
-		"2. second line",
+		"\t2. second line",
 		"\t3. third line",
 		"\t4. forth line",
 		"\t5. fifth line",
 		"6. sixth line"
 	]
 
-	fake_view.cursor.pos.y = 2
+	fake_view.cursor.pos.y = 1
 
 	fake_view.v()
 	fake_view.j()
