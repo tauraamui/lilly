@@ -8,7 +8,10 @@ mut:
 	content string
 }
 
-fn new_clipboard() &XClipClipboard {
+fn new_clipboard() Clipboard {
+	$if test {
+		return &MockClipboard{}
+	}
 	return &XClipClipboard{}
 }
 
