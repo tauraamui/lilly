@@ -7,18 +7,21 @@ struct WaylandClipboard {}
 
 fn (mut wclipboard WaylandClipboard) copy(text string) bool {
 	mut cmd := os.Command{
-		path: "echo '${text}' | wl-copy"
+		path: "echo ${text} | wl-copy -n"
 	}
 	defer { cmd.close() or { } }
-	cmd.start() or { return false }
+
+	cmd.start() or { panic(err) }
+
 	return cmd.exit_code == 0
 }
 
 fn (wclipboard WaylandClipboard) paste() []string {
 	mut cmd := os.Command{
-		path: "wl-paste"
+		path: "wl-paste -n"
 	}
 	defer { cmd.close() or { } }
+
 	cmd.start() or { panic(err) }
 
 	mut out := []string{}
@@ -28,7 +31,6 @@ fn (wclipboard WaylandClipboard) paste() []string {
 	}
 
 	if cmd.exit_code == 0 { return out }
-
 	return []
 }
 
