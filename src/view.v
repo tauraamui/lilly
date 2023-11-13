@@ -815,15 +815,17 @@ fn (mut view View) on_key_down(e &tui.Event) {
 		}
 		.visual {
 			match e.code {
-				.escape { view.escape() }
-				.h      { view.h() }
-				.l      { view.l() }
-				.j      { view.j() }
-				.k      { view.k() }
-				.up     { view.k() }
-				.right  { view.l() }
-				.down   { view.j() }
-				.left   { view.h() }
+				.escape    { view.escape() }
+				.h         { view.h() }
+				.l         { view.l() }
+				.j         { view.j() }
+				.k         { view.k() }
+				.up        { view.k() }
+				.right     { view.l() }
+				.down      { view.j() }
+				.left      { view.h() }
+				.less_than { view.visual_unindent() }
+				.greater_than { view.visual_indent() }
 				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.visual_d(true) } }
 				.p { view.visual_p() }
 				.u { if e.modifiers == .ctrl { view.ctrl_u() } }
@@ -913,6 +915,20 @@ fn (mut view View) insert_tab() {
 		return
 	}
 	view.insert_text(" ".repeat(4))
+}
+
+fn (mut view View) visual_indent() {
+	mut start := view.cursor.selection_start_y()
+	mut end := view.cursor.selection_end_y()
+
+    prefix := if view.config.insert_tabs_not_spaces { "\t" } else { " ".repeat(4) }
+
+    for i := start; i < end; i++ {
+        view.buffer.lines[i] = "${prefix}${view.buffer.lines[i]}"
+    }
+}
+
+fn (mut view View) visual_unindent() {
 }
 
 fn (mut view View) save_file()! {
@@ -1166,6 +1182,7 @@ fn (mut view View) hat() {
 }
 
 fn (mut view View) dollar() {
+    defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
 	view.cursor.pos.x = line.runes().len - 1
 }
