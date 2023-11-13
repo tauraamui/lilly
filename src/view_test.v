@@ -389,6 +389,22 @@ fn test_right_arrow_at_end_of_sentence_in_insert_mode() {
 	assert fake_view.cursor.pos.x == 20
 }
 
+fn test_tab_inserts_spaces() {
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe{ nil }, mode: .insert, clipboard: mut clip }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = ["1. first line"]
+	// ensure cursor is set to sit on the start of second line
+	fake_view.cursor.pos.x = 8
+	fake_view.cursor.pos.y = 0
+
+	fake_view.insert_tab()
+
+	assert fake_view.mode == .insert
+	assert fake_view.buffer.lines == ["1. first     line"]
+}
+
 fn test_visual_insert_mode_and_delete_in_place() {
 	mut clip := clipboard.new()
 	mut fake_view := View{ log: unsafe{ nil }, mode: .normal, clipboard: mut clip }
