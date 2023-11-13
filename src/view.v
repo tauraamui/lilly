@@ -20,6 +20,8 @@ import log
 import datatypes
 import strconv
 import regex
+import lib.clipboard
+import arrays
 
 struct Cursor {
 mut:
@@ -116,7 +118,7 @@ mut:
 	current_syntax_idx        int
 	is_multiline_comment      bool
 	d_count                   int
-	y_lines                   []string
+	clipboard                 clipboard.Clipboard
 }
 
 struct FindCursor {
@@ -397,8 +399,8 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 	cmd_buf.code = .blank
 }
 
-fn (app &App) new_view() View {
-	mut res := View{ log: app.log, mode: .normal, show_whitespace: false }
+fn (app &App) new_view(_clipboard clipboard.Clipboard) View {
+	mut res := View{ log: app.log, mode: .normal, show_whitespace: false, clipboard: _clipboard }
 	res.load_syntaxes()
 	res.load_config()
 	res.set_current_syntax_idx(".v")
@@ -1081,13 +1083,19 @@ fn (mut view View) v() {
 }
 
 fn (mut view View) visual_y() {
-	mut y_lines := []string{}
 	start := view.cursor.selection_start_y()
 	mut end   := view.cursor.selection_end_y()
 	if end+1 >= view.buffer.lines.len { end = view.buffer.lines.len-1 }
-	y_lines = view.buffer.lines[start..end+1]
-	view.y_lines = y_lines.clone()
+	view.copy_lines_into_clipboard(start, end)
 	view.escape()
+}
+
+fn (mut view View) copy_lines_into_clipboard(start int, end int) {
+	view.clipboard.copy(arrays.join_to_string(view.buffer.lines[start..end+1].clone(), "\n", fn (s string) string { return s }))
+}
+
+fn (mut view View) read_lines_from_clipboard() []string {
+	return view.clipboard.paste()
 }
 
 fn (mut view View) visual_d(overwrite_y_lines bool) {
@@ -1095,7 +1103,7 @@ fn (mut view View) visual_d(overwrite_y_lines bool) {
 	mut start := view.cursor.selection_start_y()
 	mut end := view.cursor.selection_end_y()
 
-	view.y_lines = view.buffer.lines[start..end+1]
+	view.copy_lines_into_clipboard(start, end)
 	before := view.buffer.lines[..start]
 	after := view.buffer.lines[end+1..]
 
@@ -1159,8 +1167,7 @@ fn (mut view View) d() {
 	if view.d_count == 1 { view.mode = .pending_delete }
 	if view.d_count == 2 {
 		index := if view.cursor.pos.y == view.buffer.lines.len { view.cursor.pos.y - 1 } else { view.cursor.pos.y }
-		view.y_lines = []string{}
-		view.y_lines << view.buffer.lines[index]
+		view.copy_lines_into_clipboard(index, index)
 		view.buffer.lines.delete(index)
 		view.d_count = 0
 		view.clamp_cursor_within_document_bounds()
@@ -1179,8 +1186,9 @@ fn (mut view View) o() {
 }
 
 fn (mut view View) p() {
-	view.buffer.lines.insert(view.cursor.pos.y+1, view.y_lines)
-	view.move_cursor_down(view.y_lines.len)
+	copied_lines := view.read_lines_from_clipboard()
+	view.buffer.lines.insert(view.cursor.pos.y+1, copied_lines)
+	view.move_cursor_down(copied_lines.len)
 }
 
 fn (mut view View) visual_p() {
@@ -1191,11 +1199,13 @@ fn (mut view View) visual_p() {
 	before := view.buffer.lines[..start]
 	after := view.buffer.lines[end+1..]
 
+	copied_lines := view.read_lines_from_clipboard()
+
 	view.buffer.lines = before
 	view.buffer.lines << after
 	view.cursor.pos.y = start
-	view.buffer.lines.insert(view.cursor.pos.y, view.y_lines)
-	view.move_cursor_down(view.y_lines.len)
+	view.buffer.lines.insert(view.cursor.pos.y, copied_lines)
+	view.move_cursor_down(copied_lines.len)
 	view.escape()
 }
 
