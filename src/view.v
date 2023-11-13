@@ -882,7 +882,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.down {}
 				.left { view.left() }
 				.right { view.right() }
-				.tab { view.insert_text('\t') }
+				.tab { view.insert_tab() }
 				.single_quote { view.insert_text("\'\'"); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
 				.double_quote { view.insert_text("\"\""); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
 				.left_paren { view.insert_text('()'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
@@ -906,6 +906,14 @@ fn (mut view View) on_key_down(e &tui.Event) {
 			}
 		}
 	}
+}
+
+fn (mut view View) insert_tab() {
+	if view.config.insert_tabs_not_spaces {
+		view.insert_text("\t")
+		return
+	}
+	view.insert_text(" ".repeat(4))
 }
 
 fn (mut view View) save_file()! {

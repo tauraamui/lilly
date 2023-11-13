@@ -30,6 +30,7 @@ struct Config {
 mut:
 	relative_line_numbers bool
 	selection_highlight_color tui.Color
+	insert_tabs_not_spaces bool
 }
 
 fn (mut view View) load_config() {
