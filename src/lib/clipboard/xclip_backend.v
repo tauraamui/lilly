@@ -3,17 +3,7 @@ module clipboard
 import os
 
 [heap]
-struct XClipClipboard {
-mut:
-	content string
-}
-
-fn new_clipboard() Clipboard {
-	$if test {
-		return &MockClipboard{}
-	}
-	return &XClipClipboard{}
-}
+struct XClipClipboard {}
 
 fn (mut xclipboard XClipClipboard) copy(text string) bool {
 	mut cmd := os.Command{
