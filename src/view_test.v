@@ -452,6 +452,37 @@ fn test_visual_indent_indents_highlighted_lines() {
 	]
 }
 
+fn test_visual_unindent_unindents_highlighted_lines() {
+    mut fake_view := View{ log: unsafe { nil }, mode: .visual, clipboard: clipboard.new(), config: Config{ insert_tabs_not_spaces: true } }
+
+	fake_view.buffer.lines = [
+		"1. first line",
+		"2. second line",
+		"\t3. third line",
+		"\t4. forth line",
+		"\t5. fifth line",
+		"6. sixth line"
+	]
+
+	fake_view.cursor.pos.y = 2
+
+	fake_view.v()
+	fake_view.j()
+	fake_view.j()
+	fake_view.j()
+
+	fake_view.visual_unindent()
+
+	assert fake_view.buffer.lines == [
+		"1. first line",
+		"2. second line",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line",
+		"6. sixth line"
+	]
+}
+
 fn test_visual_insert_mode_and_delete_in_place() {
 	mut clip := clipboard.new()
 	mut fake_view := View{ log: unsafe{ nil }, mode: .normal, clipboard: mut clip }
