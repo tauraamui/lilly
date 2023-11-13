@@ -929,6 +929,22 @@ fn (mut view View) visual_indent() {
 }
 
 fn (mut view View) visual_unindent() {
+	mut start := view.cursor.selection_start_y()
+	mut end := view.cursor.selection_end_y()
+
+    prefix := if view.config.insert_tabs_not_spaces { "\t" } else { " ".repeat(4) }
+
+    for i := start; i < end; i++ {
+        view.buffer.lines[i] = subtract_prefix_from_line(prefix, view.buffer.lines[i])
+    }
+}
+
+fn subtract_prefix_from_line(prefix string, line string) string {
+    if line.len > prefix.len {
+        line_prefix := line.substr(0, prefix.len)
+        if line_prefix == prefix { return line.substr(prefix.len, line.len) }
+    }
+    return line
 }
 
 fn (mut view View) save_file()! {
