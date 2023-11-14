@@ -22,6 +22,7 @@ import strconv
 import regex
 import lib.clipboard
 import arrays
+import lib { Buffer }
 
 struct Cursor {
 mut:
@@ -242,11 +243,6 @@ struct Find {
 mut:
 	start int
 	end   int
-}
-
-struct Buffer {
-mut:
-	lines []string
 }
 
 enum CmdCode as u8 {
@@ -1013,6 +1009,8 @@ fn (mut view View) escape() {
 	if whitespace_prefix.len == line.len {
 		view.buffer.lines[view.cursor.pos.y] = ""
 	}
+
+	view.buffer.update_undo_history()
 }
 
 fn (mut view View) jump_cursor_to(position int) {
@@ -1115,6 +1113,7 @@ fn (mut view View) k() {
 fn (mut view View) i() {
 	view.mode = .insert
 	view.clamp_cursor_x_pos()
+	view.buffer.snapshot()
 }
 
 fn (mut view View) v() {
