@@ -786,7 +786,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.down  { view.j() }
 				.left  { view.h() }
 				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.d() } }
-				.u { if e.modifiers == .ctrl { view.ctrl_u() } }
+				.u { if e.modifiers == .ctrl { view.ctrl_u() } else { view.u() } }
 				.caret { view.hat() }
 				.dollar { view.dollar() }
 				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
@@ -1213,6 +1213,10 @@ fn (mut view View) d() {
 		view.clamp_cursor_within_document_bounds()
 		view.mode = .normal
 	}
+}
+
+fn (mut view View) u() {
+	view.buffer.undo()
 }
 
 fn (mut view View) o() {

@@ -17,6 +17,26 @@ module main
 import lib.clipboard
 import arrays
 
+fn test_u_undos_line_insertions() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: clipboard.new() }
+	fake_view.buffer.lines = ["1. first line"]
+
+	fake_view.i()
+	fake_view.buffer.lines << "2. second new line which we're adding now"
+	fake_view.escape()
+
+	assert fake_view.buffer.lines == [
+		"1. first line",
+		"2. second new line which we're adding now"
+	]
+
+	fake_view.u()
+
+	assert fake_view.buffer.lines == [
+		"1. first line"
+	]
+}
+
 fn test_dd_deletes_current_line_at_start_of_doc() {
 	mut clip := clipboard.new()
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }

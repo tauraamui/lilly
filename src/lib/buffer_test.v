@@ -21,3 +21,23 @@ fn test_buffer_update_undo_history_with_no_snapshot() {
 
 	assert buff.lines == ["1. first line which already exists"]
 }
+
+fn test_buffer_undo_some_line_insertions() {
+	mut buff := Buffer{
+		lines: ["1. first line which already exists"]
+	}
+
+	buff.snapshot()
+
+	buff.lines << "2. new second line which wasn't here before snapshot!'"
+	assert buff.lines == [
+		"1. first line which already exists",
+		"2. new second line which wasn't here before snapshot!'"
+	]
+
+	buff.update_undo_history()
+
+	buff.undo()
+
+	assert buff.lines == ["1. first line which already exists"]
+}
