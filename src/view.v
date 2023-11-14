@@ -770,6 +770,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 	match view.mode {
 		.normal {
 			match e.code {
+				.escape { view.escape() }
 				.h     { view.h() }
 				.l     { view.l() }
 				.j     { view.j() }
@@ -795,7 +796,6 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.left_square_bracket { view.left_square_bracket() }
 				.right_square_bracket { view.right_square_bracket() }
 				.slash { view.search() }
-				.escape { view.escape() }
 				.enter {
 					// TODO(tauraamui) -> what even is this, remove??
 					if view.mode == .command {

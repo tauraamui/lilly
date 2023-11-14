@@ -17,23 +17,62 @@ module main
 import lib.clipboard
 import arrays
 
+const example_file = "module lib\nstruct Type {\n\tfield_a string\n\tfield_b int\n}"
+
 fn test_u_undos_line_insertions() {
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: clipboard.new() }
-	fake_view.buffer.lines = ["1. first line"]
+	fake_view.buffer.lines = example_file.split_into_lines()
 
+	assert fake_view.buffer.lines == [
+		"module lib",
+		"struct Type {",
+		"\tfield_a string",
+		"\tfield_b int",
+		"}"
+	]
+
+	fake_view.cursor.pos.x = 10
+	fake_view.cursor.pos.y = 1
 	fake_view.i()
-	fake_view.buffer.lines << "2. second new line which we're adding now"
+	fake_view.enter()
 	fake_view.escape()
 
 	assert fake_view.buffer.lines == [
-		"1. first line",
-		"2. second new line which we're adding now"
+		"module lib",
+		"struct Typ",
+		"e {",
+		"\tfield_a string",
+		"\tfield_b int",
+		"}"
 	]
 
 	fake_view.u()
 
 	assert fake_view.buffer.lines == [
-		"1. first line"
+		"module lib",
+		"struct Typ",
+		"\tfield_a string",
+		"\tfield_b int",
+		"}"
+	]
+
+	fake_view.u()
+
+	assert fake_view.buffer.lines == [
+		"module lib",
+		"\tfield_a string",
+		"\tfield_b int",
+		"}"
+	]
+
+	fake_view.u()
+
+	assert fake_view.buffer.lines == [
+		"module lib",
+		"struct Type {",
+		"\tfield_a string",
+		"\tfield_b int",
+		"}"
 	]
 }
 
