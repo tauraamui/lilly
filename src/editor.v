@@ -26,7 +26,7 @@ mut:
 pub fn open_editor(workspace_root_dir string) !&Editor {
 	if !os.is_dir(workspace_root_dir) { return error("path ${workspace_root_dir} is not a directory") }
 	mut editor := Editor{}
-	editor.views << SplashScreen{}
+	editor.views << new_splash()
 	editor.view = &editor.views[0]
 	return &editor
 }
