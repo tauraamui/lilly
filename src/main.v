@@ -103,8 +103,15 @@ fn main() {
 	app.views << app.new_view(clip)
 	app.update_view()
 
-	path := os.args[1] or { panic("missing file path") }
+	path := os.args[1] or { print_and_exit("missing file path..."); "" }
+	if !os.is_dir(path) { print_and_exit("given path ${path} is not a directory") }
 	app.view.open_file(path)
 
     app.tui.run()!
 }
+
+fn print_and_exit(msg string) {
+	println(msg)
+	exit(1)
+}
+
