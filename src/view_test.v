@@ -17,6 +17,90 @@ module main
 import lib.clipboard
 import arrays
 
+const example_file = "module history\n\nimport datatypes\nimport lib.diff { Op }\n\npub struct History {\nmut:\n\tundos datatypes.Stack[Op] // will actually be type diff.Op\n\tredos datatypes.Stack[Op]\n}"
+
+fn test_u_undos_line_insertions() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: clipboard.new() }
+	fake_view.buffer.lines = example_file.split_into_lines()
+
+	assert fake_view.buffer.lines == [
+		"module history",
+		"",
+		"import datatypes",
+		"import lib.diff { Op }",
+		"",
+		"pub struct History {",
+		"mut:",
+		"\tundos datatypes.Stack[Op] // will actually be type diff.Op",
+		"\tredos datatypes.Stack[Op]",
+		"}"
+	]
+
+	fake_view.cursor.pos.x = 9
+	fake_view.cursor.pos.y = 5
+	fake_view.i()
+	fake_view.enter()
+	fake_view.escape()
+
+	assert fake_view.buffer.lines == [
+		"module history",
+		"",
+		"import datatypes",
+		"import lib.diff { Op }",
+		"",
+		"pub struc",
+		"t History {",
+		"mut:",
+		"\tundos datatypes.Stack[Op] // will actually be type diff.Op",
+		"\tredos datatypes.Stack[Op]",
+		"}"
+	]
+
+	fake_view.u()
+
+	assert fake_view.buffer.lines == [
+		"module history",
+		"",
+		"import datatypes",
+		"import lib.diff { Op }",
+		"",
+		"pub struc",
+		"mut:",
+		"\tundos datatypes.Stack[Op] // will actually be type diff.Op",
+		"\tredos datatypes.Stack[Op]",
+		"}"
+	]
+
+	fake_view.u()
+
+	assert fake_view.buffer.lines == [
+		"module history",
+		"",
+		"import datatypes",
+		"import lib.diff { Op }",
+		"",
+		"mut:",
+		"\tundos datatypes.Stack[Op] // will actually be type diff.Op",
+		"\tredos datatypes.Stack[Op]",
+		"}"
+	]
+
+	fake_view.u()
+
+	assert fake_view.buffer.lines == [
+		"module history",
+		"",
+		"import datatypes",
+		"import lib.diff { Op }",
+		"pub struct History {"
+		"",
+		"mut:",
+		"\tundos datatypes.Stack[Op] // will actually be type diff.Op",
+		"\tredos datatypes.Stack[Op]",
+		"}"
+	]
+}
+
 fn test_dd_deletes_current_line_at_start_of_doc() {
 	mut clip := clipboard.new()
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
