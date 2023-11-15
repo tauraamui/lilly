@@ -17,7 +17,7 @@ fn test_generate_diff_ops_twixt_two_file_versions() {
 
 	assert his.undos.array() == [
 		Op{
-			line_num: 1
+			line_num: 0
 			value: "2. second new line which was added"
 			kind: "ins",
 		}
