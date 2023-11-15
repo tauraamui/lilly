@@ -22,6 +22,7 @@ import strconv
 import regex
 import lib.clipboard
 import arrays
+import lib { Buffer }
 
 struct Cursor {
 mut:
@@ -242,11 +243,6 @@ struct Find {
 mut:
 	start int
 	end   int
-}
-
-struct Buffer {
-mut:
-	lines []string
 }
 
 enum CmdCode as u8 {
@@ -774,6 +770,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 	match view.mode {
 		.normal {
 			match e.code {
+				.escape { view.escape() }
 				.h     { view.h() }
 				.l     { view.l() }
 				.j     { view.j() }
@@ -791,7 +788,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.down  { view.j() }
 				.left  { view.h() }
 				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.d() } }
-				.u { if e.modifiers == .ctrl { view.ctrl_u() } }
+				.u { if e.modifiers == .ctrl { view.ctrl_u() } else { view.u() } }
 				.caret { view.hat() }
 				.dollar { view.dollar() }
 				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
@@ -800,7 +797,6 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.left_square_bracket { view.left_square_bracket() }
 				.right_square_bracket { view.right_square_bracket() }
 				.slash { view.search() }
-				.escape { view.escape() }
 				.enter {
 					// TODO(tauraamui) -> what even is this, remove??
 					if view.mode == .command {
@@ -1014,6 +1010,8 @@ fn (mut view View) escape() {
 	if whitespace_prefix.len == line.len {
 		view.buffer.lines[view.cursor.pos.y] = ""
 	}
+
+	view.buffer.update_undo_history()
 }
 
 fn (mut view View) jump_cursor_to(position int) {
@@ -1116,6 +1114,7 @@ fn (mut view View) k() {
 fn (mut view View) i() {
 	view.mode = .insert
 	view.clamp_cursor_x_pos()
+	view.buffer.snapshot()
 }
 
 fn (mut view View) v() {
@@ -1215,6 +1214,10 @@ fn (mut view View) d() {
 		view.clamp_cursor_within_document_bounds()
 		view.mode = .normal
 	}
+}
+
+fn (mut view View) u() {
+	view.buffer.undo()
 }
 
 fn (mut view View) o() {

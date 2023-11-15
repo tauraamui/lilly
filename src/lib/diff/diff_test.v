@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module main
+module diff
 
 fn test_same_check_is_matching() {
 	assert same(["a", "b", "c"], ["a", "b", "c"])
