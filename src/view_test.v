@@ -36,8 +36,8 @@ fn test_u_undos_line_insertions() {
 		"}"
 	]
 
-	fake_view.cursor.pos.x = 10
-	fake_view.cursor.pos.y = 3
+	fake_view.cursor.pos.x = 9
+	fake_view.cursor.pos.y = 5
 	fake_view.i()
 	fake_view.enter()
 	fake_view.escape()
@@ -46,10 +46,26 @@ fn test_u_undos_line_insertions() {
 		"module history",
 		"",
 		"import datatypes",
-		"import lib"
-		".diff { Op }",
+		"import lib.diff { Op }",
 		"",
-		"pub struct History {",
+		"pub struc",
+		"t History {",
+		"mut:",
+		"\tundos datatypes.Stack[Op] // will actually be type diff.Op",
+		"\tredos datatypes.Stack[Op]",
+		"}"
+	]
+
+	fake_view.u()
+
+	assert fake_view.buffer.lines == [
+		"module history",
+		"",
+		"import datatypes",
+		"import lib.diff { Op }",
+		"",
+		"pub struc",
+		"t History {",
 		"mut:",
 		"\tundos datatypes.Stack[Op] // will actually be type diff.Op",
 		"\tredos datatypes.Stack[Op]",
