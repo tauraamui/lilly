@@ -18,10 +18,19 @@ pub fn (mut history History) pop_undo() !Op {
 pub fn (mut history History) append_ops_to_undo(a []string, b []string) {
 	ops := diff.diff(a, b)
 
-	for i, op in ops {
+	println("OPS: ${ops}")
+
+	mut line_num := 0
+	for op in ops {
 		mut op_cpy := op
+		op_cpy.line_num = line_num
+		match op.kind {
+			"same" { line_num += 1 }
+			"ins" { line_num += 1 }
+			"del" { line_num -= 1 }
+			else {}
+		}
 		if op.kind == "same" { continue }
-		op_cpy.line_num = i
 		history.undos.push(op_cpy)
 	}
 }

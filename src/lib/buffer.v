@@ -15,9 +15,10 @@ mut:
 pub fn (mut buffer Buffer) undo() {
 	op_to_undo := buffer.history.pop_undo() or { return }
 	println("OP TO UNDO: ${op_to_undo}")
+	mut line_offset := 0
 	match op_to_undo.kind {
-		"ins" { buffer.lines.delete(op_to_undo.line_num - 1) }
-		"del" { buffer.lines.insert(op_to_undo.line_num, op_to_undo.value) }
+		"ins" { buffer.lines.delete(op_to_undo.line_num + line_offset); line_offset -= 1 }
+		"del" { buffer.lines.insert(op_to_undo.line_num + line_offset, op_to_undo.value); line_offset += 1 }
 		else {}
 	}
 }

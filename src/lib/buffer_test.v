@@ -29,10 +29,10 @@ fn test_buffer_undo_some_line_insertions() {
 
 	buff.snapshot()
 
-	buff.lines << "2. new second line which wasn't here before snapshot!'"
+	buff.lines << "2. new second line which wasn't here before snapshot!"
 	assert buff.lines == [
 		"1. first line which already exists",
-		"2. new second line which wasn't here before snapshot!'"
+		"2. new second line which wasn't here before snapshot!"
 	]
 
 	buff.update_undo_history()
