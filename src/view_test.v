@@ -65,7 +65,35 @@ fn test_u_undos_line_insertions() {
 		"import lib.diff { Op }",
 		"",
 		"pub struc",
-		"t History {",
+		"mut:",
+		"\tundos datatypes.Stack[Op] // will actually be type diff.Op",
+		"\tredos datatypes.Stack[Op]",
+		"}"
+	]
+
+	fake_view.u()
+
+	assert fake_view.buffer.lines == [
+		"module history",
+		"",
+		"import datatypes",
+		"import lib.diff { Op }",
+		"",
+		"mut:",
+		"\tundos datatypes.Stack[Op] // will actually be type diff.Op",
+		"\tredos datatypes.Stack[Op]",
+		"}"
+	]
+
+	fake_view.u()
+
+	assert fake_view.buffer.lines == [
+		"module history",
+		"",
+		"import datatypes",
+		"import lib.diff { Op }",
+		"pub struct History {"
+		"",
 		"mut:",
 		"\tundos datatypes.Stack[Op] // will actually be type diff.Op",
 		"\tredos datatypes.Stack[Op]",
