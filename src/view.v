@@ -395,7 +395,8 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 	cmd_buf.code = .blank
 }
 
-fn (app &App) new_view(_clipboard clipboard.Clipboard) View {
+/*
+fn (app &App) new_view(_clipboard clipboard.Clipboard) Viewable {
 	mut res := View{ log: app.log, mode: .normal, show_whitespace: false, clipboard: _clipboard }
 	res.load_syntaxes()
 	res.load_config()
@@ -403,6 +404,7 @@ fn (app &App) new_view(_clipboard clipboard.Clipboard) View {
 	res.cursor.selection_start = Pos{ -1, -1 }
 	return res
 }
+*/
 
 fn (mut view View) open_file(path string) {
 	view.path = path
@@ -425,6 +427,11 @@ fn (mut view View) open_file(path string) {
 	if view.buffer.lines.len == 0 {
 		view.buffer.lines << ''
 	}
+}
+
+interface Viewable {
+	draw(mut tui.Context)
+	on_key_down(&tui.Event)
 }
 
 fn (mut view View) draw(mut ctx tui.Context) {
