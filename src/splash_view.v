@@ -2,6 +2,7 @@ module main
 
 import term.ui as tui
 import math
+import strings
 
 const logo_contents = $embed_file("./src/splash-logo.txt")
 
@@ -35,7 +36,16 @@ pub fn (splash SplashScreen) draw(mut ctx tui.Context) {
 	mut offset_y := 1 + f64(ctx.window_height) * 0.1
 	ctx.set_color(r: 245, g: 191, b: 243)
 	for i, l in splash.logo.data {
-		if i == 11 { ctx.set_color(r: 97, g: 242, b: 136) }
+		start_x := offset_x+(ctx.window_width / 2) - (l.runes().len / 2)
+		if has_colouring_directives(l) {
+			for j, c in l.runes() {
+				mut to_draw := "${c}"
+				if to_draw == "g" { to_draw = " "; ctx.set_color(r: 97, g: 242, b: 136) }
+				if to_draw == "p" { to_draw = " "; ctx.set_color(r: 245, g: 191, b: 243) }
+				ctx.draw_text(start_x + j, int(math.floor(offset_y))+i, to_draw)
+			}
+			continue
+		}
 		ctx.draw_text(offset_x+(ctx.window_width / 2) - (l.runes().len / 2), int(math.floor(offset_y))+i, l)
 	}
 	ctx.reset_color()
@@ -45,6 +55,13 @@ pub fn (splash SplashScreen) draw(mut ctx tui.Context) {
 
 	the_lilly_editor := "The Lilly Editor"
 	ctx.draw_text(offset_x+(ctx.window_width / 2) - (the_lilly_editor.len / 2), int(math.floor(offset_y)), the_lilly_editor)
+}
+
+fn has_colouring_directives(line string) bool {
+	for i, c in line.split("") {
+		if c == "g" || c == "p" { return true }
+	}
+	return false
 }
 
 pub fn (splash SplashScreen) on_key_down(e &tui.Event) {
