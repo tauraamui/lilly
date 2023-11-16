@@ -53,8 +53,25 @@ pub fn (splash SplashScreen) draw(mut ctx tui.Context) {
 	offset_y += splash.logo.data.len
 	offset_y += (ctx.window_height - offset_y) * 0.05
 
-	the_lilly_editor := "The Lilly Editor"
-	ctx.draw_text(offset_x+(ctx.window_width / 2) - (the_lilly_editor.len / 2), int(math.floor(offset_y)), the_lilly_editor)
+	offset_y += 2
+
+	basic_command_help := [
+		" Find File                   <leader>ff",
+		" Find Word                   <leader>fg",
+		" Recent Files                <leader>fo",
+		" File Browser                <leader>fv",
+		" Colorschemes                <leader>cs",
+		" New File                    <leader>nf",
+	]
+
+	for h in basic_command_help {
+		ctx.draw_text(offset_x+(ctx.window_width / 2) - (h.len / 2), int(math.floor(offset_y)), h)
+		offset_y += 2
+	}
+
+	copyright_footer := "the lilly editor authors ©"
+	ctx.draw_text(offset_x+(ctx.window_width / 2) - (copyright_footer.len / 2), int(math.floor(offset_y)), copyright_footer)
+	ctx.hide_cursor()
 }
 
 fn has_colouring_directives(line string) bool {
