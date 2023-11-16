@@ -33,9 +33,12 @@ pub fn new_splash() SplashScreen {
 pub fn (splash SplashScreen) draw(mut ctx tui.Context) {
 	offset_x := 1
 	mut offset_y := 1 + f64(ctx.window_height) * 0.1
+	ctx.set_color(r: 245, g: 191, b: 243)
 	for i, l in splash.logo.data {
+		if i == 11 { ctx.set_color(r: 97, g: 242, b: 136) }
 		ctx.draw_text(offset_x+(ctx.window_width / 2) - (l.runes().len / 2), int(math.floor(offset_y))+i, l)
 	}
+	ctx.reset_color()
 
 	offset_y += splash.logo.data.len
 	offset_y += (ctx.window_height - offset_y) * 0.05
