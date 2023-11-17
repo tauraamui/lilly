@@ -1,5 +1,5 @@
 run:
-    v run ./src
+    v run ./src .
 
 test:
     v -g test ./src
