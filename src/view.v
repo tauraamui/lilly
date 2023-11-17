@@ -324,6 +324,7 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View) {
 			cmd_buf.code = .successful
 			view.save_file() or { cmd_buf.code = .unsuccessful }
 		}
+		"" { return }
 		else {
 			jump_pos, parse_successful := try_to_parse_to_jump_to_line_num(view.cmd_buf.line)
 			if !parse_successful { cmd_buf.code = .unrecognised } else {
@@ -334,7 +335,6 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View) {
 	}
 
 	if cmd_buf.code == .successful {
-		if cmd_buf.cmd_history.last() or { "" } == cmd_buf.line { return }
 		cmd_buf.cmd_history.push(cmd_buf.line)
 	}
 	cmd_buf.set_error(cmd_buf.code.str().replace("__", cmd_buf.line))
@@ -790,6 +790,7 @@ fn (mut view View) on_key_down(e &tui.Event, root Root) {
 				.w     { view.w() }
 				.b     { view.b() }
 				.o     { view.o() }
+				.a     { if e.modifiers == .shift { view.shift_a() } else { view.a() } }
 				.p     { view.p() }
 				.up    { view.k() }
 				.right { view.l() }
@@ -1236,6 +1237,16 @@ fn (mut view View) o() {
 	defer { view.cursor.pos.x = whitespace_prefix.len }
 	if y >= view.buffer.lines.len { view.buffer.lines << "${whitespace_prefix}"; return }
 	view.buffer.lines.insert(y+1, "${whitespace_prefix}")
+}
+
+fn (mut view View) a() {
+	view.mode = .insert
+	view.cursor.pos.x += 1
+}
+
+fn (mut view View) shift_a() {
+	view.dollar()
+	view.a()
 }
 
 fn (mut view View) p() {

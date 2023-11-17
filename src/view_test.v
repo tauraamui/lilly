@@ -1032,3 +1032,32 @@ fn test_calc_b_move_amount_code_line() {
 	fake_cursor_pos.x -= amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "s"
 }
+
+fn test_a_enters_insert_mode_after_cursor_position() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+
+	fake_view.buffer.lines = ["single line of text!"]
+
+	fake_view.cursor.pos.x = 0
+
+	fake_view.a()
+
+	assert fake_view.cursor.pos.x == 1
+	assert fake_view.mode == .insert
+}
+
+fn test_shift_a_enters_insert_mode_at_the_end_of_current_line() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+
+	fake_view.buffer.lines = ["some line of text", "single line of text!", "a third line!"]
+
+	fake_view.cursor.pos.y = 1
+	// use random starting location, not at the start
+	fake_view.cursor.pos.x = 3
+
+	fake_view.shift_a()
+
+	assert fake_view.cursor.pos.x == 20
+	assert fake_view.cursor.pos.y == 1
+	assert fake_view.mode == .insert
+}
