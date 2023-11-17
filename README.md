@@ -3,8 +3,9 @@
 </div>
 
 ## A VIM-Like editor for your terminal (<a href="https://discord.gg/N4UG2TfDfd">chat on Discord</a>)
-![Screenshot 2023-10-18 00 14 02](https://github.com/tauraamui/lilly/assets/3159648/7d585274-1ec4-42fe-b213-9421aedd4771)
+![Screenshot 2023-11-17 20 07 13](https://github.com/tauraamui/lilly/assets/3159648/12e893ce-0120-4eb4-9d54-71b1a076832c)
 
+![Screenshot 2023-10-18 00 14 02](https://github.com/tauraamui/lilly/assets/3159648/7d585274-1ec4-42fe-b213-9421aedd4771)
 
 Our project is focused on the development of a text editor that serves as a practical alternative to Vim and Neovim. The primary aim is to provide users with essential features, eliminating the need to navigate a complex ecosystem of Lua plugins. This approach is intended to be welcoming to users of all experience levels.
 
