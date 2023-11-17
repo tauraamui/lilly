@@ -29,10 +29,14 @@ fn (file_finder_modal FileFinderModal) draw(mut ctx tui.Context) {
 fn (mut file_finder_modal FileFinderModal) on_key_down(e &tui.Event, mut root Root) {
 	match e.code {
 		.escape { root.close_file_finder() }
-		.j { file_finder_modal.move_selection_down(1) }
-		.k { file_finder_modal.move_selection_up(1) }
+		.j      { file_finder_modal.move_selection_down(1) }
+		.k      { file_finder_modal.move_selection_up(1) }
+		.enter  { file_finder_modal.file_selected(mut root) }
 		else { }
 	}
+}
+
+fn (file_finder_modal FileFinderModal) file_selected(mut root Root) {
 }
 
 fn (mut file_finder_modal FileFinderModal) move_selection_down(by int) {
