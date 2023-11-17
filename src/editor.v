@@ -57,7 +57,9 @@ fn (mut editor Editor) open_file(path string) ! {
 
 fn (mut editor Editor) open_file_finder() {
 	editor.file_finder_model_open = true
-	editor.file_finder_model = FileFinderModal{}
+	editor.file_finder_model = FileFinderModal{
+		file_paths: editor.workspace.files()
+	}
 }
 
 fn (mut editor Editor) close_file_finder() {

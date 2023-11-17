@@ -18,9 +18,10 @@ pub fn open_workspace(
 	path := os.dir(root_path)
 	if !is_dir(path) { return error("${path} is not a directory") }
 	// return error("workspace not implemented yet")
-	mut wrkspace := Workspace{}
-	dir_walker(path, fn [mut wrkspace] (file_path string) {
-		wrkspace.files << file_path
+	wrkspace := Workspace{}
+	mut files_ref := &wrkspace.files
+	dir_walker(path, fn [mut files_ref] (file_path string) {
+		files_ref << file_path
 	})
 	return wrkspace
 }
@@ -28,4 +29,3 @@ pub fn open_workspace(
 pub fn (workspace Workspace) files() []string {
 	return workspace.files
 }
-
