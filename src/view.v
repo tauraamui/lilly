@@ -397,6 +397,7 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 
 fn open_view(_clipboard clipboard.Clipboard, buff &buffer.Buffer) Viewable {
 	mut res := View{ log: unsafe { nil }, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
+	res.path = res.buffer.file_path
 	res.load_syntaxes()
 	res.load_config()
 	res.set_current_syntax_idx(".v")
