@@ -17,22 +17,26 @@ module main
 import os
 import term.ui as tui
 import lib.buffer
+import lib.workspace
 
 struct Editor {
 mut:
-	view    &Viewable = unsafe { nil }
-	views   []Viewable
-	buffers []buffer.Buffer
+	view      &Viewable = unsafe { nil }
+	views     []Viewable
+	buffers   []buffer.Buffer
+	workspace workspace.Workspace
 }
 
 interface Root {
 mut:
+	open_file_finder()
 	quit()
 }
 
 pub fn open_editor(workspace_root_dir string) !&Editor {
 	if !os.is_dir(workspace_root_dir) { return error("path ${workspace_root_dir} is not a directory") }
 	mut editor := Editor{}
+	editor.workspace = workspace.open_workspace(workspace_root_dir) or { return error("unable to open workspace '${workspace_root_dir}' -> ${err}") }
 	editor.views << new_splash()
 	editor.view = &editor.views[0]
 	return &editor
@@ -42,6 +46,9 @@ fn (mut editor Editor) open_file(path string) ! {
 	mut buff := buffer.Buffer{ file_path: path }
 	buff.load_from_path() or { return err }
 	editor.buffers << buff
+}
+
+fn (mut editor Editor) open_file_finder() {
 }
 
 pub fn (mut editor Editor) draw(mut ctx tui.Context) {
