@@ -34,7 +34,6 @@ mut:
 }
 
 pub fn open_editor(workspace_root_dir string) !&Editor {
-	if !os.is_dir(workspace_root_dir) { return error("path ${workspace_root_dir} is not a directory") }
 	mut editor := Editor{}
 	editor.workspace = workspace.open_workspace(workspace_root_dir) or { return error("unable to open workspace '${workspace_root_dir}' -> ${err}") }
 	editor.views << new_splash()
