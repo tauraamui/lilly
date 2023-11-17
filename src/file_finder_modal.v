@@ -11,7 +11,9 @@ fn (file_finder_modal FileFinderModal) draw(mut ctx tui.Context) {
 	ctx.clear()
 	ctx.set_color(r: 245, g: 245, b: 245)
 	ctx.draw_text(1, 1, "WORKSPACE FILES")
-	for i, l in file_finder_modal.file_paths {
+	for i, l in file_finder_modal.file_paths.filter(fn (it string) bool {
+		return !it.starts_with("./.git")
+	}) {
 		ctx.draw_text(1, i+2, l)
 	}
 }
