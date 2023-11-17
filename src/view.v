@@ -446,11 +446,6 @@ mut:
 	on_key_down(&tui.Event, mut Root)
 }
 
-interface Viewable {
-	draw(mut tui.Context)
-	on_key_down(&tui.Event, mut Root)
-}
-
 fn (mut view View) draw(mut ctx tui.Context) {
 	view.height = ctx.window_height
 	view.x = "${view.buffer.lines.len}".len + 1
