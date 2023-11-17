@@ -326,6 +326,7 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View) {
 			cmd_buf.code = .successful
 			view.save_file() or { cmd_buf.code = .unsuccessful }
 		}
+		"" { return }
 		else {
 			jump_pos, parse_successful := try_to_parse_to_jump_to_line_num(view.cmd_buf.line)
 			if !parse_successful { cmd_buf.code = .unrecognised } else {
@@ -336,7 +337,6 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View) {
 	}
 
 	if cmd_buf.code == .successful {
-		if cmd_buf.cmd_history.last() or { "" } == cmd_buf.line { return }
 		cmd_buf.cmd_history.push(cmd_buf.line)
 	}
 	cmd_buf.set_error(cmd_buf.code.str().replace("__", cmd_buf.line))
