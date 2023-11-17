@@ -75,7 +75,7 @@ pub fn (splash SplashScreen) draw(mut ctx tui.Context) {
 }
 
 fn has_colouring_directives(line string) bool {
-	for i, c in line.split("") {
+	for c in line.split("") {
 		if c == "g" || c == "p" { return true }
 	}
 	return false
