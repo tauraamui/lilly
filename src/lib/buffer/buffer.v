@@ -2,6 +2,7 @@ module buffer
 
 import history { History }
 import lib.diff { Op }
+import os
 
 pub struct Buffer {
 pub:
@@ -15,7 +16,7 @@ mut:
 }
 
 pub fn (mut buffer Buffer) load_from_path() ! {
-	return error("unable to open file ${buffer.file_path}")
+	buffer.lines = os.read_lines(buffer.file_path) or { return error("unable to open file ${buffer.file_path} ${err}") }
 }
 
 pub fn (mut buffer Buffer) undo() {

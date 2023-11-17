@@ -88,16 +88,8 @@ fn main() {
 		use_alternate_buffer: true
     )
 
-	/*
-	clip := clipboard.new()
-	app.editor.views << app.new_view(clip)
-	app.update_view()
-	*/
-
-	path := os.args[1] or { print_and_exit("missing file path..."); "" }
-	app.editor = open_editor(path) or { print_and_exit("${err}"); &Editor{} }
-	// if !os.is_dir(path) { print_and_exit("given path ${path} is not a directory") }
-	// app.view.open_file(path)
+	path := os.args[1] or { "" }
+	app.editor = open_editor(clipboard.new(), path) or { print_and_exit("${err}"); &Editor{} }
 
     app.tui.run()!
 }

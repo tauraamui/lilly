@@ -12,9 +12,13 @@ mut:
 	width int
 }
 
+const leader_key = tui.KeyCode.semicolon
+
 struct SplashScreen {
 mut:
-	logo Logo
+	logo        Logo
+	leader_mode bool
+	f_count     int
 }
 
 pub fn new_splash() Viewable {
@@ -71,7 +75,6 @@ pub fn (splash SplashScreen) draw(mut ctx tui.Context) {
 
 	copyright_footer := "the lilly editor authors ©"
 	ctx.draw_text(offset_x+(ctx.window_width / 2) - (copyright_footer.len / 2), int(math.floor(offset_y)), copyright_footer)
-	ctx.hide_cursor()
 }
 
 fn has_colouring_directives(line string) bool {
@@ -81,9 +84,11 @@ fn has_colouring_directives(line string) bool {
 	return false
 }
 
-pub fn (splash SplashScreen) on_key_down(e &tui.Event, mut root Root) {
+pub fn (mut splash SplashScreen) on_key_down(e &tui.Event, mut root Root) {
 	match e.code {
-		.escape { root.quit() }
+		.escape    { if splash.leader_mode { splash.leader_mode = false; return } root.quit() }
+		leader_key { splash.leader_mode = true }
+		.f         { if splash.leader_mode { splash.f_count += 1 } if splash.f_count == 2 { splash.leader_mode = false; root.open_file_finder() } }
 		else { }
 	}
 }
