@@ -431,6 +431,7 @@ fn (mut view View) open_file(path string) {
 
 interface Viewable {
 	draw(mut tui.Context)
+mut:
 	on_key_down(&tui.Event, mut Root)
 }
 
