@@ -431,7 +431,7 @@ fn (mut view View) open_file(path string) {
 
 interface Viewable {
 	draw(mut tui.Context)
-	on_key_down(&tui.Event)
+	on_key_down(&tui.Event, mut Root)
 }
 
 fn (mut view View) draw(mut ctx tui.Context) {
@@ -537,7 +537,8 @@ struct LineSegment {
 fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string, within_selection bool) {
 	mut linex := line.replace("\t", " ".repeat(4))
 	mut max_width := view.width
-	if max_width > linex.runes().len { max_width = linex.runes().len }
+	visible_len := utf8_str_visible_length(linex)
+	if max_width > visible_len { max_width = visible_len }
 
 	linex = linex[..max_width]
 
@@ -773,7 +774,7 @@ fn paint_text_on_background(mut ctx tui.Context, x int, y int, bg_color Color, f
 	ctx.draw_text(x, y, text)
 }
 
-fn (mut view View) on_key_down(e &tui.Event) {
+fn (mut view View) on_key_down(e &tui.Event, root Root) {
 	match view.mode {
 		.normal {
 			match e.code {

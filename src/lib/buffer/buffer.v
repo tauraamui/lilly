@@ -4,12 +4,18 @@ import history { History }
 import lib.diff { Op }
 
 pub struct Buffer {
+pub:
+	file_path string
 pub mut:
 	lines     []string
 mut:
 	lines_cpy                 []string
 	history                   History
 	snapshotted_at_least_once bool
+}
+
+pub fn (mut buffer Buffer) load_from_path() ! {
+	return error("unable to open file ${buffer.file_path}")
 }
 
 pub fn (mut buffer Buffer) undo() {

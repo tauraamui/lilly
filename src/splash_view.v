@@ -17,7 +17,7 @@ mut:
 	logo Logo
 }
 
-pub fn new_splash() SplashScreen {
+pub fn new_splash() Viewable {
 	mut splash := SplashScreen{
 		logo: Logo{
 			data: logo_contents.to_string().split_into_lines()
@@ -81,9 +81,9 @@ fn has_colouring_directives(line string) bool {
 	return false
 }
 
-pub fn (splash SplashScreen) on_key_down(e &tui.Event) {
+pub fn (splash SplashScreen) on_key_down(e &tui.Event, mut root Root) {
 	match e.code {
-		.escape { exit(0) }
+		.escape { root.quit() }
 		else { }
 	}
 }

@@ -16,11 +16,18 @@ module main
 
 import os
 import term.ui as tui
+import lib.buffer
 
 struct Editor {
 mut:
-	view &Viewable = unsafe { nil }
-	views []Viewable
+	view    &Viewable = unsafe { nil }
+	views   []Viewable
+	buffers []buffer.Buffer
+}
+
+interface Root {
+mut:
+	quit()
 }
 
 pub fn open_editor(workspace_root_dir string) !&Editor {
@@ -31,7 +38,10 @@ pub fn open_editor(workspace_root_dir string) !&Editor {
 	return &editor
 }
 
-fn (mut editor Editor) open_file(path string) {
+fn (mut editor Editor) open_file(path string) ! {
+	mut buff := buffer.Buffer{ file_path: path }
+	buff.load_from_path() or { return err }
+	editor.buffers << buff
 }
 
 pub fn (mut editor Editor) draw(mut ctx tui.Context) {
@@ -39,6 +49,11 @@ pub fn (mut editor Editor) draw(mut ctx tui.Context) {
 }
 
 pub fn (mut editor Editor) on_key_down(e &tui.Event) {
-	editor.view.on_key_down(e)
+	editor.view.on_key_down(e, mut editor)
+}
+
+pub fn (mut editor Editor) quit() {
+	editor.view = unsafe { nil }
+	exit(0)
 }
 
