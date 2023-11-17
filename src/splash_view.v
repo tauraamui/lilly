@@ -75,7 +75,6 @@ pub fn (splash SplashScreen) draw(mut ctx tui.Context) {
 
 	copyright_footer := "the lilly editor authors ©"
 	ctx.draw_text(offset_x+(ctx.window_width / 2) - (copyright_footer.len / 2), int(math.floor(offset_y)), copyright_footer)
-	ctx.hide_cursor()
 }
 
 fn has_colouring_directives(line string) bool {

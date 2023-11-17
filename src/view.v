@@ -22,7 +22,7 @@ import strconv
 import regex
 import lib.clipboard
 import arrays
-import lib { Buffer }
+import lib.buffer
 
 struct Cursor {
 mut:
@@ -102,7 +102,7 @@ mut:
 	path                      string
 	config                    Config
 	mode                      Mode
-	buffer                    Buffer
+	buffer                    buffer.Buffer
 	cursor                    Cursor
 	cmd_buf                   CmdBuffer
 	search                    Search
@@ -395,6 +395,15 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 	cmd_buf.code = .blank
 }
 
+fn open_view(_clipboard clipboard.Clipboard, buff &buffer.Buffer) Viewable {
+	mut res := View{ log: unsafe { nil }, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
+	res.load_syntaxes()
+	res.load_config()
+	res.set_current_syntax_idx(".v")
+	res.cursor.selection_start = Pos{ -1, -1 }
+	return res
+}
+
 /*
 fn (app &App) new_view(_clipboard clipboard.Clipboard) Viewable {
 	mut res := View{ log: app.log, mode: .normal, show_whitespace: false, clipboard: _clipboard }
@@ -406,6 +415,7 @@ fn (app &App) new_view(_clipboard clipboard.Clipboard) Viewable {
 }
 */
 
+/*
 fn (mut view View) open_file(path string) {
 	view.path = path
 	view.buffer.lines = os.read_lines(path) or { []string{} }
@@ -428,10 +438,11 @@ fn (mut view View) open_file(path string) {
 		view.buffer.lines << ''
 	}
 }
+*/
 
 interface Viewable {
-	draw(mut tui.Context)
 mut:
+	draw(mut tui.Context)
 	on_key_down(&tui.Event, mut Root)
 }
 
@@ -775,7 +786,7 @@ fn paint_text_on_background(mut ctx tui.Context, x int, y int, bg_color Color, f
 	ctx.draw_text(x, y, text)
 }
 
-fn (mut view View) on_key_down(e &tui.Event, root Root) {
+fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 	match view.mode {
 		.normal {
 			match e.code {

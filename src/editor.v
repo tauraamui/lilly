@@ -17,10 +17,12 @@ module main
 import os
 import term.ui as tui
 import lib.buffer
+import lib.clipboard
 import lib.workspace
 
 struct Editor {
 mut:
+	clipboard              clipboard.Clipboard
 	view                   &Viewable = unsafe { nil }
 	views                  []Viewable
 	buffers                []buffer.Buffer
@@ -32,11 +34,12 @@ mut:
 interface Root {
 mut:
 	open_file_finder()
+	open_file(path string) !
 	close_file_finder()
 	quit()
 }
 
-pub fn open_editor(workspace_root_dir string) !&Editor {
+pub fn open_editor(_clipboard clipboard.Clipboard, workspace_root_dir string) !&Editor {
 	mut editor := Editor{}
 	editor.workspace = workspace.open_workspace(
 			workspace_root_dir,
@@ -50,9 +53,12 @@ pub fn open_editor(workspace_root_dir string) !&Editor {
 }
 
 fn (mut editor Editor) open_file(path string) ! {
+	defer { editor.file_finder_model_open = false }
 	mut buff := buffer.Buffer{ file_path: path }
 	buff.load_from_path() or { return err }
 	editor.buffers << buff
+	editor.views << open_view(editor.clipboard, &editor.buffers[editor.buffers.len-1])
+	editor.view = &editor.views[editor.views.len-1]
 }
 
 fn (mut editor Editor) open_file_finder() {

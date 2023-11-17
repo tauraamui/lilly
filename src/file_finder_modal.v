@@ -37,6 +37,8 @@ fn (mut file_finder_modal FileFinderModal) on_key_down(e &tui.Event, mut root Ro
 }
 
 fn (file_finder_modal FileFinderModal) file_selected(mut root Root) {
+	root.open_file(file_finder_modal.file_paths
+		.filter(fn (it string) bool { return !it.starts_with("./.git") })[file_finder_modal.current_selection]) or { panic("${err}") }
 }
 
 fn (mut file_finder_modal FileFinderModal) move_selection_down(by int) {

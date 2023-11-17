@@ -89,7 +89,7 @@ fn main() {
     )
 
 	path := os.args[1] or { "" }
-	app.editor = open_editor(path) or { print_and_exit("${err}"); &Editor{} }
+	app.editor = open_editor(clipboard.new(), path) or { print_and_exit("${err}"); &Editor{} }
 
     app.tui.run()!
 }
