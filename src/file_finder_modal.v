@@ -18,7 +18,9 @@ import term.ui as tui
 
 struct FileFinderModal {
 pub:
-	file_paths              []string
+	file_paths []string
+	max_height int
+	from       int
 mut:
 	current_selection int
 }
@@ -26,6 +28,7 @@ mut:
 fn (file_finder_modal FileFinderModal) draw(mut ctx tui.Context) {
 	defer { ctx.reset_bg_color() }
 	ctx.set_color(r: 245, g: 245, b: 245)
+	ctx.set_bg_color(r: 15, g: 15, b: 15)
 	ctx.draw_text(1, 1, "WORKSPACE FILES")
 	for i, l in file_finder_modal.file_paths.filter(fn (it string) bool {
 		return !it.starts_with("./.git")
