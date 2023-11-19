@@ -25,19 +25,20 @@ mut:
 
 fn (file_finder_modal FileFinderModal) draw(mut ctx tui.Context) {
 	defer { ctx.reset_bg_color() }
-	ctx.clear()
 	ctx.set_color(r: 245, g: 245, b: 245)
 	ctx.draw_text(1, 1, "WORKSPACE FILES")
 	for i, l in file_finder_modal.file_paths.filter(fn (it string) bool {
 		return !it.starts_with("./.git")
 	}) {
 		ctx.reset_bg_color()
+		ctx.set_bg_color(r: 15, g: 15, b: 15)
 		if i == file_finder_modal.current_selection {
 			ctx.set_bg_color(r: 53, g: 53, b: 53)
 		}
 		ctx.draw_rect(1, i+2, ctx.window_width, i+2)
 		ctx.draw_text(1, i+2, l)
 	}
+	ctx.set_cursor_position(1, file_finder_modal.current_selection + 2)
 }
 
 fn (mut file_finder_modal FileFinderModal) on_key_down(e &tui.Event, mut root Root) {

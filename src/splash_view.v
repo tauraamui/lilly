@@ -102,7 +102,8 @@ pub fn (mut splash SplashScreen) on_key_down(e &tui.Event, mut root Root) {
 	match e.code {
 		.escape    { if splash.leader_mode { splash.leader_mode = false; return } root.quit() }
 		leader_key { splash.leader_mode = true }
-		.f         { if splash.leader_mode { splash.f_count += 1 } if splash.f_count == 2 { splash.leader_mode = false; root.open_file_finder() } }
+		// TODO(tauraamui): move to f() method, this line is a too complicated/long statement now
+		.f         { if splash.leader_mode { splash.f_count += 1 } if splash.f_count == 2 { splash.leader_mode = false; splash.f_count = 0; root.open_file_finder() } }
 		else { }
 	}
 }
