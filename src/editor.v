@@ -41,6 +41,7 @@ mut:
 
 pub fn open_editor(_clipboard clipboard.Clipboard, workspace_root_dir string) !&Editor {
 	mut editor := Editor{}
+	editor.clipboard = _clipboard
 	editor.workspace = workspace.open_workspace(
 			workspace_root_dir,
 			os.is_dir,
