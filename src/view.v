@@ -1164,7 +1164,9 @@ fn (mut view View) visual_d(overwrite_y_lines bool) {
 	mut start := view.cursor.selection_start_y()
 	mut end := view.cursor.selection_end_y()
 
+	/*
 	view.copy_lines_into_clipboard(start, end)
+	*/
 	before := view.buffer.lines[..start]
 	after := view.buffer.lines[end+1..]
 
