@@ -50,8 +50,8 @@ fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx tui.Cont
 fn (mut file_finder_modal FileFinderModal) on_key_down(e &tui.Event, mut root Root) {
 	match e.code {
 		.escape { root.close_file_finder() }
-		.j      { file_finder_modal.move_selection_down(1) }
-		.k      { file_finder_modal.move_selection_up(1) }
+		.j      { file_finder_modal.move_selection_down() }
+		.k      { file_finder_modal.move_selection_up() }
 		.enter  { file_finder_modal.file_selected(mut root) }
 		else { }
 	}
@@ -68,8 +68,8 @@ fn (mut file_finder_modal FileFinderModal) resolve_to() int {
 	return to
 }
 
-fn (mut file_finder_modal FileFinderModal) move_selection_down(by int) {
-	file_finder_modal.current_selection += by
+fn (mut file_finder_modal FileFinderModal) move_selection_down() {
+	file_finder_modal.current_selection += 1
 	to := file_finder_modal.resolve_to()
 	if file_finder_modal.current_selection >= to {
 		if file_finder_modal.file_paths.len - to > 0 {
@@ -81,5 +81,11 @@ fn (mut file_finder_modal FileFinderModal) move_selection_down(by int) {
 	}
 }
 
-fn (mut file_finder_modal FileFinderModal) move_selection_up(by int) {
+fn (mut file_finder_modal FileFinderModal) move_selection_up() {
+	file_finder_modal.current_selection -= 1
+	if file_finder_modal.current_selection < file_finder_modal.from {
+		file_finder_modal.from -= 1
+	}
+	if file_finder_modal.from < 0 { file_finder_modal.from = 0 }
+	if file_finder_modal.current_selection < 0 { file_finder_modal.current_selection = 0 }
 }
