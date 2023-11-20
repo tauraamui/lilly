@@ -34,7 +34,7 @@ fn (mut file_finder_modal FileFinderModal) draw(mut ctx tui.Context) {
 	ctx.draw_text(1, y_offset, "=== FILE BROWSER ===")
 	y_offset += 1
 	file_finder_modal.draw_scrollable_list(mut ctx, y_offset, file_finder_modal.file_paths)
-	ctx.set_cursor_position(1, y_offset + file_finder_modal.current_selection)
+	ctx.set_cursor_position(1, y_offset + file_finder_modal.current_selection - file_finder_modal.from)
 }
 
 fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx tui.Context, y_offset int, list []string) {
@@ -63,18 +63,23 @@ fn (file_finder_modal FileFinderModal) file_selected(mut root Root) {
 }
 
 fn (mut file_finder_modal FileFinderModal) resolve_to() int {
-	mut to := file_finder_modal.file_paths.len
-	if to > max_height { to = max_height }
+	mut to := file_finder_modal.from + max_height
+	if to > file_finder_modal.file_paths.len { to = file_finder_modal.file_paths.len }
 	return to
 }
 
 fn (mut file_finder_modal FileFinderModal) move_selection_down(by int) {
-	if file_finder_modal.current_selection + 1 < file_finder_modal.resolve_to() {
-		file_finder_modal.current_selection += 1
+	file_finder_modal.current_selection += by
+	to := file_finder_modal.resolve_to()
+	if file_finder_modal.current_selection >= to {
+		if file_finder_modal.file_paths.len - to > 0 {
+			file_finder_modal.from += 1
+		}
+	}
+	if file_finder_modal.current_selection >= file_finder_modal.file_paths.len {
+		file_finder_modal.current_selection = file_finder_modal.file_paths.len - 1
 	}
 }
 
 fn (mut file_finder_modal FileFinderModal) move_selection_up(by int) {
-	file_finder_modal.current_selection -= 1
-	if file_finder_modal.current_selection < file_finder_modal.from - 1 { file_finder_modal.current_selection = file_finder_modal.from}
 }
