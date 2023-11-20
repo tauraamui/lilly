@@ -17,11 +17,11 @@ pub fn open_workspace(
 ) !Workspace {
 	path := os.dir(root_path)
 	if !is_dir(path) { return error("${path} is not a directory") }
-	// return error("workspace not implemented yet")
 	wrkspace := Workspace{}
 	mut files_ref := &wrkspace.files
-	dir_walker(path, fn [mut files_ref] (file_path string) {
+	dir_walker(path, fn [mut files_ref, is_dir] (file_path string) {
 		if file_path.starts_with("./.git") { return }
+		if is_dir(file_path) { return }
 		files_ref << file_path
 	})
 	return wrkspace
