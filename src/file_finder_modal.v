@@ -21,44 +21,29 @@ const max_height = 20
 struct FileFinderModal {
 pub:
 	file_paths []string
-	from       int
 mut:
 	current_selection int
+	from       int
 }
 
 fn (mut file_finder_modal FileFinderModal) draw(mut ctx tui.Context) {
 	defer { ctx.reset_bg_color() }
 	ctx.set_color(r: 245, g: 245, b: 245)
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
-	ctx.draw_text(1, 1, "=== FILE BROWSER ===")
-	/*
-	for i, l in file_finder_modal.file_paths {
-		ctx.reset_bg_color()
-		ctx.set_bg_color(r: 15, g: 15, b: 15)
-		if i == file_finder_modal.current_selection {
-			ctx.set_bg_color(r: 53, g: 53, b: 53)
-		}
-		ctx.draw_rect(1, i+2, ctx.window_width, i+2)
-		ctx.draw_text(1, i+2, l)
-	}
-	*/
-	file_finder_modal.draw_scrollable_list(mut ctx, 2, file_finder_modal.file_paths)
-	ctx.set_cursor_position(1, file_finder_modal.current_selection + 2)
+	mut y_offset := 1
+	ctx.draw_text(1, y_offset, "=== FILE BROWSER ===")
+	y_offset += 1
+	file_finder_modal.draw_scrollable_list(mut ctx, y_offset, file_finder_modal.file_paths)
+	ctx.set_cursor_position(1, y_offset + file_finder_modal.current_selection)
 }
 
 fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx tui.Context, y_offset int, list []string) {
 	ctx.reset_bg_color()
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
-	ctx.draw_rect(1, y_offset, ctx.window_width, y_offset+max_height)
-	for i := 0; i < list.len; i++ {
-		if i > max_height { continue }
-		if i == file_finder_modal.current_selection {
-			ctx.set_bg_color(r: 53, g: 53, b: 53)
-			ctx.draw_text(1, y_offset+i, list[i])
-			ctx.reset_bg_color()
-			continue
-		}
-		ctx.draw_text(1, y_offset+i, list[i])
+	ctx.draw_rect(1, y_offset, ctx.window_width, y_offset+max_height - 1)
+	from, to := file_finder_modal.resolve_from_and_to()
+	for i := from; i < to; i++ {
+		ctx.draw_text(1, y_offset+(i - from), list[i])
 	}
 }
 
@@ -77,12 +62,20 @@ fn (file_finder_modal FileFinderModal) file_selected(mut root Root) {
 		.filter(fn (it string) bool { return !it.starts_with("./.git") })[file_finder_modal.current_selection]) or { panic("${err}") }
 }
 
+fn (mut file_finder_modal FileFinderModal) resolve_from_and_to() (int, int) {
+	mut to := file_finder_modal.file_paths.len
+	if to > max_height { to = max_height }
+	return file_finder_modal.from, to
+}
+
 fn (mut file_finder_modal FileFinderModal) move_selection_down(by int) {
 	file_finder_modal.current_selection += 1
-	if file_finder_modal.current_selection > file_finder_modal.file_paths.len - 1 { file_finder_modal.current_selection = 0 }
+	_, to := file_finder_modal.resolve_from_and_to()
+	if file_finder_modal.current_selection > to - 1 { file_finder_modal.current_selection = to - 1}
 }
 
 fn (mut file_finder_modal FileFinderModal) move_selection_up(by int) {
 	file_finder_modal.current_selection -= 1
-	if file_finder_modal.current_selection < 0 { file_finder_modal.current_selection = file_finder_modal.file_paths.len - 1 }
+	from, _ := file_finder_modal.resolve_from_and_to()
+	if file_finder_modal.current_selection < from - 1 { file_finder_modal.current_selection = from}
 }
