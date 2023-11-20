@@ -41,9 +41,9 @@ fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx tui.Cont
 	ctx.reset_bg_color()
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
 	ctx.draw_rect(1, y_offset, ctx.window_width, y_offset+max_height - 1)
-	from, to := file_finder_modal.resolve_from_and_to()
-	for i := from; i < to; i++ {
-		ctx.draw_text(1, y_offset+(i - from), list[i])
+	to := file_finder_modal.resolve_to()
+	for i := file_finder_modal.from; i < to; i++ {
+		ctx.draw_text(1, y_offset+(i - file_finder_modal.from), list[i])
 	}
 }
 
@@ -62,20 +62,19 @@ fn (file_finder_modal FileFinderModal) file_selected(mut root Root) {
 		.filter(fn (it string) bool { return !it.starts_with("./.git") })[file_finder_modal.current_selection]) or { panic("${err}") }
 }
 
-fn (mut file_finder_modal FileFinderModal) resolve_from_and_to() (int, int) {
+fn (mut file_finder_modal FileFinderModal) resolve_to() int {
 	mut to := file_finder_modal.file_paths.len
 	if to > max_height { to = max_height }
-	return file_finder_modal.from, to
+	return to
 }
 
 fn (mut file_finder_modal FileFinderModal) move_selection_down(by int) {
-	file_finder_modal.current_selection += 1
-	_, to := file_finder_modal.resolve_from_and_to()
-	if file_finder_modal.current_selection > to - 1 { file_finder_modal.current_selection = to - 1}
+	if file_finder_modal.current_selection + 1 < file_finder_modal.resolve_to() {
+		file_finder_modal.current_selection += 1
+	}
 }
 
 fn (mut file_finder_modal FileFinderModal) move_selection_up(by int) {
 	file_finder_modal.current_selection -= 1
-	from, _ := file_finder_modal.resolve_from_and_to()
-	if file_finder_modal.current_selection < from - 1 { file_finder_modal.current_selection = from}
+	if file_finder_modal.current_selection < file_finder_modal.from - 1 { file_finder_modal.current_selection = file_finder_modal.from}
 }
