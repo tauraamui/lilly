@@ -59,6 +59,8 @@ fn (mut file_finder_modal FileFinderModal) draw(mut ctx tui.Context) {
 	y_offset += 1
 	ctx.set_cursor_position(1, y_offset + file_finder_modal.current_selection - file_finder_modal.from)
 	y_offset += file_finder_modal.draw_scrollable_list(mut ctx, y_offset, file_finder_modal.resolve_file_paths())
+	ctx.set_bg_color(r: 180, g: 90, b: 30)
+	ctx.draw_rect(1, y_offset, ctx.window_width, y_offset)
 }
 
 fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx tui.Context, y_offset int, list []string) int {
@@ -74,12 +76,15 @@ fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx tui.Cont
 		}
 		ctx.draw_text(1, y_offset+(i - file_finder_modal.from), list[i])
 	}
-	return y_offset + (max_height - 1)
+	return y_offset + (max_height - 2)
 }
 
 fn (mut file_finder_modal FileFinderModal) on_key_down(e &tui.Event, mut root Root) {
 	match e.code {
 		.escape    { root.close_file_finder() }
+		48...57, 97...122 {
+			file_finder_modal.search.put_char(e.ascii.ascii_str())
+		}
 		.down      { file_finder_modal.move_selection_down() }
 		.up        { file_finder_modal.move_selection_up() }
 		.enter     { file_finder_modal.file_selected(mut root) }
@@ -96,7 +101,7 @@ fn (file_finder_modal FileFinderModal) file_selected(mut root Root) {
 
 fn (file_finder_modal FileFinderModal) resolve_file_paths() []string {
 	if file_finder_modal.search.query.len == 0 { return file_finder_modal.file_paths }
-	mut re := regex.regex_opt(file_finder_modal.search.query) or { return [] }
+	mut re := regex.regex_opt(file_finder_modal.search.query) or { panic("${err}") }
 	return file_finder_modal.file_paths.filter(fn [mut re] (it string) bool {
 		return re.find_all(it).len > 0
 	})
