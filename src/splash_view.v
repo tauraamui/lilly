@@ -16,7 +16,6 @@ module main
 
 import term.ui as tui
 import math
-import strings
 import term { strikethrough }
 
 const logo_contents = $embed_file("./src/splash-logo.txt")

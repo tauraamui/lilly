@@ -26,8 +26,8 @@ mut:
 	view                   &Viewable = unsafe { nil }
 	views                  []Viewable
 	buffers                []buffer.Buffer
-	file_finder_model_open bool
-	file_finder_model      Viewable
+	file_finder_modal_open bool
+	file_finder_modal      Viewable
 	workspace              workspace.Workspace
 }
 
@@ -40,8 +40,7 @@ mut:
 }
 
 pub fn open_editor(_clipboard clipboard.Clipboard, workspace_root_dir string) !&Editor {
-	mut editor := Editor{}
-	editor.clipboard = _clipboard
+	mut editor := Editor{ clipboard: _clipboard, file_finder_modal: unsafe { nil } }
 	editor.workspace = workspace.open_workspace(
 			workspace_root_dir,
 			os.is_dir,
@@ -55,7 +54,7 @@ pub fn open_editor(_clipboard clipboard.Clipboard, workspace_root_dir string) !&
 }
 
 fn (mut editor Editor) open_file(path string) ! {
-	defer { editor.file_finder_model_open = false }
+	defer { editor.file_finder_modal_open = false }
 	mut buff := buffer.Buffer{ file_path: path }
 	buff.load_from_path() or { return err }
 	editor.buffers << buff
@@ -64,26 +63,26 @@ fn (mut editor Editor) open_file(path string) ! {
 }
 
 fn (mut editor Editor) open_file_finder() {
-	editor.file_finder_model_open = true
-	editor.file_finder_model = FileFinderModal{
+	editor.file_finder_modal_open = true
+	editor.file_finder_modal = FileFinderModal{
 		file_paths: editor.workspace.files()
 	}
 }
 
 fn (mut editor Editor) close_file_finder() {
-	editor.file_finder_model_open = false
+	editor.file_finder_modal_open = false
 }
 
 pub fn (mut editor Editor) draw(mut ctx tui.Context) {
 	editor.view.draw(mut ctx)
-	if editor.file_finder_model_open {
-		editor.file_finder_model.draw(mut ctx)
+	if editor.file_finder_modal_open {
+		editor.file_finder_modal.draw(mut ctx)
 	}
 }
 
 pub fn (mut editor Editor) on_key_down(e &tui.Event) {
-	if editor.file_finder_model_open {
-		editor.file_finder_model.on_key_down(e, mut editor)
+	if editor.file_finder_modal_open {
+		editor.file_finder_modal.on_key_down(e, mut editor)
 		return
 	}
 	editor.view.on_key_down(e, mut editor)
