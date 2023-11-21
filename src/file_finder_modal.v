@@ -41,6 +41,15 @@ fn (mut file_search FileSearch) put_char(c string) {
 	file_search.cursor_x += 1
 }
 
+fn (mut file_search FileSearch) backspace() {
+	if file_search.cursor_x == 1 { return }
+	first := file_search.query[..file_search.cursor_x-1]
+	last := file_search.query[file_search.cursor_x..]
+	file_search.query = "${first}${last}"
+	file_search.cursor_x -= 1
+	if file_search.cursor_x < 1 { file_search.cursor_x = 1 }
+}
+
 fn (mut file_finder_modal FileFinderModal) draw(mut ctx tui.Context) {
 	defer { ctx.reset_bg_color() }
 	ctx.set_color(r: 245, g: 245, b: 245)
@@ -64,10 +73,11 @@ fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx tui.Cont
 
 fn (mut file_finder_modal FileFinderModal) on_key_down(e &tui.Event, mut root Root) {
 	match e.code {
-		.escape { root.close_file_finder() }
-		.down   { file_finder_modal.move_selection_down() }
-		.up     { file_finder_modal.move_selection_up() }
-		.enter  { file_finder_modal.file_selected(mut root) }
+		.escape    { root.close_file_finder() }
+		.down      { file_finder_modal.move_selection_down() }
+		.up        { file_finder_modal.move_selection_up() }
+		.enter     { file_finder_modal.file_selected(mut root) }
+		.backspace { file_finder_modal.search.backspace() }
 		else { file_finder_modal.search.put_char(e.ascii.ascii_str()) }
 	}
 }
@@ -108,7 +118,6 @@ fn (mut file_finder_modal FileFinderModal) move_selection_down() {
 }
 
 fn (mut file_finder_modal FileFinderModal) move_selection_up() {
-	file_paths := file_finder_modal.resolve_file_paths()
 	file_finder_modal.current_selection -= 1
 	if file_finder_modal.current_selection < file_finder_modal.from {
 		file_finder_modal.from -= 1
