@@ -22,6 +22,7 @@ fn test_buffer_update_undo_history_with_no_snapshot() {
 	assert buff.lines == ["1. first line which already exists"]
 }
 
+// TODO(tauraamui): these tests will be re-worked once the undo system has been changed/re-worked
 fn test_buffer_undo_some_line_insertions() {
 	mut buff := Buffer{
 		lines: ["1. first line which already exists"]
