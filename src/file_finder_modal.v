@@ -52,6 +52,8 @@ fn (mut file_finder_modal FileFinderModal) on_key_down(e &tui.Event, mut root Ro
 		.escape { root.close_file_finder() }
 		.j      { file_finder_modal.move_selection_down() }
 		.k      { file_finder_modal.move_selection_up() }
+		.down   { file_finder_modal.move_selection_down() }
+		.up     { file_finder_modal.move_selection_up() }
 		.enter  { file_finder_modal.file_selected(mut root) }
 		else { }
 	}
