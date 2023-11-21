@@ -17,6 +17,7 @@ module main
 import term.ui as tui
 import math
 import strings
+import term { strikethrough }
 
 const logo_contents = $embed_file("./src/splash-logo.txt")
 
@@ -75,6 +76,9 @@ pub fn (splash SplashScreen) draw(mut ctx tui.Context) {
 
 	basic_command_help := [
 		" Find File                   <leader>ff",
+	]
+
+	disabled_command_help := [
 		" Find Word                   <leader>fg",
 		" Recent Files                <leader>fo",
 		" File Browser                <leader>fv",
@@ -84,6 +88,11 @@ pub fn (splash SplashScreen) draw(mut ctx tui.Context) {
 
 	for h in basic_command_help {
 		ctx.draw_text(offset_x+(ctx.window_width / 2) - (h.len / 2), int(math.floor(offset_y)), h)
+		offset_y += 2
+	}
+
+	for dh in disabled_command_help {
+		ctx.draw_text(offset_x+(ctx.window_width / 2) - (dh.len / 2), int(math.floor(offset_y)), strikethrough(dh))
 		offset_y += 2
 	}
 
