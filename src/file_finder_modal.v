@@ -23,7 +23,21 @@ pub:
 	file_paths []string
 mut:
 	current_selection int
-	from       int
+	from              int
+	search            FileSearch
+}
+
+struct FileSearch {
+mut:
+	query    string
+	cursor_x int
+}
+
+fn (mut file_search FileSearch) put_char(c string) {
+	first := file_search.query[..file_search.cursor_x]
+	last := file_search.query[file_search.cursor_x..]
+	file_search.query = "${first}${c}${last}"
+	file_search.cursor_x += 1
 }
 
 fn (mut file_finder_modal FileFinderModal) draw(mut ctx tui.Context) {
@@ -53,7 +67,7 @@ fn (mut file_finder_modal FileFinderModal) on_key_down(e &tui.Event, mut root Ro
 		.down   { file_finder_modal.move_selection_down() }
 		.up     { file_finder_modal.move_selection_up() }
 		.enter  { file_finder_modal.file_selected(mut root) }
-		else { }
+		else { file_finder_modal.search.put_char(e.ascii.ascii_str()) }
 	}
 }
 
