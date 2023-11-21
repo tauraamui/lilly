@@ -846,7 +846,8 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.greater_than { view.visual_indent() }
 				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.visual_d(true) } }
 				.p { view.visual_p() }
-				.u { if e.modifiers == .ctrl { view.ctrl_u() } }
+				// NOTE(tauraamui): undo bind is now disabled until the feature is re-done
+				// .u { if e.modifiers == .ctrl { view.ctrl_u() } }
 				.caret { view.hat() }
 				.dollar { view.dollar() }
 				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
