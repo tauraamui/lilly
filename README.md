@@ -1,5 +1,6 @@
 <div align="center">
   <img src="docs/lilly-banner.png" width="445.4" alt="Lilly">
+  <img src="https://github.com/tauraamui/lilly/assets/3159648/270286b3-67a6-48ca-9b9c-4566f605ec66" width="100%" height="25px">
 </div>
 
 ## A VIM-Like editor for your terminal (<a href="https://discord.gg/N4UG2TfDfd">chat on Discord</a>)
