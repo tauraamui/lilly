@@ -15,6 +15,7 @@
 module main
 
 import term.ui as tui
+import regex
 
 const max_height = 20
 
@@ -47,7 +48,7 @@ fn (mut file_finder_modal FileFinderModal) draw(mut ctx tui.Context) {
 	mut y_offset := 1
 	ctx.draw_text(1, y_offset, "=== FILE BROWSER ===")
 	y_offset += 1
-	file_finder_modal.draw_scrollable_list(mut ctx, y_offset, file_finder_modal.file_paths)
+	file_finder_modal.draw_scrollable_list(mut ctx, y_offset, file_finder_modal.resolve_file_paths())
 	ctx.set_cursor_position(1, y_offset + file_finder_modal.current_selection - file_finder_modal.from)
 }
 
@@ -72,30 +73,42 @@ fn (mut file_finder_modal FileFinderModal) on_key_down(e &tui.Event, mut root Ro
 }
 
 fn (file_finder_modal FileFinderModal) file_selected(mut root Root) {
-	root.open_file(file_finder_modal.file_paths
+	file_paths := file_finder_modal.resolve_file_paths()
+	root.open_file(file_paths
 		.filter(fn (it string) bool { return !it.starts_with("./.git") })[file_finder_modal.current_selection]) or { panic("${err}") }
 }
 
+fn (file_finder_modal FileFinderModal) resolve_file_paths() []string {
+	if file_finder_modal.search.query.len == 0 { return file_finder_modal.file_paths }
+	mut re := regex.regex_opt(file_finder_modal.search.query) or { return [] }
+	return file_finder_modal.file_paths.filter(fn [mut re] (it string) bool {
+		return re.find_all(it).len > 0
+	})
+}
+
 fn (mut file_finder_modal FileFinderModal) resolve_to() int {
+	file_paths := file_finder_modal.resolve_file_paths()
 	mut to := file_finder_modal.from + max_height
-	if to > file_finder_modal.file_paths.len { to = file_finder_modal.file_paths.len }
+	if to > file_paths.len { to = file_paths.len }
 	return to
 }
 
 fn (mut file_finder_modal FileFinderModal) move_selection_down() {
+	file_paths := file_finder_modal.resolve_file_paths()
 	file_finder_modal.current_selection += 1
 	to := file_finder_modal.resolve_to()
 	if file_finder_modal.current_selection >= to {
-		if file_finder_modal.file_paths.len - to > 0 {
+		if file_paths.len - to > 0 {
 			file_finder_modal.from += 1
 		}
 	}
-	if file_finder_modal.current_selection >= file_finder_modal.file_paths.len {
-		file_finder_modal.current_selection = file_finder_modal.file_paths.len - 1
+	if file_finder_modal.current_selection >= file_paths.len {
+		file_finder_modal.current_selection = file_paths.len - 1
 	}
 }
 
 fn (mut file_finder_modal FileFinderModal) move_selection_up() {
+	file_paths := file_finder_modal.resolve_file_paths()
 	file_finder_modal.current_selection -= 1
 	if file_finder_modal.current_selection < file_finder_modal.from {
 		file_finder_modal.from -= 1
