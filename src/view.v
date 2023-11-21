@@ -20,6 +20,9 @@ import log
 import datatypes
 import strconv
 import regex
+import lib.clipboard
+import arrays
+import lib.buffer
 
 struct Cursor {
 mut:
@@ -99,7 +102,7 @@ mut:
 	path                      string
 	config                    Config
 	mode                      Mode
-	buffer                    Buffer
+	buffer                    buffer.Buffer
 	cursor                    Cursor
 	cmd_buf                   CmdBuffer
 	search                    Search
@@ -116,7 +119,7 @@ mut:
 	current_syntax_idx        int
 	is_multiline_comment      bool
 	d_count                   int
-	y_lines                   []string
+	clipboard                 clipboard.Clipboard
 }
 
 struct FindCursor {
@@ -240,11 +243,6 @@ struct Find {
 mut:
 	start int
 	end   int
-}
-
-struct Buffer {
-mut:
-	lines []string
 }
 
 enum CmdCode as u8 {
@@ -397,8 +395,9 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 	cmd_buf.code = .blank
 }
 
-fn (app &App) new_view() View {
-	mut res := View{ log: app.log, mode: .normal, show_whitespace: false }
+fn open_view(_clipboard clipboard.Clipboard, buff &buffer.Buffer) Viewable {
+	mut res := View{ log: unsafe { nil }, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
+	res.path = res.buffer.file_path
 	res.load_syntaxes()
 	res.load_config()
 	res.set_current_syntax_idx(".v")
@@ -406,6 +405,18 @@ fn (app &App) new_view() View {
 	return res
 }
 
+/*
+fn (app &App) new_view(_clipboard clipboard.Clipboard) Viewable {
+	mut res := View{ log: app.log, mode: .normal, show_whitespace: false, clipboard: _clipboard }
+	res.load_syntaxes()
+	res.load_config()
+	res.set_current_syntax_idx(".v")
+	res.cursor.selection_start = Pos{ -1, -1 }
+	return res
+}
+*/
+
+/*
 fn (mut view View) open_file(path string) {
 	view.path = path
 	view.buffer.lines = os.read_lines(path) or { []string{} }
@@ -427,6 +438,13 @@ fn (mut view View) open_file(path string) {
 	if view.buffer.lines.len == 0 {
 		view.buffer.lines << ''
 	}
+}
+*/
+
+interface Viewable {
+mut:
+	draw(mut tui.Context)
+	on_key_down(&tui.Event, mut Root)
 }
 
 fn (mut view View) draw(mut ctx tui.Context) {
@@ -532,7 +550,8 @@ struct LineSegment {
 fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string, within_selection bool) {
 	mut linex := line.replace("\t", " ".repeat(4))
 	mut max_width := view.width
-	if max_width > linex.runes().len { max_width = linex.runes().len }
+	visible_len := utf8_str_visible_length(linex)
+	if max_width > visible_len { max_width = visible_len }
 
 	linex = linex[..max_width]
 
@@ -768,10 +787,11 @@ fn paint_text_on_background(mut ctx tui.Context, x int, y int, bg_color Color, f
 	ctx.draw_text(x, y, text)
 }
 
-fn (mut view View) on_key_down(e &tui.Event) {
+fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 	match view.mode {
 		.normal {
 			match e.code {
+				.escape { view.escape() }
 				.h     { view.h() }
 				.l     { view.l() }
 				.j     { view.j() }
@@ -789,7 +809,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.down  { view.j() }
 				.left  { view.h() }
 				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.d() } }
-				.u { if e.modifiers == .ctrl { view.ctrl_u() } }
+				.u { if e.modifiers == .ctrl { view.ctrl_u() } else { view.u() } }
 				.caret { view.hat() }
 				.dollar { view.dollar() }
 				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
@@ -798,7 +818,6 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.left_square_bracket { view.left_square_bracket() }
 				.right_square_bracket { view.right_square_bracket() }
 				.slash { view.search() }
-				.escape { view.escape() }
 				.enter {
 					// TODO(tauraamui) -> what even is this, remove??
 					if view.mode == .command {
@@ -814,18 +833,21 @@ fn (mut view View) on_key_down(e &tui.Event) {
 		}
 		.visual {
 			match e.code {
-				.escape { view.escape() }
-				.h      { view.h() }
-				.l      { view.l() }
-				.j      { view.j() }
-				.k      { view.k() }
-				.up     { view.k() }
-				.right  { view.l() }
-				.down   { view.j() }
-				.left   { view.h() }
+				.escape    { view.escape() }
+				.h         { view.h() }
+				.l         { view.l() }
+				.j         { view.j() }
+				.k         { view.k() }
+				.up        { view.k() }
+				.right     { view.l() }
+				.down      { view.j() }
+				.left      { view.h() }
+				.less_than { view.visual_unindent() }
+				.greater_than { view.visual_indent() }
 				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.visual_d(true) } }
 				.p { view.visual_p() }
-				.u { if e.modifiers == .ctrl { view.ctrl_u() } }
+				// NOTE(tauraamui): undo bind is now disabled until the feature is re-done
+				// .u { if e.modifiers == .ctrl { view.ctrl_u() } }
 				.caret { view.hat() }
 				.dollar { view.dollar() }
 				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
@@ -880,7 +902,7 @@ fn (mut view View) on_key_down(e &tui.Event) {
 				.down {}
 				.left { view.left() }
 				.right { view.right() }
-				.tab { view.insert_text('\t') }
+				.tab { view.insert_tab() }
 				.single_quote { view.insert_text("\'\'"); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
 				.double_quote { view.insert_text("\"\""); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
 				.left_paren { view.insert_text('()'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
@@ -904,6 +926,44 @@ fn (mut view View) on_key_down(e &tui.Event) {
 			}
 		}
 	}
+}
+
+fn (mut view View) insert_tab() {
+	if view.config.insert_tabs_not_spaces {
+		view.insert_text("\t")
+		return
+	}
+	view.insert_text(" ".repeat(4))
+}
+
+fn (mut view View) visual_indent() {
+	mut start := view.cursor.selection_start_y()
+	mut end := view.cursor.selection_end_y()
+
+    prefix := if view.config.insert_tabs_not_spaces { "\t" } else { " ".repeat(4) }
+
+    for i := start; i < end + 1; i++ {
+        view.buffer.lines[i] = "${prefix}${view.buffer.lines[i]}"
+    }
+}
+
+fn (mut view View) visual_unindent() {
+	mut start := view.cursor.selection_start_y()
+	mut end := view.cursor.selection_end_y()
+
+    prefix := if view.config.insert_tabs_not_spaces { "\t" } else { " ".repeat(4) }
+
+    for i := start; i < end + 1; i++ {
+        view.buffer.lines[i] = subtract_prefix_from_line(prefix, view.buffer.lines[i])
+    }
+}
+
+fn subtract_prefix_from_line(prefix string, line string) string {
+    if line.len > prefix.len {
+        line_prefix := line.substr(0, prefix.len)
+        if line_prefix == prefix { return line.substr(prefix.len, line.len) }
+    }
+    return line
 }
 
 fn (mut view View) save_file()! {
@@ -972,6 +1032,8 @@ fn (mut view View) escape() {
 	if whitespace_prefix.len == line.len {
 		view.buffer.lines[view.cursor.pos.y] = ""
 	}
+
+	view.buffer.update_undo_history()
 }
 
 fn (mut view View) jump_cursor_to(position int) {
@@ -1074,6 +1136,7 @@ fn (mut view View) k() {
 fn (mut view View) i() {
 	view.mode = .insert
 	view.clamp_cursor_x_pos()
+	view.buffer.snapshot()
 }
 
 fn (mut view View) v() {
@@ -1082,13 +1145,19 @@ fn (mut view View) v() {
 }
 
 fn (mut view View) visual_y() {
-	mut y_lines := []string{}
 	start := view.cursor.selection_start_y()
 	mut end   := view.cursor.selection_end_y()
 	if end+1 >= view.buffer.lines.len { end = view.buffer.lines.len-1 }
-	y_lines = view.buffer.lines[start..end+1]
-	view.y_lines = y_lines.clone()
+	view.copy_lines_into_clipboard(start, end)
 	view.escape()
+}
+
+fn (mut view View) copy_lines_into_clipboard(start int, end int) {
+	view.clipboard.copy(arrays.join_to_string(view.buffer.lines[start..end+1].clone(), "\n", fn (s string) string { return s }))
+}
+
+fn (mut view View) read_lines_from_clipboard() []string {
+	return view.clipboard.paste()
 }
 
 fn (mut view View) visual_d(overwrite_y_lines bool) {
@@ -1096,7 +1165,7 @@ fn (mut view View) visual_d(overwrite_y_lines bool) {
 	mut start := view.cursor.selection_start_y()
 	mut end := view.cursor.selection_end_y()
 
-	view.y_lines = view.buffer.lines[start..end+1]
+	view.copy_lines_into_clipboard(start, end)
 	before := view.buffer.lines[..start]
 	after := view.buffer.lines[end+1..]
 
@@ -1151,6 +1220,7 @@ fn (mut view View) hat() {
 }
 
 fn (mut view View) dollar() {
+    defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
 	view.cursor.pos.x = line.runes().len - 1
 }
@@ -1160,13 +1230,16 @@ fn (mut view View) d() {
 	if view.d_count == 1 { view.mode = .pending_delete }
 	if view.d_count == 2 {
 		index := if view.cursor.pos.y == view.buffer.lines.len { view.cursor.pos.y - 1 } else { view.cursor.pos.y }
-		view.y_lines = []string{}
-		view.y_lines << view.buffer.lines[index]
+		view.copy_lines_into_clipboard(index, index)
 		view.buffer.lines.delete(index)
 		view.d_count = 0
 		view.clamp_cursor_within_document_bounds()
 		view.mode = .normal
 	}
+}
+
+fn (mut view View) u() {
+	view.buffer.undo()
 }
 
 fn (mut view View) o() {
@@ -1190,8 +1263,9 @@ fn (mut view View) shift_a() {
 }
 
 fn (mut view View) p() {
-	view.buffer.lines.insert(view.cursor.pos.y+1, view.y_lines)
-	view.move_cursor_down(view.y_lines.len)
+	copied_lines := view.read_lines_from_clipboard()
+	view.buffer.lines.insert(view.cursor.pos.y+1, copied_lines)
+	view.move_cursor_down(copied_lines.len)
 }
 
 fn (mut view View) visual_p() {
@@ -1202,11 +1276,13 @@ fn (mut view View) visual_p() {
 	before := view.buffer.lines[..start]
 	after := view.buffer.lines[end+1..]
 
+	copied_lines := view.read_lines_from_clipboard()
+
 	view.buffer.lines = before
 	view.buffer.lines << after
 	view.cursor.pos.y = start
-	view.buffer.lines.insert(view.cursor.pos.y, view.y_lines)
-	view.move_cursor_down(view.y_lines.len)
+	view.buffer.lines.insert(view.cursor.pos.y, copied_lines)
+	view.move_cursor_down(copied_lines.len)
 	view.escape()
 }
 

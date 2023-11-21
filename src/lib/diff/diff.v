@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module main
+module diff
 
 import arrays
 import math
@@ -25,10 +25,13 @@ fn same(left []string, right []string) bool {
 	return true
 }
 
-struct Op {
-	kind  string
-	value string
+pub struct Op {
 	eof   bool
+pub:
+	kind     string
+	value    string
+pub mut:
+	line_num int
 }
 
 struct Entry {
@@ -230,7 +233,7 @@ fn add_new_count_existing(mut acc []Entry, cur string) {
 	}
 }
 
-fn diff(a []string, b []string) []Op {
+pub fn diff(a []string, b []string) []Op {
 	if same(a, b) { return a.map(fn (v string) Op { return Op{ kind: "same", value: v } })}
 	if a.len == 0 { return b.map(fn (v string) Op { return Op{ kind: "ins", value: v } }) }
 	if b.len == 0 { return a.map(fn (v string) Op { return Op{ kind: "del", value: v } }) }

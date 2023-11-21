@@ -14,8 +14,96 @@
 
 module main
 
+import lib.clipboard
+import arrays
+
+const example_file = "module history\n\nimport datatypes\nimport lib.diff { Op }\n\npub struct History {\nmut:\n\tundos datatypes.Stack[Op] // will actually be type diff.Op\n\tredos datatypes.Stack[Op]\n}"
+
+fn test_u_undos_line_insertions() {
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: clipboard.new() }
+	fake_view.buffer.lines = example_file.split_into_lines()
+
+	assert fake_view.buffer.lines == [
+		"module history",
+		"",
+		"import datatypes",
+		"import lib.diff { Op }",
+		"",
+		"pub struct History {",
+		"mut:",
+		"\tundos datatypes.Stack[Op] // will actually be type diff.Op",
+		"\tredos datatypes.Stack[Op]",
+		"}"
+	]
+
+	fake_view.cursor.pos.x = 9
+	fake_view.cursor.pos.y = 5
+	fake_view.i()
+	fake_view.enter()
+	fake_view.escape()
+
+	assert fake_view.buffer.lines == [
+		"module history",
+		"",
+		"import datatypes",
+		"import lib.diff { Op }",
+		"",
+		"pub struc",
+		"t History {",
+		"mut:",
+		"\tundos datatypes.Stack[Op] // will actually be type diff.Op",
+		"\tredos datatypes.Stack[Op]",
+		"}"
+	]
+
+	fake_view.u()
+
+	assert fake_view.buffer.lines == [
+		"module history",
+		"",
+		"import datatypes",
+		"import lib.diff { Op }",
+		"",
+		"pub struc",
+		"mut:",
+		"\tundos datatypes.Stack[Op] // will actually be type diff.Op",
+		"\tredos datatypes.Stack[Op]",
+		"}"
+	]
+
+	fake_view.u()
+
+	assert fake_view.buffer.lines == [
+		"module history",
+		"",
+		"import datatypes",
+		"import lib.diff { Op }",
+		"",
+		"mut:",
+		"\tundos datatypes.Stack[Op] // will actually be type diff.Op",
+		"\tredos datatypes.Stack[Op]",
+		"}"
+	]
+
+	fake_view.u()
+
+	assert fake_view.buffer.lines == [
+		"module history",
+		"",
+		"import datatypes",
+		"import lib.diff { Op }",
+		"pub struct History {"
+		"",
+		"mut:",
+		"\tundos datatypes.Stack[Op] // will actually be type diff.Op",
+		"\tredos datatypes.Stack[Op]",
+		"}"
+	]
+}
+
 fn test_dd_deletes_current_line_at_start_of_doc() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	fake_view.buffer.lines = ["1. first line", "2. second line", "3. third line", "4. forth line"]
 	fake_view.cursor.pos.y = 0
 
@@ -23,11 +111,12 @@ fn test_dd_deletes_current_line_at_start_of_doc() {
 	fake_view.d()
 
 	assert fake_view.buffer.lines == ["2. second line", "3. third line", "4. forth line"]
-	assert fake_view.y_lines == ["1. first line"]
+	assert fake_view.read_lines_from_clipboard() == ["1. first line"]
 }
 
 fn test_dd_deletes_current_line_in_middle_of_doc() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	fake_view.buffer.lines = ["1. first line", "2. second line", "3. third line", "4. forth line"]
 	fake_view.cursor.pos.y = 2
 
@@ -36,11 +125,12 @@ fn test_dd_deletes_current_line_in_middle_of_doc() {
 
 	assert fake_view.buffer.lines == ["1. first line", "2. second line", "4. forth line"]
 	assert fake_view.cursor.pos.y == 2
-	assert fake_view.y_lines == ["3. third line"]
+	assert fake_view.read_lines_from_clipboard() == ["3. third line"]
 }
 
 fn test_dd_deletes_current_line_at_end_of_doc() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	// manually set the "document" contents
 	fake_view.buffer.lines = ["1. first line", "2. second line", "3. third line"]
 	// ensure the cursor is set to sit on the last line
@@ -52,7 +142,7 @@ fn test_dd_deletes_current_line_at_end_of_doc() {
 
 	assert fake_view.buffer.lines == ["1. first line", "2. second line"]
 	assert fake_view.cursor.pos.y == 1
-	assert fake_view.y_lines == ["3. third line"]
+	assert fake_view.read_lines_from_clipboard() == ["3. third line"]
 }
 
 fn test_o_inserts_sentance_line() {
@@ -383,8 +473,103 @@ fn test_right_arrow_at_end_of_sentence_in_insert_mode() {
 	assert fake_view.cursor.pos.x == 20
 }
 
+fn test_tab_inserts_spaces() {
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe{ nil }, mode: .insert, clipboard: mut clip }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = ["1. first line"]
+
+	fake_view.cursor.pos.x = 9
+	fake_view.cursor.pos.y = 0
+
+	fake_view.insert_tab()
+
+	assert fake_view.mode == .insert
+	assert fake_view.buffer.lines == ["1. first     line"]
+}
+
+fn test_tab_inserts_tabs_not_spaces_if_enabled() {
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe{ nil }, mode: .insert, clipboard: mut clip, config: Config{ insert_tabs_not_spaces: true } }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = ["1. first line"]
+
+	fake_view.cursor.pos.x = 9
+	fake_view.cursor.pos.y = 0
+
+	fake_view.insert_tab()
+
+	assert fake_view.mode == .insert
+	assert fake_view.buffer.lines == ["1. first \tline"]
+}
+
+fn test_visual_indent_indents_highlighted_lines() {
+    mut fake_view := View{ log: unsafe { nil }, mode: .visual, clipboard: clipboard.new(), config: Config{ insert_tabs_not_spaces: true } }
+
+	fake_view.buffer.lines = [
+		"1. first line",
+		"2. second line",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line",
+		"6. sixth line"
+	]
+
+	fake_view.cursor.pos.y = 1
+
+	fake_view.v()
+	fake_view.j()
+	fake_view.j()
+	fake_view.j()
+
+	fake_view.visual_indent()
+
+	assert fake_view.buffer.lines == [
+		"1. first line",
+		"\t2. second line",
+		"\t3. third line",
+		"\t4. forth line",
+		"\t5. fifth line",
+		"6. sixth line"
+	]
+}
+
+fn test_visual_unindent_unindents_highlighted_lines() {
+    mut fake_view := View{ log: unsafe { nil }, mode: .visual, clipboard: clipboard.new(), config: Config{ insert_tabs_not_spaces: true } }
+
+	fake_view.buffer.lines = [
+		"1. first line",
+		"\t2. second line",
+		"\t3. third line",
+		"\t4. forth line",
+		"\t5. fifth line",
+		"6. sixth line"
+	]
+
+	fake_view.cursor.pos.y = 1
+
+	fake_view.v()
+	fake_view.j()
+	fake_view.j()
+	fake_view.j()
+
+	fake_view.visual_unindent()
+
+	assert fake_view.buffer.lines == [
+		"1. first line",
+		"2. second line",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line",
+		"6. sixth line"
+	]
+}
+
 fn test_visual_insert_mode_and_delete_in_place() {
-	mut fake_view := View{ log: unsafe{ nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe{ nil }, mode: .normal, clipboard: mut clip }
 
 	// manually set the documents contents
 	fake_view.buffer.lines = ["1. first line", "2. second line", "3. third line", "4. forth line"]
@@ -400,7 +585,8 @@ fn test_visual_insert_mode_and_delete_in_place() {
 }
 
 fn test_visual_insert_mode_selection_move_down_once_and_delete() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
 	// manually set the documents contents
 	fake_view.buffer.lines = ["1. first line", "2. second line", "3. third line", "4. forth line"]
@@ -417,7 +603,8 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 }
 
 fn test_visual_selection_copy() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
 	// manually set the documents contents
 	fake_view.buffer.lines = [
@@ -427,8 +614,6 @@ fn test_visual_selection_copy() {
 		"4. forth line",
 		"5. fifth line"
 	]
-
-	assert fake_view.y_lines == []
 
 	// ensure cursor is set to sit on second line
 	fake_view.cursor.pos.x = 0
@@ -438,14 +623,20 @@ fn test_visual_selection_copy() {
 	fake_view.j()
 	fake_view.visual_y()
 
-	assert fake_view.y_lines == [
+	assert fake_view.read_lines_from_clipboard() == [
 		"2. second line",
 		"3. third line"
 	]
 }
 
 fn test_paste() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	clip.copy(arrays.join_to_string(
+	    ["some new random contents", "with multiple lines"],
+		"\n",
+		fn (s string) string { return s }
+	))
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
 	// manually set the documents contents
 	fake_view.buffer.lines = [
@@ -455,8 +646,6 @@ fn test_paste() {
 		"4. forth line",
 		"5. fifth line"
 	]
-
-	fake_view.y_lines = ["some new random contents", "with multiple lines"]
 
 	// ensure cursor is set to sit on second line
 	fake_view.cursor.pos.x = 0
@@ -476,7 +665,13 @@ fn test_paste() {
 }
 
 fn test_visual_paste() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	clip.copy(arrays.join_to_string(
+	    ["some new random contents", "with multiple lines"],
+		"\n",
+		fn (s string) string { return s }
+	))
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
 	// manually set the documents contents
 	fake_view.buffer.lines = [
@@ -486,8 +681,6 @@ fn test_visual_paste() {
 		"4. forth line",
 		"5. fifth line"
 	]
-
-	fake_view.y_lines = ["some new random contents", "with multiple lines"]
 
 	// ensure cursor is set to sit on second line
 	fake_view.cursor.pos.x = 0
@@ -596,7 +789,7 @@ fn test_search_within_for_multiple_lines_multiple_matches_per_line() {
 }
 
 fn test_move_cursor_with_b_from_start_of_line_which_preceeds_a_blank_line() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: clipboard.new() }
 	fake_view.buffer.lines = ["1. first line", "", "3. third line"]
 
 	fake_view.cursor.pos.x = 0
@@ -609,7 +802,7 @@ fn test_move_cursor_with_b_from_start_of_line_which_preceeds_a_blank_line() {
 }
 
 fn test_jump_cursor_up_to_next_blank_line() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: clipboard.new() }
 	fake_view.buffer.lines = [
 		"# Top of the file"
 		"",
@@ -629,7 +822,7 @@ fn test_jump_cursor_up_to_next_blank_line() {
 }
 
 fn test_jump_cursor_down_to_next_blank_line() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: clipboard.new() }
 	fake_view.buffer.lines = [
 		"# Top of the file"
 		"",

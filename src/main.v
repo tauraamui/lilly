@@ -17,11 +17,13 @@ module main
 import os
 import term.ui as tui
 import log
+import lib.clipboard
 
 struct App {
 mut:
 	log       &log.Log
     tui       &tui.Context = unsafe { nil }
+    editor    &Editor = unsafe { nil }
 	view      &View = unsafe { nil }
 	views     []View
 	cur_split int
@@ -43,24 +45,13 @@ fn event(e &tui.Event, mut app &App) {
 	match e.typ {
 		.key_down {
 			app.changed = true
-			mut view := app.view
-			view.on_key_down(e)
+			app.editor.on_key_down(e)
 		}
 		.resized {
 			app.changed = true
 		}
 		else {}
 	}
-
-	/*
-	if e.typ == .key_down {
-		match e.code {
-			.j { app.cursor.pos.y += 1 }
-			.k { app.cursor.pos.y -= 1; if app.cursor.pos.y < 1 { app.cursor.pos.y = 1 } }
-			else {}
-		}
-	}
-	*/
 }
 
 fn frame(mut app &App) {
@@ -68,8 +59,7 @@ fn frame(mut app &App) {
 		app.changed = false
 		app.tui.clear()
 
-		mut view := app.view
-		view.draw(mut app.tui)
+		app.editor.draw(mut app.tui)
 
 		app.tui.flush()
 	}
@@ -97,11 +87,15 @@ fn main() {
 		capture_events: true
 		use_alternate_buffer: true
     )
-	app.views << app.new_view()
-	app.update_view()
 
-	path := os.args[1] or { panic("missing file path") }
-	app.view.open_file(path)
+	path := os.args[1] or { "" }
+	app.editor = open_editor(clipboard.new(), path) or { print_and_exit("${err}"); unsafe { nil } }
 
     app.tui.run()!
 }
+
+fn print_and_exit(msg string) {
+	println(msg)
+	exit(1)
+}
+
