@@ -42,12 +42,12 @@ fn (mut file_search FileSearch) put_char(c string) {
 }
 
 fn (mut file_search FileSearch) backspace() {
-	if file_search.cursor_x == 1 { return }
+	if file_search.cursor_x == 0 { return }
 	first := file_search.query[..file_search.cursor_x-1]
 	last := file_search.query[file_search.cursor_x..]
 	file_search.query = "${first}${last}"
 	file_search.cursor_x -= 1
-	if file_search.cursor_x < 1 { file_search.cursor_x = 1 }
+	if file_search.cursor_x < 0 { file_search.cursor_x = 0 }
 }
 
 fn (mut file_finder_modal FileFinderModal) draw(mut ctx tui.Context) {
