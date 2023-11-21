@@ -57,18 +57,24 @@ fn (mut file_finder_modal FileFinderModal) draw(mut ctx tui.Context) {
 	mut y_offset := 1
 	ctx.draw_text(1, y_offset, "=== FILE BROWSER ===")
 	y_offset += 1
-	file_finder_modal.draw_scrollable_list(mut ctx, y_offset, file_finder_modal.resolve_file_paths())
 	ctx.set_cursor_position(1, y_offset + file_finder_modal.current_selection - file_finder_modal.from)
+	y_offset += file_finder_modal.draw_scrollable_list(mut ctx, y_offset, file_finder_modal.resolve_file_paths())
 }
 
-fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx tui.Context, y_offset int, list []string) {
+fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx tui.Context, y_offset int, list []string) int {
 	ctx.reset_bg_color()
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
 	ctx.draw_rect(1, y_offset, ctx.window_width, y_offset+max_height - 1)
 	to := file_finder_modal.resolve_to()
 	for i := file_finder_modal.from; i < to; i++ {
+		ctx.set_bg_color(r: 15, g: 15, b: 15)
+		if file_finder_modal.current_selection == i {
+			ctx.set_bg_color(r: 60, g: 60, b: 60)
+			ctx.draw_rect(1, y_offset+(i - file_finder_modal.from), ctx.window_width, y_offset+(i - file_finder_modal.from))
+		}
 		ctx.draw_text(1, y_offset+(i - file_finder_modal.from), list[i])
 	}
+	return y_offset + (max_height - 1)
 }
 
 fn (mut file_finder_modal FileFinderModal) on_key_down(e &tui.Event, mut root Root) {
