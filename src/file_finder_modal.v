@@ -93,9 +93,7 @@ fn (mut file_finder_modal FileFinderModal) on_key_down(e &tui.Event, mut root Ro
 		.enter     { file_finder_modal.file_selected(mut root) }
 		.backspace { file_finder_modal.search.backspace() }
 		else {
-			buf := [5]u8{}
-			s := unsafe { utf32_to_str_no_malloc(u32(e.code), &buf[0]) }
-			file_finder_modal.search.put_char(s)
+			file_finder_modal.search.put_char(e.ascii.ascii_str())
 		}
 	}
 }
