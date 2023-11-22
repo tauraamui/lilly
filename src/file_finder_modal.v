@@ -59,8 +59,11 @@ fn (mut file_finder_modal FileFinderModal) draw(mut ctx tui.Context) {
 	y_offset += 1
 	ctx.set_cursor_position(1, y_offset + file_finder_modal.current_selection - file_finder_modal.from)
 	y_offset += file_finder_modal.draw_scrollable_list(mut ctx, y_offset, file_finder_modal.resolve_file_paths())
-	ctx.set_bg_color(r: 180, g: 90, b: 30)
+	ctx.set_bg_color(r: 153, g: 95, b: 146)
 	ctx.draw_rect(1, y_offset, ctx.window_width, y_offset)
+	search_label := "SEARCH:"
+	ctx.draw_text(1, y_offset, search_label)
+	ctx.draw_text(1+utf8_str_visible_length(search_label)+1, y_offset, file_finder_modal.search.query)
 }
 
 fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx tui.Context, y_offset int, list []string) int {
@@ -71,7 +74,7 @@ fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx tui.Cont
 	for i := file_finder_modal.from; i < to; i++ {
 		ctx.set_bg_color(r: 15, g: 15, b: 15)
 		if file_finder_modal.current_selection == i {
-			ctx.set_bg_color(r: 60, g: 60, b: 60)
+			ctx.set_bg_color(r: 53, g: 53, b: 53)
 			ctx.draw_rect(1, y_offset+(i - file_finder_modal.from), ctx.window_width, y_offset+(i - file_finder_modal.from))
 		}
 		ctx.draw_text(1, y_offset+(i - file_finder_modal.from), list[i])
@@ -89,7 +92,11 @@ fn (mut file_finder_modal FileFinderModal) on_key_down(e &tui.Event, mut root Ro
 		.up        { file_finder_modal.move_selection_up() }
 		.enter     { file_finder_modal.file_selected(mut root) }
 		.backspace { file_finder_modal.search.backspace() }
-		else { file_finder_modal.search.put_char(e.ascii.ascii_str()) }
+		else {
+			buf := [5]u8{}
+			s := unsafe { utf32_to_str_no_malloc(u32(e.code), &buf[0]) }
+			file_finder_modal.search.put_char(s)
+		}
 	}
 }
 
