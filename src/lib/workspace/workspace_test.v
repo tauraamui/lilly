@@ -1,9 +1,10 @@
 module workspace
 
 struct MockFS {
-	pwd   string
-	dirs  map[string][]string
-	files map[string][]string
+	pwd           string
+	dirs          map[string][]string
+	files         map[string][]string
+	file_contents map[string]string
 }
 
 fn (mock_fs MockFS) is_dir(path string) bool {
@@ -27,10 +28,17 @@ fn (mock_fs MockFS) dir_walker(path string, f fn (string)) {
 fn test_open_workspace() {
 	mock_fs := MockFS{
 		pwd:  "/dev/fake-project"
-		dirs: { "/dev/fake-project": ["src", "research-notes"] }
+		dirs: {
+			"~/.config/lilly": [],
+			"/dev/fake-project": ["src", "research-notes"]
+		}
 		files: {
+			"~/.config/lilly": ["lilly.conf"],
 			"/dev/fake-project/src": ["main.v", "some_other_code.v"],
 			"/dev/fake-project/research-notes": ["brainstorm.pdf", "article-links.txt"],
+		}
+		file_contents: {
+			"./config/lilly/lilly.conf": "{ 'relative_line_numbers': true, 'insert_tabs_not_spaces': true, 'selection_highlight_color': { 'r': 96, 'g': 138, 'b': 143 } }"
 		}
 	}
 	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker) or { panic("${err}") }

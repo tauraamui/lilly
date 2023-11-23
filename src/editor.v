@@ -58,7 +58,7 @@ fn (mut editor Editor) open_file(path string) ! {
 	mut buff := buffer.Buffer{ file_path: path }
 	buff.load_from_path() or { return err }
 	editor.buffers << buff
-	editor.views << open_view(editor.clipboard, &editor.buffers[editor.buffers.len-1])
+	editor.views << open_view(editor.workspace.config, editor.clipboard, &editor.buffers[editor.buffers.len-1])
 	editor.view = &editor.views[editor.views.len-1]
 }
 

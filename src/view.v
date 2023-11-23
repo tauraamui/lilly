@@ -23,6 +23,7 @@ import regex
 import lib.clipboard
 import arrays
 import lib.buffer
+import lib.workspace
 
 struct Cursor {
 mut:
@@ -100,7 +101,7 @@ struct View {
 mut:
 	log                       &log.Log
 	path                      string
-	config                    Config
+	config                    workspace.Config
 	mode                      Mode
 	buffer                    buffer.Buffer
 	cursor                    Cursor
@@ -395,11 +396,10 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 	cmd_buf.code = .blank
 }
 
-fn open_view(_clipboard clipboard.Clipboard, buff &buffer.Buffer) Viewable {
-	mut res := View{ log: unsafe { nil }, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
+fn open_view(config workspace.Config, _clipboard clipboard.Clipboard, buff &buffer.Buffer) Viewable {
+	mut res := View{ log: unsafe { nil }, config: config, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
 	res.path = res.buffer.file_path
 	res.load_syntaxes()
-	res.load_config()
 	res.set_current_syntax_idx(".v")
 	res.cursor.selection_start = Pos{ -1, -1 }
 	return res

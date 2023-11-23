@@ -1,7 +1,10 @@
 module workspace
 
 import os
+import json
 import term.ui as tui
+
+const builtin_lilly_config_file_content = $embed_file("../../config/lilly.conf").to_string()
 
 pub struct Workspace {
 pub:
@@ -10,7 +13,8 @@ mut:
 	files []string
 }
 
-struct Config {
+pub struct Config {
+pub mut:
 	relative_line_numbers     bool
 	selection_highlight_color tui.Color
 	insert_tabs_not_spaces    bool
@@ -36,11 +40,16 @@ pub fn open_workspace(
 }
 
 fn resolve_config() Config {
-	return attempt_to_load_from_disk() or { fallback_to_bundled_default_config() }
+	loaded_config := attempt_to_load_from_disk() or { fallback_to_bundled_default_config() }
+	return loaded_config
 }
 
+// NOTE(tauraamui):
+// Whilst technically json decode can fail, this should only be the case in this instance
+// if we the editor authors have fucked up the default config file format, this kind of
+// issue should never make it out to production, hence the acceptable panic here.
 fn fallback_to_bundled_default_config() Config {
-	return Config{}
+	return json.decode(Config, builtin_lilly_config_file_content) or { panic("decoding bundled config failed: ${err}") }
 }
 
 fn attempt_to_load_from_disk() !Config {
