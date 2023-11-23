@@ -43,7 +43,7 @@ pub fn open_workspace(
 }
 
 fn resolve_config(config_dir fn () !string, read_file fn (path string) !string) Config {
-	loaded_config := attempt_to_load_from_disk(config_dir, read_file) or { println("${err}"); fallback_to_bundled_default_config() }
+	loaded_config := attempt_to_load_from_disk(config_dir, read_file) or { fallback_to_bundled_default_config() }
 	return loaded_config
 }
 
@@ -59,7 +59,6 @@ fn attempt_to_load_from_disk(config_dir fn () !string, read_file fn (path string
 	config_root_dir := config_dir() or { return error("unable to resolve local config root directory") }
 	config_file_full_path := os.join_path(config_root_dir, lilly_config_root_dir_name, "lilly.conf")
 	config_file_contents := read_file(config_file_full_path) or { return error("local config file ${config_file_full_path} not found: ${err}") }
-	println(config_file_contents)
 	return json.decode(Config, config_file_contents) or { return error("unable to parse config ${config_file_full_path}: ${err}") }
 }
 
