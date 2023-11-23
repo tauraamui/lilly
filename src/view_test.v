@@ -14,8 +14,9 @@
 
 module main
 
-import lib.clipboard
 import arrays
+import lib.clipboard
+import lib.workspace
 
 const example_file = "module history\n\nimport datatypes\nimport lib.diff { Op }\n\npub struct History {\nmut:\n\tundos datatypes.Stack[Op] // will actually be type diff.Op\n\tredos datatypes.Stack[Op]\n}"
 
@@ -491,7 +492,7 @@ fn test_tab_inserts_spaces() {
 
 fn test_tab_inserts_tabs_not_spaces_if_enabled() {
 	mut clip := clipboard.new()
-	mut fake_view := View{ log: unsafe{ nil }, mode: .insert, clipboard: mut clip, config: Config{ insert_tabs_not_spaces: true } }
+	mut fake_view := View{ log: unsafe{ nil }, mode: .insert, clipboard: mut clip, config: workspace.Config{ insert_tabs_not_spaces: true } }
 
 	// manually set the documents contents
 	fake_view.buffer.lines = ["1. first line"]
@@ -506,7 +507,7 @@ fn test_tab_inserts_tabs_not_spaces_if_enabled() {
 }
 
 fn test_visual_indent_indents_highlighted_lines() {
-    mut fake_view := View{ log: unsafe { nil }, mode: .visual, clipboard: clipboard.new(), config: Config{ insert_tabs_not_spaces: true } }
+    mut fake_view := View{ log: unsafe { nil }, mode: .visual, clipboard: clipboard.new(), config: workspace.Config{ insert_tabs_not_spaces: true } }
 
 	fake_view.buffer.lines = [
 		"1. first line",
@@ -537,7 +538,7 @@ fn test_visual_indent_indents_highlighted_lines() {
 }
 
 fn test_visual_unindent_unindents_highlighted_lines() {
-    mut fake_view := View{ log: unsafe { nil }, mode: .visual, clipboard: clipboard.new(), config: Config{ insert_tabs_not_spaces: true } }
+    mut fake_view := View{ log: unsafe { nil }, mode: .visual, clipboard: clipboard.new(), config: workspace.Config{ insert_tabs_not_spaces: true } }
 
 	fake_view.buffer.lines = [
 		"1. first line",

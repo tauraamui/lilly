@@ -17,6 +17,7 @@ mut:
 
 pub fn (mut buffer Buffer) load_from_path() ! {
 	buffer.lines = os.read_lines(buffer.file_path) or { return error("unable to open file ${buffer.file_path} ${err}") }
+	if buffer.lines.len == 0 { buffer.lines = [""] }
 }
 
 pub fn (mut buffer Buffer) undo() {
