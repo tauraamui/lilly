@@ -14,7 +14,6 @@
 
 module main
 
-import os
 import json
 
 const builtin_v_syntax_file_content = $embed_file('syntax/v.syntax').to_string()

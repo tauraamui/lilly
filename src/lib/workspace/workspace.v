@@ -35,7 +35,7 @@ pub fn open_workspace(
 	}
 	mut files_ref := &wrkspace.files
 	dir_walker(path, fn [mut files_ref, is_dir] (file_path string) {
-		if file_path.starts_with("./.git") { return }
+		if file_path.starts_with(os.join_path(".", ".git")) { return }
 		if is_dir(file_path) { return }
 		files_ref << file_path
 	})
