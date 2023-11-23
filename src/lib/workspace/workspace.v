@@ -16,6 +16,7 @@ mut:
 
 pub struct Config {
 pub mut:
+	leader_key                string
 	relative_line_numbers     bool
 	selection_highlight_color tui.Color
 	insert_tabs_not_spaces    bool
