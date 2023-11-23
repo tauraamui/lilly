@@ -44,7 +44,7 @@ fn test_open_workspace_files_and_config() {
 		dirs: {
 			"/home/test-user/.config/lilly": [],
 			"/dev/fake-project/.git": ["8494859384953"]
-			"/dev/fake-project": [".git", "src", "research-notes"]
+			"/dev/fake-project": ["src", "research-notes"]
 		}
 		files: {
 			"/home/test-user/.config/lilly": ["lilly.conf"],
