@@ -26,20 +26,20 @@ mut:
 	width int
 }
 
-const leader_key = tui.KeyCode.semicolon
-
 struct SplashScreen {
 mut:
 	logo        Logo
 	leader_mode bool
 	f_count     int
+	leader_key  string
 }
 
-pub fn new_splash() Viewable {
+pub fn new_splash(leader_key string) Viewable {
 	mut splash := SplashScreen{
 		logo: Logo{
 			data: logo_contents.to_string().split_into_lines()
 		}
+		leader_key: leader_key
 	}
 
 	for l in splash.logo.data {
@@ -107,9 +107,13 @@ fn has_colouring_directives(line string) bool {
 }
 
 pub fn (mut splash SplashScreen) on_key_down(e &tui.Event, mut root Root) {
+	match e.utf8 {
+		splash.leader_key { splash.leader_mode = true }
+		else { }
+	}
 	match e.code {
 		.escape    { if splash.leader_mode { splash.leader_mode = false; return } root.quit() }
-		leader_key { splash.leader_mode = true }
+		// leader_key { splash.leader_mode = true }
 		// TODO(tauraamui): move to f() method, this line is a too complicated/long statement now
 		.f         { if splash.leader_mode { splash.f_count += 1 } if splash.f_count == 2 { splash.leader_mode = false; splash.f_count = 0; root.open_file_finder() } }
 		else { }
