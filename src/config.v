@@ -18,7 +18,7 @@ import os
 import json
 import term.ui as tui
 
-const builtin_lilly_config_file_content = $embed_file('config/lilly.conf').to_string()
+// const builtin_lilly_config_file_content = $embed_file('config/lilly.conf').to_string()
 
 const (
 	home_dir     = os.home_dir()
@@ -26,13 +26,14 @@ const (
 	syntax_dir   = os.join_path(settings_dir, 'syntax')
 )
 
-struct Config {
-mut:
+pub struct Config {
+pub mut:
 	relative_line_numbers bool
 	selection_highlight_color tui.Color
 	insert_tabs_not_spaces bool
 }
 
+/*
 fn (mut view View) load_config() {
 	println("loading config...")
 	config := json.decode(Config, builtin_lilly_config_file_content) or {
@@ -40,3 +41,4 @@ fn (mut view View) load_config() {
 	}
 	view.config = config
 }
+*/

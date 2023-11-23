@@ -44,7 +44,9 @@ pub fn open_editor(_clipboard clipboard.Clipboard, workspace_root_dir string) !&
 	editor.workspace = workspace.open_workspace(
 			workspace_root_dir,
 			os.is_dir,
-			os.walk
+			os.walk,
+			os.config_dir,
+			os.read_file
 		) or { return error("unable to open workspace '${workspace_root_dir}' -> ${err}")
 	}
 
@@ -58,7 +60,7 @@ fn (mut editor Editor) open_file(path string) ! {
 	mut buff := buffer.Buffer{ file_path: path }
 	buff.load_from_path() or { return err }
 	editor.buffers << buff
-	editor.views << open_view(editor.clipboard, &editor.buffers[editor.buffers.len-1])
+	editor.views << open_view(editor.workspace.config, editor.clipboard, &editor.buffers[editor.buffers.len-1])
 	editor.view = &editor.views[editor.views.len-1]
 }
 
