@@ -72,3 +72,33 @@ fn test_open_workspace_files_and_config() {
 	}
 }
 
+fn test_open_workspace_files_but_fallsback_to_embedded_config() {
+	mock_fs := MockFS{
+		pwd:  "/dev/fake-project"
+		dirs: {
+			"/home/test-user/.config/lilly": [],
+			"/dev/fake-project": ["src", "research-notes"]
+		}
+		files: {
+			"/dev/fake-project/src": ["main.v", "some_other_code.v"],
+			"/dev/fake-project/research-notes": ["brainstorm.pdf", "article-links.txt"],
+		}
+		file_contents: {}
+	}
+	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err}") }
+
+	assert wrkspace.files == [
+		"/dev/fake-project/src/main.v",
+		"/dev/fake-project/src/some_other_code.v",
+		"/dev/fake-project/research-notes/brainstorm.pdf",
+		"/dev/fake-project/research-notes/article-links.txt"
+	]
+
+	assert wrkspace.config == Config{
+		relative_line_numbers: true
+		selection_highlight_color: tui.Color{
+			r: 96, g: 138, b: 143
+		}
+		insert_tabs_not_spaces: true
+	}
+}
