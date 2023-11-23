@@ -97,6 +97,7 @@ fn test_open_workspace_files_but_fallsback_to_embedded_config() {
 	]
 
 	assert wrkspace.config == Config{
+		leader_key: " "
 		relative_line_numbers: true
 		selection_highlight_color: tui.Color{
 			r: 96, g: 138, b: 143
