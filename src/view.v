@@ -104,6 +104,7 @@ mut:
 	config                    workspace.Config
 	mode                      Mode
 	buffer                    buffer.Buffer
+	leader_key                string
 	cursor                    Cursor
 	cmd_buf                   CmdBuffer
 	search                    Search
@@ -120,6 +121,7 @@ mut:
 	current_syntax_idx        int
 	is_multiline_comment      bool
 	d_count                   int
+	f_count                   int
 	clipboard                 clipboard.Clipboard
 }
 
@@ -397,7 +399,7 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 }
 
 fn open_view(config workspace.Config, _clipboard clipboard.Clipboard, buff &buffer.Buffer) Viewable {
-	mut res := View{ log: unsafe { nil }, config: config, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
+	mut res := View{ log: unsafe { nil }, config: config, leader_key: config.leader_key, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
 	res.path = res.buffer.file_path
 	res.load_syntaxes()
 	res.set_current_syntax_idx(".v")
@@ -789,7 +791,18 @@ fn paint_text_on_background(mut ctx tui.Context, x int, y int, bg_color Color, f
 
 fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 	match view.mode {
+		.leader {
+			match e.code {
+				.escape { view.escape() }
+				.f { view.f_count += 1; if view.f_count == 2 { view.escape(); root.open_file_finder() } }
+				else { }
+			}
+		}
 		.normal {
+			match e.utf8 {
+				view.leader_key { view.mode = .leader }
+				else { }
+			}
 			match e.code {
 				.escape { view.escape() }
 				.h     { view.h() }
@@ -1025,6 +1038,7 @@ fn (mut view View) escape() {
 	view.cmd_buf.clear()
 	view.search.clear()
 	view.d_count = 0
+	view.f_count = 0
 
 	// if current line only contains whitespace prefix clear the line
 	line := view.buffer.lines[view.cursor.pos.y]
