@@ -1,5 +1,7 @@
 module workspace
 
+import term.ui as tui
+
 struct MockFS {
 	pwd           string
 	dirs          map[string][]string
@@ -25,7 +27,7 @@ fn (mock_fs MockFS) dir_walker(path string, f fn (string)) {
 	}
 }
 
-fn test_open_workspace() {
+fn test_open_workspace_files_and_config() {
 	mock_fs := MockFS{
 		pwd:  "/dev/fake-project"
 		dirs: {
@@ -49,5 +51,13 @@ fn test_open_workspace() {
 		"/dev/fake-project/research-notes/brainstorm.pdf",
 		"/dev/fake-project/research-notes/article-links.txt"
 	]
+
+	assert wrkspace.config == Config{
+		relative_line_numbers: true
+		selection_highlight_color: tui.Color{
+			r: 96, g: 138, b: 143
+		}
+		insert_tabs_not_spaces: true
+	}
 }
 

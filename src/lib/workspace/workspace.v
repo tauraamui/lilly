@@ -53,7 +53,7 @@ fn fallback_to_bundled_default_config() Config {
 }
 
 fn attempt_to_load_from_disk() !Config {
-	return Config{}
+	return error("unable to load user provided config")
 }
 
 pub fn (workspace Workspace) files() []string {
