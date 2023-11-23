@@ -44,7 +44,8 @@ pub fn open_editor(_clipboard clipboard.Clipboard, workspace_root_dir string) !&
 	editor.workspace = workspace.open_workspace(
 			workspace_root_dir,
 			os.is_dir,
-			os.walk
+			os.walk,
+			os.read_file
 		) or { return error("unable to open workspace '${workspace_root_dir}' -> ${err}")
 	}
 

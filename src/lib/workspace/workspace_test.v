@@ -27,6 +27,13 @@ fn (mock_fs MockFS) dir_walker(path string, f fn (string)) {
 	}
 }
 
+fn (mock_fs MockFS) read_file(path string) !string {
+	if v := mock_fs.file_contents[path] {
+		return v
+	}
+	return error("file ${path} does not exist")
+}
+
 fn test_open_workspace_files_and_config() {
 	mock_fs := MockFS{
 		pwd:  "/dev/fake-project"
@@ -43,7 +50,7 @@ fn test_open_workspace_files_and_config() {
 			"./config/lilly/lilly.conf": "{ 'relative_line_numbers': true, 'insert_tabs_not_spaces': true, 'selection_highlight_color': { 'r': 96, 'g': 138, 'b': 143 } }"
 		}
 	}
-	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker) or { panic("${err}") }
+	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.read_file) or { panic("${err}") }
 
 	assert wrkspace.files == [
 		"/dev/fake-project/src/main.v",
