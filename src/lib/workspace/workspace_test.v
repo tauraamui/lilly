@@ -27,14 +27,19 @@ fn (mock_fs MockFS) dir_walker(path string, f fn (string)) {
 fn test_open_workspace() {
 	mock_fs := MockFS{
 		pwd:  "/dev/fake-project"
-		dirs: { "/dev/fake-project": ["src"] }
-		files: { "/dev/fake-project/src": ["main.v", "some_other_code.v"] }
+		dirs: { "/dev/fake-project": ["src", "research-notes"] }
+		files: {
+			"/dev/fake-project/src": ["main.v", "some_other_code.v"],
+			"/dev/fake-project/research-notes": ["brainstorm.pdf", "article-links.txt"],
+		}
 	}
 	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker) or { panic("${err}") }
 
 	assert wrkspace.files == [
 		"/dev/fake-project/src/main.v",
-		"/dev/fake-project/src/some_other_code.v"
+		"/dev/fake-project/src/some_other_code.v",
+		"/dev/fake-project/research-notes/brainstorm.pdf",
+		"/dev/fake-project/research-notes/article-links.txt"
 	]
 }
 
