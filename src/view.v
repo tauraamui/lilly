@@ -279,7 +279,6 @@ fn (code CmdCode) str() string {
 }
 
 struct CmdBuffer {
-	root        Root
 mut:
 	line        string
 	code        CmdCode
