@@ -33,6 +33,7 @@ fn (mut view View) load_syntaxes() {
 		panic('the builtin syntax file can not be decoded')
 	}
 	view.syntaxes << vsyntax
+	/*
 	files := os.walk_ext(syntax_dir, '.syntax')
 	for file in files {
 		fcontent := os.read_file(file) or {
@@ -51,6 +52,7 @@ fn (mut view View) load_syntaxes() {
 		view.syntaxes << syntax
 	}
 	println('${files.len} syntax files loaded + the compile time builtin syntax for .v')
+	*/
 }
 
 fn (mut view View) set_current_syntax_idx(ext string) {
