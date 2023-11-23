@@ -5,6 +5,7 @@ import json
 import term.ui as tui
 
 const builtin_lilly_config_file_content = $embed_file("../../config/lilly.conf").to_string()
+const lilly_config_root_dir_name = "lilly"
 
 pub struct Workspace {
 pub:
@@ -24,12 +25,13 @@ pub fn open_workspace(
 	root_path string,
 	is_dir fn (path string) bool,
 	dir_walker fn (path string, f fn (string)),
+	config_dir fn () !string,
 	read_file fn (path string) !string
 ) !Workspace {
 	path := os.dir(root_path)
 	if !is_dir(path) { return error("${path} is not a directory") }
 	wrkspace := Workspace{
-		config: resolve_config(read_file)
+		config: resolve_config(config_dir, read_file)
 	}
 	mut files_ref := &wrkspace.files
 	dir_walker(path, fn [mut files_ref, is_dir] (file_path string) {
@@ -40,8 +42,8 @@ pub fn open_workspace(
 	return wrkspace
 }
 
-fn resolve_config(read_file fn (path string) !string) Config {
-	loaded_config := attempt_to_load_from_disk(read_file) or { fallback_to_bundled_default_config() }
+fn resolve_config(config_dir fn () !string, read_file fn (path string) !string) Config {
+	loaded_config := attempt_to_load_from_disk(config_dir, read_file) or { println("${err}"); fallback_to_bundled_default_config() }
 	return loaded_config
 }
 
@@ -53,8 +55,12 @@ fn fallback_to_bundled_default_config() Config {
 	return json.decode(Config, builtin_lilly_config_file_content) or { panic("decoding bundled config failed: ${err}") }
 }
 
-fn attempt_to_load_from_disk(read_file fn (path string) !string) !Config {
-	return error("unable to load user provided config")
+fn attempt_to_load_from_disk(config_dir fn () !string, read_file fn (path string) !string) !Config {
+	config_root_dir := config_dir() or { return error("unable to resolve local config root directory") }
+	config_file_full_path := "${config_root_dir}/${lilly_config_root_dir_name}/lilly.conf"
+	config_file_contents := read_file(config_file_full_path) or { return error("local config file ${config_file_full_path} not found: ${err}") }
+	println(config_file_contents)
+	return json.decode(Config, config_file_contents) or { return error("unable to parse config ${config_file_full_path}: ${err}") }
 }
 
 pub fn (workspace Workspace) files() []string {

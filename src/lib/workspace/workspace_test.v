@@ -34,23 +34,27 @@ fn (mock_fs MockFS) read_file(path string) !string {
 	return error("file ${path} does not exist")
 }
 
+fn (mock_fs MockFS) config_dir() !string {
+	return "/home/test-user/.config"
+}
+
 fn test_open_workspace_files_and_config() {
 	mock_fs := MockFS{
 		pwd:  "/dev/fake-project"
 		dirs: {
-			"~/.config/lilly": [],
+			"/home/test-user/.config/lilly": [],
 			"/dev/fake-project": ["src", "research-notes"]
 		}
 		files: {
-			"~/.config/lilly": ["lilly.conf"],
+			"/home/test-user/.config/lilly": ["lilly.conf"],
 			"/dev/fake-project/src": ["main.v", "some_other_code.v"],
 			"/dev/fake-project/research-notes": ["brainstorm.pdf", "article-links.txt"],
 		}
 		file_contents: {
-			"./config/lilly/lilly.conf": "{ 'relative_line_numbers': true, 'insert_tabs_not_spaces': true, 'selection_highlight_color': { 'r': 96, 'g': 138, 'b': 143 } }"
+			"/home/test-user/.config/lilly/lilly.conf": '{ "relative_line_numbers": true, "insert_tabs_not_spaces": false, "selection_highlight_color": { "r": 96, "g": 138, "b": 143 } }'
 		}
 	}
-	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.read_file) or { panic("${err}") }
+	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err}") }
 
 	assert wrkspace.files == [
 		"/dev/fake-project/src/main.v",
@@ -64,7 +68,7 @@ fn test_open_workspace_files_and_config() {
 		selection_highlight_color: tui.Color{
 			r: 96, g: 138, b: 143
 		}
-		insert_tabs_not_spaces: true
+		insert_tabs_not_spaces: false
 	}
 }
 
