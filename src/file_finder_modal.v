@@ -107,14 +107,23 @@ fn (file_finder_modal FileFinderModal) file_selected(mut root Root) {
 		.filter(fn (it string) bool { return !it.starts_with("./.git") })[file_finder_modal.current_selection]) or { panic("${err}") }
 }
 
-// TODO(tauraamui): replace regex with levenshtein_distance
+struct ScoredFilePath {
+	content string
+	score   f32
+}
+
 fn (file_finder_modal FileFinderModal) resolve_file_paths() []string {
+	// TODO(tauraamui): two submaps? this seems slow and could be optimised I imagine. Also I want 0 score filtering.
 	if file_finder_modal.search.query.len == 0 { return file_finder_modal.file_paths }
-	mut re := regex.regex_opt(file_finder_modal.search.query) or { panic("${err}") }
-	return file_finder_modal.file_paths.filter(fn [file_finder_modal] (it string) bool {
-		distance := strings.dice_coefficient(file_finder_modal.search.query, it)
-		return distance > 0
-	})
+
+	mut scored_paths := file_finder_modal.file_paths.map(
+		ScoredFilePath{
+			content: it,
+			score: f32(int(strings.dice_coefficient(file_finder_modal.search.query, it) * 1000)) / 1000
+		}
+	)
+	scored_paths.sort(a.score > b.score)
+	return scored_paths.map(it.content)
 }
 
 fn (mut file_finder_modal FileFinderModal) resolve_to() int {
