@@ -42,8 +42,9 @@ fn test_fuzzy_searching_is_operational() {
 		]
 	}
 
-	mock_modal.search.query = "libutil"
+	mock_modal.search.query = "projectutilities"
 	assert mock_modal.resolve_file_paths() == [
 		"./src/project/lib/some_utilities.v"
 	]
 }
+
