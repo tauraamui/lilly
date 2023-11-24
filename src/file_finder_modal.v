@@ -21,6 +21,7 @@ const max_height = 20
 
 struct FileFinderModal {
 pub:
+	file_path  string
 	file_paths []string
 mut:
 	current_selection int

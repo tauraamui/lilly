@@ -98,12 +98,15 @@ const (
 )
 
 struct View {
+pub:
+	file_path                 string
 mut:
 	log                       &log.Log
 	path                      string
 	config                    workspace.Config
 	mode                      Mode
 	buffer                    buffer.Buffer
+	leader_key                string
 	cursor                    Cursor
 	cmd_buf                   CmdBuffer
 	search                    Search
@@ -120,6 +123,7 @@ mut:
 	current_syntax_idx        int
 	is_multiline_comment      bool
 	d_count                   int
+	f_count                   int
 	clipboard                 clipboard.Clipboard
 }
 
@@ -306,9 +310,9 @@ fn (mut cmd_buf CmdBuffer) prepare_for_input() {
 	cmd_buf.cursor_x = 1
 }
 
-fn (mut cmd_buf CmdBuffer) exec(mut view View) {
+fn (mut cmd_buf CmdBuffer) exec(mut view View, mut root Root) {
 	match view.cmd_buf.line {
-		":q" { exit(0); cmd_buf.code = .successful }
+		":q" { root.quit(); cmd_buf.code = .successful }
 		":toggle whitespace" {
 			// view.show_whitespace = !view.show_whitespace
 			cmd_buf.code = .disabled
@@ -397,7 +401,7 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 }
 
 fn open_view(config workspace.Config, _clipboard clipboard.Clipboard, buff &buffer.Buffer) Viewable {
-	mut res := View{ log: unsafe { nil }, config: config, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
+	mut res := View{ log: unsafe { nil }, file_path: buff.file_path, config: config, leader_key: config.leader_key, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
 	res.path = res.buffer.file_path
 	res.load_syntaxes()
 	res.set_current_syntax_idx(".v")
@@ -442,6 +446,7 @@ fn (mut view View) open_file(path string) {
 */
 
 interface Viewable {
+	file_path string
 mut:
 	draw(mut tui.Context)
 	on_key_down(&tui.Event, mut Root)
@@ -789,7 +794,18 @@ fn paint_text_on_background(mut ctx tui.Context, x int, y int, bg_color Color, f
 
 fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 	match view.mode {
+		.leader {
+			match e.code {
+				.escape { view.escape() }
+				.f { view.f_count += 1; if view.f_count == 2 { view.escape(); root.open_file_finder() } }
+				else { }
+			}
+		}
 		.normal {
+			match e.utf8 {
+				view.leader_key { view.mode = .leader }
+				else { }
+			}
 			match e.code {
 				.escape { view.escape() }
 				.h     { view.h() }
@@ -818,13 +834,6 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.left_square_bracket { view.left_square_bracket() }
 				.right_square_bracket { view.right_square_bracket() }
 				.slash { view.search() }
-				.enter {
-					// TODO(tauraamui) -> what even is this, remove??
-					if view.mode == .command {
-						if view.cmd_buf.line == ":q" { exit(0) }
-						view.cmd_buf.set_error("unrecognised command ${view.cmd_buf.line}")
-					}
-				}
 				48...57 { // 0-9a
 					view.repeat_amount = "${view.repeat_amount}${e.ascii.ascii_str()}"
 				}
@@ -859,7 +868,7 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 		.command {
 			match e.code {
 				.escape { view.escape() }
-				.enter { view.cmd_buf.exec(mut view); view.mode = .normal }
+				.enter { view.cmd_buf.exec(mut view, mut root); view.mode = .normal }
 				.space { view.cmd_buf.put_char(" ") }
 				48...57, 97...122 { // 0-9a-zA-Z
 					view.cmd_buf.put_char(e.ascii.ascii_str())
@@ -912,9 +921,9 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 					view.insert_text(e.ascii.ascii_str())
 				}
 				else {
-					buf := [5]u8{}
-					s := unsafe { utf32_to_str_no_malloc(u32(e.code), &buf[0]) }
-					view.insert_text(s)
+					// buf := [5]u8{}
+					// s := unsafe { utf32_to_str_no_malloc(u32(e.code), &buf[0]) }
+					view.insert_text(e.utf8)
 				}
 			}
 		}
@@ -1025,6 +1034,7 @@ fn (mut view View) escape() {
 	view.cmd_buf.clear()
 	view.search.clear()
 	view.d_count = 0
+	view.f_count = 0
 
 	// if current line only contains whitespace prefix clear the line
 	line := view.buffer.lines[view.cursor.pos.y]
