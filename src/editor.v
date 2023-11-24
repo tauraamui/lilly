@@ -57,6 +57,25 @@ pub fn open_editor(_clipboard clipboard.Clipboard, workspace_root_dir string) !&
 
 fn (mut editor Editor) open_file(path string) ! {
 	defer { editor.file_finder_modal_open = false }
+
+	// find existing view which has that file open
+	for i, view in editor.views[1..] {
+		if view.file_path == path {
+			editor.view = &editor.views[i+1]
+			return
+		}
+	}
+
+	// couldn't find a view, so now search for an existing buffer with no view
+	for i, buffer in editor.buffers {
+		if buffer.file_path == path {
+			editor.views << open_view(editor.workspace.config, editor.clipboard, &editor.buffers[i])
+			editor.view = &editor.views[editor.views.len-1]
+			return
+		}
+	}
+
+	// neither existing view nor buffer was found, oh well, just load it then :)
 	mut buff := buffer.Buffer{ file_path: path }
 	buff.load_from_path() or { return err }
 	editor.buffers << buff
@@ -67,6 +86,7 @@ fn (mut editor Editor) open_file(path string) ! {
 fn (mut editor Editor) open_file_finder() {
 	editor.file_finder_modal_open = true
 	editor.file_finder_modal = FileFinderModal{
+		file_path: "**lff**"
 		file_paths: editor.workspace.files()
 	}
 }

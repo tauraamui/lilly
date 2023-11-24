@@ -27,6 +27,8 @@ mut:
 }
 
 struct SplashScreen {
+pub:
+	file_path   string
 mut:
 	logo        Logo
 	leader_mode bool
@@ -36,6 +38,7 @@ mut:
 
 pub fn new_splash(leader_key string) Viewable {
 	mut splash := SplashScreen{
+		file_path: "**lss**"
 		logo: Logo{
 			data: logo_contents.to_string().split_into_lines()
 		}

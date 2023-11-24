@@ -22,6 +22,7 @@ enum Mode as u8 {
 	insert
 	command
 	search
+	leader
 	pending_delete
 }
 
@@ -48,6 +49,7 @@ fn (mode Mode) color() Color {
 		.insert { status_orange }
 		.command { status_cyan }
 		.search { status_purple }
+		.leader { status_purple }
 		.pending_delete { status_green }
 	}
 }
@@ -59,6 +61,7 @@ fn (mode Mode) str() string {
 		.insert  { "INSERT"  }
 		.command { "COMMAND" }
 		.search  { "SEARCH"  }
+		.leader  { "LEADER" }
 		.pending_delete { "NORMAL" }
 	}
 }
