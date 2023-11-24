@@ -30,7 +30,7 @@ fn test_resolve_file_paths_returns_realistic_results() {
 		"./src/project/lib/some_utilities.v"
 	]
 
-	mock_modal.search.query = "fewnfjefw"
+	mock_modal.search.query = "zkf"
 	assert mock_modal.resolve_file_paths() == []
 }
 
@@ -42,7 +42,7 @@ fn test_fuzzy_searching_is_operational() {
 		]
 	}
 
-	mock_modal.search.query = "projectutilities"
+	mock_modal.search.query = "ut"
 	assert mock_modal.resolve_file_paths() == [
 		"./src/project/lib/some_utilities.v"
 	]
