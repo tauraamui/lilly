@@ -106,11 +106,14 @@ fn (file_finder_modal FileFinderModal) file_selected(mut root Root) {
 		.filter(fn (it string) bool { return !it.starts_with("./.git") })[file_finder_modal.current_selection]) or { panic("${err}") }
 }
 
+// TODO(tauraamui): replace regex with levenshtein_distance
 fn (file_finder_modal FileFinderModal) resolve_file_paths() []string {
 	if file_finder_modal.search.query.len == 0 { return file_finder_modal.file_paths }
 	mut re := regex.regex_opt(file_finder_modal.search.query) or { panic("${err}") }
-	return file_finder_modal.file_paths.filter(fn [mut re] (it string) bool {
-		return re.find_all(it).len > 0
+	return file_finder_modal.file_paths.filter(fn [mut re, file_finder_modal] (it string) bool {
+		println(strings.levenshtein_distance_percentage(it, file_finder_modal.search.query))
+		return strings.levenshtein_distance_percentage(it, file_finder_modal.search.query) >= 10
+		// return re.find_all(it).len > 0
 	})
 }
 
