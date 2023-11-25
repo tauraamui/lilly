@@ -110,7 +110,6 @@ struct ScoredFilePath {
 }
 
 fn (file_finder_modal FileFinderModal) resolve_file_paths() []ScoredFilePath {
-	// TODO(tauraamui): two submaps? this seems slow and could be optimised I imagine. Also I want 0 score filtering.
 	mut scored_paths := file_finder_modal.file_paths.map(
 		ScoredFilePath{
 			content: it,
@@ -121,7 +120,6 @@ fn (file_finder_modal FileFinderModal) resolve_file_paths() []ScoredFilePath {
 
 	scored_paths.sort(a.score > b.score)
 	return scored_paths
-	// return scored_paths.map(it.content)
 }
 
 fn (mut file_finder_modal FileFinderModal) resolve_to() int {
