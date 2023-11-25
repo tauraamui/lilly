@@ -15,9 +15,7 @@
 module main
 
 import term.ui as tui
-import regex
 import strings
-import math
 
 const max_height = 20
 
