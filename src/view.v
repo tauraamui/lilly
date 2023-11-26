@@ -329,6 +329,11 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View, mut root Root) {
 			cmd_buf.code = .successful
 			view.save_file() or { cmd_buf.code = .unsuccessful }
 		}
+		":wq" {
+			cmd_buf.code = .successful
+			view.save_file() or { cmd_buf.code = .unsuccessful }
+			if cmd_buf.code == .successful { root.quit() }
+		}
 		"" { return }
 		else {
 			jump_pos, parse_successful := try_to_parse_to_jump_to_line_num(view.cmd_buf.line)
