@@ -15,7 +15,7 @@
 module main
 
 import term.ui as tui
-import regex
+import strings
 
 const max_height = 20
 
@@ -67,7 +67,7 @@ fn (mut file_finder_modal FileFinderModal) draw(mut ctx tui.Context) {
 	ctx.draw_text(1+utf8_str_visible_length(search_label)+1, y_offset, file_finder_modal.search.query)
 }
 
-fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx tui.Context, y_offset int, list []string) int {
+fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx tui.Context, y_offset int, list []ScoredFilePath) int {
 	ctx.reset_bg_color()
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
 	ctx.draw_rect(1, y_offset, ctx.window_width, y_offset+max_height - 1)
@@ -78,7 +78,7 @@ fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx tui.Cont
 			ctx.set_bg_color(r: 53, g: 53, b: 53)
 			ctx.draw_rect(1, y_offset+(i - file_finder_modal.from), ctx.window_width, y_offset+(i - file_finder_modal.from))
 		}
-		ctx.draw_text(1, y_offset+(i - file_finder_modal.from), list[i])
+		ctx.draw_text(1, y_offset+(i - file_finder_modal.from), list[i].content)
 	}
 	return y_offset + (max_height - 2)
 }
@@ -101,16 +101,25 @@ fn (mut file_finder_modal FileFinderModal) on_key_down(e &tui.Event, mut root Ro
 
 fn (file_finder_modal FileFinderModal) file_selected(mut root Root) {
 	file_paths := file_finder_modal.resolve_file_paths()
-	root.open_file(file_paths
-		.filter(fn (it string) bool { return !it.starts_with("./.git") })[file_finder_modal.current_selection]) or { panic("${err}") }
+	root.open_file(file_paths[file_finder_modal.current_selection].content) or { panic("${err}") }
 }
 
-fn (file_finder_modal FileFinderModal) resolve_file_paths() []string {
-	if file_finder_modal.search.query.len == 0 { return file_finder_modal.file_paths }
-	mut re := regex.regex_opt(file_finder_modal.search.query) or { panic("${err}") }
-	return file_finder_modal.file_paths.filter(fn [mut re] (it string) bool {
-		return re.find_all(it).len > 0
-	})
+struct ScoredFilePath {
+	content string
+	score   f32
+}
+
+fn (file_finder_modal FileFinderModal) resolve_file_paths() []ScoredFilePath {
+	mut scored_paths := file_finder_modal.file_paths.map(
+		ScoredFilePath{
+			content: it,
+			score: f32(int(strings.dice_coefficient(file_finder_modal.search.query, it) * 1000)) / 1000
+		}
+	)
+	if file_finder_modal.search.query.len == 0 { return scored_paths }
+
+	scored_paths.sort(a.score > b.score)
+	return scored_paths
 }
 
 fn (mut file_finder_modal FileFinderModal) resolve_to() int {
