@@ -1062,3 +1062,37 @@ fn test_shift_a_enters_insert_mode_at_the_end_of_current_line() {
 	assert fake_view.cursor.pos.y == 1
 	assert fake_view.mode == .insert
 }
+
+fn test_shift_o_adds_line_above_cursor() {
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	fake_view.buffer.lines = ["some line of text", "another line of text"]
+	fake_view.cursor.pos.y = 1
+	fake_view.cursor.pos.x = 7
+
+	fake_view.shift_o()
+
+	assert fake_view.buffer.lines.len == 3
+	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == ""
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 1
+	assert fake_view.mode == .insert
+}
+
+fn test_shift_o_adds_line_above_cursor_at_start_of_file() {
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	fake_view.buffer.lines = ["some line of text", "another line of text"]
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 7
+
+	fake_view.shift_o()
+
+	assert fake_view.buffer.lines.len == 3
+	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == ""
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 0
+	assert fake_view.mode == .insert
+}
