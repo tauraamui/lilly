@@ -493,7 +493,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	if view.mode == .insert {
 		set_cursor_to_vertical_bar(mut ctx)
 	} else { set_cursor_to_block(mut ctx) }
-	if view.d_count == 1 { set_cursor_to_underline(mut ctx) }
+	if view.d_count == 1 || view.mode == .replace { set_cursor_to_underline(mut ctx) }
 	ctx.set_cursor_position(view.x+1+offset, cursor_screen_space_y+1)
 }
 
@@ -820,6 +820,7 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.o     { view.o() }
 				.a     { if e.modifiers == .shift { view.shift_a() } else { view.a() } }
 				.p     { view.p() }
+				.r     { view.r() }
 				.up    { view.k() }
 				.right { view.l() }
 				.down  { view.j() }
@@ -934,6 +935,21 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				else {}
 			}
 		}
+		.replace {
+			match e.code {
+				.escape { view.escape_replace() }
+				.enter { view.escape_replace() }
+				.backspace {}
+				.up {}
+				.down {}
+				.left {}
+				.right {}
+				.tab {}
+				else {
+					view.replace_char(e.utf8)
+				}
+			}
+		}
 	}
 }
 
@@ -1046,6 +1062,10 @@ fn (mut view View) escape() {
 	view.buffer.update_undo_history()
 }
 
+fn (mut view View) escape_replace() {
+	view.mode = .normal
+}
+
 fn (mut view View) jump_cursor_to(position int) {
 	defer {
 		view.clamp_cursor_within_document_bounds()
@@ -1152,6 +1172,10 @@ fn (mut view View) i() {
 fn (mut view View) v() {
 	view.mode = .visual
 	view.cursor.selection_start = view.cursor.pos
+}
+
+fn (mut view View) r() {
+	view.mode = .replace
 }
 
 fn (mut view View) visual_y() {
@@ -1501,6 +1525,18 @@ fn (mut view View) right_square_bracket() {
 		view.move_cursor_down(view.buffer.lines.len - view.cursor.pos.y)
 		view.right_bracket_press_count = 0
 	}
+}
+
+fn (mut view View) replace_char(c string) {
+	if int(c[0]) < 32 {
+		view.mode = .normal
+		return
+	}
+	line := view.buffer.lines[view.cursor.pos.y].runes()
+	start := line[..view.cursor.pos.x]
+	end := line[view.cursor.pos.x+1..]
+	view.buffer.lines[view.cursor.pos.y] = "${start.string()}${c}${end.string()}"
+	view.mode = .normal
 }
 
 fn get_clean_words(line string) []string {

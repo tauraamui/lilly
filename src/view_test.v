@@ -17,6 +17,7 @@ module main
 import arrays
 import lib.clipboard
 import lib.workspace
+import term.ui as tui
 
 const example_file = "module history\n\nimport datatypes\nimport lib.diff { Op }\n\npub struct History {\nmut:\n\tundos datatypes.Stack[Op] // will actually be type diff.Op\n\tredos datatypes.Stack[Op]\n}"
 
@@ -1061,4 +1062,106 @@ fn test_shift_a_enters_insert_mode_at_the_end_of_current_line() {
 	assert fake_view.cursor.pos.x == 20
 	assert fake_view.cursor.pos.y == 1
 	assert fake_view.mode == .insert
+}
+
+fn test_r_replaces_character_in_middle_of_line() {
+	clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	fake_view.buffer.lines = ["some random line", "another line of text", "one last line"]
+	fake_view.cursor.pos.y = 2
+	fake_view.cursor.pos.x = 4
+	fake_view.r()
+
+	assert fake_view.mode == .replace
+
+	fake_view.replace_char("p")
+
+	assert fake_view.mode == .normal
+	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == "one past line"
+	assert fake_view.cursor.pos.x == 4
+	assert fake_view.cursor.pos.y == 2
+
+}
+
+fn test_r_replaces_character_with_special_character() {
+	clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	fake_view.buffer.lines = ["some random line", "another line of text", "one last line"]
+	fake_view.cursor.pos.y = 2
+	fake_view.cursor.pos.x = 8
+	fake_view.r()
+
+	assert fake_view.mode == .replace
+
+	fake_view.replace_char("!")
+
+	assert fake_view.mode == .normal
+	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == "one last!line"
+	assert fake_view.cursor.pos.x == 8
+	assert fake_view.cursor.pos.y == 2
+
+}
+
+fn test_r_replaces_character_with_space() {
+	clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	fake_view.buffer.lines = ["some random line", "another line of text", "one last line"]
+	fake_view.cursor.pos.y = 2
+	fake_view.cursor.pos.x = 4
+	fake_view.r()
+
+	assert fake_view.mode == .replace
+
+	fake_view.replace_char(" ")
+
+	assert fake_view.mode == .normal
+	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == "one  ast line"
+	assert fake_view.cursor.pos.x == 4
+	assert fake_view.cursor.pos.y == 2
+
+}
+
+fn test_r_doesnt_change_anything_when_escape_is_used() {
+	clip := clipboard.new()
+	mut editor := Editor{ clipboard: mut clip, file_finder_modal: unsafe { nil } }
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	fake_view.buffer.lines = ["some random line", "another line of text", "one last line"]
+	fake_view.cursor.pos.y = 2
+	fake_view.cursor.pos.x = 4
+	fake_view.r()
+
+	assert fake_view.mode == .replace
+
+	event := &tui.Event{code: tui.KeyCode.escape}
+	fake_view.on_key_down(event, mut editor)
+
+	assert fake_view.mode == .normal
+	assert fake_view.cursor.pos.x == 4
+	assert fake_view.cursor.pos.y == 2
+	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == "one last line"
+}
+
+fn test_r_doesnt_change_anything_when_enter_is_used() {
+	clip := clipboard.new()
+	mut editor := Editor{ clipboard: mut clip, file_finder_modal: unsafe { nil } }
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	fake_view.buffer.lines = ["some random line", "another line of text", "one last line"]
+	fake_view.cursor.pos.y = 1
+	fake_view.cursor.pos.x = 7
+	fake_view.r()
+
+	assert fake_view.mode == .replace
+
+	event := &tui.Event{code: tui.KeyCode.enter}
+	fake_view.on_key_down(event, mut editor)
+
+	assert fake_view.mode == .normal
+	assert fake_view.cursor.pos.x == 7
+	assert fake_view.cursor.pos.y == 1
+	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == "another line of text"
 }

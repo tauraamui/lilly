@@ -24,6 +24,7 @@ enum Mode as u8 {
 	search
 	leader
 	pending_delete
+	replace
 }
 
 fn (mode Mode) draw(mut ctx tui.Context, x int, y int) int {
@@ -51,6 +52,7 @@ fn (mode Mode) color() Color {
 		.search { status_purple }
 		.leader { status_purple }
 		.pending_delete { status_green }
+		.replace { status_green }
 	}
 }
 
@@ -63,6 +65,7 @@ fn (mode Mode) str() string {
 		.search  { "SEARCH"  }
 		.leader  { "LEADER" }
 		.pending_delete { "NORMAL" }
+		.replace { "NORMAL" }
 	}
 }
 
