@@ -4,6 +4,7 @@ import os
 import json
 
 const builtin_v_syntax = $embed_file("../../syntax/v.syntax").to_string()
+const builtin_go_syntax = $embed_file("../../syntax/go.syntax").to_string()
 
 pub struct Syntax {
 pub:
@@ -16,6 +17,8 @@ pub:
 fn (mut workspace Workspace) load_builtin_syntaxes() {
 	vsyntax := json.decode(Syntax, builtin_v_syntax) or { panic("builtin syntax file failed to decode: ${err}") }
 	workspace.syntaxes << vsyntax
+	go_syntax := json.decode(Syntax, builtin_go_syntax) or { panic("builtin syntax file failed to decode: ${err}") }
+	workspace.syntaxes << go_syntax
 }
 
 fn (mut workspace Workspace) load_syntaxes_from_disk(config_dir fn () !string, dir_walker fn (path string, f fn (string)), read_file fn (path string) !string) ! {
@@ -26,7 +29,8 @@ fn (mut workspace Workspace) load_syntaxes_from_disk(config_dir fn () !string, d
 		if !file_path.ends_with(".syntax") { return }
 		contents := read_file(file_path) or { panic("${err.msg()}"); "{}" } // TODO(tauraamui): log out to a file here probably
 		syn := json.decode(Syntax, contents) or { Syntax{} }
-		if file_path.ends_with("v.syntax") { syntaxes_ref[0] = syn; return }
+		if file_path.ends_with("v.syntax") { unsafe { syntaxes_ref[0] = syn }; return }
+		if file_path.ends_with("go.syntax") { unsafe { syntaxes_ref[1] = syn }; return }
 		syntaxes_ref << syn
 	})
 }
