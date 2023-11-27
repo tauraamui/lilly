@@ -1170,6 +1170,7 @@ fn test_r_doesnt_change_anything_when_enter_is_used() {
 	assert fake_view.cursor.pos.x == 7
 	assert fake_view.cursor.pos.y == 1
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == "another line of text"
+}
 
 fn test_x_removes_character_in_middle_of_line() {
 	clip := clipboard.new()
