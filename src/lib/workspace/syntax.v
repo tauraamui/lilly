@@ -12,6 +12,8 @@ pub:
 	extensions []string
 	keywords   []string
 	literals   []string
+mut:
+	file_path  string
 }
 
 fn (mut workspace Workspace) load_builtin_syntaxes() {
@@ -24,14 +26,15 @@ fn (mut workspace Workspace) load_builtin_syntaxes() {
 fn (mut workspace Workspace) load_syntaxes_from_disk(config_dir fn () !string, dir_walker fn (path string, f fn (string)), read_file fn (path string) !string) ! {
 	config_root_dir := config_dir() or { return error("unable to resolve local config root directory") }
 	syntax_dir_full_path := os.join_path(config_root_dir, lilly_config_root_dir_name, lilly_syntaxes_dir_name)
-	mut syntaxes_ref := &workspace.syntaxes
-	dir_walker(syntax_dir_full_path, fn [mut syntaxes_ref, read_file] (file_path string) {
+	mut syns := &workspace.syntaxes
+	dir_walker(syntax_dir_full_path, fn [mut syns, read_file] (file_path string) {
 		if !file_path.ends_with(".syntax") { return }
 		contents := read_file(file_path) or { panic("${err.msg()}"); "{}" } // TODO(tauraamui): log out to a file here probably
-		syn := json.decode(Syntax, contents) or { Syntax{} }
-		if file_path.ends_with("v.syntax") { unsafe { syntaxes_ref[0] = syn }; return }
-		if file_path.ends_with("go.syntax") { unsafe { syntaxes_ref[1] = syn }; return }
-		syntaxes_ref << syn
+		mut syn := json.decode(Syntax, contents) or { Syntax{} }
+		syn.file_path = file_path
+		if syn.file_path.ends_with("v.syntax") { syns[0] = syn; return }
+		if syn.file_path.ends_with("go.syntax") { syns[1] = syn; return }
+		syns << syn
 	})
 }
 
