@@ -12,8 +12,6 @@ pub:
 	extensions []string
 	keywords   []string
 	literals   []string
-mut:
-	file_path  string
 }
 
 fn (mut workspace Workspace) load_builtin_syntaxes() {
@@ -31,9 +29,8 @@ fn (mut workspace Workspace) load_syntaxes_from_disk(config_dir fn () !string, d
 		if !file_path.ends_with(".syntax") { return }
 		contents := read_file(file_path) or { panic("${err.msg()}"); "{}" } // TODO(tauraamui): log out to a file here probably
 		mut syn := json.decode(Syntax, contents) or { Syntax{} }
-		syn.file_path = file_path
-		if syn.file_path.ends_with("v.syntax") { syns[0] = syn; return }
-		if syn.file_path.ends_with("go.syntax") { syns[1] = syn; return }
+		if file_path.ends_with("v.syntax") { syns[0] = syn; return }
+		if file_path.ends_with("go.syntax") { syns[1] = syn; return }
 		syns << syn
 	})
 }
