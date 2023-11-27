@@ -43,25 +43,14 @@ pub fn open_workspace(
 		files_ref << file_path
 	})
 
-	wrkspace.load_syntaxes(config_dir, dir_walker, read_file) or { return error("unable to load syntaxes") }
+	wrkspace.load_builtin_syntaxes()
+	wrkspace.load_syntaxes_from_disk(config_dir, dir_walker, read_file) or { return error("unable to load syntaxes") }
 	return wrkspace
 }
 
 fn resolve_config(config_dir fn () !string, read_file fn (path string) !string) Config {
 	loaded_config := attempt_to_load_from_disk(config_dir, read_file) or { fallback_to_bundled_default_config() }
 	return loaded_config
-}
-
-fn (mut workspace Workspace) load_syntaxes(config_dir fn () !string, dir_walker fn (path string, f fn (string)), read_file fn (path string) !string) ! {
-	config_root_dir := config_dir() or { return error("unable to resolve local config root directory") }
-	syntax_dir_full_path := os.join_path(config_root_dir, lilly_config_root_dir_name, lilly_syntaxes_dir_name)
-	mut syntaxes_ref := &workspace.syntaxes
-	dir_walker(syntax_dir_full_path, fn [mut syntaxes_ref, read_file] (file_path string) {
-		if !file_path.ends_with(".syntax") { return }
-		contents := read_file(file_path) or { panic("${err.msg()}"); "{}" } // TODO(tauraamui): log out to a file here probably
-		syn := json.decode(Syntax, contents) or { Syntax{} }
-		syntaxes_ref << syn
-	})
 }
 
 // NOTE(tauraamui):
