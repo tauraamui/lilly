@@ -15,9 +15,9 @@ pub:
 }
 
 fn (mut workspace Workspace) load_builtin_syntaxes() {
-	vsyntax := json.decode(Syntax, builtin_v_syntax) or { panic("builtin syntax file failed to decode: ${err}") }
+	vsyntax := json.decode(Syntax, builtin_v_syntax) or { panic("builtin V syntax file failed to decode: ${err}") }
 	workspace.syntaxes << vsyntax
-	go_syntax := json.decode(Syntax, builtin_go_syntax) or { panic("builtin syntax file failed to decode: ${err}") }
+	go_syntax := json.decode(Syntax, builtin_go_syntax) or { panic("builtin Go syntax file failed to decode: ${err}") }
 	workspace.syntaxes << go_syntax
 }
 
