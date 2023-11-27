@@ -39,6 +39,20 @@ fn (mock_fs MockFS) config_dir() !string {
 	return "/home/test-user/.config"
 }
 
+fn test_open_workspace_loads_builtin_syntax() {
+	mock_fs := MockFS{
+		pwd: "/home/test-user/dev/fakeproject"
+		dirs: {
+			"/home/test-user/dev/fakeproject": []
+		}
+		files: {}
+		file_contents: {}
+	}
+
+	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err.msg()}") }
+	assert wrkspace.syntaxes[0].name == "V"
+	assert wrkspace.syntaxes[1].name == "Go"
+}
 
 fn test_open_workspace_overrides_builtin_syntax() {
 	mock_fs := MockFS{
@@ -56,5 +70,6 @@ fn test_open_workspace_overrides_builtin_syntax() {
 	}
 
 	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err.msg()}") }
+	assert wrkspace.syntaxes[0].name == "V"
 	assert wrkspace.syntaxes[1].name == "GoTest"
 }

@@ -29,8 +29,8 @@ fn (mut workspace Workspace) load_syntaxes_from_disk(config_dir fn () !string, d
 		if !file_path.ends_with(".syntax") { return }
 		contents := read_file(file_path) or { panic("${err.msg()}"); "{}" } // TODO(tauraamui): log out to a file here probably
 		mut syn := json.decode(Syntax, contents) or { Syntax{} }
-		if file_path.ends_with("v.syntax") { syns[0] = syn; return }
-		if file_path.ends_with("go.syntax") { syns[1] = syn; return }
+		if file_path.ends_with("v.syntax") { unsafe { syns[0] = syn }; return }
+		if file_path.ends_with("go.syntax") { unsafe { syns[1] = syn }; return }
 		syns << syn
 	})
 }
