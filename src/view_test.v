@@ -1066,6 +1066,7 @@ fn test_shift_a_enters_insert_mode_at_the_end_of_current_line() {
 
 fn test_r_replaces_character_in_middle_of_line() {
 	clip := clipboard.new()
+	mut editor := Editor{ clipboard: mut clip, file_finder_modal: unsafe { nil } }
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
 	fake_view.buffer.lines = ["some random line", "another line of text", "one last line"]
@@ -1075,7 +1076,8 @@ fn test_r_replaces_character_in_middle_of_line() {
 
 	assert fake_view.mode == .replace
 
-	fake_view.replace_char("p")
+	event := &tui.Event{code: tui.KeyCode.p, ascii: 112}
+	fake_view.on_key_down(event, mut editor)
 
 	assert fake_view.mode == .normal
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == "one past line"
@@ -1086,6 +1088,7 @@ fn test_r_replaces_character_in_middle_of_line() {
 
 fn test_r_replaces_character_with_special_character() {
 	clip := clipboard.new()
+	mut editor := Editor{ clipboard: mut clip, file_finder_modal: unsafe { nil } }
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
 	fake_view.buffer.lines = ["some random line", "another line of text", "one last line"]
@@ -1095,7 +1098,8 @@ fn test_r_replaces_character_with_special_character() {
 
 	assert fake_view.mode == .replace
 
-	fake_view.replace_char("!")
+	event := &tui.Event{code: tui.KeyCode.exclamation, ascii: 33}
+	fake_view.on_key_down(event, mut editor)
 
 	assert fake_view.mode == .normal
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == "one last!line"
@@ -1106,6 +1110,7 @@ fn test_r_replaces_character_with_special_character() {
 
 fn test_r_replaces_character_with_space() {
 	clip := clipboard.new()
+	mut editor := Editor{ clipboard: mut clip, file_finder_modal: unsafe { nil } }
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
 	fake_view.buffer.lines = ["some random line", "another line of text", "one last line"]
@@ -1115,7 +1120,8 @@ fn test_r_replaces_character_with_space() {
 
 	assert fake_view.mode == .replace
 
-	fake_view.replace_char(" ")
+	event := &tui.Event{code: tui.KeyCode.space, ascii: 32}
+	fake_view.on_key_down(event, mut editor)
 
 	assert fake_view.mode == .normal
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == "one  ast line"
@@ -1136,7 +1142,7 @@ fn test_r_doesnt_change_anything_when_escape_is_used() {
 
 	assert fake_view.mode == .replace
 
-	event := &tui.Event{code: tui.KeyCode.escape}
+	event := &tui.Event{code: tui.KeyCode.escape, ascii: 27}
 	fake_view.on_key_down(event, mut editor)
 
 	assert fake_view.mode == .normal
@@ -1157,7 +1163,7 @@ fn test_r_doesnt_change_anything_when_enter_is_used() {
 
 	assert fake_view.mode == .replace
 
-	event := &tui.Event{code: tui.KeyCode.enter}
+	event := &tui.Event{code: tui.KeyCode.enter, ascii: 10}
 	fake_view.on_key_down(event, mut editor)
 
 	assert fake_view.mode == .normal

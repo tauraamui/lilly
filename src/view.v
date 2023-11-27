@@ -946,7 +946,8 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.right {}
 				.tab {}
 				else {
-					view.replace_char(e.utf8)
+					view.replace_char(e.ascii)
+					view.escape_replace()
 				}
 			}
 		}
@@ -1527,16 +1528,14 @@ fn (mut view View) right_square_bracket() {
 	}
 }
 
-fn (mut view View) replace_char(c string) {
-	if int(c[0]) < 32 {
-		view.mode = .normal
+fn (mut view View) replace_char(c u8) {
+	if c < 32 {
 		return
 	}
 	line := view.buffer.lines[view.cursor.pos.y].runes()
 	start := line[..view.cursor.pos.x]
 	end := line[view.cursor.pos.x+1..]
-	view.buffer.lines[view.cursor.pos.y] = "${start.string()}${c}${end.string()}"
-	view.mode = .normal
+	view.buffer.lines[view.cursor.pos.y] = "${start.string()}${c.ascii_str()}${end.string()}"
 }
 
 fn get_clean_words(line string) []string {
