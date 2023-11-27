@@ -29,6 +29,7 @@ mut:
 	file_finder_modal_open bool
 	file_finder_modal      Viewable
 	workspace              workspace.Workspace
+	syntaxes               []workspace.Syntax
 }
 
 interface Root {
@@ -69,7 +70,7 @@ fn (mut editor Editor) open_file(path string) ! {
 	// couldn't find a view, so now search for an existing buffer with no view
 	for i, buffer in editor.buffers {
 		if buffer.file_path == path {
-			editor.views << open_view(editor.workspace.config, editor.clipboard, &editor.buffers[i])
+			editor.views << open_view(editor.workspace.config, editor.workspace.syntaxes(), editor.clipboard, &editor.buffers[i])
 			editor.view = &editor.views[editor.views.len-1]
 			return
 		}
@@ -79,7 +80,7 @@ fn (mut editor Editor) open_file(path string) ! {
 	mut buff := buffer.Buffer{ file_path: path }
 	buff.load_from_path() or { return err }
 	editor.buffers << buff
-	editor.views << open_view(editor.workspace.config, editor.clipboard, &editor.buffers[editor.buffers.len-1])
+	editor.views << open_view(editor.workspace.config, editor.workspace.syntaxes(), editor.clipboard, &editor.buffers[editor.buffers.len-1])
 	editor.view = &editor.views[editor.views.len-1]
 }
 

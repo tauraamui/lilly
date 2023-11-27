@@ -6,12 +6,14 @@ import term.ui as tui
 
 const builtin_lilly_config_file_content = $embed_file("../../config/lilly.conf").to_string()
 const lilly_config_root_dir_name = "lilly"
+const lilly_syntaxes_dir_name = "syntaxes"
 
 pub struct Workspace {
 pub:
 	config Config
 mut:
-	files []string
+	files    []string
+	syntaxes []Syntax
 }
 
 pub struct Config {
@@ -31,7 +33,7 @@ pub fn open_workspace(
 ) !Workspace {
 	path := os.dir(root_path)
 	if !is_dir(path) { return error("${path} is not a directory") }
-	wrkspace := Workspace{
+	mut wrkspace := Workspace{
 		config: resolve_config(config_dir, read_file)
 	}
 	mut files_ref := &wrkspace.files
@@ -40,12 +42,26 @@ pub fn open_workspace(
 		if is_dir(file_path) { return }
 		files_ref << file_path
 	})
+
+	wrkspace.load_syntaxes(config_dir, dir_walker, read_file) or { return error("unable to load syntaxes") }
 	return wrkspace
 }
 
 fn resolve_config(config_dir fn () !string, read_file fn (path string) !string) Config {
 	loaded_config := attempt_to_load_from_disk(config_dir, read_file) or { fallback_to_bundled_default_config() }
 	return loaded_config
+}
+
+fn (mut workspace Workspace) load_syntaxes(config_dir fn () !string, dir_walker fn (path string, f fn (string)), read_file fn (path string) !string) ! {
+	config_root_dir := config_dir() or { return error("unable to resolve local config root directory") }
+	syntax_dir_full_path := os.join_path(config_root_dir, lilly_config_root_dir_name, lilly_syntaxes_dir_name)
+	mut syntaxes_ref := &workspace.syntaxes
+	dir_walker(syntax_dir_full_path, fn [mut syntaxes_ref, read_file] (file_path string) {
+		if !file_path.ends_with(".syntax") { return }
+		contents := read_file(file_path) or { panic("${err.msg()}"); "{}" } // TODO(tauraamui): log out to a file here probably
+		syn := json.decode(Syntax, contents) or { Syntax{} }
+		syntaxes_ref << syn
+	})
 }
 
 // NOTE(tauraamui):
@@ -66,3 +82,5 @@ fn attempt_to_load_from_disk(config_dir fn () !string, read_file fn (path string
 pub fn (workspace Workspace) files() []string {
 	return workspace.files
 }
+
+pub fn (workspace Workspace) syntaxes() []Syntax { return workspace.syntaxes }
