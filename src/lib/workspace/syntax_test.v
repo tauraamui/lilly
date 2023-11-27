@@ -50,6 +50,7 @@ fn test_open_workspace_loads_builtin_syntax() {
 	}
 
 	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err.msg()}") }
+	assert wrkspace.syntaxes.len == 2
 	assert wrkspace.syntaxes[0].name == "V"
 	assert wrkspace.syntaxes[1].name == "Go"
 }
@@ -70,6 +71,29 @@ fn test_open_workspace_overrides_builtin_syntax() {
 	}
 
 	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err.msg()}") }
+	assert wrkspace.syntaxes.len == 2
 	assert wrkspace.syntaxes[0].name == "V"
 	assert wrkspace.syntaxes[1].name == "GoTest"
+}
+
+fn test_open_workspace_loads_custom_syntax() {
+	mock_fs := MockFS{
+		pwd: "/home/test-user/dev/fakeproject"
+		dirs: {
+			"/home/test-user/.config/lilly/syntaxes": [],
+			"/home/test-user/dev/fakeproject": []
+		}
+		files: {
+			"/home/test-user/.config/lilly/syntaxes": ["brainfuck.syntax"]
+		}
+		file_contents: {
+			"/home/test-user/.config/lilly/syntaxes/brainfuck.syntax": '{ "name": "Brainfuck"}'
+		}
+	}
+
+	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err.msg()}") }
+	assert wrkspace.syntaxes.len == 3
+	assert wrkspace.syntaxes[0].name == "V"
+	assert wrkspace.syntaxes[1].name == "Go"
+	assert wrkspace.syntaxes[2].name == "Brainfuck"
 }
