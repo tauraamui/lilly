@@ -119,7 +119,7 @@ mut:
 	show_whitespace           bool
 	left_bracket_press_count  int
 	right_bracket_press_count int
-	syntaxes                  []Syntax
+	syntaxes                  []workspace.Syntax
 	current_syntax_idx        int
 	is_multiline_comment      bool
 	d_count                   int
@@ -329,6 +329,11 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View, mut root Root) {
 			cmd_buf.code = .successful
 			view.save_file() or { cmd_buf.code = .unsuccessful }
 		}
+		":wq" {
+			cmd_buf.code = .successful
+			view.save_file() or { cmd_buf.code = .unsuccessful }
+			if cmd_buf.code == .successful { root.quit() }
+		}
 		"" { return }
 		else {
 			jump_pos, parse_successful := try_to_parse_to_jump_to_line_num(view.cmd_buf.line)
@@ -400,13 +405,21 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 	cmd_buf.code = .blank
 }
 
-fn open_view(config workspace.Config, _clipboard clipboard.Clipboard, buff &buffer.Buffer) Viewable {
-	mut res := View{ log: unsafe { nil }, file_path: buff.file_path, config: config, leader_key: config.leader_key, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
+fn open_view(config workspace.Config, syntaxes []workspace.Syntax, _clipboard clipboard.Clipboard, buff &buffer.Buffer) Viewable {
+	mut res := View{ log: unsafe { nil }, syntaxes: syntaxes, file_path: buff.file_path, config: config, leader_key: config.leader_key, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
 	res.path = res.buffer.file_path
-	res.load_syntaxes()
-	res.set_current_syntax_idx(".v")
+	res.set_current_syntax_idx(os.file_ext(res.path))
 	res.cursor.selection_start = Pos{ -1, -1 }
 	return res
+}
+
+fn (mut view View) set_current_syntax_idx(ext string) {
+	for i, syntax in view.syntaxes {
+		if ext in syntax.extensions {
+			view.current_syntax_idx = i
+			break
+		}
+	}
 }
 
 /*
@@ -560,7 +573,7 @@ fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string, withi
 
 	linex = linex[..max_width]
 
-	segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { Syntax{} }, linex, view.is_multiline_comment)
+	segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex, view.is_multiline_comment)
 	view.is_multiline_comment = is_multiline_comment
 
 	/*
@@ -603,7 +616,7 @@ fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string, withi
 	}
 }
 
-fn resolve_line_segments(syntax Syntax, line string, is_multiline_comment bool) ([]LineSegment, bool) {
+fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comment bool) ([]LineSegment, bool) {
 	mut segments := []LineSegment{}
 	mut is_multiline_commentx := is_multiline_comment
 	line_runes := line.runes()
@@ -820,6 +833,7 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.o     { if e.modifiers == .shift { view.shift_o() } else { view.o() } }
 				.a     { if e.modifiers == .shift { view.shift_a() } else { view.a() } }
 				.p     { view.p() }
+				.x     { view.x() }
 				.up    { view.k() }
 				.right { view.l() }
 				.down  { view.j() }
@@ -1160,6 +1174,17 @@ fn (mut view View) visual_y() {
 	if end+1 >= view.buffer.lines.len { end = view.buffer.lines.len-1 }
 	view.copy_lines_into_clipboard(start, end)
 	view.escape()
+}
+
+fn (mut view View) x() {
+	defer { view.clamp_cursor_x_pos() }
+	x := view.cursor.pos.x
+	y := view.cursor.pos.y
+
+	line := view.buffer.lines[y].runes()
+	start := line[..x]
+	end := line[x+1..]
+	view.buffer.lines[y] = "${start.string()}${end.string()}"
 }
 
 fn (mut view View) copy_lines_into_clipboard(start int, end int) {
