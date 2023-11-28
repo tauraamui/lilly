@@ -1062,3 +1062,39 @@ fn test_shift_a_enters_insert_mode_at_the_end_of_current_line() {
 	assert fake_view.cursor.pos.y == 1
 	assert fake_view.mode == .insert
 }
+
+fn test_x_removes_character_in_middle_of_line() {
+	clip := clipboard.new()
+
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	fake_view.buffer.lines = ["this is a lines of text"]
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 14
+
+	fake_view.x()
+
+	assert fake_view.buffer.lines == ["this is a line of text"]
+	assert fake_view.mode == .normal
+	assert fake_view.cursor.pos.x == 14
+}
+
+fn test_x_removes_character_and_shifts_cursor_back_at_end_of_line() {
+	clip := clipboard.new()
+
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	fake_view.buffer.lines = ["this is a lines of text"]
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 22
+
+	// to show it reduces the length in later assertion
+	assert fake_view.buffer.lines[fake_view.cursor.pos.y].len == 23
+
+	fake_view.x()
+
+	assert fake_view.buffer.lines == ["this is a lines of tex"]
+	assert fake_view.mode == .normal
+	assert fake_view.cursor.pos.x == 21
+	assert fake_view.buffer.lines[fake_view.cursor.pos.y].len == 22
+}

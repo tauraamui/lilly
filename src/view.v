@@ -329,6 +329,11 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View, mut root Root) {
 			cmd_buf.code = .successful
 			view.save_file() or { cmd_buf.code = .unsuccessful }
 		}
+		":wq" {
+			cmd_buf.code = .successful
+			view.save_file() or { cmd_buf.code = .unsuccessful }
+			if cmd_buf.code == .successful { root.quit() }
+		}
 		"" { return }
 		else {
 			jump_pos, parse_successful := try_to_parse_to_jump_to_line_num(view.cmd_buf.line)
@@ -828,6 +833,7 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.o     { view.o() }
 				.a     { if e.modifiers == .shift { view.shift_a() } else { view.a() } }
 				.p     { view.p() }
+				.x     { view.x() }
 				.up    { view.k() }
 				.right { view.l() }
 				.down  { view.j() }
@@ -1168,6 +1174,17 @@ fn (mut view View) visual_y() {
 	if end+1 >= view.buffer.lines.len { end = view.buffer.lines.len-1 }
 	view.copy_lines_into_clipboard(start, end)
 	view.escape()
+}
+
+fn (mut view View) x() {
+	defer { view.clamp_cursor_x_pos() }
+	x := view.cursor.pos.x
+	y := view.cursor.pos.y
+
+	line := view.buffer.lines[y].runes()
+	start := line[..x]
+	end := line[x+1..]
+	view.buffer.lines[y] = "${start.string()}${end.string()}"
 }
 
 fn (mut view View) copy_lines_into_clipboard(start int, end int) {
