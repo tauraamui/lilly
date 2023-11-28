@@ -6,12 +6,14 @@ import term.ui as tui
 
 const builtin_lilly_config_file_content = $embed_file("../../config/lilly.conf").to_string()
 const lilly_config_root_dir_name = "lilly"
+const lilly_syntaxes_dir_name = "syntaxes"
 
 pub struct Workspace {
 pub:
 	config Config
 mut:
-	files []string
+	files    []string
+	syntaxes []Syntax
 }
 
 pub struct Config {
@@ -31,7 +33,7 @@ pub fn open_workspace(
 ) !Workspace {
 	path := os.dir(root_path)
 	if !is_dir(path) { return error("${path} is not a directory") }
-	wrkspace := Workspace{
+	mut wrkspace := Workspace{
 		config: resolve_config(config_dir, read_file)
 	}
 	mut files_ref := &wrkspace.files
@@ -40,6 +42,9 @@ pub fn open_workspace(
 		if is_dir(file_path) { return }
 		files_ref << file_path
 	})
+
+	wrkspace.load_builtin_syntaxes()
+	wrkspace.load_syntaxes_from_disk(config_dir, dir_walker, read_file) or { return error("unable to load syntaxes") }
 	return wrkspace
 }
 
@@ -66,3 +71,5 @@ fn attempt_to_load_from_disk(config_dir fn () !string, read_file fn (path string
 pub fn (workspace Workspace) files() []string {
 	return workspace.files
 }
+
+pub fn (workspace Workspace) syntaxes() []Syntax { return workspace.syntaxes }
