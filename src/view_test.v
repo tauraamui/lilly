@@ -148,7 +148,8 @@ fn test_dd_deletes_current_line_at_end_of_doc() {
 }
 
 fn test_o_inserts_sentance_line() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	// manually set the "document" contents
 	fake_view.buffer.lines = ["1. first line", "2. second line"]
 	// ensure cursor is set to sit on the first line
@@ -163,7 +164,8 @@ fn test_o_inserts_sentance_line() {
 }
 
 fn test_o_inserts_sentance_line_end_of_document() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	// manually set the "document" contents
 	fake_view.buffer.lines = ["1. first line", "2. second line"]
 	// ensure cursor is set to sit on the second line
@@ -178,7 +180,8 @@ fn test_o_inserts_sentance_line_end_of_document() {
 }
 
 fn test_o_inserts_line_and_auto_indents() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	// manually set the "document" contents
 	fake_view.buffer.lines = ["	1. first line"]
 	// ensure cursor is set to sit on the first line
@@ -193,7 +196,8 @@ fn test_o_inserts_line_and_auto_indents() {
 }
 
 fn test_o_auto_indents_but_clears_if_nothing_added_to_line() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	// manually set the "document" contents
 	fake_view.buffer.lines = ["	1. first line"]
 	// ensure cursor is set to sit on the first line
@@ -219,7 +223,8 @@ fn test_resolve_whitespace_prefix_on_line_with_no_text() {
 }
 
 fn test_v_toggles_visual_mode_and_starts_selection() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	// manually set the "document" contents
 	fake_view.buffer.lines = ["1. first line"]
 	// ensure cursor is set to sit on sort of in the middle of the first line
@@ -235,7 +240,8 @@ fn test_v_toggles_visual_mode_and_starts_selection() {
 }
 
 fn test_enter_from_start_of_line() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .insert, clipboard: mut clip }
 	// manually set the "document" contents
 	fake_view.buffer.lines = [
 		"1. first line with some trailing content"
@@ -254,7 +260,8 @@ fn test_enter_from_start_of_line() {
 }
 
 fn test_enter_moves_trailing_segment_to_next_line_and_moves_cursor_in_front() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .insert, clipboard: mut clip }
 	// manually set the "document" contents
 	fake_view.buffer.lines = [
 		"1. first line with some trailing content"
@@ -273,7 +280,8 @@ fn test_enter_moves_trailing_segment_to_next_line_and_moves_cursor_in_front() {
 }
 
 fn test_enter_moves_trailing_segment_to_next_line_and_moves_cursor_to_past_prefix_whitespace() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .insert, clipboard: mut clip }
 	fake_view.buffer.lines = [
 		"    1. first line with whitespace prefix"
 	]
@@ -291,7 +299,8 @@ fn test_enter_moves_trailing_segment_to_next_line_and_moves_cursor_to_past_prefi
 }
 
 fn test_enter_inserts_line_at_cur_pos_and_auto_indents() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .insert, clipboard: mut clip }
 	// manually set the "document" contents
 	fake_view.buffer.lines = ["	indented first line"]
 	// ensure cursor is set to sit on the first line
@@ -306,7 +315,8 @@ fn test_enter_inserts_line_at_cur_pos_and_auto_indents() {
 }
 
 fn test_enter_auto_indents_but_clears_if_nothing_added_to_line() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .insert }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .insert, clipboard: mut clip }
 	// manually set the "document" contents
 	fake_view.buffer.lines = ["	indented first line"]
 	// ensure cursor is set to sit on the first line
@@ -323,7 +333,8 @@ fn test_enter_auto_indents_but_clears_if_nothing_added_to_line() {
 }
 
 fn test_backspace_deletes_char_from_end_of_sentance() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	// manually set the "document" contents
 	fake_view.buffer.lines = ["single line of text!"]
 	// ensure cursor is set to sit on the first line
@@ -341,7 +352,8 @@ fn test_backspace_deletes_char_from_end_of_sentance() {
 }
 
 fn test_backspace_deletes_char_from_start_of_sentance() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	fake_view.mode = .insert
 
 	// manually set the "document" contents
@@ -357,7 +369,8 @@ fn test_backspace_deletes_char_from_start_of_sentance() {
 }
 
 fn test_backspace_moves_line_up_to_previous_line() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	fake_view.mode = .insert
 
 	// manually set the document contents
@@ -373,7 +386,8 @@ fn test_backspace_moves_line_up_to_previous_line() {
 }
 
 fn test_backspace_moves_line_up_to_end_of_previous_line() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	fake_view.mode = .insert
 
 	// manually set the document contents
@@ -392,7 +406,8 @@ fn test_backspace_moves_line_up_to_end_of_previous_line() {
 }
 
 fn test_backspace_at_start_of_sentance_first_line_does_nothing() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	fake_view.mode = .insert
 
 	// manually set the document contents
@@ -408,7 +423,8 @@ fn test_backspace_at_start_of_sentance_first_line_does_nothing() {
 }
 
 fn test_left_arrow_at_start_of_sentence_in_insert_mode() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	fake_view.mode = .insert
 
 	// manually set the document contents
@@ -425,7 +441,8 @@ fn test_left_arrow_at_start_of_sentence_in_insert_mode() {
 }
 
 fn test_right_arrow_at_start_of_sentence_in_insert_mode() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	fake_view.mode = .insert
 
 	// manually set the documents contents
@@ -442,7 +459,8 @@ fn test_right_arrow_at_start_of_sentence_in_insert_mode() {
 }
 
 fn test_left_arrow_at_end_of_sentence_in_insert_mode() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	fake_view.mode = .insert
 
 	// manually set the documents contents
@@ -459,7 +477,8 @@ fn test_left_arrow_at_end_of_sentence_in_insert_mode() {
 }
 
 fn test_right_arrow_at_end_of_sentence_in_insert_mode() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	fake_view.mode = .insert
 
 	// manually set the documents contents
@@ -702,7 +721,8 @@ fn test_visual_paste() {
 }
 
 fn test_search_is_toggled() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
 	fake_view.search()
 
@@ -1036,7 +1056,8 @@ fn test_calc_b_move_amount_code_line() {
 }
 
 fn test_a_enters_insert_mode_after_cursor_position() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
 	fake_view.buffer.lines = ["single line of text!"]
 
@@ -1049,7 +1070,8 @@ fn test_a_enters_insert_mode_after_cursor_position() {
 }
 
 fn test_shift_a_enters_insert_mode_at_the_end_of_current_line() {
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal }
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
 	fake_view.buffer.lines = ["some line of text", "single line of text!", "a third line!"]
 
@@ -1170,6 +1192,40 @@ fn test_r_doesnt_change_anything_when_enter_is_used() {
 	assert fake_view.cursor.pos.x == 7
 	assert fake_view.cursor.pos.y == 1
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == "another line of text"
+}
+
+fn test_shift_o_adds_line_above_cursor() {
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	fake_view.buffer.lines = ["some line of text", "another line of text"]
+	fake_view.cursor.pos.y = 1
+	fake_view.cursor.pos.x = 7
+
+	fake_view.shift_o()
+
+	assert fake_view.buffer.lines.len == 3
+	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == ""
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 1
+	assert fake_view.mode == .insert
+}
+
+fn test_shift_o_adds_line_above_cursor_at_start_of_file() {
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	fake_view.buffer.lines = ["some line of text", "another line of text"]
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 7
+
+	fake_view.shift_o()
+
+	assert fake_view.buffer.lines.len == 3
+	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == ""
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 0
+	assert fake_view.mode == .insert
 }
 
 fn test_x_removes_character_in_middle_of_line() {
