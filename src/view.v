@@ -919,11 +919,31 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 		}
 		.insert {
 			match e.code {
+				// ignored/currently "handled" but rejected keys
+				.f1 { }
+				.f2 { }
+				.f3 { }
+				.f4 { }
+				.f5 { }
+				.f6 { }
+				.f7 { }
+				.f8 { }
+				.f9 { }
+				.f10 { }
+				.f11 { }
+				.f12 { }
+				.delete { }
+				.insert { }
+				.home { }
+				.page_up { }
+				.page_down { }
+				.end { }
+				.up { }
+				.down { }
+				//
 				.escape { view.escape() }
 				.enter { view.enter() }
 				.backspace { view.backspace() }
-				.up {}
-				.down {}
 				.left { view.left() }
 				.right { view.right() }
 				.tab { view.insert_tab() }
