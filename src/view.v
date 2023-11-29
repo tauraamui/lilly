@@ -952,8 +952,8 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.left_paren { view.insert_text('()'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
 				.left_curly_bracket { view.insert_text('{}'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
 				.left_square_bracket { view.insert_text('[]'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
-				48...57, 97...122 { // 0-9a-zA-Z
-					view.insert_text(e.ascii.ascii_str())
+				48...57, 97...122 { // 0-9A-Z
+					view.insert_text(e.utf8)
 				}
 				else {
 					// buf := [5]u8{}
