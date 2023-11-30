@@ -1417,13 +1417,13 @@ fn (mut view View) backspace() {
 	}
 
 	if view.cursor.pos.x == line.len {
-		view.buffer.lines[y] = line[..line.len - 1]
+		view.buffer.lines[y] = line.runes()[..line.len - 1].string()
 		view.cursor.pos.x = view.buffer.lines[y].len
 		return
 	}
 
-	before := line[..view.cursor.pos.x-1]
-	after := line[view.cursor.pos.x..]
+	before := line.runes()[..view.cursor.pos.x-1].string()
+	after := line.runes()[view.cursor.pos.x..].string()
 	view.buffer.lines[y] = "${before}${after}"
 	view.cursor.pos.x -= 1
 	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
