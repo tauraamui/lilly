@@ -65,7 +65,7 @@ fn frame(mut app &App) {
 	}
 }
 
-[console]
+@[console]
 fn main() {
 	mut l := log.Log{}
 	l.set_level(.debug)

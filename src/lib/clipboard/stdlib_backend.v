@@ -2,7 +2,7 @@ module clipboard
 
 import clipboard as stdlib_clipboard
 
-[heap]
+@[heap]
 struct StdLibClipboard {
 mut:
 	ref &stdlib_clipboard.Clipboard

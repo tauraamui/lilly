@@ -2,7 +2,7 @@ module clipboard
 
 import os
 
-[heap]
+@[heap]
 struct XClipClipboard {}
 
 fn (mut xclipboard XClipClipboard) copy(text string) bool {
