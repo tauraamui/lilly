@@ -571,7 +571,7 @@ fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string, withi
 	visible_len := utf8_str_visible_length(linex)
 	if max_width > visible_len { max_width = visible_len }
 
-	linex = linex[..max_width]
+	linex = linex.runes()[..max_width].string()
 
 	segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex, view.is_multiline_comment)
 	view.is_multiline_comment = is_multiline_comment
