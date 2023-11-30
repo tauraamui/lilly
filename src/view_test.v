@@ -1263,3 +1263,20 @@ fn test_x_removes_character_and_shifts_cursor_back_at_end_of_line() {
 	assert fake_view.cursor.pos.x == 21
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y].len == 22
 }
+
+fn test_something() {
+	clip := clipboard.new()
+	mut editor := Editor{ clipboard: mut clip, file_finder_modal: unsafe { nil } }
+	mut fake_view := View{ log: unsafe { nil }, mode: .insert, clipboard: mut clip }
+
+	fake_view.buffer.lines = ["fn "]
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 2
+
+	//event := &tui.Event{code: tui.KeyCode.left_paren, ascii: 40}
+	//fake_view.on_key_down(event, mut editor)
+
+	event2 := &tui.Event{code: tui.KeyCode.right_paren, ascii: 41}
+	fake_view.on_key_down(event2, mut editor)
+
+}
