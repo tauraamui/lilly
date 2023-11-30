@@ -919,11 +919,31 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 		}
 		.insert {
 			match e.code {
+				// ignored/currently "handled" but rejected keys
+				.f1 { }
+				.f2 { }
+				.f3 { }
+				.f4 { }
+				.f5 { }
+				.f6 { }
+				.f7 { }
+				.f8 { }
+				.f9 { }
+				.f10 { }
+				.f11 { }
+				.f12 { }
+				.delete { }
+				.insert { }
+				.home { }
+				.page_up { }
+				.page_down { }
+				.end { }
+				.up { }
+				.down { }
+				//
 				.escape { view.escape() }
 				.enter { view.enter() }
 				.backspace { view.backspace() }
-				.up {}
-				.down {}
 				.left { view.left() }
 				.right { view.right() }
 				.tab { view.insert_tab() }
@@ -932,8 +952,8 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.left_paren { view.insert_text('()'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
 				.left_curly_bracket { view.insert_text('{}'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
 				.left_square_bracket { view.insert_text('[]'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
-				48...57, 97...122 { // 0-9a-zA-Z
-					view.insert_text(e.ascii.ascii_str())
+				48...57, 97...122 { // 0-9A-Z
+					view.insert_text(e.utf8)
 				}
 				else {
 					// buf := [5]u8{}
@@ -960,7 +980,7 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.right {}
 				.tab {}
 				else {
-					view.replace_char(e.ascii)
+					view.replace_char(e.ascii, e.utf8)
 					view.escape_replace()
 				}
 			}
@@ -1561,14 +1581,14 @@ fn (mut view View) right_square_bracket() {
 	}
 }
 
-fn (mut view View) replace_char(c u8) {
-	if c < 32 {
+fn (mut view View) replace_char(code u8, str string) {
+	if code < 32 {
 		return
 	}
 	line := view.buffer.lines[view.cursor.pos.y].runes()
 	start := line[..view.cursor.pos.x]
 	end := line[view.cursor.pos.x+1..]
-	view.buffer.lines[view.cursor.pos.y] = "${start.string()}${c.ascii_str()}${end.string()}"
+	view.buffer.lines[view.cursor.pos.y] = "${start.string()}${str}${end.string()}"
 }
 
 fn get_clean_words(line string) []string {
