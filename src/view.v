@@ -1382,8 +1382,8 @@ fn (mut view View) enter() {
 		whitespace_prefix = ""
 		view.cursor.pos.x = 0
 	}
-	after_cursor := view.buffer.lines[y][view.cursor.pos.x..]
-	view.buffer.lines[y] = view.buffer.lines[y][..view.cursor.pos.x]
+	after_cursor := view.buffer.lines[y].runes()[view.cursor.pos.x..].string()
+	view.buffer.lines[y] = view.buffer.lines[y].runes()[..view.cursor.pos.x].string()
 	view.buffer.lines.insert(y + 1, "${whitespace_prefix}${after_cursor}")
 	view.move_cursor_down(1)
 	view.cursor.pos.x = whitespace_prefix.len
