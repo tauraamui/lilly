@@ -686,7 +686,7 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 		}
 
 		// key
-		for i < line.len && is_alpha_underscore(int(line[i])) {
+		for i < line.runes().len && is_alpha_underscore(int(line.runes()[i])) {
 			i++
 		}
 		word := line.runes()[start..i].string()
