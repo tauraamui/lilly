@@ -2,7 +2,7 @@ module clipboard
 
 import os
 
-[heap]
+@[heap]
 struct WaylandClipboard {}
 
 fn (mut wclipboard WaylandClipboard) copy(text string) bool {

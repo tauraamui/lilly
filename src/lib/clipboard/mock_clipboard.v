@@ -1,6 +1,6 @@
 module clipboard
 
-[heap]
+@[heap]
 struct MockClipboard {
 mut:
 	copied_content      string
