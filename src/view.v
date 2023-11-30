@@ -593,7 +593,7 @@ fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string, withi
 	for i, segment in segments {
 		// render text before next segment
 		if segment.start > pos {
-			s := linex[pos..segment.start]
+			s := linex.runes()[pos..segment.start].string()
 			ctx.draw_text(view.x+1+pos, y+1, s)
 		}
 
@@ -604,13 +604,13 @@ fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string, withi
 			.a_string { Color{ 87, 215, 217 } }
 			.a_comment { Color{ 130, 130, 130 } }
 		}
-		s := linex[segment.start..segment.end]
+		s := linex.runes()[segment.start..segment.end].string()
 		ctx.set_color(r: color.r, g: color.g, b: color.b)
 		ctx.draw_text(view.x+1+segment.start, y+1, s)
 		ctx.reset_color()
 		pos = segment.end
 		if i == segments.len - 1 && segment.end < linex.len {
-			final := linex[segment.end..linex.len]
+			final := linex.runes()[segment.end..linex.runes().len].string()
 			ctx.draw_text(view.x+1+pos, y+1, final)
 		}
 	}
@@ -639,7 +639,7 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 		if i > 0 && line_runes[i - 1] == `/` && line_runes[i] == `*` && !(line_runes[line_runes.len - 2] == `*`
 			&& line_runes[line_runes.len - 1] == `/`) {
 			// all after /* is  a comment
-			segments << LineSegment{ start, line.len, .a_comment }
+			segments << LineSegment{ start, line_runes.len, .a_comment }
 			is_multiline_commentx = true
 			break
 		}
@@ -689,7 +689,7 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 		for i < line.len && is_alpha_underscore(int(line[i])) {
 			i++
 		}
-		word := line[start..i]
+		word := line.runes()[start..i].string()
 		if word in syntax.literals {
 			segments << LineSegment{ start, i, .a_lit }
 		} else if word in syntax.keywords {
