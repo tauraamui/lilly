@@ -66,6 +66,7 @@ const (
 	status_green            = Color { 145, 237, 145 }
 	status_orange           = Color { 237, 207, 123 }
 	status_lilac            = Color { 194, 110, 230 }
+	status_dark_lilac       = Color { 154, 119, 209 }
 	status_cyan             = Color { 138, 222, 237 }
 	status_purple           = Color { 130, 144, 250 }
 
@@ -1633,7 +1634,7 @@ fn get_git_branch()! string {
 	mut re := regex.regex_opt("/")!
 	cwd := re.split(os.getwd())
 	if os.is_file(os.norm_path("${os.getwd()}/.git/HEAD")) {
-		f = os.read_file(os.norm_path("${os.getwd()}/.git/HEAD"))!	
+		f = os.read_file(os.norm_path("${os.getwd()}/.git/HEAD"))!
 	} else {
 		up_one := cwd[..cwd.len-1].map(it.str()).join("/")
 		f = os.read_file(os.norm_path("${up_one}/.git/HEAD"))!

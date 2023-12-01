@@ -81,12 +81,11 @@ fn draw_search_selection_info_segment(mut ctx tui.Context, x int, y int, selecti
 }
 
 fn draw_git_branch_section(mut ctx tui.Context, x int, y int, git_branch string) int {
-	paint_shape_text(mut ctx, x, y, Color{ 60, 0, 120 }, "${slant_left_flat_top}${block}")
+	paint_shape_text(mut ctx, x, y, status_dark_lilac, "${slant_left_flat_top}${block}")
 	mut offset := 2
-	ctx.bold()
-	paint_text_on_background(mut ctx, x + offset, y, Color{ 60, 0, 120 }, Color{ 230, 230, 230 }, git_branch)
-	offset += git_branch.len - 3
-	paint_shape_text(mut ctx, x + offset, y, Color{ 60, 0, 120 }, "${block}${slant_right_flat_bottom}")
+	paint_text_on_background(mut ctx, x + offset, y, status_dark_lilac, Color{ 230, 230, 230 }, git_branch)
+	offset += git_branch.runes().len - 1
+	paint_shape_text(mut ctx, x + offset, y, Color{ 154, 119, 209 }, "${block}${slant_right_flat_bottom}")
 	offset += 2
 	return offset
 }
