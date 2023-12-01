@@ -104,6 +104,7 @@ pub:
 mut:
 	log                       &log.Log
 	path                      string
+	branch                    string
 	config                    workspace.Config
 	mode                      Mode
 	buffer                    buffer.Buffer
@@ -406,8 +407,8 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 	cmd_buf.code = .blank
 }
 
-fn open_view(config workspace.Config, syntaxes []workspace.Syntax, _clipboard clipboard.Clipboard, buff &buffer.Buffer) Viewable {
-	mut res := View{ log: unsafe { nil }, syntaxes: syntaxes, file_path: buff.file_path, config: config, leader_key: config.leader_key, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
+fn open_view(config workspace.Config, branch string, syntaxes []workspace.Syntax, _clipboard clipboard.Clipboard, buff &buffer.Buffer) Viewable {
+	mut res := View{ log: unsafe { nil }, branch: branch, syntaxes: syntaxes, file_path: buff.file_path, config: config, leader_key: config.leader_key, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
 	res.path = res.buffer.file_path
 	res.set_current_syntax_idx(os.file_ext(res.path))
 	res.cursor.selection_start = Pos{ -1, -1 }
@@ -489,8 +490,6 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
 	if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
 
-	branch := get_git_branch() or { return }
-
 	draw_status_line(mut ctx,
 		Status{
 			view.mode, view.cursor.pos.x,
@@ -500,7 +499,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 				total: view.search.total_finds,
 				current: view.search.current_find.match_index
 			},
-			branch
+			view.branch
 		}
 	)
 	view.cmd_buf.draw(mut ctx, view.mode == .command)

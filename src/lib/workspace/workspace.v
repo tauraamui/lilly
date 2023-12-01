@@ -67,6 +67,8 @@ fn (mut workspace Workspace) resolve_files(
 	})
 }
 
+pub fn (workspace Workspace) branch() string { return workspace.git_branch }
+
 pub fn (workspace Workspace) files() []string {
 	return workspace.files
 }
