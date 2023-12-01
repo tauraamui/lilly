@@ -8,13 +8,14 @@ struct MockFS {
 }
 
 fn (mock_fs MockFS) is_dir(path string) bool {
-	mut expanded_path := path.replace(".config", "").replace(".", mock_fs.pwd)
+	mut expanded_path := path.replace("./", mock_fs.pwd)
+	if mock_fs.pwd == expanded_path { return true }
 	_ := mock_fs.dirs[expanded_path] or { return false }
 	return true
 }
 
 fn (mock_fs MockFS) dir_walker(path string, f fn (string)) {
-	mut expanded_path := path.replace(".config", "dotconfig").replace(".", mock_fs.pwd).replace("dotconfig", ".config")
+	mut expanded_path := path.replace("./", mock_fs.pwd)
 	sub_dirs := mock_fs.dirs[expanded_path] or { return }
 	for sub_dir in sub_dirs {
 		full_dir := "${expanded_path}/${sub_dir}"
