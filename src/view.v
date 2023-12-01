@@ -1086,6 +1086,7 @@ fn (mut view View) escape() {
 	}
 
 	view.buffer.update_undo_history()
+	view.buffer.auto_close_chars = []
 }
 
 fn (mut view View) escape_replace() {

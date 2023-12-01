@@ -1326,3 +1326,30 @@ fn test_auto_closing_curley_brace_inputting_secondary_close_should_only_move_cur
 
 	assert fake_view.cursor.pos.x == 2 // ensure cursor is on the far right side of both braces
 }
+
+
+fn test_auto_closing_square_brace_inputting_secondary_close_should_only_move_cursor_pos() {
+	clip := clipboard.new()
+	mut editor := Editor{ clipboard: mut clip, file_finder_modal: unsafe { nil } }
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	fake_view.buffer.lines = [""]
+
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 0
+
+	fake_view.i()
+
+	mut event := &tui.Event{code: tui.KeyCode.left_square_bracket, ascii: 91 }
+	fake_view.on_key_down(event, mut editor)
+	assert fake_view.buffer.lines == ["[]"]
+
+	assert fake_view.cursor.pos.x == 1 // ensure cursor is technically between the braces
+
+	event = &tui.Event{code: tui.KeyCode.right_square_bracket, ascii: 93 }
+	fake_view.on_key_down(event, mut editor)
+	assert fake_view.buffer.lines == ["[]"] // actual number of braces shouldn't have changed
+
+	assert fake_view.cursor.pos.x == 2 // ensure cursor is on the far right side of both braces
+}
+
