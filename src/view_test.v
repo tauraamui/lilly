@@ -1264,19 +1264,65 @@ fn test_x_removes_character_and_shifts_cursor_back_at_end_of_line() {
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y].len == 22
 }
 
-fn test_something() {
+fn test_auto_closing_square_brace() {
 	clip := clipboard.new()
 	mut editor := Editor{ clipboard: mut clip, file_finder_modal: unsafe { nil } }
-	mut fake_view := View{ log: unsafe { nil }, mode: .insert, clipboard: mut clip }
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
-	fake_view.buffer.lines = ["fn "]
+	fake_view.buffer.lines = [""]
+
 	fake_view.cursor.pos.y = 0
-	fake_view.cursor.pos.x = 2
+	fake_view.cursor.pos.x = 0
 
-	//event := &tui.Event{code: tui.KeyCode.left_paren, ascii: 40}
-	//fake_view.on_key_down(event, mut editor)
+	fake_view.i()
 
-	event2 := &tui.Event{code: tui.KeyCode.right_paren, ascii: 41}
-	fake_view.on_key_down(event2, mut editor)
+	mut event := &tui.Event{code: tui.KeyCode.left_square_bracket, ascii: 91 }
+	fake_view.on_key_down(event, mut editor)
+	assert fake_view.buffer.lines == ["[]"]
 
+	assert fake_view.cursor.pos.x == 1 // ensure cursor is technically between the braces
+}
+
+fn test_auto_closing_curley_brace() {
+	clip := clipboard.new()
+	mut editor := Editor{ clipboard: mut clip, file_finder_modal: unsafe { nil } }
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	fake_view.buffer.lines = [""]
+
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 0
+
+	fake_view.i()
+
+	mut event := &tui.Event{code: tui.KeyCode.left_curly_bracket, ascii: 91 }
+	fake_view.on_key_down(event, mut editor)
+	assert fake_view.buffer.lines == ["{}"]
+
+	assert fake_view.cursor.pos.x == 1 // ensure cursor is technically between the braces
+}
+
+fn test_auto_closing_curley_brace_inputting_secondary_close_should_only_move_cursor_pos() {
+	clip := clipboard.new()
+	mut editor := Editor{ clipboard: mut clip, file_finder_modal: unsafe { nil } }
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	fake_view.buffer.lines = [""]
+
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 0
+
+	fake_view.i()
+
+	mut event := &tui.Event{code: tui.KeyCode.left_curly_bracket, ascii: 123 }
+	fake_view.on_key_down(event, mut editor)
+	assert fake_view.buffer.lines == ["{}"]
+
+	assert fake_view.cursor.pos.x == 1 // ensure cursor is technically between the braces
+
+	event = &tui.Event{code: tui.KeyCode.right_curly_bracket, ascii: 125 }
+	fake_view.on_key_down(event, mut editor)
+	assert fake_view.buffer.lines == ["{}"] // actual number of braces shouldn't have changed
+
+	assert fake_view.cursor.pos.x == 2 // ensure cursor is on the far right side of both braces
 }
