@@ -65,8 +65,9 @@ fn frame(mut app &App) {
 	}
 }
 
-[console]
+@[console]
 fn main() {
+	persist_stderr_to_disk()
 	mut l := log.Log{}
 	l.set_level(.debug)
 	l.set_full_logpath("./debug.log")

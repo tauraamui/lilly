@@ -1098,7 +1098,7 @@ fn test_r_replaces_character_in_middle_of_line() {
 
 	assert fake_view.mode == .replace
 
-	event := &tui.Event{code: tui.KeyCode.p, ascii: 112}
+	event := &tui.Event{code: tui.KeyCode.p, ascii: 112, utf8: "p"}
 	fake_view.on_key_down(event, mut editor)
 
 	assert fake_view.mode == .normal
@@ -1120,7 +1120,7 @@ fn test_r_replaces_character_with_special_character() {
 
 	assert fake_view.mode == .replace
 
-	event := &tui.Event{code: tui.KeyCode.exclamation, ascii: 33}
+	event := &tui.Event{code: tui.KeyCode.exclamation, ascii: 33, utf8: "!"}
 	fake_view.on_key_down(event, mut editor)
 
 	assert fake_view.mode == .normal
@@ -1142,7 +1142,7 @@ fn test_r_replaces_character_with_space() {
 
 	assert fake_view.mode == .replace
 
-	event := &tui.Event{code: tui.KeyCode.space, ascii: 32}
+	event := &tui.Event{code: tui.KeyCode.space, ascii: 32, utf8: " "}
 	fake_view.on_key_down(event, mut editor)
 
 	assert fake_view.mode == .normal

@@ -1,7 +1,6 @@
 module buffer
 
 import history { History }
-import lib.diff { Op }
 import os
 
 pub struct Buffer {

@@ -579,7 +579,7 @@ fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string, withi
 	visible_len := utf8_str_visible_length(linex)
 	if max_width > visible_len { max_width = visible_len }
 
-	linex = linex[..max_width]
+	linex = linex.runes()[..max_width].string()
 
 	segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex, view.is_multiline_comment)
 	view.is_multiline_comment = is_multiline_comment
@@ -601,7 +601,7 @@ fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string, withi
 	for i, segment in segments {
 		// render text before next segment
 		if segment.start > pos {
-			s := linex[pos..segment.start]
+			s := linex.runes()[pos..segment.start].string()
 			ctx.draw_text(view.x+1+pos, y+1, s)
 		}
 
@@ -612,13 +612,13 @@ fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string, withi
 			.a_string { Color{ 87, 215, 217 } }
 			.a_comment { Color{ 130, 130, 130 } }
 		}
-		s := linex[segment.start..segment.end]
+		s := linex.runes()[segment.start..segment.end].string()
 		ctx.set_color(r: color.r, g: color.g, b: color.b)
 		ctx.draw_text(view.x+1+segment.start, y+1, s)
 		ctx.reset_color()
 		pos = segment.end
 		if i == segments.len - 1 && segment.end < linex.len {
-			final := linex[segment.end..linex.len]
+			final := linex.runes()[segment.end..linex.runes().len].string()
 			ctx.draw_text(view.x+1+pos, y+1, final)
 		}
 	}
@@ -647,7 +647,7 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 		if i > 0 && line_runes[i - 1] == `/` && line_runes[i] == `*` && !(line_runes[line_runes.len - 2] == `*`
 			&& line_runes[line_runes.len - 1] == `/`) {
 			// all after /* is  a comment
-			segments << LineSegment{ start, line.len, .a_comment }
+			segments << LineSegment{ start, line_runes.len, .a_comment }
 			is_multiline_commentx = true
 			break
 		}
@@ -694,10 +694,10 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 		}
 
 		// key
-		for i < line.len && is_alpha_underscore(int(line[i])) {
+		for i < line.runes().len && is_alpha_underscore(int(line.runes()[i])) {
 			i++
 		}
-		word := line[start..i]
+		word := line.runes()[start..i].string()
 		if word in syntax.literals {
 			segments << LineSegment{ start, i, .a_lit }
 		} else if word in syntax.keywords {
@@ -927,11 +927,31 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 		}
 		.insert {
 			match e.code {
+				// ignored/currently "handled" but rejected keys
+				.f1 { }
+				.f2 { }
+				.f3 { }
+				.f4 { }
+				.f5 { }
+				.f6 { }
+				.f7 { }
+				.f8 { }
+				.f9 { }
+				.f10 { }
+				.f11 { }
+				.f12 { }
+				.delete { }
+				.insert { }
+				.home { }
+				.page_up { }
+				.page_down { }
+				.end { }
+				.up { }
+				.down { }
+				//
 				.escape { view.escape() }
 				.enter { view.enter() }
 				.backspace { view.backspace() }
-				.up {}
-				.down {}
 				.left { view.left() }
 				.right { view.right() }
 				.tab { view.insert_tab() }
@@ -943,8 +963,8 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.right_paren { view.close_pair_or_insert(e.ascii.ascii_str()) }
 				.right_curly_bracket { view.close_pair_or_insert(e.ascii.ascii_str()) }
 				.right_square_bracket { view.close_pair_or_insert(e.ascii.ascii_str()) }
-				48...57, 97...122 { // 0-9a-zA-Z
-					view.insert_text(e.ascii.ascii_str())
+				48...57, 97...122 { // 0-9A-Z
+					view.insert_text(e.utf8)
 				}
 				else {
 					// buf := [5]u8{}
@@ -971,7 +991,7 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.right {}
 				.tab {}
 				else {
-					view.replace_char(e.ascii)
+					view.replace_char(e.ascii, e.utf8)
 					view.escape_replace()
 				}
 			}
@@ -1374,8 +1394,8 @@ fn (mut view View) enter() {
 		whitespace_prefix = ""
 		view.cursor.pos.x = 0
 	}
-	after_cursor := view.buffer.lines[y][view.cursor.pos.x..]
-	view.buffer.lines[y] = view.buffer.lines[y][..view.cursor.pos.x]
+	after_cursor := view.buffer.lines[y].runes()[view.cursor.pos.x..].string()
+	view.buffer.lines[y] = view.buffer.lines[y].runes()[..view.cursor.pos.x].string()
 	view.buffer.lines.insert(y + 1, "${whitespace_prefix}${after_cursor}")
 	view.move_cursor_down(1)
 	view.cursor.pos.x = whitespace_prefix.len
@@ -1409,13 +1429,13 @@ fn (mut view View) backspace() {
 	}
 
 	if view.cursor.pos.x == line.len {
-		view.buffer.lines[y] = line[..line.len - 1]
+		view.buffer.lines[y] = line.runes()[..line.len - 1].string()
 		view.cursor.pos.x = view.buffer.lines[y].len
 		return
 	}
 
-	before := line[..view.cursor.pos.x-1]
-	after := line[view.cursor.pos.x..]
+	before := line.runes()[..view.cursor.pos.x-1].string()
+	after := line.runes()[view.cursor.pos.x..].string()
 	view.buffer.lines[y] = "${before}${after}"
 	view.cursor.pos.x -= 1
 	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
@@ -1573,14 +1593,14 @@ fn (mut view View) right_square_bracket() {
 	}
 }
 
-fn (mut view View) replace_char(c u8) {
-	if c < 32 {
+fn (mut view View) replace_char(code u8, str string) {
+	if code < 32 {
 		return
 	}
 	line := view.buffer.lines[view.cursor.pos.y].runes()
 	start := line[..view.cursor.pos.x]
 	end := line[view.cursor.pos.x+1..]
-	view.buffer.lines[view.cursor.pos.y] = "${start.string()}${c.ascii_str()}${end.string()}"
+	view.buffer.lines[view.cursor.pos.y] = "${start.string()}${str}${end.string()}"
 }
 
 fn (mut view View) close_pair(c string) bool {
