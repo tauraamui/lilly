@@ -488,6 +488,8 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
 	if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
 
+	branch := get_git_branch() or { return }
+
 	draw_status_line(mut ctx,
 		Status{
 			view.mode, view.cursor.pos.x,
@@ -496,7 +498,8 @@ fn (mut view View) draw(mut ctx tui.Context) {
 				active: view.mode == .search,
 				total: view.search.total_finds,
 				current: view.search.current_find.match_index
-			}
+			},
+			branch
 		}
 	)
 	view.cmd_buf.draw(mut ctx, view.mode == .command)
@@ -1624,3 +1627,17 @@ fn is_alpha_underscore(r int) bool {
 	return is_alpha(u8(r)) || u8(r) == `_` || u8(r) == `#` || u8(r) == `$`
 }
 
+fn get_git_branch()! string {
+	prefix := "\uE0A0"
+	mut f := ""
+	mut re := regex.regex_opt("/")!
+	cwd := re.split(os.getwd())
+	if os.is_file(os.norm_path("${os.getwd()}/.git/HEAD")) {
+		f = os.read_file(os.norm_path("${os.getwd()}/.git/HEAD"))!	
+	} else {
+		up_one := cwd[..cwd.len-1].map(it.str()).join("/")
+		f = os.read_file(os.norm_path("${up_one}/.git/HEAD"))!
+	}
+	branch := f.runes()[16..].string()
+	return "${prefix} ${branch}"
+}
