@@ -1627,17 +1627,3 @@ fn is_alpha_underscore(r int) bool {
 	return is_alpha(u8(r)) || u8(r) == `_` || u8(r) == `#` || u8(r) == `$`
 }
 
-fn get_git_branch()! string {
-	prefix := "\uE0A0"
-	mut f := ""
-	mut re := regex.regex_opt("/")!
-	cwd := re.split(os.getwd())
-	if os.is_file(os.norm_path("${os.getwd()}/.git/HEAD")) {
-		f = os.read_file(os.norm_path("${os.getwd()}/.git/HEAD"))!
-	} else {
-		up_one := cwd[..cwd.len-1].map(it.str()).join("/")
-		f = os.read_file(os.norm_path("${up_one}/.git/HEAD"))!
-	}
-	branch := f.runes()[16..].string()
-	return "${prefix} ${branch}"
-}
