@@ -955,8 +955,8 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.left { view.left() }
 				.right { view.right() }
 				.tab { view.insert_tab() }
-				.single_quote { view.insert_text("\'\'"); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos(); view.buffer.auto_close_chars << "\'" }
-				.double_quote { view.insert_text("\"\""); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos(); view.buffer.auto_close_chars << "\"" }
+				.single_quote { view.insert_text("\'\'"); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
+				.double_quote { view.insert_text("\"\""); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
 				.left_paren { view.insert_text('()'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos(); view.buffer.auto_close_chars << "(" }
 				.left_curly_bracket { view.insert_text('{}'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos(); view.buffer.auto_close_chars << "{" }
 				.left_square_bracket { view.insert_text('[]'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos(); view.buffer.auto_close_chars << "[" }
