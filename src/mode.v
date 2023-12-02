@@ -22,6 +22,8 @@ enum Mode as u8 {
 	insert
 	command
 	search
+	leader
+	pending_delete
 }
 
 fn (mode Mode) draw(mut ctx tui.Context, x int, y int) int {
@@ -36,6 +38,7 @@ fn (mode Mode) draw(mut ctx tui.Context, x int, y int) int {
 	paint_text_on_background(mut ctx, status_line_x + offset, status_line_y, status_color, Color{ 0, 0, 0}, label)
 	offset += label.len
 	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, "${block}${slant_right_flat_bottom}")
+	offset += 2
 	return status_line_x + offset
 }
 
@@ -46,6 +49,8 @@ fn (mode Mode) color() Color {
 		.insert { status_orange }
 		.command { status_cyan }
 		.search { status_purple }
+		.leader { status_purple }
+		.pending_delete { status_green }
 	}
 }
 
@@ -56,6 +61,8 @@ fn (mode Mode) str() string {
 		.insert  { "INSERT"  }
 		.command { "COMMAND" }
 		.search  { "SEARCH"  }
+		.leader  { "LEADER" }
+		.pending_delete { "NORMAL" }
 	}
 }
 
