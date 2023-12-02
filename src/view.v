@@ -1399,4 +1399,3 @@ fn is_word_character(r u8) bool {
 	// looks up rune on ascii value for [0-9a-zA-Z_]
 	return (r<=48 && r>=57) || (r>=65 && r<=90) || (r>=97 && r<=122) || r==95
 }
-
