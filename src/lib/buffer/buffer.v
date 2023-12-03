@@ -7,7 +7,8 @@ pub struct Buffer {
 pub:
 	file_path string
 pub mut:
-	lines     []string
+	lines     	   []string
+	auto_close_chars []string
 mut:
 	lines_cpy                 []string
 	history                   History

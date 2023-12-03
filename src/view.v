@@ -95,6 +95,14 @@ const (
 		`\u206f`, // U+206F NOMINAL DIGIT SHAPES
 		`\ufeff`, // U+FEFF ZERO WIDTH NO-BREAK SPACE
 	]
+
+	auto_pairs = {
+		'}': '{',
+		']': '[',
+		')': '(',
+		'"': '"',
+		"'": "'",
+	}
 )
 
 struct View {
@@ -949,9 +957,12 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.tab { view.insert_tab() }
 				.single_quote { view.insert_text("\'\'"); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
 				.double_quote { view.insert_text("\"\""); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
-				.left_paren { view.insert_text('()'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
-				.left_curly_bracket { view.insert_text('{}'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
-				.left_square_bracket { view.insert_text('[]'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
+				.left_paren { view.insert_text('()'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos(); view.buffer.auto_close_chars << "(" }
+				.left_curly_bracket { view.insert_text('{}'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos(); view.buffer.auto_close_chars << "{" }
+				.left_square_bracket { view.insert_text('[]'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos(); view.buffer.auto_close_chars << "[" }
+				.right_paren { view.close_pair_or_insert(e.ascii.ascii_str()) }
+				.right_curly_bracket { view.close_pair_or_insert(e.ascii.ascii_str()) }
+				.right_square_bracket { view.close_pair_or_insert(e.ascii.ascii_str()) }
 				48...57, 97...122 { // 0-9A-Z
 					view.insert_text(e.utf8)
 				}
@@ -1095,6 +1106,7 @@ fn (mut view View) escape() {
 	}
 
 	view.buffer.update_undo_history()
+	view.buffer.auto_close_chars = []
 }
 
 fn (mut view View) escape_replace() {
@@ -1589,6 +1601,25 @@ fn (mut view View) replace_char(code u8, str string) {
 	start := line[..view.cursor.pos.x]
 	end := line[view.cursor.pos.x+1..]
 	view.buffer.lines[view.cursor.pos.y] = "${start.string()}${str}${end.string()}"
+}
+
+fn (mut view View) close_pair(c string) bool {
+	pair := auto_pairs[c] or { return false }
+	if view.buffer.auto_close_chars[view.buffer.auto_close_chars.len-1] == pair {
+		view.buffer.auto_close_chars.delete_last()
+		return true
+	}
+	return false
+}
+
+fn (mut view View) close_pair_or_insert(c string) {
+	if view.buffer.auto_close_chars.len == 0 {
+		view.insert_text(c)
+	} else if view.close_pair(c) {
+		view.cursor.pos.x += 1;
+	} else {
+		view.insert_text(c)
+	}
 }
 
 fn get_clean_words(line string) []string {
