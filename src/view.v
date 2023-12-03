@@ -24,6 +24,7 @@ import lib.clipboard
 import arrays
 import lib.buffer
 import lib.workspace
+import lib.chords
 
 struct Cursor {
 mut:
@@ -96,6 +97,14 @@ const (
 		`\u206f`, // U+206F NOMINAL DIGIT SHAPES
 		`\ufeff`, // U+FEFF ZERO WIDTH NO-BREAK SPACE
 	]
+
+	auto_pairs = {
+		'}': '{',
+		']': '[',
+		')': '(',
+		'"': '"',
+		"'": "'",
+	}
 )
 
 struct View {
@@ -112,7 +121,7 @@ mut:
 	cursor                    Cursor
 	cmd_buf                   CmdBuffer
 	search                    Search
-	repeat_amount             string
+	chord                     chords.Chord
 	x                         int
 	width                     int
 	height                    int
@@ -505,7 +514,8 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	view.cmd_buf.draw(mut ctx, view.mode == .command)
 	if view.mode == .search { view.search.draw(mut ctx, view.mode == .search) }
 
-	ctx.draw_text(ctx.window_width-view.repeat_amount.len, ctx.window_height, view.repeat_amount)
+	repeat_amount := view.chord.pending_repeat_amount()
+	ctx.draw_text(ctx.window_width-repeat_amount.len, ctx.window_height, repeat_amount)
 	if view.mode == .insert {
 		set_cursor_to_vertical_bar(mut ctx)
 	} else { set_cursor_to_block(mut ctx) }
@@ -808,6 +818,19 @@ fn paint_text_on_background(mut ctx tui.Context, x int, y int, bg_color Color, f
 	ctx.draw_text(x, y, text)
 }
 
+fn (mut view View) exec(ops []chords.Op) {
+	for op in ops {
+		match op.kind {
+			.movement {
+				match op.direction {
+					.up   { view.k() }
+					.down { view.j() }
+				}
+			}
+		}
+	}
+}
+
 fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 	match view.mode {
 		.leader {
@@ -826,8 +849,8 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.escape { view.escape() }
 				.h     { view.h() }
 				.l     { view.l() }
-				.j     { view.j() }
-				.k     { view.k() }
+				.j     { view.exec(view.chord.expand_ops(chords.Op{ kind: .movement, direction: .down })) }
+				.k     { view.exec(view.chord.expand_ops(chords.Op{ kind: .movement, direction: .up })) }
 				.i     { view.i() }
 				.v     { if e.modifiers == .shift { view.v() } }
 				.e     { view.e() }
@@ -853,7 +876,7 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.right_square_bracket { view.right_square_bracket() }
 				.slash { view.search() }
 				48...57 { // 0-9a
-					view.repeat_amount = "${view.repeat_amount}${e.ascii.ascii_str()}"
+					view.chord.append_to_repeat_amount(e.ascii.ascii_str())
 				}
 				else {}
 			}
@@ -952,9 +975,12 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.tab { view.insert_tab() }
 				.single_quote { view.insert_text("\'\'"); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
 				.double_quote { view.insert_text("\"\""); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
-				.left_paren { view.insert_text('()'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
-				.left_curly_bracket { view.insert_text('{}'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
-				.left_square_bracket { view.insert_text('[]'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos() }
+				.left_paren { view.insert_text('()'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos(); view.buffer.auto_close_chars << "(" }
+				.left_curly_bracket { view.insert_text('{}'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos(); view.buffer.auto_close_chars << "{" }
+				.left_square_bracket { view.insert_text('[]'); view.cursor.pos.x -= 1; view.clamp_cursor_x_pos(); view.buffer.auto_close_chars << "[" }
+				.right_paren { view.close_pair_or_insert(e.ascii.ascii_str()) }
+				.right_curly_bracket { view.close_pair_or_insert(e.ascii.ascii_str()) }
+				.right_square_bracket { view.close_pair_or_insert(e.ascii.ascii_str()) }
 				48...57, 97...122 { // 0-9A-Z
 					view.insert_text(e.utf8)
 				}
@@ -1082,7 +1108,7 @@ fn (mut view View) escape() {
 		view.scroll_from_and_to()
 	}
 	view.mode = .normal
-	view.repeat_amount = ""
+	view.chord.reset()
 	view.cursor.pos.x -= 1
 	view.clamp_cursor_x_pos()
 	view.cmd_buf.clear()
@@ -1098,6 +1124,7 @@ fn (mut view View) escape() {
 	}
 
 	view.buffer.update_undo_history()
+	view.buffer.auto_close_chars = []
 }
 
 fn (mut view View) escape_replace() {
@@ -1188,16 +1215,12 @@ fn (mut view View) l() {
 }
 
 fn (mut view View) j() {
-	defer { view.repeat_amount = "" }
-	count := strconv.atoi(view.repeat_amount) or { 1 }
-	view.move_cursor_down(count)
+	view.move_cursor_down(1)
 	view.clamp_cursor_x_pos()
 }
 
 fn (mut view View) k() {
-	defer { view.repeat_amount = "" }
-	count := strconv.atoi(view.repeat_amount) or { 1 }
-	view.move_cursor_up(count)
+	view.move_cursor_up(1)
 	view.clamp_cursor_x_pos()
 }
 
@@ -1592,6 +1615,25 @@ fn (mut view View) replace_char(code u8, str string) {
 	start := line[..view.cursor.pos.x]
 	end := line[view.cursor.pos.x+1..]
 	view.buffer.lines[view.cursor.pos.y] = "${start.string()}${str}${end.string()}"
+}
+
+fn (mut view View) close_pair(c string) bool {
+	pair := auto_pairs[c] or { return false }
+	if view.buffer.auto_close_chars[view.buffer.auto_close_chars.len-1] == pair {
+		view.buffer.auto_close_chars.delete_last()
+		return true
+	}
+	return false
+}
+
+fn (mut view View) close_pair_or_insert(c string) {
+	if view.buffer.auto_close_chars.len == 0 {
+		view.insert_text(c)
+	} else if view.close_pair(c) {
+		view.cursor.pos.x += 1;
+	} else {
+		view.insert_text(c)
+	}
 }
 
 fn get_clean_words(line string) []string {
