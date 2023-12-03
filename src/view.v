@@ -825,8 +825,11 @@ fn (mut view View) exec(ops []chords.Op) {
 				match op.direction {
 					.up   { view.k() }
 					.down { view.j() }
+					.word { view.w() }
+					.word_end { view.e() }
 				}
 			}
+			else {}
 		}
 	}
 }
@@ -849,12 +852,12 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.escape { view.escape() }
 				.h     { view.h() }
 				.l     { view.l() }
-				.j     { view.exec(view.chord.expand_ops(chords.Op{ kind: .movement, direction: .down })) }
-				.k     { view.exec(view.chord.expand_ops(chords.Op{ kind: .movement, direction: .up })) }
+				.j     { view.exec(view.chord.j()) }
+				.k     { view.exec(view.chord.k()) }
 				.i     { view.i() }
 				.v     { if e.modifiers == .shift { view.v() } }
-				.e     { view.e() }
-				.w     { view.w() }
+				.e     { view.exec(view.chord.e()) }
+				.w     { view.exec(view.chord.w()) }
 				.b     { view.b() }
 				.o     { if e.modifiers == .shift { view.shift_o() } else { view.o() } }
 				.a     { if e.modifiers == .shift { view.shift_a() } else { view.a() } }
