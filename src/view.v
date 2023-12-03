@@ -67,6 +67,7 @@ const (
 	status_green            = Color { 145, 237, 145 }
 	status_orange           = Color { 237, 207, 123 }
 	status_lilac            = Color { 194, 110, 230 }
+	status_dark_lilac       = Color { 154, 119, 209 }
 	status_cyan             = Color { 138, 222, 237 }
 	status_purple           = Color { 130, 144, 250 }
 
@@ -112,6 +113,7 @@ pub:
 mut:
 	log                       &log.Log
 	path                      string
+	branch                    string
 	config                    workspace.Config
 	mode                      Mode
 	buffer                    buffer.Buffer
@@ -414,8 +416,8 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 	cmd_buf.code = .blank
 }
 
-fn open_view(config workspace.Config, syntaxes []workspace.Syntax, _clipboard clipboard.Clipboard, buff &buffer.Buffer) Viewable {
-	mut res := View{ log: unsafe { nil }, syntaxes: syntaxes, file_path: buff.file_path, config: config, leader_key: config.leader_key, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
+fn open_view(config workspace.Config, branch string, syntaxes []workspace.Syntax, _clipboard clipboard.Clipboard, buff &buffer.Buffer) Viewable {
+	mut res := View{ log: unsafe { nil }, branch: branch, syntaxes: syntaxes, file_path: buff.file_path, config: config, leader_key: config.leader_key, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
 	res.path = res.buffer.file_path
 	res.set_current_syntax_idx(os.file_ext(res.path))
 	res.cursor.selection_start = Pos{ -1, -1 }
@@ -505,7 +507,8 @@ fn (mut view View) draw(mut ctx tui.Context) {
 				active: view.mode == .search,
 				total: view.search.total_finds,
 				current: view.search.current_find.match_index
-			}
+			},
+			view.branch
 		}
 	)
 	view.cmd_buf.draw(mut ctx, view.mode == .command)

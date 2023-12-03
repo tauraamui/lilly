@@ -23,11 +23,12 @@ struct SearchSelection {
 }
 
 struct Status {
-	mode      Mode
-	cursor_x  int
-	cursor_y  int
-	file_name string
-	selection SearchSelection
+	mode       Mode
+	cursor_x   int
+	cursor_y   int
+	file_name  string
+	selection  SearchSelection
+	git_branch string
 }
 
 fn draw_status_line(mut ctx tui.Context, status Status) {
@@ -46,6 +47,9 @@ fn draw_status_line(mut ctx tui.Context, status Status) {
 
 	// if search selection active/provided, render it's segment next
 	if status.selection.active { offset += draw_search_selection_info_segment(mut ctx, offset, y, status.selection) }
+
+	// if git branch active/provided, render it's segment next
+	if status.git_branch.len > 0 { offset += draw_git_branch_section(mut ctx, offset, y, status.git_branch) }
 
 	// draw leaning end of base status line bar
 	paint_shape_text(mut ctx, offset, y, Color{ 25, 25, 25 }, "${slant_left_flat_top}")
@@ -72,6 +76,16 @@ fn draw_search_selection_info_segment(mut ctx tui.Context, x int, y int, selecti
 	paint_text_on_background(mut ctx, x + offset, y, status_purple, Color{ 230, 230, 230 }, selection_info_label)
 	offset += selection_info_label.len
 	paint_shape_text(mut ctx, x + offset, y, status_purple, "${block}${slant_right_flat_bottom}")
+	offset += 2
+	return offset
+}
+
+fn draw_git_branch_section(mut ctx tui.Context, x int, y int, git_branch string) int {
+	paint_shape_text(mut ctx, x, y, status_dark_lilac, "${slant_left_flat_top}${block}")
+	mut offset := 2
+	paint_text_on_background(mut ctx, x + offset, y, status_dark_lilac, Color{ 230, 230, 230 }, git_branch)
+	offset += git_branch.runes().len - 1
+	paint_shape_text(mut ctx, x + offset, y, Color{ 154, 119, 209 }, "${block}${slant_right_flat_bottom}")
 	offset += 2
 	return offset
 }
