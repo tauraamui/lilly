@@ -818,19 +818,23 @@ fn paint_text_on_background(mut ctx tui.Context, x int, y int, bg_color Color, f
 	ctx.draw_text(x, y, text)
 }
 
-fn (mut view View) exec(ops []chords.Op) {
-	for op in ops {
-		match op.kind {
-			.movement {
-				match op.direction {
-					.up   { view.k() }
-					.down { view.j() }
-					.word { view.w() }
-					.word_end { view.e() }
-				}
+fn (mut view View) exec(op chords.Op) {
+	match op.kind {
+		.nop { return }
+		.mode {
+			match op.mode {
+				.insert { view.i() }
 			}
-			else {}
 		}
+		.movement {
+			match op.direction {
+				.up       { for _ in 0..op.repeat { view.k() } }
+				.down     { for _ in 0..op.repeat { view.j() } }
+				.word     { for _ in 0..op.repeat { view.w() } }
+				.word_end { for _ in 0..op.repeat { view.e() } }
+			}
+		}
+		else {}
 	}
 }
 
@@ -854,7 +858,7 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.l     { view.l() }
 				.j     { view.exec(view.chord.j()) }
 				.k     { view.exec(view.chord.k()) }
-				.i     { view.i() }
+				.i     { view.exec(view.chord.i()) }
 				.v     { if e.modifiers == .shift { view.v() } }
 				.e     { view.exec(view.chord.e()) }
 				.w     { view.exec(view.chord.w()) }
