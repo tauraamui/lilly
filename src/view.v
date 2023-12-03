@@ -826,15 +826,22 @@ fn (mut view View) exec(op chords.Op) {
 				.insert { view.i() }
 			}
 		}
-		.movement {
+		.move {
 			match op.direction {
 				.up       { for _ in 0..op.repeat { view.k() } }
 				.down     { for _ in 0..op.repeat { view.j() } }
 				.word     { for _ in 0..op.repeat { view.w() } }
 				.word_end { for _ in 0..op.repeat { view.e() } }
+				else { }
 			}
 		}
-		else {}
+		.delete {
+			match op.direction {
+				.word        { panic("delete word not implemented") }
+				.inside_word { panic("delete inside word not implemented") }
+				else { }
+			}
+		}
 	}
 }
 
@@ -872,6 +879,7 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.right { view.l() }
 				.down  { view.j() }
 				.left  { view.h() }
+				.c     { view.exec(view.chord.c()) }
 				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.d() } }
 				.u { if e.modifiers == .ctrl { view.ctrl_u() } else { view.u() } }
 				.caret { view.hat() }

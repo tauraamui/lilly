@@ -5,8 +5,8 @@ import strconv
 pub enum Kind as u8 {
 	nop
 	mode
-	movement
-	deletion
+	move
+	delete
 }
 
 pub enum Direction as u8 {
@@ -14,6 +14,7 @@ pub enum Direction as u8 {
 	down
 	word
 	word_end
+	inside_word
 }
 
 pub enum Mode as u8 {
@@ -25,7 +26,7 @@ pub:
 	kind      Kind
 	direction Direction
 	mode      Mode
-	repeat    int // TODO(tauraamui): use this field instead of returning a list of ops
+	repeat    int
 }
 
 pub struct Chord {
@@ -53,31 +54,35 @@ pub fn (mut chord Chord) i() Op {
 		chord.pending_repeat_amount = ""
 		return Op{ kind: .mode, mode: .insert }
 	}
+	op := Op{ kind: .nop }
+	if chord.pending_motion == "ci" { chord.pending_motion = ""; return op }
 	chord.pending_motion = "${chord.pending_motion}i"
-	return Op{ kind: .nop }
+	return op
 }
 
 pub fn (mut chord Chord) j() Op {
 	defer { chord.pending_motion = ""; chord.pending_repeat_amount = "" }
 	count := strconv.atoi(chord.pending_repeat_amount) or { 1 }
-	return Op{ kind: .movement, direction: .down, repeat: count }
+	return Op{ kind: .move, direction: .down, repeat: count }
 }
 
 pub fn (mut chord Chord) k() Op {
 	defer { chord.pending_motion = ""; chord.pending_repeat_amount = "" }
 	count := strconv.atoi(chord.pending_repeat_amount) or { 1 }
-	return Op{ kind: .movement, direction: .up, repeat: count }
+	return Op{ kind: .move, direction: .up, repeat: count }
 }
 
 pub fn (mut chord Chord) e() Op {
 	defer { chord.pending_motion = ""; chord.pending_repeat_amount = "" }
 	count := strconv.atoi(chord.pending_repeat_amount) or { 1 }
-	return Op{ kind: .movement, direction: .word_end, repeat: count }
+	return Op{ kind: .move, direction: .word_end, repeat: count }
 }
 
 pub fn (mut chord Chord) w() Op {
 	defer { chord.pending_motion = ""; chord.pending_repeat_amount = "" }
 	count := strconv.atoi(chord.pending_repeat_amount) or { 1 }
-	return Op{ kind: .movement, direction: .word, repeat: count }
+	if chord.pending_motion == "c" { return Op{ kind: .delete, direction: .word } }
+	if chord.pending_motion == "ci" { return Op{ kind: .delete, direction: .inside_word } }
+	return Op{ kind: .move, direction: .word, repeat: count }
 }
 
