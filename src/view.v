@@ -24,6 +24,7 @@ import lib.clipboard
 import arrays
 import lib.buffer
 import lib.workspace
+import lib.chords
 
 struct Cursor {
 mut:
@@ -118,7 +119,7 @@ mut:
 	cursor                    Cursor
 	cmd_buf                   CmdBuffer
 	search                    Search
-	repeat_amount             string
+	chord                     chords.Chord
 	x                         int
 	width                     int
 	height                    int
@@ -510,7 +511,8 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	view.cmd_buf.draw(mut ctx, view.mode == .command)
 	if view.mode == .search { view.search.draw(mut ctx, view.mode == .search) }
 
-	ctx.draw_text(ctx.window_width-view.repeat_amount.len, ctx.window_height, view.repeat_amount)
+	repeat_amount := view.chord.pending_repeat_amount()
+	ctx.draw_text(ctx.window_width-repeat_amount.len, ctx.window_height, repeat_amount)
 	if view.mode == .insert {
 		set_cursor_to_vertical_bar(mut ctx)
 	} else { set_cursor_to_block(mut ctx) }
@@ -813,6 +815,19 @@ fn paint_text_on_background(mut ctx tui.Context, x int, y int, bg_color Color, f
 	ctx.draw_text(x, y, text)
 }
 
+fn (mut view View) exec(ops []chords.Op) {
+	for op in ops {
+		match op.kind {
+			.movement {
+				match op.direction {
+					.up   { view.k() }
+					.down { view.j() }
+				}
+			}
+		}
+	}
+}
+
 fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 	match view.mode {
 		.leader {
@@ -831,8 +846,8 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.escape { view.escape() }
 				.h     { view.h() }
 				.l     { view.l() }
-				.j     { view.j() }
-				.k     { view.k() }
+				.j     { view.exec(view.chord.expand_ops(chords.Op{ kind: .movement, direction: .down })) }
+				.k     { view.exec(view.chord.expand_ops(chords.Op{ kind: .movement, direction: .up })) }
 				.i     { view.i() }
 				.v     { if e.modifiers == .shift { view.v() } }
 				.e     { view.e() }
@@ -858,7 +873,7 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.right_square_bracket { view.right_square_bracket() }
 				.slash { view.search() }
 				48...57 { // 0-9a
-					view.repeat_amount = "${view.repeat_amount}${e.ascii.ascii_str()}"
+					view.chord.append_to_repeat_amount(e.ascii.ascii_str())
 				}
 				else {}
 			}
@@ -1090,7 +1105,7 @@ fn (mut view View) escape() {
 		view.scroll_from_and_to()
 	}
 	view.mode = .normal
-	view.repeat_amount = ""
+	view.chord.reset()
 	view.cursor.pos.x -= 1
 	view.clamp_cursor_x_pos()
 	view.cmd_buf.clear()
@@ -1197,16 +1212,12 @@ fn (mut view View) l() {
 }
 
 fn (mut view View) j() {
-	defer { view.repeat_amount = "" }
-	count := strconv.atoi(view.repeat_amount) or { 1 }
-	view.move_cursor_down(count)
+	view.move_cursor_down(1)
 	view.clamp_cursor_x_pos()
 }
 
 fn (mut view View) k() {
-	defer { view.repeat_amount = "" }
-	count := strconv.atoi(view.repeat_amount) or { 1 }
-	view.move_cursor_up(count)
+	view.move_cursor_up(1)
 	view.clamp_cursor_x_pos()
 }
 
