@@ -944,6 +944,7 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 			}
 		}
 		.insert {
+			if e.modifiers == .ctrl { return }
 			match e.code {
 				// ignored/currently "handled" but rejected keys
 				.f1 { }
