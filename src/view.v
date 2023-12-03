@@ -828,6 +828,8 @@ fn (mut view View) exec(op chords.Op) {
 		}
 		.move {
 			match op.direction {
+				.left     { for _ in 0..op.repeat { view.h() } }
+				.right    { for _ in 0..op.repeat { view.l() } }
 				.up       { for _ in 0..op.repeat { view.k() } }
 				.down     { for _ in 0..op.repeat { view.j() } }
 				.word     { for _ in 0..op.repeat { view.w() } }
@@ -861,8 +863,8 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 			}
 			match e.code {
 				.escape { view.escape() }
-				.h     { view.h() }
-				.l     { view.l() }
+				.h     { view.exec(view.chord.h()) }
+				.l     { view.exec(view.chord.l()) }
 				.j     { view.exec(view.chord.j()) }
 				.k     { view.exec(view.chord.k()) }
 				.i     { view.exec(view.chord.i()) }

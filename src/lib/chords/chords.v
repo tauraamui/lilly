@@ -10,7 +10,9 @@ pub enum Kind as u8 {
 }
 
 pub enum Direction as u8 {
+	left
 	up
+	right
 	down
 	word
 	word_end
@@ -58,6 +60,18 @@ pub fn (mut chord Chord) i() Op {
 	if chord.pending_motion == "ci" { chord.pending_motion = ""; return op }
 	chord.pending_motion = "${chord.pending_motion}i"
 	return op
+}
+
+pub fn (mut chord Chord) h() Op {
+	defer { chord.pending_motion = ""; chord.pending_repeat_amount = "" }
+	count := strconv.atoi(chord.pending_repeat_amount) or { 1 }
+	return Op{ kind: .move, direction: .left, repeat: count }
+}
+
+pub fn (mut chord Chord) l() Op {
+	defer { chord.pending_motion = ""; chord.pending_repeat_amount = "" }
+	count := strconv.atoi(chord.pending_repeat_amount) or { 1 }
+	return Op{ kind: .move, direction: .right, repeat: count }
 }
 
 pub fn (mut chord Chord) j() Op {
