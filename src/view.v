@@ -818,14 +818,30 @@ fn paint_text_on_background(mut ctx tui.Context, x int, y int, bg_color Color, f
 	ctx.draw_text(x, y, text)
 }
 
-fn (mut view View) exec(ops []chords.Op) {
-	for op in ops {
-		match op.kind {
-			.movement {
-				match op.direction {
-					.up   { view.k() }
-					.down { view.j() }
-				}
+fn (mut view View) exec(op chords.Op) {
+	match op.kind {
+		.nop { return }
+		.mode {
+			match op.mode {
+				.insert { view.i() }
+			}
+		}
+		.move {
+			match op.direction {
+				.left     { for _ in 0..op.repeat { view.h() } }
+				.right    { for _ in 0..op.repeat { view.l() } }
+				.up       { for _ in 0..op.repeat { view.k() } }
+				.down     { for _ in 0..op.repeat { view.j() } }
+				.word     { for _ in 0..op.repeat { view.w() } }
+				.word_end { for _ in 0..op.repeat { view.e() } }
+				else { }
+			}
+		}
+		.delete {
+			match op.direction {
+				.word        { panic("delete word not implemented") }
+				.inside_word { panic("delete inside word not implemented") }
+				else { }
 			}
 		}
 	}
@@ -847,14 +863,14 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 			}
 			match e.code {
 				.escape { view.escape() }
-				.h     { view.h() }
-				.l     { view.l() }
-				.j     { view.exec(view.chord.expand_ops(chords.Op{ kind: .movement, direction: .down })) }
-				.k     { view.exec(view.chord.expand_ops(chords.Op{ kind: .movement, direction: .up })) }
-				.i     { view.i() }
+				.h     { view.exec(view.chord.h()) }
+				.l     { view.exec(view.chord.l()) }
+				.j     { view.exec(view.chord.j()) }
+				.k     { view.exec(view.chord.k()) }
+				.i     { view.exec(view.chord.i()) }
 				.v     { if e.modifiers == .shift { view.v() } }
-				.e     { view.e() }
-				.w     { view.w() }
+				.e     { view.exec(view.chord.e()) }
+				.w     { view.exec(view.chord.w()) }
 				.b     { view.b() }
 				.o     { if e.modifiers == .shift { view.shift_o() } else { view.o() } }
 				.a     { if e.modifiers == .shift { view.shift_a() } else { view.a() } }
@@ -865,6 +881,7 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.right { view.l() }
 				.down  { view.j() }
 				.left  { view.h() }
+				.c     { view.exec(view.chord.c()) }
 				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.d() } }
 				.u { if e.modifiers == .ctrl { view.ctrl_u() } else { view.u() } }
 				.caret { view.hat() }
