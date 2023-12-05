@@ -877,14 +877,14 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.o     { if e.modifiers == .shift { view.shift_o() } else { view.o() } }
 				.a     { if e.modifiers == .shift { view.shift_a() } else { view.a() } }
 				.p     { view.exec(view.chord.p()) }
-				.r     { view.r() }
-				.x     { view.x() }
-				.up    { view.k() }
-				.right { view.l() }
-				.down  { view.j() }
-				.left  { view.h() }
+				.r     { view.r() } // TODO(tauraamui): request Valentine implements chord usage for this
+				.x     { view.x() } // TODO(tauraamui): request Valentine implements chord usage for this
+				.left  { view.exec(view.chord.h()) }
+				.right { view.exec(view.chord.l()) }
+				.down  { view.exec(view.chord.j()) }
+				.up    { view.exec(view.chord.k()) }
 				.c     { view.exec(view.chord.c()) }
-				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.d() } }
+				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.d() } } // TODO(tauraamui): this will need some special attention to implement
 				.u { if e.modifiers == .ctrl { view.ctrl_u() } else { view.u() } }
 				.caret { view.hat() }
 				.dollar { view.dollar() }
