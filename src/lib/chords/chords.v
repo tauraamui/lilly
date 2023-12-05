@@ -52,8 +52,6 @@ pub fn (mut chord Chord) c() Op {
 
 pub fn (mut chord Chord) i() Op {
 	if chord.pending_motion.len == 0 {
-		chord.pending_motion = ""
-		chord.pending_repeat_amount = ""
 		return Op{ kind: .mode, mode: .insert }
 	}
 	op := Op{ kind: .nop }
@@ -63,40 +61,34 @@ pub fn (mut chord Chord) i() Op {
 }
 
 pub fn (mut chord Chord) h() Op {
-	defer { chord.pending_motion = ""; chord.pending_repeat_amount = "" }
-	count := strconv.atoi(chord.pending_repeat_amount) or { 1 }
-	return Op{ kind: .move, direction: .left, repeat: count }
+	return chord.create_op(.move, .left)
 }
 
 pub fn (mut chord Chord) l() Op {
-	defer { chord.pending_motion = ""; chord.pending_repeat_amount = "" }
-	count := strconv.atoi(chord.pending_repeat_amount) or { 1 }
-	return Op{ kind: .move, direction: .right, repeat: count }
+	return chord.create_op(.move, .right)
 }
 
 pub fn (mut chord Chord) j() Op {
-	defer { chord.pending_motion = ""; chord.pending_repeat_amount = "" }
-	count := strconv.atoi(chord.pending_repeat_amount) or { 1 }
-	return Op{ kind: .move, direction: .down, repeat: count }
+	return chord.create_op(.move, .down)
 }
 
 pub fn (mut chord Chord) k() Op {
-	defer { chord.pending_motion = ""; chord.pending_repeat_amount = "" }
-	count := strconv.atoi(chord.pending_repeat_amount) or { 1 }
-	return Op{ kind: .move, direction: .up, repeat: count }
+	return chord.create_op(.move, .up)
 }
 
 pub fn (mut chord Chord) e() Op {
+	return chord.create_op(.move, .word_end)
+}
+
+fn (mut chord Chord) create_op(kind Kind, direction Direction) Op {
 	defer { chord.pending_motion = ""; chord.pending_repeat_amount = "" }
 	count := strconv.atoi(chord.pending_repeat_amount) or { 1 }
-	return Op{ kind: .move, direction: .word_end, repeat: count }
+	return Op{ kind: kind, direction: direction, repeat: count }
 }
 
 pub fn (mut chord Chord) w() Op {
-	defer { chord.pending_motion = ""; chord.pending_repeat_amount = "" }
-	count := strconv.atoi(chord.pending_repeat_amount) or { 1 }
-	if chord.pending_motion == "c" { return Op{ kind: .delete, direction: .word } }
-	if chord.pending_motion == "ci" { return Op{ kind: .delete, direction: .inside_word } }
-	return Op{ kind: .move, direction: .word, repeat: count }
+	if chord.pending_motion == "c" { return chord.create_op(.delete, .word) }
+	if chord.pending_motion == "ci" { return chord.create_op(.delete, .inside_word) }
+	return chord.create_op(.move, .word)
 }
 
