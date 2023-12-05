@@ -23,14 +23,14 @@ fn test_chord_generates_single_nop_op_from_invoking_c_alone() {
 fn test_chord_generates_single_deletion_op_from_invoking_c_and_w() {
 	mut chord := Chord{}
 	assert chord.c() == Op{ kind: .nop }
-	assert chord.w() == Op{ kind: .delete, direction: .word }
+	assert chord.w() == Op{ kind: .delete, direction: .word, repeat: 1 }
 }
 
 fn test_chord_generates_single_deletion_op_from_invoking_c_i_and_w() {
 	mut chord := Chord{}
 	assert chord.c() == Op{ kind: .nop }
 	assert chord.i() == Op{ kind: .nop }
-	assert chord.w() == Op{ kind: .delete, direction: .inside_word }
+	assert chord.w() == Op{ kind: .delete, direction: .inside_word, repeat: 1 }
 }
 
 fn test_chord_generates_single_nop_op_from_invoking_c_i_and_i_again() {

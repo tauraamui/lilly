@@ -821,6 +821,7 @@ fn paint_text_on_background(mut ctx tui.Context, x int, y int, bg_color Color, f
 fn (mut view View) exec(op chords.Op) {
 	match op.kind {
 		.nop { return }
+		.paste { for _ in 0..op.repeat { view.p() } }
 		.mode {
 			match op.mode {
 				.insert { view.i() }
@@ -828,12 +829,13 @@ fn (mut view View) exec(op chords.Op) {
 		}
 		.move {
 			match op.direction {
-				.left     { for _ in 0..op.repeat { view.h() } }
-				.right    { for _ in 0..op.repeat { view.l() } }
-				.up       { for _ in 0..op.repeat { view.k() } }
-				.down     { for _ in 0..op.repeat { view.j() } }
-				.word     { for _ in 0..op.repeat { view.w() } }
-				.word_end { for _ in 0..op.repeat { view.e() } }
+				.left         { for _ in 0..op.repeat { view.h() } }
+				.right        { for _ in 0..op.repeat { view.l() } }
+				.up           { for _ in 0..op.repeat { view.k() } }
+				.down         { for _ in 0..op.repeat { view.j() } }
+				.word         { for _ in 0..op.repeat { view.w() } }
+				.word_end     { for _ in 0..op.repeat { view.e() } }
+				.word_reverse { for _ in 0..op.repeat { view.b() } }
 				else { }
 			}
 		}
@@ -871,18 +873,18 @@ fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
 				.v     { if e.modifiers == .shift { view.v() } }
 				.e     { view.exec(view.chord.e()) }
 				.w     { view.exec(view.chord.w()) }
-				.b     { view.b() }
+				.b     { view.exec(view.chord.b()) }
 				.o     { if e.modifiers == .shift { view.shift_o() } else { view.o() } }
 				.a     { if e.modifiers == .shift { view.shift_a() } else { view.a() } }
-				.p     { view.p() }
-				.r     { view.r() }
-				.x     { view.x() }
-				.up    { view.k() }
-				.right { view.l() }
-				.down  { view.j() }
-				.left  { view.h() }
+				.p     { view.exec(view.chord.p()) }
+				.r     { view.r() } // TODO(tauraamui): request Valentine implements chord usage for this
+				.x     { view.x() } // TODO(tauraamui): request Valentine implements chord usage for this
+				.left  { view.exec(view.chord.h()) }
+				.right { view.exec(view.chord.l()) }
+				.down  { view.exec(view.chord.j()) }
+				.up    { view.exec(view.chord.k()) }
 				.c     { view.exec(view.chord.c()) }
-				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.d() } }
+				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.d() } } // TODO(tauraamui): this will need some special attention to implement
 				.u { if e.modifiers == .ctrl { view.ctrl_u() } else { view.u() } }
 				.caret { view.hat() }
 				.dollar { view.dollar() }
