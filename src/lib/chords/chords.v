@@ -7,6 +7,7 @@ pub enum Kind as u8 {
 	mode
 	move
 	delete
+	paste
 }
 
 pub enum Direction as u8 {
@@ -16,6 +17,7 @@ pub enum Direction as u8 {
 	down
 	word
 	word_end
+	word_reverse
 	inside_word
 }
 
@@ -43,6 +45,10 @@ pub fn (mut chord Chord) reset() { chord.pending_repeat_amount = "" }
 
 pub fn (mut chord Chord) append_to_repeat_amount(n string) {
 	chord.pending_repeat_amount = "${chord.pending_repeat_amount}${n}"
+}
+
+pub fn (mut chord Chord) b() Op {
+	return chord.create_op(.move, .word_reverse)
 }
 
 pub fn (mut chord Chord) c() Op {
@@ -80,15 +86,19 @@ pub fn (mut chord Chord) e() Op {
 	return chord.create_op(.move, .word_end)
 }
 
-fn (mut chord Chord) create_op(kind Kind, direction Direction) Op {
-	defer { chord.pending_motion = ""; chord.pending_repeat_amount = "" }
-	count := strconv.atoi(chord.pending_repeat_amount) or { 1 }
-	return Op{ kind: kind, direction: direction, repeat: count }
-}
-
 pub fn (mut chord Chord) w() Op {
 	if chord.pending_motion == "c" { return chord.create_op(.delete, .word) }
 	if chord.pending_motion == "ci" { return chord.create_op(.delete, .inside_word) }
 	return chord.create_op(.move, .word)
+}
+
+pub fn (mut chord Chord) p() Op {
+	return chord.create_op(.paste, .down)
+}
+
+fn (mut chord Chord) create_op(kind Kind, direction Direction) Op {
+	defer { chord.pending_motion = ""; chord.pending_repeat_amount = "" }
+	count := strconv.atoi(chord.pending_repeat_amount) or { 1 }
+	return Op{ kind: kind, direction: direction, repeat: count }
 }
 
