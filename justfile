@@ -14,3 +14,6 @@ apply-license-header:
 
 install-license-tool:
 	go install github.com/google/addlicense@latest
+
+symlink: compile
+	sudo ln -s $PWD/lilly /usr/local/bin
