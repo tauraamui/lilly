@@ -993,7 +993,7 @@ fn (mut view View) scroll_from_and_to() {
 		return
 	}
 
-	if view.cursor.pos.y+1 > view.to {
+	if view.cursor.pos.y+1 > view.to && view.to >= view.height - 2 { // TODO(tauraamui): I really need to define the magic numbers we're using any why
 		diff := view.cursor.pos.y+1 - view.to
 		view.from += diff
 	}
