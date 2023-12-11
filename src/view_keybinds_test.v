@@ -3,33 +3,33 @@ module main
 import lib.clipboard
 import term.ui as tui
 
-struct KeyEventTestCase {
+struct MovementKeyEventTestCase {
 	name                string
 	code                tui.KeyCode
 	starting_cursor_pos Pos
 	expected_cursor_pos Pos
 }
 
-const cases = [
-	KeyEventTestCase{
+const movement_key_cases = [
+	MovementKeyEventTestCase{
 		name: "key code h"
 		code: tui.KeyCode.h,
 		starting_cursor_pos: Pos{ x: 3, y: 0 }
 		expected_cursor_pos: Pos{ x: 2, y: 0 }
 	},
-	KeyEventTestCase{
+	MovementKeyEventTestCase{
 		name: "key code l",
 		code: tui.KeyCode.l,
 		starting_cursor_pos: Pos{ x: 3, y: 0 }
 		expected_cursor_pos: Pos{ x: 4, y: 0 }
 	},
-	KeyEventTestCase{
+	MovementKeyEventTestCase{
 		name: "key code j",
 		code: tui.KeyCode.j,
 		starting_cursor_pos: Pos{ x: 0, y: 0 }
 		expected_cursor_pos: Pos{ x: 0, y: 1 }
 	},
-	KeyEventTestCase{
+	MovementKeyEventTestCase{
 		name: "key code k",
 		code: tui.KeyCode.k,
 		starting_cursor_pos: Pos{ x: 0, y: 1 }
@@ -38,7 +38,7 @@ const cases = [
 ]
 
 fn test_sets_of_key_events_for_views_on_key_down_adjusting_cursor_position() {
-	for case in cases {
+	for case in movement_key_cases {
 		mut clip := clipboard.new()
 		mut editor := Editor{ clipboard: mut clip, file_finder_modal: unsafe { nil } }
 		mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
