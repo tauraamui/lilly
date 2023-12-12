@@ -6,86 +6,108 @@ import term.ui as tui
 struct MovementKeyEventTestCase {
 	name                string
 	code                tui.KeyCode
+	document_contents   []string
 	starting_cursor_pos Pos
 	expected_cursor_pos Pos
 }
+
+const (
+	basic_three_lines_doc = [
+		"1. first line",
+		"2. second line",
+		"3. third line"
+	]
+)
 
 const movement_key_cases = [
 	MovementKeyEventTestCase{
 		name: "key code h"
 		code: tui.KeyCode.h,
+		document_contents: basic_three_lines_doc
 		starting_cursor_pos: Pos{ x: 3, y: 0 }
 		expected_cursor_pos: Pos{ x: 2, y: 0 }
 	},
 	MovementKeyEventTestCase{
 		name: "key code l",
 		code: tui.KeyCode.l,
+		document_contents: basic_three_lines_doc
 		starting_cursor_pos: Pos{ x: 3, y: 0 }
 		expected_cursor_pos: Pos{ x: 4, y: 0 }
 	},
 	MovementKeyEventTestCase{
 		name: "key code j",
 		code: tui.KeyCode.j,
+		document_contents: basic_three_lines_doc
 		starting_cursor_pos: Pos{ x: 0, y: 0 }
 		expected_cursor_pos: Pos{ x: 0, y: 1 }
 	},
 	MovementKeyEventTestCase{
 		name: "key code k",
 		code: tui.KeyCode.k,
+		document_contents: basic_three_lines_doc
 		starting_cursor_pos: Pos{ x: 0, y: 1 }
 		expected_cursor_pos: Pos{ x: 0, y: 0 }
 	},
 	MovementKeyEventTestCase{
 		name: "key code e",
 		code: tui.KeyCode.e,
+		document_contents: basic_three_lines_doc
 		starting_cursor_pos: Pos{ x: 1, y: 1 }
 		expected_cursor_pos: Pos{ x: 8, y: 1 }
 	},
 	MovementKeyEventTestCase{
 		name: "key code w",
 		code: tui.KeyCode.w,
+		document_contents: basic_three_lines_doc
 		starting_cursor_pos: Pos{ x: 1, y: 1 }
 		expected_cursor_pos: Pos{ x: 3, y: 1 }
 	},
 	MovementKeyEventTestCase{
 		name: "key code b",
 		code: tui.KeyCode.b,
+		document_contents: basic_three_lines_doc
 		starting_cursor_pos: Pos{ x: 8, y: 1 }
 		expected_cursor_pos: Pos{ x: 3, y: 1 }
 	},
 	MovementKeyEventTestCase{
 		name: "key code left"
 		code: tui.KeyCode.left,
+		document_contents: basic_three_lines_doc
 		starting_cursor_pos: Pos{ x: 3, y: 0 }
 		expected_cursor_pos: Pos{ x: 2, y: 0 }
 	},
 	MovementKeyEventTestCase{
 		name: "key code right",
 		code: tui.KeyCode.right,
+		document_contents: basic_three_lines_doc
 		starting_cursor_pos: Pos{ x: 3, y: 0 }
 		expected_cursor_pos: Pos{ x: 4, y: 0 }
 	},
 	MovementKeyEventTestCase{
 		name: "key code down",
 		code: tui.KeyCode.down,
+		document_contents: basic_three_lines_doc
 		starting_cursor_pos: Pos{ x: 0, y: 0 }
 		expected_cursor_pos: Pos{ x: 0, y: 1 }
 	},
 	MovementKeyEventTestCase{
 		name: "key code up",
 		code: tui.KeyCode.up,
+		document_contents: basic_three_lines_doc
 		starting_cursor_pos: Pos{ x: 0, y: 1 }
 		expected_cursor_pos: Pos{ x: 0, y: 0 }
 	},
 	MovementKeyEventTestCase{
 		name: "key code caret/hat",
 		code: tui.KeyCode.caret,
+		document_contents: basic_three_lines_doc
 		starting_cursor_pos: Pos{ x: 11, y: 0 }
 		expected_cursor_pos: Pos{ x: 0, y: 0 }
 	},
 	MovementKeyEventTestCase{
 		name: "key code dollar",
 		code: tui.KeyCode.dollar,
+		document_contents: basic_three_lines_doc
 		starting_cursor_pos: Pos{ x: 0, y: 0 }
 		expected_cursor_pos: Pos{ x: 12, y: 0 }
 	}
