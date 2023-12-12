@@ -53,12 +53,12 @@ pub fn new_splash(leader_key string) Viewable {
 	return splash
 }
 
-pub fn (splash SplashScreen) draw(mut ctx draw.Context) {
+pub fn (splash SplashScreen) draw(mut ctx draw.Contextable) {
 	offset_x := 1
-	mut offset_y := 1 + f64(ctx.window_height) * 0.1
+	mut offset_y := 1 + f64(ctx.window_height()) * 0.1
 	ctx.set_color(r: 245, g: 191, b: 243)
 	for i, l in splash.logo.data {
-		start_x := offset_x+(ctx.window_width / 2) - (l.runes().len / 2)
+		start_x := offset_x+(ctx.window_width() / 2) - (l.runes().len / 2)
 		if has_colouring_directives(l) {
 			for j, c in l.runes() {
 				mut to_draw := "${c}"
@@ -68,12 +68,12 @@ pub fn (splash SplashScreen) draw(mut ctx draw.Context) {
 			}
 			continue
 		}
-		ctx.draw_text(offset_x+(ctx.window_width / 2) - (l.runes().len / 2), int(math.floor(offset_y))+i, l)
+		ctx.draw_text(offset_x+(ctx.window_width() / 2) - (l.runes().len / 2), int(math.floor(offset_y))+i, l)
 	}
 	ctx.reset_color()
 
 	offset_y += splash.logo.data.len
-	offset_y += (ctx.window_height - offset_y) * 0.05
+	offset_y += (ctx.window_height() - offset_y) * 0.05
 
 	offset_y += 2
 
@@ -90,17 +90,17 @@ pub fn (splash SplashScreen) draw(mut ctx draw.Context) {
 	]
 
 	for h in basic_command_help {
-		ctx.draw_text(offset_x+(ctx.window_width / 2) - (h.len / 2), int(math.floor(offset_y)), h)
+		ctx.draw_text(offset_x+(ctx.window_width() / 2) - (h.len / 2), int(math.floor(offset_y)), h)
 		offset_y += 2
 	}
 
 	for dh in disabled_command_help {
-		ctx.draw_text(offset_x+(ctx.window_width / 2) - (dh.len / 2), int(math.floor(offset_y)), strikethrough(dh))
+		ctx.draw_text(offset_x+(ctx.window_width() / 2) - (dh.len / 2), int(math.floor(offset_y)), strikethrough(dh))
 		offset_y += 2
 	}
 
 	copyright_footer := "the lilly editor authors ©"
-	ctx.draw_text(offset_x+(ctx.window_width / 2) - (copyright_footer.len / 2), int(math.floor(offset_y)), copyright_footer)
+	ctx.draw_text(offset_x+(ctx.window_width() / 2) - (copyright_footer.len / 2), int(math.floor(offset_y)), copyright_footer)
 }
 
 fn has_colouring_directives(line string) bool {

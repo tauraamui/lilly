@@ -31,13 +31,13 @@ struct Status {
 	git_branch string
 }
 
-fn draw_status_line(mut ctx draw.Context, status Status) {
+fn draw_status_line(mut ctx draw.Contextable, status Status) {
 	defer { ctx.reset() }
 
-	y := ctx.window_height - 1
+	y := ctx.window_height() - 1
 	// draw base dark rectangle for the status line
 	ctx.set_bg_color(r: 25, g: 25, b: 25)
-	ctx.draw_rect(12, y, ctx.window_width, y)
+	ctx.draw_rect(12, y, ctx.window_width(), y)
 
 	// invoke the mode indicator draw
 	mut offset := status.mode.draw(mut ctx, 1, y)
@@ -58,7 +58,7 @@ fn draw_status_line(mut ctx draw.Context, status Status) {
 	draw_cursor_position_segment(mut ctx, 1, y, status.cursor_x, status.cursor_y)
 }
 
-fn draw_file_name_segment(mut ctx draw.Context, x int, y int, file_name string) int {
+fn draw_file_name_segment(mut ctx draw.Contextable, x int, y int, file_name string) int {
 	paint_shape_text(mut ctx, x, y, Color{ 86, 86, 86 }, "${slant_left_flat_top}${block}")
 	mut offset := 2
 	ctx.bold()
@@ -69,7 +69,7 @@ fn draw_file_name_segment(mut ctx draw.Context, x int, y int, file_name string) 
 	return offset
 }
 
-fn draw_search_selection_info_segment(mut ctx draw.Context, x int, y int, selection SearchSelection) int {
+fn draw_search_selection_info_segment(mut ctx draw.Contextable, x int, y int, selection SearchSelection) int {
 	selection_info_label := "${selection.current}/${selection.total}"
 	mut offset := 2
 	paint_shape_text(mut ctx, x, y, status_purple, "${slant_left_flat_top}${block}")
@@ -80,7 +80,7 @@ fn draw_search_selection_info_segment(mut ctx draw.Context, x int, y int, select
 	return offset
 }
 
-fn draw_git_branch_section(mut ctx draw.Context, x int, y int, git_branch string) int {
+fn draw_git_branch_section(mut ctx draw.Contextable, x int, y int, git_branch string) int {
 	paint_shape_text(mut ctx, x, y, status_dark_lilac, "${slant_left_flat_top}${block}")
 	mut offset := 2
 	paint_text_on_background(mut ctx, x + offset, y, status_dark_lilac, Color{ 230, 230, 230 }, git_branch)
@@ -90,13 +90,13 @@ fn draw_git_branch_section(mut ctx draw.Context, x int, y int, git_branch string
 	return offset
 }
 
-fn draw_cursor_position_segment(mut ctx draw.Context, x int, y int, cursor_x int, cursor_y int) int {
+fn draw_cursor_position_segment(mut ctx draw.Contextable, x int, y int, cursor_x int, cursor_y int) int {
 	cursor_info_label := "${cursor_y+1}:${cursor_x+1}"
-	paint_shape_text(mut ctx, ctx.window_width - 1, y, Color { 245, 42, 42 }, "${block}${block}")
+	paint_shape_text(mut ctx, ctx.window_width() - 1, y, Color { 245, 42, 42 }, "${block}${block}")
 	ctx.bold()
-	paint_text_on_background(mut ctx, ctx.window_width - 1 - cursor_info_label.len, y, Color{ 245, 42, 42 }, Color{ 255, 255, 255 }, cursor_info_label)
-	paint_shape_text(mut ctx, ctx.window_width - 2 - cursor_info_label.len - 2, y, Color { 245, 42, 42 }, "${slant_right_flat_top}${slant_left_flat_bottom}${block}")
-	paint_shape_text(mut ctx, ctx.window_width - 2 - cursor_info_label.len - 2, y, Color { 25, 25, 25 }, "${slant_right_flat_top}")
+	paint_text_on_background(mut ctx, ctx.window_width() - 1 - cursor_info_label.len, y, Color{ 245, 42, 42 }, Color{ 255, 255, 255 }, cursor_info_label)
+	paint_shape_text(mut ctx, ctx.window_width() - 2 - cursor_info_label.len - 2, y, Color { 245, 42, 42 }, "${slant_right_flat_top}${slant_left_flat_bottom}${block}")
+	paint_shape_text(mut ctx, ctx.window_width() - 2 - cursor_info_label.len - 2, y, Color { 25, 25, 25 }, "${slant_right_flat_top}")
 	return 0
 }
 

@@ -27,7 +27,7 @@ enum Mode as u8 {
 	replace
 }
 
-fn (mode Mode) draw(mut ctx draw.Context, x int, y int) int {
+fn (mode Mode) draw(mut ctx draw.Contextable, x int, y int) int {
 	defer { ctx.reset() }
 	label := mode.str()
 	status_line_y := y

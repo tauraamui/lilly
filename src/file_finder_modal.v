@@ -52,7 +52,7 @@ fn (mut file_search FileSearch) backspace() {
 	if file_search.cursor_x < 0 { file_search.cursor_x = 0 }
 }
 
-fn (mut file_finder_modal FileFinderModal) draw(mut ctx draw.Context) {
+fn (mut file_finder_modal FileFinderModal) draw(mut ctx draw.Contextable) {
 	defer { ctx.reset_bg_color() }
 	ctx.set_color(r: 245, g: 245, b: 245)
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
@@ -62,22 +62,22 @@ fn (mut file_finder_modal FileFinderModal) draw(mut ctx draw.Context) {
 	ctx.set_cursor_position(1, y_offset + file_finder_modal.current_selection - file_finder_modal.from)
 	y_offset += file_finder_modal.draw_scrollable_list(mut ctx, y_offset, file_finder_modal.resolve_file_paths())
 	ctx.set_bg_color(r: 153, g: 95, b: 146)
-	ctx.draw_rect(1, y_offset, ctx.window_width, y_offset)
+	ctx.draw_rect(1, y_offset, ctx.window_width(), y_offset)
 	search_label := "SEARCH:"
 	ctx.draw_text(1, y_offset, search_label)
 	ctx.draw_text(1+utf8_str_visible_length(search_label)+1, y_offset, file_finder_modal.search.query)
 }
 
-fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx draw.Context, y_offset int, list []ScoredFilePath) int {
+fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx draw.Contextable, y_offset int, list []ScoredFilePath) int {
 	ctx.reset_bg_color()
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
-	ctx.draw_rect(1, y_offset, ctx.window_width, y_offset+max_height - 1)
+	ctx.draw_rect(1, y_offset, ctx.window_width(), y_offset+max_height - 1)
 	to := file_finder_modal.resolve_to()
 	for i := file_finder_modal.from; i < to; i++ {
 		ctx.set_bg_color(r: 15, g: 15, b: 15)
 		if file_finder_modal.current_selection == i {
 			ctx.set_bg_color(r: 53, g: 53, b: 53)
-			ctx.draw_rect(1, y_offset+(i - file_finder_modal.from), ctx.window_width, y_offset+(i - file_finder_modal.from))
+			ctx.draw_rect(1, y_offset+(i - file_finder_modal.from), ctx.window_width(), y_offset+(i - file_finder_modal.from))
 		}
 		ctx.draw_text(1, y_offset+(i - file_finder_modal.from), list[i].content)
 	}
