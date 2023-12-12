@@ -52,6 +52,30 @@ const movement_key_cases = [
 		code: tui.KeyCode.b,
 		starting_cursor_pos: Pos{ x: 8, y: 1 }
 		expected_cursor_pos: Pos{ x: 3, y: 1 }
+	},
+	MovementKeyEventTestCase{
+		name: "key code left"
+		code: tui.KeyCode.left,
+		starting_cursor_pos: Pos{ x: 3, y: 0 }
+		expected_cursor_pos: Pos{ x: 2, y: 0 }
+	},
+	MovementKeyEventTestCase{
+		name: "key code right",
+		code: tui.KeyCode.right,
+		starting_cursor_pos: Pos{ x: 3, y: 0 }
+		expected_cursor_pos: Pos{ x: 4, y: 0 }
+	},
+	MovementKeyEventTestCase{
+		name: "key code down",
+		code: tui.KeyCode.down,
+		starting_cursor_pos: Pos{ x: 0, y: 0 }
+		expected_cursor_pos: Pos{ x: 0, y: 1 }
+	},
+	MovementKeyEventTestCase{
+		name: "key code up",
+		code: tui.KeyCode.up,
+		starting_cursor_pos: Pos{ x: 0, y: 1 }
+		expected_cursor_pos: Pos{ x: 0, y: 0 }
 	}
 ]
 
