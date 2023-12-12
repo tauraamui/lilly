@@ -16,6 +16,7 @@ module main
 
 import term.ui as tui
 import strings
+import lib.draw
 
 const max_height = 20
 
@@ -51,7 +52,7 @@ fn (mut file_search FileSearch) backspace() {
 	if file_search.cursor_x < 0 { file_search.cursor_x = 0 }
 }
 
-fn (mut file_finder_modal FileFinderModal) draw(mut ctx tui.Context) {
+fn (mut file_finder_modal FileFinderModal) draw(mut ctx draw.Context) {
 	defer { ctx.reset_bg_color() }
 	ctx.set_color(r: 245, g: 245, b: 245)
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
@@ -67,7 +68,7 @@ fn (mut file_finder_modal FileFinderModal) draw(mut ctx tui.Context) {
 	ctx.draw_text(1+utf8_str_visible_length(search_label)+1, y_offset, file_finder_modal.search.query)
 }
 
-fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx tui.Context, y_offset int, list []ScoredFilePath) int {
+fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx draw.Context, y_offset int, list []ScoredFilePath) int {
 	ctx.reset_bg_color()
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
 	ctx.draw_rect(1, y_offset, ctx.window_width, y_offset+max_height - 1)

@@ -18,11 +18,13 @@ import os
 import term.ui as tui
 import log
 import lib.clipboard
+import lib.draw
 
 struct App {
 mut:
 	log       &log.Log
     tui       &tui.Context = unsafe { nil }
+    ui        &draw.Context = unsafe { nil }
     editor    &Editor = unsafe { nil }
 	view      &View = unsafe { nil }
 	views     []View
@@ -57,11 +59,11 @@ fn event(e &tui.Event, mut app &App) {
 fn frame(mut app &App) {
 	if app.changed {
 		app.changed = false
-		app.tui.clear()
+		app.ui.clear()
 
-		app.editor.draw(mut app.tui)
+		app.editor.draw(mut app.ui)
 
-		app.tui.flush()
+		app.ui.flush()
 	}
 }
 
@@ -76,26 +78,24 @@ fn main() {
 		l.close()
 	}
 
-	$if gui ? {
-	} $else {
-	    mut app := &App{
-			log: &l
-			changed: true
-		}
-
-	    app.tui = tui.init(
-	        user_data: app
-	        event_fn: event
-	        frame_fn: frame
-			capture_events: true
-			use_alternate_buffer: true
-	    )
-
-		path := os.args[1] or { "" }
-		app.editor = open_editor(clipboard.new(), path) or { print_and_exit("${err}"); unsafe { nil } }
-
-	    app.tui.run()!
+    mut app := &App{
+		log: &l
+		changed: true
 	}
+
+	$if !gui ? {
+	    app.ui = tui.init(
+		        user_data: app
+		        event_fn: event
+		        frame_fn: frame
+				capture_events: true
+				use_alternate_buffer: true)
+	} $else { print_and_exit("gui render target not yet available") }
+
+	path := os.args[1] or { "" }
+	app.editor = open_editor(clipboard.new(), path) or { print_and_exit("${err}"); unsafe { nil } }
+
+    app.ui.run()!
 }
 
 fn print_and_exit(msg string) {

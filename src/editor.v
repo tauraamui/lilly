@@ -19,6 +19,7 @@ import term.ui as tui
 import lib.buffer
 import lib.clipboard
 import lib.workspace
+import lib.draw
 
 struct Editor {
 mut:
@@ -96,7 +97,7 @@ fn (mut editor Editor) close_file_finder() {
 	editor.file_finder_modal_open = false
 }
 
-pub fn (mut editor Editor) draw(mut ctx tui.Context) {
+pub fn (mut editor Editor) draw(mut ctx draw.Context) {
 	editor.view.draw(mut ctx)
 	if editor.file_finder_modal_open {
 		editor.file_finder_modal.draw(mut ctx)
