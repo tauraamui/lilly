@@ -17,6 +17,15 @@ const (
 		"2. second line",
 		"3. third line"
 	]
+	gapped_blocks_of_content_doc = [
+		"fn this_is_a_function() {",
+		"    1 + 1",
+		"}",
+		"",
+		"fn this_is_a_different_function() {",
+		"    3495 * 22",
+		"}",
+	]
 )
 
 const movement_key_cases = [
@@ -110,6 +119,13 @@ const movement_key_cases = [
 		document_contents: basic_three_lines_doc
 		starting_cursor_pos: Pos{ x: 0, y: 0 }
 		expected_cursor_pos: Pos{ x: 12, y: 0 }
+	},
+	MovementKeyEventTestCase{
+		name: "key code left curly bracket",
+		code: tui.KeyCode.left_curly_bracket,
+		document_contents: gapped_blocks_of_content_doc
+		starting_cursor_pos: Pos{ x: 0, y: 12 }
+		expected_cursor_pos: Pos{ x: 0, y: 3 }
 	}
 ]
 
@@ -118,11 +134,7 @@ fn test_sets_of_key_events_for_views_on_key_down_adjusting_cursor_position() {
 		mut clip := clipboard.new()
 		mut editor := Editor{ clipboard: mut clip, file_finder_modal: unsafe { nil } }
 		mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
-		fake_view.buffer.lines = [
-			"1. first line",
-			"2. second line",
-			"3. third line"
-		]
+		fake_view.buffer.lines = case.document_contents
 		fake_view.cursor.pos = case.starting_cursor_pos
 		kevent := &tui.Event{ code: case.code }
 		fake_view.on_key_down(kevent, mut editor)
