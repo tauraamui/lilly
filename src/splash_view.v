@@ -17,6 +17,7 @@ module main
 import term.ui as tui
 import math
 import term { strikethrough }
+import lib.draw
 
 const logo_contents = $embed_file("./src/splash-logo.txt")
 
@@ -52,7 +53,7 @@ pub fn new_splash(leader_key string) Viewable {
 	return splash
 }
 
-pub fn (splash SplashScreen) draw(mut ctx tui.Context) {
+pub fn (splash SplashScreen) draw(mut ctx draw.Context) {
 	offset_x := 1
 	mut offset_y := 1 + f64(ctx.window_height) * 0.1
 	ctx.set_color(r: 245, g: 191, b: 243)

@@ -14,7 +14,7 @@
 
 module main
 
-import term.ui as tui
+import lib.draw
 
 struct SearchSelection {
 	active  bool
@@ -31,7 +31,7 @@ struct Status {
 	git_branch string
 }
 
-fn draw_status_line(mut ctx tui.Context, status Status) {
+fn draw_status_line(mut ctx draw.Context, status Status) {
 	defer { ctx.reset() }
 
 	y := ctx.window_height - 1
@@ -58,7 +58,7 @@ fn draw_status_line(mut ctx tui.Context, status Status) {
 	draw_cursor_position_segment(mut ctx, 1, y, status.cursor_x, status.cursor_y)
 }
 
-fn draw_file_name_segment(mut ctx tui.Context, x int, y int, file_name string) int {
+fn draw_file_name_segment(mut ctx draw.Context, x int, y int, file_name string) int {
 	paint_shape_text(mut ctx, x, y, Color{ 86, 86, 86 }, "${slant_left_flat_top}${block}")
 	mut offset := 2
 	ctx.bold()
@@ -69,7 +69,7 @@ fn draw_file_name_segment(mut ctx tui.Context, x int, y int, file_name string) i
 	return offset
 }
 
-fn draw_search_selection_info_segment(mut ctx tui.Context, x int, y int, selection SearchSelection) int {
+fn draw_search_selection_info_segment(mut ctx draw.Context, x int, y int, selection SearchSelection) int {
 	selection_info_label := "${selection.current}/${selection.total}"
 	mut offset := 2
 	paint_shape_text(mut ctx, x, y, status_purple, "${slant_left_flat_top}${block}")
@@ -80,7 +80,7 @@ fn draw_search_selection_info_segment(mut ctx tui.Context, x int, y int, selecti
 	return offset
 }
 
-fn draw_git_branch_section(mut ctx tui.Context, x int, y int, git_branch string) int {
+fn draw_git_branch_section(mut ctx draw.Context, x int, y int, git_branch string) int {
 	paint_shape_text(mut ctx, x, y, status_dark_lilac, "${slant_left_flat_top}${block}")
 	mut offset := 2
 	paint_text_on_background(mut ctx, x + offset, y, status_dark_lilac, Color{ 230, 230, 230 }, git_branch)
@@ -90,7 +90,7 @@ fn draw_git_branch_section(mut ctx tui.Context, x int, y int, git_branch string)
 	return offset
 }
 
-fn draw_cursor_position_segment(mut ctx tui.Context, x int, y int, cursor_x int, cursor_y int) int {
+fn draw_cursor_position_segment(mut ctx draw.Context, x int, y int, cursor_x int, cursor_y int) int {
 	cursor_info_label := "${cursor_y+1}:${cursor_x+1}"
 	paint_shape_text(mut ctx, ctx.window_width - 1, y, Color { 245, 42, 42 }, "${block}${block}")
 	ctx.bold()

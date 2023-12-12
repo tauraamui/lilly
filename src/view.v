@@ -25,6 +25,7 @@ import arrays
 import lib.buffer
 import lib.workspace
 import lib.chords
+import lib.draw
 
 struct Cursor {
 mut:
@@ -174,7 +175,7 @@ fn (mut search Search) get_line_matches(line_num int) []Match {
 	return matches
 }
 
-fn (mut search Search) draw(mut ctx tui.Context, draw_cursor bool) {
+fn (mut search Search) draw(mut ctx draw.Context, draw_cursor bool) {
 	ctx.draw_text(1, ctx.window_height, search.to_find)
 	ctx.set_bg_color(r: 230, g: 230, b: 230)
 	ctx.draw_point(search.cursor_x+1, ctx.window_height)
@@ -299,7 +300,7 @@ mut:
 	cmd_history datatypes.Queue[string]
 }
 
-fn (mut cmd_buf CmdBuffer) draw(mut ctx tui.Context, draw_cursor bool) {
+fn (mut cmd_buf CmdBuffer) draw(mut ctx draw.Context, draw_cursor bool) {
 	defer { ctx.reset_bg_color() }
 	if cmd_buf.code != .blank {
 		color := cmd_buf.code.color()
@@ -472,11 +473,11 @@ fn (mut view View) open_file(path string) {
 interface Viewable {
 	file_path string
 mut:
-	draw(mut tui.Context)
+	draw(mut draw.Context)
 	on_key_down(&tui.Event, mut Root)
 }
 
-fn (mut view View) draw(mut ctx tui.Context) {
+fn (mut view View) draw(mut ctx draw.Context) {
 	view.height = ctx.window_height
 	view.x = "${view.buffer.lines.len}".len + 1
 	view.width = ctx.window_width
@@ -523,7 +524,7 @@ fn (mut view View) draw(mut ctx tui.Context) {
 	ctx.set_cursor_position(view.x+1+offset, cursor_screen_space_y+1)
 }
 
-fn (mut view View) draw_document(mut ctx tui.Context) {
+fn (mut view View) draw_document(mut ctx draw.Context) {
 	mut to := view.from + view.code_view_height()
 	if to > view.buffer.lines.len { to = view.buffer.lines.len }
 	view.to = to
@@ -578,7 +579,7 @@ struct LineSegment {
 	typ   SegmentKind
 }
 
-fn (mut view View) draw_text_line(mut ctx tui.Context, y int, line string, within_selection bool) {
+fn (mut view View) draw_text_line(mut ctx draw.Context, y int, line string, within_selection bool) {
 	mut linex := line.replace("\t", " ".repeat(4))
 	mut max_width := view.width
 	visible_len := utf8_str_visible_length(linex)
@@ -712,7 +713,7 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 	return segments, is_multiline_commentx
 }
 
-fn (mut view View) draw_text_line_number(mut ctx tui.Context, y int) {
+fn (mut view View) draw_text_line_number(mut ctx draw.Context, y int) {
 	cursor_screenspace_y := view.cursor.pos.y - view.from
 	ctx.set_color(r: 117, g: 118, b: 120)
 
@@ -788,15 +789,15 @@ fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cp
 // 4 - Underline (steady)
 // 5 - Bar (blinking)
 // 6 - Bar (steady)
-fn set_cursor_to_block(mut ctx tui.Context) {
+fn set_cursor_to_block(mut ctx draw.Context) {
 	ctx.write("\x1b[0 q")
 }
 
-fn set_cursor_to_underline(mut ctx tui.Context) {
+fn set_cursor_to_underline(mut ctx draw.Context) {
 	ctx.write("\x1b[4 q")
 }
 
-fn set_cursor_to_vertical_bar(mut ctx tui.Context) {
+fn set_cursor_to_vertical_bar(mut ctx draw.Context) {
 	ctx.write("\x1b[6 q")
 }
 
@@ -806,13 +807,13 @@ struct Color {
 	b u8
 }
 
-fn paint_shape_text(mut ctx tui.Context, x int, y int, color Color, text string) {
+fn paint_shape_text(mut ctx draw.Context, x int, y int, color Color, text string) {
 	ctx.set_color(r: color.r, g: color.g, b: color.b)
 	ctx.reset_bg_color()
 	ctx.draw_text(x, y, text)
 }
 
-fn paint_text_on_background(mut ctx tui.Context, x int, y int, bg_color Color, fg_color Color, text string) {
+fn paint_text_on_background(mut ctx draw.Context, x int, y int, bg_color Color, fg_color Color, text string) {
 	ctx.set_bg_color(r: bg_color.r, g: bg_color.g, b: bg_color.b)
 	ctx.set_color(r: fg_color.r, g: fg_color.g, b: fg_color.b)
 	ctx.draw_text(x, y, text)
