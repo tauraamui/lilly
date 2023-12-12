@@ -76,23 +76,26 @@ fn main() {
 		l.close()
 	}
 
-    mut app := &App{
-		log: &l
-		changed: true
+	$if gui ? {
+	} $else {
+	    mut app := &App{
+			log: &l
+			changed: true
+		}
+
+	    app.tui = tui.init(
+	        user_data: app
+	        event_fn: event
+	        frame_fn: frame
+			capture_events: true
+			use_alternate_buffer: true
+	    )
+
+		path := os.args[1] or { "" }
+		app.editor = open_editor(clipboard.new(), path) or { print_and_exit("${err}"); unsafe { nil } }
+
+	    app.tui.run()!
 	}
-
-    app.tui = tui.init(
-        user_data: app
-        event_fn: event
-        frame_fn: frame
-		capture_events: true
-		use_alternate_buffer: true
-    )
-
-	path := os.args[1] or { "" }
-	app.editor = open_editor(clipboard.new(), path) or { print_and_exit("${err}"); unsafe { nil } }
-
-    app.tui.run()!
 }
 
 fn print_and_exit(msg string) {

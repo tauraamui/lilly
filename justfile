@@ -1,6 +1,9 @@
 run:
     v -g run ./src .
 
+run-gui:
+    v -g -d gui run ./src .
+
 experiment:
     v -g run ./experiment .
 
