@@ -1,6 +1,9 @@
 run:
     v -g run ./src .
 
+experiment:
+    v -g run ./experiment .
+
 test:
     v -g test ./src
 
