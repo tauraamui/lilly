@@ -67,6 +67,9 @@ fn frame(mut app &App) {
 	}
 }
 
+// this will optionally define/include the console attribute
+// depending on whether we're compiling with the GUI target or not
+@[if !gui]
 @[console]
 fn main() {
 	persist_stderr_to_disk()
