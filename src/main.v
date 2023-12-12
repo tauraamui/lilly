@@ -23,8 +23,8 @@ import lib.draw
 struct App {
 mut:
 	log       &log.Log
-    ui        &draw.Contextable = unsafe { nil }
-    editor    &Editor = unsafe { nil }
+  ui        &draw.Contextable = unsafe { nil }
+  editor    &Editor = unsafe { nil }
 	view      &View = unsafe { nil }
 	views     []View
 	cur_split int
