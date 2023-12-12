@@ -76,6 +76,18 @@ const movement_key_cases = [
 		code: tui.KeyCode.up,
 		starting_cursor_pos: Pos{ x: 0, y: 1 }
 		expected_cursor_pos: Pos{ x: 0, y: 0 }
+	},
+	MovementKeyEventTestCase{
+		name: "key code caret/hat",
+		code: tui.KeyCode.caret,
+		starting_cursor_pos: Pos{ x: 11, y: 0 }
+		expected_cursor_pos: Pos{ x: 0, y: 0 }
+	},
+	MovementKeyEventTestCase{
+		name: "key code dollar",
+		code: tui.KeyCode.dollar,
+		starting_cursor_pos: Pos{ x: 0, y: 0 }
+		expected_cursor_pos: Pos{ x: 12, y: 0 }
 	}
 ]
 
