@@ -8,7 +8,7 @@ pub struct Event {
 
 pub struct Config {
 	user_data voidptr
-	frame_fn  ?fn (voidptr)
+	frame_fn  fn (voidptr)        @[required]
 	event_fn  fn (Event, voidptr) @[required]
 
 	capture_events       bool

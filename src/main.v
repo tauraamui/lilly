@@ -22,8 +22,8 @@ import lib.draw
 struct App {
 mut:
 	log       &log.Log
-  ui        &draw.Contextable = unsafe { nil }
-  editor    &Editor = unsafe { nil }
+	ui        &draw.Contextable = unsafe { nil }
+	editor    &Editor = unsafe { nil }
 	view      &View = unsafe { nil }
 	views     []View
 	cur_split int
@@ -67,8 +67,6 @@ fn frame(mut app &App) {
 
 // this will optionally define/include the console attribute
 // depending on whether we're compiling with the GUI target or not
-@[if !gui?]
-@[console]
 fn main() {
 	persist_stderr_to_disk()
 	mut l := log.Log{}
@@ -84,15 +82,13 @@ fn main() {
 		changed: true
 	}
 
-	$if !gui ? {
-		app.ui = draw.new_context(
-			user_data: app
-	        event_fn: event
-	        frame_fn: frame
-			capture_events: true
-			use_alternate_buffer: true
-		)
-	} $else { print_and_exit("gui render target not yet available") }
+	app.ui = draw.new_context(
+		user_data: app
+        event_fn: event
+        frame_fn: frame
+		capture_events: true
+		use_alternate_buffer: true
+	)
 
 	path := os.args[1] or { "" }
 	app.editor = open_editor(clipboard.new(), path) or { print_and_exit("${err}"); unsafe { nil } }
