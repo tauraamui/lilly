@@ -1,93 +1,58 @@
 module draw
 
-import sokol
-import sokol.sapp
-import sokol.gfx
-import sokol.sgl
-import fontstash
-import sokol.sfons
+import gg
+import gx
+import math
 import os
 
-struct Context{
-	state       &State
-	ref         sapp.Desc
-}
-
-struct State {
+struct Context {
+	user_data voidptr
+	frame_cb fn (v voidptr)
 mut:
-	user_data    voidptr
-	frame_cb    fn (v voidptr)
-	pass_action gfx.PassAction
-	fons        &fontstash.Context = unsafe { nil }
-	font_normal int
-	inited      bool
+	gg      &gg.Context = unsafe { nil }
+	txt_cfg gx.TextCfg
 }
-
-const black = sfons.rgba(0, 0, 0, 255)
 
 pub fn new_context(cfg Config) &Contextable {
-	mut color_action := gfx.ColorAttachmentAction{
-		load_action: .clear
-		clear_value: gfx.Color{
-			r: 1.0
-			g: 1.0
-			b: 1.0
-			a: 1.0
-		}
-	}
-	mut pass_action := gfx.PassAction{}
-	pass_action.colors[0] = color_action
-	state := &State{
-		pass_action: pass_action
+	mut ctx := &Context{
 		user_data: cfg.user_data
+		frame_cb: cfg.frame_fn
 	}
-	return &Context{
-		state: state
-		ref: sapp.Desc{
-			user_data: state
-			init_userdata_cb: fn (mut state State) {
-				desc := sapp.create_desc()
-				gfx.setup(&desc)
-				s := &sgl.Desc{}
-				sgl.setup(s)
-				state.fons = sfons.create(512, 512, 1)
-				if bytes := os.read_bytes(os.resource_abs_path("../experiment/RobotoMono-Regular.ttf")) {
-					println("loaded font: ${bytes.len}")
-					state.font_normal = state.fons.add_font_mem("sans", bytes, false)
-				}
-			}
-			frame_userdata_cb: fn [cfg] (mut state State) {
-				mut fons := state.fons
-				if !state.inited {
-					fons.clear_state()
-					sgl.defaults()
-					sgl.matrix_mode_projection()
-					sgl.ortho(0.0, f32(sapp.width()), f32(sapp.height()), 0.0, -1.0, 1.0)
-					fons.set_font(state.font_normal)
-					fons.set_color(black)
-					fons.set_size(18)
-					state.inited = true
-				}
-				cfg.frame_fn(state.user_data)
-			}
-			window_title: "lilly".str
-			width: 800
-			height: 600
-			high_dpi: true
-		}
+	ctx.gg = gg.new_context(
+				width: 800
+				height: 600
+				create_window: true
+				window_title: "Lilly Editor"
+				user_data: ctx
+				bg_color: gx.white
+				font_path: os.resource_abs_path("../experiment/RobotoMono-Regular.ttf")
+				frame_fn: frame
+			)
+	return ctx
+}
+
+fn frame(mut ctx Context) {
+	ctx.gg.begin()
+	width := gg.window_size().width
+	mut scale_factor := math.round(f32(width) / 800)
+	if scale_factor <= 0 { scale_factor = 1 }
+	ctx.txt_cfg = gx.TextCfg{
+		size: 16 * int(scale_factor)
 	}
+	ctx.frame_cb(ctx.user_data)
+	ctx.gg.end()
 }
 
 fn (mut ctx Context) rate_limit_draws() bool { return false }
 
-fn (mut ctx Context) window_width() int { return sapp.width() }
+fn (mut ctx Context) window_width() int { return gg.window_size().width }
 
-fn (mut ctx Context) window_height() int { return sapp.height() }
+fn (mut ctx Context) window_height() int { return gg.window_size().height }
 
 fn (mut ctx Context) set_cursor_position(x int, y int) {}
 
 fn (mut ctx Context) draw_text(x int, y int, text string) {
-	ctx.state.fons.draw_text(x, y, text)
+	ctx.gg.draw_text(x * 16, y * 16, text, ctx.txt_cfg)
 }
 
 fn (mut ctx Context) write(c string) {}
@@ -109,16 +74,10 @@ fn (mut ctx Context) reset_bg_color() {}
 fn (mut ctx Context) reset() {}
 
 fn (mut ctx Context) run() ! {
-	sapp.run(&ctx.ref)
+	ctx.gg.run()
 }
 
-fn (mut ctx Context) clear() {
-	gfx.begin_default_pass(&ctx.state.pass_action, sapp.width(), sapp.height())
-	sgl.draw()
-	gfx.end_pass()
-	gfx.commit()
-}
+fn (mut ctx Context) clear() {}
 
-fn (mut ctx Context) flush() {
-	sfons.flush(ctx.state.fons)
-}
+fn (mut ctx Context) flush() {}
+
