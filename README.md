@@ -29,3 +29,8 @@ Transition to our text editor to explore an alternative that is rooted in functi
 
 Not a problem, Neovim/VIM are fantastic existing projects and are freely available for you to use today.
 
+### misc + extra information
+
+(experimental GUI render target)
+
+![Screenshot 2023-12-13 21 10 40](https://github.com/tauraamui/lilly/assets/3159648/17ec7286-ecc2-4e68-addd-9c503afd45ee)
