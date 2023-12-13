@@ -97,7 +97,7 @@ fn (mut editor Editor) close_file_finder() {
 }
 
 pub fn (mut editor Editor) draw(mut ctx draw.Contextable) {
-  editor.view.draw(mut ctx)
+	editor.view.draw(mut ctx)
 	if editor.file_finder_modal_open {
 		editor.file_finder_modal.draw(mut ctx)
 	}
