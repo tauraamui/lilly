@@ -8,6 +8,11 @@
 
 ![Screenshot 2023-12-01 21 01 45](https://github.com/tauraamui/lilly/assets/3159648/e9023db2-0214-49e1-baad-9a75aa22d291)
 
+(experimental GUI render target)
+
+![Screenshot 2023-12-13 21 10 40](https://github.com/tauraamui/lilly/assets/3159648/17ec7286-ecc2-4e68-addd-9c503afd45ee)
+
+
 Our project is focused on the development of a text editor that serves as a practical alternative to Vim and Neovim. The primary aim is to provide users with essential features, eliminating the need to navigate a complex ecosystem of Lua plugins. This approach is intended to be welcoming to users of all experience levels.
 
 # The Rationale
