@@ -2,10 +2,14 @@ module draw
 
 import term.ui as tui
 
+pub struct Event {
+	tui.Event
+}
+
 pub struct Config {
 	user_data voidptr
 	frame_fn  ?fn (voidptr)
-	event_fn  ?fn (&tui.Event, voidptr)
+	event_fn  fn (Event, voidptr) @[required]
 
 	capture_events       bool
 	use_alternate_buffer bool = true

@@ -15,7 +15,6 @@
 module main
 
 import os
-import term.ui as tui
 import lib.buffer
 import lib.clipboard
 import lib.workspace
@@ -104,7 +103,7 @@ pub fn (mut editor Editor) draw(mut ctx draw.Contextable) {
 	}
 }
 
-pub fn (mut editor Editor) on_key_down(e &tui.Event) {
+pub fn (mut editor Editor) on_key_down(e draw.Event) {
 	if editor.file_finder_modal_open {
 		editor.file_finder_modal.on_key_down(e, mut editor)
 		return

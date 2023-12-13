@@ -15,7 +15,6 @@
 module main
 
 import os
-import term.ui as tui
 import log
 import lib.clipboard
 import lib.draw
@@ -42,7 +41,7 @@ fn (mut app App) update_view() {
 }
 
 
-fn event(e &tui.Event, mut app &App) {
+fn event(e draw.Event, mut app &App) {
 	match e.typ {
 		.key_down {
 			app.changed = true

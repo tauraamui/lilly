@@ -1,6 +1,7 @@
 module main
 
 import lib.clipboard
+import lib.draw
 import term.ui as tui
 
 struct MovementKeyEventTestCase {
@@ -136,7 +137,7 @@ fn test_sets_of_key_events_for_views_on_key_down_adjusting_cursor_position() {
 		mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 		fake_view.buffer.lines = case.document_contents
 		fake_view.cursor.pos = case.starting_cursor_pos
-		kevent := &tui.Event{ code: case.code }
+		kevent := draw.Event{ code: case.code }
 		fake_view.on_key_down(kevent, mut editor)
 		assert fake_view.cursor.pos == case.expected_cursor_pos, 'test case ${case.name} - expected cursor pos assertion failed'
 	}

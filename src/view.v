@@ -474,7 +474,7 @@ interface Viewable {
 	file_path string
 mut:
 	draw(mut draw.Contextable)
-	on_key_down(&tui.Event, mut Root)
+	on_key_down(draw.Event, mut Root)
 }
 
 fn (mut view View) draw(mut ctx draw.Contextable) {

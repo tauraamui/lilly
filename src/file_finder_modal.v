@@ -14,7 +14,6 @@
 
 module main
 
-import term.ui as tui
 import strings
 import lib.draw
 
@@ -84,7 +83,7 @@ fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx draw.Con
 	return y_offset + (max_height - 2)
 }
 
-fn (mut file_finder_modal FileFinderModal) on_key_down(e &tui.Event, mut root Root) {
+fn (mut file_finder_modal FileFinderModal) on_key_down(e draw.Event, mut root Root) {
 	match e.code {
 		.escape    { root.close_file_finder() }
 		48...57, 97...122 {

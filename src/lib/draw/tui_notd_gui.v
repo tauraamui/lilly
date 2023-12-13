@@ -11,7 +11,9 @@ pub fn new_context(cfg Config) &Contextable {
 	return Context{
 		ref: tui.init(
 			user_data: cfg.user_data
-			event_fn: cfg.event_fn
+			event_fn: fn [cfg] (e &tui.Event, app voidptr) {
+				cfg.event_fn(Event{ e }, app)
+			}
 			frame_fn: cfg.frame_fn
 			capture_events: cfg.capture_events
 			use_alternate_buffer: cfg.use_alternate_buffer

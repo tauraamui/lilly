@@ -14,7 +14,6 @@
 
 module main
 
-import term.ui as tui
 import math
 import term { strikethrough }
 import lib.draw
@@ -110,7 +109,7 @@ fn has_colouring_directives(line string) bool {
 	return false
 }
 
-pub fn (mut splash SplashScreen) on_key_down(e &tui.Event, mut root Root) {
+pub fn (mut splash SplashScreen) on_key_down(e draw.Event, mut root Root) {
 	match e.utf8 {
 		splash.leader_key { splash.leader_mode = true }
 		else { }
