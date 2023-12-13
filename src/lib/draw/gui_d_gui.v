@@ -1,15 +1,9 @@
 module draw
 
-import sokol
-import sokol.sapp
-import sokol.gfx
-import sokol.sgl
-import fontstash
-import sokol.sfons
-import os
 import gg
 import gx
 import math
+import os
 
 struct Context {
 	user_data voidptr
