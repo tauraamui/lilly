@@ -64,8 +64,6 @@ fn frame(mut app &App) {
 	app.ui.flush()
 }
 
-// this will optionally define/include the console attribute
-// depending on whether we're compiling with the GUI target or not
 fn main() {
 	persist_stderr_to_disk()
 	mut l := log.Log{}
