@@ -23,6 +23,7 @@ pub struct Color {
 
 pub interface Contextable {
 mut:
+	rate_limit_draws() bool
 	window_width() int
 	window_height() int
 

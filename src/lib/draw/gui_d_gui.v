@@ -84,6 +84,8 @@ pub fn new_context(cfg Config) &Contextable {
 	}
 }
 
+fn (mut ctx Context) rate_limit_draws() bool { return false }
+
 fn (mut ctx Context) window_width() int { return sapp.width() }
 
 fn (mut ctx Context) window_height() int { return sapp.height() }

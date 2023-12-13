@@ -55,14 +55,13 @@ fn event(e draw.Event, mut app &App) {
 }
 
 fn frame(mut app &App) {
-	if app.changed {
-		app.changed = false
-		app.ui.clear()
+	if app.ui.rate_limit_draws() && !app.changed { return }
+	app.changed = false
+	app.ui.clear()
 
-		app.editor.draw(mut app.ui)
+	app.editor.draw(mut app.ui)
 
-		app.ui.flush()
-	}
+	app.ui.flush()
 }
 
 // this will optionally define/include the console attribute
