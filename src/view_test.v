@@ -17,6 +17,7 @@ module main
 import arrays
 import lib.clipboard
 import lib.workspace
+import lib.draw
 import term.ui as tui
 
 const example_file = "module history\n\nimport datatypes\nimport lib.diff { Op }\n\npub struct History {\nmut:\n\tundos datatypes.Stack[Op] // will actually be type diff.Op\n\tredos datatypes.Stack[Op]\n}"
@@ -1098,7 +1099,7 @@ fn test_r_replaces_character_in_middle_of_line() {
 
 	assert fake_view.mode == .replace
 
-	event := &tui.Event{code: tui.KeyCode.p, ascii: 112, utf8: "p"}
+	event := draw.Event{code: tui.KeyCode.p, ascii: 112, utf8: "p"}
 	fake_view.on_key_down(event, mut editor)
 
 	assert fake_view.mode == .normal
@@ -1120,7 +1121,7 @@ fn test_r_replaces_character_with_special_character() {
 
 	assert fake_view.mode == .replace
 
-	event := &tui.Event{code: tui.KeyCode.exclamation, ascii: 33, utf8: "!"}
+	event := draw.Event{code: tui.KeyCode.exclamation, ascii: 33, utf8: "!"}
 	fake_view.on_key_down(event, mut editor)
 
 	assert fake_view.mode == .normal
@@ -1142,7 +1143,7 @@ fn test_r_replaces_character_with_space() {
 
 	assert fake_view.mode == .replace
 
-	event := &tui.Event{code: tui.KeyCode.space, ascii: 32, utf8: " "}
+	event := draw.Event{code: tui.KeyCode.space, ascii: 32, utf8: " "}
 	fake_view.on_key_down(event, mut editor)
 
 	assert fake_view.mode == .normal
@@ -1164,7 +1165,7 @@ fn test_r_doesnt_change_anything_when_escape_is_used() {
 
 	assert fake_view.mode == .replace
 
-	event := &tui.Event{code: tui.KeyCode.escape, ascii: 27}
+	event := draw.Event{code: tui.KeyCode.escape, ascii: 27}
 	fake_view.on_key_down(event, mut editor)
 
 	assert fake_view.mode == .normal
@@ -1185,7 +1186,7 @@ fn test_r_doesnt_change_anything_when_enter_is_used() {
 
 	assert fake_view.mode == .replace
 
-	event := &tui.Event{code: tui.KeyCode.enter, ascii: 10}
+	event := draw.Event{code: tui.KeyCode.enter, ascii: 10}
 	fake_view.on_key_down(event, mut editor)
 
 	assert fake_view.mode == .normal
@@ -1276,7 +1277,7 @@ fn test_auto_closing_square_brace() {
 
 	fake_view.i()
 
-	mut event := &tui.Event{code: tui.KeyCode.left_square_bracket, ascii: 91 }
+	mut event := draw.Event{code: tui.KeyCode.left_square_bracket, ascii: 91 }
 	fake_view.on_key_down(event, mut editor)
 	assert fake_view.buffer.lines == ["[]"]
 
@@ -1295,7 +1296,7 @@ fn test_auto_closing_curley_brace() {
 
 	fake_view.i()
 
-	mut event := &tui.Event{code: tui.KeyCode.left_curly_bracket, ascii: 91 }
+	mut event := draw.Event{code: tui.KeyCode.left_curly_bracket, ascii: 91 }
 	fake_view.on_key_down(event, mut editor)
 	assert fake_view.buffer.lines == ["{}"]
 
@@ -1314,13 +1315,13 @@ fn test_auto_closing_curley_brace_inputting_secondary_close_should_only_move_cur
 
 	fake_view.i()
 
-	mut event := &tui.Event{code: tui.KeyCode.left_curly_bracket, ascii: 123 }
+	mut event := draw.Event{code: tui.KeyCode.left_curly_bracket, ascii: 123 }
 	fake_view.on_key_down(event, mut editor)
 	assert fake_view.buffer.lines == ["{}"]
 
 	assert fake_view.cursor.pos.x == 1 // ensure cursor is technically between the braces
 
-	event = &tui.Event{code: tui.KeyCode.right_curly_bracket, ascii: 125 }
+	event = draw.Event{code: tui.KeyCode.right_curly_bracket, ascii: 125 }
 	fake_view.on_key_down(event, mut editor)
 	assert fake_view.buffer.lines == ["{}"] // actual number of braces shouldn't have changed
 
@@ -1340,13 +1341,13 @@ fn test_auto_closing_square_brace_inputting_secondary_close_should_only_move_cur
 
 	fake_view.i()
 
-	mut event := &tui.Event{code: tui.KeyCode.left_square_bracket, ascii: 91 }
+	mut event := draw.Event{code: tui.KeyCode.left_square_bracket, ascii: 91 }
 	fake_view.on_key_down(event, mut editor)
 	assert fake_view.buffer.lines == ["[]"]
 
 	assert fake_view.cursor.pos.x == 1 // ensure cursor is technically between the braces
 
-	event = &tui.Event{code: tui.KeyCode.right_square_bracket, ascii: 93 }
+	event = draw.Event{code: tui.KeyCode.right_square_bracket, ascii: 93 }
 	fake_view.on_key_down(event, mut editor)
 	assert fake_view.buffer.lines == ["[]"] // actual number of braces shouldn't have changed
 

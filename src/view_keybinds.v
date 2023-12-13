@@ -1,8 +1,8 @@
 module main
 
-import term.ui as tui
+import lib.draw
 
-fn (mut view View) on_key_down(e &tui.Event, mut root Root) {
+fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 	match view.mode {
 		.leader {
 			match e.code {
