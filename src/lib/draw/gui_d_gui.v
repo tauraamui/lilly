@@ -87,7 +87,7 @@ fn (mut ctx Context) window_height() int { return sapp.height() }
 fn (mut ctx Context) set_cursor_position(x int, y int) {}
 
 fn (mut ctx Context) draw_text(x int, y int, text string) {
-	ctx.state.fons.draw_text(x+18, y+18, text)
+	ctx.state.fons.draw_text(x, y, text)
 }
 
 fn (mut ctx Context) write(c string) {}
