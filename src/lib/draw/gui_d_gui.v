@@ -9,8 +9,10 @@ struct Context {
 	user_data voidptr
 	frame_cb fn (v voidptr)
 mut:
-	gg      &gg.Context = unsafe { nil }
-	txt_cfg gx.TextCfg
+	gg               &gg.Context = unsafe { nil }
+	txt_cfg          gx.TextCfg
+	foreground_color Color
+	background_color Color
 }
 
 pub fn new_context(cfg Config) &Contextable {
@@ -57,21 +59,24 @@ fn (mut ctx Context) draw_text(x int, y int, text string) {
 
 fn (mut ctx Context) write(c string) {}
 
-fn (mut ctx Context) draw_rect(x int, y int, width int, height int) {}
+fn (mut ctx Context) draw_rect(x int, y int, width int, height int) {
+	c := ctx.background_color
+	ctx.gg.draw_rect_filled(x, y-100, width, height / 16, gx.rgb(c.r, c.g, c.b))
+}
 
 fn (mut ctx Context) draw_point(x int, y int) {}
 
 fn (mut ctx Context) bold() {}
 
-fn (mut ctx Context) set_color(c Color) {}
+fn (mut ctx Context) set_color(c Color) { ctx.foreground_color = c }
 
-fn (mut ctx Context) set_bg_color(c Color) {}
+fn (mut ctx Context) set_bg_color(c Color) { ctx.background_color = c }
 
-fn (mut ctx Context) reset_color() {}
+fn (mut ctx Context) reset_color() { ctx.foreground_color = Color{} }
 
 fn (mut ctx Context) reset_bg_color() {}
 
-fn (mut ctx Context) reset() {}
+fn (mut ctx Context) reset() { ctx.foreground_color = Color{}; ctx.background_color = Color{} }
 
 fn (mut ctx Context) run() ! {
 	ctx.gg.run()
