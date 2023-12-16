@@ -54,7 +54,7 @@ fn (mut ctx Context) window_height() int { return gg.window_size().height }
 fn (mut ctx Context) set_cursor_position(x int, y int) {}
 
 fn (mut ctx Context) draw_text(x int, y int, text string) {
-	ctx.gg.draw_text(x * 16, y * 16, text, ctx.txt_cfg)
+	ctx.gg.draw_text((x * 16) - 16, (y * 16) - 16, text, ctx.txt_cfg)
 }
 
 fn (mut ctx Context) write(c string) {}

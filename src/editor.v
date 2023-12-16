@@ -24,6 +24,7 @@ struct Editor {
 mut:
 	clipboard              clipboard.Clipboard
 	view                   &Viewable = unsafe { nil }
+	debug_view             bool
 	views                  []Viewable
 	buffers                []buffer.Buffer
 	file_finder_modal_open bool
@@ -55,6 +56,11 @@ pub fn open_editor(_clipboard clipboard.Clipboard, workspace_root_dir string) !&
 	editor.view = &editor.views[0]
 	editor.open_file("./src/main.v") or { return error("unable to open file -> ${err}") }
 	return &editor
+}
+
+fn (mut editor Editor) enable_debug() {
+	editor.debug_view = true
+	editor.view = draw.Debug{}
 }
 
 fn (mut editor Editor) open_file(path string) ! {
