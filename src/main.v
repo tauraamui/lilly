@@ -89,7 +89,7 @@ fn main() {
 
 	path := os.args[1] or { "" }
 	app.editor = open_editor(clipboard.new(), path) or { print_and_exit("${err}"); unsafe { nil } }
-	app.enable_debug()
+	// app.editor.start_debug()
 
     app.ui.run()!
 }

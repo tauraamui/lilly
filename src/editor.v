@@ -58,9 +58,9 @@ pub fn open_editor(_clipboard clipboard.Clipboard, workspace_root_dir string) !&
 	return &editor
 }
 
-fn (mut editor Editor) enable_debug() {
+fn (mut editor Editor) start_debug() {
 	editor.debug_view = true
-	editor.view = draw.Debug{}
+	editor.view = &Debug{ file_path: "**dbg**" }
 }
 
 fn (mut editor Editor) open_file(path string) ! {
