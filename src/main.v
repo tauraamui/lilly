@@ -64,7 +64,18 @@ fn frame(mut app &App) {
 	app.ui.flush()
 }
 
+struct CmdArgs {
+	log_level  string
+	debug_mode bool
+}
+
+fn resolve_cmd_args(args []string) ?CmdArgs {
+	if args.len == 1 { return none }
+	return CmdArgs{}
+}
+
 fn main() {
+	println(os.args)
 	persist_stderr_to_disk()
 	mut l := log.Log{}
 	l.set_level(.debug)
