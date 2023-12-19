@@ -18,6 +18,7 @@ import os
 import log
 import lib.clipboard
 import lib.draw
+import os.cmdline
 
 struct App {
 mut:
@@ -64,18 +65,22 @@ fn frame(mut app &App) {
 	app.ui.flush()
 }
 
-struct CmdArgs {
+struct Options {
+mut:
 	log_level  string
 	debug_mode bool
 }
 
-fn resolve_cmd_args(args []string) ?CmdArgs {
-	if args.len == 1 { return none }
-	return CmdArgs{}
+fn resolve_options_from_args(args []string) Options {
+	flags := cmdline.only_options(args)
+	return Options{
+		debug_mode: "--debug" in flags || "-d" in flags
+	}
 }
 
 fn main() {
-	println(os.args)
+	args := os.args[1..]
+	opts := resolve_options_from_args(args)
 	persist_stderr_to_disk()
 	mut l := log.Log{}
 	l.set_level(.debug)
@@ -98,9 +103,12 @@ fn main() {
 		use_alternate_buffer: true
 	)
 
-	path := os.args[1] or { "" }
-	app.editor = open_editor(clipboard.new(), path) or { print_and_exit("${err}"); unsafe { nil } }
-	// app.editor.start_debug()
+	files := cmdline.only_non_options(args)
+	if files.len != 1 { print_and_exit("too many file paths, expected just one") }
+	app.editor = open_editor(clipboard.new(), files[0]) or { print_and_exit("${err}"); unsafe { nil } }
+	if opts.debug_mode {
+		app.editor.start_debug()
+	}
 
     app.ui.run()!
 }
