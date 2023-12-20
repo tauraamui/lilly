@@ -1491,7 +1491,7 @@ fn get_clean_words(line string) []string {
 }
 
 fn is_non_alpha(c u8) bool {
-	return !is_alpha(c)
+	return c != `_` && !is_alpha(c)
 }
 
 fn is_alpha(r u8) bool {
