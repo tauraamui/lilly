@@ -117,6 +117,12 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 		}
 		.insert {
 			if e.modifiers == .ctrl { return }
+			// ignore the ASCII group separators
+			// FS, GS and RS
+			match e.ascii {
+				28...31 { return }
+				else {}
+			}
 			match e.code {
 				// ignored/currently "handled" but rejected keys
 				.f1 { }
