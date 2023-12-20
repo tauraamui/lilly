@@ -888,7 +888,12 @@ fn test_calc_w_move_amount_code_line() {
 	mut fake_cursor_pos := Pos{ x: 0 }
 
 	mut amount := calc_w_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 4
+	assert amount == 3
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 1
 	fake_cursor_pos.x += amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "m"
 
