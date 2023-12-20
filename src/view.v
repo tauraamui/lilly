@@ -1302,12 +1302,12 @@ fn calc_w_move_amount(cursor_pos Pos, line string) int {
 	if line.len == 0 { return 0 }
 	mut next_whitespace := 0
 	for i, c in line.runes()[cursor_pos.x..] {
-		if is_whitespace(c) { next_whitespace = i; break }
+		if is_non_alpha(c) { next_whitespace = i; break }
 	}
 
 	mut next_alpha := 0
 	for i, c in line.runes()[cursor_pos.x+next_whitespace..] {
-		if !is_whitespace(c) { next_alpha = i; break }
+		if !is_non_alpha(c) { next_alpha = i; break }
 	}
 	return next_whitespace + next_alpha
 }
@@ -1488,6 +1488,10 @@ fn get_clean_words(line string) []string {
 		i++
 	}
 	return res
+}
+
+fn is_non_alpha(c u8) bool {
+	return !is_alpha(c)
 }
 
 fn is_alpha(r u8) bool {
