@@ -1299,8 +1299,13 @@ fn (mut view View) right() {
 }
 
 fn is_whitespace_or_special(r rune) ?rune {
-	if r in [` `, `\t`, `(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`] { return r }
+	if r in [` `, `\t`, `.`, `(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`] { return r }
 	return none
+}
+
+const specials = [`(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`]
+fn is_alpha_or_special(r rune) bool {
+	return is_alpha(r) || r in specials
 }
 
 fn count_repeated_sequence(char_rune u8, line []rune) int {
@@ -1324,7 +1329,7 @@ fn calc_w_move_amount(cursor_pos Pos, line string) int {
 
 	mut next_alpha := 0
 	for i, c in line.runes()[cursor_pos.x+next_whitespace..] {
-		if !is_whitespace(c) { next_alpha = i; break }
+		if is_alpha_or_special(c) { next_alpha = i; break }
 	}
 	return next_whitespace + next_alpha
 }
