@@ -882,6 +882,26 @@ fn test_calc_w_move_amount_simple_sentence_line() {
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "a"
 }
 
+fn test_calc_w_move_amount_beyond_repeated_sequence_of_special_char() {
+	// manually set the documents contents
+	fake_line := "(((#####)))"
+	mut fake_cursor_pos := Pos{ x: 0 }
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
+
+	mut amount := calc_w_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 3
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "#"
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 5
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 0
+}
+
 fn test_calc_w_move_amount_code_line() {
 	// manually set the documents contents
 	fake_line := "fn (mut view View) w() {"
