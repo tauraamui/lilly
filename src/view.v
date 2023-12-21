@@ -1298,15 +1298,28 @@ fn (mut view View) right() {
 	view.clamp_cursor_x_pos()
 }
 
+fn is_whitespace_or_special(r rune) ?rune {
+	if r in [` `, `\t`, `(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`] { return r }
+	return none
+}
+
+fn count_repeated_sequence(char_rune u8, line []rune) int {
+	for i, r in line {
+		if r != char_rune { return i }
+	}
+	return 0 // sequence continues to end of line, ergo, jump to start of next line
+}
+
 fn calc_w_move_amount(cursor_pos Pos, line string) int {
 	if line.len == 0 { return 0 }
+	line_chars := line.runes()
+	if r := is_whitespace_or_special(line_chars[cursor_pos.x]) {
+		return count_repeated_sequence(r, line_chars[cursor_pos.x..])
+	}
+
 	mut next_whitespace := 0
-	if line.runes()[cursor_pos.x] == `(` {
-		next_whitespace = 1
-	} else {
-		for i, c in line.runes()[cursor_pos.x..] {
-			if is_whitespace(c) { next_whitespace = i; break }
-		}
+	for i, c in line.runes()[cursor_pos.x..] {
+		if is_whitespace(c) { next_whitespace = i; break }
 	}
 
 	mut next_alpha := 0
