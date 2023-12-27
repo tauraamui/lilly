@@ -1304,15 +1304,16 @@ fn is_whitespace_or_special(r rune) ?rune {
 }
 
 const specials = [`(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`]
-fn is_alpha_or_special(r rune) bool {
-	return is_alpha(r) || r in specials
+fn is_special(r rune) bool {
+	return r in specials
 }
 
 fn count_repeated_sequence(char_rune u8, line []rune) int {
 	for i, r in line {
 		if r != char_rune { return i }
+		if i == line.len - 1 { return 0 }
 	}
-	return 0 // sequence continues to end of line, ergo, jump to start of next line
+	return 1 // sequence continues to end of line, ergo, jump to start of next line
 }
 
 fn calc_w_move_amount(cursor_pos Pos, line string) int {
@@ -1322,6 +1323,7 @@ fn calc_w_move_amount(cursor_pos Pos, line string) int {
 		return count_repeated_sequence(r, line_chars[cursor_pos.x..])
 	}
 
+	// this part needs re-writing
 	mut next_whitespace := 0
 	for i, c in line.runes()[cursor_pos.x..] {
 		if is_whitespace(c) { next_whitespace = i; break }
@@ -1329,7 +1331,8 @@ fn calc_w_move_amount(cursor_pos Pos, line string) int {
 
 	mut next_alpha := 0
 	for i, c in line.runes()[cursor_pos.x+next_whitespace..] {
-		if is_alpha_or_special(c) { next_alpha = i; break }
+		if is_alpha(c) { next_alpha = i; break }
+		if is_special(c) { next_alpha = i; break }
 	}
 	return next_whitespace + next_alpha
 }
