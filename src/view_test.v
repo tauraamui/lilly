@@ -921,7 +921,7 @@ fn test_calc_w_move_amount_to_special_char_before_next_word_past_space() {
 
 fn test_calc_w_move_amount_code_line() {
 	// manually set the documents contents
-	fake_line := "fn (mut view View) w() {"
+	fake_line := "fn (mut view View) w() int {"
 	mut fake_cursor_pos := Pos{ x: 0 }
 
 	mut amount := calc_w_move_amount(fake_cursor_pos, fake_line)
@@ -938,6 +938,21 @@ fn test_calc_w_move_amount_code_line() {
 	assert amount == 4
 	fake_cursor_pos.x += amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "v"
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 5
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "V"
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 4
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
+
+	assert amount == 1
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "w"
 }
 
 fn test_calc_w_move_amount_indented_code_line() {
