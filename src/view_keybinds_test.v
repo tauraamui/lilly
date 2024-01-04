@@ -70,7 +70,7 @@ const movement_key_cases = [
 		code: tui.KeyCode.w,
 		document_contents: basic_three_lines_doc
 		starting_cursor_pos: Pos{ x: 1, y: 1 }
-		expected_cursor_pos: Pos{ x: 3, y: 1 }
+		expected_cursor_pos: Pos{ x: 2, y: 1 }
 	},
 	MovementKeyEventTestCase{
 		name: "key code b",

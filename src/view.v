@@ -1298,16 +1298,41 @@ fn (mut view View) right() {
 	view.clamp_cursor_x_pos()
 }
 
+fn is_whitespace_or_special(r rune) ?rune {
+	if r in [` `, `\t`, `.`, `(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`] { return r }
+	return none
+}
+
+const specials = [`(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`]
+fn is_special(r rune) bool {
+	return r in specials
+}
+
+fn count_repeated_sequence(char_rune u8, line []rune) int {
+	for i, r in line {
+		if r != char_rune { return i }
+		if i == line.len - 1 { return 0 }
+	}
+	return 1
+}
+
 fn calc_w_move_amount(cursor_pos Pos, line string) int {
 	if line.len == 0 { return 0 }
+	line_chars := line.runes()
+	if r := is_whitespace_or_special(line_chars[cursor_pos.x]) {
+		return count_repeated_sequence(r, line_chars[cursor_pos.x..])
+	}
+
 	mut next_whitespace := 0
-	for i, c in line.runes()[cursor_pos.x..] {
+	for i, c in line_chars[cursor_pos.x..] {
+		if is_special(c)    { return i }
 		if is_whitespace(c) { next_whitespace = i; break }
 	}
 
 	mut next_alpha := 0
-	for i, c in line.runes()[cursor_pos.x+next_whitespace..] {
-		if !is_whitespace(c) { next_alpha = i; break }
+	for i, c in line_chars[cursor_pos.x+next_whitespace..] {
+		if is_alpha(c) { next_alpha = i; break }
+		if is_special(c) { next_alpha = i; break }
 	}
 	return next_whitespace + next_alpha
 }
@@ -1488,6 +1513,10 @@ fn get_clean_words(line string) []string {
 		i++
 	}
 	return res
+}
+
+fn is_non_alpha(c u8) bool {
+	return c != `_` && !is_alpha(c)
 }
 
 fn is_alpha(r u8) bool {
