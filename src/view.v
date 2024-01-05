@@ -1311,8 +1311,8 @@ fn is_special(r rune) ?rune {
 
 fn count_repeated_sequence(char_rune rune, line []rune) int {
 	for i, r in line {
-		if r != char_rune { return i }
-		if i == line.len - 1 { return 0 }
+		if r != char_rune    { return i }
+		if i + 1 == line.len { return i + 1 }
 	}
 	return 0
 }
@@ -1321,7 +1321,9 @@ fn calc_w_move_amount(cursor_pos Pos, line string) int {
 	if line.len == 0 { return 0 }
 	line_chars := line.runes()
 	if r := is_special(line_chars[cursor_pos.x]) {
-		return count_repeated_sequence(r, line_chars[cursor_pos.x..])
+		repeated := count_repeated_sequence(r, line_chars[cursor_pos.x..])
+		if repeated > 0 { return repeated }
+		return 1
 	}
 
 	mut next_whitespace := 0

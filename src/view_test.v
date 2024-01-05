@@ -955,6 +955,19 @@ fn test_calc_w_move_amount_code_line() {
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "w"
 }
 
+fn test_count_repeated_sequence_multiple() {
+	fake_line := "(((("
+	assert "(".runes().len == 1
+	assert count_repeated_sequence('('.runes()[0], fake_line.runes()) == 4
+}
+
+fn test_count_repeated_sequence_multiple_combined() {
+	fake_line := "(((#####)))"
+	assert count_repeated_sequence('('.runes()[0], fake_line.runes()) == 3
+	assert count_repeated_sequence('#'.runes()[0], fake_line.runes()[3..]) == 5
+	assert count_repeated_sequence(')'.runes()[0], fake_line.runes()[8..]) == 3
+}
+
 fn test_calc_w_move_amount_indented_code_line() {
 	// manually set the document contents
 	fake_line := "		for i := 0; i < 100; i++ {"
