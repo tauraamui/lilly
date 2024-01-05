@@ -898,8 +898,10 @@ fn test_calc_w_move_amount_beyond_repeated_sequence_of_special_char() {
 	fake_cursor_pos.x += amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
 
+	current_cursor_x_pos := fake_cursor_pos.x
 	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 0
+	assert amount == 3
+	assert current_cursor_x_pos == fake_cursor_pos.x // make sure cursor x wasn't actually moved
 }
 
 fn test_calc_w_move_amount_to_special_char_before_next_word_past_space() {
