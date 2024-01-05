@@ -948,11 +948,16 @@ fn test_calc_w_move_amount_code_line() {
 	assert amount == 4
 	fake_cursor_pos.x += amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
-	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
 
-	assert amount == 1
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 2
 	fake_cursor_pos.x += amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "w"
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 1
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
 }
 
 fn test_count_repeated_sequence_multiple() {

@@ -1320,16 +1320,17 @@ fn count_repeated_sequence(char_rune rune, line []rune) int {
 fn calc_w_move_amount(cursor_pos Pos, line string) int {
 	if line.len == 0 { return 0 }
 	line_chars := line.runes()
-	if r := is_special(line_chars[cursor_pos.x]) {
-		repeated := count_repeated_sequence(r, line_chars[cursor_pos.x..])
-		if repeated > 0 { return repeated }
-		return 1
-	}
 
 	mut next_whitespace := 0
-	for i, c in line_chars[cursor_pos.x..] {
-		if is_whitespace(c)   { next_whitespace = i; break }
-		if _ := is_special(c) { return i }
+	if r := is_special(line_chars[cursor_pos.x]) {
+		next_whitespace = count_repeated_sequence(r, line_chars[cursor_pos.x..])
+	}
+
+	if next_whitespace == 0 {
+		for i, c in line_chars[cursor_pos.x..] {
+			if is_whitespace(c)   { next_whitespace = i; break }
+			if _ := is_special(c) { return i }
+		}
 	}
 
 	mut next_alpha := 0
