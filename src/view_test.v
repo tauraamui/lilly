@@ -898,8 +898,10 @@ fn test_calc_w_move_amount_beyond_repeated_sequence_of_special_char() {
 	fake_cursor_pos.x += amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
 
+	current_cursor_x_pos := fake_cursor_pos.x
 	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 0
+	assert amount == 3
+	assert current_cursor_x_pos == fake_cursor_pos.x // make sure cursor x wasn't actually moved
 }
 
 fn test_calc_w_move_amount_to_special_char_before_next_word_past_space() {
@@ -921,7 +923,7 @@ fn test_calc_w_move_amount_to_special_char_before_next_word_past_space() {
 
 fn test_calc_w_move_amount_code_line() {
 	// manually set the documents contents
-	fake_line := "fn (mut view View) w() {"
+	fake_line := "fn (mut view View) w() int {"
 	mut fake_cursor_pos := Pos{ x: 0 }
 
 	mut amount := calc_w_move_amount(fake_cursor_pos, fake_line)
@@ -938,6 +940,39 @@ fn test_calc_w_move_amount_code_line() {
 	assert amount == 4
 	fake_cursor_pos.x += amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "v"
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 5
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "V"
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 4
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 2
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "w"
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 1
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
+}
+
+fn test_count_repeated_sequence_multiple() {
+	fake_line := "(((("
+	assert "(".runes().len == 1
+	assert count_repeated_sequence('('.runes()[0], fake_line.runes()) == 4
+}
+
+fn test_count_repeated_sequence_multiple_combined() {
+	fake_line := "(((#####)))"
+	assert count_repeated_sequence('('.runes()[0], fake_line.runes()) == 3
+	assert count_repeated_sequence('#'.runes()[0], fake_line.runes()[3..]) == 5
+	assert count_repeated_sequence(')'.runes()[0], fake_line.runes()[8..]) == 3
 }
 
 fn test_calc_w_move_amount_indented_code_line() {
