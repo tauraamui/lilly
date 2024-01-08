@@ -73,6 +73,13 @@ const movement_key_cases = [
 		expected_cursor_pos: Pos{ x: 3, y: 1 }
 	},
 	MovementKeyEventTestCase{
+		name: "key code w end of line to next line",
+		code: tui.KeyCode.w,
+		document_contents: basic_three_lines_doc
+		starting_cursor_pos: Pos{ x: 12, y: 0 }
+		expected_cursor_pos: Pos{ x: 0, y: 1 }
+	},
+	MovementKeyEventTestCase{
 		name: "key code b",
 		code: tui.KeyCode.b,
 		document_contents: basic_three_lines_doc

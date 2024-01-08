@@ -1117,8 +1117,8 @@ fn (mut view View) visual_d(overwrite_y_lines bool) {
 fn (mut view View) w() {
 	line := view.buffer.lines[view.cursor.pos.y]
 	amount := calc_w_move_amount(view.cursor.pos, line)
-	if amount > line.len { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
-	view.cursor.pos.x += calc_w_move_amount(view.cursor.pos, line)
+	if view.cursor.pos.x + amount >= line.len - 1 { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
+	view.cursor.pos.x += amount
 	view.clamp_cursor_x_pos()
 }
 
