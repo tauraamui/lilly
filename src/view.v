@@ -1117,8 +1117,8 @@ fn (mut view View) visual_d(overwrite_y_lines bool) {
 fn (mut view View) w() {
 	line := view.buffer.lines[view.cursor.pos.y]
 	amount := calc_w_move_amount(view.cursor.pos, line)
-	if amount == 0 { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
-	view.cursor.pos.x += calc_w_move_amount(view.cursor.pos, line)
+	if view.cursor.pos.x + amount >= line.len - 1 { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
+	view.cursor.pos.x += amount
 	view.clamp_cursor_x_pos()
 }
 
@@ -1304,35 +1304,39 @@ fn is_whitespace_or_special(r rune) ?rune {
 }
 
 const specials = [`(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`]
-fn is_special(r rune) bool {
-	return r in specials
+fn is_special(r rune) ?rune {
+	if r in specials { return r }
+	return none
 }
 
-fn count_repeated_sequence(char_rune u8, line []rune) int {
+fn count_repeated_sequence(char_rune rune, line []rune) int {
 	for i, r in line {
-		if r != char_rune { return i }
-		if i == line.len - 1 { return 0 }
+		if r != char_rune    { return i }
+		if i + 1 == line.len { return i + 1 }
 	}
-	return 1
+	return 0
 }
 
 fn calc_w_move_amount(cursor_pos Pos, line string) int {
 	if line.len == 0 { return 0 }
 	line_chars := line.runes()
-	if r := is_whitespace_or_special(line_chars[cursor_pos.x]) {
-		return count_repeated_sequence(r, line_chars[cursor_pos.x..])
-	}
 
 	mut next_whitespace := 0
-	for i, c in line_chars[cursor_pos.x..] {
-		if is_special(c)    { return i }
-		if is_whitespace(c) { next_whitespace = i; break }
+	if r := is_special(line_chars[cursor_pos.x]) {
+		next_whitespace = count_repeated_sequence(r, line_chars[cursor_pos.x..])
+	}
+
+	if next_whitespace == 0 {
+		for i, c in line_chars[cursor_pos.x..] {
+			if is_whitespace(c)   { next_whitespace = i; break }
+			if _ := is_special(c) { return i }
+		}
 	}
 
 	mut next_alpha := 0
 	for i, c in line_chars[cursor_pos.x+next_whitespace..] {
 		if is_alpha(c) { next_alpha = i; break }
-		if is_special(c) { next_alpha = i; break }
+		if _ := is_special(c) { next_alpha = i; break }
 	}
 	return next_whitespace + next_alpha
 }
