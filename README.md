@@ -10,6 +10,19 @@
 
 Our project is focused on the development of a text editor that serves as a practical alternative to Vim and Neovim. The primary aim is to provide users with essential features, eliminating the need to navigate a complex ecosystem of Lua plugins. This approach is intended to be welcoming to users of all experience levels.
 
+## Milestone 1: A pre-alpha release
+
+### Targets:
+
+- [ ] Within line visual mode
+- [ ] Fix found search result highlighting
+- [ ] Horizontal scrolling
+- [ ] Splits (horizontal + vertical)
+- [ ] Goto def
+- [ ] List of active but not open buffers
+- [x] Search/Find files
+- [ ] Workspace wide search (ripgrep + roll your own)
+
 # The Rationale
 ### Inclusive Functionality
 We have set out to create an editor that encompasses the fundamental capabilities expected by users, rendering it a compelling choice as a Vim/Neovim alternative. Our emphasis is on streamlining the editing process without the necessity of configuring numerous plugins – our core features aim to fulfill these needs.
