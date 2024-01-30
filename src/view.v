@@ -1005,16 +1005,21 @@ fn (mut view View) clamp_cursor_within_document_bounds() {
 	if view.cursor.pos.y > view.buffer.lines.len - 1 { view.cursor.pos.y = view.buffer.lines.len - 1 }
 }
 
-fn (mut view View) clamp_cursor_x_pos() {
+fn (mut view View) clamp_cursor_x_pos() int {
 	view.clamp_cursor_within_document_bounds()
 	line_len := view.buffer.lines[view.cursor.pos.y].runes().len
-	if line_len == 0 { view.cursor.pos.x = 0; return }
+	if line_len == 0 { view.cursor.pos.x = 0; return 0 }
 	if view.mode == .insert {
 		if view.cursor.pos.x > line_len { view.cursor.pos.x = line_len }
 	} else {
-		if view.cursor.pos.x > line_len - 1 { view.cursor.pos.x = line_len - 1 }
+		diff := view.cursor.pos.x - (line_len - 1)
+		if diff > 0 {
+			view.cursor.pos.x = line_len - 1
+			return diff
+		}
 	}
 	if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
+	return 0
 }
 
 fn (view View) code_view_height() int { return view.height - 2 }
@@ -1115,11 +1120,13 @@ fn (mut view View) visual_d(overwrite_y_lines bool) {
 }
 
 fn (mut view View) w() {
+	// TODO(tauraamui): rethink how this works
 	line := view.buffer.lines[view.cursor.pos.y]
 	amount := calc_w_move_amount(view.cursor.pos, line)
 	if view.cursor.pos.x + amount >= line.len - 1 { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
 	view.cursor.pos.x += amount
-	view.clamp_cursor_x_pos()
+	diff := view.clamp_cursor_x_pos()
+	if diff > 0 { view.move_cursor_down(1) }
 }
 
 fn (mut view View) e() {
