@@ -1120,10 +1120,10 @@ fn (mut view View) visual_d(overwrite_y_lines bool) {
 }
 
 fn (mut view View) w() {
-	// TODO(tauraamui): rethink how this works
+	defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
 	amount := calc_w_move_amount(view.cursor.pos, line)
-	if view.cursor.pos.x + amount >= line.len - 1 { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
+	if amount == 0 || view.cursor.pos.x + amount >= line.runes().len - 1 { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
 	view.cursor.pos.x += amount
 	diff := view.clamp_cursor_x_pos()
 	if diff > 0 { view.move_cursor_down(1) }
@@ -1306,7 +1306,7 @@ fn (mut view View) right() {
 }
 
 fn is_whitespace_or_special(r rune) ?rune {
-	if r in [` `, `\t`, `.`, `(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`] { return r }
+	if r in [` `, `/`, `\t`, `.`, `(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`] { return r }
 	return none
 }
 

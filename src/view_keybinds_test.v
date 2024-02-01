@@ -161,13 +161,11 @@ fn test_w_moves_cursor_to_next_line_with_plain_comments() {
 	mut editor := Editor{ clipboard: mut clip, file_finder_modal: unsafe { nil } }
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	fake_view.buffer.lines = fake_lines
-	fake_view.cursor.pos = Pos{ x: 28 }
+	fake_view.cursor.pos = Pos{ x: 35 }
 	kevent := draw.Event{ code: tui.KeyCode.w }
 
 	fake_view.on_key_down(kevent, mut editor)
-	assert fake_view.cursor.pos.x == 35
-
-	fake_view.on_key_down(kevent, mut editor)
-	assert fake_view.cursor.pos.x == 54
+	assert fake_view.cursor.pos.y == 1
+	assert fake_view.cursor.pos.x == 0
 }
 
