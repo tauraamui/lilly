@@ -150,3 +150,22 @@ fn test_sets_of_key_events_for_views_on_key_down_adjusting_cursor_position() {
 	}
 }
 
+fn test_w_moves_cursor_to_next_line_with_plain_comments() {
+	fake_lines := [
+		"// Copyright 2023 The Lilly Editor contributors",
+		"//",
+		"// Licensed under the Apache License, Version 2.0 (the \"License\")"
+	]
+
+	mut clip := clipboard.new()
+	mut editor := Editor{ clipboard: mut clip, file_finder_modal: unsafe { nil } }
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+	fake_view.buffer.lines = fake_lines
+	fake_view.cursor.pos = Pos{ x: 35 }
+	kevent := draw.Event{ code: tui.KeyCode.w }
+
+	fake_view.on_key_down(kevent, mut editor)
+	assert fake_view.cursor.pos.y == 1
+	assert fake_view.cursor.pos.x == 0
+}
+

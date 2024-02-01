@@ -962,6 +962,29 @@ fn test_calc_w_move_amount_code_line() {
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
 }
 
+fn test_calc_w_move_cursor_to_next_line_with_plain_comments() {
+	// manually set the documents contents
+	fake_lines := [
+		"// Copyright 2023 The Lilly Editor contributors",
+		"//",
+		"// Licensed under the Apache License, Version 2.0 (the \"License\")"
+	]
+
+	fake_line := arrays.join_to_string(fake_lines, "\n", fn (e string) string { return e })
+
+	mut fake_cursor_pos := Pos{ x: 28 }
+
+	mut amount := calc_w_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 7
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "c"
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 19
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "L"
+}
+
 fn test_count_repeated_sequence_multiple() {
 	fake_line := "(((("
 	assert "(".runes().len == 1
