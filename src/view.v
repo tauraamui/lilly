@@ -1365,17 +1365,7 @@ fn calc_e_move_amount(cursor_pos Pos, line string) int {
 			return -1
 		}
 
-		// if the next char is whitespace
-		if is_whitespace(line_chars[cursor_pos.x+1]) {
-			for i, c in line_chars[cursor_pos.x+1..] {
-				// acquire the length of the current whitepace expanse
-				if is_whitespace(c) { continue }
-				return calc_e_move_amount(Pos{ x: cursor_pos.x + i, y: cursor_pos.y }, line) + i
-			}
-		}
-
-		// TODO(tauraamui) -> handle case of next char being alpha
-		// here:
+		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line) + 1
 	}
 
 	if is_whitespace(line_chars[cursor_pos.x]) {
@@ -1385,6 +1375,9 @@ fn calc_e_move_amount(cursor_pos Pos, line string) int {
 			return calc_e_move_amount(Pos{ x: cursor_pos.x + i, y: cursor_pos.y }, line) + i
 		}
 	}
+
+	// TODO(tauraamui) -> handle case of next char being alpha
+	// here:
 
 	return 0
 }
