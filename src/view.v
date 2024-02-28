@@ -1379,6 +1379,9 @@ fn calc_e_move_amount(cursor_pos Pos, line string) int {
 
 	// TODO(tauraamui) -> handle case of next char being alpha
 	// here:
+	if is_alpha(line_chars[cursor_pos.x]) {
+		// TODO(tauraamui) -> find end of current alpha set, if we're already at the end then recursively call for next char
+	}
 
 	return 0
 }
