@@ -1355,7 +1355,7 @@ fn calc_e_move_amount(cursor_pos Pos, line string) int {
 	line_chars := line.runes()
 
 	if r := is_special(line_chars[cursor_pos.x]) {
-		if cursor_pos.x + 1 == line_chars.len { return 0 }
+		if cursor_pos.x + 1 >= line_chars.len { return 0 }
 		repeated := count_repeated_sequence(r, line_chars[cursor_pos.x+1..])
 		if repeated > 0 { return repeated }
 		// if we're on a special char, confirm the next char if special is different, and then jump to end of its own sequence
@@ -1369,11 +1369,12 @@ fn calc_e_move_amount(cursor_pos Pos, line string) int {
 	}
 
 	if is_whitespace(line_chars[cursor_pos.x]) {
-		if cursor_pos.x + 1 == line_chars.len { return 0 }
+		if cursor_pos.x + 1 >= line_chars.len { return 0 }
+		mut end_of_whitespace_set := 0
 		for i, c in line_chars[cursor_pos.x..] {
-			if is_whitespace(c) { continue }
-			return calc_e_move_amount(Pos{ x: cursor_pos.x + i, y: cursor_pos.y }, line) + i
+			if !is_whitespace(c) { end_of_whitespace_set = i; break }
 		}
+		return calc_e_move_amount(Pos{ x: cursor_pos.x + end_of_whitespace_set, y: cursor_pos.y }, line) + end_of_whitespace_set
 	}
 
 	// TODO(tauraamui) -> handle case of next char being alpha
