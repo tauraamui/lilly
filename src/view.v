@@ -1130,11 +1130,13 @@ fn (mut view View) w() {
 }
 
 fn (mut view View) e() {
+	defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
 	amount := calc_e_move_amount(view.cursor.pos, line)
-	if amount == 0 { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
+	if amount == 0 || view.cursor.pos.x + amount >= line.runes().len - 1 { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
 	view.cursor.pos.x += amount
-	view.clamp_cursor_x_pos()
+	diff := view.clamp_cursor_x_pos()
+	if diff > 0 { view.move_cursor_down(1) }
 }
 
 fn (mut view View) b() {
@@ -1350,47 +1352,29 @@ fn calc_w_move_amount(cursor_pos Pos, line string) int {
 
 fn calc_e_move_amount(cursor_pos Pos, line string) int {
     if line.len == 0 { return 0 }
+	line_chars := line.runes()
 
-	if is_whitespace(line[cursor_pos.x]) {
-		mut word_start_offset := 0
-		for i, c in line.runes()[cursor_pos.x..] {
-			if !is_whitespace(c) { word_start_offset = i; break }
-			if cursor_pos.x + i == line.runes().len - 1 { word_start_offset = i; break }
+	if r := is_special(line_chars[cursor_pos.x]) {
+		repeated := count_repeated_sequence(r, line_chars[cursor_pos.x+1..])
+		if repeated > 0 { return repeated }
+		// if we're on a special char, confirm the next char if special is different, and then jump to end of its own sequence
+		if next_r := is_special(line_chars[cursor_pos.x+1]) {
+			if next_r != r { return count_repeated_sequence(next_r, line_chars[cursor_pos.x+1..]) }
+			// TODO(tauraamui) -> this should be unreachable anyways, throw some kind of error value here...
+			return -1
 		}
 
-		mut word_end_offset := 0
-		for i, c in line.runes()[cursor_pos.x+word_start_offset..] {
-			if is_whitespace(c) { word_end_offset = i - 1; break }
-			if cursor_pos.x + word_start_offset + i == line.runes().len - 1 { word_end_offset = i; break }
-		}
-
-		return word_start_offset + word_end_offset
-	}
-
-	if !is_whitespace(line[cursor_pos.x]) {
-		mut word_start_offset := 0
-		mut word_end_offset := 0
-		for i, c in line.runes()[cursor_pos.x..] {
-			if is_whitespace(c) { word_end_offset = i - 1; break }
-		}
-
-		// already at end of a word, find the start of next word
-		if word_end_offset == 0 {
-			for i, c in line.runes()[cursor_pos.x..] {
-				if i > 0 && !is_whitespace(c) { word_start_offset = i; break }
+		// if the next char is whitespace
+		if is_whitespace(line_chars[cursor_pos.x+1]) {
+			for i, c in line_chars[cursor_pos.x+1..] {
+				// acquire the length of the current whitepace expanse
+				if is_whitespace(c) { continue }
+				return calc_e_move_amount(Pos{ x: cursor_pos.x + i, y: cursor_pos.y }, line)
 			}
-
-			// find the end of this word
-			word_end_offset = 0
-			for i, c in line.runes()[cursor_pos.x+word_start_offset..] {
-				if is_whitespace(c) { word_end_offset = i - 1; break }
-				if cursor_pos.x + word_start_offset + i == line.runes().len - 1 { word_end_offset = i; break }
-			}
-
-			return word_start_offset + word_end_offset
 		}
 
-		return word_end_offset
+		// TODO(tauraamui) -> handle case of next char being alpha
+		// here:
 	}
 
 	return 0

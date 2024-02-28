@@ -1014,6 +1014,50 @@ fn test_calc_w_move_amount_indented_code_line() {
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "i"
 }
 
+fn test_calc_e_move_amount_to_end_of_repeated_sequence_of_special_char() {
+	// manually set the documents contents
+	fake_line := "(((#####)))"
+	mut fake_cursor_pos := Pos{ x: 0 }
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
+
+	mut amount := calc_e_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 2
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
+
+	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 5
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "#"
+
+	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 3
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
+}
+
+fn test_calc_e_move_amount_to_end_of_repeated_sequence_of_special_char_with_whitespace_inbetween() {
+	// manually set the documents contents
+	fake_line := "(((    )))"
+	mut fake_cursor_pos := Pos{ x: 0 }
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
+
+	mut amount := calc_e_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 2
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
+
+	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 5
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
+
+	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 3
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
+}
+
 fn test_calc_e_move_amount_code_line() {
 	// manually set the document contents
 	fake_line := "status_green            = Color { 145, 237, 145 }"
