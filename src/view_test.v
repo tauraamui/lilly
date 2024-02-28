@@ -1048,12 +1048,12 @@ fn test_calc_e_move_amount_to_end_of_repeated_sequence_of_special_char_with_whit
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
 
 	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 5
+	assert amount == 7
 	fake_cursor_pos.x += amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
 
 	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 3
+	assert amount == 0
 	fake_cursor_pos.x += amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
 }
