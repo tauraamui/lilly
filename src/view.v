@@ -1312,7 +1312,7 @@ fn is_whitespace_or_special(r rune) ?rune {
 	return none
 }
 
-const specials = [`(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`]
+const specials = [`(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`, `=`]
 fn is_special(r rune) ?rune {
 	if r in specials { return r }
 	return none
@@ -1370,6 +1370,8 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 			if next_r != r { return count_repeated_sequence(next_r, line_chars[cursor_pos.x + 1..]) }
 			// TODO(tauraamui) -> this should be unreachable anyways, throw some kind of error value here...
 			return -1
+		} else {
+			if recursive_call { return 0 }
 		}
 
 		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) + 1
@@ -1404,7 +1406,8 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) + 1
 	}
 
-	return 0
+	// TODO(tauraamui) -> this should be unreachable anyways, throw some kind of error value here...
+	return -1
 }
 
 fn find_position_within_word(cursor_pos_x int, line_chars []rune) PositionWithinWord {

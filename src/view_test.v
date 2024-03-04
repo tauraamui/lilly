@@ -1128,9 +1128,9 @@ fn test_calc_e_move_amount_code_line() {
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "{"
 
 	amount = calc_e_move_amount(fake_cursor_pos, fake_line, false)
-	assert amount == 5
+	assert amount == 4
 	fake_cursor_pos.x += amount
-	assert fake_line[fake_cursor_pos.x].ascii_str() == ","
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "5"
 }
 
 fn test_calc_e_move_amount_word_with_leading_whitespace() {
