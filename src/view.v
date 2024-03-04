@@ -1132,7 +1132,7 @@ fn (mut view View) w() {
 fn (mut view View) e() {
 	defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
-	amount := calc_e_move_amount(view.cursor.pos, line)
+	amount := calc_e_move_amount(view.cursor.pos, line, false)
 	if amount == 0 || view.cursor.pos.x + amount >= line.runes().len - 1 { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
 	view.cursor.pos.x += amount
 	diff := view.clamp_cursor_x_pos()
@@ -1350,22 +1350,22 @@ fn calc_w_move_amount(cursor_pos Pos, line string) int {
 	return next_whitespace + next_alpha
 }
 
-fn calc_e_move_amount(cursor_pos Pos, line string) int {
+fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
     if line.len == 0 { return 0 }
 	line_chars := line.runes()
 
 	if r := is_special(line_chars[cursor_pos.x]) {
 		if cursor_pos.x + 1 >= line_chars.len { return 0 }
-		repeated := count_repeated_sequence(r, line_chars[cursor_pos.x+1..])
+		repeated := count_repeated_sequence(r, line_chars[cursor_pos.x + 1..])
 		if repeated > 0 { return repeated }
 		// if we're on a special char, confirm the next char if special is different, and then jump to end of its own sequence
-		if next_r := is_special(line_chars[cursor_pos.x+1]) {
-			if next_r != r { return count_repeated_sequence(next_r, line_chars[cursor_pos.x+1..]) }
+		if next_r := is_special(line_chars[cursor_pos.x + 1]) {
+			if next_r != r { return count_repeated_sequence(next_r, line_chars[cursor_pos.x + 1..]) }
 			// TODO(tauraamui) -> this should be unreachable anyways, throw some kind of error value here...
 			return -1
 		}
 
-		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line) + 1
+		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) + 1
 	}
 
 	if is_whitespace(line_chars[cursor_pos.x]) {
@@ -1374,13 +1374,22 @@ fn calc_e_move_amount(cursor_pos Pos, line string) int {
 		for i, c in line_chars[cursor_pos.x..] {
 			if !is_whitespace(c) { end_of_whitespace_set = i; break }
 		}
-		return calc_e_move_amount(Pos{ x: cursor_pos.x + end_of_whitespace_set, y: cursor_pos.y }, line) + end_of_whitespace_set
+		return calc_e_move_amount(Pos{ x: cursor_pos.x + end_of_whitespace_set, y: cursor_pos.y }, line, true) + end_of_whitespace_set
 	}
 
-	// TODO(tauraamui) -> handle case of next char being alpha
-	// here:
 	if is_alpha(line_chars[cursor_pos.x]) {
-		// TODO(tauraamui) -> find end of current alpha set, if we're already at the end then recursively call for next char
+		if cursor_pos.x + 1 >= line_chars.len { return 0 }
+		mut already_at_end := false
+		for i, c in line_chars[cursor_pos.x..] {
+			if is_non_alpha(c) {
+				if i == 1 { already_at_end = true; break }
+				return i - 1
+			}
+		}
+		if already_at_end {
+			if recursive_call { return 0 }
+			return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) + 1
+		}
 	}
 
 	return 0
