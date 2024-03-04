@@ -1394,17 +1394,14 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 					if is_non_alpha(c) { return i }
 				}
 			}
-			.end {
-				return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) + 1
-			}
 			.single_letter {
 				if recursive_call {
 					return 0
 				}
-				return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) + 1
 			}
 			else {}
 		}
+		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) + 1
 	}
 
 	return 0
