@@ -1130,6 +1130,10 @@ fn (mut view View) w() {
 }
 
 fn (mut view View) e() {
+	line := view.buffer.lines[view.cursor.pos.y]
+	amount := calc_e_move_amount(view.cursor.pos, line, false) or { view.cmd_buf.set_error(err.msg); 0 }
+	println("AMOUNT: ${amount}")
+	/*
 	defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
 	amount := calc_e_move_amount(view.cursor.pos, line, false)
@@ -1137,6 +1141,7 @@ fn (mut view View) e() {
 	view.cursor.pos.x += amount
 	diff := view.clamp_cursor_x_pos()
 	if diff > 0 { view.move_cursor_down(1) }
+	*/
 }
 
 fn (mut view View) b() {
@@ -1357,7 +1362,7 @@ enum PositionWithinWord as u8 {
 	end
 }
 
-fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
+fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
     if line.len == 0 { return 0 }
 	line_chars := line.runes()
 
@@ -1369,12 +1374,12 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 		if next_r := is_special(line_chars[cursor_pos.x + 1]) {
 			if next_r != r { return count_repeated_sequence(next_r, line_chars[cursor_pos.x + 1..]) }
 			// TODO(tauraamui) -> this should be unreachable anyways, throw some kind of error value here...
-			return -1
+			return error("on special -> unable to provide move calculation")
 		} else {
 			if recursive_call { return 0 }
 		}
 
-		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) + 1
+		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or { return err } + 1
 	}
 
 	if is_whitespace(line_chars[cursor_pos.x]) {
@@ -1383,7 +1388,7 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 		for i, c in line_chars[cursor_pos.x..] {
 			if !is_whitespace(c) { end_of_whitespace_set = i; break }
 		}
-		return calc_e_move_amount(Pos{ x: cursor_pos.x + end_of_whitespace_set, y: cursor_pos.y }, line, true) + end_of_whitespace_set
+		return calc_e_move_amount(Pos{ x: cursor_pos.x + end_of_whitespace_set, y: cursor_pos.y }, line, true) or { return err } + end_of_whitespace_set
 	}
 
 	if is_alpha(line_chars[cursor_pos.x]) {
@@ -1403,11 +1408,11 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 			}
 			else {}
 		}
-		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) + 1
+		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or { return err } + 1
 	}
 
 	// TODO(tauraamui) -> this should be unreachable anyways, throw some kind of error value here...
-	return -1
+	return error("unable to provide move calculation")
 }
 
 fn find_position_within_word(cursor_pos_x int, line_chars []rune) PositionWithinWord {
