@@ -1133,6 +1133,32 @@ fn test_calc_e_move_amount_code_line() {
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "5"
 }
 
+fn test_calc_e_move_amount_code_line_two() {
+	// manually set the document contents
+	fake_line := "fn name_of_function() {"
+	mut fake_cursor_pos := Pos{ x: 0 }
+
+	mut amount := calc_e_move_amount(fake_cursor_pos, fake_line, false)
+	assert amount == 1
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "n"
+
+	amount = calc_e_move_amount(fake_cursor_pos, fake_line, false)
+	assert amount == 17
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "n"
+
+	amount = calc_e_move_amount(fake_cursor_pos, fake_line, false)
+	assert amount == 2
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
+
+	amount = calc_e_move_amount(fake_cursor_pos, fake_line, false)
+	assert amount == 2
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "{"
+}
+
 fn test_calc_e_move_amount_word_with_leading_whitespace() {
 	// manually set the document contents
 	fake_line := "    this"
