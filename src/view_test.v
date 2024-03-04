@@ -1452,6 +1452,14 @@ fn test_x_removes_character_and_shifts_cursor_back_at_end_of_line() {
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y].len == 22
 }
 
+fn test_find_position_within_word_lines() {
+	assert find_position_within_word(0, "Single".runes()) == .start
+	assert find_position_within_word(0, "S word".runes()) == .single_letter
+	assert find_position_within_word(0, "Multiple words".runes()) == .start
+	assert find_position_within_word(2, "One or two words".runes()) == .end
+	assert find_position_within_word(11, "Words with a single letter".runes()) == .single_letter
+}
+
 fn test_auto_closing_square_brace() {
 	clip := clipboard.new()
 	mut editor := Editor{ clipboard: mut clip, file_finder_modal: unsafe { nil } }

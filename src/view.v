@@ -1350,6 +1350,13 @@ fn calc_w_move_amount(cursor_pos Pos, line string) int {
 	return next_whitespace + next_alpha
 }
 
+enum PositionWithinWord as u8 {
+	start
+	floating
+	single_letter
+	end
+}
+
 fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
     if line.len == 0 { return 0 }
 	line_chars := line.runes()
@@ -1379,20 +1386,41 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 
 	if is_alpha(line_chars[cursor_pos.x]) {
 		if cursor_pos.x + 1 >= line_chars.len { return 0 }
-		mut already_at_end := false
-		for i, c in line_chars[cursor_pos.x..] {
-			if is_non_alpha(c) {
-				if i == 1 { already_at_end = true; break }
-				return i - 1
+		mut word_position := find_position_within_word(cursor_pos.x, line_chars)
+		if word_position == .start { word_position = .floating }
+		match word_position {
+			.floating {
+				for i, c in line_chars[cursor_pos.x + 1..] {
+					if is_non_alpha(c) { return i }
+				}
 			}
-		}
-		if already_at_end {
-			if recursive_call { return 0 }
-			return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) + 1
+			.end {
+				return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) + 1
+			}
+			.single_letter {
+				if recursive_call {
+					return 0
+				}
+				return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) + 1
+			}
+			else {}
 		}
 	}
 
 	return 0
+}
+
+fn find_position_within_word(cursor_pos_x int, line_chars []rune) PositionWithinWord {
+	mut position := PositionWithinWord.floating
+	if cursor_pos_x == 0 {
+		if is_non_alpha(line_chars[cursor_pos_x + 1]) { return .single_letter }
+		return .start
+	}
+	if is_non_alpha(line_chars[cursor_pos_x - 1]) { position = .start }
+	if is_non_alpha(line_chars[cursor_pos_x + 1]) {
+		if position == .start { position = .single_letter } else { position = .end }
+	}
+	return position
 }
 
 fn calc_b_move_amount(cursor_pos Pos, line string) int {
