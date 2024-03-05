@@ -1376,7 +1376,6 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
 		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or { return err } + 1
 	}
 
-	// status_green            = Color { 145, 237, 145 }
 	if is_whitespace(line_chars[cursor_pos.x]) {
 		if cursor_pos.x + 1 >= line_chars.len { return 0 }
 		mut end_of_whitespace_set := 0
@@ -1406,8 +1405,7 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
 		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or { return err } + 1
 	}
 
-	println("CURRENT CHAR: ${line_chars[cursor_pos.x]}")
-	return error("unable to provide move calculation")
+	return error("unable to provide move calculation") // TODO(tauraamui) -> improve error string structure and meaning/grammar/syntax
 }
 
 fn find_position_within_word(cursor_pos_x int, line_chars []rune) PositionWithinWord {
