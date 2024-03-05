@@ -1366,6 +1366,7 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
     if line.len == 0 { return 0 }
 	line_chars := line.runes()
 
+	/*
 	if r := is_special(line_chars[cursor_pos.x]) {
 		if cursor_pos.x + 1 >= line_chars.len { return 0 }
 		repeated := count_repeated_sequence(r, line_chars[cursor_pos.x + 1..])
@@ -1380,6 +1381,18 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
 		}
 
 		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or { return err } + 1
+	}
+	*/
+
+	// (((#####)))
+	if r := is_special(line_chars[cursor_pos.x]) {
+		if cursor_pos.x + 1 >= line_chars.len { return 0 }
+		repeated := count_repeated_sequence(r, line_chars[cursor_pos.x + 1..])
+		if repeated > 0 { return repeated }
+		if next_r := is_special(line_chars[cursor_pos.x + 1]) {
+			return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or { return err } + 1
+		}
+		return error("on special -> unable to figure out move amount")
 	}
 
 	if is_whitespace(line_chars[cursor_pos.x]) {
