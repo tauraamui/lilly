@@ -1305,17 +1305,6 @@ fn (mut view View) right() {
 	view.clamp_cursor_x_pos()
 }
 
-fn is_whitespace_or_special(r rune) ?rune {
-	if r in [` `, `/`, `\t`, `.`, `(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`] { return r }
-	return none
-}
-
-const specials = [`(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`, `=`, `,`, `.`]
-fn is_special(r rune) ?rune {
-	if r in specials { return r }
-	return none
-}
-
 fn count_repeated_sequence(char_rune rune, line []rune) int {
 	for i, r in line {
 		if r != char_rune    { return i }
@@ -1353,6 +1342,13 @@ enum PositionWithinWord as u8 {
 	floating
 	single_letter
 	end
+}
+
+fn is_special(r rune) ?rune {
+	if !is_whitespace(r) && is_non_alpha(r) && !(r == `\n` || r == `\r`) {
+		return r
+	}
+	return none
 }
 
 fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
@@ -1544,16 +1540,16 @@ fn get_clean_words(line string) []string {
 	return res
 }
 
-fn is_non_alpha(c u8) bool {
+fn is_non_alpha(c rune) bool {
 	return c != `_` && !is_alpha(c)
 }
 
-fn is_alpha(r u8) bool {
+fn is_alpha(r rune) bool {
 	return (r >= `a` && r <= `z`) || (r >= `A` && r <= `Z`) || (r >= `0` && r <= `9`)
 }
 
-fn is_whitespace(r u8) bool {
-	return r == ` ` || r == `\t`
+fn is_whitespace(r rune) bool {
+	return r == ` ` || r == `\t` || r == `\n` || r == `\r`
 }
 
 fn is_alpha_underscore(r int) bool {

@@ -980,7 +980,17 @@ fn test_calc_w_move_cursor_to_next_line_with_plain_comments() {
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "c"
 
 	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 19
+	assert amount == 13
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "/"
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 3
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "/"
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line)
+	assert amount == 3
 	fake_cursor_pos.x += amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "L"
 }
@@ -1012,6 +1022,44 @@ fn test_calc_w_move_amount_indented_code_line() {
 	assert amount == 4
 	fake_cursor_pos.x += amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "i"
+}
+
+fn test_calc_e_move_cursor_to_next_line_with_plain_comments() {
+	// manually set the documents contents
+	fake_lines := [
+		"// Copyright 2023 The Lilly Editor contributors",
+		"//",
+		"// Licensed under the Apache License, Version 2.0 (the \"License\")"
+	]
+
+	fake_line := arrays.join_to_string(fake_lines, "\n", fn (e string) string { return e })
+
+	mut fake_cursor_pos := Pos{ x: 28 }
+
+	mut amount := calc_e_move_amount(fake_cursor_pos, fake_line, false)!
+	assert amount == 5
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "r"
+
+	amount = calc_e_move_amount(fake_cursor_pos, fake_line, false)!
+	assert amount == 13
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "s"
+
+	amount = calc_e_move_amount(fake_cursor_pos, fake_line, false)!
+	assert amount == 3
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "/"
+
+	amount = calc_e_move_amount(fake_cursor_pos, fake_line, false)!
+	assert amount == 3
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "/"
+
+	amount = calc_e_move_amount(fake_cursor_pos, fake_line, false)!
+	assert amount == 9
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "d"
 }
 
 fn test_calc_e_move_amount_to_end_of_repeated_sequence_of_special_char() {
