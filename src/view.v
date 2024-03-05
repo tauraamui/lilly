@@ -1132,8 +1132,12 @@ fn (mut view View) w() {
 fn (mut view View) e() {
 	defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
-	amount := calc_e_move_amount(view.cursor.pos, line, false) or { view.cmd_buf.set_error(err.msg); 0 }
-	if amount == 0 { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
+	mut amount := calc_e_move_amount(view.cursor.pos, line, false) or { view.cmd_buf.set_error(err.msg); 0 }
+	if amount == 0 {
+		view.move_cursor_down(1)
+		view.cursor.pos.x = 0
+		amount = calc_e_move_amount(view.cursor.pos, line, false) or { view.cmd_buf.set_error(err.msg); 0 }
+	}
 	view.cursor.pos.x += amount
 }
 
