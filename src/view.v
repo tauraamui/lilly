@@ -1130,18 +1130,11 @@ fn (mut view View) w() {
 }
 
 fn (mut view View) e() {
-	line := view.buffer.lines[view.cursor.pos.y]
-	amount := calc_e_move_amount(view.cursor.pos, line, false) or { view.cmd_buf.set_error(err.msg); 0 }
-	println("AMOUNT: ${amount}")
-	/*
 	defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
-	amount := calc_e_move_amount(view.cursor.pos, line, false)
-	if amount == 0 || view.cursor.pos.x + amount >= line.runes().len - 1 { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
+	amount := calc_e_move_amount(view.cursor.pos, line, false) or { view.cmd_buf.set_error(err.msg); 0 }
+	if amount == 0 { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
 	view.cursor.pos.x += amount
-	diff := view.clamp_cursor_x_pos()
-	if diff > 0 { view.move_cursor_down(1) }
-	*/
 }
 
 fn (mut view View) b() {
@@ -1317,7 +1310,7 @@ fn is_whitespace_or_special(r rune) ?rune {
 	return none
 }
 
-const specials = [`(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`, `=`, `,`]
+const specials = [`(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`, `=`, `,`, `.`]
 fn is_special(r rune) ?rune {
 	if r in specials { return r }
 	return none
