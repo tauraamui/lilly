@@ -1117,6 +1117,22 @@ fn test_calc_e_move_amount_code_line() {
 	fake_cursor_pos.x += 4
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "5"
 
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 1
+	fake_cursor_pos.x += 1
+	assert fake_line[fake_cursor_pos.x].ascii_str() == ","
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 4
+	fake_cursor_pos.x += 4
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "7"
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 1
+	fake_cursor_pos.x += 1
+	assert fake_line[fake_cursor_pos.x].ascii_str() == ","
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 4
+	fake_cursor_pos.x += 4
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "5"
+
 	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 2
 	fake_cursor_pos.x += 2
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "}"
@@ -1135,8 +1151,12 @@ fn test_calc_e_move_amount_code_line_two() {
 	fake_cursor_pos.x += 17
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "n"
 
-	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 2
-	fake_cursor_pos.x += 2
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 1
+	fake_cursor_pos.x += 1
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 1
+	fake_cursor_pos.x += 1
 	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
 
 	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 2

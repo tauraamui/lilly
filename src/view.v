@@ -1317,7 +1317,7 @@ fn is_whitespace_or_special(r rune) ?rune {
 	return none
 }
 
-const specials = [`(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`, `=`]
+const specials = [`(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`, `=`, `,`]
 fn is_special(r rune) ?rune {
 	if r in specials { return r }
 	return none
@@ -1366,17 +1366,17 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
     if line.len == 0 { return 0 }
 	line_chars := line.runes()
 
-	// (((    )))
 	if r := is_special(line_chars[cursor_pos.x]) {
 		if cursor_pos.x + 1 >= line_chars.len { return 0 }
 		repeated := count_repeated_sequence(r, line_chars[cursor_pos.x + 1..])
 		if repeated > 0 { return repeated }
-		if next_r := is_special(line_chars[cursor_pos.x + 1]) {
-			return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or { return err } + 1
-		}
-		return error("on special -> unable to figure out move amount")
+
+		if recursive_call { return 0 } // basically this means we've hit a single floating special
+
+		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or { return err } + 1
 	}
 
+	// status_green            = Color { 145, 237, 145 }
 	if is_whitespace(line_chars[cursor_pos.x]) {
 		if cursor_pos.x + 1 >= line_chars.len { return 0 }
 		mut end_of_whitespace_set := 0
@@ -1406,7 +1406,7 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
 		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or { return err } + 1
 	}
 
-	// TODO(tauraamui) -> this should be unreachable anyways, throw some kind of error value here...
+	println("CURRENT CHAR: ${line_chars[cursor_pos.x]}")
 	return error("unable to provide move calculation")
 }
 
