@@ -1366,25 +1366,7 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
     if line.len == 0 { return 0 }
 	line_chars := line.runes()
 
-	/*
-	if r := is_special(line_chars[cursor_pos.x]) {
-		if cursor_pos.x + 1 >= line_chars.len { return 0 }
-		repeated := count_repeated_sequence(r, line_chars[cursor_pos.x + 1..])
-		if repeated > 0 { return repeated }
-		// if we're on a special char, confirm the next char if special is different, and then jump to end of its own sequence
-		if next_r := is_special(line_chars[cursor_pos.x + 1]) {
-			if next_r != r { return count_repeated_sequence(next_r, line_chars[cursor_pos.x + 1..]) }
-			// TODO(tauraamui) -> this should be unreachable anyways, throw some kind of error value here...
-			return error("on special -> unable to provide move calculation")
-		} else {
-			if recursive_call { return 0 }
-		}
-
-		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or { return err } + 1
-	}
-	*/
-
-	// (((#####)))
+	// (((    )))
 	if r := is_special(line_chars[cursor_pos.x]) {
 		if cursor_pos.x + 1 >= line_chars.len { return 0 }
 		repeated := count_repeated_sequence(r, line_chars[cursor_pos.x + 1..])
