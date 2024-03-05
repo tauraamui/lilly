@@ -1014,36 +1014,154 @@ fn test_calc_w_move_amount_indented_code_line() {
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "i"
 }
 
+fn test_calc_e_move_amount_to_end_of_repeated_sequence_of_special_char() {
+	// manually set the documents contents
+	fake_line := "(((#####)))"
+	mut fake_cursor_pos := Pos{ x: 0 }
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
+
+	mut amount := calc_e_move_amount(fake_cursor_pos, fake_line, false)!
+	assert amount == 2
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
+
+	amount = calc_e_move_amount(fake_cursor_pos, fake_line, false)!
+	assert amount == 5
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "#"
+
+	amount = calc_e_move_amount(fake_cursor_pos, fake_line, false)!
+	assert amount == 3
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
+}
+
+fn test_calc_e_move_amount_to_end_of_repeated_sequence_of_special_char_with_whitespace_inbetween() {
+	// manually set the documents contents
+	fake_line := "(((    )))"
+	mut fake_cursor_pos := Pos{ x: 0 }
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 2
+	fake_cursor_pos.x += 2
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 7
+	fake_cursor_pos.x += 7
+	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 0
+	fake_cursor_pos.x += 0
+	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
+}
+
+fn test_calc_e_move_amount_normal_sentence() {
+	// manually set the document contents
+	fake_line := "This can read like a regularly structured sentence."
+
+	mut fake_cursor_pos := Pos{ x: 0 }
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "T"
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 3
+	fake_cursor_pos.x += 3
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "s"
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 4
+	fake_cursor_pos.x += 4
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "n"
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 5
+	fake_cursor_pos.x += 5
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "d"
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 5
+	fake_cursor_pos.x += 5
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "e"
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 2
+	fake_cursor_pos.x += 2
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "a"
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 10
+	fake_cursor_pos.x += 10
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "y"
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 11
+	fake_cursor_pos.x += 11
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "d"
+}
+
 fn test_calc_e_move_amount_code_line() {
 	// manually set the document contents
 	fake_line := "status_green            = Color { 145, 237, 145 }"
 
 	mut fake_cursor_pos := Pos{ x: 0 }
 
-	mut amount := calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 11
-	fake_cursor_pos.x += amount
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 11
+	fake_cursor_pos.x += 11
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "n"
 
-	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 13
-	fake_cursor_pos.x += amount
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 13
+	fake_cursor_pos.x += 13
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "="
 
-	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 6
-	fake_cursor_pos.x += amount
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 6
+	fake_cursor_pos.x += 6
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "r"
 
-	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 2
-	fake_cursor_pos.x += amount
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 2
+	fake_cursor_pos.x += 2
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "{"
 
-	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 5
-	fake_cursor_pos.x += amount
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 4
+	fake_cursor_pos.x += 4
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "5"
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 1
+	fake_cursor_pos.x += 1
 	assert fake_line[fake_cursor_pos.x].ascii_str() == ","
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 4
+	fake_cursor_pos.x += 4
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "7"
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 1
+	fake_cursor_pos.x += 1
+	assert fake_line[fake_cursor_pos.x].ascii_str() == ","
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 4
+	fake_cursor_pos.x += 4
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "5"
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 2
+	fake_cursor_pos.x += 2
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "}"
+}
+
+fn test_calc_e_move_amount_code_line_two() {
+	// manually set the document contents
+	fake_line := "fn name_of_function() {"
+	mut fake_cursor_pos := Pos{ x: 0 }
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 1
+	fake_cursor_pos.x += 1
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "n"
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 17
+	fake_cursor_pos.x += 17
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "n"
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 1
+	fake_cursor_pos.x += 1
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 1
+	fake_cursor_pos.x += 1
+	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
+
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 2
+	fake_cursor_pos.x += 2
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "{"
 }
 
 fn test_calc_e_move_amount_word_with_leading_whitespace() {
@@ -1051,9 +1169,8 @@ fn test_calc_e_move_amount_word_with_leading_whitespace() {
 	fake_line := "    this"
 	mut fake_cursor_pos := Pos{ x: 0 }
 
-	mut amount := calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 7
-	fake_cursor_pos.x += amount
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 7
+	fake_cursor_pos.x += 7
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "s"
 }
 
@@ -1063,19 +1180,16 @@ fn test_calc_e_move_amount_two_words_with_leading_whitespace() {
 
 	mut fake_cursor_pos := Pos{ x: 0 }
 
-	mut amount := calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 7
-	fake_cursor_pos.x += amount
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 7
+	fake_cursor_pos.x += 7
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "s"
 
-	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 9
-	fake_cursor_pos.x += amount
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 9
+	fake_cursor_pos.x += 9
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "e"
 
-	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 0
-	fake_cursor_pos.x += amount
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 0
+	fake_cursor_pos.x += 0
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "e"
 }
 
@@ -1084,34 +1198,28 @@ fn test_calc_e_move_amount_multiple_words_with_leading_whitespace() {
 
 	mut fake_cursor_pos := Pos{ x: 0 }
 
-	mut amount := calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 7
-	fake_cursor_pos.x += amount
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 7
+	fake_cursor_pos.x += 7
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "s"
 
-	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 9
-	fake_cursor_pos.x += amount
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 9
+	fake_cursor_pos.x += 9
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "e"
 
-	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 3
-	fake_cursor_pos.x += amount
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 3
+	fake_cursor_pos.x += 3
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "s"
 
-	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 2
-	fake_cursor_pos.x += amount
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 2
+	fake_cursor_pos.x += 2
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "a"
 
-	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 5
-	fake_cursor_pos.x += amount
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 5
+	fake_cursor_pos.x += 5
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "t"
 
-	amount = calc_e_move_amount(fake_cursor_pos, fake_line)
-	assert amount == 4
-	fake_cursor_pos.x += amount
+	assert calc_e_move_amount(fake_cursor_pos, fake_line, false)! == 4
+	fake_cursor_pos.x += 4
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "r"
 }
 
@@ -1363,6 +1471,14 @@ fn test_x_removes_character_and_shifts_cursor_back_at_end_of_line() {
 	assert fake_view.mode == .normal
 	assert fake_view.cursor.pos.x == 21
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y].len == 22
+}
+
+fn test_find_position_within_word_lines() {
+	assert find_position_within_word(0, "Single".runes()) == .start
+	assert find_position_within_word(0, "S word".runes()) == .single_letter
+	assert find_position_within_word(0, "Multiple words".runes()) == .start
+	assert find_position_within_word(2, "One or two words".runes()) == .end
+	assert find_position_within_word(11, "Words with a single letter".runes()) == .single_letter
 }
 
 fn test_auto_closing_square_brace() {

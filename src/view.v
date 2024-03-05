@@ -1130,11 +1130,11 @@ fn (mut view View) w() {
 }
 
 fn (mut view View) e() {
+	defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
-	amount := calc_e_move_amount(view.cursor.pos, line)
+	amount := calc_e_move_amount(view.cursor.pos, line, false) or { view.cmd_buf.set_error(err.msg); 0 }
 	if amount == 0 { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
 	view.cursor.pos.x += amount
-	view.clamp_cursor_x_pos()
 }
 
 fn (mut view View) b() {
@@ -1310,7 +1310,7 @@ fn is_whitespace_or_special(r rune) ?rune {
 	return none
 }
 
-const specials = [`(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`]
+const specials = [`(`, `)`, `{`, `}`, `$`, `#`, `[`, `]`, `=`, `,`, `.`]
 fn is_special(r rune) ?rune {
 	if r in specials { return r }
 	return none
@@ -1348,52 +1348,70 @@ fn calc_w_move_amount(cursor_pos Pos, line string) int {
 	return next_whitespace + next_alpha
 }
 
-fn calc_e_move_amount(cursor_pos Pos, line string) int {
+enum PositionWithinWord as u8 {
+	start
+	floating
+	single_letter
+	end
+}
+
+fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
     if line.len == 0 { return 0 }
+	line_chars := line.runes()
 
-	if is_whitespace(line[cursor_pos.x]) {
-		mut word_start_offset := 0
-		for i, c in line.runes()[cursor_pos.x..] {
-			if !is_whitespace(c) { word_start_offset = i; break }
-			if cursor_pos.x + i == line.runes().len - 1 { word_start_offset = i; break }
-		}
+	if r := is_special(line_chars[cursor_pos.x]) {
+		if cursor_pos.x + 1 >= line_chars.len { return 0 }
+		repeated := count_repeated_sequence(r, line_chars[cursor_pos.x + 1..])
+		if repeated > 0 { return repeated }
 
-		mut word_end_offset := 0
-		for i, c in line.runes()[cursor_pos.x+word_start_offset..] {
-			if is_whitespace(c) { word_end_offset = i - 1; break }
-			if cursor_pos.x + word_start_offset + i == line.runes().len - 1 { word_end_offset = i; break }
-		}
+		if recursive_call { return 0 } // basically this means we've hit a single floating special
 
-		return word_start_offset + word_end_offset
+		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or { return err } + 1
 	}
 
-	if !is_whitespace(line[cursor_pos.x]) {
-		mut word_start_offset := 0
-		mut word_end_offset := 0
-		for i, c in line.runes()[cursor_pos.x..] {
-			if is_whitespace(c) { word_end_offset = i - 1; break }
+	if is_whitespace(line_chars[cursor_pos.x]) {
+		if cursor_pos.x + 1 >= line_chars.len { return 0 }
+		mut end_of_whitespace_set := 0
+		for i, c in line_chars[cursor_pos.x..] {
+			if !is_whitespace(c) { end_of_whitespace_set = i; break }
 		}
-
-		// already at end of a word, find the start of next word
-		if word_end_offset == 0 {
-			for i, c in line.runes()[cursor_pos.x..] {
-				if i > 0 && !is_whitespace(c) { word_start_offset = i; break }
-			}
-
-			// find the end of this word
-			word_end_offset = 0
-			for i, c in line.runes()[cursor_pos.x+word_start_offset..] {
-				if is_whitespace(c) { word_end_offset = i - 1; break }
-				if cursor_pos.x + word_start_offset + i == line.runes().len - 1 { word_end_offset = i; break }
-			}
-
-			return word_start_offset + word_end_offset
-		}
-
-		return word_end_offset
+		return calc_e_move_amount(Pos{ x: cursor_pos.x + end_of_whitespace_set, y: cursor_pos.y }, line, true) or { return err } + end_of_whitespace_set
 	}
 
-	return 0
+	if is_alpha(line_chars[cursor_pos.x]) {
+		if cursor_pos.x + 1 >= line_chars.len { return 0 }
+		mut word_position := find_position_within_word(cursor_pos.x, line_chars)
+		if word_position == .start { word_position = .floating }
+		match word_position {
+			.floating {
+				for i, c in line_chars[cursor_pos.x + 1..] {
+					if is_non_alpha(c) { return i }
+				}
+			}
+			.single_letter {
+				if recursive_call {
+					return 0
+				}
+			}
+			else {}
+		}
+		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or { return err } + 1
+	}
+
+	return error("unable to provide move calculation") // TODO(tauraamui) -> improve error string structure and meaning/grammar/syntax
+}
+
+fn find_position_within_word(cursor_pos_x int, line_chars []rune) PositionWithinWord {
+	mut position := PositionWithinWord.floating
+	if cursor_pos_x == 0 {
+		if is_non_alpha(line_chars[cursor_pos_x + 1]) { return .single_letter }
+		return .start
+	}
+	if is_non_alpha(line_chars[cursor_pos_x - 1]) { position = .start }
+	if is_non_alpha(line_chars[cursor_pos_x + 1]) {
+		if position == .start { position = .single_letter } else { position = .end }
+	}
+	return position
 }
 
 fn calc_b_move_amount(cursor_pos Pos, line string) int {
