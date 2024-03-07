@@ -417,7 +417,7 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 	cmd_buf.code = .blank
 }
 
-fn open_view(config workspace.Config, branch string, syntaxes []workspace.Syntax, _clipboard clipboard.Clipboard, buff &buffer.Buffer) Viewable {
+fn open_view(config workspace.Config, branch string, syntaxes []workspace.Syntax, _clipboard clipboard.Clipboard, mut buff &buffer.Buffer) Viewable {
 	mut res := View{ log: unsafe { nil }, branch: branch, syntaxes: syntaxes, file_path: buff.file_path, config: config, leader_key: config.leader_key, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
 	res.path = res.buffer.file_path
 	res.set_current_syntax_idx(os.file_ext(res.path))
