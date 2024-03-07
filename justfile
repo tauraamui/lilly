@@ -1,7 +1,7 @@
-run:
+run: generate-git-hash
     v -g run ./src .
 
-run-gui:
+run-gui: generate-git-hash
     v -g -d gui run ./src .
 
 run-debug: nonprod-compile
@@ -10,20 +10,23 @@ run-debug: nonprod-compile
 run-gui-debug: compile-gui
 	./lillygui --debug .
 
-experiment:
+experiment: generate-git-hash
     v -g run ./experiment .
 
-test:
+test: generate-git-hash
     v -g test ./src
 
-nonprod-compile:
+nonprod-compile: generate-git-hash
     v -g ./src -o lilly -prod
 
-prod-compile:
+prod-compile: generate-git-hash
     v ./src -o lilly -prod
 
-compile-gui:
+compile-gui: generate-git-hash
     v -d gui ./src -o lillygui
+
+generate-git-hash:
+    git log -n 1 --pretty=format:"%h" > ./src/.githash
 
 build: prod-compile
 

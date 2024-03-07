@@ -28,3 +28,4 @@ windows.sess
 lilly.panic.log
 lillygui
 src/src.dSYM/Contents
+src/.githash
