@@ -18,7 +18,8 @@ import math
 import term { strikethrough }
 import lib.draw
 
-const logo_contents = $embed_file("./src/splash-logo.txt")
+const logo_contents  = $embed_file("./src/splash-logo.txt")
+const gitcommit_hash = $embed_file("./src/.githash").to_string()
 
 struct Logo{
 mut:
@@ -73,6 +74,9 @@ pub fn (splash SplashScreen) draw(mut ctx draw.Contextable) {
 
 	offset_y += splash.logo.data.len
 	offset_y += (ctx.window_height() - offset_y) * 0.05
+
+	version_label := "lilly - dev version (#${gitcommit_hash})"
+	ctx.draw_text(offset_x+(ctx.window_width() / 2) - (version_label.len / 2), int(math.floor(offset_y)), version_label)
 
 	offset_y += 2
 
