@@ -15,6 +15,7 @@
 module main
 
 import os
+import log
 import lib.buffer
 import lib.clipboard
 import lib.workspace
@@ -41,9 +42,10 @@ mut:
 	quit()
 }
 
-pub fn open_editor(_clipboard clipboard.Clipboard, workspace_root_dir string) !&Editor {
+pub fn open_editor(mut _log log.Log, _clipboard clipboard.Clipboard, workspace_root_dir string) !&Editor {
 	mut editor := Editor{ clipboard: _clipboard, file_finder_modal: unsafe { nil } }
 	editor.workspace = workspace.open_workspace(
+			mut _log,
 			workspace_root_dir,
 			os.is_dir,
 			os.walk,

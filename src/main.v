@@ -105,7 +105,7 @@ fn main() {
 
 	files := cmdline.only_non_options(args)
 	if files.len != 1 { print_and_exit("too many file paths, expected just one") }
-	app.editor = open_editor(clipboard.new(), files[0]) or { print_and_exit("${err}"); unsafe { nil } }
+	app.editor = open_editor(mut l, clipboard.new(), files[0]) or { print_and_exit("${err}"); unsafe { nil } }
 	if opts.debug_mode {
 		app.editor.start_debug()
 	}

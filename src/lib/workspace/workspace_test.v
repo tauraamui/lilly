@@ -2,6 +2,15 @@ module workspace
 
 import term.ui as tui
 
+struct MockLogger {
+mut:
+	error_msgs []string
+}
+
+fn (mut mock_log MockLogger) error(msg string) {
+	mock_log.error_msgs << msg
+}
+
 struct MockFS {
 	pwd           string
 	dirs          map[string][]string
@@ -57,7 +66,8 @@ fn test_open_workspace_files_and_config() {
 			"/home/test-user/.config/lilly/lilly.conf": '{ "relative_line_numbers": true, "insert_tabs_not_spaces": false, "selection_highlight_color": { "r": 96, "g": 138, "b": 143 } }'
 		}
 	}
-	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err}") }
+	mut mock_log := MockLogger{}
+	wrkspace := open_workspace(mut mock_log, "./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err}") }
 
 	assert wrkspace.files == [
 		"/dev/fake-project/src/main.v",
@@ -88,7 +98,8 @@ fn test_open_workspace_files_but_fallsback_to_embedded_config() {
 		}
 		file_contents: {}
 	}
-	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err}") }
+	mut mock_log := MockLogger{}
+	wrkspace := open_workspace(mut mock_log, "./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err}") }
 
 	assert wrkspace.files == [
 		"/dev/fake-project/src/main.v",
@@ -124,7 +135,8 @@ fn test_open_workspace_resolves_git_branch() {
 			"/dev/fake-project/.git/HEAD": "ref: refs/heads/feat/git-branch-status-line",
 		}
 	}
-	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err}") }
+	mut mock_log := MockLogger{}
+	wrkspace := open_workspace(mut mock_log, "./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err}") }
 
 	assert wrkspace.git_branch == "\uE0A0 feat/git-branch-status-line"
 
