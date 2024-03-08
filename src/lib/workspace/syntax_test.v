@@ -1,5 +1,14 @@
 module workspace
 
+struct MockLogger {
+mut:
+	error_msgs []string
+}
+
+fn (mut mock_log MockLogger) error(msg string) {
+	mock_log.error_msgs << msg
+}
+
 struct MockFS {
 	pwd           string
 	dirs          map[string][]string
@@ -50,7 +59,8 @@ fn test_open_workspace_loads_builtin_syntax() {
 		file_contents: {}
 	}
 
-	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err.msg()}") }
+	mut mock_log := MockLogger{}
+	wrkspace := open_workspace(mut mock_log, "./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err.msg()}") }
 	assert wrkspace.syntaxes.len == 4
 	assert wrkspace.syntaxes[0].name == "V"
 	assert wrkspace.syntaxes[1].name == "Go"
@@ -73,7 +83,8 @@ fn test_open_workspace_overrides_builtin_syntax() {
 		}
 	}
 
-	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err.msg()}") }
+	mut mock_log := MockLogger{}
+	wrkspace := open_workspace(mut mock_log, "./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err.msg()}") }
 	assert wrkspace.syntaxes.len == 4
 	assert wrkspace.syntaxes[0].name == "V"
 	assert wrkspace.syntaxes[1].name == "GoTest"
@@ -94,7 +105,10 @@ fn test_open_workspace_loads_custom_syntax() {
 		}
 	}
 
-	wrkspace := open_workspace("./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err.msg()}") }
+	mut mock_log := MockLogger{}
+	wrkspace := open_workspace(mut mock_log, "./", mock_fs.is_dir, mock_fs.dir_walker, mock_fs.config_dir, mock_fs.read_file) or { panic("${err.msg()}") }
+	assert mock_log.error_msgs.len == 1
+	assert mock_log.error_msgs[0] == "failed to resolve config: local config file /home/test-user/.config/lilly/lilly.conf not found: file /home/test-user/.config/lilly/lilly.conf does not exist"
 	assert wrkspace.syntaxes.len == 5
 	assert wrkspace.syntaxes[0].name == "V"
 	assert wrkspace.syntaxes[1].name == "Go"
