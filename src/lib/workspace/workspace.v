@@ -1,7 +1,6 @@
 module workspace
 
 import os
-import log
 import json
 import term.ui as tui
 
@@ -18,6 +17,11 @@ mut:
 	git_branch string
 }
 
+pub interface Logger {
+mut:
+	error(msg string)
+}
+
 pub struct Config {
 pub mut:
 	leader_key                string
@@ -27,7 +31,7 @@ pub mut:
 }
 
 pub fn open_workspace(
-	mut _log log.Log,
+	mut _log Logger,
 	root_path string,
 	is_dir fn (path string) bool,
 	dir_walker fn (path string, f fn (string)),
@@ -77,7 +81,7 @@ pub fn (workspace Workspace) files() []string {
 
 pub fn (workspace Workspace) syntaxes() []Syntax { return workspace.syntaxes }
 
-fn resolve_config(mut _log log.Log, config_dir fn () !string, read_file fn (path string) !string) Config {
+fn resolve_config(mut _log Logger, config_dir fn () !string, read_file fn (path string) !string) Config {
 	loaded_config := attempt_to_load_from_disk(config_dir, read_file) or { _log.error("failed to resolve config: ${err}"); return fallback_to_bundled_default_config() }
 	// loaded_config := attempt_to_load_from_disk(config_dir, read_file) or { fallback_to_bundled_default_config() }
 	return loaded_config
