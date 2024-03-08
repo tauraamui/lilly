@@ -18,6 +18,11 @@ const (
 		"2. second line",
 		"3. third line"
 	]
+	lines_with_empty_between = [
+		"This is a first line."
+		""
+		"This is the third line."
+	]
 	gapped_blocks_of_content_doc = [
 		"fn this_is_a_function() {",
 		"    1 + 1",
@@ -64,6 +69,13 @@ const movement_key_cases = [
 		document_contents: basic_three_lines_doc
 		starting_cursor_pos: Pos{ x: 1, y: 1 }
 		expected_cursor_pos: Pos{ x: 8, y: 1 }
+	},
+	MovementKeyEventTestCase{
+		name: "key code e move to end of word on line after empty line",
+		code: tui.KeyCode.e,
+		document_contents: lines_with_empty_between
+		starting_cursor_pos: Pos{ x: 0, y: 1 }
+		expected_cursor_pos: Pos{ x: 3, y: 2 }
 	},
 	MovementKeyEventTestCase{
 		name: "key code w",
