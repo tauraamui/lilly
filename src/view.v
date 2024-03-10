@@ -1122,7 +1122,7 @@ fn (mut view View) visual_d(overwrite_y_lines bool) {
 fn (mut view View) w() {
 	defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
-	amount := calc_w_move_amount(view.cursor.pos, line)
+	amount := calc_w_move_amount(view.cursor.pos, line, false)
 	if amount == 0 || view.cursor.pos.x + amount >= line.runes().len - 1 { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
 	view.cursor.pos.x += amount
 	diff := view.clamp_cursor_x_pos()
@@ -1318,28 +1318,29 @@ fn count_repeated_sequence(char_rune rune, line []rune) int {
 	return 0
 }
 
-fn calc_w_move_amount(cursor_pos Pos, line string) int {
+// fn function_name() int
+fn calc_w_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 	if line.len == 0 { return 0 }
 	line_chars := line.runes()
 
-	mut next_whitespace := 0
-	if r := is_special(line_chars[cursor_pos.x]) {
-		next_whitespace = count_repeated_sequence(r, line_chars[cursor_pos.x..])
+	if is_special(line_chars[cursor_pos.x]) {
 	}
 
-	if next_whitespace == 0 {
-		for i, c in line_chars[cursor_pos.x..] {
-			if is_whitespace(c)   { next_whitespace = i; break }
-			if _ := is_special(c) { return i }
+	if is_whitespace(line_chars[cursor_pos.x]) {
+		if cursor_pos.x + 1 >= line_chars.len { return 0 }
+		for i, c in line_chars[cursor_pos.x + 1..] {
+			if !is_whitespace(c) { return i + 1 }
 		}
 	}
 
-	mut next_alpha := 0
-	for i, c in line_chars[cursor_pos.x+next_whitespace..] {
-		if is_alpha(c) { next_alpha = i; break }
-		if _ := is_special(c) { next_alpha = i; break }
+	if is_alpha(line_chars[cursor_pos.x]) {
+		if cursor_pos.x + 1 >= line_chars.len { return 0 }
+		for i, c in line_chars[cursor_pos.x + 1..] {
+			if is_non_alpha(c) { return calc_w_move_amount(Pos{ x: cursor_pos.x + i }, line, true) }
+		}
 	}
-	return next_whitespace + next_alpha
+
+	return 0
 }
 
 enum PositionWithinWord as u8 {
