@@ -1318,13 +1318,19 @@ fn count_repeated_sequence(char_rune rune, line []rune) int {
 	return 0
 }
 
-// (((#####)))
+// fn (mut view View) w() int {
 fn calc_w_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 	if line.len == 0 { return 0 }
 	line_chars := line.runes()
 
 	if r := is_special(line_chars[cursor_pos.x]) {
 		if cursor_pos.x + 1 >= line_chars.len { return 0 }
+		if recursive_call { return 0 }
+		for i, c in line_chars[cursor_pos.x + 1..] {
+			if next_r := is_special(c) {
+				if r != next_r { return i + 1 }
+			}
+		}
 	}
 
 	if is_whitespace(line_chars[cursor_pos.x]) {
