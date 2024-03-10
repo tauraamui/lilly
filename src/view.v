@@ -1318,7 +1318,7 @@ fn count_repeated_sequence(char_rune rune, line []rune) int {
 	return 0
 }
 
-// fn (mut view View) w() int {
+// FIX(tauraamui) -> w movement is skipping single special chars floating between whitespace.
 fn calc_w_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 	if line.len == 0 { return 0 }
 	line_chars := line.runes()
