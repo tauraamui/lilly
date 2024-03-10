@@ -1329,7 +1329,12 @@ fn calc_w_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 		for i, c in line_chars[cursor_pos.x + 1..] {
 			if next_r := is_special(c) {
 				if r != next_r { return i + 1 }
+				continue
 			}
+			if is_whitespace(c) {
+				return calc_w_move_amount(Pos{ x: cursor_pos.x + i + 1, y: cursor_pos.y }, line, true) + i + 1
+			}
+			return i + 1
 		}
 	}
 
