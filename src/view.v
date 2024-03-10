@@ -1323,7 +1323,7 @@ fn calc_w_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 	if line.len == 0 { return 0 }
 	line_chars := line.runes()
 
-	if is_special(line_chars[cursor_pos.x]) {
+	if r := is_special(line_chars[cursor_pos.x]) {
 	}
 
 	if is_whitespace(line_chars[cursor_pos.x]) {
@@ -1336,7 +1336,7 @@ fn calc_w_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 	if is_alpha(line_chars[cursor_pos.x]) {
 		if cursor_pos.x + 1 >= line_chars.len { return 0 }
 		for i, c in line_chars[cursor_pos.x + 1..] {
-			if is_non_alpha(c) { return calc_w_move_amount(Pos{ x: cursor_pos.x + i }, line, true) }
+			if is_non_alpha(c) { return calc_w_move_amount(Pos{ x: cursor_pos.x + i + 1 }, line, true) + i + 1 }
 		}
 	}
 
