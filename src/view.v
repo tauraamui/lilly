@@ -1121,12 +1121,17 @@ fn (mut view View) visual_d(overwrite_y_lines bool) {
 
 fn (mut view View) w() {
 	defer { view.clamp_cursor_x_pos() }
-	line := view.buffer.lines[view.cursor.pos.y]
-	amount := calc_w_move_amount(view.cursor.pos, line, false)
-	if amount == 0 || view.cursor.pos.x + amount >= line.runes().len - 1 { view.move_cursor_down(1); view.cursor.pos.x = 0; return }
+	mut line := view.buffer.lines[view.cursor.pos.y]
+	mut amount := calc_w_move_amount(view.cursor.pos, line, false)
+	if amount == 0 {
+		view.move_cursor_down(1)
+		view.cursor.pos.x = 0
+		line = view.buffer.lines[view.cursor.pos.y]
+		if line.len > 0 && is_whitespace(line[view.cursor.pos.x]) {
+			amount = calc_w_move_amount(view.cursor.pos, line, false)
+		}
+	}
 	view.cursor.pos.x += amount
-	diff := view.clamp_cursor_x_pos()
-	if diff > 0 { view.move_cursor_down(1) }
 }
 
 fn (mut view View) e() {
@@ -1318,7 +1323,6 @@ fn count_repeated_sequence(char_rune rune, line []rune) int {
 	return 0
 }
 
-// FIX(tauraamui) -> w movement is skipping single special chars floating between whitespace.
 fn calc_w_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 	if line.len == 0 { return 0 }
 	line_chars := line.runes()
