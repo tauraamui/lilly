@@ -31,6 +31,7 @@ const (
 		"fn this_is_a_different_function() {",
 		"    3495 * 22",
 		"}",
+		"struct TypeOfSomeKind {"
 	]
 )
 
@@ -83,6 +84,13 @@ const movement_key_cases = [
 		document_contents: basic_three_lines_doc
 		starting_cursor_pos: Pos{ x: 1, y: 1 }
 		expected_cursor_pos: Pos{ x: 3, y: 1 }
+	},
+	MovementKeyEventTestCase{
+		name: "key code w move to end of code line which terminates with floating single special",
+		code: tui.KeyCode.w,
+		document_contents: gapped_blocks_of_content_doc
+		starting_cursor_pos: Pos{ x: 22, y: 7 }
+		expected_cursor_pos: Pos{ x: 3, y: 7 }
 	},
 	MovementKeyEventTestCase{
 		name: "key code w end of line to next line",
