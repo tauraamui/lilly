@@ -958,6 +958,21 @@ fn test_calc_w_move_amount_code_line() {
 	assert amount == 1
 	fake_cursor_pos.x += amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "("
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line, false)
+	assert amount == 1
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line, false)
+	assert amount == 2
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "i"
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_line, false)
+	assert amount == 4
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "{"
 }
 
 fn test_calc_w_move_cursor_to_next_line_with_plain_comments() {
