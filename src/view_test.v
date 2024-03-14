@@ -1284,6 +1284,18 @@ fn test_calc_e_move_amount_multiple_words_with_leading_whitespace() {
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "r"
 }
 
+fn test_calc_b_move_amount_to_end_of_repeated_sequence_of_special_char() {
+	// manually set the documents contents
+	fake_line := "(((#####)))"
+	mut fake_cursor_pos := Pos{ x: 12 }
+	assert fake_line[fake_cursor_pos.x].ascii_str() == ")"
+
+	mut amount := calc_b_move_amount(fake_cursor_pos, fake_line, false)!
+	assert amount == 2
+	fake_cursor_pos.x += amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "#"
+}
+
 fn test_calc_b_move_amount_code_line() {
 	fake_line := "status_green            = Color { 145, 237, 145 }"
 
