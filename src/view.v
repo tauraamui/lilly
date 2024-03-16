@@ -1434,10 +1434,19 @@ fn find_position_within_word(cursor_pos_x int, line_chars []rune) PositionWithin
 
 // (((#####)))
 fn calc_b_move_amount(cursor_pos Pos, line string) int {
-    if line.len == 0 { return 0 }
+    if line.len == 0 || cursor_pos.x == 0 { return 0 }
 	line_chars := line.runes()
 
 	if r := is_special(line_chars[cursor_pos.x]) {
+		for c := 0; c < cursor_pos.x; c++ {
+			i := cursor_pos.x - c
+			if next_r := is_special(line_chars[i]) {
+				if r != next_r {
+					if c - 1 == 0 { return calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line) }
+					return c - 1
+				}
+			}
+		}
 	}
 
 	if is_whitespace(line_chars[cursor_pos.x]) {
