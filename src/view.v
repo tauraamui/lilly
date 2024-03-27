@@ -1150,7 +1150,7 @@ fn (mut view View) e() {
 fn (mut view View) b() {
 	defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
-	amount := calc_b_move_amount(view.cursor.pos, line)
+	amount := calc_b_move_amount(view.cursor.pos, line, false)
 	if amount == 0 && view.cursor.pos.y > 0 {
 		view.move_cursor_up(1)
 		view.cursor.pos.x = view.buffer.lines[view.cursor.pos.y].runes().len - 1
@@ -1433,20 +1433,17 @@ fn find_position_within_word(cursor_pos_x int, line_chars []rune) PositionWithin
 }
 
 // (((#####)))
-fn calc_b_move_amount(cursor_pos Pos, line string) int {
-    if line.len == 0 || cursor_pos.x == 0 { return 0 }
+fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
+    if line.len == 0 { return 0 }
 	line_chars := line.runes()
 
 	if r := is_special(line_chars[cursor_pos.x]) {
-		for c := 0; c < cursor_pos.x; c++ {
-			i := cursor_pos.x - c
-			if next_r := is_special(line_chars[i]) {
-				if r != next_r {
-					if c - 1 == 0 { return calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line) }
-					return c - 1
-				}
-			}
-		}
+		if cursor_pos.x - 1 < 0 { return 0 }
+		mut repeated := count_repeated_sequence(r, line_chars[..cursor_pos.x].reverse())
+		if recursive_call { repeated += 1 }
+		if repeated > 0 { return repeated }
+
+		return calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true)
 	}
 
 	if is_whitespace(line_chars[cursor_pos.x]) {
