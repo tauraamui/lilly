@@ -1449,17 +1449,22 @@ fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 
 	if is_whitespace(line_chars[cursor_pos.x]) {
 		if cursor_pos.x - 1 < 0 { return 0 }
+		for i, c in line_chars[..cursor_pos.x].reverse() {
+			println("I: ${i}, CHAR: ${line_chars[cursor_pos.x]} -> is_whitespace: ${is_whitespace(line_chars[c])}")
+			if !is_whitespace(c) {
+				return calc_b_move_amount(Pos{ x: cursor_pos.x - (i + 1), y: cursor_pos.y }, line, true) + i
+			}
+		}
 	}
 
 	if is_alpha(line_chars[cursor_pos.x]) {
 		if cursor_pos.x - 1 < 0 { return 0 }
+		println("I: 0, CHAR: ${line_chars[cursor_pos.x]} -> is_alpha: ${!is_non_alpha(line_chars[cursor_pos.x])}")
 		for i, c in line_chars[..cursor_pos.x].reverse() {
+			println("I: ${i + 1}, CHAR: ${c} -> is_alpha: ${!is_non_alpha(c)}")
 			if is_non_alpha(c) {
-				if recursive_call {
-					if i == 1 { return calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) }
-					return i + 1
-				}
-				return i
+				if i + 1 == 1 && !recursive_call { return calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) + 1 }
+				return i + 1
 			}
 		}
 	}
