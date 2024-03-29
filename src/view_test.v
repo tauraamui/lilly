@@ -1310,9 +1310,9 @@ fn test_calc_b_move_amount_to_end_of_repeated_sequence_of_special_char() {
 }
 
 fn test_calc_b_move_amount_code_line() {
-	fake_line := "status_green            = Color { 145, 237, 145 }"
+	fake_line := "status_green            = Color  { 145, 237, 145 }"
 
-	mut fake_cursor_pos := Pos{ x: 42 }
+	mut fake_cursor_pos := Pos{ x: 43 }
 	assert fake_line[fake_cursor_pos.x].ascii_str() == ","
 
 	mut amount := calc_b_move_amount(fake_cursor_pos, fake_line, false)
@@ -1334,6 +1334,16 @@ fn test_calc_b_move_amount_code_line() {
 	assert amount == 2
 	fake_cursor_pos.x -= amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "{"
+
+	amount = calc_b_move_amount(fake_cursor_pos, fake_line, false)
+	assert amount == 7
+	fake_cursor_pos.x -= amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "C"
+
+	amount = calc_b_move_amount(fake_cursor_pos, fake_line, false)
+	assert amount == 2
+	fake_cursor_pos.x -= amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "="
 }
 
 fn test_a_enters_insert_mode_after_cursor_position() {
