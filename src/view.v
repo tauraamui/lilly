@@ -1450,10 +1450,7 @@ fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 	if is_whitespace(line_chars[cursor_pos.x]) {
 		if cursor_pos.x - 1 < 0 { return 0 }
 		for i, c in line_chars[..cursor_pos.x].reverse() {
-			println("I: ${i}, CHAR: ${line_chars[cursor_pos.x]} -> is_whitespace: ${is_whitespace(line_chars[c])}")
-			if !is_whitespace(c) {
-				return calc_b_move_amount(Pos{ x: cursor_pos.x - (i + 1), y: cursor_pos.y }, line, true) + i
-			}
+			if !is_whitespace(c) { return i + 1 }
 		}
 	}
 

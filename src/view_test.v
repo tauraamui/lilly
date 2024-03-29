@@ -1329,6 +1329,11 @@ fn test_calc_b_move_amount_code_line() {
 	assert amount == 3
 	fake_cursor_pos.x -= amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "1"
+
+	amount = calc_b_move_amount(fake_cursor_pos, fake_line, false)
+	assert amount == 2
+	fake_cursor_pos.x -= amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "{"
 }
 
 fn test_a_enters_insert_mode_after_cursor_position() {
