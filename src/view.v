@@ -1435,6 +1435,7 @@ fn find_position_within_word(cursor_pos_x int, line_chars []rune) PositionWithin
 // status_green            = Color { 145, 237, 145 }
 fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
     if line.len == 0 { return 0 }
+	if cursor_pos.x - 1 < 0 { return 0 }
 	line_chars := line.runes()
 
 	if r := is_special(line_chars[cursor_pos.x]) {
@@ -1454,7 +1455,10 @@ fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 		if cursor_pos.x - 1 < 0 { return 0 }
 		for i, c in line_chars[..cursor_pos.x].reverse() {
 			if is_non_alpha(c) {
-				if recursive_call { return i + 1 }
+				if recursive_call {
+					if i == 1 { return calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) }
+					return i + 1
+				}
 				return i
 			}
 		}
