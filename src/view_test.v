@@ -1309,6 +1309,24 @@ fn test_calc_b_move_amount_to_end_of_repeated_sequence_of_special_char() {
 	assert fake_cursor_pos.x == 0
 }
 
+fn test_calc_b_move_amount_from_mid_first_word_to_line_start() {
+	fake_line := "        status_green"
+
+	mut fake_cursor_pos := Pos{ x: 10 }
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "a"
+
+	mut amount := calc_b_move_amount(fake_cursor_pos, fake_line, false)
+	assert amount == 2
+	fake_cursor_pos.x -= amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "s"
+
+	amount = calc_b_move_amount(fake_cursor_pos, fake_line, false)
+	assert amount == 8
+	fake_cursor_pos.x -= amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == " "
+	assert fake_cursor_pos.x == 0
+}
+
 fn test_calc_b_move_amount_from_special_to_line_start() {
 	fake_line := "status_green            = Color  { 145, 237, 145 }"
 
