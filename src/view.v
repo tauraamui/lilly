@@ -1440,33 +1440,38 @@ fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 
 	if r := is_special(line_chars[cursor_pos.x]) {
 		if cursor_pos.x - 1 < 0 { return 0 }
-		mut repeated := count_repeated_sequence(r, line_chars[..cursor_pos.x].reverse())
-		if recursive_call { repeated += 1 }
-		if repeated > 0 { return repeated }
-
-		return calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true)
+		for i, c in line_chars[..cursor_pos.x].reverse() {
+			if next_r := is_special(c) {
+				if next_r == r { continue }
+				return i
+			}
+			// find out if on single special char
+			if i == 0 { return calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) + 1 }
+			return i
+		}
 	}
 
 	if is_whitespace(line_chars[cursor_pos.x]) {
 		if cursor_pos.x - 1 < 0 { return 0 }
 		for i, c in line_chars[..cursor_pos.x].reverse() {
-			if !is_whitespace(c) {
-				mut amount := calc_b_move_amount(Pos{ x: cursor_pos.x - (i + 1), y: cursor_pos.y }, line, true)
-				println("AMOUNT: ${amount}")
-				if amount > 1 { amount += 2 }
-				return amount
-			}
+			if !is_whitespace(c) { return calc_b_move_amount(Pos{ x: cursor_pos.x - (i + 1), y: cursor_pos.y }, line, true) + i + 1 }
 		}
 	}
 
 	if is_alpha(line_chars[cursor_pos.x]) {
 		if cursor_pos.x - 1 < 0 { return 0 }
+		mut max_i := 0
 		for i, c in line_chars[..cursor_pos.x].reverse() {
+			max_i = i
 			if is_non_alpha(c) {
-				if i + 1 == 1 && !recursive_call { return calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) + 1 }
-				return i + 1
+				if i == 0 {
+					if recursive_call { return 0 }
+					return calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) + 1
+				}
+				return i
 			}
 		}
+		return max_i + 1
 	}
 
 	return 0

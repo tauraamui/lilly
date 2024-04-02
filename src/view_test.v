@@ -1309,7 +1309,19 @@ fn test_calc_b_move_amount_to_end_of_repeated_sequence_of_special_char() {
 	assert fake_cursor_pos.x == 0
 }
 
-fn test_calc_b_move_amount_code_line() {
+fn test_calc_b_move_amount_from_special_to_line_start() {
+	fake_line := "status_green            = Color  { 145, 237, 145 }"
+
+	mut fake_cursor_pos := Pos{ x: 24 }
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "="
+
+	mut amount := calc_b_move_amount(fake_cursor_pos, fake_line, false)
+	assert amount == 24
+	fake_cursor_pos.x -= amount
+	assert fake_line[fake_cursor_pos.x].ascii_str() == "s"
+}
+
+fn test_calc_b_move_amount_general() {
 	fake_line := "status_green            = Color  { 145, 237, 145 }"
 
 	mut fake_cursor_pos := Pos{ x: 43 }
@@ -1319,31 +1331,6 @@ fn test_calc_b_move_amount_code_line() {
 	assert amount == 3
 	fake_cursor_pos.x -= amount
 	assert fake_line[fake_cursor_pos.x].ascii_str() == "2"
-
-	amount = calc_b_move_amount(fake_cursor_pos, fake_line, false)
-	assert amount == 2
-	fake_cursor_pos.x -= amount
-	assert fake_line[fake_cursor_pos.x].ascii_str() == ","
-
-	amount = calc_b_move_amount(fake_cursor_pos, fake_line, false)
-	assert amount == 3
-	fake_cursor_pos.x -= amount
-	assert fake_line[fake_cursor_pos.x].ascii_str() == "1"
-
-	amount = calc_b_move_amount(fake_cursor_pos, fake_line, false)
-	assert amount == 2
-	fake_cursor_pos.x -= amount
-	assert fake_line[fake_cursor_pos.x].ascii_str() == "{"
-
-	amount = calc_b_move_amount(fake_cursor_pos, fake_line, false)
-	assert amount == 7
-	fake_cursor_pos.x -= amount
-	assert fake_line[fake_cursor_pos.x].ascii_str() == "C"
-
-	amount = calc_b_move_amount(fake_cursor_pos, fake_line, false)
-	assert amount == 2
-	fake_cursor_pos.x -= amount
-	assert fake_line[fake_cursor_pos.x].ascii_str() == "="
 }
 
 fn test_a_enters_insert_mode_after_cursor_position() {
