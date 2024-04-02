@@ -1440,15 +1440,19 @@ fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 
 	if r := is_special(line_chars[cursor_pos.x]) {
 		if cursor_pos.x - 1 < 0 { return 0 }
+		mut max_i := 0
 		for i, c in line_chars[..cursor_pos.x].reverse() {
+			max_i = i
 			if next_r := is_special(c) {
 				if next_r == r { continue }
+				if i == 0 { return calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) + 1 }
 				return i
 			}
 			// find out if on single special char
 			if i == 0 { return calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) + 1 }
 			return i
 		}
+		return max_i + 1
 	}
 
 	if is_whitespace(line_chars[cursor_pos.x]) {
