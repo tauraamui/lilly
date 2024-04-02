@@ -1150,7 +1150,7 @@ fn (mut view View) e() {
 fn (mut view View) b() {
 	defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
-	amount := calc_b_move_amount(view.cursor.pos, line)
+	amount := calc_b_move_amount(view.cursor.pos, line, false)
 	if amount == 0 && view.cursor.pos.y > 0 {
 		view.move_cursor_up(1)
 		view.cursor.pos.x = view.buffer.lines[view.cursor.pos.y].runes().len - 1
@@ -1432,35 +1432,54 @@ fn find_position_within_word(cursor_pos_x int, line_chars []rune) PositionWithin
 	return position
 }
 
-fn calc_b_move_amount(cursor_pos Pos, line string) int {
-    if line.len == 0 || cursor_pos.x == 0 { return 0 }
+// status_green            = Color { 145, 237, 145 }
+fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
+    if line.len == 0 { return 0 }
+	if cursor_pos.x - 1 < 0 { return 0 }
+	line_chars := line.runes()
 
-	if !is_whitespace(line.runes()[cursor_pos.x]) {
-		mut word_start_offset := 0
-		for i := cursor_pos.x - 1; i >= 0; i-- {
-			if is_whitespace(line.runes()[i]) { break }
-			word_start_offset += 1
-		}
-
-		// we're already at the start of this word, find the end of the previous word
-		if word_start_offset == 0 {
-			mut word_end_offset := 0
-			for i := cursor_pos.x - 1; i >= 0; i-- {
-				if !is_whitespace(line.runes()[i]) { break }
-				word_end_offset += 1
+	if r := is_special(line_chars[cursor_pos.x]) {
+		if cursor_pos.x - 1 < 0 { return 0 }
+		mut max_i := 0
+		for i, c in line_chars[..cursor_pos.x].reverse() {
+			max_i = i
+			if next_r := is_special(c) {
+				if next_r == r { continue }
+				if i == 0 { return calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) + 1 }
+				return i
 			}
-
-			// first start of this word
-			word_start_offset = 0
-			for i := cursor_pos.x - 1 - word_end_offset; i >= 0; i-- {
-				if is_whitespace(line.runes()[i]) { break }
-				word_start_offset += 1
-			}
-
-			return word_end_offset + word_start_offset
+			// find out if on single special char
+			if i == 0 { return calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) + 1 }
+			return i
 		}
+		return max_i + 1
+	}
 
-		return word_start_offset
+	if is_whitespace(line_chars[cursor_pos.x]) {
+		if cursor_pos.x - 1 < 0 { return 0 }
+		mut max_i := 0
+		for i, c in line_chars[..cursor_pos.x].reverse() {
+			max_i = i
+			if !is_whitespace(c) { return calc_b_move_amount(Pos{ x: cursor_pos.x - (i + 1), y: cursor_pos.y }, line, true) + i + 1 }
+		}
+		return max_i + 1 // NOTE(tauraamui): -> Really this behaviour is wrong, if nothing but whitespace between here and line start,
+		                 // then should be called recursively again by caller (not us/here) for the next line above.
+	}
+
+	if is_alpha(line_chars[cursor_pos.x]) {
+		if cursor_pos.x - 1 < 0 { return 0 }
+		mut max_i := 0
+		for i, c in line_chars[..cursor_pos.x].reverse() {
+			max_i = i
+			if is_non_alpha(c) {
+				if i == 0 {
+					if recursive_call { return 0 }
+					return calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) + 1
+				}
+				return i
+			}
+		}
+		return max_i + 1
 	}
 
 	return 0
