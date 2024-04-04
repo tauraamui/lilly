@@ -1005,6 +1005,10 @@ fn (mut view View) clamp_cursor_within_document_bounds() {
 	if view.cursor.pos.y > view.buffer.lines.len - 1 { view.cursor.pos.y = view.buffer.lines.len - 1 }
 }
 
+fn (mut view View) num_of_lines_in_view() int {
+	return view.to - view.from
+}
+
 fn (mut view View) clamp_cursor_x_pos() int {
 	view.clamp_cursor_within_document_bounds()
 	line_len := view.buffer.lines[view.cursor.pos.y].runes().len
@@ -1160,14 +1164,12 @@ fn (mut view View) b() {
 }
 
 fn (mut view View) ctrl_d() {
-	ten_percent_of_total_lines := f32(view.buffer.lines.len) * .05
-	view.move_cursor_down(int(ten_percent_of_total_lines))
+	view.move_cursor_down(view.num_of_lines_in_view() - 2)
 	view.clamp_cursor_x_pos()
 }
 
 fn (mut view View) ctrl_u() {
-	ten_percent_of_total_lines := f32(view.buffer.lines.len) * .05
-	view.move_cursor_up(int(ten_percent_of_total_lines))
+	view.move_cursor_up(view.num_of_lines_in_view() - 2)
 	view.clamp_cursor_x_pos()
 }
 
