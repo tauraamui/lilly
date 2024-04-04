@@ -26,7 +26,7 @@ compile-gui: generate-git-hash
     v -d gui ./src -o lillygui
 
 generate-git-hash:
-    git log -n 1 --pretty=format:"%h" > ./src/.githash
+    git log -n 1 --pretty=format:"%h" | tee ./src/.githash
 
 build: prod-compile
 
