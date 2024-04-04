@@ -1449,7 +1449,7 @@ fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 				return i
 			}
 			// find out if on single special char
-			if i == 0 { return calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) + 1 }
+			if i == 0 && !recursive_call { return calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) + 1 }
 			return i
 		}
 		return max_i + 1
