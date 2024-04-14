@@ -7,6 +7,7 @@ pub struct Event {
 }
 
 pub struct Config {
+pub:
 	user_data voidptr
 	frame_fn  fn (voidptr)        @[required]
 	event_fn  fn (Event, voidptr) @[required]
@@ -16,6 +17,7 @@ pub struct Config {
 }
 
 pub struct Color {
+pub:
 	r u8
 	g u8
 	b u8
