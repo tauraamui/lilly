@@ -14,7 +14,7 @@ jobs:
         uses: extractions/setup-just@v2
 
       - name: Install V
-        uses: vlang/setup-v@v1
+        uses: vlang/setup-v@v1.4
         with:
           check-latest: true
 
