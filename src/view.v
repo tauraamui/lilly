@@ -481,14 +481,15 @@ mut:
 	on_key_down(draw.Event, mut Root)
 }
 
-fn (mut view View) draw(mut ctx draw.Contextable) {
-	view.height = ctx.window_height()
+@[inline]
+fn (mut view View) offset_x_and_width_by_len_of_longest_line_number_str(win_width int, win_height int) {
+	view.height = win_height
 	view.x = "${view.buffer.lines.len}".len + 1
-	view.width = ctx.window_width()
-	view.width -= view.x
+	view.width = win_width - view.x
+}
 
-	view.draw_document(mut ctx)
-
+@[inline]
+fn (mut view View) calc_cursor_x_offset() int {
 	cursor_line := view.buffer.lines[view.cursor.pos.y]
 	mut offset := 0
 	mut scanto := view.cursor.pos.x
@@ -501,8 +502,37 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 		}
 	}
 
+	return offset
+}
+
+@[inline]
+fn (mut view View) calc_cursor_y_in_screen_space() int {
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
 	if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
+	return cursor_screen_space_y
+}
+
+@[inline]
+fn (mut view View) draw_bottom_bar_of_command_or_search(mut ctx draw.Contextable) {
+	view.cmd_buf.draw(mut ctx, view.mode == .command)
+	if view.mode == .search { view.search.draw(mut ctx, view.mode == .search) }
+	repeat_amount := view.chord.pending_repeat_amount()
+	ctx.draw_text(ctx.window_width()-repeat_amount.len, ctx.window_height(), repeat_amount)
+}
+
+@[inline]
+fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
+	if view.mode == .insert {
+		set_cursor_to_vertical_bar(mut ctx)
+	} else { set_cursor_to_block(mut ctx) }
+	if view.d_count == 1 || view.mode == .replace { set_cursor_to_underline(mut ctx) }
+	ctx.set_cursor_position(view.x+1+view.calc_cursor_x_offset(), view.calc_cursor_y_in_screen_space()+1)
+}
+
+fn (mut view View) draw(mut ctx draw.Contextable) {
+	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
+
+	view.draw_document(mut ctx)
 
 	draw_status_line(mut ctx,
 		Status{
@@ -516,16 +546,10 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 			view.branch
 		}
 	)
-	view.cmd_buf.draw(mut ctx, view.mode == .command)
-	if view.mode == .search { view.search.draw(mut ctx, view.mode == .search) }
 
-	repeat_amount := view.chord.pending_repeat_amount()
-	ctx.draw_text(ctx.window_width()-repeat_amount.len, ctx.window_height(), repeat_amount)
-	if view.mode == .insert {
-		set_cursor_to_vertical_bar(mut ctx)
-	} else { set_cursor_to_block(mut ctx) }
-	if view.d_count == 1 || view.mode == .replace { set_cursor_to_underline(mut ctx) }
-	ctx.set_cursor_position(view.x+1+offset, cursor_screen_space_y+1)
+	view.draw_bottom_bar_of_command_or_search(mut ctx)
+
+	view.draw_cursor_pointer(mut ctx)
 }
 
 fn (mut view View) draw_document(mut ctx draw.Contextable) {
