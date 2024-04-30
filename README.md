@@ -24,7 +24,7 @@ Our project is focused on the development of a text editor that serves as a prac
 - [x] Search/Find files
 - [ ] Workspace wide search (ripgrep + roll your own)
 
-## Building/running tests
+# Building/running tests
 
 To compile and execute the editor simultaneously run: `just.sh`.
 Alternatively you can see all available recipes to invoke by running `just.sh -l`.
