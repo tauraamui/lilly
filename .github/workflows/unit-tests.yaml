@@ -10,9 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup just
-        uses: extractions/setup-just@v2
-
       - name: Install V
         uses: vlang/setup-v@v1.4
         with:
@@ -22,7 +19,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Build lilly
-        run: just build
+        run: ./just.sh build
 
       - name: Run Tests
         run: v -stats test ./src

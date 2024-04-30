@@ -24,6 +24,11 @@ Our project is focused on the development of a text editor that serves as a prac
 - [x] Search/Find files
 - [ ] Workspace wide search (ripgrep + roll your own)
 
+# Building/running tests
+
+To compile and execute the editor simultaneously run: `just.sh`.
+Alternatively you can see all available recipes to invoke by running `just.sh -l`.
+
 # The Rationale
 ### Inclusive Functionality
 We have set out to create an editor that encompasses the fundamental capabilities expected by users, rendering it a compelling choice as a Vim/Neovim alternative. Our emphasis is on streamlining the editing process without the necessity of configuring numerous plugins – our core features aim to fulfill these needs.
