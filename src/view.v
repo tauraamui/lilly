@@ -184,6 +184,7 @@ mut:
 	syntaxes                  []workspace.Syntax
 	current_syntax_idx        int
 	is_multiline_comment      bool
+	z_count                   int
 	clipboard                 clipboard.Clipboard
 }
 
@@ -637,7 +638,7 @@ fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
 	} else {
 		set_cursor_to_block(mut ctx)
 	}
-	if view.leader_state.d_count == 1 || view.leader_state.mode == .replace {
+	if view.leader_state.d_count == 1 || view.z_count == 1 || view.leader_state.mode == .replace {
 		set_cursor_to_underline(mut ctx)
 	}
 	ctx.set_cursor_position(view.x + 1 + view.calc_cursor_x_offset(),
@@ -1745,6 +1746,34 @@ fn (mut view View) d() {
 		view.clamp_cursor_within_document_bounds()
 		view.leader_state.mode = .normal
 	}
+}
+
+fn (mut view View) z() {
+	view.z_count += 1
+	if view.z_count == 1 { view.mode = .pending_z }
+	if view.z_count == 2 {
+		view.center_text_around_cursor()
+		view.z_count = 0
+		view.mode = .normal
+	}
+}
+
+fn (mut view View) center_text_around_cursor() {
+	orig_cursor_pos := view.cursor.pos.y
+	window_center_offset := int((view.to - view.from)/2)
+	mut cursor_screen_pos := view.calc_cursor_y_in_screen_space()
+
+	// With the following logic, a second zz action will not move the cursor
+	if cursor_screen_pos < window_center_offset {
+		view.jump_cursor_to(view.from)
+		view.move_cursor_up(window_center_offset - cursor_screen_pos)
+	} else if cursor_screen_pos > window_center_offset{
+		cursor_screen_pos = cursor_screen_pos - window_center_offset - 2
+		view.jump_cursor_to(view.to)
+		view.move_cursor_down(cursor_screen_pos)
+	}
+	view.jump_cursor_to(orig_cursor_pos)
+	view.clamp_cursor_within_document_bounds()
 }
 
 fn (mut view View) u() {

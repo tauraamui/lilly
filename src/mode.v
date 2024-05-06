@@ -26,6 +26,7 @@ enum Mode as u8 {
 	leader
 	pending_delete
 	replace
+	pending_z
 }
 
 fn (mode Mode) draw(mut ctx draw.Contextable, x int, y int) int {
@@ -56,6 +57,7 @@ fn (mode Mode) color() Color {
 		.leader { status_purple }
 		.pending_delete { status_green }
 		.replace { status_green }
+		.pending_z { status_green }
 	}
 }
 
@@ -70,5 +72,6 @@ fn (mode Mode) str() string {
 		.leader { 'LEADER' }
 		.pending_delete { 'NORMAL' }
 		.replace { 'NORMAL' }
+		.pending_z { "NORMAL" }
 	}
 }
