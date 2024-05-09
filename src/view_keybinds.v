@@ -18,8 +18,9 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 			}
 			match e.code {
 				.escape { view.escape() }
-				.h     { view.exec(view.chord.h()) }
-				.l     { view.exec(view.chord.l()) }
+				.h     { if e.modifiers == .shift { view.shift_h() } else { view.exec(view.chord.h()) } }
+				.l     { if e.modifiers == .shift { view.shift_l() } else { view.exec(view.chord.l()) } }
+				.m     { if e.modifiers == .shift { view.shift_m() } else {} }
 				.j     { view.exec(view.chord.j()) }
 				.k     { view.exec(view.chord.k()) }
 				.i     { view.exec(view.chord.i()) }
@@ -30,13 +31,15 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				.o     { if e.modifiers == .shift { view.shift_o() } else { view.o() } }
 				.a     { if e.modifiers == .shift { view.shift_a() } else { view.a() } }
 				.p     { view.exec(view.chord.p()) }
-				.r     { view.r() } // TODO(tauraamui): request Valentine implements chord usage for this
+				.r     { if e.modifiers == .shift { view.mode = .replacing } else { view.r() } } // TODO(tauraamui): request Valentine implements chord usage for this
 				.x     { view.x() } // TODO(tauraamui): request Valentine implements chord usage for this
 				.left  { view.exec(view.chord.h()) }
 				.right { view.exec(view.chord.l()) }
 				.down  { view.exec(view.chord.j()) }
 				.up    { view.exec(view.chord.k()) }
 				.c     { view.exec(view.chord.c()) }
+				.g     { if e.modifiers == .shift { view.shift_g() } else { view.g() } }
+				.f     { view.f(e) }
 				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.d() } } // TODO(tauraamui): this will need some special attention to implement
 				.u { if e.modifiers == .ctrl { view.ctrl_u() } else { view.u() } }
 				.caret { view.hat() }
@@ -177,19 +180,38 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				else {}
 			}
 		}
-		.replace {
+		.pending_g {
+			match e.code {
+				.escape { view.escape() }
+				.g { view.g() }
+				else {}
+			}
+		}
+		.pending_f {
+			match e.code {
+				.escape { view.escape() }
+				else { view.f(e) }
+			}
+		}
+		.replace, .replacing {
 			match e.code {
 				.escape { view.escape_replace() }
-				.enter { view.escape_replace() }
+				.enter {
+					if view.mode == .replace { view.escape_replace() }
+				}
 				.backspace {}
 				.up {}
 				.down {}
 				.left {}
 				.right {}
 				.tab {}
-				else {
+				else  {
 					view.replace_char(e.ascii, e.utf8)
-					view.escape_replace()
+					view.cursor.pos.x += 1
+					view.clamp_cursor_x_pos()
+					if view.mode == .replace {
+						view.escape_replace()
+					}
 				}
 			}
 		}
