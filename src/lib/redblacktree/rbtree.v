@@ -7,9 +7,10 @@ const red   = Color(false)
 
 pub type Comparator[K] = fn (x K, y K) int
 
+@[heap]
 pub struct Tree[K, V] {
 mut:
-	root &Node[K, V]
+	root ?Node[K, V]
 	size int
 	cmp  Comparator[K]
 }
@@ -19,15 +20,95 @@ mut:
 	key   K
 	value V
 	color Color
-	left   &Node[K, V]
-	right  &Node[K, V]
-	parent &Node[K, V]
+	left   ?&Node[K, V]
+	right  ?&Node[K, V]
+	parent ?&Node[K, V]
 }
 
 pub fn Tree.new[K, V](cmp Comparator[K]) &Tree[K, V] {
 	return &Tree[K, V]{ cmp: cmp }
 }
 
+pub fn (mut tree Tree[K, V]) put(key K, value V) {
+	defer { tree.size += 1 }
+
+	if mut root := tree.root {
+		tree.place_node_into_existing(key, value, mut &root)
+		return
+	}
+	tree.root = Node[K, V]{ key: key, value: value, color: red }
+}
+
+fn (mut tree Tree[K, V]) place_node_into_existing(key K, value V, mut existing_node &Node[K, V]) {
+	mut loop := true
+	mut focused_node := existing_node
+	for loop {
+		compare := tree.cmp(key, focused_node.key)
+		match true {
+			compare == 0 {
+				focused_node.key = key
+				focused_node.value = value
+				return
+			}
+			compare < 0 {
+				if mut left := focused_node.left {
+					focused_node = &left
+					continue
+				}
+				focused_node.left = &Node[K, V]{ key: key, value: value, color: red, parent: focused_node }
+				loop = false
+				continue
+			}
+			compare > 0 {
+				if mut right := focused_node.right {
+					focused_node = &right
+					continue
+				}
+				focused_node.right = &Node[K, V]{ key: key, value: value, color: red, parent: focused_node }
+				loop = false
+				continue
+			}
+			else {}
+		}
+	}
+}
+
+fn (mut tree Tree[K, V]) insert_case_1(mut node &Node[K, V]) {
+	if parent := node.parent {
+		tree.insert_case_2(node)
+		return
+	}
+	node.color = black
+}
+
+fn (mut tree Tree[K, V]) insert_case_2(mut node &Node[K, V]) {
+	if parent := node.parent {
+		if node_color(parent) == black { return }
+		tree.insert_case_3(mut node)
+	}
+}
+
+fn (mut tree Tree[K, V]) insert_case_3(mut node &Node[K, V]) {
+	if uncle := node.uncle() {
+		if node_color[K, V](uncle) == red {
+		}
+	}
+}
+
+fn (node &Node[K, V]) uncle() ?&Node[K, V] {
+	parent := node.parent or { return none }
+	return parent.sibling()
+}
+
+fn (node &Node[K, V]) sibling() ?&Node[K, V] {
+	if parent := node.parent {
+		if node == parent.left? { return parent.right }
+		return parent.left
+	}
+	return none
+}
+
+/*
 pub fn (mut tree Tree[K, V]) put(key K, value V) {
 	if tree.root == nil {
 		tree.root = &Node[K, V]{key: key, value: value, color: red}
@@ -186,8 +267,12 @@ fn (mut node Node[K, V]) maximum_node() &Node[K, V] {
 	}
 	return node
 }
+*/
 
-fn node_color[K, V](node &Node[K, V]) Color {
-	if node == nil { return black }
-	return node.color
+fn node_color[K, V](node ?&Node[K, V]) Color {
+	if n := node {
+		return n.color
+	}
+	return black
 }
+
