@@ -32,6 +32,39 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				else {}
 			}
 			match e.code {
+				.escape { view.escape() }
+				.h     { if e.modifiers == .shift { view.shift_h() } else { view.exec(view.chord.h()) } }
+				.l     { if e.modifiers == .shift { view.shift_l() } else { view.exec(view.chord.l()) } }
+				.m     { if e.modifiers == .shift { view.shift_m() } else {} }
+				.j     { view.exec(view.chord.j()) }
+				.k     { view.exec(view.chord.k()) }
+				.i     { view.exec(view.chord.i()) }
+				.v     { if e.modifiers == .shift { view.v() } }
+				.e     { view.exec(view.chord.e()) }
+				.w     { view.exec(view.chord.w()) }
+				.b     { view.exec(view.chord.b()) }
+				.o     { if e.modifiers == .shift { view.shift_o() } else { view.o() } }
+				.a     { if e.modifiers == .shift { view.shift_a() } else { view.a() } }
+				.p     { view.exec(view.chord.p()) }
+				.r     { if e.modifiers == .shift { view.mode = .replacing } else { view.r() } } // TODO(tauraamui): request Valentine implements chord usage for this
+				.x     { view.x() } // TODO(tauraamui): request Valentine implements chord usage for this
+				.left  { view.exec(view.chord.h()) }
+				.right { view.exec(view.chord.l()) }
+				.down  { view.exec(view.chord.j()) }
+				.up    { view.exec(view.chord.k()) }
+				.c     { view.exec(view.chord.c()) }
+				.g     { if e.modifiers == .shift { view.shift_g() } else { view.g() } }
+				.f     { view.f(e) }
+				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.d() } } // TODO(tauraamui): this will need some special attention to implement
+				.u { if e.modifiers == .ctrl { view.ctrl_u() } else { view.u() } }
+				.caret { view.hat() }
+				.dollar { view.dollar() }
+				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
+				.right_curly_bracket { view.jump_cursor_down_to_next_blank_line() }
+				.colon { view.cmd() }
+				.left_square_bracket { view.left_square_bracket() }
+				.right_square_bracket { view.right_square_bracket() }
+				.slash { view.search() }
 				.escape {
 					view.escape()
 				}
@@ -456,23 +489,36 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				else {}
 			}
 		}
-		.replace {
+		.pending_g {
 			match e.code {
-				.escape {
-					view.escape_replace()
-				}
-				.enter {
-					view.escape_replace()
-				}
+				.escape { view.escape() }
+				.g { view.g() }
+				else {}
+			}
+		}
+		.pending_f {
+			match e.code {
+				.escape { view.escape() }
+				else { view.f(e) }
+			}
+		}
+		.replace, .replacing {
+			match e.code {
+				.escape { view.escape_replace() }
+				.enter { view.escape_replace() }
 				.backspace {}
 				.up {}
 				.down {}
 				.left {}
 				.right {}
 				.tab {}
-				else {
+				else  {
 					view.replace_char(e.ascii, e.utf8)
-					view.escape_replace()
+					view.cursor.pos.x += 1
+					view.clamp_cursor_x_pos()
+					if view.mode == .replace {
+						view.escape_replace()
+					}
 				}
 			}
 		}
