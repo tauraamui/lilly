@@ -12,7 +12,7 @@ pub type Comparator[K] = fn (x K, y K) int
 @[heap]
 pub struct Tree[K, V] {
 mut:
-	root ?&Node[K, V]
+	root &Node[K, V]
 	size int
 	cmp  Comparator[K]
 }
@@ -23,75 +23,72 @@ mut:
 	key   K
 	value V
 	color Color
-	left   ?&Node[K, V]
-	right  ?&Node[K, V]
-	parent ?&Node[K, V]
+	left   &Node[K, V]
+	right  &Node[K, V]
+	parent &Node[K, V]
 }
 
 pub fn Tree.new[K, V](cmp Comparator[K]) &Tree[K, V] {
-	return &Tree[K, V]{ root: none, cmp: cmp }
+	return &Tree[K, V]{ root: unsafe { nil }, cmp: cmp }
 }
 
 pub fn (mut tree Tree[K, V]) put(key K, value V) {
-	if mut root := tree.root {
-		if root != unsafe { nil } {
-			tree.place_node_into_existing(key, value, mut root)
-			return
-		}
-	}
-
-	tree.root = &Node[K, V]{ key: key, value: value, color: red }
-	if mut root := tree.root {
-		tree.insert_case_1(mut root)
+	mut inserted_node := &Node[K, V](unsafe { nil })
+	defer {
+		tree.insert_case_1(mut inserted_node)
 		tree.size += 1
 	}
-}
 
-fn (mut tree Tree[K, V]) place_node_into_existing(key K, value V, mut existing_node &Node[K, V]) {
+	if tree.root == unsafe { nil } {
+		tree.root = &Node[K, V]{
+			key: key, value: value, color: red, left: unsafe { nil }, right: unsafe { nil }, parent: unsafe { nil }
+		}
+		inserted_node = tree.root
+		return
+	}
+
+	mut node := tree.root
 	mut loop := true
-	mut focused_node := &existing_node
-	mut inserted_node := Node[K, V]{ key: key, value: value, left: none, right: none, parent: none, color: red }
 	for loop {
-		compare := tree.cmp(key, focused_node.key)
+		compare := tree.cmp(key, node.key)
 		match true {
 			compare == 0 {
-				focused_node.key = key
-				focused_node.value = value
+				node.key = key
+				node.value = value
 				return
 			}
 			compare < 0 {
-				if mut left := focused_node.left {
-					focused_node = left
+				if node.left == unsafe { nil } {
+					node.left = &Node[K, V]{
+						key: key, value: value, color: red, left: unsafe { nil }, right: unsafe { nil }, parent: unsafe { nil }
+					}
+					inserted_node = node.left
+					loop = false
 					continue
 				}
-				focused_node.left = &Node[K, V]{ key: key, value: value, color: red, parent: &focused_node }
-				if left := focused_node.left { inserted_node = left }
-				loop = false
-				continue
+				node = node.left
 			}
 			compare > 0 {
-				if mut right := focused_node.right {
-					focused_node = right
+				if node.right == unsafe { nil } {
+					node.right = &Node[K, V]{
+						key: key, value: value, color: red, left: unsafe { nil }, right: unsafe { nil }, parent: unsafe { nil }
+					}
+					inserted_node = node.right
+					loop = false
 					continue
 				}
-				focused_node.right = &Node[K, V]{ key: key, value: value, color: red, parent: &focused_node }
-				if right := focused_node.right { inserted_node = right }
-				loop = false
-				continue
+				node = node.right
 			}
 			else {}
 		}
 	}
-	tree.insert_case_1(mut inserted_node)
-	tree.size += 1
+	inserted_node.parent = node
 }
 
 fn (tree Tree[K, V]) to_string() string {
 	mut str_builder := strings.new_builder(0)
 	if !tree.empty() {
-		if root := tree.root {
-			output[K, V](root, "", true, mut &str_builder)
-		}
+		output[K, V](tree.root, "", true, mut &str_builder)
 	}
 	return str_builder.str()
 }
@@ -101,151 +98,143 @@ fn (node &Node[K, V]) to_string() string {
 }
 
 fn output[K, V](node &Node[K, V], prefix string, is_tail bool, mut str_builder &strings.Builder) {
-	if node_right := node.right {
-		if node_right != unsafe { nil } {
-			mut new_prefix := prefix
-			if is_tail { new_prefix += "|   " } else { new_prefix += "    " }
-			output[K, V](node_right, new_prefix, false, mut str_builder)
-		}
+	if node.right != unsafe { nil } {
+		mut new_prefix := prefix
+		if is_tail { new_prefix += "|   " } else { new_prefix += "    " }
+		output[K, V](node.right, new_prefix, false, mut str_builder)
 	}
 
 	str_builder.write_string(prefix)
 	if is_tail { str_builder.write_string("└── ") } else { str_builder.write_string("┌── ") }
 	str_builder.write_string("${node.to_string()}\n")
 
-	if node_left := node.left {
-		if node_left != unsafe { nil } {
-			mut new_prefix := prefix
-			if is_tail { new_prefix += "    " } else { new_prefix += "|   " }
-			output[K, V](node_left, new_prefix, true, mut str_builder)
-		}
+	if node.left != unsafe { nil } {
+		mut new_prefix := prefix
+		if is_tail { new_prefix += "    " } else { new_prefix += "|   " }
+		output[K, V](node.left, new_prefix, true, mut str_builder)
 	}
 }
 
-fn (node &Node[K, V]) grandparent() ?&Node[K, V] {
-	if parent := node.parent {
-		if grandparent := parent.parent { return grandparent }
+fn (node &Node[K, V]) grandparent() &Node[K, V] {
+	if node.parent != unsafe { nil } {
+		return node.parent.parent
 	}
-	return none
+	return unsafe { nil }
 }
 
-fn (node &Node[K, V]) uncle() ?&Node[K, V] {
-	parent := node.parent or { return none }
-	return parent.sibling()
+fn (node &Node[K, V]) uncle() &Node[K, V] {
+	if node.parent == unsafe { nil } || node.parent.parent == unsafe { nil } {
+		return unsafe { nil }
+	}
+	return node.parent.sibling()
 }
 
-fn (node &Node[K, V]) sibling() ?&Node[K, V] {
-	if parent := node.parent {
-		if node == parent.left? { return parent.right }
-		return parent.left
+fn (node &Node[K, V]) sibling() &Node[K, V] {
+	if node == unsafe { nil } || node.parent == unsafe { nil } {
+		return unsafe { nil }
 	}
-	return none
+	if node == node.parent.left {
+		return node.parent.right
+	}
+	return node.parent.left
 }
 
 fn (mut tree Tree[K, V]) rotate_left(mut node &Node[K, V]) {
-	if mut right := node.right {
-		tree.replace_node(node, mut right)
-		if mut right_left := right.left {
-			node.right = right_left
-			if right_left != unsafe { nil } {
-				right_left.parent = node
-			}
-			right_left.left = node
-			node.parent = right
-		}
+	mut right := node.right
+	tree.replace_node(mut node, mut right)
+	node.right = right.left
+	if right.left != unsafe { nil } {
+		right.left.parent = node
 	}
+	right.left = node
+	node.parent = right
 }
 
 fn (mut tree Tree[K, V]) rotate_right(mut node &Node[K, V]) {
-	if mut left := node.left {
-		tree.replace_node(node, mut left)
-		if mut left_right := left.right {
-			if left_right != unsafe { nil } {
-				left_right.parent = node
-			}
-			left_right.right = node
-			node.parent = left
-		}
+	mut left := node.left
+	tree.replace_node(mut node, mut left)
+	node.left = left.right
+	if left.right != unsafe { nil } {
+		left.right.parent = node
 	}
+	left.right = node
+	node.parent = left
 }
 
-fn (mut tree Tree[K, V]) replace_node(old &Node[K, V], mut new &Node[K, V]) {
-	if old_parent := old.parent {
-		if old_parent == unsafe { nil } { tree.root = new; return }
-		if mut old_parent_left := old_parent.left {
-			if old == old_parent_left {
-				old_parent_left = new
-				return
-			}
+fn (mut tree Tree[K, V]) replace_node(mut old &Node[K, V], mut new &Node[K, V]) {
+	if old.parent == unsafe { nil } {
+		tree.root = new
+	} else {
+		if old == old.parent.left {
+			old.parent.left = new
+		} else {
+			old.parent.right = new
 		}
-		if mut old_parent_right := old_parent.right {
-			old_parent_right = new
-		}
-		if new != unsafe { nil } {
-			new.parent = old_parent
-		}
+	}
+
+	if new != unsafe { nil } {
+		new.parent = old.parent
 	}
 }
 
 
 fn (mut tree Tree[K, V]) insert_case_1(mut node &Node[K, V]) {
-	if parent := node.parent {
-		tree.insert_case_2(mut node)
+	if node.parent == unsafe { nil } {
+		node.color = black
 		return
 	}
-	node.color = black
+	tree.insert_case_2(mut node)
 }
 
 fn (mut tree Tree[K, V]) insert_case_2(mut node &Node[K, V]) {
-	if parent := node.parent {
-		if node_color[K, V](parent) == black { return }
-		tree.insert_case_3(mut node)
+	if node_color[K, V](node.parent) == black {
+		return
 	}
+	tree.insert_case_3(mut node)
 }
 
 fn (mut tree Tree[K, V]) insert_case_3(mut node &Node[K, V]) {
-	if mut uncle := node.uncle() {
-		if node_color[K, V](uncle) == red {
-			if mut parent := node.parent {
-				parent.color = black
-				uncle.color = black
-				if mut grandparent := node.grandparent() {
-					grandparent.color = red
-					tree.insert_case_1(mut grandparent)
-				}
-			}
-			return
-		}
-		tree.insert_case_4(mut node)
+	mut uncle := node.uncle()
+	if node_color[K, V](uncle) == red {
+		node.parent.color = black
+		uncle.color = black
+		node.grandparent().color = red
+		tree.insert_case_1(mut node.grandparent())
+		return
 	}
+	tree.insert_case_4(mut node)
 }
 
 fn (mut tree Tree[K, V]) insert_case_4(mut node &Node[K, V]) {
-	if grandparent := node.grandparent() {
-		if mut parent := node.parent {
-			if node == parent.right or { unsafe { nil } } && parent == grandparent.left or { unsafe { nil } } {
-				tree.rotate_left(mut parent)
-				if node_left := node.left { node = node_left }
-			} else if node == parent.left or { unsafe { nil } } && parent == grandparent.right or { unsafe { nil } } {
-				tree.rotate_right(mut parent)
-				if node_right := node.right { node = node_right }
-			}
-		}
+	grandparent := node.grandparent()
+	if node == node.parent.right && node.parent == grandparent.left {
+		tree.rotate_left(mut node.parent)
+		node = node.left
+		tree.insert_case_5(mut node)
+		return
 	}
-	tree.insert_case_5(mut node)
+
+	if node == node.parent.left && node.parent == grandparent.right {
+		tree.rotate_right(mut node.parent)
+		node = node.right
+		tree.insert_case_5(mut node)
+		return
+	}
 }
 
 fn (mut tree Tree[K, V]) insert_case_5(mut node &Node[K, V]) {
-	if mut parent := node.parent {
-		parent.color = black
-		if mut grandparent := node.grandparent() {
-			grandparent.color = red
-			if node == parent.left or { unsafe { nil } } && parent == grandparent.left or { unsafe { nil } } {
-				tree.rotate_right(mut grandparent)
-			} else if node == parent.right or { unsafe { nil } } && parent == grandparent.right or { unsafe { nil } } {
-				tree.rotate_left(mut grandparent)
-			}
-		}
+	node.parent.color = black
+	mut grandparent := node.grandparent()
+	grandparent.color = red
+
+	if node == node.parent.left && node.parent == grandparent.left {
+		tree.rotate_right(mut grandparent)
+		return
+	}
+
+	if node == node.parent.right && node.parent == grandparent.right {
+		tree.rotate_left(mut grandparent)
+		return
 	}
 }
 
