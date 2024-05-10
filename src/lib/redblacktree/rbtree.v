@@ -93,6 +93,15 @@ fn (tree Tree[K, V]) to_string() string {
 	return str_builder.str()
 }
 
+fn (tree Tree[K, V]) get(key K) ?V {
+	if node := tree.lookup(key) { return node.value }
+	return none
+}
+
+fn (tree Tree[K, V]) get_node(key K) ?&Node[K, V] {
+	return tree.lookup(key)
+}
+
 fn (node &Node[K, V]) to_string() string {
 	return "${node.key}"
 }
@@ -113,6 +122,26 @@ fn output[K, V](node &Node[K, V], prefix string, is_tail bool, mut str_builder &
 		if is_tail { new_prefix += "    " } else { new_prefix += "|   " }
 		output[K, V](node.left, new_prefix, true, mut str_builder)
 	}
+}
+
+fn (tree Tree[K, V]) lookup(key K) ?&Node[K, V] {
+	mut node := tree.root
+	for node != unsafe { nil } {
+		compare := tree.cmp(key, node.key)
+		match true {
+			compare == 0 {
+				return node
+			}
+			compare < 0 {
+				node = node.left
+			}
+			compare > 0 {
+				node = node.right
+			}
+			else { }
+		}
+	}
+	return none
 }
 
 fn (node &Node[K, V]) grandparent() &Node[K, V] {
