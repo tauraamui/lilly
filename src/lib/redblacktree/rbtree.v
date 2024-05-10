@@ -42,6 +42,7 @@ pub fn (mut tree Tree[K, V]) put(key K, value V) {
 fn (mut tree Tree[K, V]) place_node_into_existing(key K, value V, mut existing_node &Node[K, V]) {
 	mut loop := true
 	mut focused_node := existing_node
+	mut inserted_node := &Node[K, V]{ key: key, value: value, color: red }
 	for loop {
 		compare := tree.cmp(key, focused_node.key)
 		match true {
@@ -56,6 +57,7 @@ fn (mut tree Tree[K, V]) place_node_into_existing(key K, value V, mut existing_n
 					continue
 				}
 				focused_node.left = &Node[K, V]{ key: key, value: value, color: red, parent: focused_node }
+				if left := focused_node.left { inserted_node = left }
 				loop = false
 				continue
 			}
@@ -65,17 +67,19 @@ fn (mut tree Tree[K, V]) place_node_into_existing(key K, value V, mut existing_n
 					continue
 				}
 				focused_node.right = &Node[K, V]{ key: key, value: value, color: red, parent: focused_node }
+				if right := focused_node.right { inserted_node = right }
 				loop = false
 				continue
 			}
 			else {}
 		}
 	}
+	tree.insert_case_1(mut inserted_node)
 }
 
 fn (mut tree Tree[K, V]) insert_case_1(mut node &Node[K, V]) {
 	if parent := node.parent {
-		tree.insert_case_2(node)
+		tree.insert_case_2(mut node)
 		return
 	}
 	node.color = black
@@ -83,14 +87,18 @@ fn (mut tree Tree[K, V]) insert_case_1(mut node &Node[K, V]) {
 
 fn (mut tree Tree[K, V]) insert_case_2(mut node &Node[K, V]) {
 	if parent := node.parent {
-		if node_color(parent) == black { return }
+		if node_color[K, V](parent) == black { return }
 		tree.insert_case_3(mut node)
 	}
 }
 
 fn (mut tree Tree[K, V]) insert_case_3(mut node &Node[K, V]) {
-	if uncle := node.uncle() {
+	if mut uncle := node.uncle() {
 		if node_color[K, V](uncle) == red {
+			if mut parent := node.parent {
+				parent.color = black
+				uncle.color = black
+			}
 		}
 	}
 }
