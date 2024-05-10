@@ -85,6 +85,81 @@ pub fn (mut tree Tree[K, V]) put(key K, value V) {
 	inserted_node.parent = node
 }
 
+fn (mut tree Tree[K, V]) left() &Node[K, V] {
+	mut parent := &Node[K, V](unsafe { nil })
+	mut current := tree.root
+	for current != unsafe { nil } {
+		parent = current
+		current = current.left
+	}
+	return parent
+}
+
+fn (mut tree Tree[K, V]) right() &Node[K, V] {
+	mut parent := &Node[K, V](unsafe { nil })
+	mut current := tree.root
+	for current != unsafe { nil } {
+		parent = current
+		current = current.right
+	}
+	return parent
+}
+
+fn (mut tree Tree[K, V]) floor(key K) ?&Node[K, V] {
+	mut found := false
+	mut node := tree.root
+	mut floor := &Node[K, V](unsafe { nil })
+	for node != unsafe { nil } {
+		compare := tree.cmp(key, node.key)
+		match true {
+			compare == 0 {
+				return node
+			}
+			compare < 0 {
+				node = node.left
+			}
+			compare > 0 {
+				floor = node
+				found = true
+				node = node.right
+			}
+			else { }
+		}
+	}
+	if found { return floor }
+	return none
+}
+
+fn (mut tree Tree[K, V]) ceiling(key K) ?&Node[K, V] {
+	mut found := false
+	mut node := tree.root
+	mut ceiling := &Node[K, V](unsafe { nil })
+	for node != unsafe { nil } {
+		compare := tree.cmp(key, node.key)
+		match true {
+			compare == 0 {
+				return node
+			}
+			compare < 0 {
+				ceiling = node
+				found = true
+				node = node.left
+			}
+			compare > 0 {
+				node = node.right
+			}
+			else { }
+		}
+	}
+	if found { return ceiling }
+	return none
+}
+
+fn (mut tree Tree[K, V]) clear() {
+	tree.root = unsafe { nil }
+	tree.size = 0
+}
+
 fn (tree Tree[K, V]) to_string() string {
 	mut str_builder := strings.new_builder(0)
 	if !tree.empty() {
