@@ -12,4 +12,5 @@ fn cmp(x int, y int) int {
 fn test_new_tree() {
 	mut rbtree := Tree.new[int, string](cmp)
 	rbtree.put(1, "A")
+	assert rbtree.size == 1
 }
