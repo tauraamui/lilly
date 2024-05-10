@@ -102,6 +102,36 @@ fn (tree Tree[K, V]) get_node(key K) ?&Node[K, V] {
 	return tree.lookup(key)
 }
 
+fn (mut tree Tree[K, V]) remove(key K) {
+	mut child := &Node[K, V](unsafe { nil })
+	mut node := tree.lookup(key) or { unsafe { nil } }
+	if node == unsafe { nil } { return }
+
+	if node.left != unsafe { nil } && node.right != unsafe { nil } {
+		pred := node.left.maximum_node()
+		node.key = pred.key
+		node.value = pred.value
+		node = pred
+	}
+
+	if node.left == unsafe { nil } || node.right == unsafe { nil } {
+		if node.right == unsafe { nil } {
+			child = node.left
+		} else {
+			child = node.right
+		}
+		if node.color == black {
+			node.color = node_color[K, V](child)
+			tree.delete_case_1(mut node)
+		}
+		tree.replace_node(mut node, mut child)
+		if node.parent == unsafe { nil } && child != unsafe { nil } {
+			child.color = black
+		}
+	}
+	tree.size -= 1
+}
+
 fn (node &Node[K, V]) to_string() string {
 	return "${node.key}"
 }
@@ -264,6 +294,94 @@ fn (mut tree Tree[K, V]) insert_case_5(mut node &Node[K, V]) {
 	if node == node.parent.right && node.parent == grandparent.right {
 		tree.rotate_left(mut grandparent)
 		return
+	}
+}
+
+fn (mut node Node[K, V]) maximum_node() &Node[K, V] {
+	if node == unsafe { nil } { return unsafe { nil } }
+	for node.right != unsafe { nil } {
+		node = node.right
+	}
+	return node
+}
+
+fn (mut tree Tree[K, V]) delete_case_1(mut node &Node[K, V]) {
+	if node.parent == unsafe { nil } {
+		return
+	}
+	tree.delete_case_2(mut node)
+}
+
+fn (mut tree Tree[K, V]) delete_case_2(mut node &Node[K, V]) {
+	mut sibling := node.sibling()
+	if node_color[K, V](sibling) == red {
+		node.parent.color = red
+		sibling.color = black
+		if node == node.parent.left {
+			tree.rotate_left(mut node.parent)
+		} else {
+			tree.rotate_right(mut node.parent)
+		}
+	}
+	tree.delete_case_3(mut node)
+}
+
+fn (mut tree Tree[K, V]) delete_case_3(mut node &Node[K, V]) {
+	mut sibling := node.sibling()
+	if node_color[K, V](node.parent) == black &&
+		node_color[K, V](sibling) == black &&
+		node_color[K, V](sibling.left) == black &&
+		node_color[K, V](sibling.right) == black {
+		sibling.color = red
+		tree.delete_case_1(mut node.parent)
+		return
+	}
+	tree.delete_case_4(mut node)
+}
+
+fn (mut tree Tree[K, V]) delete_case_4(mut node &Node[K, V]) {
+	mut sibling := node.sibling()
+	if node_color[K, V](node.parent) == red &&
+		node_color[K, V](sibling) == black &&
+		node_color[K, V](sibling.left) == black &&
+		node_color[K, V](sibling.right) == black {
+		sibling.color = red
+		node.parent.color = black
+		return
+	}
+	tree.delete_case_5(mut node)
+}
+
+fn (mut tree Tree[K, V]) delete_case_5(mut node &Node[K, V]) {
+	mut sibling := node.sibling()
+	if node == node.parent.left &&
+		node_color[K, V](sibling) == black &&
+		node_color[K, V](sibling.left) == red &&
+		node_color[K, V](sibling.right) == black {
+		sibling.color = red
+		sibling.left.color = black
+		tree.rotate_right(mut sibling)
+	} else if node == node.parent.right &&
+		node_color[K, V](sibling) == black &&
+		node_color[K, V](sibling.right) == red &&
+		node_color[K, V](sibling.left) == black {
+		sibling.color = red
+		sibling.right.color = black
+		tree.rotate_left(mut sibling)
+	}
+	tree.delete_case_6(mut node)
+}
+
+fn (mut tree Tree[K, V]) delete_case_6(mut node &Node[K, V]) {
+	mut sibling := node.sibling()
+	sibling.color = node_color[K, V](node.parent)
+	node.parent.color = black
+	if node == node.parent.left && node_color[K, V](sibling.right) == red {
+		sibling.right.color = black
+		tree.rotate_left(mut node.parent)
+	} else if node_color[K, V](sibling.left) == red {
+		sibling.left.color = black
+		tree.rotate_right(mut node.parent)
 	}
 }
 
