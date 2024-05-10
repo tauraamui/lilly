@@ -1,5 +1,7 @@
 module redblacktree
 
+import strings
+
 type Color = bool
 
 const black = Color(true)
@@ -10,7 +12,7 @@ pub type Comparator[K] = fn (x K, y K) int
 @[heap]
 pub struct Tree[K, V] {
 mut:
-	root ?Node[K, V]
+	root ?&Node[K, V]
 	size int
 	cmp  Comparator[K]
 }
@@ -27,23 +29,28 @@ mut:
 }
 
 pub fn Tree.new[K, V](cmp Comparator[K]) &Tree[K, V] {
-	return &Tree[K, V]{ cmp: cmp }
+	return &Tree[K, V]{ root: none, cmp: cmp }
 }
 
 pub fn (mut tree Tree[K, V]) put(key K, value V) {
-	defer { tree.size += 1 }
-
 	if mut root := tree.root {
-		tree.place_node_into_existing(key, value, mut &root)
-		return
+		if root != unsafe { nil } {
+			tree.place_node_into_existing(key, value, mut root)
+			return
+		}
 	}
-	tree.root = Node[K, V]{ key: key, value: value, color: red }
+
+	tree.root = &Node[K, V]{ key: key, value: value, color: red }
+	if mut root := tree.root {
+		tree.insert_case_1(mut root)
+		tree.size += 1
+	}
 }
 
 fn (mut tree Tree[K, V]) place_node_into_existing(key K, value V, mut existing_node &Node[K, V]) {
 	mut loop := true
 	mut focused_node := &existing_node
-	mut inserted_node := Node[K, V]{ key: key, value: value, color: red }
+	mut inserted_node := Node[K, V]{ key: key, value: value, left: none, right: none, parent: none, color: red }
 	for loop {
 		compare := tree.cmp(key, focused_node.key)
 		match true {
@@ -76,6 +83,43 @@ fn (mut tree Tree[K, V]) place_node_into_existing(key K, value V, mut existing_n
 		}
 	}
 	tree.insert_case_1(mut inserted_node)
+	tree.size += 1
+}
+
+fn (tree Tree[K, V]) to_string() string {
+	mut str_builder := strings.new_builder(0)
+	if !tree.empty() {
+		if root := tree.root {
+			output[K, V](root, "", true, mut &str_builder)
+		}
+	}
+	return str_builder.str()
+}
+
+fn (node &Node[K, V]) to_string() string {
+	return "${node.key}"
+}
+
+fn output[K, V](node &Node[K, V], prefix string, is_tail bool, mut str_builder &strings.Builder) {
+	if node_right := node.right {
+		if node_right != unsafe { nil } {
+			mut new_prefix := prefix
+			if is_tail { new_prefix += "|   " } else { new_prefix += "    " }
+			output[K, V](node_right, new_prefix, false, mut str_builder)
+		}
+	}
+
+	str_builder.write_string(prefix)
+	if is_tail { str_builder.write_string("└── ") } else { str_builder.write_string("┌── ") }
+	str_builder.write_string("${node.to_string()}\n")
+
+	if node_left := node.left {
+		if node_left != unsafe { nil } {
+			mut new_prefix := prefix
+			if is_tail { new_prefix += "    " } else { new_prefix += "|   " }
+			output[K, V](node_left, new_prefix, true, mut str_builder)
+		}
+	}
 }
 
 fn (node &Node[K, V]) grandparent() ?&Node[K, V] {
@@ -204,6 +248,8 @@ fn (mut tree Tree[K, V]) insert_case_5(mut node &Node[K, V]) {
 		}
 	}
 }
+
+fn (tree Tree[K, V]) empty() bool { return tree.size == 0 }
 
 fn node_color[K, V](node ?&Node[K, V]) Color {
 	if n := node {
