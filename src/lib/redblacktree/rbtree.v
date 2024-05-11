@@ -85,6 +85,89 @@ pub fn (mut tree Tree[K, V]) put(key K, value V) {
 	inserted_node.parent = node
 }
 
+fn (tree Tree[K, V]) get(key K) ?V {
+	if node := tree.lookup(key) { return node.value }
+	return none
+}
+
+fn (tree Tree[K, V]) get_node(key K) ?&Node[K, V] {
+	return tree.lookup(key)
+}
+
+fn (mut tree Tree[K, V]) remove(key K) {
+	mut child := &Node[K, V](unsafe { nil })
+	mut node := tree.lookup(key) or { unsafe { nil } }
+	if node == unsafe { nil } { return }
+
+	if node.left != unsafe { nil } && node.right != unsafe { nil } {
+		pred := node.left.maximum_node()
+		node.key = pred.key
+		node.value = pred.value
+		node = pred
+	}
+
+	if node.left == unsafe { nil } || node.right == unsafe { nil } {
+		if node.right == unsafe { nil } {
+			child = node.left
+		} else {
+			child = node.right
+		}
+		if node.color == black {
+			node.color = node_color[K, V](child)
+			tree.delete_case_1(mut node)
+		}
+		tree.replace_node(mut node, mut child)
+		if node.parent == unsafe { nil } && child != unsafe { nil } {
+			child.color = black
+		}
+	}
+	tree.size -= 1
+}
+
+pub fn (tree Tree[K, V]) empty() bool {
+	return tree.size == 0
+}
+
+pub fn (tree Tree[K, V]) size() int {
+	return tree.size
+}
+
+pub fn (node &Node[K, V]) size() int {
+	if node == unsafe { nil } {
+		return 0
+	}
+	mut size := 1
+	if node.left != unsafe { nil } {
+		size += node.left.size()
+	}
+
+	if node.right != unsafe { nil } {
+		size += node.right.size()
+	}
+
+	return size
+}
+
+fn (tree Tree[K, V]) keys() []K {
+	mut keys := []K{ len: tree.size }
+	mut it := tree.iterator()
+
+	for i, node in it {
+		keys[i] = node.key
+	}
+	return keys
+}
+
+fn (tree Tree[K, V]) values() []V {
+	mut values := []V{ len: tree.size }
+	mut it := tree.iterator()
+
+	for i, node in it {
+		values[i] = node.value
+	}
+	return values
+}
+
 fn (mut tree Tree[K, V]) left() &Node[K, V] {
 	mut parent := &Node[K, V](unsafe { nil })
 	mut current := tree.root
@@ -166,45 +249,6 @@ fn (tree Tree[K, V]) to_string() string {
 		output[K, V](tree.root, "", true, mut &str_builder)
 	}
 	return str_builder.str()
-}
-
-fn (tree Tree[K, V]) get(key K) ?V {
-	if node := tree.lookup(key) { return node.value }
-	return none
-}
-
-fn (tree Tree[K, V]) get_node(key K) ?&Node[K, V] {
-	return tree.lookup(key)
-}
-
-fn (mut tree Tree[K, V]) remove(key K) {
-	mut child := &Node[K, V](unsafe { nil })
-	mut node := tree.lookup(key) or { unsafe { nil } }
-	if node == unsafe { nil } { return }
-
-	if node.left != unsafe { nil } && node.right != unsafe { nil } {
-		pred := node.left.maximum_node()
-		node.key = pred.key
-		node.value = pred.value
-		node = pred
-	}
-
-	if node.left == unsafe { nil } || node.right == unsafe { nil } {
-		if node.right == unsafe { nil } {
-			child = node.left
-		} else {
-			child = node.right
-		}
-		if node.color == black {
-			node.color = node_color[K, V](child)
-			tree.delete_case_1(mut node)
-		}
-		tree.replace_node(mut node, mut child)
-		if node.parent == unsafe { nil } && child != unsafe { nil } {
-			child.color = black
-		}
-	}
-	tree.size -= 1
 }
 
 fn (node &Node[K, V]) to_string() string {
@@ -459,8 +503,6 @@ fn (mut tree Tree[K, V]) delete_case_6(mut node &Node[K, V]) {
 		tree.rotate_right(mut node.parent)
 	}
 }
-
-fn (tree Tree[K, V]) empty() bool { return tree.size == 0 }
 
 fn node_color[K, V](node ?&Node[K, V]) Color {
 	if n := node {
