@@ -34,55 +34,45 @@ pub fn Tree.new[K, V](cmp Comparator[K]) &Tree[K, V] {
 
 pub fn (mut tree Tree[K, V]) put(key K, value V) {
 	mut inserted_node := &Node[K, V](unsafe { nil })
-	defer {
-		tree.insert_case_1(mut inserted_node)
-		tree.size += 1
-	}
-
 	if tree.root == unsafe { nil } {
-		tree.root = &Node[K, V]{
-			key: key, value: value, color: red, left: unsafe { nil }, right: unsafe { nil }, parent: unsafe { nil }
-		}
+		tree.root = &Node[K, V]{ key: key, value: value, color: red, left: unsafe { nil }, right: unsafe { nil }, parent: unsafe { nil } }
 		inserted_node = tree.root
-		return
-	}
-
-	mut node := tree.root
-	mut loop := true
-	for loop {
-		compare := tree.cmp(key, node.key)
-		match true {
-			compare == 0 {
-				node.key = key
-				node.value = value
-				return
-			}
-			compare < 0 {
-				if node.left == unsafe { nil } {
-					node.left = &Node[K, V]{
-						key: key, value: value, color: red, left: unsafe { nil }, right: unsafe { nil }, parent: unsafe { nil }
-					}
-					inserted_node = node.left
-					loop = false
-					continue
+	} else {
+		mut node := tree.root
+		mut loop := true
+		for loop {
+			compare := tree.cmp(key, node.key)
+			match true {
+				compare == 0 {
+					node.key = key
+					node.value = value
+					return
 				}
-				node = node.left
-			}
-			compare > 0 {
-				if node.right == unsafe { nil } {
-					node.right = &Node[K, V]{
-						key: key, value: value, color: red, left: unsafe { nil }, right: unsafe { nil }, parent: unsafe { nil }
+				compare < 0 {
+					if node.left == unsafe { nil } {
+						node.left = &Node[K, V]{ key: key, value: value, color: red, left: unsafe { nil }, right: unsafe { nil }, parent: unsafe { nil } }
+						inserted_node = node.left
+						loop = false
+					} else {
+						node = node.left
 					}
-					inserted_node = node.right
-					loop = false
-					continue
 				}
-				node = node.right
+				compare > 0 {
+					if node.right == unsafe { nil } {
+						node.right = &Node[K, V]{ key: key, value: value, color: red, left: unsafe { nil }, right: unsafe { nil }, parent: unsafe { nil } }
+						inserted_node = node.right
+						loop = false
+					} else {
+						node = node.right
+					}
+				}
+				else { }
 			}
-			else {}
 		}
+		inserted_node.parent = node
 	}
-	inserted_node.parent = node
+	tree.insert_case_1(mut inserted_node)
+	tree.size += 1
 }
 
 fn (tree Tree[K, V]) get(key K) ?V {
