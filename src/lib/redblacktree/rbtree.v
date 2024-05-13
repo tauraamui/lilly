@@ -301,6 +301,7 @@ fn (node &Node[K, V]) sibling() &Node[K, V] {
 	if node == unsafe { nil } || node.parent == unsafe { nil } {
 		return unsafe { nil }
 	}
+	if node.parent.left == unsafe { nil } { return unsafe { nil } }
 	if node == node.parent.left {
 		return node.parent.right
 	}
@@ -375,6 +376,7 @@ fn (mut tree Tree[K, V]) insert_case_3(mut node &Node[K, V]) {
 
 fn (mut tree Tree[K, V]) insert_case_4(mut node &Node[K, V]) {
 	grandparent := node.grandparent()
+	if grandparent == unsafe { nil } || grandparent.left == unsafe { nil } || node.parent.right == unsafe { nil } { return }
 	if node == node.parent.right && node.parent == grandparent.left {
 		tree.rotate_left(mut node.parent)
 		node = node.left
@@ -496,6 +498,7 @@ fn (mut tree Tree[K, V]) delete_case_6(mut node &Node[K, V]) {
 
 fn node_color[K, V](node ?&Node[K, V]) Color {
 	if n := node {
+		if n == unsafe { nil } { return black }
 		return n.color
 	}
 	return black
