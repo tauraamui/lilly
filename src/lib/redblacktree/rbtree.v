@@ -234,32 +234,30 @@ fn (mut tree Tree[K, V]) clear() {
 }
 
 fn (tree Tree[K, V]) to_string() string {
-	mut str_builder := strings.new_builder(0)
+	mut str := "RedBlackTree\n"
 	if !tree.empty() {
-		output[K, V](tree.root, "", true, mut &str_builder)
+		output[K, V](tree.root, "", true, mut &str)
 	}
-	return str_builder.str()
+	return str
 }
 
 fn (node &Node[K, V]) to_string() string {
 	return "${node.key}"
 }
 
-fn output[K, V](node &Node[K, V], prefix string, is_tail bool, mut str_builder &strings.Builder) {
+fn output[K, V](node &Node[K, V], prefix string, is_tail bool, mut str &string) {
 	if node.right != unsafe { nil } {
 		mut new_prefix := prefix
 		if is_tail { new_prefix += "|   " } else { new_prefix += "    " }
-		output[K, V](node.right, new_prefix, false, mut str_builder)
+		output[K, V](node.right, new_prefix, false, mut str)
 	}
-
-	str_builder.write_string(prefix)
-	if is_tail { str_builder.write_string("└── ") } else { str_builder.write_string("┌── ") }
-	str_builder.write_string("${node.to_string()}\n")
-
+	str += prefix
+	if is_tail { str += "└── " } else { str += "┌── " }
+	str += node.to_string() + "\n"
 	if node.left != unsafe { nil } {
 		mut new_prefix := prefix
-		if is_tail { new_prefix += "    " } else { new_prefix += "|   " }
-		output[K, V](node.left, new_prefix, true, mut str_builder)
+		if is_tail { new_prefix += "    " } else { "|   " }
+		output[K, V](node.left, new_prefix, true, mut str)
 	}
 }
 
