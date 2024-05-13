@@ -242,7 +242,7 @@ fn (tree Tree[K, V]) to_string() string {
 }
 
 fn (node &Node[K, V]) to_string() string {
-	return "${node.key}"
+	return "${node.key}: ${node.value}"
 }
 
 fn output[K, V](node &Node[K, V], prefix string, is_tail bool, mut str &string) {
