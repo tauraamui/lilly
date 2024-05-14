@@ -296,10 +296,10 @@ fn (node &Node[K, V]) uncle() &Node[K, V] {
 }
 
 fn (node &Node[K, V]) sibling() &Node[K, V] {
-	if node == unsafe { nil } || node.parent == unsafe { nil } {
+	if node == unsafe { nil } || node.parent.left == unsafe { nil } || node.parent == unsafe { nil } {
 		return unsafe { nil }
 	}
-	if node.parent.left == unsafe { nil } { return unsafe { nil } }
+
 	if node == node.parent.left {
 		return node.parent.right
 	}
