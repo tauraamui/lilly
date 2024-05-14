@@ -248,15 +248,15 @@ fn (node &Node[K, V]) to_string() string {
 fn output[K, V](node &Node[K, V], prefix string, is_tail bool, mut str &string) {
 	if node.right != unsafe { nil } {
 		mut new_prefix := prefix
-		if is_tail { new_prefix += "|   " } else { new_prefix += "    " }
+		if is_tail { new_prefix = "${new_prefix}|   " } else { new_prefix = "${new_prefix}    " }
 		output[K, V](node.right, new_prefix, false, mut str)
 	}
-	str += prefix
-	if is_tail { str += "└── " } else { str += "┌── " }
-	str += node.to_string() + "\n"
+	str = "${str}${prefix}"
+	if is_tail { str = "${str}└── " } else { str = "${str}┌── " }
+	str = "${str}${node.to_string()}\n"
 	if node.left != unsafe { nil } {
 		mut new_prefix := prefix
-		if is_tail { new_prefix += "    " } else { "|   " }
+		if is_tail { new_prefix = "${new_prefix}    " } else { new_prefix = "${new_prefix}|   " }
 		output[K, V](node.left, new_prefix, true, mut str)
 	}
 }
