@@ -29,7 +29,20 @@ fn test_red_black_tree_get() {
 	tree.put(6, "f") // 1->a, 2->b, 3->c, 4->d, 5->e, 6->f (in order)
 
 	println(tree.to_string())
-	assert 10 == 12
+
+	assert tree.size() == 6, 'expected tree size of 6'
+
+	if node_four := tree.get_node(4) {
+		assert node_four.size() == 3, 'expected sub branch size of 3 from node 4'
+	}
+
+	if node_two := tree.get_node(2) {
+		assert node_two.size() == 5, 'expected sub branch size of 5 from node 2'
+	}
+
+	if node_eight := tree.get_node(8) {
+		assert node_eight.size() == 0, 'expected sub branch size of 0 from node 8'
+	}
 }
 
 fn test_new_tree_with_some_puts() {
@@ -38,6 +51,5 @@ fn test_new_tree_with_some_puts() {
 	rbtree.put(30, "B")
 	rbtree.put(60, "C")
 	println(rbtree.to_string())
-	assert 2 == 3
 }
 
