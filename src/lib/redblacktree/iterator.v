@@ -33,33 +33,37 @@ fn (mut iterator Iterator[K, V]) next() ?&Node[K, V] {
 	}
 
 	if iterator.position == begin {
-		left := iterator.tree.left()
-		if left == unsafe { nil } {
-			on_end[K, V](mut iterator)
-			return none
-		}
-		iterator.node = left
-		on_between[K, V](mut iterator)
-		return iterator.node
-	}
-
-	if iterator.node.right != unsafe { nil } {
-		iterator.node = iterator.node.right
-		for iterator.node.left != unsafe { nil } {
-			iterator.node = iterator.node.left
-		}
-		on_between[K, V](mut iterator)
-		return iterator.node
-	}
-
-	if iterator.node.parent != unsafe { nil } {
-		node := iterator.node
-		iterator.node = iterator.node.parent
-		if node == iterator.node.left {
+		if left_node := iterator.tree.left() {
+			iterator.node = left_node
 			on_between[K, V](mut iterator)
 			return iterator.node
 		}
 	}
 
+	if right_node := iterator.node.right {
+		iterator.node = right_node
+		for iterator.node.left != none {
+			if left_node := iterator.node.left {
+				iterator.node = left_node
+			}
+		}
+		on_between[K, V](mut iterator)
+		return iterator.node
+	}
+
+	for iterator.node.parent != none {
+		node := iterator.node
+		if parent_node := iterator.node.parent {
+			iterator.node = parent_node
+		}
+		if left_node := iterator.node.left {
+			if node == left_node {
+				on_between[K, V](mut iterator)
+				return iterator.node
+			}
+		}
+	}
+
 	return none
 }
+

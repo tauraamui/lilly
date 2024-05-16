@@ -29,7 +29,7 @@ mut:
 }
 
 pub fn Tree.new[K, V](cmp Comparator[K]) &Tree[K, V] {
-	return &Tree[K, V]{ root: unsafe { nil }, cmp: cmp }
+	return &Tree[K, V]{ root: none, cmp: cmp }
 }
 
 pub fn (mut tree Tree[K, V]) put(key K, value V) {
