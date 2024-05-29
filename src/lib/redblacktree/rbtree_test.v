@@ -16,6 +16,10 @@ fn test_red_black_tree_get() {
 	mut tree := Tree.new[int, string](cmp)
 	assert tree.size() == 0, 'expected tree size of 0'
 
+	mut rbtree := RBTree.new[int, string](cmp)
+	assert rbtree.insert(1, "f")
+	assert rbtree.insert(3, "dw")
+
 	if node_two := tree.get_node(2) {
 		assert node_two.size() == 0, 'expected node sub tree size of 0'
 	}

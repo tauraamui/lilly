@@ -10,6 +10,234 @@ const red   = Color(false)
 pub type Comparator[K] = fn (x K, y K) int
 
 @[heap]
+struct RBTreeNode[K, V] {
+mut:
+	is_init bool
+	key    K
+	value  V
+	color  Color
+	left   &RBTreeNode[K, V] = unsafe { 0 }
+	right  &RBTreeNode[K, V] = unsafe { 0 }
+	parent &RBTreeNode[K, V] = unsafe { 0 }
+}
+
+fn new_root_node[K, V](key K, value V) &RBTreeNode[K, V] {
+	return &RBTreeNode[K, V]{
+		is_init: true
+		key: key
+		value: value
+		left: new_none_node[K, V](false)
+		right: new_none_node[K, V](false)
+		parent: new_none_node[K, V](false)
+	}
+}
+
+fn new_node[K, V](parent &RBTreeNode[K, V], key K, value V) &RBTreeNode[K, V] {
+	return &RBTreeNode[K, V]{
+		is_init: true
+		key: key
+		value: value
+		left: unsafe { 0 }
+		right: unsafe { 0 }
+		parent: parent
+	}
+}
+
+fn new_none_node[K, V](init bool) &RBTreeNode[K, V] {
+	return &RBTreeNode[K, V]{
+		is_init: init
+		left: unsafe { 0 }
+		right: unsafe { 0 }
+		parent: unsafe { 0 }
+	}
+}
+
+fn (mut node RBTreeNode[K, V]) bind(mut to_bind RBTreeNode[K, V], left bool) {
+	node.color = to_bind.color
+	node.left = to_bind.left
+	node.right = to_bind.right
+	node.parent = to_bind.parent
+	node.is_init = to_bind.is_init
+	to_bind = new_none_node[K, V](false)
+
+}
+
+fn (mut node RBTreeNode[K, V]) grandparent() &RBTreeNode[K, V] {
+	if unsafe { node.parent == 0 } {
+		return new_none_node[K, V](false)
+	}
+	return node.parent.parent
+}
+
+fn (mut node RBTreeNode[K, V]) uncle() &RBTreeNode[K, V] {
+	if unsafe { node.parent == 0 } || unsafe { node.parent.parent == 0 } {
+		return new_none_node[K, V](false)
+	}
+	return node.parent.sibling()
+}
+
+fn (mut node RBTreeNode[K, V]) sibling() &RBTreeNode[K, V] {
+	if unsafe { node.parent == 0 } {
+		return new_none_node[K, V](false)
+	}
+	if node == node.parent.left {
+		return node.parent.right
+	}
+	return node.parent.left
+}
+
+pub struct RBTree[K, V] {
+mut:
+	cmp Comparator[K]
+	root &RBTreeNode[K, V] = unsafe { 0 }
+	size int
+}
+
+pub fn RBTree.new[K, V](cmp Comparator[K]) &RBTree[K, V] {
+	return &RBTree[K, V]{
+		root: unsafe { 0 }
+		cmp: cmp
+	}
+}
+
+pub fn (mut rbt RBTree[K, V]) insert(key K, value V) bool {
+	if rbt.is_empty() {
+		rbt.root = new_root_node(key, value)
+		rbt.insert_case_1(mut rbt.root)
+		rbt.size += 1
+		return true
+	}
+
+	return rbt.insert_helper(mut rbt.root, key, value)
+}
+
+fn (mut rbt RBTree[K, V]) insert_helper(mut node RBTreeNode[K, V], key K, value V) bool {
+	mut inserted_node := new_none_node[K, V](false)
+	compare := rbt.cmp(node.key, key)
+	if compare < 0 {
+		if unsafe { node.right != 0 } && node.right.is_init {
+			return rbt.insert_helper(mut node.right, key, value)
+		}
+		node.right = new_node(node, key, value)
+		inserted_node = node.right
+		rbt.insert_case_1(mut inserted_node)
+		rbt.size += 1
+		return true
+	} else if compare > 0 {
+		if unsafe { node.left != 0 } && node.left.is_init {
+			return rbt.insert_helper(mut node.left, key, value)
+		}
+		node.left = new_node(node, key, value)
+		inserted_node = node.left
+		rbt.insert_case_1(mut inserted_node)
+		rbt.size += 1
+		return true
+	}
+	return false
+}
+
+fn (mut rbt RBTree[K, V]) insert_case_1(mut node RBTreeNode[K, V]) {
+	if !node.parent.is_init {
+		node.color = black
+		return
+	}
+	rbt.insert_case_2(mut node)
+}
+
+fn (mut rbt RBTree[K, V]) insert_case_2(mut node RBTreeNode[K, V]) {
+	if rbnode_color[K, V](node.parent) == black {
+		return
+	}
+	rbt.insert_case_3(mut node)
+}
+
+fn (mut rbt RBTree[K, V]) insert_case_3(mut node RBTreeNode[K, V]) {
+	mut uncle := node.uncle()
+	if rbnode_color[K, V](uncle) == red {
+		node.parent.color = black
+		uncle.color = black
+		node.grandparent().color = red
+		rbt.insert_case_1(mut node.grandparent())
+		return
+	}
+	rbt.insert_case_4(mut node)
+}
+
+fn (mut rbt RBTree[K, V]) insert_case_4(mut node RBTreeNode[K, V]) {
+	mut grandparent := node.grandparent()
+	if node == node.parent.right && node.parent == grandparent.left {
+		//tree.rotate_left(node.parent)
+		node = node.left
+		rbt.insert_case_5(mut node)
+		return
+	}
+
+	if node == node.parent.left && node.parent == grandparent.right {
+		//tree.rotate_right(node.parent)
+		node = node.right
+		rbt.insert_case_5(mut node)
+	}
+}
+
+fn (mut rbt RBTree[K, V]) insert_case_5(mut node RBTreeNode[K, V]) {
+	node.parent.color = black
+	mut grandparent := node.grandparent()
+	grandparent.color = red
+	if node == node.parent.left && node.parent == grandparent.left {
+		// rbt.rotate_right(mut grandparent)
+		return
+	}
+	if node == node.parent.right && node.parent == grandparent.right {
+		// rbt.rotate_left(mut grandparent)
+	}
+}
+
+fn (rbt &RBTree[K, V]) get_node(node &RBTreeNode[K, V], key K) &RBTreeNode[K, V] {
+	if unsafe { node == 0 } || !node.is_init {
+		return new_none_node[K, V](false)
+	}
+
+	compare := rbt.cmp(node.key, key)
+	if compare == 0 {
+		return node
+	}
+
+	if compare < 0 {
+		return rbt.get_node(node.right, key)
+	}
+
+	return rbt.get_node(node.left, key)
+}
+
+pub fn (rbt &RBTree[K, V]) to_left(key K) !V {
+	if rbt.is_empty() {
+		return error('RBTree is empty')
+	}
+	node := rbt.get_node(rbt.root, key)
+	if !node.is_init {
+		return error('RBTree is not initialised')
+	}
+	left_node := node.left
+	return left_node.value
+}
+
+pub fn (rbt &RBTree[K, V]) to_right(key K) !V {
+	if rbt.is_empty() {
+		return error('RBTree is empty')
+	}
+	node := rbt.get_node(rbt.root, key)
+	if !node.is_init {
+		return error('RBTree is not initialised')
+	}
+	right_node := node.right
+	return right_node.value
+}
+
+pub fn (rbt &RBTree[K, V]) is_empty() bool {
+	return unsafe { rbt.root == 0 }
+}
+
+@[heap]
 pub struct Tree[K, V] {
 mut:
 	root ?&Node[K, V]
@@ -547,6 +775,13 @@ fn (mut tree Tree[K, V]) delete_case_6(mut node &Node[K, V]) {
 			}
 		}
 	}
+}
+
+fn rbnode_color[K, V](node RBTreeNode[K, V]) Color {
+	if !node.is_init {
+		return black
+	}
+	return node.color
 }
 
 fn node_color[K, V](node ?&Node[K, V]) Color {
