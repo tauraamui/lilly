@@ -86,6 +86,28 @@ fn (mut node RBTreeNode[K, V]) sibling() &RBTreeNode[K, V] {
 	return node.parent.left
 }
 
+fn (mut rbt RBTree[K, V]) rotate_left[K, V](mut node RBTreeNode[K, V]) {
+	mut right := node.right
+	rbt.replace_node(mut node, mut right)
+	node.right = right.left
+	if unsafe { node.left != 0 } && node.left.is_init {
+		node.left.parent = node
+	}
+	right.left = node
+	node.parent = right
+}
+
+fn (mut rbt RBTree[K, V]) rotate_right[K, V](mut node RBTreeNode[K, V]) {
+	mut left := node.left
+	rbt.replace_node(mut node, mut left)
+	node.left = left.right
+	if unsafe { node.right != 0 } && node.right.is_init {
+		node.right.parent = node
+	}
+	left.right = node
+	node.parent = left
+}
+
 pub struct RBTree[K, V] {
 mut:
 	cmp Comparator[K]
@@ -136,6 +158,97 @@ fn (mut rbt RBTree[K, V]) insert_helper(mut node RBTreeNode[K, V], key K, value 
 	return false
 }
 
+pub fn (mut rbt RBTree[K, V]) contains(key K) bool {
+	return rbt.contains_helper(rbt.root, key)
+}
+
+fn (mut rbt RBTree[K, V]) contains_helper(node &RBTreeNode[K, V], key K) bool {
+	if unsafe { node == 0 } || !node.is_init {
+		return false
+	}
+
+	compare := rbt.cmp(node.key, key)
+	if compare < 0 {
+		return rbt.contains_helper(node.right, key)
+	} else if compare > 0 {
+		return rbt.contains_helper(node.left, key)
+	}
+	assert node.key == key
+	return true
+}
+
+pub fn (mut rbt RBTree[K, V]) remove(key K) bool {
+	if rbt.is_empty() {
+		return false
+	}
+	return rbt.remove_helper(mut rbt.root, key, false)
+}
+
+fn (mut rbt RBTree[K, V]) remove_helper(mut node RBTreeNode[K, V], key K, left bool) bool {
+	if !node.is_init {
+		return false
+	}
+	if node.key == key {
+		if unsafe { node.left != 0 } && node.left.is_init {
+			mut max_node := rbt.get_max_from_right(node.left)
+			node.bind(mut max_node, true)
+		} else if unsafe { node.right != 0 } && node.right.is_init {
+			mut min_node := rbt.get_min_from_left(node.right)
+			node.bind(mut min_node, false)
+		} else {
+			mut parent := node.parent
+			if left {
+				parent.left = new_none_node[K, V](false)
+			} else {
+				parent.right = new_none_node[K, V](false)
+			}
+			node = new_none_node[K, V](false)
+		}
+		return true
+	}
+
+	compare := rbt.cmp(node.key, key)
+	if compare < 0 {
+		return rbt.remove_helper(mut node.right, key, false)
+	}
+	return rbt.remove_helper(mut node.left, key, true)
+}
+
+fn (mut rbt RBTree[K, V]) get_max_from_right(node &RBTreeNode[K, V]) &RBTreeNode[K, V] {
+	if unsafe { node == 0 } {
+		return new_none_node[K, V](false)
+	}
+	right_node := node.right
+	if unsafe { right_node == 0 } || !right_node.is_init {
+		return node
+	}
+	return rbt.get_max_from_right(right_node)
+}
+
+fn (mut rbt RBTree[K, V]) get_min_from_left(node &RBTreeNode[K, V]) &RBTreeNode[K, V] {
+	if unsafe { node == 0 } {
+		return new_none_node[K, V](false)
+	}
+	left_node := node.left
+	if unsafe { left_node == 0 } || !left_node.is_init {
+		return node
+	}
+	return rbt.get_min_from_left(left_node)
+}
+
+fn (mut rbt RBTree[K, V]) replace_node(mut old RBTreeNode[K, V], mut new RBTreeNode[K, V]) {
+	if unsafe { old.parent != 0 } && old.parent.is_init {
+		if old == old.parent.left {
+			old.parent.left = new
+		} else {
+			old.parent.right = new
+		}
+	}
+	if new.is_init {
+		new.parent = old.parent
+	}
+}
+
 fn (mut rbt RBTree[K, V]) insert_case_1(mut node RBTreeNode[K, V]) {
 	if !node.parent.is_init {
 		node.color = black
@@ -166,14 +279,14 @@ fn (mut rbt RBTree[K, V]) insert_case_3(mut node RBTreeNode[K, V]) {
 fn (mut rbt RBTree[K, V]) insert_case_4(mut node RBTreeNode[K, V]) {
 	mut grandparent := node.grandparent()
 	if node == node.parent.right && node.parent == grandparent.left {
-		//tree.rotate_left(node.parent)
+		rbt.rotate_left(mut node.parent)
 		node = node.left
 		rbt.insert_case_5(mut node)
 		return
 	}
 
 	if node == node.parent.left && node.parent == grandparent.right {
-		//tree.rotate_right(node.parent)
+		rbt.rotate_right(mut node.parent)
 		node = node.right
 		rbt.insert_case_5(mut node)
 	}
@@ -184,11 +297,11 @@ fn (mut rbt RBTree[K, V]) insert_case_5(mut node RBTreeNode[K, V]) {
 	mut grandparent := node.grandparent()
 	grandparent.color = red
 	if node == node.parent.left && node.parent == grandparent.left {
-		// rbt.rotate_right(mut grandparent)
+		rbt.rotate_right(mut grandparent)
 		return
 	}
 	if node == node.parent.right && node.parent == grandparent.right {
-		// rbt.rotate_left(mut grandparent)
+		rbt.rotate_left(mut grandparent)
 	}
 }
 
