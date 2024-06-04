@@ -236,6 +236,21 @@ fn (mut rbt RBTree[K, V]) get_min_from_left(node &RBTreeNode[K, V]) &RBTreeNode[
 	return rbt.get_min_from_left(left_node)
 }
 
+fn (mut rbt RBTree[K, V]) in_order_traversal_helper(node &RBTreeNode[K, V], mut result []K) {
+	if unsafe { node == 0 } || !node.is_init {
+		return
+	}
+	rbt.in_order_traversal_helper(node.left, mut result)
+	result << node.key
+	rbt.in_order_traversal_helper(node.right, mut result)
+}
+
+pub fn (mut rbt RBTree[K, V]) post_order_traversal() []K {
+	mut result := []K{}
+	rbt.post_order_traversal_helper(rbt.root, mut result)
+	return result
+}
+
 fn (mut rbt RBTree[K, V]) replace_node(mut old RBTreeNode[K, V], mut new RBTreeNode[K, V]) {
 	if unsafe { old.parent != 0 } && old.parent.is_init {
 		if old == old.parent.left {
