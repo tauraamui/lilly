@@ -12,6 +12,13 @@ fn cmp(x int, y int) int {
 	return 0
 }
 
+fn test_insert_into_rbt_one() {
+	mut rbt := RBTree.new[int, string](cmp)
+	assert rbt.insert(10, "Line 10") == true
+	assert rbt.contains(10) == true
+	assert rbt.contains(20) == false
+}
+
 fn test_red_black_tree_get() {
 	mut tree := Tree.new[int, string](cmp)
 	assert tree.size() == 0, 'expected tree size of 0'

@@ -251,6 +251,32 @@ pub fn (mut rbt RBTree[K, V]) post_order_traversal() []K {
 	return result
 }
 
+fn (mut rbt RBTree[K, V]) post_order_traversal_helper(node &RBTreeNode[K, V], mut result []K) {
+	if unsafe { node == 0 } || !node.is_init {
+		return
+	}
+
+	rbt.post_order_traversal_helper(node.left, mut result)
+	rbt.post_order_traversal_helper(node.right, mut result)
+	result << node.key
+}
+
+pub fn (rbt &RBTree[K, V]) pre_order_traversal() []K {
+	mut result := []K{}
+	rbt.pre_order_traversal_helper(rbt.root, mut result)
+	return result
+}
+
+fn (rbt &RBTree[K, V]) pre_order_traversal_helper(node &RBTreeNode[K, V], mut result []K) {
+	if unsafe { node == 0 } || !node.is_init {
+		return
+	}
+
+	result << node.key
+	rbt.pre_order_traversal_helper(node.left, mut result)
+	rbt.pre_order_traversal_helper(node.right, mut result)
+}
+
 fn (mut rbt RBTree[K, V]) replace_node(mut old RBTreeNode[K, V], mut new RBTreeNode[K, V]) {
 	if unsafe { old.parent != 0 } && old.parent.is_init {
 		if old == old.parent.left {
