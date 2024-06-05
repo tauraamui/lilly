@@ -44,6 +44,27 @@ fn test_in_order_rbt_visit_one() {
 	assert rbt.in_order_traversal() == [1, 10, 20, 21]
 }
 
+// Ensure the post_order_traversals list returns the results correctly
+fn test_post_order_rbt_visit_one() {
+	mut rbt := RBTree.new[int, string](cmp)
+	assert rbt.insert(10, "Line 10")
+	assert rbt.insert(20, "Line 20")
+	assert rbt.insert(21, "Line 21")
+	assert rbt.insert(1, "Line 1")
+
+	assert rbt.post_order_traversal() == [1, 21, 20, 10]
+}
+
+fn test_pre_order_rbt_visit_one() {
+	mut rbt := RBTree.new[int, string](cmp)
+	assert rbt.insert(10, "Line 10")
+	assert rbt.insert(20, "Line 20")
+	assert rbt.insert(21, "Line 21")
+	assert rbt.insert(1, "Line 1")
+
+	assert rbt.pre_order_traversal() == [10, 1, 20, 21]
+}
+
 /*
 fn test_red_black_tree_get() {
 	mut tree := Tree.new[int, string](cmp)
