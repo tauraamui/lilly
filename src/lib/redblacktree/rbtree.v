@@ -236,7 +236,13 @@ fn (mut rbt RBTree[K, V]) get_min_from_left(node &RBTreeNode[K, V]) &RBTreeNode[
 	return rbt.get_min_from_left(left_node)
 }
 
-fn (mut rbt RBTree[K, V]) in_order_traversal_helper(node &RBTreeNode[K, V], mut result []K) {
+pub fn (rbt &RBTree[K, V]) in_order_traversal() []K {
+	mut result := []K{}
+	rbt.in_order_traversal_helper(rbt.root, mut result)
+	return result
+}
+
+fn (rbt &RBTree[K, V]) in_order_traversal_helper(node &RBTreeNode[K, V], mut result []K) {
 	if unsafe { node == 0 } || !node.is_init {
 		return
 	}
@@ -326,7 +332,7 @@ fn (mut rbt RBTree[K, V]) insert_case_4(mut node RBTreeNode[K, V]) {
 		return
 	}
 
-	if node == node.parent.left && node.parent == grandparent.right {
+	if unsafe { node.parent.left != 0 } && node.parent.left.is_init && node == node.parent.left && node.parent == grandparent.right {
 		rbt.rotate_right(mut node.parent)
 		node = node.right
 		rbt.insert_case_5(mut node)

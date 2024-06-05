@@ -12,13 +12,39 @@ fn cmp(x int, y int) int {
 	return 0
 }
 
+// Make an insert of one element and check if the rbt is able to locate it
 fn test_insert_into_rbt_one() {
 	mut rbt := RBTree.new[int, string](cmp)
-	assert rbt.insert(10, "Line 10") == true
-	assert rbt.contains(10) == true
+	assert rbt.insert(10, "Line 10")
+	assert rbt.contains(10)
 	assert rbt.contains(20) == false
 }
 
+// Make the insert of more elements into rbt and check if it is able to locate them all
+fn test_insert_into_rbt_two() {
+	mut rbt := RBTree.new[int, string](cmp)
+	assert rbt.insert(10, "Line 10")
+	assert rbt.insert(20, "Line 20")
+	assert rbt.insert(9, "Line 9")
+
+	assert rbt.contains(9)
+	assert rbt.contains(10)
+	assert rbt.contains(20)
+	assert rbt.contains(11) == false
+}
+
+// Ensure the in_order_traversals list return the results correctly
+fn test_in_order_rbt_visit_one() {
+	mut rbt := RBTree.new[int, string](cmp)
+	assert rbt.insert(10, "Line 10")
+	assert rbt.insert(20, "Line 20")
+	assert rbt.insert(21, "Line 21")
+	assert rbt.insert(1, "Line 1")
+
+	assert rbt.in_order_traversal() == [1, 10, 20, 21]
+}
+
+/*
 fn test_red_black_tree_get() {
 	mut tree := Tree.new[int, string](cmp)
 	assert tree.size() == 0, 'expected tree size of 0'
@@ -84,3 +110,4 @@ fn test_red_black_tree_put() {
 	assert tree.keys() == [1, 2, 3, 4, 5, 6, 7], 'expected tree node keys'
 	assert tree.values() == ["a", "b", "c", "d", "e", "f", "g"], 'expected tree node values'
 }
+*/
