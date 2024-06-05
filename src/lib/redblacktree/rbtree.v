@@ -158,6 +158,16 @@ fn (mut rbt RBTree[K, V]) insert_helper(mut node RBTreeNode[K, V], key K, value 
 	return false
 }
 
+pub fn (rbt &RBTree[K, V]) get(key K) ?V {
+	node := rbt.get_node_from_key(key)
+	if unsafe { node == 0 } || !node.is_init { return none }
+	return node.value
+}
+
+pub fn (rbt &RBTree[K, V]) get_node_from_key(key K) &RBTreeNode[K, V] {
+	return rbt.get_node(rbt.root, key)
+}
+
 pub fn (mut rbt RBTree[K, V]) contains(key K) bool {
 	return rbt.contains_helper(rbt.root, key)
 }

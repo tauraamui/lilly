@@ -65,6 +65,30 @@ fn test_pre_order_rbt_visit_one() {
 	assert rbt.pre_order_traversal() == [10, 1, 20, 21]
 }
 
+fn test_get_left_root() {
+	mut rbt := RBTree.new[int, string](cmp)
+	assert rbt.insert(10, "Line 10")
+	assert rbt.insert(20, "Line 20")
+	assert rbt.insert(21, "Line 21")
+	assert rbt.insert(1, "Line 1")
+
+	left_val := rbt.to_left(10) or { "" }
+	assert left_val == "Line 1"
+
+	right_val := rbt.to_right(10) or { "" }
+	assert right_val == "Line 20"
+}
+
+fn test_get_left_on_empty_rbt() {
+	mut rbt := RBTree.new[int, string](cmp)
+
+	left_val := rbt.to_left(10) or { "" }
+	assert left_val == ""
+
+	right_val := rbt.to_right(10) or { "" }
+	assert right_val == ""
+}
+
 /*
 fn test_red_black_tree_get() {
 	mut tree := Tree.new[int, string](cmp)
