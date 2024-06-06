@@ -213,6 +213,27 @@ pub fn (mut rbt RBTree[K, V]) remove(key K) bool {
 	if unsafe { node.left == 0 } || unsafe { node.right == 0 } {
 		println(unsafe { node.left == 0 })
 		println(unsafe { node.right == 0 })
+		if unsafe { node.left != 0 } {
+			mut child := node.left
+			if node.color == black {
+				node.color = rbnode_color[K, V](child)
+				rbt.delete_case_1(mut node)
+			}
+			rbt.replace_node(mut node, mut child)
+			if unsafe { node.parent == 0 } {
+				child.color = black
+			}
+		} else if unsafe { node.right != 0 } {
+			mut child := node.right
+			if node.color == black {
+				node.color = rbnode_color[K, V](child)
+				rbt.delete_case_1(mut node)
+			}
+			rbt.replace_node(mut node, mut child)
+			if unsafe { node.parent == 0 } {
+				child.color = black
+			}
+		}
 	}
 
 	rbt.size -= 1
