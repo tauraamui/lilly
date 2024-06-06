@@ -86,6 +86,13 @@ fn (mut node RBTreeNode[K, V]) sibling() &RBTreeNode[K, V] {
 	return node.parent.left
 }
 
+fn (node &RBTreeNode[K, V]) maximum_node() &RBTreeNode[K, V] {
+	if unsafe { node.right == 0 } {
+		return new_none_node[K, V](false)
+	}
+	return node.right
+}
+
 fn (mut rbt RBTree[K, V]) rotate_left[K, V](mut node RBTreeNode[K, V]) {
 	mut right := node.right
 	rbt.replace_node(mut node, mut right)
@@ -191,6 +198,42 @@ pub fn (mut rbt RBTree[K, V]) remove(key K) bool {
 	if rbt.is_empty() {
 		return false
 	}
+
+	mut node := rbt.get_node_from_key(key)
+	if unsafe { node == 0 } || !node.is_init { return false }
+
+	if unsafe { node.left != 0 } && unsafe { node.right != 0 } {
+		mut max_node := rbt.get_max_from_right(node.left)
+		node.bind(mut max_node, true)
+		rbt.size -= 1
+		return true
+	}
+
+	if unsafe { node.left == 0 } || unsafe { node.right == 0 } {
+		mut child := node.right
+		if unsafe { node.right == 0 } || !node.right.is_init {
+			child = node.left
+		}
+		if node.color == black {
+			node.color = rbnode_color[K, V](child)
+			rbt.delete_case_1(node)
+		}
+		rbt.replace_node(mut node, mut child)
+		if (unsafe { node.parent == 0 } || !node.parent.is_init) && unsafe { child != 0 } {
+			child.color = black
+		}
+		rbt.size -= 1
+		return true
+	}
+
+	return false
+}
+
+/*
+pub fn (mut rbt RBTree[K, V]) remove(key K) bool {
+	if rbt.is_empty() {
+		return false
+	}
 	return rbt.remove_helper(mut rbt.root, key, false)
 }
 
@@ -223,6 +266,7 @@ fn (mut rbt RBTree[K, V]) remove_helper(mut node RBTreeNode[K, V], key K, left b
 	}
 	return rbt.remove_helper(mut node.left, key, true)
 }
+*/
 
 fn (rbt &RBTree[K, V]) get_max_from_right(node &RBTreeNode[K, V]) &RBTreeNode[K, V] {
 	if unsafe { node == 0 } {
