@@ -89,6 +89,18 @@ fn test_get_left_on_empty_rbt() {
 	assert right_val == ""
 }
 
+fn test_remove_from_rbt_one() {
+	mut rbt := RBTree.new[int, string](cmp)
+	assert rbt.insert(10, "Line 10")
+	assert rbt.insert(20, "Line 20")
+	assert rbt.insert(21, "Line 21")
+	assert rbt.insert(1, "Line 1")
+	assert rbt.in_order_traversal() == [1, 10, 20, 21]
+	assert rbt.remove(21)
+
+	assert rbt.in_order_traversal() == [1, 10, 20]
+}
+
 /*
 fn test_red_black_tree_get() {
 	mut tree := Tree.new[int, string](cmp)
