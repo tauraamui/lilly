@@ -108,7 +108,7 @@ fn test_remove_from_rbt_two() {
 	assert rbt.insert(21, "Line 21")
 	assert rbt.insert(1, "Line 1")
 	assert rbt.in_order_traversal() == [1, 10, 20, 21]
-	assert rbt.remove(10)
+	assert rbt.remove(20)
 
 	assert rbt.in_order_traversal() == [1, 10, 21]
 }

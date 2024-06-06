@@ -203,30 +203,21 @@ pub fn (mut rbt RBTree[K, V]) remove(key K) bool {
 	if unsafe { node == 0 } || !node.is_init { return false }
 
 	if unsafe { node.left != 0 } && unsafe { node.right != 0 } {
-		mut max_node := rbt.get_max_from_right(node.left)
-		node.bind(mut max_node, true)
-		rbt.size -= 1
-		return true
+		pred := node.left.maximum_node()
+		node.key = pred.key
+		node.value = pred.value
+		node.is_init = pred.is_init
+		node = pred
 	}
 
 	if unsafe { node.left == 0 } || unsafe { node.right == 0 } {
-		mut child := node.right
-		if unsafe { node.right == 0 } || !node.right.is_init {
-			child = node.left
-		}
-		if node.color == black {
-			node.color = rbnode_color[K, V](child)
-			rbt.delete_case_1(mut node)
-		}
-		rbt.replace_node(mut node, mut child)
-		if (unsafe { node.parent == 0 } || !node.parent.is_init) && unsafe { child != 0 } {
-			child.color = black
-		}
-		rbt.size -= 1
-		return true
+		println(unsafe { node.left == 0 })
+		println(unsafe { node.right == 0 })
 	}
 
-	return false
+	rbt.size -= 1
+
+	return true
 }
 
 fn (mut rbt RBTree[K, V]) delete_case_1(mut node RBTreeNode[K, V]) {
@@ -422,7 +413,7 @@ fn (mut rbt RBTree[K, V]) replace_node(mut old RBTreeNode[K, V], mut new RBTreeN
 			old.parent.right = new
 		}
 	}
-	if new.is_init {
+	if unsafe { new != nil } && new.is_init {
 		new.parent = old.parent
 	}
 }
