@@ -216,7 +216,7 @@ pub fn (mut rbt RBTree[K, V]) remove(key K) bool {
 		}
 		if node.color == black {
 			node.color = rbnode_color[K, V](child)
-			rbt.delete_case_1(node)
+			rbt.delete_case_1(mut node)
 		}
 		rbt.replace_node(mut node, mut child)
 		if (unsafe { node.parent == 0 } || !node.parent.is_init) && unsafe { child != 0 } {
@@ -227,6 +227,83 @@ pub fn (mut rbt RBTree[K, V]) remove(key K) bool {
 	}
 
 	return false
+}
+
+fn (mut rbt RBTree[K, V]) delete_case_1(mut node RBTreeNode[K, V]) {
+	if unsafe { node.parent == 0 } { return }
+	rbt.delete_case_2(mut node)
+}
+
+fn (mut rbt RBTree[K, V]) delete_case_2(mut node RBTreeNode[K, V]) {
+	mut sibling := node.sibling()
+	if rbnode_color[K, V](sibling) == red {
+		node.parent.color = red
+		sibling.color = black
+		if node == node.parent.left {
+			rbt.rotate_left(mut node.parent)
+		} else {
+			rbt.rotate_right(mut node.parent)
+		}
+	}
+}
+
+fn (mut rbt RBTree[K, V]) delete_case_3(mut node RBTreeNode[K, V]) {
+	mut sibling := node.sibling()
+	if rbnode_color[K, V](node.parent) == black &&
+		rbnode_color[K, V](sibling) == black &&
+		rbnode_color[K, V](sibling.left) == black &&
+		rbnode_color[K, V](sibling.right) == black {
+		sibling.color = red
+		rbt.delete_case_1(mut node.parent)
+		return
+	}
+	rbt.delete_case_4(mut node)
+}
+
+fn (mut rbt RBTree[K, V]) delete_case_4(mut node RBTreeNode[K, V]) {
+	mut sibling := node.sibling()
+	if rbnode_color[K, V](node.parent) == red &&
+		rbnode_color[K, V](sibling) == black &&
+		rbnode_color[K, V](sibling.left) == black &&
+		rbnode_color[K, V](sibling.right) == black {
+		sibling.color = red
+		node.parent.color = black
+		return
+	}
+	rbt.delete_case_5(mut node)
+}
+
+fn (mut rbt RBTree[K, V]) delete_case_5(mut node RBTreeNode[K, V]) {
+	mut sibling := node.sibling()
+	if node == node.parent.left &&
+		rbnode_color[K, V](sibling) == black &&
+		rbnode_color[K, V](sibling.left) == red &&
+		rbnode_color[K, V](sibling.right) == black {
+		sibling.color = red
+		sibling.left.color = black
+		rbt.rotate_right(mut sibling)
+	} else if node == node.parent.right &&
+		rbnode_color[K, V](sibling) == black &&
+		rbnode_color[K, V](sibling.right) == red &&
+		rbnode_color[K, V](sibling.left) == black {
+		sibling.color = red
+		sibling.right.color = black
+		rbt.rotate_left(mut sibling)
+	}
+	rbt.delete_case_6(mut node)
+}
+
+fn (mut rbt RBTree[K, V]) delete_case_6(mut node RBTreeNode[K, V]) {
+	mut sibling := node.sibling()
+	sibling.color = rbnode_color[K, V](node.parent)
+	node.parent.color = black
+	if node == node.parent.left && rbnode_color[K, V](sibling.right) == red {
+		sibling.right.color = black
+		rbt.rotate_left(mut node.parent)
+	} else if rbnode_color[K, V](sibling.left) == red {
+		sibling.left.color = black
+		rbt.rotate_right(mut node.parent)
+	}
 }
 
 /*
