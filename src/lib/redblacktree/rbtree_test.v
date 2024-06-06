@@ -101,6 +101,40 @@ fn test_remove_from_rbt_one() {
 	assert rbt.in_order_traversal() == [1, 10, 20]
 }
 
+fn test_remove_from_rbt_two() {
+	mut rbt := RBTree.new[int, string](cmp)
+	assert rbt.insert(10, "Line 10")
+	assert rbt.insert(20, "Line 20")
+	assert rbt.insert(21, "Line 21")
+	assert rbt.insert(1, "Line 1")
+	assert rbt.in_order_traversal() == [1, 10, 20, 21]
+	assert rbt.remove(20)
+
+	assert rbt.in_order_traversal() == [1, 10, 21]
+}
+
+fn test_get_max_in_rbt() {
+	mut rbt := RBTree.new[int, string](cmp)
+	assert (rbt.max() or { "" }) == ""
+	assert rbt.insert(10, "Line 10")
+	assert rbt.insert(20, "Line 20")
+	assert rbt.insert(21, "Line 21")
+	assert rbt.insert(1, "Line 1")
+	max := rbt.max() or { "" }
+	assert max == "Line 21"
+}
+
+fn test_get_min_in_rbt() {
+	mut rbt := RBTree.new[int, string](cmp)
+	assert (rbt.min() or { "" }) == ""
+	assert rbt.insert(10, "Line 10")
+	assert rbt.insert(20, "Line 20")
+	assert rbt.insert(21, "Line 21")
+	assert rbt.insert(1, "Line 1")
+	min := rbt.min() or { "" }
+	assert min == "Line 1"
+}
+
 /*
 fn test_red_black_tree_get() {
 	mut tree := Tree.new[int, string](cmp)

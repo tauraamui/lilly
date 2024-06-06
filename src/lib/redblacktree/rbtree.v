@@ -224,7 +224,7 @@ fn (mut rbt RBTree[K, V]) remove_helper(mut node RBTreeNode[K, V], key K, left b
 	return rbt.remove_helper(mut node.left, key, true)
 }
 
-fn (mut rbt RBTree[K, V]) get_max_from_right(node &RBTreeNode[K, V]) &RBTreeNode[K, V] {
+fn (rbt &RBTree[K, V]) get_max_from_right(node &RBTreeNode[K, V]) &RBTreeNode[K, V] {
 	if unsafe { node == 0 } {
 		return new_none_node[K, V](false)
 	}
@@ -235,7 +235,7 @@ fn (mut rbt RBTree[K, V]) get_max_from_right(node &RBTreeNode[K, V]) &RBTreeNode
 	return rbt.get_max_from_right(right_node)
 }
 
-fn (mut rbt RBTree[K, V]) get_min_from_left(node &RBTreeNode[K, V]) &RBTreeNode[K, V] {
+fn (rbt &RBTree[K, V]) get_min_from_left(node &RBTreeNode[K, V]) &RBTreeNode[K, V] {
 	if unsafe { node == 0 } {
 		return new_none_node[K, V](false)
 	}
@@ -401,6 +401,28 @@ pub fn (rbt &RBTree[K, V]) to_right(key K) !V {
 	}
 	right_node := node.right
 	return right_node.value
+}
+
+pub fn (rbt &RBTree[K, V]) max() !V {
+	if rbt.is_empty() {
+		return error('RBTree is empty')
+	}
+	max := rbt.get_max_from_right(rbt.root)
+	if !max.is_init {
+		return error('RBTree is not initialised')
+	}
+	return max.value
+}
+
+pub fn (rbt &RBTree[K, V]) min() !V {
+	if rbt.is_empty() {
+		return error('RBTree is empty')
+	}
+	min := rbt.get_min_from_left(rbt.root)
+	if !min.is_init {
+		return error('RBTree is not initialised')
+	}
+	return min.value
 }
 
 pub fn (rbt &RBTree[K, V]) is_empty() bool {
