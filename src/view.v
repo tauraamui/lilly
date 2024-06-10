@@ -607,12 +607,14 @@ struct LineSegment {
 	start int
 	end   int
 	typ   SegmentKind
-	fg_color Color
-	bg_color Color
 }
 
-fn (view &View) resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comment bool) ([]LineSegment) {
-	mut segments := []LineSegment{}
+struct LineSegment2 {
+	start int
+	end   int
+	typ   SegmentKind
+	fg_color Color
+	bg_color Color
 }
 
 fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, within_selection bool) {
@@ -665,6 +667,47 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 		}
 	}
 }
+
+fn resolve_line_segments_2(syntax workspace.Syntax, line string) []LineSegment2 {
+	mut segments := []LineSegment2{}
+
+	line_runes := line.runes()
+
+	for i in 0..line_runes.len {
+		if line_runes[i] == `'` {
+			for x := i + 1; x < line_runes.len; x++ {
+				if line_runes[x] != `'` { continue }
+				segments << LineSegment2{ i, x, .a_string, Color{1, 1, 1}, Color{3, 3, 3} }
+				break
+			}
+			segments << LineSegment2{ i, line_runes.len, .a_string, Color{1, 1, 1}, Color{3, 3, 3} }
+			break
+		}
+	}
+	// resolve_next(syntax, 0, line.runes(), mut segments)
+
+	return segments
+}
+
+/*
+fn resolve_next(syntax workspace.Syntax, start_offset int, line_runes []rune, mut segments []LineSegment2) {
+	mut end := 0
+	for i in 0..line_runes.len {
+		if !is_alpha_underscore(int(line_runes[i])) {
+			end = i
+			break
+		}
+	}
+	word := line_runes[..end].string()
+	if word in syntax.keywords {
+		segments << LineSegment2{ start_offset, end, .a_key, Color{ 230, 230, 230 }, Color{ 124, 124, 124 } }
+	}
+
+	println("end: ${start_offset + end}, ${line_runes[end + 1..]}")
+	println("SEGMENTS: ${segments}")
+	resolve_next(syntax, start_offset + end, line_runes[end + 1..], mut segments)
+}
+*/
 
 fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comment bool) ([]LineSegment, bool) {
 	mut segments := []LineSegment{}
