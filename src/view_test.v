@@ -589,7 +589,7 @@ fn test_visual_unindent_unindents_highlighted_lines() {
 	]
 }
 
-fn test_visual_insert_mode_and_delete_in_place() {
+fn test_visual_line_insert_mode_and_delete_in_place() {
 	mut clip := clipboard.new()
 	mut fake_view := View{ log: unsafe{ nil }, mode: .normal, clipboard: mut clip }
 
@@ -599,7 +599,7 @@ fn test_visual_insert_mode_and_delete_in_place() {
 	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 1
 
-	fake_view.visual_line()
+	fake_view.shift_v()
 	fake_view.visual_line_d(true)
 
 	assert fake_view.mode == .normal
