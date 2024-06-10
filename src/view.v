@@ -575,6 +575,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 		view.draw_text_line_number(mut ctx, y)
 
 		document_space_y := view.from + y
+		/*
 		match view.mode {
 			.visual_line {
 				within_selection = view.cursor.line_is_within_selection(document_space_y)
@@ -587,6 +588,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 				}
 			}
 		}
+		*/
 
 		search_matches := view.search.get_line_matches(document_space_y)
 		if search_matches.len > 0 { ctx.set_bg_color(r: 53, g: 100, b: 230) }
@@ -605,6 +607,12 @@ struct LineSegment {
 	start int
 	end   int
 	typ   SegmentKind
+	fg_color Color
+	bg_color Color
+}
+
+fn (view &View) resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comment bool) ([]LineSegment) {
+	mut segments := []LineSegment{}
 }
 
 fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, within_selection bool) {
@@ -640,7 +648,7 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 		}
 
 		typ := segment.typ
-		color := match typ {
+		mut color := match typ {
 			.a_key { Color{ 255, 126, 182 } }
 			.a_lit { Color{ 87, 215, 217 } }
 			.a_string { Color{ 87, 215, 217 } }
