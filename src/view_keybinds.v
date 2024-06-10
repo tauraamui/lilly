@@ -23,7 +23,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				.j     { view.exec(view.chord.j()) }
 				.k     { view.exec(view.chord.k()) }
 				.i     { view.exec(view.chord.i()) }
-				.v     { if e.modifiers == .shift { view.v() } }
+				.v     { if e.modifiers == .shift { view.shift_v() } else { view.v() } }
 				.e     { view.exec(view.chord.e()) }
 				.w     { view.exec(view.chord.w()) }
 				.b     { view.exec(view.chord.b()) }
@@ -54,6 +54,8 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 			}
 		}
 		.visual {
+		}
+		.visual_line {
 			match e.code {
 				.escape    { view.escape() }
 				.h         { view.h() }
@@ -64,9 +66,9 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				.right     { view.l() }
 				.down      { view.j() }
 				.left      { view.h() }
-				.less_than { view.visual_unindent() }
-				.greater_than { view.visual_indent() }
-				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.visual_d(true) } }
+				.less_than { view.visual_line_unindent() }
+				.greater_than { view.visual_line_indent() }
+				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.visual_line_d(true) } }
 				.p { view.visual_p() }
 				// NOTE(tauraamui): undo bind is now disabled until the feature is re-done
 				// .u { if e.modifiers == .ctrl { view.ctrl_u() } }

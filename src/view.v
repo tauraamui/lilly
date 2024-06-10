@@ -886,7 +886,7 @@ fn (mut view View) insert_tab() {
 	view.insert_text(" ".repeat(4))
 }
 
-fn (mut view View) visual_indent() {
+fn (mut view View) visual_line_indent() {
 	mut start := view.cursor.selection_start_y()
 	mut end := view.cursor.selection_end_y()
 
@@ -897,7 +897,7 @@ fn (mut view View) visual_indent() {
     }
 }
 
-fn (mut view View) visual_unindent() {
+fn (mut view View) visual_line_unindent() {
 	mut start := view.cursor.selection_start_y()
 	mut end := view.cursor.selection_end_y()
 
@@ -1105,6 +1105,11 @@ fn (mut view View) v() {
 	view.cursor.selection_start = view.cursor.pos
 }
 
+fn (mut view View) shift_v() {
+	view.mode = .visual_line
+	view.cursor.selection_start = view.cursor.pos
+}
+
 fn (mut view View) r() {
 	view.mode = .replace
 }
@@ -1136,7 +1141,7 @@ fn (mut view View) read_lines_from_clipboard() []string {
 	return view.clipboard.paste()
 }
 
-fn (mut view View) visual_d(overwrite_y_lines bool) {
+fn (mut view View) visual_line_d(overwrite_y_lines bool) {
 	defer { view.clamp_cursor_within_document_bounds() }
 	mut start := view.cursor.selection_start_y()
 	mut end := view.cursor.selection_end_y()

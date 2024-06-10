@@ -19,6 +19,7 @@ import lib.draw
 enum Mode as u8 {
 	normal
 	visual
+	visual_line
 	insert
 	command
 	search
@@ -47,6 +48,7 @@ fn (mode Mode) color() Color {
 	return match mode {
 		.normal { status_green }
 		.visual { status_lilac }
+		.visual_line { status_lilac }
 		.insert { status_orange }
 		.command { status_cyan }
 		.search { status_purple }
@@ -60,6 +62,7 @@ fn (mode Mode) str() string {
 	return match mode {
 		.normal  { "NORMAL"  }
 		.visual  { "VISUAL"  }
+		.visual_line { "VISUAL LINE"  }
 		.insert  { "INSERT"  }
 		.command { "COMMAND" }
 		.search  { "SEARCH"  }
