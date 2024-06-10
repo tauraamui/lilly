@@ -1100,10 +1100,12 @@ fn (mut view View) i() {
 	view.buffer.snapshot()
 }
 
+/*
 fn (mut view View) v() {
 	view.mode = .visual
 	view.cursor.selection_start = view.cursor.pos
 }
+*/
 
 fn (mut view View) shift_v() {
 	view.mode = .visual_line

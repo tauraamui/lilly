@@ -233,9 +233,9 @@ fn test_v_toggles_visual_mode_and_starts_selection() {
 	fake_view.cursor.pos.x = 6
 
 	// invoke the 'v' command
-	fake_view.v()
+	fake_view.shift_v()
 
-	assert fake_view.mode == .visual
+	assert fake_view.mode == .visual_line
 	assert fake_view.cursor.selection_active()
 	assert fake_view.cursor.selection_start == Pos{ 6, 0 }
 }
@@ -599,14 +599,14 @@ fn test_visual_insert_mode_and_delete_in_place() {
 	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 1
 
-	fake_view.v()
+	fake_view.visual_line()
 	fake_view.visual_line_d(true)
 
 	assert fake_view.mode == .normal
 	assert fake_view.buffer.lines == ["1. first line", "3. third line", "4. forth line"]
 }
 
-fn test_visual_insert_mode_selection_move_down_once_and_delete() {
+fn test_visual_line_insert_mode_selection_move_down_once_and_delete() {
 	mut clip := clipboard.new()
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
@@ -616,7 +616,7 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 1
 
-	fake_view.v()
+	fake_view.shift_v()
 	fake_view.j()
 	fake_view.visual_line_d(true)
 
@@ -624,7 +624,7 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 	assert fake_view.buffer.lines == ["1. first line", "4. forth line"]
 }
 
-fn test_visual_selection_copy() {
+fn test_visual_line_selection_copy() {
 	mut clip := clipboard.new()
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
@@ -641,7 +641,7 @@ fn test_visual_selection_copy() {
 	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 1
 
-	fake_view.v()
+	fake_view.shift_v()
 	fake_view.j()
 	fake_view.visual_y()
 
@@ -686,7 +686,7 @@ fn test_paste() {
 	]
 }
 
-fn test_visual_paste() {
+fn test_visual_line_paste() {
 	mut clip := clipboard.new()
 	clip.copy(arrays.join_to_string(
 	    ["some new random contents", "with multiple lines"],
@@ -707,7 +707,7 @@ fn test_visual_paste() {
 	// ensure cursor is set to sit on second line
 	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 1
-	fake_view.v()
+	fake_view.shift_v()
 	fake_view.j()
 
 	fake_view.visual_p()
