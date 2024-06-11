@@ -673,18 +673,18 @@ fn resolve_line_segments_2(syntax workspace.Syntax, line string) []LineSegment2 
 
 	line_runes := line.runes()
 
+	mut previous_boundary := 0
 	for i in 0..line_runes.len {
-		if line_runes[i] == `'` {
-			for x := i + 1; x < line_runes.len; x++ {
-				if line_runes[x] != `'` { continue }
-				segments << LineSegment2{ i, x, .a_string, Color{1, 1, 1}, Color{3, 3, 3} }
-				break
+		if i < line_runes.len && !is_alpha_underscore(int(line_runes[i])) {
+			word := line_runes[previous_boundary..i].string()
+			if word in syntax.keywords {
+				segments << LineSegment2{ previous_boundary, i - 1, .a_key, Color{1, 1, 1}, Color{3, 3, 3} }
+			} else if word in syntax.literals {
+				segments << LineSegment2{ previous_boundary, i - 1, .a_lit, Color{1, 1, 1}, Color{3, 3, 3} }
 			}
-			segments << LineSegment2{ i, line_runes.len, .a_string, Color{1, 1, 1}, Color{3, 3, 3} }
-			break
+			previous_boundary = i + 1
 		}
 	}
-	// resolve_next(syntax, 0, line.runes(), mut segments)
 
 	return segments
 }
