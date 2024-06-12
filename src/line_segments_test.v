@@ -10,7 +10,7 @@ fn syntax_for_testing() workspace.Syntax {
 }
 
 fn test_resolve_line_segments() {
-	line := "if true && value == `jiewfiei` && other == 'stringvalue'"
+	line := "if true && value == `jiewfiei` && other == 'stringvalue' && cheese == \"fullstring\""
 	segments := resolve_line_segments_2(syntax_for_testing(), line)
 
 	for i, segment in segments {

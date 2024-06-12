@@ -671,6 +671,19 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 	}
 }
 
+const string_boundary_runes = {
+	`\``: `\``
+	`'`: `'`
+	`"`: `"`
+}
+
+fn is_string_boundary_rune(r rune) ?rune {
+	if rr := string_boundary_runes[r] {
+		return rr
+	}
+	return none
+}
+
 fn resolve_line_segments_2(syntax workspace.Syntax, line string) []LineSegment2 {
 	mut segments := []LineSegment2{}
 
@@ -679,11 +692,11 @@ fn resolve_line_segments_2(syntax workspace.Syntax, line string) []LineSegment2 
 	mut previous_boundary := 0
 	// for each character in line
 	for i := 0; i < line_runes.len; i++ {
-		if i < line_runes.len && line_runes[i] == `\`` {
+		// if current rune is string boundary then find next matching occurence
+		if string_boundary_rune := is_string_boundary_rune(line_runes[i]) {
 			previous_boundary = i
 			i += 1
-			mut j := i + 1
-			for i < line_runes.len - 1 && line_runes[i] != `\`` {
+			for i < line_runes.len - 1 && line_runes[i] != string_boundary_rune {
 				i++
 			}
 			if i >= line_runes.len {
