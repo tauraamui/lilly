@@ -597,6 +597,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 }
 
 enum SegmentKind {
+	an_unknown = 0
 	a_string = 1
 	a_comment = 2
 	a_key = 3
@@ -612,6 +613,7 @@ struct LineSegment {
 struct LineSegment2 {
 	start int
 	end   int
+mut:
 	typ   SegmentKind
 	fg_color Color
 	bg_color Color
@@ -655,6 +657,7 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 			.a_lit { Color{ 87, 215, 217 } }
 			.a_string { Color{ 87, 215, 217 } }
 			.a_comment { Color{ 130, 130, 130 } }
+			else { Color{ 230, 230, 230 } }
 		}
 		s := linex.runes()[segment.start..segment.end].string()
 		ctx.set_color(r: color.r, g: color.g, b: color.b)
@@ -674,32 +677,51 @@ fn resolve_line_segments_2(syntax workspace.Syntax, line string) []LineSegment2 
 	line_runes := line.runes()
 
 	mut previous_boundary := 0
-	for i in 0..line_runes.len {
-		if i < line_runes.len && !is_alpha_underscore(int(line_runes[i])) {
-			word := line_runes[previous_boundary..i].string()
-
-			if segment := convert_word_to_segment(syntax, word, previous_boundary, i) {
-				segments << segment
+	// for each character in line
+	for i := 0; i < line_runes.len; i++ {
+		if i < line_runes.len && line_runes[i] == `\`` {
+			previous_boundary = i
+			i += 1
+			mut j := i + 1
+			for i < line_runes.len - 1 && line_runes[i] != `\`` {
+				i++
 			}
+			if i >= line_runes.len {
+				i = line_runes.len - 1
+			}
+			segments << LineSegment2{ previous_boundary, i + 1, .a_string, Color{ 1, 1, 1 }, Color{ 3, 3, 3 } }
 			previous_boundary = i + 1
+			continue
 		}
+
+		/*
+		if i < line_runes.len && is_alpha_underscore(int(line_runes[i])) {
+			continue
+		}
+
+		word := line_runes[previous_boundary..i].string()
+		segments << convert_word_to_segment(syntax, word, previous_boundary, i)
+		previous_boundary = i + 1
+		*/
 	}
 
 	return segments
 }
 
-fn convert_word_to_segment(syntax workspace.Syntax, word string, previous_boundary int, i int) ?LineSegment2 {
+fn convert_word_to_segment(syntax workspace.Syntax, word string, previous_boundary int, i int) LineSegment2 {
+	mut segment := LineSegment2{ previous_boundary, i - 1, .an_unknown, Color{1, 1, 1}, Color{3, 3, 3} }
 	match true {
 		word in syntax.keywords {
-			return LineSegment2{ previous_boundary, i - 1, .a_key, Color{1, 1, 1}, Color{3, 3, 3} }
+			segment.typ = .a_key
 		}
 
 		word in syntax.literals {
-			return LineSegment2{ previous_boundary, i - 1, .a_lit, Color{1, 1, 1}, Color{3, 3, 3} }
+			segment.typ = .a_lit
+			// return LineSegment2{ previous_boundary, i - 1, .a_lit, Color{1, 1, 1}, Color{3, 3, 3} }
 		}
 		else {}
 	}
-	return none
+	return segment
 }
 
 /*
