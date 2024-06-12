@@ -677,16 +677,29 @@ fn resolve_line_segments_2(syntax workspace.Syntax, line string) []LineSegment2 
 	for i in 0..line_runes.len {
 		if i < line_runes.len && !is_alpha_underscore(int(line_runes[i])) {
 			word := line_runes[previous_boundary..i].string()
-			if word in syntax.keywords {
-				segments << LineSegment2{ previous_boundary, i - 1, .a_key, Color{1, 1, 1}, Color{3, 3, 3} }
-			} else if word in syntax.literals {
-				segments << LineSegment2{ previous_boundary, i - 1, .a_lit, Color{1, 1, 1}, Color{3, 3, 3} }
+
+			if segment := convert_word_to_segment(syntax, word, previous_boundary, i) {
+				segments << segment
 			}
 			previous_boundary = i + 1
 		}
 	}
 
 	return segments
+}
+
+fn convert_word_to_segment(syntax workspace.Syntax, word string, previous_boundary int, i int) ?LineSegment2 {
+	match true {
+		word in syntax.keywords {
+			return LineSegment2{ previous_boundary, i - 1, .a_key, Color{1, 1, 1}, Color{3, 3, 3} }
+		}
+
+		word in syntax.literals {
+			return LineSegment2{ previous_boundary, i - 1, .a_lit, Color{1, 1, 1}, Color{3, 3, 3} }
+		}
+		else {}
+	}
+	return none
 }
 
 /*
