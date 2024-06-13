@@ -628,8 +628,28 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 
 	linex = linex.runes()[..max_width].string()
 
-	segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex, view.is_multiline_comment)
-	view.is_multiline_comment = is_multiline_comment
+	// segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex, view.is_multiline_comment)
+	// view.is_multiline_comment = is_multiline_comment
+
+	line_runes := linex.runes()
+	mut pos := 0
+	segments := resolve_line_segments_2(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex)
+	for i, segment in segments {
+		if i > 0 {
+			ctx.draw_text(view.x + pos + 1, y + 1, line_runes[segments[i - 1].end..segment.start].string())
+		}
+		ctx.draw_text(view.x + 1 + segment.start, y + 1, line_runes[segment.start..segment.end].string())
+		pos = segment.end
+	}
+	/*
+	mut render_target := strings.new_builder(64)
+	for i, segment in segments {
+		if i > 0 {
+			render_target.write_runes(line_runes[segments[i - 1].end..segment.start])
+		}
+		render_target.write_runes(line_runes[segment.start..segment.end])
+		println(segment)
+	}
 
 	/*
 	if view.is_multiline_comment {
@@ -670,6 +690,7 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 			ctx.draw_text(view.x+1+pos, y+1, final)
 		}
 	}
+	*/
 }
 
 const string_boundary_runes = [`\``, `'`, `"`]
