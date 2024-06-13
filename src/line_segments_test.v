@@ -1,5 +1,7 @@
 module main
 
+import strings
+
 import lib.workspace
 
 fn syntax_for_testing() workspace.Syntax {
@@ -10,14 +12,19 @@ fn syntax_for_testing() workspace.Syntax {
 }
 
 fn test_resolve_line_segments() {
-	line := "if true && value == `jiewfiei` && other == 'stringvalue' && cheese == \"fullstring\""
+	line := "if true && value     == `jiew       fiei` && other == 'stringvalue' && cheese == \"fullstring\""
+	line_runes := line.runes()
 	segments := resolve_line_segments_2(syntax_for_testing(), line)
 
+	mut render_target := strings.new_builder(64)
 	for i, segment in segments {
-		println("SEGMENT ${i}: ${segment} -> ${line.runes()[segment.start..segment.end].string()}")
+		if i > 0 {
+			render_target.write_runes(line_runes[segments[i - 1].end..segment.start])
+		}
+		render_target.write_runes(line_runes[segment.start..segment.end])
 	}
 
-	assert true == false
+	assert render_target.str() == line
 }
 
 fn test_convert_word_to_segments() {

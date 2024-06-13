@@ -714,16 +714,6 @@ fn resolve_line_segments_2(syntax workspace.Syntax, line string) []LineSegment2 
 			previous_boundary = i + 1
 			continue
 		}
-
-		/*
-		if i < line_runes.len && is_alpha_underscore(int(line_runes[i])) {
-			continue
-		}
-
-		word := line_runes[previous_boundary..i].string()
-		segments << convert_word_to_segment(syntax, word, previous_boundary, i)
-		previous_boundary = i + 1
-		*/
 	}
 
 	return segments
