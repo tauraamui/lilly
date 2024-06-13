@@ -27,6 +27,23 @@ fn test_resolve_line_segments() {
 	assert render_target.str() == line
 }
 
+fn test_resolve_line_segments_with_if_statement() {
+	line := "if otherthing == 'fwefuweifw' { return true }"
+	line_runes := line.runes()
+	segments := resolve_line_segments_2(syntax_for_testing(), line)
+
+	mut render_target := strings.new_builder(64)
+	for i, segment in segments {
+		if i > 0 {
+			render_target.write_runes(line_runes[segments[i - 1].end..segment.start])
+		}
+		render_target.write_runes(line_runes[segment.start..segment.end])
+		println(segment)
+	}
+
+	assert render_target.str() == line
+}
+
 fn test_resolve_line_segments_with_single_line_double_slash_comment() {
 	line_with_double_slash_comment := "This is before // this is after comment"
 	line_runes := line_with_double_slash_comment.runes()
@@ -38,7 +55,6 @@ fn test_resolve_line_segments_with_single_line_double_slash_comment() {
 			render_target.write_runes(line_runes[segments[i - 1].end..segment.start])
 		}
 		render_target.write_runes(line_runes[segment.start..segment.end])
-		println(segment)
 	}
 
 	assert render_target.str() == line_with_double_slash_comment
@@ -55,7 +71,6 @@ fn test_resolve_line_segments_with_single_line_single_hash_comment() {
 			render_target.write_runes(line_runes[segments[i - 1].end..segment.start])
 		}
 		render_target.write_runes(line_runes[segment.start..segment.end])
-		println(segment)
 	}
 
 	assert render_target.str() == line_with_single_hash_comment
