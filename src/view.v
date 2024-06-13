@@ -672,16 +672,12 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 	}
 }
 
-const string_boundary_runes = {
-	`\``: `\``
-	`'`: `'`
-	`"`: `"`
-}
+const string_boundary_runes = [`\``, `'`, `"`]
+
+const single_line_comment_runes = { `/`: 2, `#`: 1 }
 
 fn is_string_boundary_rune(r rune) ?rune {
-	if rr := string_boundary_runes[r] {
-		return rr
-	}
+	if r in string_boundary_runes { return r }
 	return none
 }
 
@@ -693,6 +689,21 @@ fn resolve_line_segments_2(syntax workspace.Syntax, line string) []LineSegment2 
 	mut previous_boundary := 0
 	// for each character in line
 	for i := 0; i < line_runes.len; i++ {
+		if comment_rune_freq := single_line_comment_runes[line_runes[i]] {
+			comment_rune := line_runes[i]
+			if comment_rune_freq == 2 && i > 0 && line_runes[i - 1] == comment_rune {
+				previous_boundary = i - 1
+				segments << LineSegment2{ previous_boundary, line_runes.len, .a_comment, Color{ 1, 1, 1 }, Color{ 3, 3, 3 } }
+				break
+			}
+
+			if comment_rune_freq == 1 {
+				previous_boundary = i
+				segments << LineSegment2{ previous_boundary, line_runes.len, .a_comment, Color{ 1, 1, 1 }, Color{ 3, 3, 3 } }
+				break
+			}
+		}
+
 		// if current rune is string boundary then find next matching occurence
 		if string_boundary_rune := is_string_boundary_rune(line_runes[i]) {
 			previous_boundary = i
