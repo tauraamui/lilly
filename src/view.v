@@ -598,10 +598,11 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 
 enum SegmentKind {
 	an_unknown = 0
-	a_string = 1
-	a_comment = 2
-	a_key = 3
-	a_lit = 4
+	a_whitespace = 1
+	a_string = 2
+	a_comment = 3
+	a_key = 4
+	a_lit = 5
 }
 
 struct LineSegment {
