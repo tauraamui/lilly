@@ -82,7 +82,7 @@ fn test_convert_word_to_segments() {
 		start: 0,
 		end: 2,
 		typ: .a_key,
-		fg_color: Color{ 1, 1, 1 },
+		fg_color: Color{ 255, 126, 182 },
 		bg_color: Color{ 3, 3, 3 },
 	}
 
@@ -90,7 +90,7 @@ fn test_convert_word_to_segments() {
 		start: 0,
 		end: 4,
 		typ: .a_lit,
-		fg_color: Color{ 1, 1, 1 },
+		fg_color: Color{ 87, 215, 217 },
 		bg_color: Color{ 3, 3, 3 },
 	}
 
@@ -98,7 +98,7 @@ fn test_convert_word_to_segments() {
 		start: 0,
 		end: 6,
 		typ: .an_unknown,
-		fg_color: Color{ 1, 1, 1 },
+		fg_color: Color{ 230, 230, 230 },
 		bg_color: Color{ 3, 3, 3 },
 	}
 
@@ -106,7 +106,7 @@ fn test_convert_word_to_segments() {
 		start: 0,
 		end: 1,
 		typ: .an_unknown,
-		fg_color: Color{ 1, 1, 1 },
+		fg_color: Color{ 230, 230, 230 },
 		bg_color: Color{ 3, 3, 3 },
 	}
 }

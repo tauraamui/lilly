@@ -620,6 +620,14 @@ mut:
 	bg_color Color
 }
 
+const segment_fg_color = {
+	SegmentKind.a_key: Color{ 255, 126, 182 }
+	SegmentKind.a_lit: Color{ 87, 215, 217 }
+	SegmentKind.a_string: Color{ 87, 215, 217 }
+	SegmentKind.a_comment: Color{ 130, 130, 130 }
+	SegmentKind.an_unknown: Color{ 230, 230, 230 }
+}
+
 fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, within_selection bool) {
 	mut linex := line.replace("\t", " ".repeat(4))
 	mut max_width := view.width
@@ -636,9 +644,12 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 	segments := resolve_line_segments_2(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex)
 	for i, segment in segments {
 		if i > 0 {
+			// rendering separating whitespace
 			ctx.draw_text(view.x + pos + 1, y + 1, line_runes[segments[i - 1].end..segment.start].string())
 		}
+		ctx.set_color(r: segment.fg_color.r, g: segment.fg_color.g, b: segment.fg_color.b)
 		ctx.draw_text(view.x + 1 + segment.start, y + 1, line_runes[segment.start..segment.end].string())
+		ctx.reset_color()
 		pos = segment.end
 	}
 	/*
@@ -714,13 +725,13 @@ fn resolve_line_segments_2(syntax workspace.Syntax, line string) []LineSegment2 
 			comment_rune := line_runes[i]
 			if comment_rune_freq == 2 && i > 0 && line_runes[i - 1] == comment_rune {
 				previous_boundary = i - 1
-				segments << LineSegment2{ previous_boundary, line_runes.len, .a_comment, Color{ 1, 1, 1 }, Color{ 3, 3, 3 } }
+				segments << LineSegment2{ previous_boundary, line_runes.len, .a_comment, segment_fg_color[.a_comment], Color{ 3, 3, 3 } }
 				break
 			}
 
 			if comment_rune_freq == 1 {
 				previous_boundary = i
-				segments << LineSegment2{ previous_boundary, line_runes.len, .a_comment, Color{ 1, 1, 1 }, Color{ 3, 3, 3 } }
+				segments << LineSegment2{ previous_boundary, line_runes.len, .a_comment, segment_fg_color[.a_comment], Color{ 3, 3, 3 } }
 				break
 			}
 		}
@@ -735,7 +746,7 @@ fn resolve_line_segments_2(syntax workspace.Syntax, line string) []LineSegment2 
 			if i >= line_runes.len {
 				i = line_runes.len - 1
 			}
-			segments << LineSegment2{ previous_boundary, i + 1, .a_string, Color{ 1, 1, 1 }, Color{ 3, 3, 3 } }
+			segments << LineSegment2{ previous_boundary, i + 1, .a_string, segment_fg_color[.a_string], Color{ 3, 3, 3 } }
 			previous_boundary = i + 1
 			continue
 		}
@@ -763,12 +774,18 @@ fn convert_word_to_segment(syntax workspace.Syntax, word string, previous_bounda
 	match true {
 		word in syntax.keywords {
 			segment.typ = .a_key
+			segment.fg_color = segment_fg_color[segment.typ]
 		}
 
 		word in syntax.literals {
 			segment.typ = .a_lit
+			segment.fg_color = segment_fg_color[segment.typ]
 		}
-		else {}
+
+		else {
+			segment.typ = .an_unknown
+			segment.fg_color = segment_fg_color[segment.typ]
+		}
 	}
 	return segment
 }
