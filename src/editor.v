@@ -23,6 +23,7 @@ import lib.draw
 
 struct Editor {
 mut:
+	log                    log.Log
 	clipboard              clipboard.Clipboard
 	view                   &Viewable = unsafe { nil }
 	debug_view             bool
@@ -43,7 +44,7 @@ mut:
 }
 
 pub fn open_editor(mut _log log.Log, _clipboard clipboard.Clipboard, workspace_root_dir string) !&Editor {
-	mut editor := Editor{ clipboard: _clipboard, file_finder_modal: unsafe { nil } }
+	mut editor := Editor{ log: mut _log, clipboard: _clipboard, file_finder_modal: unsafe { nil } }
 	editor.workspace = workspace.open_workspace(
 			mut _log,
 			workspace_root_dir,
@@ -78,7 +79,7 @@ fn (mut editor Editor) open_file(path string) ! {
 	// couldn't find a view, so now search for an existing buffer with no view
 	for i, buffer in editor.buffers {
 		if buffer.file_path == path {
-			editor.views << open_view(editor.workspace.config, editor.workspace.branch(), editor.workspace.syntaxes(), editor.clipboard, mut &editor.buffers[i])
+			editor.views << open_view(mut editor.log, editor.workspace.config, editor.workspace.branch(), editor.workspace.syntaxes(), editor.clipboard, mut &editor.buffers[i])
 			editor.view = &editor.views[editor.views.len-1]
 			return
 		}
@@ -88,7 +89,7 @@ fn (mut editor Editor) open_file(path string) ! {
 	mut buff := buffer.Buffer{ file_path: path }
 	buff.load_from_path() or { return err }
 	editor.buffers << buff
-	editor.views << open_view(editor.workspace.config, editor.workspace.branch(), editor.workspace.syntaxes(), editor.clipboard, mut &editor.buffers[editor.buffers.len-1])
+	editor.views << open_view(mut editor.log, editor.workspace.config, editor.workspace.branch(), editor.workspace.syntaxes(), editor.clipboard, mut &editor.buffers[editor.buffers.len-1])
 	editor.view = &editor.views[editor.views.len-1]
 }
 

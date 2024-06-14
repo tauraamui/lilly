@@ -421,8 +421,8 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 	cmd_buf.code = .blank
 }
 
-fn open_view(config workspace.Config, branch string, syntaxes []workspace.Syntax, _clipboard clipboard.Clipboard, mut buff &buffer.Buffer) Viewable {
-	mut res := View{ log: unsafe { nil }, branch: branch, syntaxes: syntaxes, file_path: buff.file_path, config: config, leader_key: config.leader_key, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
+fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes []workspace.Syntax, _clipboard clipboard.Clipboard, mut buff &buffer.Buffer) Viewable {
+	mut res := View{ log: unsafe { mut _log }, branch: branch, syntaxes: syntaxes, file_path: buff.file_path, config: config, leader_key: config.leader_key, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
 	res.path = res.buffer.file_path
 	res.set_current_syntax_idx(os.file_ext(res.path))
 	res.cursor.selection_start = Pos{ -1, -1 }
@@ -642,9 +642,9 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 	line_runes := linex.runes()
 	mut pos := 0
 	segments := resolve_line_segments_2(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex)
+	view.log.debug("LINE ${y}, SEGMENTS: ${segments.len}")
 	for i, segment in segments {
 		if i > 0 {
-			// rendering separating whitespace
 			ctx.draw_text(view.x + pos + 1, y + 1, line_runes[segments[i - 1].end..segment.start].string())
 		}
 		ctx.set_color(r: segment.fg_color.r, g: segment.fg_color.g, b: segment.fg_color.b)
