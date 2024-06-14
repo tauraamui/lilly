@@ -753,15 +753,19 @@ fn resolve_line_segments_2(syntax workspace.Syntax, line string) []LineSegment2 
 
 		if i < line_runes.len && is_whitespace(int(line_runes[i])) {
 			word := line_runes[previous_boundary..i].string()
-			segments << convert_word_to_segment(syntax, word, previous_boundary, i)
-			previous_boundary = i + 1
+			if segment := convert_word_to_segment(syntax, word, previous_boundary, i) {
+				segments << segment
+				previous_boundary = i + 1
+			}
 			continue
 		}
 
 		if i + 1 == line_runes.len {
 			end_of_line_word := line_runes[previous_boundary..].string()
-			segments << convert_word_to_segment(syntax, line_runes[previous_boundary..].string(), previous_boundary, i + 1)
-			previous_boundary = i + 1
+			if segment := convert_word_to_segment(syntax, end_of_line_word, previous_boundary, i + 1) {
+				segments << segment
+				previous_boundary = i + 1
+			}
 			continue
 		}
 	}
@@ -769,7 +773,7 @@ fn resolve_line_segments_2(syntax workspace.Syntax, line string) []LineSegment2 
 	return segments
 }
 
-fn convert_word_to_segment(syntax workspace.Syntax, word string, previous_boundary int, i int) LineSegment2 {
+fn convert_word_to_segment(syntax workspace.Syntax, word string, previous_boundary int, i int) ?LineSegment2 {
 	mut segment := LineSegment2{ previous_boundary, i, .an_unknown, Color{1, 1, 1}, Color{3, 3, 3} }
 	match true {
 		word in syntax.keywords {

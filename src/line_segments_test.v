@@ -78,7 +78,7 @@ fn test_resolve_line_segments_with_single_line_single_hash_comment() {
 fn test_convert_word_to_segments() {
 	syntax := syntax_for_testing()
 
-	assert convert_word_to_segment(syntax, "if", 0, 2) == LineSegment2{
+	assert convert_word_to_segment(syntax, "if", 0, 2)? == LineSegment2{
 		start: 0,
 		end: 2,
 		typ: .a_key,
@@ -86,7 +86,7 @@ fn test_convert_word_to_segments() {
 		bg_color: Color{ 3, 3, 3 },
 	}
 
-	assert convert_word_to_segment(syntax, "true", 0, 4) == LineSegment2{
+	assert convert_word_to_segment(syntax, "true", 0, 4)? == LineSegment2{
 		start: 0,
 		end: 4,
 		typ: .a_lit,
@@ -94,7 +94,7 @@ fn test_convert_word_to_segments() {
 		bg_color: Color{ 3, 3, 3 },
 	}
 
-	assert convert_word_to_segment(syntax, "random", 0, 6) == LineSegment2{
+	assert convert_word_to_segment(syntax, "random", 0, 6)? == LineSegment2{
 		start: 0,
 		end: 6,
 		typ: .an_unknown,
@@ -102,7 +102,7 @@ fn test_convert_word_to_segments() {
 		bg_color: Color{ 3, 3, 3 },
 	}
 
-	assert convert_word_to_segment(syntax, "}", 0, 1) == LineSegment2{
+	assert convert_word_to_segment(syntax, "}", 0, 1)? == LineSegment2{
 		start: 0,
 		end: 1,
 		typ: .an_unknown,
