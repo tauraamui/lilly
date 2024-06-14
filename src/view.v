@@ -746,6 +746,13 @@ fn resolve_line_segments_2(syntax workspace.Syntax, line string) []LineSegment2 
 			previous_boundary = i + 1
 			continue
 		}
+
+		if i + 1 == line_runes.len {
+			end_of_line_word := line_runes[previous_boundary..].string()
+			segments << convert_word_to_segment(syntax, line_runes[previous_boundary..].string(), previous_boundary, i + 1)
+			previous_boundary = i + 1
+			continue
+		}
 	}
 
 	return segments
@@ -760,7 +767,6 @@ fn convert_word_to_segment(syntax workspace.Syntax, word string, previous_bounda
 
 		word in syntax.literals {
 			segment.typ = .a_lit
-			// return LineSegment2{ previous_boundary, i - 1, .a_lit, Color{1, 1, 1}, Color{3, 3, 3} }
 		}
 		else {}
 	}

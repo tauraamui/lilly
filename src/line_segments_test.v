@@ -38,7 +38,6 @@ fn test_resolve_line_segments_with_if_statement() {
 			render_target.write_runes(line_runes[segments[i - 1].end..segment.start])
 		}
 		render_target.write_runes(line_runes[segment.start..segment.end])
-		println(segment)
 	}
 
 	assert render_target.str() == line
@@ -98,6 +97,14 @@ fn test_convert_word_to_segments() {
 	assert convert_word_to_segment(syntax, "random", 0, 6) == LineSegment2{
 		start: 0,
 		end: 6,
+		typ: .an_unknown,
+		fg_color: Color{ 1, 1, 1 },
+		bg_color: Color{ 3, 3, 3 },
+	}
+
+	assert convert_word_to_segment(syntax, "}", 0, 1) == LineSegment2{
+		start: 0,
+		end: 1,
 		typ: .an_unknown,
 		fg_color: Color{ 1, 1, 1 },
 		bg_color: Color{ 3, 3, 3 },
