@@ -599,12 +599,30 @@ enum SegmentKind {
 	a_comment = 2
 	a_key = 3
 	a_lit = 4
+	an_unknown = 5
 }
 
 struct LineSegment {
 	start int
 	end   int
 	typ   SegmentKind
+}
+
+struct LineSegment2 {
+	start int
+	end   int
+mut:
+	typ   SegmentKind
+	fg_color Color
+	bg_color Color
+}
+
+const segment_fg_color = {
+	SegmentKind.a_key: Color{ 255, 126, 182 }
+	SegmentKind.a_lit: Color{ 87, 215, 217 }
+	SegmentKind.a_string: Color{ 87, 215, 217 }
+	SegmentKind.a_comment: Color{ 130, 130, 130 }
+	SegmentKind.an_unknown: Color{ 230, 230, 230 }
 }
 
 fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, within_selection bool) {
@@ -615,8 +633,9 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 
 	linex = linex.runes()[..max_width].string()
 
-	segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex, view.is_multiline_comment)
-	view.is_multiline_comment = is_multiline_comment
+	// segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex, view.is_multiline_comment)
+	// view.is_multiline_comment = is_multiline_comment
+	segments := resolve_line_segments_2(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex)
 
 	/*
 	if view.is_multiline_comment {
@@ -634,20 +653,31 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 	mut pos := 0
 	for i, segment in segments {
 		// render text before next segment
+		/*
 		if segment.start > pos {
 			s := linex.runes()[pos..segment.start].string()
 			ctx.draw_text(view.x+1+pos, y+1, s)
 		}
+		*/
 
+		if i > 0 {
+			ctx.draw_text(view.x + pos + 1, y + 1, linex.runes()[segments[i - 1].end..segment.start].string())
+		}
+		ctx.set_color(r: segment.fg_color.r, g: segment.fg_color.g, b: segment.fg_color.b)
+
+		/*
 		typ := segment.typ
 		color := match typ {
 			.a_key { Color{ 255, 126, 182 } }
 			.a_lit { Color{ 87, 215, 217 } }
 			.a_string { Color{ 87, 215, 217 } }
 			.a_comment { Color{ 130, 130, 130 } }
+			.an_unknown { Color{ 1, 1, 1 } }
 		}
+		*/
 		s := linex.runes()[segment.start..segment.end].string()
-		ctx.set_color(r: color.r, g: color.g, b: color.b)
+		ctx.set_color(r: segment.fg_color.r, g: segment.fg_color.g, b: segment.fg_color.b)
+		// ctx.set_color(r: color.r, g: color.g, b: color.b)
 		ctx.draw_text(view.x+1+segment.start, y+1, s)
 		ctx.reset_color()
 		pos = segment.end
@@ -656,6 +686,96 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 			ctx.draw_text(view.x+1+pos, y+1, final)
 		}
 	}
+}
+
+const string_boundary_runes = [`\``, `'`, `"`]
+
+const single_line_comment_runes = { `/`: 2, `#`: 1 }
+
+fn is_string_boundary_rune(r rune) ?rune {
+	if r in string_boundary_runes { return r }
+	return none
+}
+
+fn resolve_line_segments_2(syntax workspace.Syntax, line string) []LineSegment2 {
+	mut segments := []LineSegment2{}
+
+	line_runes := line.runes()
+
+	mut previous_boundary := 0
+	// for each character in line
+	for i := 0; i < line_runes.len; i++ {
+		if comment_rune_freq := single_line_comment_runes[line_runes[i]] {
+			comment_rune := line_runes[i]
+			if comment_rune_freq == 2 && i > 0 && line_runes[i - 1] == comment_rune {
+				previous_boundary = i - 1
+				segments << LineSegment2{ previous_boundary, line_runes.len, .a_comment, segment_fg_color[.a_comment], Color{ 3, 3, 3 } }
+				break
+			}
+
+			if comment_rune_freq == 1 {
+				previous_boundary = i
+				segments << LineSegment2{ previous_boundary, line_runes.len, .a_comment, segment_fg_color[.a_comment], Color{ 3, 3, 3 } }
+				break
+			}
+		}
+
+		// if current rune is string boundary then find next matching occurence
+		if string_boundary_rune := is_string_boundary_rune(line_runes[i]) {
+			previous_boundary = i
+			i += 1
+			for i < line_runes.len - 1 && line_runes[i] != string_boundary_rune {
+				i++
+			}
+			if i >= line_runes.len {
+				i = line_runes.len - 1
+			}
+			segments << LineSegment2{ previous_boundary, i + 1, .a_string, segment_fg_color[.a_string], Color{ 3, 3, 3 } }
+			previous_boundary = i + 1
+			continue
+		}
+
+		if i < line_runes.len && is_whitespace(int(line_runes[i])) {
+			word := line_runes[previous_boundary..i].string()
+			if segment := convert_word_to_segment(syntax, word, previous_boundary, i) {
+				segments << segment
+				previous_boundary = i + 1
+			}
+			continue
+		}
+
+		if i + 1 == line_runes.len {
+			end_of_line_word := line_runes[previous_boundary..].string()
+			if segment := convert_word_to_segment(syntax, end_of_line_word, previous_boundary, i + 1) {
+				segments << segment
+				previous_boundary = i + 1
+			}
+			continue
+		}
+	}
+
+	return segments
+}
+
+fn convert_word_to_segment(syntax workspace.Syntax, word string, previous_boundary int, i int) ?LineSegment2 {
+	mut segment := LineSegment2{ previous_boundary, i, .an_unknown, Color{1, 1, 1}, Color{3, 3, 3} }
+	match true {
+		word in syntax.keywords {
+			segment.typ = .a_key
+			segment.fg_color = segment_fg_color[segment.typ]
+		}
+
+		word in syntax.literals {
+			segment.typ = .a_lit
+			segment.fg_color = segment_fg_color[segment.typ]
+		}
+
+		else {
+			segment.typ = .an_unknown
+			segment.fg_color = segment_fg_color[segment.typ]
+		}
+	}
+	return segment
 }
 
 fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comment bool) ([]LineSegment, bool) {
