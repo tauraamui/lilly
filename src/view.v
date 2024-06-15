@@ -565,7 +565,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 		ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width(), cursor_screen_space_y+1)
 	}
 
-	color := view.config.selection_highlight_color
+	// color := view.config.selection_highlight_color
 	mut within_selection := false
 	// draw document text
 	for y, line in view.buffer.lines[view.from..to] {
@@ -589,6 +589,10 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 			}
 		}
 		*/
+
+		if y == cursor_screen_space_y {
+			ctx.set_bg_color(r: 53, g: 53, b: 53)
+		}
 
 		search_matches := view.search.get_line_matches(document_space_y)
 		if search_matches.len > 0 { ctx.set_bg_color(r: 53, g: 100, b: 230) }
@@ -642,7 +646,6 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 	line_runes := linex.runes()
 	mut pos := 0
 	segments := resolve_line_segments_2(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex)
-	view.log.debug("LINE ${y}, SEGMENTS: ${segments.len}")
 	for i, segment in segments {
 		if i > 0 {
 			ctx.draw_text(view.x + pos + 1, y + 1, line_runes[segments[i - 1].end..segment.start].string())
@@ -652,56 +655,6 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 		ctx.reset_color()
 		pos = segment.end
 	}
-	/*
-	mut render_target := strings.new_builder(64)
-	for i, segment in segments {
-		if i > 0 {
-			render_target.write_runes(line_runes[segments[i - 1].end..segment.start])
-		}
-		render_target.write_runes(line_runes[segment.start..segment.end])
-		println(segment)
-	}
-
-	/*
-	if view.is_multiline_comment {
-		ctx.set_color(r: 130, g: 130, b: 130)
-		ctx.draw_text(view.x+1, y+1, linex)
-		return
-	}
-	*/
-
-	if segments.len == 0 || within_selection {
-		ctx.draw_text(view.x+1, y+1, linex)
-		return
-	}
-
-	mut pos := 0
-	for i, segment in segments {
-		// render text before next segment
-		if segment.start > pos {
-			s := linex.runes()[pos..segment.start].string()
-			ctx.draw_text(view.x+1+pos, y+1, s)
-		}
-
-		typ := segment.typ
-		mut color := match typ {
-			.a_key { Color{ 255, 126, 182 } }
-			.a_lit { Color{ 87, 215, 217 } }
-			.a_string { Color{ 87, 215, 217 } }
-			.a_comment { Color{ 130, 130, 130 } }
-			else { Color{ 230, 230, 230 } }
-		}
-		s := linex.runes()[segment.start..segment.end].string()
-		ctx.set_color(r: color.r, g: color.g, b: color.b)
-		ctx.draw_text(view.x+1+segment.start, y+1, s)
-		ctx.reset_color()
-		pos = segment.end
-		if i == segments.len - 1 && segment.end < linex.len {
-			final := linex.runes()[segment.end..linex.runes().len].string()
-			ctx.draw_text(view.x+1+pos, y+1, final)
-		}
-	}
-	*/
 }
 
 const string_boundary_runes = [`\``, `'`, `"`]
@@ -793,26 +746,6 @@ fn convert_word_to_segment(syntax workspace.Syntax, word string, previous_bounda
 	}
 	return segment
 }
-
-/*
-fn resolve_next(syntax workspace.Syntax, start_offset int, line_runes []rune, mut segments []LineSegment2) {
-	mut end := 0
-	for i in 0..line_runes.len {
-		if !is_alpha_underscore(int(line_runes[i])) {
-			end = i
-			break
-		}
-	}
-	word := line_runes[..end].string()
-	if word in syntax.keywords {
-		segments << LineSegment2{ start_offset, end, .a_key, Color{ 230, 230, 230 }, Color{ 124, 124, 124 } }
-	}
-
-	println("end: ${start_offset + end}, ${line_runes[end + 1..]}")
-	println("SEGMENTS: ${segments}")
-	resolve_next(syntax, start_offset + end, line_runes[end + 1..], mut segments)
-}
-*/
 
 fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comment bool) ([]LineSegment, bool) {
 	mut segments := []LineSegment{}

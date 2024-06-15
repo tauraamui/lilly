@@ -1,6 +1,7 @@
 module main
 
 import strings
+import time
 
 import lib.workspace
 
@@ -9,6 +10,24 @@ fn syntax_for_testing() workspace.Syntax {
 		keywords: [ "if" ]
 		literals: [ "true" ]
 	}
+}
+
+fn test_benchmark_resolve_line_segments2() {
+	line := "if true && value     == `jiew       fiei` && other == 'stringvalue' && cheese == \"fullstring\""
+	mut sw := time.new_stopwatch()
+	sw.start()
+	resolve_line_segments_2(syntax_for_testing(), line)
+	sw.stop()
+	assert sw.elapsed().microseconds() <= 80
+}
+
+fn test_benchmark_resolve_line_segments() {
+	line := "if true && value     == `jiew       fiei` && other == 'stringvalue' && cheese == \"fullstring\""
+	mut sw := time.new_stopwatch()
+	sw.start()
+	resolve_line_segments(syntax_for_testing(), line, false)
+	sw.stop()
+	assert sw.elapsed().microseconds() <= 800
 }
 
 fn test_resolve_line_segments() {
