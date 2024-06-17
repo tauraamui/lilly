@@ -16,7 +16,7 @@ fn test_benchmark_resolve_line_segments2() {
 	line := "if true && value     == `jiew       fiei` && other == 'stringvalue' && cheese == \"fullstring\""
 	mut sw := time.new_stopwatch()
 	sw.start()
-	resolve_line_segments_2(syntax_for_testing(), line)
+	assert resolve_line_segments_2(syntax_for_testing(), line).len == 20
 	sw.stop()
 	assert sw.elapsed().microseconds() <= 80
 }
@@ -25,7 +25,8 @@ fn test_benchmark_resolve_line_segments() {
 	line := "if true && value     == `jiew       fiei` && other == 'stringvalue' && cheese == \"fullstring\""
 	mut sw := time.new_stopwatch()
 	sw.start()
-	resolve_line_segments(syntax_for_testing(), line, false)
+	segments, _ := resolve_line_segments(syntax_for_testing(), line, false)
+	assert segments.len == 5
 	sw.stop()
 	assert sw.elapsed().microseconds() <= 800
 }
