@@ -663,7 +663,6 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 			ctx.draw_text(view.x+1+pos, y+1, s)
 		}
 
-		typ := segment.typ
 		color := segment.fg_color
 		s := linex.runes()[segment.start..segment.end].string()
 		ctx.set_color(r: color.r, g: color.g, b: color.b)
