@@ -590,7 +590,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 
 		search_matches := view.search.get_line_matches(document_space_y)
 		if search_matches.len > 0 { ctx.set_bg_color(r: 53, g: 100, b: 230) }
-		view.draw_text_line(mut ctx, y, line, LineSelectionBounds{ full: true })
+		view.draw_text_line(mut ctx, y, line, LineSelectionBounds{ full: within_selection })
 	}
 }
 
