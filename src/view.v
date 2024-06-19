@@ -590,7 +590,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 
 		search_matches := view.search.get_line_matches(document_space_y)
 		if search_matches.len > 0 { ctx.set_bg_color(r: 53, g: 100, b: 230) }
-		view.draw_text_line(mut ctx, y, line, within_selection)
+		view.draw_text_line(mut ctx, y, line, LineSelectionBounds{ full: true })
 	}
 }
 
@@ -602,12 +602,36 @@ enum SegmentKind {
 }
 
 struct LineSegment {
-	start int
-	end   int
-	typ   SegmentKind
+	start    int
+	end      int
+	typ      SegmentKind
+	fg_color Color
+	bg_color Color = Color{ 1, 1, 1 }
 }
 
-fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, within_selection bool) {
+fn LineSegment.new_key(start int, end int) LineSegment {
+	return LineSegment{ start, end, .a_key, Color{ 255, 126, 182 }, Color{ 1, 1, 1 } }
+}
+
+fn LineSegment.new_literal(start int, end int) LineSegment {
+	return LineSegment{ start, end, .a_lit, Color{ 87, 215, 217 }, Color{ 1, 1, 1 } }
+}
+
+fn LineSegment.new_string(start int, end int) LineSegment {
+	return LineSegment{ start, end, .a_string, Color{ 87, 215, 217 }, Color{ 1, 1, 1 } }
+}
+
+fn LineSegment.new_comment(start int, end int) LineSegment {
+	return LineSegment{ start, end, .a_comment, Color{ 130, 130, 130 }, Color{ 1, 1, 1 } }
+}
+
+struct LineSelectionBounds {
+	start int
+	end   int
+	full  bool
+}
+
+fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, line_selection_bounds LineSelectionBounds) {
 	mut linex := line.replace("\t", " ".repeat(4))
 	mut max_width := view.width
 	visible_len := utf8_str_visible_length(linex)
@@ -626,7 +650,7 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 	}
 	*/
 
-	if segments.len == 0 || within_selection {
+	if segments.len == 0 || line_selection_bounds.full {
 		ctx.draw_text(view.x+1, y+1, linex)
 		return
 	}
@@ -640,12 +664,7 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 		}
 
 		typ := segment.typ
-		color := match typ {
-			.a_key { Color{ 255, 126, 182 } }
-			.a_lit { Color{ 87, 215, 217 } }
-			.a_string { Color{ 87, 215, 217 } }
-			.a_comment { Color{ 130, 130, 130 } }
-		}
+		color := segment.fg_color
 		s := linex.runes()[segment.start..segment.end].string()
 		ctx.set_color(r: color.r, g: color.g, b: color.b)
 		ctx.draw_text(view.x+1+segment.start, y+1, s)
@@ -666,13 +685,15 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 		start := i
 		// '//' comment
 		if i > 0 && line_runes[i - 1] == `/` && line_runes[i] == `/` {
-			segments << LineSegment{ start - 1, line_runes.len, .a_comment }
+			segments << LineSegment.new_comment(start - 1, line_runes.len)
+			// segments << LineSegment{ start - 1, line_runes.len, .a_comment, Color{ 130, 130, 130 } }
 			break
 		}
 
 		// '#' comment
 		if line_runes[i] == `#` {
-			segments << LineSegment{ start, line_runes.len, .a_comment }
+			// segments << LineSegment{ start, line_runes.len, .a_comment }
+			segments << LineSegment.new_comment(start, line_runes.len)
 			break
 		}
 
@@ -681,14 +702,16 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 		if i > 0 && line_runes[i - 1] == `/` && line_runes[i] == `*` && !(line_runes[line_runes.len - 2] == `*`
 			&& line_runes[line_runes.len - 1] == `/`) {
 			// all after /* is  a comment
-			segments << LineSegment{ start, line_runes.len, .a_comment }
+			segments << LineSegment.new_comment(start, line_runes.len)
+			// segments << LineSegment{ start, line_runes.len, .a_comment }
 			is_multiline_commentx = true
 			break
 		}
 		// end of /* */
 		if i > 0 && line_runes[i - 1] == `*` && line_runes[i] == `/` {
 			// all before */ is still a comment
-			segments << LineSegment{ 0, start + 1, .a_comment }
+			segments << LineSegment.new_comment(0, start + 1)
+			// segments << LineSegment{ 0, start + 1, .a_comment }
 			is_multiline_commentx = false
 			break
 		}
@@ -702,7 +725,8 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 			if i >= line_runes.len {
 				i = line_runes.len - 1
 			}
-			segments << LineSegment{ start, i + 1, .a_string }
+			segments << LineSegment.new_string(start, i + 1)
+			// segments << LineSegment{ start, i + 1, .a_string }
 		}
 
 		if line_runes[i] == `"` {
@@ -713,7 +737,8 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 			if i >= line_runes.len {
 				i = line_runes.len - 1
 			}
-			segments << LineSegment{ start, i + 1, .a_string }
+			segments << LineSegment.new_string(start, i + 1)
+			// segments << LineSegment{ start, i + 1, .a_string }
 		}
 
 		if line_runes[i] == `\`` {
@@ -724,7 +749,8 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 			if i >= line_runes.len {
 				i = line_runes.len - 1
 			}
-			segments << LineSegment{ start, i + 1, .a_string }
+			segments << LineSegment.new_string(start, i + 1)
+			// segments << LineSegment{ start, i + 1, .a_string }
 		}
 
 		// key
@@ -733,9 +759,11 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 		}
 		word := line.runes()[start..i].string()
 		if word in syntax.literals {
-			segments << LineSegment{ start, i, .a_lit }
+			segments << LineSegment.new_literal(start, i)
+			// segments << LineSegment{ start, i, .a_lit }
 		} else if word in syntax.keywords {
-			segments << LineSegment{ start, i, .a_key }
+			segments << LineSegment.new_key(start, i)
+			// segments << LineSegment{ start, i, .a_key }
 		}
 	}
 	return segments, is_multiline_commentx
