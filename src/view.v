@@ -560,7 +560,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
 	// draw cursor line
-	if view.mode != .visual {
+	if view.mode != .visual_line {
 		if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
 		ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width(), cursor_screen_space_y+1)
 	}
@@ -576,7 +576,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 
 		document_space_y := view.from + y
 		match view.mode {
-			.visual {
+			.visual_line {
 				within_selection = view.cursor.line_is_within_selection(document_space_y)
 				if within_selection { ctx.set_bg_color(r: color.r, g: color.g, b: color.b) }
 			}
@@ -1127,8 +1127,8 @@ fn (mut view View) i() {
 	view.buffer.snapshot()
 }
 
-fn (mut view View) v() {
-	view.mode = .visual
+fn (mut view View) shift_v() {
+	view.mode = .visual_line
 	view.cursor.selection_start = view.cursor.pos
 }
 

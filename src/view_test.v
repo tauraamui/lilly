@@ -223,7 +223,7 @@ fn test_resolve_whitespace_prefix_on_line_with_no_text() {
 	assert resolve_whitespace_prefix(test_line_with_just_4_spaces).len == 4
 }
 
-fn test_v_toggles_visual_mode_and_starts_selection() {
+fn test_shift_v_toggles_visual_line_mode_and_starts_selection() {
 	mut clip := clipboard.new()
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 	// manually set the "document" contents
@@ -233,9 +233,9 @@ fn test_v_toggles_visual_mode_and_starts_selection() {
 	fake_view.cursor.pos.x = 6
 
 	// invoke the 'v' command
-	fake_view.v()
+	fake_view.shift_v()
 
-	assert fake_view.mode == .visual
+	assert fake_view.mode == .visual_line
 	assert fake_view.cursor.selection_active()
 	assert fake_view.cursor.selection_start == Pos{ 6, 0 }
 }
@@ -541,7 +541,7 @@ fn test_visual_indent_indents_highlighted_lines() {
 
 	fake_view.cursor.pos.y = 1
 
-	fake_view.v()
+	fake_view.shift_v()
 	fake_view.j()
 	fake_view.j()
 	fake_view.j()
@@ -559,7 +559,7 @@ fn test_visual_indent_indents_highlighted_lines() {
 }
 
 fn test_visual_unindent_unindents_highlighted_lines() {
-    mut fake_view := View{ log: unsafe { nil }, mode: .visual, clipboard: clipboard.new(), config: workspace.Config{ insert_tabs_not_spaces: true } }
+    mut fake_view := View{ log: unsafe { nil }, mode: .visual_line, clipboard: clipboard.new(), config: workspace.Config{ insert_tabs_not_spaces: true } }
 
 	fake_view.buffer.lines = [
 		"1. first line",
@@ -572,7 +572,7 @@ fn test_visual_unindent_unindents_highlighted_lines() {
 
 	fake_view.cursor.pos.y = 1
 
-	fake_view.v()
+	fake_view.shift_v()
 	fake_view.j()
 	fake_view.j()
 	fake_view.j()
@@ -599,7 +599,7 @@ fn test_visual_insert_mode_and_delete_in_place() {
 	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 1
 
-	fake_view.v()
+	fake_view.shift_v()
 	fake_view.visual_d(true)
 
 	assert fake_view.mode == .normal
@@ -616,7 +616,7 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 1
 
-	fake_view.v()
+	fake_view.shift_v()
 	fake_view.j()
 	fake_view.visual_d(true)
 
@@ -641,7 +641,7 @@ fn test_visual_selection_copy() {
 	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 1
 
-	fake_view.v()
+	fake_view.shift_v()
 	fake_view.j()
 	fake_view.visual_y()
 
@@ -707,7 +707,7 @@ fn test_visual_paste() {
 	// ensure cursor is set to sit on second line
 	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 1
-	fake_view.v()
+	fake_view.shift_v()
 	fake_view.j()
 
 	fake_view.visual_p()
