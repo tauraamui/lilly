@@ -624,11 +624,14 @@ enum SegmentKind {
 }
 
 struct LineSegment {
-	start    int
-	end      int
-	typ      SegmentKind
-	fg_color Color
-	bg_color Color = Color{ 1, 1, 1 }
+	start            int
+	end              int
+	within_selection bool
+	selection_start  int
+	selection_end    int
+	typ              SegmentKind
+	fg_color         Color
+	bg_color         Color = Color{ 1, 1, 1 }
 }
 
 fn LineSegment.new_key(start int, end int) LineSegment {
@@ -645,6 +648,10 @@ fn LineSegment.new_string(start int, end int) LineSegment {
 
 fn LineSegment.new_comment(start int, end int) LineSegment {
 	return LineSegment{ start, end, .a_comment, Color{ 130, 130, 130 }, Color{ 1, 1, 1 } }
+}
+
+fn (mut line_segment LineSegment) accomodate_selection(selection_start int, selection_end Pos) {
+    // TODO(tauraamui): implement some kind of selection contents acknowledger thing
 }
 
 struct LineSelectionBounds {

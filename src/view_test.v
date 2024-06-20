@@ -260,7 +260,11 @@ fn resolve_test_syntax() workspace.Syntax {
 fn test_resolve_line_segments_and_change_colors_if_in_selection() {
     line := "for thing != nil { print(true) }"
     line_segments, _ := resolve_line_segments(resolve_test_syntax(), line, false)
-    assert line_segments == []
+    assert line_segments.len == 3
+    for line_segment in line_segments {
+        println("LINE SEGMENT: ${line_segment}")
+    }
+    assert true == false // to force log output from this test to show in stdout
 }
 
 fn test_shift_v_toggles_visual_line_mode_and_starts_selection() {
