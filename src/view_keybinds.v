@@ -23,7 +23,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				.j     { view.exec(view.chord.j()) }
 				.k     { view.exec(view.chord.k()) }
 				.i     { view.exec(view.chord.i()) }
-				.v     { if e.modifiers == .shift { view.v() } }
+				.v     { if e.modifiers == .shift { view.shift_v() } }
 				.e     { view.exec(view.chord.e()) }
 				.w     { view.exec(view.chord.w()) }
 				.b     { view.exec(view.chord.b()) }
@@ -53,7 +53,8 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				else {}
 			}
 		}
-		.visual {
+		.visual {}
+		.visual_line {
 			match e.code {
 				.escape    { view.escape() }
 				.h         { view.h() }
