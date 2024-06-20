@@ -30,25 +30,47 @@ import lib.draw
 struct Cursor {
 mut:
 	pos             Pos
-	selection_start Pos
+	selection_start_pos Pos
 }
 
 fn (cursor Cursor) line_is_within_selection(line_y int) bool {
-	start := if cursor.selection_start.y < cursor.pos.y { cursor.selection_start.y } else { cursor.pos.y }
-	end   := if cursor.pos.y > cursor.selection_start.y { cursor.pos.y } else { cursor.selection_start.y }
+	start := if cursor.selection_start_pos.y < cursor.pos.y { cursor.selection_start_pos.y } else { cursor.pos.y }
+	end   := if cursor.pos.y > cursor.selection_start_pos.y { cursor.pos.y } else { cursor.selection_start_pos.y }
 
 	return line_y >= start && line_y <= end
 }
 
+fn (cursor Cursor) selection_start() Pos {
+    return Pos{
+        x: cursor.selection_start_x(),
+        y: cursor.selection_start_y()
+    }
+}
+
+fn (cursor Cursor) selection_end() Pos {
+    return Pos{
+        x: cursor.selection_end_x(),
+        y: cursor.selection_end_y()
+    }
+}
+
+fn (cursor Cursor) selection_start_x() int {
+    return if cursor.selection_start_pos.x < cursor.pos.x { cursor.selection_start_pos.x } else { cursor.pos.x }
+}
+
+fn (cursor Cursor) selection_end_x() int {
+    return if cursor.pos.x > cursor.selection_start_pos.x { cursor.pos.x } else { cursor.selection_start_pos.x }
+}
+
 fn (cursor Cursor) selection_start_y() int {
-	return if cursor.selection_start.y < cursor.pos.y { cursor.selection_start.y } else { cursor.pos.y }
+	return if cursor.selection_start_pos.y < cursor.pos.y { cursor.selection_start_pos.y } else { cursor.pos.y }
 }
 
 fn (cursor Cursor) selection_end_y() int {
-	return if cursor.pos.y > cursor.selection_start.y { cursor.pos.y } else { cursor.selection_start.y }
+	return if cursor.pos.y > cursor.selection_start_pos.y { cursor.pos.y } else { cursor.selection_start_pos.y }
 }
 
-fn (cursor Cursor) selection_active() bool { return cursor.selection_start.x >= 0 && cursor.selection_start.y >= 0 }
+fn (cursor Cursor) selection_active() bool { return cursor.selection_start_pos.x >= 0 && cursor.selection_start_pos.y >= 0 }
 
 struct Pos {
 mut:
@@ -425,7 +447,7 @@ fn open_view(config workspace.Config, branch string, syntaxes []workspace.Syntax
 	mut res := View{ log: unsafe { nil }, branch: branch, syntaxes: syntaxes, file_path: buff.file_path, config: config, leader_key: config.leader_key, mode: .normal, show_whitespace: false, clipboard: _clipboard, buffer: buff }
 	res.path = res.buffer.file_path
 	res.set_current_syntax_idx(os.file_ext(res.path))
-	res.cursor.selection_start = Pos{ -1, -1 }
+	res.cursor.selection_start_pos = Pos{ -1, -1 }
 	return res
 }
 
@@ -991,7 +1013,7 @@ fn (mut view View) escape() {
 		if view.cursor.selection_active() {
 			view.cursor.pos.y = view.cursor.selection_start_y()
 		}
-		view.cursor.selection_start = Pos{ -1, -1 }
+		view.cursor.selection_start_pos = Pos{ -1, -1 }
 		view.clamp_cursor_within_document_bounds()
 		view.scroll_from_and_to()
 	}
@@ -1127,9 +1149,14 @@ fn (mut view View) i() {
 	view.buffer.snapshot()
 }
 
+fn (mut view View) v() {
+    view.mode = .visual
+    view.cursor.selection_start_pos = view.cursor.pos
+}
+
 fn (mut view View) shift_v() {
 	view.mode = .visual_line
-	view.cursor.selection_start = view.cursor.pos
+	view.cursor.selection_start_pos = view.cursor.pos
 }
 
 fn (mut view View) r() {
