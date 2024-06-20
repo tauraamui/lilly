@@ -223,6 +223,31 @@ fn test_resolve_whitespace_prefix_on_line_with_no_text() {
 	assert resolve_whitespace_prefix(test_line_with_just_4_spaces).len == 4
 }
 
+fn test_v_toggles_visual_mode_and_starts_selection() {
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+	// manually set the "document" contents
+	fake_view.buffer.lines = ["1. first line"]
+
+	// ensure cursor is set to sit on sort of in the middle of the first line
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 6
+
+	// invoke the 'v' command
+	fake_view.v()
+
+	assert fake_view.mode == .visual
+	assert fake_view.cursor.selection_active()
+	selection_start := fake_view.cursor.selection_start()
+	assert selection_start == Pos{ 6, 0 }
+	assert fake_view.cursor.pos == selection_start
+
+    fake_view.dollar()
+
+	assert fake_view.cursor.selection_start() == Pos{ 6, 0 }
+	assert fake_view.cursor.selection_end() == Pos{ 12, 0 }
+}
+
 fn test_shift_v_toggles_visual_line_mode_and_starts_selection() {
 	mut clip := clipboard.new()
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
@@ -232,12 +257,12 @@ fn test_shift_v_toggles_visual_line_mode_and_starts_selection() {
 	fake_view.cursor.pos.y = 0
 	fake_view.cursor.pos.x = 6
 
-	// invoke the 'v' command
+	// invoke the 'shift v' command
 	fake_view.shift_v()
 
 	assert fake_view.mode == .visual_line
 	assert fake_view.cursor.selection_active()
-	assert fake_view.cursor.selection_start == Pos{ 6, 0 }
+	assert fake_view.cursor.selection_start() == Pos{ 6, 0 }
 }
 
 fn test_enter_from_start_of_line() {
