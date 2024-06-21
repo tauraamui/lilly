@@ -17,6 +17,7 @@ module main
 import arrays
 import lib.clipboard
 import lib.workspace
+import json
 import lib.draw
 import term.ui as tui
 
@@ -246,6 +247,60 @@ fn test_v_toggles_visual_mode_and_starts_selection() {
 
 	assert fake_view.cursor.selection_start() == Pos{ 6, 0 }
 	assert fake_view.cursor.selection_end() == Pos{ 12, 0 }
+}
+
+fn resolve_test_syntax() workspace.Syntax {
+    return json.decode(workspace.Syntax, '{
+        "name": "test",
+        "keywords": ["for", "func", "print"],
+        "literals": ["nil", "true", "false"]
+    }') or { panic("failed to parse test syntax: ${err}") }
+}
+
+fn test_line_segments_accomodate_selection_full_line() {
+    line := "for thing != nil { print(true) }"
+    mut line_segments, _ := resolve_line_segments(resolve_test_syntax(), line, 0, false)
+    assert line_segments.len == 4
+    for mut line_segment in line_segments {
+        line_segment.accomodate_selection(0, Pos{ 0, 0 }, Pos{ line.runes().len, 0 })
+        assert line_segment.within_selection
+    }
+}
+
+fn test_line_segments_accomodate_selection_when_selection_inside_span() {
+    line := "for thing != nil { print(true) }"
+    mut line_segments, _ := resolve_line_segments(resolve_test_syntax(), line, 0, false)
+    assert line_segments.len == 4
+    for i, mut line_segment in line_segments {
+        if i != 2 { continue }
+        line_segment.accomodate_selection(0, Pos{ 20, 0 }, Pos{ 23, 0 })
+        assert line_segment.within_selection
+        assert line_segment.selection_start == 20
+        assert line_segment.selection_end == 23
+    }
+}
+
+fn test_line_segments_accomodate_selection_when_selection_encompasses_multiple_spans() {
+    line := "for thing != nil { print(true) }"
+    mut line_segments, _ := resolve_line_segments(resolve_test_syntax(), line, 0, false)
+    assert line_segments.len == 4
+    for i, mut line_segment in line_segments {
+        if i == 0 || i == line_segments.len - 1 { continue }
+        line_segment.accomodate_selection(0, Pos{ 10, 0 }, Pos{ 23, 0 })
+        if i == 1 {
+            assert line_segment.within_selection
+            assert line_segment.selection_start == 13
+            assert line_segment.selection_end == 16
+            continue
+        }
+
+        if i == 2 {
+            assert line_segment.within_selection
+            assert line_segment.selection_start == 19
+            assert line_segment.selection_end == 23
+            continue
+        }
+    }
 }
 
 fn test_shift_v_toggles_visual_line_mode_and_starts_selection() {
