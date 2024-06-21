@@ -677,13 +677,43 @@ fn LineSegment.new_comment(start int, line_y int, end int) LineSegment {
 }
 
 fn (mut line_segment LineSegment) accomodate_selection(line_y int, selection_start Pos, selection_end Pos) {
+    defer { line_segment.within_selection = (line_segment.selection_start != 0 || line_segment.selection_end != 0) }
+    // if line segment lies outside of selection span
     if line_segment.line_y < selection_start.y || line_segment.line_y > selection_end.y { return }
+    // if selection span completely encompasses current line
     if selection_start.y != selection_end.y && line_segment.line_y > selection_start.y && line_segment.line_y < selection_end.y {
         line_segment.selection_start = line_segment.start
         line_segment.selection_end = line_segment.end
         return
     }
-    // TODO(tauraamui): provide defer to set selection flag to true if values make sense for it to be
+    // does the segment start after the end of the selection span
+    if line_segment.start > selection_end.x { return }
+    // does the entire span of the segment exist prior to the selection start x
+    if line_segment.start < selection_start.x && line_segment.end < selection_start.x { return }
+
+    // does the selection span match the segment span exactly
+    if selection_start.x <= line_segment.start && selection_end.x >= line_segment.end {
+        line_segment.selection_start = line_segment.start
+        line_segment.selection_end = line_segment.end
+        return
+    }
+
+    // does the selection completely envelop the segment
+    if selection_start.x > line_segment.start && selection_end.x < line_segment.end {
+        line_segment.selection_start = selection_start.x
+        line_segment.selection_end = selection_end.x
+        return
+    }
+
+    if selection_start.x > line_segment.start && selection_start.x < line_segment.end {
+        line_segment.selection_start = selection_start.x
+        if selection_end.x >= line_segment.end {
+            line_segment.selection_end = line_segment.end
+            return
+        }
+        line_segment.selection_end = selection_end.x
+        return
+    }
 }
 
 struct LineSelectionBounds {

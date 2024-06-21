@@ -257,14 +257,27 @@ fn resolve_test_syntax() workspace.Syntax {
     }') or { panic("failed to parse test syntax: ${err}") }
 }
 
-fn test_resolve_line_segments_and_change_colors_if_in_selection() {
+fn test_line_segments_accomodate_selection_full_line() {
     line := "for thing != nil { print(true) }"
     mut line_segments, _ := resolve_line_segments(resolve_test_syntax(), line, 0, false)
     assert line_segments.len == 4
     for mut line_segment in line_segments {
         line_segment.accomodate_selection(0, Pos{ 0, 0 }, Pos{ line.runes().len, 0 })
+        assert line_segment.within_selection
     }
-    assert true == false // to force log output from this test to show in stdout
+}
+
+fn test_line_segments_accomodate_selection_when_selection_inside_span() {
+    line := "for thing != nil { print(true) }"
+    mut line_segments, _ := resolve_line_segments(resolve_test_syntax(), line, 0, false)
+    assert line_segments.len == 4
+    for i, mut line_segment in line_segments {
+        if i != 2 { continue }
+        line_segment.accomodate_selection(0, Pos{ 20, 0 }, Pos{ 23, 0 })
+        assert line_segment.within_selection
+        assert line_segment.selection_start == 20
+        assert line_segment.selection_end == 23
+    }
 }
 
 fn test_shift_v_toggles_visual_line_mode_and_starts_selection() {
