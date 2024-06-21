@@ -635,19 +635,39 @@ struct LineSegment {
 }
 
 fn LineSegment.new_key(start int, end int) LineSegment {
-	return LineSegment{ start, end, .a_key, Color{ 255, 126, 182 }, Color{ 1, 1, 1 } }
+    return LineSegment{
+        start: start,
+        end: end,
+        typ: .a_key,
+        fg_color: Color{ 255, 126, 182 }
+    }
 }
 
 fn LineSegment.new_literal(start int, end int) LineSegment {
-	return LineSegment{ start, end, .a_lit, Color{ 87, 215, 217 }, Color{ 1, 1, 1 } }
+    return LineSegment{
+        start: start,
+        end: end,
+        typ: .a_lit,
+        fg_color: Color{ 87, 215, 217 }
+    }
 }
 
 fn LineSegment.new_string(start int, end int) LineSegment {
-	return LineSegment{ start, end, .a_string, Color{ 87, 215, 217 }, Color{ 1, 1, 1 } }
+    return LineSegment{
+        start: start,
+        end: end,
+        typ: .a_string,
+        fg_color: Color{ 87, 215, 217 }
+    }
 }
 
 fn LineSegment.new_comment(start int, end int) LineSegment {
-	return LineSegment{ start, end, .a_comment, Color{ 130, 130, 130 }, Color{ 1, 1, 1 } }
+    return LineSegment{
+        start: start,
+        end: end,
+        typ: .a_comment,
+        fg_color: Color{ 130, 130, 130 }
+    }
 }
 
 fn (mut line_segment LineSegment) accomodate_selection(selection_start int, selection_end Pos) {
