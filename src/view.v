@@ -627,12 +627,13 @@ struct LineSegment {
 	start            int
 	end              int
 	line_y           int
-	within_selection bool
-	selection_start  int
-	selection_end    int
 	typ              SegmentKind
 	fg_color         Color
 	bg_color         Color = Color{ 1, 1, 1 }
+mut:
+	within_selection bool
+	selection_start  int
+	selection_end    int
 }
 
 fn LineSegment.new_key(start int, line_y int, end int) LineSegment {
@@ -676,6 +677,12 @@ fn LineSegment.new_comment(start int, line_y int, end int) LineSegment {
 }
 
 fn (mut line_segment LineSegment) accomodate_selection(line_y int, selection_start Pos, selection_end Pos) {
+    if line_segment.line_y < selection_start.y || line_segment.line_y > selection_end.y { return }
+    if selection_start.y != selection_end.y && line_segment.line_y > selection_start.y && line_segment.line_y < selection_end.y {
+        line_segment.selection_start = line_segment.start
+        line_segment.selection_end = line_segment.end
+        return
+    }
     // TODO(tauraamui): provide defer to set selection flag to true if values make sense for it to be
 }
 
