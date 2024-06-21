@@ -252,17 +252,17 @@ fn test_v_toggles_visual_mode_and_starts_selection() {
 fn resolve_test_syntax() workspace.Syntax {
     return json.decode(workspace.Syntax, '{
         "name": "test",
-        "keywords": ["for", "func"],
+        "keywords": ["for", "func", "print"],
         "literals": ["nil", "true", "false"]
     }') or { panic("failed to parse test syntax: ${err}") }
 }
 
 fn test_resolve_line_segments_and_change_colors_if_in_selection() {
     line := "for thing != nil { print(true) }"
-    line_segments, _ := resolve_line_segments(resolve_test_syntax(), line, false)
-    assert line_segments.len == 3
-    for line_segment in line_segments {
-        println("LINE SEGMENT: ${line_segment}")
+    mut line_segments, _ := resolve_line_segments(resolve_test_syntax(), line, 0, false)
+    assert line_segments.len == 4
+    for mut line_segment in line_segments {
+        line_segment.accomodate_selection(0, Pos{ 0, 0 }, Pos{ line.runes().len, 0 })
     }
     assert true == false // to force log output from this test to show in stdout
 }

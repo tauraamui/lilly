@@ -626,6 +626,7 @@ enum SegmentKind {
 struct LineSegment {
 	start            int
 	end              int
+	line_y           int
 	within_selection bool
 	selection_start  int
 	selection_end    int
@@ -634,44 +635,48 @@ struct LineSegment {
 	bg_color         Color = Color{ 1, 1, 1 }
 }
 
-fn LineSegment.new_key(start int, end int) LineSegment {
+fn LineSegment.new_key(start int, line_y int, end int) LineSegment {
     return LineSegment{
         start: start,
         end: end,
+        line_y: line_y,
         typ: .a_key,
         fg_color: Color{ 255, 126, 182 }
     }
 }
 
-fn LineSegment.new_literal(start int, end int) LineSegment {
+fn LineSegment.new_literal(start int, line_y int, end int) LineSegment {
     return LineSegment{
         start: start,
         end: end,
+        line_y: line_y,
         typ: .a_lit,
         fg_color: Color{ 87, 215, 217 }
     }
 }
 
-fn LineSegment.new_string(start int, end int) LineSegment {
+fn LineSegment.new_string(start int, line_y int, end int) LineSegment {
     return LineSegment{
         start: start,
         end: end,
+        line_y: line_y,
         typ: .a_string,
         fg_color: Color{ 87, 215, 217 }
     }
 }
 
-fn LineSegment.new_comment(start int, end int) LineSegment {
+fn LineSegment.new_comment(start int, line_y int, end int) LineSegment {
     return LineSegment{
         start: start,
         end: end,
+        line_y: line_y,
         typ: .a_comment,
         fg_color: Color{ 130, 130, 130 }
     }
 }
 
-fn (mut line_segment LineSegment) accomodate_selection(selection_start int, selection_end Pos) {
-    // TODO(tauraamui): implement some kind of selection contents acknowledger thing
+fn (mut line_segment LineSegment) accomodate_selection(line_y int, selection_start Pos, selection_end Pos) {
+    // TODO(tauraamui): provide defer to set selection flag to true if values make sense for it to be
 }
 
 struct LineSelectionBounds {
@@ -688,7 +693,7 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 
 	linex = linex.runes()[..max_width].string()
 
-	segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex, view.is_multiline_comment)
+	segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex, y, view.is_multiline_comment)
 	view.is_multiline_comment = is_multiline_comment
 
 	/*
@@ -725,7 +730,7 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 	}
 }
 
-fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comment bool) ([]LineSegment, bool) {
+fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, is_multiline_comment bool) ([]LineSegment, bool) {
 	mut segments := []LineSegment{}
 	mut is_multiline_commentx := is_multiline_comment
 	line_runes := line.runes()
@@ -733,15 +738,13 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 		start := i
 		// '//' comment
 		if i > 0 && line_runes[i - 1] == `/` && line_runes[i] == `/` {
-			segments << LineSegment.new_comment(start - 1, line_runes.len)
-			// segments << LineSegment{ start - 1, line_runes.len, .a_comment, Color{ 130, 130, 130 } }
+			segments << LineSegment.new_comment(start - 1, line_y, line_runes.len)
 			break
 		}
 
 		// '#' comment
 		if line_runes[i] == `#` {
-			// segments << LineSegment{ start, line_runes.len, .a_comment }
-			segments << LineSegment.new_comment(start, line_runes.len)
+			segments << LineSegment.new_comment(start, line_y, line_runes.len)
 			break
 		}
 
@@ -750,16 +753,14 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 		if i > 0 && line_runes[i - 1] == `/` && line_runes[i] == `*` && !(line_runes[line_runes.len - 2] == `*`
 			&& line_runes[line_runes.len - 1] == `/`) {
 			// all after /* is  a comment
-			segments << LineSegment.new_comment(start, line_runes.len)
-			// segments << LineSegment{ start, line_runes.len, .a_comment }
+			segments << LineSegment.new_comment(start, line_y, line_runes.len)
 			is_multiline_commentx = true
 			break
 		}
 		// end of /* */
 		if i > 0 && line_runes[i - 1] == `*` && line_runes[i] == `/` {
 			// all before */ is still a comment
-			segments << LineSegment.new_comment(0, start + 1)
-			// segments << LineSegment{ 0, start + 1, .a_comment }
+			segments << LineSegment.new_comment(0, line_y, start + 1)
 			is_multiline_commentx = false
 			break
 		}
@@ -773,8 +774,7 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 			if i >= line_runes.len {
 				i = line_runes.len - 1
 			}
-			segments << LineSegment.new_string(start, i + 1)
-			// segments << LineSegment{ start, i + 1, .a_string }
+			segments << LineSegment.new_string(start, line_y, i + 1)
 		}
 
 		if line_runes[i] == `"` {
@@ -785,8 +785,7 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 			if i >= line_runes.len {
 				i = line_runes.len - 1
 			}
-			segments << LineSegment.new_string(start, i + 1)
-			// segments << LineSegment{ start, i + 1, .a_string }
+			segments << LineSegment.new_string(start, line_y, i + 1)
 		}
 
 		if line_runes[i] == `\`` {
@@ -797,8 +796,7 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 			if i >= line_runes.len {
 				i = line_runes.len - 1
 			}
-			segments << LineSegment.new_string(start, i + 1)
-			// segments << LineSegment{ start, i + 1, .a_string }
+			segments << LineSegment.new_string(start, line_y, i + 1)
 		}
 
 		// key
@@ -807,11 +805,9 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, is_multiline_comm
 		}
 		word := line.runes()[start..i].string()
 		if word in syntax.literals {
-			segments << LineSegment.new_literal(start, i)
-			// segments << LineSegment{ start, i, .a_lit }
+			segments << LineSegment.new_literal(start, line_y, i)
 		} else if word in syntax.keywords {
-			segments << LineSegment.new_key(start, i)
-			// segments << LineSegment{ start, i, .a_key }
+			segments << LineSegment.new_key(start, line_y, i)
 		}
 	}
 	return segments, is_multiline_commentx
