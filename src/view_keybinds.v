@@ -37,6 +37,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				.down  { view.exec(view.chord.j()) }
 				.up    { view.exec(view.chord.k()) }
 				.c     { view.exec(view.chord.c()) }
+				.z     { view.z() }
 				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.d() } } // TODO(tauraamui): this will need some special attention to implement
 				.u { if e.modifiers == .ctrl { view.ctrl_u() } else { view.u() } }
 				.caret { view.hat() }
@@ -189,6 +190,13 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 			match e.code {
 				.escape { view.escape() }
 				.d { view.d() }
+				else {}
+			}
+		}
+		.pending_z {
+			match e.code {
+				.escape { view.escape() }
+				.z { view.z() }
 				else {}
 			}
 		}
