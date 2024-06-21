@@ -612,7 +612,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 
 		search_matches := view.search.get_line_matches(document_space_y)
 		if search_matches.len > 0 { ctx.set_bg_color(r: 53, g: 100, b: 230) }
-		view.draw_text_line(mut ctx, y, line, LineSelectionBounds{ full: within_selection })
+		view.draw_text_line(mut ctx, y, document_space_y, line, LineSelectionBounds{ full: within_selection })
 	}
 }
 
@@ -728,7 +728,7 @@ struct LineSelectionBounds {
 	full  bool
 }
 
-fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, line_selection_bounds LineSelectionBounds) {
+fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, document_space_y int, line string, line_selection_bounds LineSelectionBounds) {
 	mut linex := line.replace("\t", " ".repeat(4))
 	mut max_width := view.width
 	visible_len := utf8_str_visible_length(linex)
@@ -736,7 +736,7 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 
 	linex = linex.runes()[..max_width].string()
 
-	segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex, y, view.is_multiline_comment)
+	mut segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex, y, view.is_multiline_comment)
 	view.is_multiline_comment = is_multiline_comment
 
 	/*
@@ -753,13 +753,14 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, 
 	}
 
 	mut pos := 0
-	for i, segment in segments {
+	for i, mut segment in segments {
 		// render text before next segment
 		if segment.start > pos {
 			s := linex.runes()[pos..segment.start].string()
 			ctx.draw_text(view.x+1+pos, y+1, s)
 		}
 
+        segment.accomodate_selection(document_space_y, view.cursor.selection_start(), view.cursor.selection_end())
 		color := segment.fg_color
 		s := linex.runes()[segment.start..segment.end].string()
 		ctx.set_color(r: color.r, g: color.g, b: color.b)
