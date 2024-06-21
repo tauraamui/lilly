@@ -705,6 +705,12 @@ fn (mut line_segment LineSegment) accomodate_selection(line_y int, selection_sta
         return
     }
 
+    if selection_start.x < line_segment.start && selection_end.x > line_segment.start && selection_end.x <= line_segment.end {
+        line_segment.selection_start = line_segment.start
+        line_segment.selection_end = selection_end.x
+        return
+    }
+
     if selection_start.x > line_segment.start && selection_start.x < line_segment.end {
         line_segment.selection_start = selection_start.x
         if selection_end.x >= line_segment.end {
