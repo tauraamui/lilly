@@ -252,7 +252,7 @@ fn test_v_toggles_visual_mode_and_starts_selection() {
 fn resolve_test_syntax() workspace.Syntax {
     return json.decode(workspace.Syntax, '{
         "name": "test",
-        "keywords": ["for", "func", "print"],
+        "keywords": ["for", "func", "print", "bool"],
         "literals": ["nil", "true", "false"]
     }') or { panic("failed to parse test syntax: ${err}") }
 }
@@ -277,6 +277,15 @@ fn test_line_segments_accomodate_selection_when_selection_inside_span() {
         assert line_segment.within_selection
         assert line_segment.selection_start == 20
         assert line_segment.selection_end == 23
+    }
+}
+
+fn test_line_segment_accomodate_selection_when_selection_starts_before_but_ends_within_span() {
+    line := "func dosomething() bool "
+    mut line_segments, _ := resolve_line_segments(resolve_test_syntax(), line, 0, false)
+    assert line_segments.len == 2
+    for i, mut line_segment in line_segments {
+        line_segment.accomodate_selection(0, Pos{ 10, 0 }, Pos{ 21, 0 })
     }
 }
 

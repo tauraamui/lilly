@@ -676,11 +676,11 @@ fn LineSegment.new_comment(start int, line_y int, end int) LineSegment {
     }
 }
 
-fn (line_segment &LineSegment) draw(mut ctx draw.Contextable) {
-    color := segment.fg_color
-    s := linex.runes()[segment.start..segment.end].string()
+fn (line_segment &LineSegment) draw(mut ctx draw.Contextable, x int, y int, linex []rune) {
+    color := line_segment.fg_color
+    s := linex[line_segment.start..line_segment.end].string()
     ctx.set_color(r: color.r, g: color.g, b: color.b)
-    ctx.draw_text(view.x+1+segment.start, y+1, s)
+    ctx.draw_text(x + 1 + line_segment.start, y + 1, s)
     ctx.reset_color()
 }
 
@@ -791,7 +791,7 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, document_spac
 		ctx.reset_color()
 		*/
 
-        segment.draw(mut ctx)
+        segment.draw(mut ctx, view.x, y, linex.runes())
 		pos = segment.end
 		if i == segments.len - 1 && segment.end < linex.len {
 			final := linex.runes()[segment.end..linex.runes().len].string()
