@@ -676,6 +676,14 @@ fn LineSegment.new_comment(start int, line_y int, end int) LineSegment {
     }
 }
 
+fn (line_segment &LineSegment) draw(mut ctx draw.Contextable) {
+    color := segment.fg_color
+    s := linex.runes()[segment.start..segment.end].string()
+    ctx.set_color(r: color.r, g: color.g, b: color.b)
+    ctx.draw_text(view.x+1+segment.start, y+1, s)
+    ctx.reset_color()
+}
+
 fn (mut line_segment LineSegment) accomodate_selection(line_y int, selection_start Pos, selection_end Pos) {
     defer { line_segment.within_selection = (line_segment.selection_start != 0 || line_segment.selection_end != 0) }
     // if line segment lies outside of selection span
@@ -774,11 +782,16 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, document_spac
 		}
 
         segment.accomodate_selection(document_space_y, view.cursor.selection_start(), view.cursor.selection_end())
+
+        /*
 		color := segment.fg_color
 		s := linex.runes()[segment.start..segment.end].string()
 		ctx.set_color(r: color.r, g: color.g, b: color.b)
 		ctx.draw_text(view.x+1+segment.start, y+1, s)
 		ctx.reset_color()
+		*/
+
+        segment.draw(mut ctx)
 		pos = segment.end
 		if i == segments.len - 1 && segment.end < linex.len {
 			final := linex.runes()[segment.end..linex.runes().len].string()
