@@ -62,6 +62,10 @@ fn (mut ctx Context) set_bg_color(c Color) {
 	ctx.last_set_bg_color = c
 }
 
+fn (mut ctx Context) get_last_set_bg_color() ?Color {
+    return ctx.last_set_bg_color
+}
+
 fn (mut ctx Context) reset_color() {
 	ctx.ref.reset_color()
 }
