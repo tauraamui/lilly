@@ -5,6 +5,7 @@ import term.ui as tui
 struct Context{
 mut:
 	ref &tui.Context
+	last_set_bg_color ?Color
 }
 
 pub fn new_context(cfg Config) &Contextable {
@@ -18,6 +19,7 @@ pub fn new_context(cfg Config) &Contextable {
 			capture_events: cfg.capture_events
 			use_alternate_buffer: cfg.use_alternate_buffer
 		)
+		last_set_bg_color: none
 	}
 }
 
@@ -57,6 +59,7 @@ fn (mut ctx Context) set_color(c Color) {
 
 fn (mut ctx Context) set_bg_color(c Color) {
 	ctx.ref.set_bg_color(tui.Color{ r: c.r, g: c.g, b: c.b })
+	ctx.last_set_bg_color = c
 }
 
 fn (mut ctx Context) reset_color() {
