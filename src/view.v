@@ -685,8 +685,19 @@ fn (line_segment &LineSegment) draw(mut ctx draw.Contextable, x int, y int, line
     color := line_segment.fg_color
     s := linex[line_segment.start..line_segment.end].string()
     ctx.set_color(r: color.r, g: color.g, b: color.b)
-    ctx.draw_text(x + 1 + line_segment.start, y + 1, s)
-    ctx.reset_color()
+    if selection := line_segment.selection {
+        pre_selection_s := s.runes()[..selection.start].string()
+        selection_s := s.runes()[selection.start..selection.end].string()
+        post_selection := s.runes()[selection.end..].string()
+        ctx.draw_text(x + 1 + line_segment.start, y + 1, pre_selection_s)
+        ctx.set_bg_color(draw.Color{ r: 240, g: 20, b: 20 })
+        ctx.draw_text(x + 1 + line_segment.start + pre_selection_s.len, y + 1, selection_s)
+        ctx.revert_bg_color()
+        ctx.draw_text(x + 1 + line_segment.start + pre_selection_s.len + selection_s.len, y + 1, post_selection)
+    } else {
+        ctx.draw_text(x + 1 + line_segment.start, y + 1, s)
+        ctx.reset_color()
+    }
 }
 
 fn (mut line_segment LineSegment) accomodate_selection(line_y int, selection_start Pos, selection_end Pos) {
