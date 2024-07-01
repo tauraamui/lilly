@@ -613,7 +613,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 
 		search_matches := view.search.get_line_matches(document_space_y)
 		if search_matches.len > 0 { ctx.set_bg_color(r: 53, g: 100, b: 230) }
-		view.draw_text_line(mut ctx, y, document_space_y, line)
+		view.draw_text_line_2(mut ctx, y, line)
 	}
 }
 
@@ -713,6 +713,10 @@ fn (mut line_segment LineSegment) accomodate_selection(document_space_y int, sel
     line_segment.selection = none
     if selection_start.y > document_space_y { return }
     if selection_end.y < document_space_y { return }
+}
+
+fn (mut view View) draw_text_line_2(mut ctx draw.Contextable, y int, line string) {
+    ctx.draw_text(view.x + 1, y + 1, line)
 }
 
 fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, document_space_y int, line string) {
