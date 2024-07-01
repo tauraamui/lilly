@@ -602,6 +602,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 				within_selection = view.cursor.line_is_within_selection(document_space_y)
 				if within_selection { ctx.set_bg_color(r: color.r, g: color.g, b: color.b) }
 			}
+			.visual { }
 			else {
 				within_selection = false
 				if y == cursor_screen_space_y {
@@ -612,7 +613,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 
 		search_matches := view.search.get_line_matches(document_space_y)
 		if search_matches.len > 0 { ctx.set_bg_color(r: 53, g: 100, b: 230) }
-		view.draw_text_line(mut ctx, y, document_space_y, line, LineSelectionBounds{ full: within_selection })
+		view.draw_text_line(mut ctx, y, document_space_y, line)
 	}
 }
 
@@ -631,7 +632,6 @@ struct LineSegment {
 	fg_color         Color
 	bg_color         Color = Color{ 1, 1, 1 }
 mut:
-	within_selection bool
 	selection        ?SelectionSpan
 }
 
@@ -647,7 +647,8 @@ fn LineSegment.new_key(start int, line_y int, end int) LineSegment {
         end: end,
         line_y: line_y,
         typ: .a_key,
-        fg_color: Color{ 255, 126, 182 }
+        fg_color: Color{ 255, 126, 182 },
+        selection: none
     }
 }
 
@@ -657,7 +658,8 @@ fn LineSegment.new_literal(start int, line_y int, end int) LineSegment {
         end: end,
         line_y: line_y,
         typ: .a_lit,
-        fg_color: Color{ 87, 215, 217 }
+        fg_color: Color{ 87, 215, 217 },
+        selection: none
     }
 }
 
@@ -667,7 +669,8 @@ fn LineSegment.new_string(start int, line_y int, end int) LineSegment {
         end: end,
         line_y: line_y,
         typ: .a_string,
-        fg_color: Color{ 87, 215, 217 }
+        fg_color: Color{ 87, 215, 217 },
+        selection: none
     }
 }
 
@@ -677,7 +680,8 @@ fn LineSegment.new_comment(start int, line_y int, end int) LineSegment {
         end: end,
         line_y: line_y,
         typ: .a_comment,
-        fg_color: Color{ 130, 130, 130 }
+        fg_color: Color{ 130, 130, 130 },
+        selection: none
     }
 }
 
@@ -702,10 +706,12 @@ fn (line_segment &LineSegment) draw(mut ctx draw.Contextable, x int, y int, line
 
 fn (mut line_segment LineSegment) accomodate_selection(line_y int, selection_start Pos, selection_end Pos) {
     line_segment.selection = none
+    // TODO(tauraamui): re-write selection calc
+    /*
     // if line segment lies outside of selection span
-    if line_segment.line_y < selection_start.y || line_segment.line_y > selection_end.y { return }
+    if line_y < selection_start.y || line_y > selection_end.y { return }
     // if selection span completely encompasses current line
-    if selection_start.y != selection_end.y && line_segment.line_y > selection_start.y && line_segment.line_y < selection_end.y {
+    if selection_start.y != selection_end.y && line_y > selection_start.y && line_segment.line_y < selection_end.y {
         line_segment.selection = SelectionSpan{ line_segment.start, line_segment.end }
         return
     }
@@ -752,15 +758,10 @@ fn (mut line_segment LineSegment) accomodate_selection(line_y int, selection_sta
         sel_span.end = selection_end.x
         return
     }
+    */
 }
 
-struct LineSelectionBounds {
-	start int
-	end   int
-	full  bool
-}
-
-fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, document_space_y int, line string, line_selection_bounds LineSelectionBounds) {
+fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, document_space_y int, line string) {
 	mut linex := line.replace("\t", " ".repeat(4))
 	mut max_width := view.width
 	visible_len := utf8_str_visible_length(linex)
@@ -779,7 +780,7 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, document_spac
 	}
 	*/
 
-	if segments.len == 0 || line_selection_bounds.full {
+	if segments.len == 0 {
 		ctx.draw_text(view.x+1, y+1, linex)
 		return
 	}
@@ -793,14 +794,6 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, document_spac
 		}
 
         segment.accomodate_selection(document_space_y, view.cursor.selection_start(), view.cursor.selection_end())
-
-        /*
-		color := segment.fg_color
-		s := linex.runes()[segment.start..segment.end].string()
-		ctx.set_color(r: color.r, g: color.g, b: color.b)
-		ctx.draw_text(view.x+1+segment.start, y+1, s)
-		ctx.reset_color()
-		*/
 
         segment.draw(mut ctx, view.x, y, linex.runes())
 		pos = segment.end
