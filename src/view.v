@@ -706,59 +706,6 @@ fn (line_segment &LineSegment) draw(mut ctx draw.Contextable, x int, y int, line
 
 fn (mut line_segment LineSegment) accomodate_selection(line_y int, selection_start Pos, selection_end Pos) {
     line_segment.selection = none
-    // TODO(tauraamui): re-write selection calc
-    /*
-    // if line segment lies outside of selection span
-    if line_y < selection_start.y || line_y > selection_end.y { return }
-    // if selection span completely encompasses current line
-    if selection_start.y != selection_end.y && line_y > selection_start.y && line_segment.line_y < selection_end.y {
-        line_segment.selection = SelectionSpan{ line_segment.start, line_segment.end }
-        return
-    }
-    // does the segment start after the end of the selection span
-    if line_segment.start > selection_end.x { return }
-    // does the entire span of the segment exist prior to the selection start x
-    if line_segment.start < selection_start.x && line_segment.end < selection_start.x { return }
-
-    // does the selection span match the segment span exactly
-    if selection_start.x <= line_segment.start && selection_end.x >= line_segment.end {
-        line_segment.selection = SelectionSpan{ line_segment.start, line_segment.end }
-        return
-    }
-
-    // does the selection completely envelop the segment
-    if selection_start.x > line_segment.start && selection_end.x < line_segment.end {
-        line_segment.selection = SelectionSpan{ selection_start.x, selection_end.x }
-        return
-    }
-
-    if selection_start.x < line_segment.start {
-        if selection_end.x <= line_segment.end {
-            line_segment.selection = SelectionSpan{ line_segment.start, selection_end.x }
-            return
-        }
-        if selection_end.x > line_segment.end {
-            line_segment.selection = SelectionSpan{ line_segment.start, line_segment.end }
-            return
-        }
-    }
-
-    if selection_start.x < line_segment.start && selection_end.x > line_segment.start && selection_end.x <= line_segment.end {
-        line_segment.selection = SelectionSpan{ line_segment.start, selection_end.x }
-        return
-    }
-
-    if selection_start.x > line_segment.start && selection_start.x < line_segment.end {
-        mut sel_span := SelectionSpan{ start: selection_start.x }
-        line_segment.selection = sel_span
-        if selection_end.x >= line_segment.end {
-            sel_span.end = line_segment.end
-            return
-        }
-        sel_span.end = selection_end.x
-        return
-    }
-    */
 }
 
 fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, document_space_y int, line string) {
@@ -793,7 +740,7 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, document_spac
 			ctx.draw_text(view.x+1+pos, y+1, s)
 		}
 
-        segment.accomodate_selection(document_space_y, view.cursor.selection_start(), view.cursor.selection_end())
+        segment.accomodate_selection(y, view.cursor.selection_start(), view.cursor.selection_end())
 
         segment.draw(mut ctx, view.x, y, linex.runes())
 		pos = segment.end
