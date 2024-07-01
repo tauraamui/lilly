@@ -681,12 +681,14 @@ fn (line_segment &LineSegment) draw(mut ctx draw.Contextable, x int, y int, line
     s := linex[line_segment.start..line_segment.end].string()
     ctx.set_color(r: color.r, g: color.g, b: color.b)
     // NOTE(tauraamui): need to track background color state within view and where it's coming from
+    /*
     if line_segment.within_selection {
         ctx.set_bg_color(r: 100, g: 100, b: 100)
         defer { ctx.revert_bg_color() }
     }
+    */
     ctx.draw_text(x + 1 + line_segment.start, y + 1, s)
-    ctx.reset_bg_color()
+    // ctx.reset_bg_color()
     ctx.reset_color()
 }
 
