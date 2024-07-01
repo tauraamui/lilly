@@ -632,8 +632,13 @@ struct LineSegment {
 	bg_color         Color = Color{ 1, 1, 1 }
 mut:
 	within_selection bool
-	selection_start  int
-	selection_end    int
+	selection        ?SelectionSpan
+}
+
+struct SelectionSpan {
+mut:
+    start  int
+    end    int
 }
 
 fn LineSegment.new_key(start int, line_y int, end int) LineSegment {
@@ -681,25 +686,22 @@ fn (line_segment &LineSegment) draw(mut ctx draw.Contextable, x int, y int, line
     s := linex[line_segment.start..line_segment.end].string()
     ctx.set_color(r: color.r, g: color.g, b: color.b)
     // NOTE(tauraamui): need to track background color state within view and where it's coming from
-    /*
     if line_segment.within_selection {
         ctx.set_bg_color(r: 100, g: 100, b: 100)
         defer { ctx.revert_bg_color() }
     }
-    */
     ctx.draw_text(x + 1 + line_segment.start, y + 1, s)
     // ctx.reset_bg_color()
     ctx.reset_color()
 }
 
 fn (mut line_segment LineSegment) accomodate_selection(line_y int, selection_start Pos, selection_end Pos) {
-    defer { line_segment.within_selection = (line_segment.selection_start != 0 || line_segment.selection_end != 0) }
+    line_segment.selection = none
     // if line segment lies outside of selection span
     if line_segment.line_y < selection_start.y || line_segment.line_y > selection_end.y { return }
     // if selection span completely encompasses current line
     if selection_start.y != selection_end.y && line_segment.line_y > selection_start.y && line_segment.line_y < selection_end.y {
-        line_segment.selection_start = line_segment.start
-        line_segment.selection_end = line_segment.end
+        line_segment.selection = SelectionSpan{ line_segment.start, line_segment.end }
         return
     }
     // does the segment start after the end of the selection span
@@ -709,44 +711,40 @@ fn (mut line_segment LineSegment) accomodate_selection(line_y int, selection_sta
 
     // does the selection span match the segment span exactly
     if selection_start.x <= line_segment.start && selection_end.x >= line_segment.end {
-        line_segment.selection_start = line_segment.start
-        line_segment.selection_end = line_segment.end
+        line_segment.selection = SelectionSpan{ line_segment.start, line_segment.end }
         return
     }
 
     // does the selection completely envelop the segment
     if selection_start.x > line_segment.start && selection_end.x < line_segment.end {
-        line_segment.selection_start = selection_start.x
-        line_segment.selection_end = selection_end.x
+        line_segment.selection = SelectionSpan{ selection_start.x, selection_end.x }
         return
     }
 
     if selection_start.x < line_segment.start {
         if selection_end.x <= line_segment.end {
-            line_segment.selection_start = line_segment.start
-            line_segment.selection_end = selection_end.x
+            line_segment.selection = SelectionSpan{ line_segment.start, selection_end.x }
             return
         }
         if selection_end.x > line_segment.end {
-            line_segment.selection_start = line_segment.start
-            line_segment.selection_end = line_segment.end
+            line_segment.selection = SelectionSpan{ line_segment.start, line_segment.end }
             return
         }
     }
 
     if selection_start.x < line_segment.start && selection_end.x > line_segment.start && selection_end.x <= line_segment.end {
-        line_segment.selection_start = line_segment.start
-        line_segment.selection_end = selection_end.x
+        line_segment.selection = SelectionSpan{ line_segment.start, selection_end.x }
         return
     }
 
     if selection_start.x > line_segment.start && selection_start.x < line_segment.end {
-        line_segment.selection_start = selection_start.x
+        mut sel_span := SelectionSpan{ start: selection_start.x }
+        line_segment.selection = sel_span
         if selection_end.x >= line_segment.end {
-            line_segment.selection_end = line_segment.end
+            sel_span.end = line_segment.end
             return
         }
-        line_segment.selection_end = selection_end.x
+        sel_span.end = selection_end.x
         return
     }
 }

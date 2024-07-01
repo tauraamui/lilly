@@ -263,7 +263,7 @@ fn test_line_segments_accomodate_selection_full_line() {
     assert line_segments.len == 4
     for mut line_segment in line_segments {
         line_segment.accomodate_selection(0, Pos{ 0, 0 }, Pos{ line.runes().len, 0 })
-        assert line_segment.within_selection
+        assert line_segment.selection != none
     }
 }
 
@@ -274,9 +274,11 @@ fn test_line_segments_accomodate_selection_when_selection_inside_span() {
     for i, mut line_segment in line_segments {
         if i != 2 { continue }
         line_segment.accomodate_selection(0, Pos{ 20, 0 }, Pos{ 23, 0 })
-        assert line_segment.within_selection
-        assert line_segment.selection_start == 20
-        assert line_segment.selection_end == 23
+        assert line_segment.selection != none
+        if selection := line_segment.selection {
+            assert selection.start == 20
+            assert selection.end == 23
+        }
     }
 }
 
@@ -297,16 +299,18 @@ fn test_line_segments_accomodate_selection_when_selection_encompasses_multiple_s
         if i == 0 || i == line_segments.len - 1 { continue }
         line_segment.accomodate_selection(0, Pos{ 10, 0 }, Pos{ 23, 0 })
         if i == 1 {
-            assert line_segment.within_selection
-            assert line_segment.selection_start == 13
-            assert line_segment.selection_end == 16
+            if selection := line_segment.selection {
+                assert selection.start == 13
+                assert selection.end == 16
+            }
             continue
         }
 
         if i == 2 {
-            assert line_segment.within_selection
-            assert line_segment.selection_start == 19
-            assert line_segment.selection_end == 23
+            if selection := line_segment.selection {
+                assert selection.start == 19
+                assert selection.end == 23
+            }
             continue
         }
     }
