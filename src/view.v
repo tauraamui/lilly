@@ -627,7 +627,8 @@ enum SegmentKind {
 struct LineSegment {
 	start            int
 	end              int
-	line_y           int
+	y                int
+	document_space_y int
 	typ              SegmentKind
 	fg_color         Color
 	bg_color         Color = Color{ 1, 1, 1 }
@@ -641,44 +642,48 @@ mut:
     end    int
 }
 
-fn LineSegment.new_key(start int, line_y int, end int) LineSegment {
+fn LineSegment.new_key(start int, line_y int, document_space_y int, end int) LineSegment {
     return LineSegment{
         start: start,
         end: end,
-        line_y: line_y,
+        y: line_y,
+        document_space_y: document_space_y,
         typ: .a_key,
         fg_color: Color{ 255, 126, 182 },
         selection: none
     }
 }
 
-fn LineSegment.new_literal(start int, line_y int, end int) LineSegment {
+fn LineSegment.new_literal(start int, line_y int, document_space_y int, end int) LineSegment {
     return LineSegment{
         start: start,
         end: end,
-        line_y: line_y,
+        y: line_y,
+        document_space_y: document_space_y,
         typ: .a_lit,
         fg_color: Color{ 87, 215, 217 },
         selection: none
     }
 }
 
-fn LineSegment.new_string(start int, line_y int, end int) LineSegment {
+fn LineSegment.new_string(start int, line_y int, document_space_y int, end int) LineSegment {
     return LineSegment{
         start: start,
         end: end,
-        line_y: line_y,
+        y: line_y,
+        document_space_y: document_space_y,
         typ: .a_string,
         fg_color: Color{ 87, 215, 217 },
         selection: none
     }
 }
 
-fn LineSegment.new_comment(start int, line_y int, end int) LineSegment {
+fn LineSegment.new_comment(start int, line_y int, document_space_y int, end int) LineSegment {
     return LineSegment{
         start: start,
         end: end,
-        line_y: line_y,
+        y: line_y,
+        document_space_y: document_space_y,
         typ: .a_comment,
         fg_color: Color{ 130, 130, 130 },
         selection: none
@@ -704,7 +709,7 @@ fn (line_segment &LineSegment) draw(mut ctx draw.Contextable, x int, y int, line
     }
 }
 
-fn (mut line_segment LineSegment) accomodate_selection(line_y int, selection_start Pos, selection_end Pos) {
+fn (mut line_segment LineSegment) accomodate_selection(document_space_y int, selection_start Pos, selection_end Pos) {
     line_segment.selection = none
 }
 
@@ -716,7 +721,7 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, document_spac
 
 	linex = linex.runes()[..max_width].string()
 
-	mut segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex, y, view.is_multiline_comment)
+	mut segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex, y, document_space_y, view.is_multiline_comment)
 	view.is_multiline_comment = is_multiline_comment
 
 	/*
@@ -740,7 +745,7 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, document_spac
 			ctx.draw_text(view.x+1+pos, y+1, s)
 		}
 
-        segment.accomodate_selection(y, view.cursor.selection_start(), view.cursor.selection_end())
+        segment.accomodate_selection(document_space_y, view.cursor.selection_start(), view.cursor.selection_end())
 
         segment.draw(mut ctx, view.x, y, linex.runes())
 		pos = segment.end
@@ -751,7 +756,7 @@ fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, document_spac
 	}
 }
 
-fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, is_multiline_comment bool) ([]LineSegment, bool) {
+fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, document_space_y int, is_multiline_comment bool) ([]LineSegment, bool) {
 	mut segments := []LineSegment{}
 	mut is_multiline_commentx := is_multiline_comment
 	line_runes := line.runes()
@@ -759,13 +764,13 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, is_mu
 		start := i
 		// '//' comment
 		if i > 0 && line_runes[i - 1] == `/` && line_runes[i] == `/` {
-			segments << LineSegment.new_comment(start - 1, line_y, line_runes.len)
+			segments << LineSegment.new_comment(start - 1, line_y, document_space_y, line_runes.len)
 			break
 		}
 
 		// '#' comment
 		if line_runes[i] == `#` {
-			segments << LineSegment.new_comment(start, line_y, line_runes.len)
+			segments << LineSegment.new_comment(start, line_y, document_space_y, line_runes.len)
 			break
 		}
 
@@ -774,14 +779,14 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, is_mu
 		if i > 0 && line_runes[i - 1] == `/` && line_runes[i] == `*` && !(line_runes[line_runes.len - 2] == `*`
 			&& line_runes[line_runes.len - 1] == `/`) {
 			// all after /* is  a comment
-			segments << LineSegment.new_comment(start, line_y, line_runes.len)
+			segments << LineSegment.new_comment(start, line_y, document_space_y, line_runes.len)
 			is_multiline_commentx = true
 			break
 		}
 		// end of /* */
 		if i > 0 && line_runes[i - 1] == `*` && line_runes[i] == `/` {
 			// all before */ is still a comment
-			segments << LineSegment.new_comment(0, line_y, start + 1)
+			segments << LineSegment.new_comment(0, line_y, document_space_y, start + 1)
 			is_multiline_commentx = false
 			break
 		}
@@ -795,7 +800,7 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, is_mu
 			if i >= line_runes.len {
 				i = line_runes.len - 1
 			}
-			segments << LineSegment.new_string(start, line_y, i + 1)
+			segments << LineSegment.new_string(start, line_y, document_space_y, i + 1)
 		}
 
 		if line_runes[i] == `"` {
@@ -806,7 +811,7 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, is_mu
 			if i >= line_runes.len {
 				i = line_runes.len - 1
 			}
-			segments << LineSegment.new_string(start, line_y, i + 1)
+			segments << LineSegment.new_string(start, line_y, document_space_y, i + 1)
 		}
 
 		if line_runes[i] == `\`` {
@@ -817,7 +822,7 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, is_mu
 			if i >= line_runes.len {
 				i = line_runes.len - 1
 			}
-			segments << LineSegment.new_string(start, line_y, i + 1)
+			segments << LineSegment.new_string(start, line_y, document_space_y, i + 1)
 		}
 
 		// key
@@ -826,9 +831,9 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, is_mu
 		}
 		word := line.runes()[start..i].string()
 		if word in syntax.literals {
-			segments << LineSegment.new_literal(start, line_y, i)
+			segments << LineSegment.new_literal(start, line_y, document_space_y, i)
 		} else if word in syntax.keywords {
-			segments << LineSegment.new_key(start, line_y, i)
+			segments << LineSegment.new_key(start, line_y, document_space_y, i)
 		}
 	}
 	return segments, is_multiline_commentx
