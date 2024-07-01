@@ -711,6 +711,8 @@ fn (line_segment &LineSegment) draw(mut ctx draw.Contextable, x int, y int, line
 
 fn (mut line_segment LineSegment) accomodate_selection(document_space_y int, selection_start Pos, selection_end Pos) {
     line_segment.selection = none
+    if selection_start.y > document_space_y { return }
+    if selection_end.y < document_space_y { return }
 }
 
 fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, document_space_y int, line string) {
