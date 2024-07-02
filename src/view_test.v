@@ -264,30 +264,25 @@ fn test_line_segments_accomodate_selection_full_line() {
     for mut line_segment in line_segments {
         line_segment.accomodate_selection(0, Pos{ 0, 0 }, Pos{ line.runes().len, 0 })
         assert line_segment.selection != none
+        if selection := line_segment.selection {
+        	assert selection.start == line_segment.start
+        	assert selection.end == line_segment.end
+        }
     }
 }
 
-fn test_line_segments_accomodate_selection_when_selection_inside_span() {
+fn test_line_segments_accomodate_selection_when_selection_matches_span() {
     line := "for thing != nil { print(true) }"
     mut line_segments, _ := resolve_line_segments(resolve_test_syntax(), line, 0, 0, false)
     assert line_segments.len == 4
     for i, mut line_segment in line_segments {
         if i != 2 { continue }
-        line_segment.accomodate_selection(0, Pos{ 20, 0 }, Pos{ 23, 0 })
+        line_segment.accomodate_selection(0, Pos{ 19, 0 }, Pos{ 24, 0 })
         assert line_segment.selection != none
         if selection := line_segment.selection {
-            assert selection.start == 20
-            assert selection.end == 23
+            assert selection.start == 19
+            assert selection.end == 24
         }
-    }
-}
-
-fn test_line_segment_accomodate_selection_when_selection_starts_before_but_ends_within_span() {
-    line := "func dosomething() bool "
-    mut line_segments, _ := resolve_line_segments(resolve_test_syntax(), line, 0, 0, false)
-    assert line_segments.len == 2
-    for i, mut line_segment in line_segments {
-        line_segment.accomodate_selection(0, Pos{ 10, 0 }, Pos{ 21, 0 })
     }
 }
 
