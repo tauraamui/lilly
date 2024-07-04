@@ -610,21 +610,6 @@ fn (mut view View) draw_document_2(mut ctx draw.Contextable) {
 	}
 }
 
-fn set_bg_color(mut ctx draw.Contextable, cursor Cursor, current_mode Mode, selection_highlight_color Color, screen_space_y int, document_space_y int, cursor_screen_space_y int) {
-	match current_mode {
-		.visual_line {
-			within_selection := cursor.line_is_within_selection(document_space_y)
-			if within_selection { ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b) }
-		}
-		.visual {}
-		else {
-			if screen_space_y == cursor_screen_space_y {
-				ctx.set_bg_color(r: 53, g: 53, b: 53)
-			}
-		}
-	}
-}
-
 fn draw_text_line(
 	mut ctx draw.Contextable,
 	cursor Cursor,
@@ -634,8 +619,22 @@ fn draw_text_line(
 	cursor_screen_space_y int,
 	line string
 ) {
-	set_bg_color(mut ctx, cursor, current_mode, selection_highlight_color, screen_space_y, document_space_y, cursor_screen_space_y)
-	ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
+	match current_mode {
+		.visual_line {
+			within_selection := cursor.line_is_within_selection(document_space_y)
+			if within_selection { ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b) }
+			ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
+		}
+		.visual {
+			ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
+		}
+		else {
+			if screen_space_y == cursor_screen_space_y {
+				ctx.set_bg_color(r: 53, g: 53, b: 53)
+			}
+			ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
+		}
+	}
 }
 
 fn (mut view View) draw_document(mut ctx draw.Contextable) {
