@@ -626,6 +626,9 @@ fn draw_text_line(
 			ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
 		}
 		.visual {
+			if screen_space_y == cursor_screen_space_y {
+				ctx.set_bg_color(r: 110, g: 10, b: 10)
+			}
 			ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
 		}
 		else {
