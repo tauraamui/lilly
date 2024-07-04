@@ -599,19 +599,18 @@ fn (mut view View) draw_document_2(mut ctx draw.Contextable) {
 
 		document_space_y := view.from + y
 
-		view.draw_text_line(mut ctx, y, line)
+		mut linex := line.replace("\t", " ".repeat(4))
+		mut max_width := view.width
+		visible_len := utf8_str_visible_length(linex)
+		if max_width > visible_len { max_width = visible_len }
+
+		linex = linex.runes()[..max_width].string()
+		draw_text_line(mut ctx, view.x, y, cursor_screen_space_y, linex)
 	}
 }
 
-fn (mut view View) draw_text_line(mut ctx draw.Contextable, screen_y int, line string) {
-	mut linex := line.replace("\t", " ".repeat(4))
-	mut max_width := view.width
-	visible_len := utf8_str_visible_length(linex)
-	if max_width > visible_len { max_width = visible_len }
-
-	linex = linex.runes()[..max_width].string()
-
-	ctx.draw_text(view.x+1, screen_y+1, linex)
+fn draw_text_line(mut ctx draw.Contextable, screen_x int, screen_y int, cursor_screen_space_y int, line string) {
+	ctx.draw_text(screen_x+1, screen_y+1, line)
 }
 
 fn (mut view View) draw_document(mut ctx draw.Contextable) {
