@@ -605,16 +605,20 @@ fn (mut view View) draw_document_2(mut ctx draw.Contextable) {
 		if max_width > visible_len { max_width = visible_len }
 
 		linex = linex.runes()[..max_width].string()
-		draw_text_line(mut ctx, view.mode, view.x, y, cursor_screen_space_y, linex)
+		sel_highlight_color := Color{ r: view.config.selection_highlight_color.r, g: view.config.selection_highlight_color.g, b: view.config.selection_highlight_color.b }
+		draw_text_line(mut ctx, view.cursor, view.mode, sel_highlight_color, view.x, y, document_space_y, cursor_screen_space_y, linex)
 	}
 }
 
-fn set_bg_color(mut ctx draw.Contextable, current_mode Mode, screen_y int, cursor_screen_space_y int) {
+fn set_bg_color(mut ctx draw.Contextable, cursor Cursor, current_mode Mode, selection_highlight_color Color, screen_space_y int, document_space_y int, cursor_screen_space_y int) {
 	match current_mode {
-		.visual_line {}
+		.visual_line {
+			within_selection := cursor.line_is_within_selection(document_space_y)
+			if within_selection { ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b) }
+		}
 		.visual {}
 		else {
-			if screen_y == cursor_screen_space_y {
+			if screen_space_y == cursor_screen_space_y {
 				ctx.set_bg_color(r: 53, g: 53, b: 53)
 			}
 		}
@@ -623,13 +627,15 @@ fn set_bg_color(mut ctx draw.Contextable, current_mode Mode, screen_y int, curso
 
 fn draw_text_line(
 	mut ctx draw.Contextable,
+	cursor Cursor,
 	current_mode Mode,
-	screen_x int, screen_y int,
+	selection_highlight_color Color,
+	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
 	line string
 ) {
-	set_bg_color(mut ctx, current_mode, screen_y, cursor_screen_space_y)
-	ctx.draw_text(screen_x+1, screen_y+1, line)
+	set_bg_color(mut ctx, cursor, current_mode, selection_highlight_color, screen_space_y, document_space_y, cursor_screen_space_y)
+	ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
 }
 
 fn (mut view View) draw_document(mut ctx draw.Contextable) {
