@@ -554,7 +554,7 @@ fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
 fn (mut view View) draw(mut ctx draw.Contextable) {
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
-	view.draw_document(mut ctx)
+	view.draw_document_2(mut ctx)
 
 	draw_status_line(mut ctx,
 		Status{
@@ -572,6 +572,46 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 	view.draw_bottom_bar_of_command_or_search(mut ctx)
 
 	view.draw_cursor_pointer(mut ctx)
+}
+
+fn (mut view View) update_to() {
+	mut to := view.from + view.code_view_height()
+	if to > view.buffer.lines.len { to = view.buffer.lines.len }
+	view.to = to
+}
+
+fn (mut view View) draw_document_2(mut ctx draw.Contextable) {
+	view.update_to()
+	ctx.set_bg_color(r: 53, g: 53, b: 53)
+
+	mut cursor_screen_space_y := view.cursor.pos.y - view.from
+	// draw cursor line
+	if view.mode != .visual_line {
+		if cursor_screen_space_y > view.code_view_height() - 1 { cursor_screen_space_y = view.code_view_height() - 1 }
+		ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width(), cursor_screen_space_y+1)
+	}
+
+	for y, line in view.buffer.lines[view.from..view.to] {
+		ctx.reset_bg_color()
+		ctx.reset_color()
+
+		view.draw_text_line_number(mut ctx, y)
+
+		document_space_y := view.from + y
+
+		view.draw_text_line(mut ctx, y, line)
+	}
+}
+
+fn (mut view View) draw_text_line(mut ctx draw.Contextable, screen_y int, line string) {
+	mut linex := line.replace("\t", " ".repeat(4))
+	mut max_width := view.width
+	visible_len := utf8_str_visible_length(linex)
+	if max_width > visible_len { max_width = visible_len }
+
+	linex = linex.runes()[..max_width].string()
+
+	ctx.draw_text(view.x+1, screen_y+1, linex)
 }
 
 fn (mut view View) draw_document(mut ctx draw.Contextable) {
