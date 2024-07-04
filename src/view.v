@@ -605,14 +605,30 @@ fn (mut view View) draw_document_2(mut ctx draw.Contextable) {
 		if max_width > visible_len { max_width = visible_len }
 
 		linex = linex.runes()[..max_width].string()
-		draw_text_line(mut ctx, view.x, y, cursor_screen_space_y, linex)
+		draw_text_line(mut ctx, view.mode, view.x, y, cursor_screen_space_y, linex)
 	}
 }
 
-fn draw_text_line(mut ctx draw.Contextable, screen_x int, screen_y int, cursor_screen_space_y int, line string) {
-	if screen_y == cursor_screen_space_y {
-		ctx.set_bg_color(r: 53, g: 53, b: 53)
+fn set_bg_color(mut ctx draw.Contextable, current_mode Mode, screen_y int, cursor_screen_space_y int) {
+	match current_mode {
+		.visual_line {}
+		.visual {}
+		else {
+			if screen_y == cursor_screen_space_y {
+				ctx.set_bg_color(r: 53, g: 53, b: 53)
+			}
+		}
 	}
+}
+
+fn draw_text_line(
+	mut ctx draw.Contextable,
+	current_mode Mode,
+	screen_x int, screen_y int,
+	cursor_screen_space_y int,
+	line string
+) {
+	set_bg_color(mut ctx, current_mode, screen_y, cursor_screen_space_y)
 	ctx.draw_text(screen_x+1, screen_y+1, line)
 }
 
