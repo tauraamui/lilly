@@ -610,6 +610,9 @@ fn (mut view View) draw_document_2(mut ctx draw.Contextable) {
 }
 
 fn draw_text_line(mut ctx draw.Contextable, screen_x int, screen_y int, cursor_screen_space_y int, line string) {
+	if screen_y == cursor_screen_space_y {
+		ctx.set_bg_color(r: 53, g: 53, b: 53)
+	}
 	ctx.draw_text(screen_x+1, screen_y+1, line)
 }
 
