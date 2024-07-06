@@ -633,7 +633,10 @@ fn draw_text_line(
 
 				line_selection_start_x := selection_start.x
 				mut line_selection_end_x := selection_end.x
-				if selection_start.y != selection_end.y {
+
+				if document_space_y != selection_start.y && document_space_y != selection_end.y {
+					line_selection_end_x = line.runes().len
+				} else if document_space_y == selection_start.y && selection_start.y != selection_end.y {
 					line_selection_end_x = line.runes().len
 				}
 
@@ -642,7 +645,7 @@ fn draw_text_line(
 				post_selection_line_segment := line.runes()[line_selection_end_x..].string()
 
 				ctx.draw_text(screen_space_x+1, screen_space_y+1, pre_selection_line_segment)
-				ctx.set_bg_color(r: 90, g: 20, b: 20)
+				ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b)
 				ctx.draw_text(screen_space_x+1+utf8_str_visible_length(pre_selection_line_segment), screen_space_y+1, selected_line_segment)
 				ctx.reset_bg_color()
 				ctx.draw_text(screen_space_x+1+utf8_str_visible_length(pre_selection_line_segment)+utf8_str_visible_length(selected_line_segment), screen_space_y+1, post_selection_line_segment)
