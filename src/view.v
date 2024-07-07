@@ -676,16 +676,12 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 		ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width(), cursor_screen_space_y+1)
 	}
 
-	color := view.config.selection_highlight_color
-	mut within_selection := false
 	// draw document text
 	for y, line in view.buffer.lines[view.from..to] {
 		ctx.reset_bg_color()
 		ctx.reset_color()
 
 		view.draw_text_line_number(mut ctx, y)
-
-		document_space_y := view.from + y
 
 		mut linex := line.replace("\t", " ".repeat(4))
 		mut max_width := view.width
