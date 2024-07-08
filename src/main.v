@@ -68,6 +68,7 @@ fn frame(mut app App) {
 struct Options {
 mut:
 	log_level  string
+	show_help bool
 	debug_mode bool
 	capture_panics bool
 }
@@ -75,17 +76,25 @@ mut:
 fn resolve_options_from_args(args []string) Options {
 	flags := cmdline.only_options(args)
 	return Options{
+		show_help: "--help" in flags || "-h" in flags
 		debug_mode: "--debug" in flags || "-d" in flags
 		capture_panics: "--capturepanics" in flags || "-cp" in flags
 	}
 }
 
+fn output_help_and_close() {
+	msg := "./lilly <option flags> <dir path/file path>\nFlags:\n\t--help (show help)\n\t--debug (enable debug log out)\n\t--capturepanics (persist panic stack trace output)"
+	print_and_exit(msg)
+}
+
 fn main() {
 	args := os.args[1..]
 	opts := resolve_options_from_args(args)
-	if opts.capture_panics {
-		persist_stderr_to_disk()
-	}
+
+	if opts.show_help { output_help_and_close() }
+
+	if opts.capture_panics { persist_stderr_to_disk() }
+
 	mut l := log.Log{}
 	l.set_level(.debug)
 	l.set_full_logpath("./debug.log")
