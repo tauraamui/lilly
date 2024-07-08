@@ -102,6 +102,10 @@ pub fn (splash SplashScreen) draw(mut ctx draw.Contextable) {
 		offset_y += 2
 	}
 
+	exit_label_str := "Exit/Quit                      ESC"
+	ctx.draw_text(offset_x+(ctx.window_width() / 2) - (exit_label_str.len / 2), int(math.floor(offset_y)), exit_label_str)
+	offset_y += 2
+
 	copyright_footer := "the lilly editor authors ©"
 	ctx.draw_text(offset_x+(ctx.window_width() / 2) - (copyright_footer.len / 2), int(math.floor(offset_y)), copyright_footer)
 }
