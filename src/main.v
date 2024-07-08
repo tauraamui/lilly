@@ -69,19 +69,23 @@ struct Options {
 mut:
 	log_level  string
 	debug_mode bool
+	capture_panics bool
 }
 
 fn resolve_options_from_args(args []string) Options {
 	flags := cmdline.only_options(args)
 	return Options{
 		debug_mode: "--debug" in flags || "-d" in flags
+		capture_panics: "--capturepanics" in flags || "-cp" in flags
 	}
 }
 
 fn main() {
 	args := os.args[1..]
 	opts := resolve_options_from_args(args)
-	persist_stderr_to_disk()
+	if opts.capture_panics {
+		persist_stderr_to_disk()
+	}
 	mut l := log.Log{}
 	l.set_level(.debug)
 	l.set_full_logpath("./debug.log")
