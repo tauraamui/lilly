@@ -42,7 +42,7 @@ fn (mut app App) update_view() {
 }
 
 
-fn event(e draw.Event, mut app &App) {
+fn event(e draw.Event, mut app App) {
 	match e.typ {
 		.key_down {
 			app.changed = true
@@ -55,7 +55,7 @@ fn event(e draw.Event, mut app &App) {
 	}
 }
 
-fn frame(mut app &App) {
+fn frame(mut app App) {
 	if app.ui.rate_limit_draws() && !app.changed { return }
 	app.changed = false
 	app.ui.clear()
