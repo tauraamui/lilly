@@ -117,7 +117,8 @@ fn main() {
 	)
 
 	files := cmdline.only_non_options(args)
-	if files.len != 1 { print_and_exit("too many file paths, expected just one") }
+	if files.len == 0 { print_and_exit("missing directoy path") }
+	if files.len > 1 { print_and_exit("too many directory paths (${files.len}) expected one") }
 	app.editor = open_editor(mut l, clipboard.new(), files[0]) or { print_and_exit("${err}"); unsafe { nil } }
 	if opts.debug_mode {
 		app.editor.start_debug()
