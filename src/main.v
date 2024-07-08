@@ -42,7 +42,7 @@ fn (mut app App) update_view() {
 }
 
 
-fn event(e draw.Event, mut app &App) {
+fn event(e draw.Event, mut app App) {
 	match e.typ {
 		.key_down {
 			app.changed = true
@@ -55,7 +55,7 @@ fn event(e draw.Event, mut app &App) {
 	}
 }
 
-fn frame(mut app &App) {
+fn frame(mut app App) {
 	if app.ui.rate_limit_draws() && !app.changed { return }
 	app.changed = false
 	app.ui.clear()
@@ -69,19 +69,23 @@ struct Options {
 mut:
 	log_level  string
 	debug_mode bool
+	capture_panics bool
 }
 
 fn resolve_options_from_args(args []string) Options {
 	flags := cmdline.only_options(args)
 	return Options{
 		debug_mode: "--debug" in flags || "-d" in flags
+		capture_panics: "--capturepanics" in flags || "-cp" in flags
 	}
 }
 
 fn main() {
 	args := os.args[1..]
 	opts := resolve_options_from_args(args)
-	persist_stderr_to_disk()
+	if opts.capture_panics {
+		persist_stderr_to_disk()
+	}
 	mut l := log.Log{}
 	l.set_level(.debug)
 	l.set_full_logpath("./debug.log")
