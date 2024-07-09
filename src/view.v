@@ -633,10 +633,12 @@ fn draw_text_line(
 				selection_start := cursor.selection_start()
 				selection_end := cursor.selection_end()
 
-				line_selection_start_x := selection_start.x
+				mut line_selection_start_x := selection_start.x
 				mut line_selection_end_x := selection_end.x
-
-				if document_space_y != selection_start.y && document_space_y != selection_end.y {
+				// FIX(tauraamui): apparently this logic is whack, needs re-thinking
+				if document_space_y > selection_start.y && document_space_y != selection_end.y {
+					line_selection_start_x = 0
+				} else if document_space_y != selection_start.y && document_space_y != selection_end.y {
 					line_selection_end_x = line.runes().len
 				} else if document_space_y == selection_start.y && selection_start.y != selection_end.y {
 					line_selection_end_x = line.runes().len
