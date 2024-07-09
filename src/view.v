@@ -606,12 +606,13 @@ fn (mut view View) draw_document_2(mut ctx draw.Contextable) {
 
 		linex = linex.runes()[..max_width].string()
 		sel_highlight_color := Color{ r: view.config.selection_highlight_color.r, g: view.config.selection_highlight_color.g, b: view.config.selection_highlight_color.b }
-		draw_text_line(mut ctx, view.cursor, view.mode, sel_highlight_color, view.x, y, document_space_y, cursor_screen_space_y, linex)
+		draw_text_line(mut ctx, view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, view.cursor, view.mode, sel_highlight_color, view.x, y, document_space_y, cursor_screen_space_y, linex)
 	}
 }
 
 fn draw_text_line(
 	mut ctx draw.Contextable,
+	syntax workspace.Syntax,
 	cursor Cursor,
 	current_mode Mode,
 	selection_highlight_color Color,
@@ -623,7 +624,8 @@ fn draw_text_line(
 		.visual_line {
 			within_selection := cursor.line_is_within_selection(document_space_y)
 			if within_selection { ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b) }
-			ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
+			draw_text_line_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, line)
+			// ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
 			return
 		}
 		.visual {
@@ -651,14 +653,51 @@ fn draw_text_line(
 				ctx.draw_text(screen_space_x+1+utf8_str_visible_length(pre_selection_line_segment)+utf8_str_visible_length(selected_line_segment), screen_space_y+1, post_selection_line_segment)
 				return
 			}
-			ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
+			draw_text_line_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, line)
+			// ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
 		}
 		else {
 			if screen_space_y == cursor_screen_space_y {
 				ctx.set_bg_color(r: 53, g: 53, b: 53)
 			}
-			ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
+			draw_text_line_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, line)
+			// ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
 			return
+		}
+	}
+}
+
+fn draw_text_line_segments(
+	mut ctx draw.Contextable,
+	syntax workspace.Syntax,
+	screen_space_x int, screen_space_y int,
+	document_space_y int,
+	line string
+) {
+	segments, _ := resolve_line_segments(syntax, line, screen_space_y, document_space_y, false)
+
+	if segments.len == 0 {
+		ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
+		return
+	}
+
+	mut pos := 0
+	for i, segment in segments {
+		// render text before next segment
+		if segment.start > pos {
+			s := line.runes()[pos..segment.start].string()
+			ctx.draw_text(screen_space_x+1+pos, screen_space_y+1, s)
+		}
+
+		color := segment.fg_color
+		s := line.runes()[segment.start..segment.end].string()
+		ctx.set_color(r: color.r, g: color.g, b: color.b)
+		ctx.draw_text(screen_space_x+1+segment.start, screen_space_y+1, s)
+		ctx.reset_color()
+		pos = segment.end
+		if i == segments.len - 1 && segment.end < line.len {
+			final := line.runes()[segment.end..line.runes().len].string()
+			ctx.draw_text(screen_space_x+1+pos, screen_space_y+1, final)
 		}
 	}
 }
