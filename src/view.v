@@ -781,15 +781,6 @@ struct LineSegment {
 	document_space_y int
 	typ              SegmentKind
 	fg_color         Color
-	bg_color         Color = Color{ 1, 1, 1 }
-mut:
-	selection        ?SelectionSpan
-}
-
-struct SelectionSpan {
-mut:
-    start  int
-    end    int
 }
 
 fn LineSegment.new_key(start int, line_y int, document_space_y int, end int) LineSegment {
@@ -800,7 +791,6 @@ fn LineSegment.new_key(start int, line_y int, document_space_y int, end int) Lin
         document_space_y: document_space_y,
         typ: .a_key,
         fg_color: Color{ 255, 126, 182 },
-        selection: none
     }
 }
 
@@ -812,7 +802,6 @@ fn LineSegment.new_literal(start int, line_y int, document_space_y int, end int)
         document_space_y: document_space_y,
         typ: .a_lit,
         fg_color: Color{ 87, 215, 217 },
-        selection: none
     }
 }
 
@@ -824,7 +813,6 @@ fn LineSegment.new_string(start int, line_y int, document_space_y int, end int) 
         document_space_y: document_space_y,
         typ: .a_string,
         fg_color: Color{ 87, 215, 217 },
-        selection: none
     }
 }
 
@@ -836,36 +824,6 @@ fn LineSegment.new_comment(start int, line_y int, document_space_y int, end int)
         document_space_y: document_space_y,
         typ: .a_comment,
         fg_color: Color{ 130, 130, 130 },
-        selection: none
-    }
-}
-
-fn (line_segment &LineSegment) draw(mut ctx draw.Contextable, x int, y int, linex []rune) {
-    color := line_segment.fg_color
-    s := linex[line_segment.start..line_segment.end].string()
-    ctx.set_color(r: color.r, g: color.g, b: color.b)
-    if selection := line_segment.selection {
-        pre_selection_s := s.runes()[..selection.start].string()
-        selection_s := s.runes()[selection.start..selection.end].string()
-        post_selection := s.runes()[selection.end..].string()
-        ctx.draw_text(x + 1 + line_segment.start, y + 1, pre_selection_s)
-        ctx.set_bg_color(draw.Color{ r: 240, g: 20, b: 20 })
-        ctx.draw_text(x + 1 + line_segment.start + pre_selection_s.len, y + 1, selection_s)
-        ctx.revert_bg_color()
-        ctx.draw_text(x + 1 + line_segment.start + pre_selection_s.len + selection_s.len, y + 1, post_selection)
-    } else {
-        ctx.draw_text(x + 1 + line_segment.start, y + 1, s)
-        ctx.reset_color()
-    }
-}
-
-fn (mut line_segment LineSegment) accomodate_selection(document_space_y int, selection_start Pos, selection_end Pos) {
-    line_segment.selection = none
-    if selection_start.y > document_space_y { return }
-    if selection_end.y < document_space_y { return }
-    if selection_start.x <= line_segment.start && selection_end.x >= line_segment.end {
-    	line_segment.selection = SelectionSpan{ line_segment.start, line_segment.end }
-    	return
     }
 }
 
