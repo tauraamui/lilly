@@ -630,7 +630,7 @@ fn draw_text_line(
 		}
 		.visual {
 			if cursor.line_is_within_selection(document_space_y) {
-				draw_text_line_within_visual_selection(mut ctx, syntax, cursor, selection_highlight_color, screen_space_x, screen_space_y, document_space_y, cursor_screen_space_y, line)
+				draw_text_line_within_visual_selection(mut ColoredDrawer(ctx), syntax, cursor, selection_highlight_color, screen_space_x, screen_space_y, document_space_y, cursor_screen_space_y, line)
 				return
 			}
 			draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, line)
@@ -647,8 +647,13 @@ fn draw_text_line(
 	}
 }
 
+interface ColoredDrawer {
+	draw.Colorer
+	draw.Drawer
+}
+
 fn draw_text_line_within_visual_selection(
-	mut ctx draw.Contextable,
+	mut ctx ColoredDrawer,
 	syntax workspace.Syntax,
 	cursor Cursor,
 	selection_highlight_color Color,
