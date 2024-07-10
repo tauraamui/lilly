@@ -630,29 +630,7 @@ fn draw_text_line(
 		}
 		.visual {
 			if cursor.line_is_within_selection(document_space_y) {
-				selection_start := cursor.selection_start()
-				selection_end := cursor.selection_end()
-
-				mut line_selection_start_x := selection_start.x
-				mut line_selection_end_x := selection_end.x
-				// FIX(tauraamui): apparently this logic is whack, needs re-thinking
-				if document_space_y > selection_start.y && document_space_y != selection_end.y {
-					line_selection_start_x = 0
-				} else if document_space_y != selection_start.y && document_space_y != selection_end.y {
-					line_selection_end_x = line.runes().len
-				} else if document_space_y == selection_start.y && selection_start.y != selection_end.y {
-					line_selection_end_x = line.runes().len
-				}
-
-				pre_selection_line_segment := line.runes()[..line_selection_start_x].string()
-				selected_line_segment := line.runes()[line_selection_start_x..line_selection_end_x].string()
-				post_selection_line_segment := line.runes()[line_selection_end_x..].string()
-
-				ctx.draw_text(screen_space_x+1, screen_space_y+1, pre_selection_line_segment)
-				ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b)
-				ctx.draw_text(screen_space_x+1+utf8_str_visible_length(pre_selection_line_segment), screen_space_y+1, selected_line_segment)
-				ctx.reset_bg_color()
-				ctx.draw_text(screen_space_x+1+utf8_str_visible_length(pre_selection_line_segment)+utf8_str_visible_length(selected_line_segment), screen_space_y+1, post_selection_line_segment)
+				draw_text_line_within_visual_selection(mut ctx, syntax, cursor, selection_highlight_color, screen_space_x, screen_space_y, document_space_y, cursor_screen_space_y, line)
 				return
 			}
 			draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, line)
@@ -667,6 +645,41 @@ fn draw_text_line(
 			return
 		}
 	}
+}
+
+fn draw_text_line_within_visual_selection(
+	mut ctx draw.Contextable,
+	syntax workspace.Syntax,
+	cursor Cursor,
+	selection_highlight_color Color,
+	screen_space_x int, screen_space_y int, document_space_y int,
+	cursor_screen_space_y int,
+	line string
+) {
+	selection_start := cursor.selection_start()
+	selection_end := cursor.selection_end()
+
+	mut line_selection_start_x := selection_start.x
+	mut line_selection_end_x := selection_end.x
+	// FIX(tauraamui): apparently this logic is whack, needs re-thinking
+	if document_space_y > selection_start.y && document_space_y != selection_end.y {
+		line_selection_start_x = 0
+	} else if document_space_y != selection_start.y && document_space_y != selection_end.y {
+		line_selection_end_x = line.runes().len
+	} else if document_space_y == selection_start.y && selection_start.y != selection_end.y {
+		line_selection_end_x = line.runes().len
+	}
+
+	pre_selection_line_segment := line.runes()[..line_selection_start_x].string()
+	selected_line_segment := line.runes()[line_selection_start_x..line_selection_end_x].string()
+	post_selection_line_segment := line.runes()[line_selection_end_x..].string()
+
+	ctx.draw_text(screen_space_x+1, screen_space_y+1, pre_selection_line_segment)
+	ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b)
+	ctx.draw_text(screen_space_x+1+utf8_str_visible_length(pre_selection_line_segment), screen_space_y+1, selected_line_segment)
+	ctx.reset_bg_color()
+	ctx.draw_text(screen_space_x+1+utf8_str_visible_length(pre_selection_line_segment)+utf8_str_visible_length(selected_line_segment), screen_space_y+1, post_selection_line_segment)
+	return
 }
 
 fn draw_text_line_as_segments(
