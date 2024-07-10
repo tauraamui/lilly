@@ -624,7 +624,7 @@ fn draw_text_line(
 		.visual_line {
 			within_selection := cursor.line_is_within_selection(document_space_y)
 			if within_selection { ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b) }
-			draw_text_line_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, line)
+			draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, line)
 			// ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
 			return
 		}
@@ -655,21 +655,21 @@ fn draw_text_line(
 				ctx.draw_text(screen_space_x+1+utf8_str_visible_length(pre_selection_line_segment)+utf8_str_visible_length(selected_line_segment), screen_space_y+1, post_selection_line_segment)
 				return
 			}
-			draw_text_line_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, line)
+			draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, line)
 			// ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
 		}
 		else {
 			if screen_space_y == cursor_screen_space_y {
 				ctx.set_bg_color(r: 53, g: 53, b: 53)
 			}
-			draw_text_line_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, line)
+			draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, line)
 			// ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
 			return
 		}
 	}
 }
 
-fn draw_text_line_segments(
+fn draw_text_line_as_segments(
 	mut ctx draw.Contextable,
 	syntax workspace.Syntax,
 	screen_space_x int, screen_space_y int,
