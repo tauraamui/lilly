@@ -379,6 +379,7 @@ fn test_draw_text_line_within_visual_selection_first_line_with_selection_end_on_
 
 	assert drawed_text.len >= 1
 	assert drawed_text[0] == "This is a line to draw."
+	assert drawed_text[1] == "This is a second line."
 }
 
 fn test_enter_from_start_of_line() {
