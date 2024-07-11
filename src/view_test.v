@@ -283,17 +283,45 @@ fn (mockctx MockContextable) rate_limit_draws() bool { return false }
 fn (mockctx MockContextable) window_width() int { return 0 }
 fn (mockctx MockContextable) window_height() int { return 0 }
 fn (mockctx MockContextable) set_cursor_position(x int, y int) {}
-fn (mockctx MockContextable) draw_text(x int, y int, text string) { mockctx.on_draw_cb(x, y, text) }
+fn (mut mockctx MockContextable) draw_text(x int, y int, text string) {
+	mockctx.on_draw_cb(x, y, text)
+}
 fn (mockctx MockContextable) write(c string) {}
 fn (mockctx MockContextable) draw_rect(x int, y int, width int, height int) {}
 fn (mockctx MockContextable) draw_point(x int, y int) {}
-fn (mockctx MockContextable) set_color(c Color)
-fn (mockctx MockContextable) set_bg_color(c Color)
-fn (mockctx MockContextable) revert_bg_color()
-fn (mockctx MockContextable) reset_color()
-fn (mockctx MockContextable) reset_bg_color()
+fn (mockctx MockContextable) set_color(c draw.Color) {}
+fn (mockctx MockContextable) set_bg_color(c draw.Color) {}
+fn (mockctx MockContextable) revert_bg_color() {}
+fn (mockctx MockContextable) reset_color() {}
+fn (mockctx MockContextable) reset_bg_color() {}
+fn (mockctx MockContextable) bold() {}
+fn (mockctx MockContextable) reset() {}
+fn (mockctx MockContextable) run() ! {}
+fn (mockctx MockContextable) clear() {}
+fn (mockctx MockContextable) flush() {}
 
 fn test_draw_text_line_within_visual_selection() {
+	mut drawed_text := []string{}
+	mut drawed_text_ref := &drawed_text
+	mut m_ctx := MockContextable{
+		on_draw_cb: fn [mut drawed_text_ref] (x int, y int, text string) {
+			drawed_text_ref << text
+		}
+	}
+	cursor := Cursor{
+		pos: Pos{ x: 16, y: 0 },
+		selection_start_pos: Pos{ x: 4, y: 0 }
+	}
+
+	draw_text_line_within_visual_selection(
+		mut m_ctx, resolve_test_syntax(),
+		cursor, Color{ r: 10, g: 10, b: 10 },
+		0, 0, 0, 0,
+		"This is a line to draw."
+	)
+
+	assert drawed_text[0] == "This"
+	assert drawed_text[1] == " is a line to draw."
 }
 
 fn test_enter_from_start_of_line() {
