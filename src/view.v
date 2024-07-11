@@ -795,8 +795,12 @@ fn draw_text_line_visual_selection_starts_before_but_ends_on_line(
 	line_runes []rune
 ) {
 	mut x_offset := 0
-	pre_end := line_runes[..selection_end.x]
-	post_end := line_runes[selection_end.x..]
+	mut sel_end_x := selection_end.x
+	if selection_end.x > line_runes.len {
+		sel_end_x = line_runes.len
+	}
+	pre_end := line_runes[..sel_end_x]
+	post_end := line_runes[sel_end_x..]
 
 	if pre_end.len != 0 {
 		ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b)
