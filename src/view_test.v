@@ -326,7 +326,6 @@ fn test_draw_text_line_within_visual_selection_start_end_on_same_line() {
 	assert drawed_text[2] == "o draw."
 }
 
-
 fn test_draw_text_line_within_visual_selection_start_pre_line_end_post_line() {
 	mut drawed_text := []string{}
 	mut drawed_text_ref := &drawed_text
@@ -345,6 +344,37 @@ fn test_draw_text_line_within_visual_selection_start_pre_line_end_post_line() {
 		cursor, Color{ r: 10, g: 10, b: 10 },
 		0, 0, 1, 2,
 		"This is a line to draw.",
+	)
+
+	assert drawed_text.len >= 1
+	assert drawed_text[0] == "This is a line to draw."
+}
+
+fn test_draw_text_line_within_visual_selection_first_line_with_selection_end_on_second_line() {
+	mut drawed_text := []string{}
+	mut drawed_text_ref := &drawed_text
+	mut m_ctx := MockContextable{
+		on_draw_cb: fn [mut drawed_text_ref] (x int, y int, text string) {
+			drawed_text_ref << text
+		}
+	}
+	cursor := Cursor{
+		pos: Pos{ x: 0, y: 1 },
+		selection_start_pos: Pos{ x: 4, y: 0 }
+	}
+
+	draw_text_line_within_visual_selection(
+		mut m_ctx, resolve_test_syntax(),
+		cursor, Color{ r: 10, g: 10, b: 10 },
+		0, 0, 0, 0,
+		"This is a line to draw.",
+	)
+
+	draw_text_line_within_visual_selection(
+		mut m_ctx, resolve_test_syntax(),
+		cursor, Color{ r: 10, g: 10, b: 10 },
+		0, 0, 0, 1,
+		"This is a second line.",
 	)
 
 	assert drawed_text.len >= 1
