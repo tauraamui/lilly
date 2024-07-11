@@ -23,6 +23,22 @@ pub:
 	b u8
 }
 
+pub interface Drawer {
+mut:
+	draw_text(x int, y int, text string)
+	write(c string)
+	draw_rect(x int, y int, width int, height int)
+	draw_point(x int, y int)
+}
+
+pub interface Colorer {
+mut:
+	set_color(c Color)
+	set_bg_color(c Color)
+	reset_color()
+	reset_bg_color()
+}
+
 pub interface Contextable {
 mut:
 	rate_limit_draws() bool
@@ -31,17 +47,11 @@ mut:
 
 	set_cursor_position(x int, y int)
 
-	draw_text(x int, y int, text string)
-	write(c string)
-	draw_rect(x int, y int, width int, height int)
-	draw_point(x int, y int)
+	Drawer
+	Colorer
 
 	bold()
 
-	set_color(c Color)
-	set_bg_color(c Color)
-	reset_color()
-	reset_bg_color()
 	reset()
 
 	run() !

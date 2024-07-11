@@ -252,55 +252,9 @@ fn test_v_toggles_visual_mode_and_starts_selection() {
 fn resolve_test_syntax() workspace.Syntax {
     return json.decode(workspace.Syntax, '{
         "name": "test",
-        "keywords": ["for", "func", "print"],
+        "keywords": ["for", "func", "print", "bool"],
         "literals": ["nil", "true", "false"]
     }') or { panic("failed to parse test syntax: ${err}") }
-}
-
-fn test_line_segments_accomodate_selection_full_line() {
-    line := "for thing != nil { print(true) }"
-    mut line_segments, _ := resolve_line_segments(resolve_test_syntax(), line, 0, false)
-    assert line_segments.len == 4
-    for mut line_segment in line_segments {
-        line_segment.accomodate_selection(0, Pos{ 0, 0 }, Pos{ line.runes().len, 0 })
-        assert line_segment.within_selection
-    }
-}
-
-fn test_line_segments_accomodate_selection_when_selection_inside_span() {
-    line := "for thing != nil { print(true) }"
-    mut line_segments, _ := resolve_line_segments(resolve_test_syntax(), line, 0, false)
-    assert line_segments.len == 4
-    for i, mut line_segment in line_segments {
-        if i != 2 { continue }
-        line_segment.accomodate_selection(0, Pos{ 20, 0 }, Pos{ 23, 0 })
-        assert line_segment.within_selection
-        assert line_segment.selection_start == 20
-        assert line_segment.selection_end == 23
-    }
-}
-
-fn test_line_segments_accomodate_selection_when_selection_encompasses_multiple_spans() {
-    line := "for thing != nil { print(true) }"
-    mut line_segments, _ := resolve_line_segments(resolve_test_syntax(), line, 0, false)
-    assert line_segments.len == 4
-    for i, mut line_segment in line_segments {
-        if i == 0 || i == line_segments.len - 1 { continue }
-        line_segment.accomodate_selection(0, Pos{ 10, 0 }, Pos{ 23, 0 })
-        if i == 1 {
-            assert line_segment.within_selection
-            assert line_segment.selection_start == 13
-            assert line_segment.selection_end == 16
-            continue
-        }
-
-        if i == 2 {
-            assert line_segment.within_selection
-            assert line_segment.selection_start == 19
-            assert line_segment.selection_end == 23
-            continue
-        }
-    }
 }
 
 fn test_shift_v_toggles_visual_line_mode_and_starts_selection() {
@@ -318,6 +272,114 @@ fn test_shift_v_toggles_visual_line_mode_and_starts_selection() {
 	assert fake_view.mode == .visual_line
 	assert fake_view.cursor.selection_active()
 	assert fake_view.cursor.selection_start() == Pos{ 6, 0 }
+}
+
+struct MockContextable {
+mut:
+	on_draw_cb fn (x int, y int, text string)
+}
+
+fn (mockctx MockContextable) rate_limit_draws() bool { return false }
+fn (mockctx MockContextable) window_width() int { return 0 }
+fn (mockctx MockContextable) window_height() int { return 0 }
+fn (mockctx MockContextable) set_cursor_position(x int, y int) {}
+fn (mut mockctx MockContextable) draw_text(x int, y int, text string) {
+	mockctx.on_draw_cb(x, y, text)
+}
+fn (mockctx MockContextable) write(c string) {}
+fn (mockctx MockContextable) draw_rect(x int, y int, width int, height int) {}
+fn (mockctx MockContextable) draw_point(x int, y int) {}
+fn (mockctx MockContextable) set_color(c draw.Color) {}
+fn (mockctx MockContextable) set_bg_color(c draw.Color) {}
+fn (mockctx MockContextable) revert_bg_color() {}
+fn (mockctx MockContextable) reset_color() {}
+fn (mockctx MockContextable) reset_bg_color() {}
+fn (mockctx MockContextable) bold() {}
+fn (mockctx MockContextable) reset() {}
+fn (mockctx MockContextable) run() ! {}
+fn (mockctx MockContextable) clear() {}
+fn (mockctx MockContextable) flush() {}
+
+fn test_draw_text_line_within_visual_selection_start_end_on_same_line() {
+	mut drawed_text := []string{}
+	mut drawed_text_ref := &drawed_text
+	mut m_ctx := MockContextable{
+		on_draw_cb: fn [mut drawed_text_ref] (x int, y int, text string) {
+			drawed_text_ref << text
+		}
+	}
+	cursor := Cursor{
+		pos: Pos{ x: 16, y: 0 },
+		selection_start_pos: Pos{ x: 4, y: 0 }
+	}
+
+	draw_text_line_within_visual_selection(
+		mut m_ctx, resolve_test_syntax(),
+		cursor, Color{ r: 10, g: 10, b: 10 },
+		0, 0, 0, 0,
+		"This is a line to draw."
+	)
+
+	assert drawed_text.len >= 1
+	assert drawed_text[0] == "This"
+	assert drawed_text[1] == " is a line t"
+	assert drawed_text[2] == "o draw."
+}
+
+fn test_draw_text_line_within_visual_selection_start_pre_line_end_post_line() {
+	mut drawed_text := []string{}
+	mut drawed_text_ref := &drawed_text
+	mut m_ctx := MockContextable{
+		on_draw_cb: fn [mut drawed_text_ref] (x int, y int, text string) {
+			drawed_text_ref << text
+		}
+	}
+	cursor := Cursor{
+		pos: Pos{ x: 16, y: 2 },
+		selection_start_pos: Pos{ x: 4, y: 0 }
+	}
+
+	draw_text_line_within_visual_selection(
+		mut m_ctx, resolve_test_syntax(),
+		cursor, Color{ r: 10, g: 10, b: 10 },
+		0, 0, 1, 2,
+		"This is a line to draw.",
+	)
+
+	assert drawed_text.len >= 1
+	assert drawed_text[0] == "This is a line to draw."
+}
+
+fn test_draw_text_line_within_visual_selection_first_line_with_selection_end_on_second_line() {
+	mut drawed_text := []string{}
+	mut drawed_text_ref := &drawed_text
+	mut m_ctx := MockContextable{
+		on_draw_cb: fn [mut drawed_text_ref] (x int, y int, text string) {
+			drawed_text_ref << text
+		}
+	}
+	cursor := Cursor{
+		pos: Pos{ x: 0, y: 1 },
+		selection_start_pos: Pos{ x: 0, y: 0 }
+	}
+
+	draw_text_line_within_visual_selection(
+		mut m_ctx, resolve_test_syntax(),
+		cursor, Color{ r: 10, g: 10, b: 10 },
+		0, 0, 0, 0,
+		"This is a line to draw.",
+	)
+
+	draw_text_line_within_visual_selection(
+		mut m_ctx, resolve_test_syntax(),
+		cursor, Color{ r: 10, g: 10, b: 10 },
+		0, 0, 1, 1,
+		"This is a second line.",
+	)
+
+	assert drawed_text.len >= 1
+	assert drawed_text[0] == "This is a line to draw."
+	assert drawed_text[1] == "This is a second line."
 }
 
 fn test_enter_from_start_of_line() {

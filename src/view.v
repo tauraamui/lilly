@@ -574,10 +574,14 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 	view.draw_cursor_pointer(mut ctx)
 }
 
-fn (mut view View) draw_document(mut ctx draw.Contextable) {
+fn (mut view View) update_to() {
 	mut to := view.from + view.code_view_height()
 	if to > view.buffer.lines.len { to = view.buffer.lines.len }
 	view.to = to
+}
+
+fn (mut view View) draw_document(mut ctx draw.Contextable) {
+	view.update_to()
 	ctx.set_bg_color(r: 53, g: 53, b: 53)
 
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
@@ -587,32 +591,264 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 		ctx.draw_rect(view.x+1, cursor_screen_space_y+1, ctx.window_width(), cursor_screen_space_y+1)
 	}
 
-	color := view.config.selection_highlight_color
-	mut within_selection := false
-	// draw document text
-	for y, line in view.buffer.lines[view.from..to] {
+	for y, line in view.buffer.lines[view.from..view.to] {
 		ctx.reset_bg_color()
 		ctx.reset_color()
 
 		view.draw_text_line_number(mut ctx, y)
 
 		document_space_y := view.from + y
-		match view.mode {
-			.visual_line {
-				within_selection = view.cursor.line_is_within_selection(document_space_y)
-				if within_selection { ctx.set_bg_color(r: color.r, g: color.g, b: color.b) }
+
+		mut linex := line.replace("\t", " ".repeat(4))
+		mut max_width := view.width
+		visible_len := utf8_str_visible_length(linex)
+		if max_width > visible_len { max_width = visible_len }
+
+		linex = linex.runes()[..max_width].string()
+		sel_highlight_color := Color{ r: view.config.selection_highlight_color.r, g: view.config.selection_highlight_color.g, b: view.config.selection_highlight_color.b }
+		draw_text_line(mut ctx, view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, view.cursor, view.mode, sel_highlight_color, view.x, y, document_space_y, cursor_screen_space_y, linex)
+	}
+}
+
+fn draw_text_line(
+	mut ctx draw.Contextable,
+	syntax workspace.Syntax,
+	cursor Cursor,
+	current_mode Mode,
+	selection_highlight_color Color,
+	screen_space_x int, screen_space_y int, document_space_y int,
+	cursor_screen_space_y int,
+	line string
+) {
+	match current_mode {
+		.visual_line {
+			within_selection := cursor.line_is_within_selection(document_space_y)
+			if within_selection { ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b) }
+			draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, line)
+			// ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
+			return
+		}
+		.visual {
+			if cursor.line_is_within_selection(document_space_y) {
+				draw_text_line_within_visual_selection(mut ctx, syntax, cursor, selection_highlight_color, screen_space_x, screen_space_y, document_space_y, cursor_screen_space_y, line)
+				return
 			}
-			else {
-				within_selection = false
-				if y == cursor_screen_space_y {
-					ctx.set_bg_color(r: 53, g: 53, b: 53)
-				}
+			draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, line)
+			// ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
+		}
+		else {
+			if screen_space_y == cursor_screen_space_y {
+				ctx.set_bg_color(r: 53, g: 53, b: 53)
 			}
+			draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, line)
+			// ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
+			return
+		}
+	}
+}
+
+fn draw_text_line_within_visual_selection(
+	mut ctx draw.Contextable,
+	syntax workspace.Syntax,
+	cursor Cursor,
+	selection_highlight_color Color,
+	screen_space_x int, screen_space_y int, document_space_y int,
+	cursor_screen_space_y int,
+	line string
+) {
+	line_runes := line.runes()
+	if line_runes.len == 0 { return } // NOTE(tauraamui): don't think this can happen from upstream but safe to check
+
+	selection_start := cursor.selection_start()
+	selection_end := cursor.selection_end()
+
+	if document_space_y == selection_start.y && document_space_y == selection_end.y {
+		draw_text_line_visual_selection_starts_and_ends_on_same_line(
+			mut ctx, syntax, selection_highlight_color,
+			selection_start, selection_end,
+			screen_space_x, screen_space_y, document_space_y,
+			cursor_screen_space_y,
+			line_runes
+		)
+		return
+	}
+
+	if document_space_y == selection_start.y && document_space_y < selection_end.y {
+		draw_text_line_visual_selection_starts_on_same_but_ends_after(
+			mut ctx, syntax, selection_highlight_color,
+			selection_start, selection_end,
+			screen_space_x, screen_space_y, document_space_y,
+			cursor_screen_space_y,
+			line_runes
+		)
+		return
+	}
+
+	if document_space_y > selection_start.y && document_space_y == selection_end.y {
+		draw_text_line_visual_selection_starts_before_but_ends_on_line(
+			mut ctx, syntax, selection_highlight_color,
+			selection_start, selection_end,
+			screen_space_x, screen_space_y, document_space_y,
+			cursor_screen_space_y,
+			line_runes
+		)
+		return
+	}
+
+	draw_text_line_visual_selection_between_start_and_end(
+		mut ctx, syntax, selection_highlight_color,
+		selection_start, selection_end,
+		screen_space_x, screen_space_y, document_space_y,
+		cursor_screen_space_y,
+		line_runes
+	)
+}
+
+fn draw_text_line_visual_selection_between_start_and_end(
+	mut ctx draw.Contextable,
+	syntax workspace.Syntax,
+	selection_highlight_color Color,
+	selection_start Pos, selection_end Pos,
+	screen_space_x int, screen_space_y int, document_space_y int,
+	cursor_screen_space_y int,
+	line_runes []rune
+) {
+	ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b)
+	ctx.draw_text(screen_space_x+1, screen_space_y+1, line_runes.string())
+	ctx.reset_bg_color()
+}
+
+fn draw_text_line_visual_selection_starts_and_ends_on_same_line(
+	mut ctx draw.Contextable,
+	syntax workspace.Syntax,
+	selection_highlight_color Color,
+	selection_start Pos, selection_end Pos,
+	screen_space_x int, screen_space_y int, document_space_y int,
+	cursor_screen_space_y int,
+	line_runes []rune
+) {
+	mut x_offset := 0
+	pre_sel := line_runes[..selection_start.x]
+	sel := line_runes[selection_start.x..selection_end.x]
+	post_sel := line_runes[selection_end.x..]
+
+	if pre_sel.len != 0 {
+		if screen_space_y == cursor_screen_space_y {
+			ctx.set_bg_color(r: 53, g: 53, b: 53)
+		}
+		draw_text_line_as_segments(mut ctx, syntax, screen_space_x + x_offset, screen_space_y, document_space_y, pre_sel.string())
+		x_offset += pre_sel.len
+	}
+
+	if sel.len != 0 {
+		ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b)
+		ctx.draw_text(screen_space_x+x_offset+1, screen_space_y+1, sel.string())
+		ctx.reset_bg_color()
+		x_offset += sel.len
+	}
+
+	if post_sel.len != 0 {
+		if screen_space_y == cursor_screen_space_y {
+			ctx.set_bg_color(r: 53, g: 53, b: 53)
+		}
+		draw_text_line_as_segments(mut ctx, syntax, screen_space_x + x_offset, screen_space_y, document_space_y, post_sel.string())
+		x_offset += post_sel.len
+	}
+}
+
+fn draw_text_line_visual_selection_starts_on_same_but_ends_after(
+	mut ctx draw.Contextable,
+	syntax workspace.Syntax,
+	selection_highlight_color Color,
+	selection_start Pos, selection_end Pos,
+	screen_space_x int, screen_space_y int, document_space_y int,
+	cursor_screen_space_y int,
+	line_runes []rune
+) {
+	mut x_offset := 0
+	pre_sel := line_runes[..selection_start.x]
+	sel := line_runes[selection_start.x..]
+
+	if pre_sel.len != 0 {
+		if screen_space_y == cursor_screen_space_y {
+			ctx.set_bg_color(r: 53, g: 53, b: 53)
+		}
+		draw_text_line_as_segments(mut ctx, syntax, screen_space_x + x_offset, screen_space_y, document_space_y, pre_sel.string())
+		x_offset += pre_sel.len
+	}
+
+	if sel.len != 0 {
+		ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b)
+		ctx.draw_text(screen_space_x+x_offset+1, screen_space_y+1, sel.string())
+		ctx.reset_bg_color()
+		x_offset += sel.len
+	}
+}
+
+fn draw_text_line_visual_selection_starts_before_but_ends_on_line(
+	mut ctx draw.Contextable,
+	syntax workspace.Syntax,
+	selection_highlight_color Color,
+	selection_start Pos, selection_end Pos,
+	screen_space_x int, screen_space_y int, document_space_y int,
+	cursor_screen_space_y int,
+	line_runes []rune
+) {
+	//FIX(tauraamui): there's a bug with moving up + down between lines, fix!
+	mut x_offset := 0
+	mut sel_end_x := selection_end.x
+	if selection_end.x > line_runes.len {
+		sel_end_x = line_runes.len
+	}
+	pre_end := line_runes[..sel_end_x]
+	post_end := line_runes[sel_end_x..]
+
+	if pre_end.len != 0 {
+		ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b)
+		ctx.draw_text(screen_space_x+x_offset+1, screen_space_y+1, pre_end.string())
+		ctx.reset_bg_color()
+		x_offset += pre_end.len
+	}
+
+	if screen_space_y == cursor_screen_space_y {
+		ctx.set_bg_color(r: 53, g: 53, b: 53)
+	}
+	draw_text_line_as_segments(mut ctx, syntax, screen_space_x + x_offset, screen_space_y, document_space_y, post_end.string())
+	x_offset += post_end.len
+}
+
+fn draw_text_line_as_segments(
+	mut ctx draw.Contextable,
+	syntax workspace.Syntax,
+	screen_space_x int, screen_space_y int,
+	document_space_y int,
+	line string
+) {
+	segments, _ := resolve_line_segments(syntax, line, screen_space_y, document_space_y, false)
+
+	if segments.len == 0 {
+		ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
+		return
+	}
+
+	mut pos := 0
+	for i, segment in segments {
+		// render text before next segment
+		if segment.start > pos {
+			s := line.runes()[pos..segment.start].string()
+			ctx.draw_text(screen_space_x+1+pos, screen_space_y+1, s)
 		}
 
-		search_matches := view.search.get_line_matches(document_space_y)
-		if search_matches.len > 0 { ctx.set_bg_color(r: 53, g: 100, b: 230) }
-		view.draw_text_line(mut ctx, y, line, LineSelectionBounds{ full: within_selection })
+		color := segment.fg_color
+		s := line.runes()[segment.start..segment.end].string()
+		ctx.set_color(r: color.r, g: color.g, b: color.b)
+		ctx.draw_text(screen_space_x+1+segment.start, screen_space_y+1, s)
+		ctx.reset_color()
+		pos = segment.end
+		if i == segments.len - 1 && segment.end < line.len {
+			final := line.runes()[segment.end..line.runes().len].string()
+			ctx.draw_text(screen_space_x+1+pos, screen_space_y+1, final)
+		}
 	}
 }
 
@@ -626,154 +862,57 @@ enum SegmentKind {
 struct LineSegment {
 	start            int
 	end              int
-	line_y           int
+	y                int
+	document_space_y int
 	typ              SegmentKind
 	fg_color         Color
-	bg_color         Color = Color{ 1, 1, 1 }
-mut:
-	within_selection bool
-	selection_start  int
-	selection_end    int
 }
 
-fn LineSegment.new_key(start int, line_y int, end int) LineSegment {
+fn LineSegment.new_key(start int, line_y int, document_space_y int, end int) LineSegment {
     return LineSegment{
         start: start,
         end: end,
-        line_y: line_y,
+        y: line_y,
+        document_space_y: document_space_y,
         typ: .a_key,
-        fg_color: Color{ 255, 126, 182 }
+        fg_color: Color{ 255, 126, 182 },
     }
 }
 
-fn LineSegment.new_literal(start int, line_y int, end int) LineSegment {
+fn LineSegment.new_literal(start int, line_y int, document_space_y int, end int) LineSegment {
     return LineSegment{
         start: start,
         end: end,
-        line_y: line_y,
+        y: line_y,
+        document_space_y: document_space_y,
         typ: .a_lit,
-        fg_color: Color{ 87, 215, 217 }
+        fg_color: Color{ 87, 215, 217 },
     }
 }
 
-fn LineSegment.new_string(start int, line_y int, end int) LineSegment {
+fn LineSegment.new_string(start int, line_y int, document_space_y int, end int) LineSegment {
     return LineSegment{
         start: start,
         end: end,
-        line_y: line_y,
+        y: line_y,
+        document_space_y: document_space_y,
         typ: .a_string,
-        fg_color: Color{ 87, 215, 217 }
+        fg_color: Color{ 87, 215, 217 },
     }
 }
 
-fn LineSegment.new_comment(start int, line_y int, end int) LineSegment {
+fn LineSegment.new_comment(start int, line_y int, document_space_y int, end int) LineSegment {
     return LineSegment{
         start: start,
         end: end,
-        line_y: line_y,
+        y: line_y,
+        document_space_y: document_space_y,
         typ: .a_comment,
-        fg_color: Color{ 130, 130, 130 }
+        fg_color: Color{ 130, 130, 130 },
     }
 }
 
-fn (mut line_segment LineSegment) accomodate_selection(line_y int, selection_start Pos, selection_end Pos) {
-    defer { line_segment.within_selection = (line_segment.selection_start != 0 || line_segment.selection_end != 0) }
-    // if line segment lies outside of selection span
-    if line_segment.line_y < selection_start.y || line_segment.line_y > selection_end.y { return }
-    // if selection span completely encompasses current line
-    if selection_start.y != selection_end.y && line_segment.line_y > selection_start.y && line_segment.line_y < selection_end.y {
-        line_segment.selection_start = line_segment.start
-        line_segment.selection_end = line_segment.end
-        return
-    }
-    // does the segment start after the end of the selection span
-    if line_segment.start > selection_end.x { return }
-    // does the entire span of the segment exist prior to the selection start x
-    if line_segment.start < selection_start.x && line_segment.end < selection_start.x { return }
-
-    // does the selection span match the segment span exactly
-    if selection_start.x <= line_segment.start && selection_end.x >= line_segment.end {
-        line_segment.selection_start = line_segment.start
-        line_segment.selection_end = line_segment.end
-        return
-    }
-
-    // does the selection completely envelop the segment
-    if selection_start.x > line_segment.start && selection_end.x < line_segment.end {
-        line_segment.selection_start = selection_start.x
-        line_segment.selection_end = selection_end.x
-        return
-    }
-
-    if selection_start.x < line_segment.start && selection_end.x > line_segment.start && selection_end.x <= line_segment.end {
-        line_segment.selection_start = line_segment.start
-        line_segment.selection_end = selection_end.x
-        return
-    }
-
-    if selection_start.x > line_segment.start && selection_start.x < line_segment.end {
-        line_segment.selection_start = selection_start.x
-        if selection_end.x >= line_segment.end {
-            line_segment.selection_end = line_segment.end
-            return
-        }
-        line_segment.selection_end = selection_end.x
-        return
-    }
-}
-
-struct LineSelectionBounds {
-	start int
-	end   int
-	full  bool
-}
-
-fn (mut view View) draw_text_line(mut ctx draw.Contextable, y int, line string, line_selection_bounds LineSelectionBounds) {
-	mut linex := line.replace("\t", " ".repeat(4))
-	mut max_width := view.width
-	visible_len := utf8_str_visible_length(linex)
-	if max_width > visible_len { max_width = visible_len }
-
-	linex = linex.runes()[..max_width].string()
-
-	segments, is_multiline_comment := resolve_line_segments(view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, linex, y, view.is_multiline_comment)
-	view.is_multiline_comment = is_multiline_comment
-
-	/*
-	if view.is_multiline_comment {
-		ctx.set_color(r: 130, g: 130, b: 130)
-		ctx.draw_text(view.x+1, y+1, linex)
-		return
-	}
-	*/
-
-	if segments.len == 0 || line_selection_bounds.full {
-		ctx.draw_text(view.x+1, y+1, linex)
-		return
-	}
-
-	mut pos := 0
-	for i, segment in segments {
-		// render text before next segment
-		if segment.start > pos {
-			s := linex.runes()[pos..segment.start].string()
-			ctx.draw_text(view.x+1+pos, y+1, s)
-		}
-
-		color := segment.fg_color
-		s := linex.runes()[segment.start..segment.end].string()
-		ctx.set_color(r: color.r, g: color.g, b: color.b)
-		ctx.draw_text(view.x+1+segment.start, y+1, s)
-		ctx.reset_color()
-		pos = segment.end
-		if i == segments.len - 1 && segment.end < linex.len {
-			final := linex.runes()[segment.end..linex.runes().len].string()
-			ctx.draw_text(view.x+1+pos, y+1, final)
-		}
-	}
-}
-
-fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, is_multiline_comment bool) ([]LineSegment, bool) {
+fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, document_space_y int, is_multiline_comment bool) ([]LineSegment, bool) {
 	mut segments := []LineSegment{}
 	mut is_multiline_commentx := is_multiline_comment
 	line_runes := line.runes()
@@ -781,13 +920,13 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, is_mu
 		start := i
 		// '//' comment
 		if i > 0 && line_runes[i - 1] == `/` && line_runes[i] == `/` {
-			segments << LineSegment.new_comment(start - 1, line_y, line_runes.len)
+			segments << LineSegment.new_comment(start - 1, line_y, document_space_y, line_runes.len)
 			break
 		}
 
 		// '#' comment
 		if line_runes[i] == `#` {
-			segments << LineSegment.new_comment(start, line_y, line_runes.len)
+			segments << LineSegment.new_comment(start, line_y, document_space_y, line_runes.len)
 			break
 		}
 
@@ -796,14 +935,14 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, is_mu
 		if i > 0 && line_runes[i - 1] == `/` && line_runes[i] == `*` && !(line_runes[line_runes.len - 2] == `*`
 			&& line_runes[line_runes.len - 1] == `/`) {
 			// all after /* is  a comment
-			segments << LineSegment.new_comment(start, line_y, line_runes.len)
+			segments << LineSegment.new_comment(start, line_y, document_space_y, line_runes.len)
 			is_multiline_commentx = true
 			break
 		}
 		// end of /* */
 		if i > 0 && line_runes[i - 1] == `*` && line_runes[i] == `/` {
 			// all before */ is still a comment
-			segments << LineSegment.new_comment(0, line_y, start + 1)
+			segments << LineSegment.new_comment(0, line_y, document_space_y, start + 1)
 			is_multiline_commentx = false
 			break
 		}
@@ -817,7 +956,7 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, is_mu
 			if i >= line_runes.len {
 				i = line_runes.len - 1
 			}
-			segments << LineSegment.new_string(start, line_y, i + 1)
+			segments << LineSegment.new_string(start, line_y, document_space_y, i + 1)
 		}
 
 		if line_runes[i] == `"` {
@@ -828,7 +967,7 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, is_mu
 			if i >= line_runes.len {
 				i = line_runes.len - 1
 			}
-			segments << LineSegment.new_string(start, line_y, i + 1)
+			segments << LineSegment.new_string(start, line_y, document_space_y, i + 1)
 		}
 
 		if line_runes[i] == `\`` {
@@ -839,7 +978,7 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, is_mu
 			if i >= line_runes.len {
 				i = line_runes.len - 1
 			}
-			segments << LineSegment.new_string(start, line_y, i + 1)
+			segments << LineSegment.new_string(start, line_y, document_space_y, i + 1)
 		}
 
 		// key
@@ -848,9 +987,9 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, is_mu
 		}
 		word := line.runes()[start..i].string()
 		if word in syntax.literals {
-			segments << LineSegment.new_literal(start, line_y, i)
+			segments << LineSegment.new_literal(start, line_y, document_space_y, i)
 		} else if word in syntax.keywords {
-			segments << LineSegment.new_key(start, line_y, i)
+			segments << LineSegment.new_key(start, line_y, document_space_y, i)
 		}
 	}
 	return segments, is_multiline_commentx
