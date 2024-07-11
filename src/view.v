@@ -676,7 +676,7 @@ fn draw_text_line_within_visual_selection(
 
 			if selection_end.x < line_runes.len {
 				post_selection_segment := line_runes[selection_end.x..].string()
-				ctx.draw_text(screen_space_x+1, screen_space_y+1, post_selection_segment)
+				draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, post_selection_segment)
 			}
 		}
 	}
