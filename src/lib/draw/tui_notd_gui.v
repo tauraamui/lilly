@@ -5,8 +5,6 @@ import term.ui as tui
 struct Context{
 mut:
 	ref           &tui.Context
-    last_bg_color ?Color
-	bg_color      ?Color
 }
 
 pub fn new_context(cfg Config) &Contextable {
