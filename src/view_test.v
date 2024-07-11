@@ -360,7 +360,7 @@ fn test_draw_text_line_within_visual_selection_first_line_with_selection_end_on_
 	}
 	cursor := Cursor{
 		pos: Pos{ x: 0, y: 1 },
-		selection_start_pos: Pos{ x: 4, y: 0 }
+		selection_start_pos: Pos{ x: 0, y: 0 }
 	}
 
 	draw_text_line_within_visual_selection(
