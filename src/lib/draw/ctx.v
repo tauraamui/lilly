@@ -35,7 +35,6 @@ pub interface Colorer {
 mut:
 	set_color(c Color)
 	set_bg_color(c Color)
-	revert_bg_color()
 	reset_color()
 	reset_bg_color()
 }
