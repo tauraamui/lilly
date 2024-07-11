@@ -320,8 +320,10 @@ fn test_draw_text_line_within_visual_selection() {
 		"This is a line to draw."
 	)
 
+	assert drawed_text.len >= 1
 	assert drawed_text[0] == "This"
-	assert drawed_text[1] == " is a line to draw."
+	assert drawed_text[1] == " is a line t"
+	assert drawed_text[2] == "o draw."
 }
 
 fn test_enter_from_start_of_line() {
