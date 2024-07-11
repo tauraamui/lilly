@@ -662,13 +662,11 @@ fn draw_text_line_within_visual_selection(
 	selection_start := cursor.selection_start()
 	selection_end := cursor.selection_end()
 
-	if document_space_y > selection_start.y {
-		if document_space_y < selection_end.y {
-			ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b)
-			ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
-			ctx.reset_bg_color()
-			return
-		}
+	if document_space_y > selection_start.y && document_space_y < selection_end.y {
+		ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b)
+		ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
+		ctx.reset_bg_color()
+		return
 	}
 
 	if document_space_y == selection_start.y {

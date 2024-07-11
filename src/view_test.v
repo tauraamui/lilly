@@ -373,7 +373,7 @@ fn test_draw_text_line_within_visual_selection_first_line_with_selection_end_on_
 	draw_text_line_within_visual_selection(
 		mut m_ctx, resolve_test_syntax(),
 		cursor, Color{ r: 10, g: 10, b: 10 },
-		0, 0, 0, 1,
+		0, 0, 1, 1,
 		"This is a second line.",
 	)
 
