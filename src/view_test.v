@@ -274,6 +274,28 @@ fn test_shift_v_toggles_visual_line_mode_and_starts_selection() {
 	assert fake_view.cursor.selection_start() == Pos{ 6, 0 }
 }
 
+struct MockContextable {
+mut:
+	on_draw_cb fn (x int, y int, text string)
+}
+
+fn (mockctx MockContextable) rate_limit_draws() bool { return false }
+fn (mockctx MockContextable) window_width() int { return 0 }
+fn (mockctx MockContextable) window_height() int { return 0 }
+fn (mockctx MockContextable) set_cursor_position(x int, y int) {}
+fn (mockctx MockContextable) draw_text(x int, y int, text string) { mockctx.on_draw_cb(x, y, text) }
+fn (mockctx MockContextable) write(c string) {}
+fn (mockctx MockContextable) draw_rect(x int, y int, width int, height int) {}
+fn (mockctx MockContextable) draw_point(x int, y int) {}
+fn (mockctx MockContextable) set_color(c Color)
+fn (mockctx MockContextable) set_bg_color(c Color)
+fn (mockctx MockContextable) revert_bg_color()
+fn (mockctx MockContextable) reset_color()
+fn (mockctx MockContextable) reset_bg_color()
+
+fn test_draw_text_line_within_visual_selection() {
+}
+
 fn test_enter_from_start_of_line() {
 	mut clip := clipboard.new()
 	mut fake_view := View{ log: unsafe { nil }, mode: .insert, clipboard: mut clip }
