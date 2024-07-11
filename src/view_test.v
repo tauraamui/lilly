@@ -300,7 +300,7 @@ fn (mockctx MockContextable) run() ! {}
 fn (mockctx MockContextable) clear() {}
 fn (mockctx MockContextable) flush() {}
 
-fn test_draw_text_line_within_visual_selection() {
+fn test_draw_text_line_within_visual_selection_start_end_on_same_line() {
 	mut drawed_text := []string{}
 	mut drawed_text_ref := &drawed_text
 	mut m_ctx := MockContextable{
@@ -324,6 +324,31 @@ fn test_draw_text_line_within_visual_selection() {
 	assert drawed_text[0] == "This"
 	assert drawed_text[1] == " is a line t"
 	assert drawed_text[2] == "o draw."
+}
+
+
+fn test_draw_text_line_within_visual_selection_start_pre_line_end_post_line() {
+	mut drawed_text := []string{}
+	mut drawed_text_ref := &drawed_text
+	mut m_ctx := MockContextable{
+		on_draw_cb: fn [mut drawed_text_ref] (x int, y int, text string) {
+			drawed_text_ref << text
+		}
+	}
+	cursor := Cursor{
+		pos: Pos{ x: 16, y: 2 },
+		selection_start_pos: Pos{ x: 4, y: 0 }
+	}
+
+	draw_text_line_within_visual_selection(
+		mut m_ctx, resolve_test_syntax(),
+		cursor, Color{ r: 10, g: 10, b: 10 },
+		0, 0, 1, 2,
+		"This is a line to draw.",
+	)
+
+	assert drawed_text.len >= 1
+	assert drawed_text[0] == "This is a line to draw."
 }
 
 fn test_enter_from_start_of_line() {
