@@ -672,6 +672,17 @@ fn draw_text_line_within_visual_selection(
 		)
 		return
 	}
+
+	if document_space_y > selection_start.y && document_space_y == selection_end.y {
+		draw_text_line_visual_selection_starts_before_but_ends_on_line(
+			mut ctx, syntax, selection_highlight_color,
+			selection_start, selection_end,
+			screen_space_x, screen_space_y, document_space_y,
+			cursor_screen_space_y,
+			line_runes
+		)
+		return
+	}
 }
 
 fn draw_text_line_visual_selection_starts_and_ends_on_same_line(
@@ -711,6 +722,16 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(
 		x_offset += post_sel.len
 	}
 }
+
+fn draw_text_line_visual_selection_starts_before_but_ends_on_line(
+	mut ctx draw.Contextable,
+	syntax workspace.Syntax,
+	selection_highlight_color Color,
+	selection_start Pos, selection_end Pos,
+	screen_space_x int, screen_space_y int, document_space_y int,
+	cursor_screen_space_y int,
+	line_runes []rune
+) {}
 
 fn draw_text_line_as_segments(
 	mut ctx draw.Contextable,
