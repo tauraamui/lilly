@@ -702,30 +702,6 @@ fn draw_text_line_within_visual_selection(
 			return
 		}
 	}
-
-	/*
-	mut line_selection_start_x := selection_start.x
-	mut line_selection_end_x := selection_end.x
-	// FIX(tauraamui): apparently this logic is whack, needs re-thinking
-	if document_space_y > selection_start.y && document_space_y != selection_end.y {
-		line_selection_start_x = 0
-	} else if document_space_y != selection_start.y && document_space_y != selection_end.y {
-		line_selection_end_x = line.runes().len
-	} else if document_space_y == selection_start.y && selection_start.y != selection_end.y {
-		line_selection_end_x = line.runes().len
-	}
-
-	pre_selection_line_segment := line.runes()[..line_selection_start_x].string()
-	selected_line_segment := line.runes()[line_selection_start_x..line_selection_end_x].string()
-	post_selection_line_segment := line.runes()[line_selection_end_x..].string()
-
-	ctx.draw_text(screen_space_x+1, screen_space_y+1, pre_selection_line_segment)
-	ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b)
-	ctx.draw_text(screen_space_x+1+utf8_str_visible_length(pre_selection_line_segment), screen_space_y+1, selected_line_segment)
-	ctx.reset_bg_color()
-	ctx.draw_text(screen_space_x+1+utf8_str_visible_length(pre_selection_line_segment)+utf8_str_visible_length(selected_line_segment), screen_space_y+1, post_selection_line_segment)
-	return
-	*/
 }
 
 fn draw_text_line_as_segments(
