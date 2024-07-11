@@ -672,20 +672,32 @@ fn draw_text_line_within_visual_selection(
 	}
 
 	if document_space_y == selection_start.y {
+		mut x_offset := 0
 		// on the first line there's maximum three parts, pre selection + within selection + post selection
 		if selection_start.x > 0 && line_runes.len > 0 {
-			pre_selection_segment := line_runes[..selection_start.x].string()
-			draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, pre_selection_segment)
+			pre_selection_segment := line_runes[..selection_start.x]
+			if screen_space_y == cursor_screen_space_y {
+				ctx.set_bg_color(r: 53, g: 53, b: 53)
+			}
+			draw_text_line_as_segments(mut ctx, syntax, screen_space_x + x_offset, screen_space_y, document_space_y, pre_selection_segment.string())
+			x_offset += pre_selection_segment.len
 		}
 
 		if document_space_y == selection_end.y {
 			// render selection span
-			selection_segment := line_runes[selection_start.x..selection_end.x].string()
-			ctx.draw_text(screen_space_x+1, screen_space_y+1, selection_segment)
+			selection_segment := line_runes[selection_start.x..selection_end.x]
+			ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b)
+			ctx.draw_text(screen_space_x+x_offset+1, screen_space_y+1, selection_segment.string())
+			ctx.reset_bg_color()
+			x_offset += selection_segment.len
+
+			if screen_space_y == cursor_screen_space_y {
+				ctx.set_bg_color(r: 53, g: 53, b: 53)
+			}
 
 			if selection_end.x < line_runes.len {
-				post_selection_segment := line_runes[selection_end.x..].string()
-				draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, post_selection_segment)
+				post_selection_segment := line_runes[selection_end.x..]
+				draw_text_line_as_segments(mut ctx, syntax, screen_space_x + x_offset, screen_space_y, document_space_y, post_selection_segment.string())
 			}
 			return
 		}
