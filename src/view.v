@@ -656,9 +656,32 @@ fn draw_text_line_within_visual_selection(
 	cursor_screen_space_y int,
 	line string
 ) {
+	line_runes := line.runes()
+	if line_runes.len == 0 { return } // NOTE(tauraamui): don't think this can happen from upstream but safe to check
+
 	selection_start := cursor.selection_start()
 	selection_end := cursor.selection_end()
 
+	if document_space_y == selection_start.y {
+		// on the first line there's maximum three parts, pre selection + within selection + post selection
+		if selection_start.x > 0 && line_runes.len > 0 {
+			pre_selection_segment := line_runes[..selection_start.x].string()
+			draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, pre_selection_segment)
+		}
+
+		if document_space_y == selection_end.y {
+			// render selection span
+			selection_segment := line_runes[selection_start.x..selection_end.x].string()
+			ctx.draw_text(screen_space_x+1, screen_space_y+1, selection_segment)
+
+			if selection_end.x < line_runes.len {
+				post_selection_segment := line_runes[selection_end.x..].string()
+				ctx.draw_text(screen_space_x+1, screen_space_y+1, post_selection_segment)
+			}
+		}
+	}
+
+	/*
 	mut line_selection_start_x := selection_start.x
 	mut line_selection_end_x := selection_end.x
 	// FIX(tauraamui): apparently this logic is whack, needs re-thinking
@@ -680,6 +703,7 @@ fn draw_text_line_within_visual_selection(
 	ctx.reset_bg_color()
 	ctx.draw_text(screen_space_x+1+utf8_str_visible_length(pre_selection_line_segment)+utf8_str_visible_length(selected_line_segment), screen_space_y+1, post_selection_line_segment)
 	return
+	*/
 }
 
 fn draw_text_line_as_segments(
