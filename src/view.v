@@ -662,43 +662,53 @@ fn draw_text_line_within_visual_selection(
 	selection_start := cursor.selection_start()
 	selection_end := cursor.selection_end()
 
-	if document_space_y > selection_start.y && document_space_y < selection_end.y {
-		ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b)
-		ctx.draw_text(screen_space_x+1, screen_space_y+1, line)
-		ctx.reset_bg_color()
+	if document_space_y == selection_start.y && document_space_y == selection_end.y {
+		draw_text_line_visual_selection_starts_and_ends_on_same_line(
+			mut ctx, syntax, selection_highlight_color,
+			selection_start, selection_end,
+			screen_space_x, screen_space_y, document_space_y,
+			cursor_screen_space_y,
+			line_runes
+		)
 		return
 	}
+}
 
-	if document_space_y == selection_start.y {
-		mut x_offset := 0
-		// on the first line there's maximum three parts, pre selection + within selection + post selection
-		if selection_start.x > 0 && line_runes.len > 0 {
-			pre_selection_segment := line_runes[..selection_start.x]
-			if screen_space_y == cursor_screen_space_y {
-				ctx.set_bg_color(r: 53, g: 53, b: 53)
-			}
-			draw_text_line_as_segments(mut ctx, syntax, screen_space_x + x_offset, screen_space_y, document_space_y, pre_selection_segment.string())
-			x_offset += pre_selection_segment.len
+fn draw_text_line_visual_selection_starts_and_ends_on_same_line(
+	mut ctx draw.Contextable,
+	syntax workspace.Syntax,
+	selection_highlight_color Color,
+	selection_start Pos, selection_end Pos,
+	screen_space_x int, screen_space_y int, document_space_y int,
+	cursor_screen_space_y int,
+	line_runes []rune
+) {
+	mut x_offset := 0
+	pre_sel := line_runes[..selection_start.x]
+	sel := line_runes[selection_start.x..selection_end.x]
+	post_sel := line_runes[selection_end.x..]
+
+	if pre_sel.len != 0 {
+		if screen_space_y == cursor_screen_space_y {
+			ctx.set_bg_color(r: 53, g: 53, b: 53)
 		}
+		draw_text_line_as_segments(mut ctx, syntax, screen_space_x + x_offset, screen_space_y, document_space_y, pre_sel.string())
+		x_offset += pre_sel.len
+	}
 
-		if document_space_y == selection_end.y {
-			// render selection span
-			selection_segment := line_runes[selection_start.x..selection_end.x]
-			ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b)
-			ctx.draw_text(screen_space_x+x_offset+1, screen_space_y+1, selection_segment.string())
-			ctx.reset_bg_color()
-			x_offset += selection_segment.len
+	if sel.len != 0 {
+		ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b)
+		ctx.draw_text(screen_space_x+x_offset+1, screen_space_y+1, sel.string())
+		ctx.reset_bg_color()
+		x_offset += sel.len
+	}
 
-			if screen_space_y == cursor_screen_space_y {
-				ctx.set_bg_color(r: 53, g: 53, b: 53)
-			}
-
-			if selection_end.x < line_runes.len {
-				post_selection_segment := line_runes[selection_end.x..]
-				draw_text_line_as_segments(mut ctx, syntax, screen_space_x + x_offset, screen_space_y, document_space_y, post_selection_segment.string())
-			}
-			return
+	if post_sel.len != 0 {
+		if screen_space_y == cursor_screen_space_y {
+			ctx.set_bg_color(r: 53, g: 53, b: 53)
 		}
+		draw_text_line_as_segments(mut ctx, syntax, screen_space_x + x_offset, screen_space_y, document_space_y, post_sel.string())
+		x_offset += post_sel.len
 	}
 }
 
