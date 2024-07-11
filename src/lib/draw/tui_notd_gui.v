@@ -4,7 +4,7 @@ import term.ui as tui
 
 struct Context{
 mut:
-	ref           &tui.Context
+	ref &tui.Context
 }
 
 pub fn new_context(cfg Config) &Contextable {
