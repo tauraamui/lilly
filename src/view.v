@@ -794,6 +794,7 @@ fn draw_text_line_visual_selection_starts_before_but_ends_on_line(
 	cursor_screen_space_y int,
 	line_runes []rune
 ) {
+	//FIX(tauraamui): there's a bug with moving up + down between lines, fix!
 	mut x_offset := 0
 	mut sel_end_x := selection_end.x
 	if selection_end.x > line_runes.len {
