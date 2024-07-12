@@ -249,6 +249,31 @@ fn test_v_toggles_visual_mode_and_starts_selection() {
 	assert fake_view.cursor.selection_end() == Pos{ 12, 0 }
 }
 
+fn test_v_toggles_visual_mode_move_selection_down_to_second_line_ensure_start_position_is_same() {
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+	// manually set the "document" contents
+	fake_view.buffer.lines = ["1. first line", "//"]
+
+	// ensure cursor is set to sit on sort of in the middle of the first line
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 6
+
+	// invoke the 'v' command
+	fake_view.v()
+
+	assert fake_view.mode == .visual
+	assert fake_view.cursor.selection_active()
+	selection_start := fake_view.cursor.selection_start()
+	assert selection_start == Pos{ 6, 0 }
+	assert fake_view.cursor.pos == selection_start
+
+	fake_view.j()
+
+	assert fake_view.cursor.selection_start() == Pos{ 6, 0 }
+	assert fake_view.cursor.selection_end() == Pos{ 0, 1 }
+}
+
 fn resolve_test_syntax() workspace.Syntax {
     return json.decode(workspace.Syntax, '{
         "name": "test",
