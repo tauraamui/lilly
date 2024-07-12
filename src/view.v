@@ -33,6 +33,12 @@ mut:
 	selection_start_pos Pos
 }
 
+// FIX(tauraamui): Cursor selection start + end selection logic is not completely correct.
+//                 Basically it seems that the start selection x position does not remain constant
+//                 and gets changed out from underneath of itself if the x position of end selection's
+//                 x moves backwards, they seem to be "anchored" together incorrectly. Further tests will
+//                 be written and then hopefully we can amend the logic to match what we want/expect.
+
 fn (cursor Cursor) line_is_within_selection(line_y int) bool {
 	start := if cursor.selection_start_pos.y < cursor.pos.y { cursor.selection_start_pos.y } else { cursor.pos.y }
 	end   := if cursor.pos.y > cursor.selection_start_pos.y { cursor.pos.y } else { cursor.selection_start_pos.y }
@@ -794,7 +800,7 @@ fn draw_text_line_visual_selection_starts_before_but_ends_on_line(
 	cursor_screen_space_y int,
 	line_runes []rune
 ) {
-	//FIX(tauraamui): there's a bug with moving up + down between lines, fix!
+	// FIX(tauraamui): there's a bug with moving up + down between lines, fix!
 	mut x_offset := 0
 	mut sel_end_x := selection_end.x
 	if selection_end.x > line_runes.len {
