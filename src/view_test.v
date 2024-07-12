@@ -224,6 +224,16 @@ fn test_resolve_whitespace_prefix_on_line_with_no_text() {
 	assert resolve_whitespace_prefix(test_line_with_just_4_spaces).len == 4
 }
 
+fn test_cursor_selection_start_and_end_methods_basic_situation() {
+	mut cursor := Cursor{
+		pos: Pos{ x: 0, y: 0 } // make position be at "beginning"
+		selection_start_pos: Pos{ x: 20, y: 0 } // make selection "end" at the "end"
+	}
+
+	assert cursor.selection_start() == Pos{ 0, 0 }
+	assert cursor.selection_end() == Pos{ 20, 0 }
+}
+
 fn test_v_toggles_visual_mode_and_starts_selection() {
 	mut clip := clipboard.new()
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
