@@ -105,6 +105,9 @@ fn test_u_undos_line_insertions() {
 	]
 }
 
+fn test_cursor_line_is_within_selection() {
+}
+
 fn test_dd_deletes_current_line_at_start_of_doc() {
 	mut clip := clipboard.new()
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
