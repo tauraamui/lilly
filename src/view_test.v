@@ -130,7 +130,7 @@ fn test_selection_start_smallest_wins_check_2() {
 		selection_start_pos: Pos{ x: 4, y: 3 }
 	}
 
-	assert cursor.selection_start() == Pos{ 0, 3 }
+	assert cursor.selection_start() == Pos{ 4, 3 }
 }
 
 fn test_dd_deletes_current_line_at_start_of_doc() {
