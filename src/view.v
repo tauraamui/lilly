@@ -33,12 +33,6 @@ mut:
 	selection_start_pos Pos
 }
 
-// FIX(tauraamui): Cursor selection start + end selection logic is not completely correct.
-//                 Basically it seems that the start selection x position does not remain constant
-//                 and gets changed out from underneath of itself if the x position of end selection's
-//                 x moves backwards, they seem to be "anchored" together incorrectly. Further tests will
-//                 be written and then hopefully we can amend the logic to match what we want/expect.
-
 fn (cursor Cursor) line_is_within_selection(line_y int) bool {
 	start := if cursor.selection_start_pos.y < cursor.pos.y { cursor.selection_start_pos.y } else { cursor.pos.y }
 	end   := if cursor.pos.y > cursor.selection_start_pos.y { cursor.pos.y } else { cursor.selection_start_pos.y }
@@ -47,33 +41,21 @@ fn (cursor Cursor) line_is_within_selection(line_y int) bool {
 }
 
 fn (cursor Cursor) selection_start() Pos {
-    return Pos{
-        x: cursor.selection_start_x(),
-        y: cursor.selection_start_y()
-    }
+	if cursor.selection_start_pos.y == cursor.pos.y {
+		if cursor.selection_start_pos.x == cursor.pos.x { return cursor.selection_start_pos }
+		if cursor.selection_start_pos.x < cursor.pos.x { return cursor.selection_start_pos }
+		return cursor.pos
+	}
+	if cursor.selection_start_pos.y < cursor.pos.y { return cursor.selection_start_pos } else { return cursor.pos }
 }
 
 fn (cursor Cursor) selection_end() Pos {
-    return Pos{
-        x: cursor.selection_end_x(),
-        y: cursor.selection_end_y()
-    }
-}
-
-fn (cursor Cursor) selection_start_x() int {
-    return if cursor.selection_start_pos.x < cursor.pos.x { cursor.selection_start_pos.x } else { cursor.pos.x }
-}
-
-fn (cursor Cursor) selection_end_x() int {
-    return if cursor.pos.x > cursor.selection_start_pos.x { cursor.pos.x } else { cursor.selection_start_pos.x }
-}
-
-fn (cursor Cursor) selection_start_y() int {
-	return if cursor.selection_start_pos.y < cursor.pos.y { cursor.selection_start_pos.y } else { cursor.pos.y }
-}
-
-fn (cursor Cursor) selection_end_y() int {
-	return if cursor.pos.y > cursor.selection_start_pos.y { cursor.pos.y } else { cursor.selection_start_pos.y }
+	if cursor.pos.y == cursor.selection_start_pos.y {
+		if cursor.pos.x == cursor.selection_start_pos.x { return cursor.pos }
+		if cursor.pos.x > cursor.selection_start_pos.x { return cursor.pos }
+		return cursor.selection_start_pos
+	}
+	if cursor.pos.y > cursor.selection_start_pos.y { return cursor.pos } else { return cursor.selection_start_pos }
 }
 
 fn (cursor Cursor) selection_active() bool { return cursor.selection_start_pos.x >= 0 && cursor.selection_start_pos.y >= 0 }
@@ -733,6 +715,7 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(
 	cursor_screen_space_y int,
 	line_runes []rune
 ) {
+	// FIX(tauraamui): this now bugs the fuck out if x increases and selection start and cursor are on same line
 	mut x_offset := 0
 	pre_sel := line_runes[..selection_start.x]
 	sel := line_runes[selection_start.x..selection_end.x]
@@ -1147,8 +1130,8 @@ fn (mut view View) insert_tab() {
 }
 
 fn (mut view View) visual_indent() {
-	mut start := view.cursor.selection_start_y()
-	mut end := view.cursor.selection_end_y()
+	mut start := view.cursor.selection_start().y
+	mut end := view.cursor.selection_end().y
 
     prefix := if view.config.insert_tabs_not_spaces { "\t" } else { " ".repeat(4) }
 
@@ -1158,8 +1141,8 @@ fn (mut view View) visual_indent() {
 }
 
 fn (mut view View) visual_unindent() {
-	mut start := view.cursor.selection_start_y()
-	mut end := view.cursor.selection_end_y()
+	mut start := view.cursor.selection_start().y
+	mut end := view.cursor.selection_end().y
 
     prefix := if view.config.insert_tabs_not_spaces { "\t" } else { " ".repeat(4) }
 
@@ -1222,7 +1205,7 @@ fn (mut view View) escape() {
 	// TODO(tauraamui) -> completely re-write this method
 	defer {
 		if view.cursor.selection_active() {
-			view.cursor.pos.y = view.cursor.selection_start_y()
+			view.cursor.pos.y = view.cursor.selection_start().y
 		}
 		view.cursor.selection_start_pos = Pos{ -1, -1 }
 		view.clamp_cursor_within_document_bounds()
@@ -1375,8 +1358,8 @@ fn (mut view View) r() {
 }
 
 fn (mut view View) visual_y() {
-	start := view.cursor.selection_start_y()
-	mut end   := view.cursor.selection_end_y()
+	start := view.cursor.selection_start().y
+	mut end   := view.cursor.selection_end().y
 	if end+1 >= view.buffer.lines.len { end = view.buffer.lines.len-1 }
 	view.copy_lines_into_clipboard(start, end)
 	view.escape()
@@ -1403,8 +1386,8 @@ fn (mut view View) read_lines_from_clipboard() []string {
 
 fn (mut view View) visual_d(overwrite_y_lines bool) {
 	defer { view.clamp_cursor_within_document_bounds() }
-	mut start := view.cursor.selection_start_y()
-	mut end := view.cursor.selection_end_y()
+	mut start := view.cursor.selection_start().y
+	mut end := view.cursor.selection_end().y
 
 	view.copy_lines_into_clipboard(start, end)
 	before := view.buffer.lines[..start]
@@ -1529,8 +1512,8 @@ fn (mut view View) p() {
 
 fn (mut view View) visual_p() {
 	defer { view.clamp_cursor_within_document_bounds() }
-	mut start := view.cursor.selection_start_y()
-	mut end := view.cursor.selection_end_y()
+	mut start := view.cursor.selection_start().y
+	mut end := view.cursor.selection_end().y
 
 	before := view.buffer.lines[..start]
 	after := view.buffer.lines[end+1..]
