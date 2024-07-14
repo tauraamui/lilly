@@ -498,6 +498,7 @@ fn (mut view View) offset_x_and_width_by_len_of_longest_line_number_str(win_widt
 	view.width = win_width - view.x
 }
 
+// TODO(tauraamui): use this/do something similar for visual mode highlighting
 @[inline]
 fn (mut view View) calc_cursor_x_offset() int {
 	cursor_line := view.buffer.lines[view.cursor.pos.y]
