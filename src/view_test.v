@@ -105,7 +105,32 @@ fn test_u_undos_line_insertions() {
 	]
 }
 
-fn test_cursor_line_is_within_selection() {
+fn test_line_is_within_selection() {
+	mut cursor := Cursor{
+		pos: Pos{ x: 0, y: 5 },
+		selection_start_pos: Pos{ x: 4, y: 2 }
+	}
+
+	assert cursor.line_is_within_selection(3)
+	assert cursor.line_is_within_selection(8) == false
+}
+
+fn test_selection_start_smallest_wins_check_1() {
+	mut cursor := Cursor{
+		pos: Pos{ x: 0, y: 2 },
+		selection_start_pos: Pos{ x: 4, y: 5 }
+	}
+
+	assert cursor.selection_start() == Pos{ 0, 2 }
+}
+
+fn test_selection_start_smallest_wins_check_2() {
+	mut cursor := Cursor{
+		pos: Pos{ x: 0, y: 11 },
+		selection_start_pos: Pos{ x: 4, y: 3 }
+	}
+
+	assert cursor.selection_start() == Pos{ 0, 3 }
 }
 
 fn test_dd_deletes_current_line_at_start_of_doc() {
