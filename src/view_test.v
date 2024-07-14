@@ -309,7 +309,7 @@ fn test_v_toggles_visual_mode_move_selection_down_to_second_line_ensure_start_po
 	fake_view.j()
 
 	assert fake_view.cursor.selection_start() == Pos{ 6, 0 }
-	assert fake_view.cursor.selection_end() == Pos{ 0, 1 }
+	assert fake_view.cursor.selection_end() == Pos{ 1, 1 }
 }
 
 fn resolve_test_syntax() workspace.Syntax {
