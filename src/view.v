@@ -41,10 +41,20 @@ fn (cursor Cursor) line_is_within_selection(line_y int) bool {
 }
 
 fn (cursor Cursor) selection_start() Pos {
+	if cursor.selection_start_pos.y == cursor.pos.y {
+		if cursor.selection_start_pos.x == cursor.pos.x { return cursor.selection_start_pos }
+		if cursor.selection_start_pos.x < cursor.pos.x { return cursor.selection_start_pos }
+		return cursor.pos
+	}
 	if cursor.selection_start_pos.y < cursor.pos.y { return cursor.selection_start_pos } else { return cursor.pos }
 }
 
 fn (cursor Cursor) selection_end() Pos {
+	if cursor.pos.y == cursor.selection_start_pos.y {
+		if cursor.pos.x == cursor.selection_start_pos.x { return cursor.pos }
+		if cursor.pos.x > cursor.selection_start_pos.x { return cursor.pos }
+		return cursor.selection_start_pos
+	}
 	if cursor.pos.y > cursor.selection_start_pos.y { return cursor.pos } else { return cursor.selection_start_pos }
 }
 
