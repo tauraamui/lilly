@@ -841,7 +841,7 @@ fn test_visual_insert_mode_and_delete_in_place() {
 	fake_view.cursor.pos.y = 1
 
 	fake_view.shift_v()
-	fake_view.visual_d(true)
+	fake_view.visual_line_d(true)
 
 	assert fake_view.mode == .normal
 	assert fake_view.buffer.lines == ["1. first line", "3. third line", "4. forth line"]
@@ -859,7 +859,7 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 
 	fake_view.shift_v()
 	fake_view.j()
-	fake_view.visual_d(true)
+	fake_view.visual_line_d(true)
 
 	assert fake_view.mode == .normal
 	assert fake_view.buffer.lines == ["1. first line", "4. forth line"]
@@ -884,7 +884,7 @@ fn test_visual_selection_copy() {
 
 	fake_view.shift_v()
 	fake_view.j()
-	fake_view.visual_y()
+	fake_view.visual_line_y()
 
 	assert fake_view.read_lines_from_clipboard() == [
 		"2. second line",
@@ -951,7 +951,7 @@ fn test_visual_paste() {
 	fake_view.shift_v()
 	fake_view.j()
 
-	fake_view.visual_p()
+	fake_view.visual_line_p()
 
 	assert fake_view.buffer.lines == [
 		"1. first line",

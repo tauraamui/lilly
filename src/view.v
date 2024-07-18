@@ -1378,7 +1378,9 @@ fn (mut view View) r() {
 	view.mode = .replace
 }
 
-fn (mut view View) visual_y() {
+fn (mut view View) visual_y() {}
+
+fn (mut view View) visual_line_y() {
 	start := view.cursor.selection_start().y
 	mut end   := view.cursor.selection_end().y
 	if end+1 >= view.buffer.lines.len { end = view.buffer.lines.len-1 }
@@ -1405,7 +1407,9 @@ fn (mut view View) read_lines_from_clipboard() []string {
 	return view.clipboard.paste()
 }
 
-fn (mut view View) visual_d(overwrite_y_lines bool) {
+fn (mut view View) visual_d(overwrite_y_lines bool) {}
+
+fn (mut view View) visual_line_d(overwrite_y_lines bool) {
 	defer { view.clamp_cursor_within_document_bounds() }
 	mut start := view.cursor.selection_start().y
 	mut end := view.cursor.selection_end().y
@@ -1531,7 +1535,9 @@ fn (mut view View) p() {
 	view.move_cursor_down(copied_lines.len)
 }
 
-fn (mut view View) visual_p() {
+fn (mut view View) visual_p() {}
+
+fn (mut view View) visual_line_p() {
 	defer { view.clamp_cursor_within_document_bounds() }
 	mut start := view.cursor.selection_start().y
 	mut end := view.cursor.selection_end().y
