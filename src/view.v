@@ -595,7 +595,12 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 
 		linex = linex.runes()[..max_width].string()
 		sel_highlight_color := Color{ r: view.config.selection_highlight_color.r, g: view.config.selection_highlight_color.g, b: view.config.selection_highlight_color.b }
-		draw_text_line(mut ctx, view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, view.cursor, view.mode, sel_highlight_color, view.x, y, document_space_y, cursor_screen_space_y, linex)
+		draw_text_line(
+			mut ctx,
+			view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} },
+			view.cursor, view.mode, sel_highlight_color, view.x, y,
+			document_space_y, cursor_screen_space_y, linex, line
+		)
 	}
 }
 
@@ -607,7 +612,8 @@ fn draw_text_line(
 	selection_highlight_color Color,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
-	line string
+	line string,
+	original_line string
 ) {
 	match current_mode {
 		.visual_line {
@@ -619,7 +625,7 @@ fn draw_text_line(
 		}
 		.visual {
 			if cursor.line_is_within_selection(document_space_y) {
-				draw_text_line_within_visual_selection(mut ctx, syntax, cursor, selection_highlight_color, screen_space_x, screen_space_y, document_space_y, cursor_screen_space_y, line)
+				draw_text_line_within_visual_selection(mut ctx, syntax, cursor, selection_highlight_color, screen_space_x, screen_space_y, document_space_y, cursor_screen_space_y, line, original_line)
 				return
 			}
 			draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, line)
@@ -643,7 +649,8 @@ fn draw_text_line_within_visual_selection(
 	selection_highlight_color Color,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
-	line string
+	line string,
+	original_line string
 ) {
 	line_runes := line.runes()
 	if line_runes.len == 0 { return } // NOTE(tauraamui): don't think this can happen from upstream but safe to check
@@ -657,7 +664,8 @@ fn draw_text_line_within_visual_selection(
 			selection_start, selection_end,
 			screen_space_x, screen_space_y, document_space_y,
 			cursor_screen_space_y,
-			line_runes
+			line_runes,
+			original_line.runes()
 		)
 		return
 	}
@@ -714,7 +722,8 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(
 	selection_start Pos, selection_end Pos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
-	line_runes []rune
+	line_runes []rune,
+	original_line_runes []rune
 ) {
 	mut x_offset := 0
 	pre_sel := line_runes[..selection_start.x]

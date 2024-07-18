@@ -363,6 +363,34 @@ fn (mockctx MockContextable) run() ! {}
 fn (mockctx MockContextable) clear() {}
 fn (mockctx MockContextable) flush() {}
 
+fn test_draw_text_line_within_visual_selection_start_end_on_same_line_with_tab_prefix() {
+	mut drawed_text := []string{}
+	mut drawed_text_ref := &drawed_text
+	mut m_ctx := MockContextable{
+		on_draw_cb: fn [mut drawed_text_ref] (x int, y int, text string) {
+			drawed_text_ref << text
+		}
+	}
+
+	mut cursor := Cursor{
+		pos: Pos{ x: 16, y: 0 },
+		selection_start_pos: Pos{ x: 5, y: 0 }
+	}
+	document_line := "\tpre_sel := line_runes[..selection_start.x]"
+	draw_text_line_within_visual_selection(
+		mut m_ctx, resolve_test_syntax(),
+		cursor, Color{ r: 10, g: 10, b: 10 },
+		0, 0, 0, 0,
+		document_line.replace("\t", ' '.repeat(4)),
+		document_line
+	)
+
+	assert drawed_text.len >= 1
+	assert drawed_text[0] == "    pre"
+	assert drawed_text[1] == "_sel := line"
+	assert drawed_text[2] == "_runes[..selection_start.x]"
+}
+
 fn test_draw_text_line_within_visual_selection_start_end_on_same_line() {
 	mut drawed_text := []string{}
 	mut drawed_text_ref := &drawed_text
@@ -376,11 +404,13 @@ fn test_draw_text_line_within_visual_selection_start_end_on_same_line() {
 		selection_start_pos: Pos{ x: 4, y: 0 }
 	}
 
+	document_line := "This is a line to draw."
 	draw_text_line_within_visual_selection(
 		mut m_ctx, resolve_test_syntax(),
 		cursor, Color{ r: 10, g: 10, b: 10 },
 		0, 0, 0, 0,
-		"This is a line to draw."
+		document_line.replace("\t", ' '.repeat(4)),
+		document_line
 	)
 
 	assert drawed_text.len >= 1
@@ -402,11 +432,13 @@ fn test_draw_text_line_within_visual_selection_start_pre_line_end_post_line() {
 		selection_start_pos: Pos{ x: 4, y: 0 }
 	}
 
+	document_line := "This is a line to draw."
 	draw_text_line_within_visual_selection(
 		mut m_ctx, resolve_test_syntax(),
 		cursor, Color{ r: 10, g: 10, b: 10 },
 		0, 0, 1, 2,
-		"This is a line to draw.",
+		document_line.replace("\t", ' '.repeat(4)),
+		document_line
 	)
 
 	assert drawed_text.len >= 1
@@ -426,18 +458,22 @@ fn test_draw_text_line_within_visual_selection_first_line_with_selection_end_on_
 		selection_start_pos: Pos{ x: 0, y: 0 }
 	}
 
+	mut document_line := "This is a line to draw."
 	draw_text_line_within_visual_selection(
 		mut m_ctx, resolve_test_syntax(),
 		cursor, Color{ r: 10, g: 10, b: 10 },
 		0, 0, 0, 0,
-		"This is a line to draw.",
+		document_line.replace("\t", ' '.repeat(4)),
+		document_line
 	)
 
+	document_line = "This is a second line."
 	draw_text_line_within_visual_selection(
 		mut m_ctx, resolve_test_syntax(),
 		cursor, Color{ r: 10, g: 10, b: 10 },
 		0, 0, 1, 1,
-		"This is a second line.",
+		document_line.replace("\t", ' '.repeat(4)),
+		document_line
 	)
 
 	assert drawed_text.len >= 1
