@@ -676,7 +676,8 @@ fn draw_text_line_within_visual_selection(
 			selection_start, selection_end,
 			screen_space_x, screen_space_y, document_space_y,
 			cursor_screen_space_y,
-			line_runes
+			line_runes,
+			original_line.runes()
 		)
 		return
 	}
@@ -687,7 +688,8 @@ fn draw_text_line_within_visual_selection(
 			selection_start, selection_end,
 			screen_space_x, screen_space_y, document_space_y,
 			cursor_screen_space_y,
-			line_runes
+			line_runes,
+			original_line.runes()
 		)
 		return
 	}
@@ -697,7 +699,8 @@ fn draw_text_line_within_visual_selection(
 		selection_start, selection_end,
 		screen_space_x, screen_space_y, document_space_y,
 		cursor_screen_space_y,
-		line_runes
+		line_runes,
+		original_line.runes()
 	)
 }
 
@@ -708,7 +711,8 @@ fn draw_text_line_visual_selection_between_start_and_end(
 	selection_start Pos, selection_end Pos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
-	line_runes []rune
+	line_runes []rune,
+	original_line_runes []rune
 ) {
 	ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b)
 	ctx.draw_text(screen_space_x+1, screen_space_y+1, line_runes.string())
@@ -726,7 +730,7 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(
 	original_line_runes []rune
 ) {
 	mut x_offset := 0
-	tab_count := original_line_runes.string().count("\t")
+	tab_count := original_line_runes[..selection_start.x].string().count("\t")
 	selection_x_offset := tab_count * 3
 	pre_sel := line_runes[..selection_start.x + selection_x_offset]
 	sel := line_runes[selection_start.x + x_offset + selection_x_offset ..selection_end.x + selection_x_offset]
@@ -763,11 +767,14 @@ fn draw_text_line_visual_selection_starts_on_same_but_ends_after(
 	selection_start Pos, selection_end Pos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
-	line_runes []rune
+	line_runes []rune,
+	original_line_runes []rune
 ) {
 	mut x_offset := 0
-	pre_sel := line_runes[..selection_start.x]
-	sel := line_runes[selection_start.x..]
+	tab_count := original_line_runes[..selection_start.x].string().count("\t")
+	selection_x_offset := tab_count * 3
+	pre_sel := line_runes[..selection_start.x + selection_x_offset]
+	sel := line_runes[selection_start.x + selection_x_offset..]
 
 	if pre_sel.len != 0 {
 		if screen_space_y == cursor_screen_space_y {
@@ -792,7 +799,8 @@ fn draw_text_line_visual_selection_starts_before_but_ends_on_line(
 	selection_start Pos, selection_end Pos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
-	line_runes []rune
+	line_runes []rune,
+	original_line_runes []rune
 ) {
 	mut x_offset := 0
 	mut sel_end_x := selection_end.x
