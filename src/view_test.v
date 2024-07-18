@@ -374,7 +374,7 @@ fn test_draw_text_line_within_visual_selection_start_end_on_same_line_with_tab_p
 
 	mut cursor := Cursor{
 		pos: Pos{ x: 16, y: 0 },
-		selection_start_pos: Pos{ x: 5, y: 0 }
+		selection_start_pos: Pos{ x: 4, y: 0 }
 	}
 	document_line := "\tpre_sel := line_runes[..selection_start.x]"
 	draw_text_line_within_visual_selection(

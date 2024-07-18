@@ -726,9 +726,11 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(
 	original_line_runes []rune
 ) {
 	mut x_offset := 0
-	pre_sel := line_runes[..selection_start.x]
-	sel := line_runes[selection_start.x..selection_end.x]
-	post_sel := line_runes[selection_end.x..]
+	tab_count := original_line_runes.string().count("\t")
+	selection_x_offset := tab_count * 3
+	pre_sel := line_runes[..selection_start.x + selection_x_offset]
+	sel := line_runes[selection_start.x + x_offset + selection_x_offset ..selection_end.x + selection_x_offset]
+	post_sel := line_runes[selection_end.x + selection_x_offset..]
 
 	if pre_sel.len != 0 {
 		if screen_space_y == cursor_screen_space_y {
