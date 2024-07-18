@@ -498,6 +498,7 @@ fn (mut view View) offset_x_and_width_by_len_of_longest_line_number_str(win_widt
 	view.width = win_width - view.x
 }
 
+// TODO(tauraamui): use this/do something similar for visual mode highlighting
 @[inline]
 fn (mut view View) calc_cursor_x_offset() int {
 	cursor_line := view.buffer.lines[view.cursor.pos.y]
@@ -594,7 +595,12 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 
 		linex = linex.runes()[..max_width].string()
 		sel_highlight_color := Color{ r: view.config.selection_highlight_color.r, g: view.config.selection_highlight_color.g, b: view.config.selection_highlight_color.b }
-		draw_text_line(mut ctx, view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} }, view.cursor, view.mode, sel_highlight_color, view.x, y, document_space_y, cursor_screen_space_y, linex)
+		draw_text_line(
+			mut ctx,
+			view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} },
+			view.cursor, view.mode, sel_highlight_color, view.x, y,
+			document_space_y, cursor_screen_space_y, linex, line
+		)
 	}
 }
 
@@ -606,7 +612,8 @@ fn draw_text_line(
 	selection_highlight_color Color,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
-	line string
+	line string,
+	original_line string
 ) {
 	match current_mode {
 		.visual_line {
@@ -618,7 +625,7 @@ fn draw_text_line(
 		}
 		.visual {
 			if cursor.line_is_within_selection(document_space_y) {
-				draw_text_line_within_visual_selection(mut ctx, syntax, cursor, selection_highlight_color, screen_space_x, screen_space_y, document_space_y, cursor_screen_space_y, line)
+				draw_text_line_within_visual_selection(mut ctx, syntax, cursor, selection_highlight_color, screen_space_x, screen_space_y, document_space_y, cursor_screen_space_y, line, original_line)
 				return
 			}
 			draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, line)
@@ -642,7 +649,8 @@ fn draw_text_line_within_visual_selection(
 	selection_highlight_color Color,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
-	line string
+	line string,
+	original_line string
 ) {
 	line_runes := line.runes()
 	if line_runes.len == 0 { return } // NOTE(tauraamui): don't think this can happen from upstream but safe to check
@@ -656,7 +664,8 @@ fn draw_text_line_within_visual_selection(
 			selection_start, selection_end,
 			screen_space_x, screen_space_y, document_space_y,
 			cursor_screen_space_y,
-			line_runes
+			line_runes,
+			original_line.runes()
 		)
 		return
 	}
@@ -667,7 +676,8 @@ fn draw_text_line_within_visual_selection(
 			selection_start, selection_end,
 			screen_space_x, screen_space_y, document_space_y,
 			cursor_screen_space_y,
-			line_runes
+			line_runes,
+			original_line.runes()
 		)
 		return
 	}
@@ -678,7 +688,8 @@ fn draw_text_line_within_visual_selection(
 			selection_start, selection_end,
 			screen_space_x, screen_space_y, document_space_y,
 			cursor_screen_space_y,
-			line_runes
+			line_runes,
+			original_line.runes()
 		)
 		return
 	}
@@ -688,7 +699,8 @@ fn draw_text_line_within_visual_selection(
 		selection_start, selection_end,
 		screen_space_x, screen_space_y, document_space_y,
 		cursor_screen_space_y,
-		line_runes
+		line_runes,
+		original_line.runes()
 	)
 }
 
@@ -699,7 +711,8 @@ fn draw_text_line_visual_selection_between_start_and_end(
 	selection_start Pos, selection_end Pos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
-	line_runes []rune
+	line_runes []rune,
+	original_line_runes []rune
 ) {
 	ctx.set_bg_color(r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b)
 	ctx.draw_text(screen_space_x+1, screen_space_y+1, line_runes.string())
@@ -713,13 +726,15 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(
 	selection_start Pos, selection_end Pos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
-	line_runes []rune
+	line_runes []rune,
+	original_line_runes []rune
 ) {
-	// FIX(tauraamui): this now bugs the fuck out if x increases and selection start and cursor are on same line
 	mut x_offset := 0
-	pre_sel := line_runes[..selection_start.x]
-	sel := line_runes[selection_start.x..selection_end.x]
-	post_sel := line_runes[selection_end.x..]
+	tab_count := original_line_runes[..selection_start.x].string().count("\t")
+	selection_x_offset := tab_count * 3
+	pre_sel := line_runes[..selection_start.x + selection_x_offset]
+	sel := line_runes[selection_start.x + x_offset + selection_x_offset ..selection_end.x + selection_x_offset]
+	post_sel := line_runes[selection_end.x + selection_x_offset..]
 
 	if pre_sel.len != 0 {
 		if screen_space_y == cursor_screen_space_y {
@@ -752,11 +767,14 @@ fn draw_text_line_visual_selection_starts_on_same_but_ends_after(
 	selection_start Pos, selection_end Pos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
-	line_runes []rune
+	line_runes []rune,
+	original_line_runes []rune
 ) {
 	mut x_offset := 0
-	pre_sel := line_runes[..selection_start.x]
-	sel := line_runes[selection_start.x..]
+	tab_count := original_line_runes[..selection_start.x].string().count("\t")
+	selection_x_offset := tab_count * 3
+	pre_sel := line_runes[..selection_start.x + selection_x_offset]
+	sel := line_runes[selection_start.x + selection_x_offset..]
 
 	if pre_sel.len != 0 {
 		if screen_space_y == cursor_screen_space_y {
@@ -781,12 +799,15 @@ fn draw_text_line_visual_selection_starts_before_but_ends_on_line(
 	selection_start Pos, selection_end Pos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
-	line_runes []rune
+	line_runes []rune,
+	original_line_runes []rune
 ) {
-	// FIX(tauraamui): there's a bug with moving up + down between lines, fix!
 	mut x_offset := 0
 	mut sel_end_x := selection_end.x
-	if selection_end.x > line_runes.len {
+	tab_count := original_line_runes[..sel_end_x].string().count("\t")
+	selection_x_offset := tab_count * 3
+	sel_end_x += selection_x_offset
+	if sel_end_x > line_runes.len {
 		sel_end_x = line_runes.len
 	}
 	pre_end := line_runes[..sel_end_x]
