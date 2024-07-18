@@ -804,7 +804,10 @@ fn draw_text_line_visual_selection_starts_before_but_ends_on_line(
 ) {
 	mut x_offset := 0
 	mut sel_end_x := selection_end.x
-	if selection_end.x > line_runes.len {
+	tab_count := original_line_runes[..sel_end_x].string().count("\t")
+	selection_x_offset := tab_count * 3
+	sel_end_x += selection_x_offset
+	if sel_end_x > line_runes.len {
 		sel_end_x = line_runes.len
 	}
 	pre_end := line_runes[..sel_end_x]
