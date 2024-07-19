@@ -927,7 +927,7 @@ fn test_paste() {
 	]
 }
 
-fn test_visual_paste() {
+fn test_visual_line_paste() {
 	mut clip := clipboard.new()
 	clip.copy(arrays.join_to_string(
 	    ["some new random contents", "with multiple lines"],
