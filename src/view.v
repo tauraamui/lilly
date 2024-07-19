@@ -1390,6 +1390,15 @@ fn (mut view View) visual_y() {
 		view.clipboard.copy(line[start.x..end.x + 1].clone().string())
 		return
 	}
+
+	start_line := view.buffer.lines[start.y].runes()
+	view.clipboard.copy(start_line[start.x..start_line.len].clone().string())
+	view.clipboard.copy("\n")
+
+	diff := end.y - start.y
+	if diff > 1 {
+		view.copy_lines_into_clipboard(start.y + 1, end.y - 1)
+	}
 }
 
 fn (mut view View) visual_line_y() {
