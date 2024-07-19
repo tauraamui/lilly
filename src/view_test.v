@@ -865,7 +865,7 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 	assert fake_view.buffer.lines == ["1. first line", "4. forth line"]
 }
 
-fn test_visual_selection_copy() {
+fn test_visual_line_selection_copy() {
 	mut clip := clipboard.new()
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
