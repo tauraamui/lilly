@@ -1440,7 +1440,7 @@ fn (mut view View) x() {
 }
 
 fn (mut view View) copy_lines_into_clipboard(start int, end int) {
-	view.clipboard.copy("\n" + arrays.join_to_string(view.buffer.lines[start..end+1].clone(), "\n", fn (s string) string { return s }))
+	view.clipboard.copy(arrays.join_to_string(view.buffer.lines[start..end+1].clone(), "\n", fn (s string) string { return s }))
 }
 
 fn (mut view View) read_lines_from_clipboard() []string {
