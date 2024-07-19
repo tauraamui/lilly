@@ -886,7 +886,7 @@ fn test_visual_selection_copy() {
 	for _ in 0..7 { fake_view.l() }
 	fake_view.visual_y()
 
-	assert fake_view.read_lines_from_clipboard() == ["efwifwewef"]
+	assert fake_view.read_lines_from_clipboard() == ["second l"]
 }
 
 fn test_visual_line_selection_copy() {
