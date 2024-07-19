@@ -1378,11 +1378,21 @@ fn (mut view View) r() {
 	view.mode = .replace
 }
 
-fn (mut view View) visual_y() {}
+fn (mut view View) visual_y() {
+	start := view.cursor.selection_start()
+	end := view.cursor.selection_end()
+	// selection begins and ends on the same line
+	if start.y == end.y {
+		line := view.buffer.lines[start.y].runes()
+		view.clipboard.copy(line[start.x..end.x + 1].clone().string())
+	}
+	view.escape()
+}
 
 fn (mut view View) visual_line_y() {
 	start := view.cursor.selection_start().y
 	mut end   := view.cursor.selection_end().y
+	// TODO(tauraamui): check if this bounds guard is actually needed at all
 	if end+1 >= view.buffer.lines.len { end = view.buffer.lines.len-1 }
 	view.copy_lines_into_clipboard(start, end)
 	view.escape()
