@@ -865,7 +865,7 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 	assert fake_view.buffer.lines == ["1. first line", "4. forth line"]
 }
 
-fn test_visual_selection_copy() {
+fn test_visual_selection_copy_starts_and_ends_on_same_line() {
 	mut clip := clipboard.new()
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
@@ -887,6 +887,35 @@ fn test_visual_selection_copy() {
 	fake_view.visual_y()
 
 	assert fake_view.read_lines_from_clipboard() == ["second l"]
+}
+
+fn test_visual_selection_copy_starts_and_ends_a_few_lines_down() {
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = [
+		"1. first line",
+		"2. second line",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line"
+	]
+
+	// ensure cursor is set to start inside second line
+	fake_view.cursor.pos.x = 3
+	fake_view.cursor.pos.y = 0
+
+	fake_view.v()
+	for _ in 0..3 { fake_view.j() }
+	fake_view.visual_y()
+
+	assert fake_view.read_lines_from_clipboard() == [
+		"first line",
+		"2. second line",
+		"3. third line",
+		"4. f"
+	]
 }
 
 fn test_visual_line_selection_copy() {
