@@ -19,6 +19,7 @@ import term.ui as tui
 import log
 import datatypes
 import strconv
+import strings
 import regex
 import lib.clipboard
 import arrays
@@ -1379,7 +1380,12 @@ fn (mut view View) r() {
 }
 
 fn (mut view View) visual_y() {
-	defer { view.escape() }
+	mut str_builder := strings.new_builder(1024)
+	defer {
+		str_builder.free()
+		view.escape()
+	}
+
 	start := view.cursor.selection_start()
 	end := view.cursor.selection_end()
 		// *
@@ -1387,18 +1393,30 @@ fn (mut view View) visual_y() {
 		// selection begins and ends on the same line
 		// *
 		line := view.buffer.lines[start.y].runes()
-		view.clipboard.copy(line[start.x..end.x + 1].clone().string())
+		str_builder.write_runes(line[start.x..end.x + 1])
+		view.clipboard.copy(str_builder.str())
 		return
 	}
 
 	start_line := view.buffer.lines[start.y].runes()
-	view.clipboard.copy(start_line[start.x..start_line.len].clone().string())
-	view.clipboard.copy("\n")
+	str_builder.write_runes(start_line[start.x..start_line.len])
+	str_builder.write_rune(`\n`)
 
 	diff := end.y - start.y
-	if diff > 1 {
-		view.copy_lines_into_clipboard(start.y + 1, end.y - 1)
+	if diff >= 1 {
+		for ll in view.buffer.lines[start.y + 1..end.y] {
+			str_builder.write_string(ll)
+			str_builder.write_rune(`\n`)
+		}
 	}
+
+	end_line := view.buffer.lines[end.y].runes()
+	str_builder.write_runes(end_line[..end.x + 1])
+	if end.x == end_line.len {
+		str_builder.write_rune(`\n`)
+	}
+
+	view.clipboard.copy(str_builder.str())
 }
 
 fn (mut view View) visual_line_y() {
