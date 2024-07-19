@@ -1379,14 +1379,17 @@ fn (mut view View) r() {
 }
 
 fn (mut view View) visual_y() {
+	defer { view.escape() }
 	start := view.cursor.selection_start()
 	end := view.cursor.selection_end()
-	// selection begins and ends on the same line
+		// *
 	if start.y == end.y {
+		// selection begins and ends on the same line
+		// *
 		line := view.buffer.lines[start.y].runes()
 		view.clipboard.copy(line[start.x..end.x + 1].clone().string())
+		return
 	}
-	view.escape()
 }
 
 fn (mut view View) visual_line_y() {
