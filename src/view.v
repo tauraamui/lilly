@@ -1575,9 +1575,21 @@ fn (mut view View) p() {
 	// needs to begin with `\n` and end with `\n` to indicate that these are full lines. If we've captured multiple lines amongst other
 	// partial line content then the clipboard should only start and end with `\n` depending on where in the first and last line(s) the
 	// copy starts and ends.
-	copied_lines := view.read_lines_from_clipboard()
+	clipboard_contents := view.clipboard.paste()
+
+	mut newline_count := 0
+	for _, r in clipboard_contents[0].runes() {
+		if r == `\n` { newline_count += 1 }
+	}
+
+	if newline_count == 0 {
+		view.insert_text(clipboard_contents[0])
+	}
+
+	/*
 	view.buffer.lines.insert(view.cursor.pos.y+1, copied_lines)
 	view.move_cursor_down(copied_lines.len)
+	*/
 }
 
 fn (mut view View) visual_p() {}

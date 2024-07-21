@@ -940,6 +940,33 @@ fn test_visual_line_selection_copy() {
 	]
 }
 
+fn test_paste_segment_of_line() {
+	mut clip := clipboard.new()
+	clip.copy("new segment of a line")
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = [
+		"A shopping list",
+		"Strawberries x 30",
+		"Cheese, blue and red",
+		"Blueberry smoothies"
+	]
+
+	// ensure cursor is set to sit on second line
+	fake_view.cursor.pos.x = 10
+	fake_view.cursor.pos.y = 1
+
+	fake_view.p()
+
+	assert fake_view.buffer.lines == [
+		"A shopping list",
+		"Strawberrinew segment of a linees x 30",
+		"Cheese, blue and red",
+		"Blueberry smoothies"
+	]
+}
+
 fn test_paste() {
 	mut clip := clipboard.new()
 	clip.copy("\nsome new random contents\nwith multiple lines\n")
