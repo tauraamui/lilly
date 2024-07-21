@@ -910,12 +910,7 @@ fn test_visual_selection_copy_starts_and_ends_a_few_lines_down() {
 	for _ in 0..3 { fake_view.j() }
 	fake_view.visual_y()
 
-	assert fake_view.read_lines_from_clipboard() == [
-		"first line",
-		"2. second line",
-		"3. third line",
-		"4. f"
-	]
+	assert fake_view.read_lines_from_clipboard()[0] == "first line\n2. second line\n3. third line\n4. f"
 }
 
 fn test_visual_line_selection_copy() {
@@ -939,7 +934,7 @@ fn test_visual_line_selection_copy() {
 	fake_view.j()
 	fake_view.visual_line_y()
 
-	assert fake_view.read_lines_from_clipboard() == [
+	assert fake_view.read_lines_from_clipboard()[0].split_into_lines() == [
 		"2. second line",
 		"3. third line"
 	]
@@ -947,11 +942,7 @@ fn test_visual_line_selection_copy() {
 
 fn test_paste() {
 	mut clip := clipboard.new()
-	clip.copy(arrays.join_to_string(
-	    ["some new random contents", "with multiple lines"],
-		"\n",
-		fn (s string) string { return s }
-	))
+	clip.copy("\nsome new random contents\nwith multiple lines\n")
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
 	// manually set the documents contents
