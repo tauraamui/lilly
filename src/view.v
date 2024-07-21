@@ -1382,7 +1382,7 @@ fn (mut view View) r() {
 fn (mut view View) visual_y() {
 	mut str_builder := strings.new_builder(1024)
 	defer {
-		str_builder.free()
+		str_builder.clear()
 		view.escape()
 	}
 
