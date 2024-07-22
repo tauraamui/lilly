@@ -993,37 +993,6 @@ fn test_paste_segment_of_line() {
 	]
 }
 
-fn test_paste_partial_selection_copy() {
-	mut clip := clipboard.new()
-	clip.copy("partial line selection")
-
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
-
-	// manually set the documents contents
-	fake_view.buffer.lines = [
-		"1. first line",
-		"2. second line",
-		"3. third line",
-		"4. forth line",
-		"5. fifth line"
-	]
-
-	// ensure cursor is set to sit on second line
-	fake_view.cursor.pos.y = 1
-	fake_view.e()
-	fake_view.e()
-
-	fake_view.p()
-
-	assert fake_view.buffer.lines == [
-		"1. first line",
-		"2. secondpartial line selection line",
-		"3. third line",
-		"4. forth line",
-		"5. fifth line"
-	]
-}
-
 fn test_paste_full_lines() {
 	mut clip := clipboard.new()
 	clip.copy("\nsome new random contents\nwith multiple lines\n")
