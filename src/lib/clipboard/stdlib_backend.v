@@ -12,7 +12,7 @@ fn (mut stdlibclipboard StdLibClipboard) copy(text string) bool {
 	return stdlibclipboard.ref.copy(text)
 }
 
-fn (mut stdlibclipboard StdLibClipboard) paste() []string {
-	return [stdlibclipboard.ref.paste()]
+fn (mut stdlibclipboard StdLibClipboard) paste() string {
+	return stdlibclipboard.ref.paste()
 }
 

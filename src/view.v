@@ -1443,10 +1443,6 @@ fn (mut view View) copy_lines_into_clipboard(start int, end int) {
 	view.clipboard.copy(arrays.join_to_string(view.buffer.lines[start..end+1].clone(), "\n", fn (s string) string { return s }))
 }
 
-fn (mut view View) read_lines_from_clipboard() []string {
-	return view.clipboard.paste()
-}
-
 fn (mut view View) visual_d(overwrite_y_lines bool) {}
 
 fn (mut view View) visual_line_d(overwrite_y_lines bool) {
@@ -1576,20 +1572,6 @@ fn (mut view View) p() {
 	// partial line content then the clipboard should only start and end with `\n` depending on where in the first and last line(s) the
 	// copy starts and ends.
 	clipboard_contents := view.clipboard.paste()
-
-	mut newline_count := 0
-	for _, r in clipboard_contents[0].runes() {
-		if r == `\n` { newline_count += 1 }
-	}
-
-	if newline_count == 0 {
-		view.insert_text(clipboard_contents[0])
-	}
-
-	/*
-	view.buffer.lines.insert(view.cursor.pos.y+1, copied_lines)
-	view.move_cursor_down(copied_lines.len)
-	*/
 }
 
 fn (mut view View) visual_p() {}
@@ -1602,11 +1584,12 @@ fn (mut view View) visual_line_p() {
 	before := view.buffer.lines[..start]
 	after := view.buffer.lines[end+1..]
 
-	copied_lines := view.read_lines_from_clipboard()
+	copied_lines := view.clipboard.paste()
 
 	view.buffer.lines = before
 	view.buffer.lines << after
 	view.cursor.pos.y = start
+	// FIX(tauraamui): adjust pasting behaviour if the copy was not from a full line
 	view.buffer.lines.insert(view.cursor.pos.y, copied_lines)
 	view.move_cursor_down(copied_lines.len)
 	view.escape()

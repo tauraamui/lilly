@@ -3,7 +3,7 @@ module clipboard
 pub interface Clipboard {
 mut:
 	copy(text string) bool
-	paste() []string
+	paste() string
 }
 
 pub fn new() Clipboard {
