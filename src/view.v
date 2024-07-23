@@ -1573,8 +1573,22 @@ fn (mut view View) p() {
 	// copy starts and ends.
 	clipboard_contents := view.clipboard.paste().runes()
 
-	if clipboard_contents.len > 0 {
-		starts_with_newline := clipboard_contents[0]
+	mut first_newline := -1
+	mut next_newline  := -1
+
+	first_newline = arrays.index_of_first(clipboard_contents, fn (_ int, elem rune) bool {
+		return elem == `\n`
+	})
+
+	if first_newline != -1 && first_newline != clipboard_contents.len {
+		next_newline = arrays.index_of_first(clipboard_contents[first_newline + 1..], fn (_ int, elem rune) bool {
+			return elem == `\n`
+		})
+	}
+
+	if first_newline == -1 && next_newline == -1 {
+		view.insert_text(clipboard_contents.string())
+		return
 	}
 }
 
