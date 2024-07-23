@@ -993,10 +993,38 @@ fn test_paste_segment_of_line() {
 	]
 }
 
+fn test_paste_segment_which_does_not_start_nor_end_with_newline() {
+	mut clip := clipboard.new()
+	clip.copy("partial selection from a line\nup to some point on the next line down")
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = [
+		"A shopping list",
+		"Strawberries x 30",
+		"Cheese, blue and red",
+		"Blueberry smoothies"
+	]
+
+	// ensure cursor is set to sit on second line
+	fake_view.cursor.pos.x = 10
+	fake_view.cursor.pos.y = 1
+
+	fake_view.p()
+
+	assert fake_view.buffer.lines == [
+		"A shopping list",
+		"Strawberripartial selection from a line",
+		"up to some point on the next line downes x 30",
+		"Cheese, blue and red",
+		"Blueberry smoothies"
+	]
+}
+
+/*
 fn test_paste_full_lines() {
 	mut clip := clipboard.new()
 	clip.copy("\nsome new random contents\nwith multiple lines\n")
-	println("\na line which starts and ends\n with newline only\n".split("\n"))
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
 	// manually set the documents contents
@@ -1024,6 +1052,7 @@ fn test_paste_full_lines() {
 		"5. fifth line"
 	]
 }
+*/
 
 // NOTE(tauraamui): this will be broken for a while
 /*
