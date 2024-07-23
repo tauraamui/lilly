@@ -996,6 +996,7 @@ fn test_paste_segment_of_line() {
 fn test_paste_full_lines() {
 	mut clip := clipboard.new()
 	clip.copy("\nsome new random contents\nwith multiple lines\n")
+	println("\na line which starts and ends\n with newline only\n".split("\n"))
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
 	// manually set the documents contents

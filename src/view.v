@@ -1576,11 +1576,9 @@ fn (mut view View) p() {
 	starts_with_newline := clipboard_contents[0] == `\n`
 	ends_with_newline := clipboard_contents.len > 1 && clipboard_contents[clipboard_contents.len - 1] == `\n`
 
-	if starts_with_newline {
-		clipboard_contents = clipboard_contents[1..]
-		next_newline := arrays.index_of_first(clipboard_contents, fn (id int, r rune) bool { return r == `\n` })
-		first_line := clipboard_contents[..next_newline]
-		view.buffer.lines.insert(view.cursor.pos.y + 1, [first_line.string()])
+	if !starts_with_newline && !ends_with_newline {
+		view.insert_text(clipboard_contents.string())
+		return
 	}
 }
 
