@@ -1576,10 +1576,17 @@ fn (mut view View) p() {
 	starts_with_newline := clipboard_contents[0] == `\n`
 	ends_with_newline := clipboard_contents.len > 1 && clipboard_contents[clipboard_contents.len - 1] == `\n`
 
-	if !starts_with_newline && !ends_with_newline {
+	mut next_newline := -1
+	mut first_newline_encountered := false
+	for i, r in clipboard_contents { if r == `\n` { next_newline = i; break } }
+	if !first_newline_encountered && next_newline != -1 { first_newline_encountered = true }
+
+	if next_newline == -1 {
 		view.insert_text(clipboard_contents.string())
 		return
 	}
+
+	println("FIRST NEWLINE ENCOUNTERED: ${first_newline_encountered}, NEXT NEWLINE: ${next_newline}")
 }
 
 fn (mut view View) visual_p() {}
