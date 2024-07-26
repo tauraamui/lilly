@@ -995,7 +995,7 @@ fn test_paste_segment_of_line() {
 
 fn test_paste_segment_which_does_not_start_nor_end_with_newline() {
 	mut clip := clipboard.new()
-	clip.copy("partial selection from a line\nup to some point on the next line down")
+	clip.copy("\npartial selection from a line\nup to some point on the next line down")
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
 	// manually set the documents contents
