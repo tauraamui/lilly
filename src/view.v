@@ -1574,25 +1574,19 @@ fn (mut view View) p() {
 	mut clipboard_contents := view.clipboard.paste().runes()
 	if clipboard_contents.len == 0 { return }
 
+	current_line := view.buffer.lines[view.cursor.pos.y].runes()
 	contents_lines := clipboard_contents.string().split_into_lines()
 
 	mut contents_after_cursor_x := ""
-	mut last_newline_index := -1
-	mut newline_encountered_count := 0
+	mut after_cursor_selection_occurred := false
+	// contents_after_cursor_x = view.buffer.lines[view.cursor.pos.y].runes()[view.cursor.pos.x..].string()
 
-	if contents_lines.len > 1 {
-		contents_after_cursor_x = view.buffer.lines[view.cursor.pos.y].runes()[view.cursor.pos.x..].string()
-	}
-
-	mut y_offset := view.cursor.pos.y
-	mut newline_encounted_count := 0
 	for i, line in contents_lines {
-		if i > 0 && contents_lines[i - 1].len == 0 {
-			newline_encountered_count += 1
+		if after_cursor_selection_occurred == false && line.len == 0 && view.cursor.pos.x < current_line.len {
+			contents_after_cursor_x = view.buffer.lines[view.cursor.pos.y].runes()[view.cursor.pos.x..].string()
+			after_cursor_selection_occurred = true
 		}
 	}
-
-	println("CONTENTS AFTER CURSOR X: ${contents_after_cursor_x}")
 }
 
 fn (mut view View) visual_p() {}
