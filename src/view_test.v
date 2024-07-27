@@ -1021,7 +1021,6 @@ fn test_paste_segment_which_does_not_start_nor_end_with_newline() {
 	]
 }
 
-/*
 fn test_paste_full_lines() {
 	mut clip := clipboard.new()
 	clip.copy("\nsome new random contents\nwith multiple lines\n")
@@ -1037,7 +1036,7 @@ fn test_paste_full_lines() {
 	]
 
 	// ensure cursor is set to sit on second line
-	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.x = 14
 	fake_view.cursor.pos.y = 1
 
 	fake_view.p()
@@ -1052,7 +1051,6 @@ fn test_paste_full_lines() {
 		"5. fifth line"
 	]
 }
-*/
 
 // NOTE(tauraamui): this will be broken for a while
 /*
