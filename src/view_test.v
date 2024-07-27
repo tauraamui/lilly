@@ -1052,40 +1052,6 @@ fn test_paste_full_lines() {
 	]
 }
 
-// NOTE(tauraamui): this will be broken for a while
-/*
-fn test_visual_line_paste() {
-	mut clip := clipboard.new()
-	clip.copy("\nsome new random contents\nwith multiple lines\n")
-	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
-
-	// manually set the documents contents
-	fake_view.buffer.lines = [
-		"1. first line",
-		"2. second line",
-		"3. third line",
-		"4. forth line",
-		"5. fifth line"
-	]
-
-	// ensure cursor is set to sit on second line
-	fake_view.cursor.pos.x = 0
-	fake_view.cursor.pos.y = 1
-	fake_view.shift_v()
-	fake_view.j()
-
-	fake_view.visual_line_p()
-
-	assert fake_view.buffer.lines == [
-		"1. first line",
-		"some new random contents",
-		"with multiple lines",
-		"4. forth line",
-		"5. fifth line"
-	]
-}
-*/
-
 fn test_search_is_toggled() {
 	mut clip := clipboard.new()
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
