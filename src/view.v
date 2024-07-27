@@ -1380,6 +1380,9 @@ fn (mut view View) r() {
 	view.mode = .replace
 }
 
+// FIX(tauraamui): there's misplaced logic in this method that should belong to
+//                 the method "visual_line_y" whereby it inserts a leading and trailing
+//                 newline char before and after the "selection"
 fn (mut view View) visual_y() {
 	mut str_builder := strings.new_builder(1024)
 	defer {
