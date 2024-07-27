@@ -1592,7 +1592,9 @@ fn (mut view View) p() {
 		}
 		view.insert_text("${clipboard_contents[i]}")
 	}
+	current_x_pos := view.cursor.pos.x
 	view.insert_text(after_current_cursor_x_pos)
+	view.cursor.pos.x = current_x_pos
 }
 
 fn (mut view View) visual_p() {}
