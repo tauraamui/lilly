@@ -1565,6 +1565,7 @@ fn (mut view View) shift_a() {
 	view.a()
 }
 
+@[direct_array_access]
 fn (mut view View) p() {
 	// TODO(tauraamui): Need to adjust this method to basically look for leading and trailing `\n`s and differentiate pasting behaviour
 	// based on their presence or lack thereof. Basically, if we've copied multiple full lines with shift_v + y, the clipboard buffer
@@ -1574,19 +1575,22 @@ fn (mut view View) p() {
 	mut clipboard_contents := view.clipboard.paste().runes()
 	if clipboard_contents.len == 0 { return }
 
-	current_line := view.buffer.lines[view.cursor.pos.y].runes()
-	contents_lines := clipboard_contents.string().split_into_lines()
-
-	mut contents_after_cursor_x := ""
-	mut after_cursor_selection_occurred := false
-	// contents_after_cursor_x = view.buffer.lines[view.cursor.pos.y].runes()[view.cursor.pos.x..].string()
-
-	for i, line in contents_lines {
-		if after_cursor_selection_occurred == false && line.len == 0 && view.cursor.pos.x < current_line.len {
-			contents_after_cursor_x = view.buffer.lines[view.cursor.pos.y].runes()[view.cursor.pos.x..].string()
-			after_cursor_selection_occurred = true
+	start_y := view.cursor.pos.y
+	mut after_current_cursor_x_pos := ""
+	mut y_offset := 0
+	for i := 0; i < clipboard_contents.len; i++ {
+		if clipboard_contents[i] == `\n` {
+			if after_current_cursor_x_pos.len == 0 && view.cursor.pos.x < view.buffer.lines[start_y].len {
+				after_current_cursor_x_pos = view.buffer.lines[start_y][view.cursor.pos.x..]
+				view.buffer.lines[start_y] = view.buffer.lines[start_y][..view.cursor.pos.x]
+			}
+			view.buffer.lines.insert(view.cursor.pos.y + 1, "")
+			view.move_cursor_down(1)
+			continue
 		}
+		view.insert_text("${clipboard_contents[i]}")
 	}
+	view.insert_text(after_current_cursor_x_pos)
 }
 
 fn (mut view View) visual_p() {}
