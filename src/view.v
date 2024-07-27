@@ -1571,6 +1571,13 @@ fn (mut view View) p() {
 	mut clipboard_contents := view.clipboard.paste().runes()
 	if clipboard_contents.len == 0 { return }
 
+	if clipboard_contents[0] == `\n` && clipboard_contents[clipboard_contents.len - 1] == `\n` {
+		lines := clipboard_contents[1..clipboard_contents.len - 1].string().split_into_lines()
+		view.buffer.lines.insert(view.cursor.pos.y + 1, lines)
+		view.move_cursor_down(lines.len)
+		return
+	}
+
 	start_y := view.cursor.pos.y
 	mut after_current_cursor_x_pos := ""
 	for i := 0; i < clipboard_contents.len; i++ {
