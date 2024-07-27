@@ -1573,7 +1573,6 @@ fn (mut view View) p() {
 
 	start_y := view.cursor.pos.y
 	mut after_current_cursor_x_pos := ""
-	mut y_offset := 0
 	for i := 0; i < clipboard_contents.len; i++ {
 		if clipboard_contents[i] == `\n` {
 			if after_current_cursor_x_pos.len == 0 && view.cursor.pos.x < view.buffer.lines[start_y].len {
