@@ -1202,11 +1202,12 @@ fn (mut view View) char_insert(s string) {
 }
 
 fn (mut view View) insert_text(s string) {
-	defer { view.clamp_cursor_x_pos() }
 	y := view.cursor.pos.y
 	line := view.buffer.lines[y]
 	if line.len == 0 {
 		view.buffer.lines[y] = '${s}'
+		view.cursor.pos.x = s.runes().len
+		return
 	} else {
 		if view.cursor.pos.x > line.len {
 			view.cursor.pos.x = line.len
@@ -1567,11 +1568,6 @@ fn (mut view View) shift_a() {
 
 @[direct_array_access]
 fn (mut view View) p() {
-	// TODO(tauraamui): Need to adjust this method to basically look for leading and trailing `\n`s and differentiate pasting behaviour
-	// based on their presence or lack thereof. Basically, if we've copied multiple full lines with shift_v + y, the clipboard buffer
-	// needs to begin with `\n` and end with `\n` to indicate that these are full lines. If we've captured multiple lines amongst other
-	// partial line content then the clipboard should only start and end with `\n` depending on where in the first and last line(s) the
-	// copy starts and ends.
 	mut clipboard_contents := view.clipboard.paste().runes()
 	if clipboard_contents.len == 0 { return }
 
