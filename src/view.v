@@ -1428,7 +1428,8 @@ fn (mut view View) visual_y() {
 fn (mut view View) visual_line_y() {
 	start := view.cursor.selection_start().y
 	mut end   := view.cursor.selection_end().y
-	assert end >= 0 && end < view.buffer.lines.len
+	assert end >= 0
+	assert end < view.buffer.lines.len
 	// TODO(tauraamui): check if this bounds guard is actually needed at all
 	if end+1 >= view.buffer.lines.len { end = view.buffer.lines.len-1 }
 	// view.copy_lines_into_clipboard(start, end)
@@ -1448,6 +1449,9 @@ fn (mut view View) x() {
 }
 
 fn (mut view View) copy_lines_into_clipboard(start int, end int) {
+	assert start >= 0
+	assert end >= 0
+	assert end + 1 <= view.buffer.lines.len
 	view.clipboard.copy(arrays.join_to_string(view.buffer.lines[start..end+1].clone(), "\n", fn (s string) string { return s }))
 }
 
@@ -1475,9 +1479,11 @@ fn (mut view View) w() {
 	if amount == 0 {
 		view.move_cursor_down(1)
 		view.cursor.pos.x = 0
-		assert view.cursor.pos.y >= 0 && view.cursor.pos.y < view.buffer.lines.len
+		assert view.cursor.pos.y >= 0
+		assert view.cursor.pos.y < view.buffer.lines.len
 		line = view.buffer.lines[view.cursor.pos.y]
-		assert view.cursor.pos.x >= 0 && view.cursor.pos.x < line.len
+		assert view.cursor.pos.x >= 0
+		assert view.cursor.pos.x < line.len
 		if line.len > 0 && is_whitespace(line[view.cursor.pos.x]) {
 			amount = calc_w_move_amount(view.cursor.pos, line, false)
 			assert amount >= 0
