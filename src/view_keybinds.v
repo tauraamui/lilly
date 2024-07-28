@@ -56,6 +56,9 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 		.visual {
 		    match e.code {
 		        .escape { view.escape() }
+				.e      { view.exec(view.chord.e()) }
+				.w      { view.exec(view.chord.w()) }
+				.b      { view.exec(view.chord.b()) }
 		        .h      { view.h() }
 				.l      { view.l() }
 				.j      { view.j() }
@@ -64,7 +67,14 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				.right  { view.l() }
 				.down   { view.j() }
 				.left   { view.h() }
+				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.visual_d(true) } }
+				.caret { view.hat() }
 				.dollar { view.dollar() }
+				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
+				.right_curly_bracket { view.jump_cursor_down_to_next_blank_line() }
+				.left_square_bracket { view.left_square_bracket() }
+				.right_square_bracket { view.right_square_bracket() }
+				.y { view.visual_y() }
 				else    {}
 		    }
 		}
@@ -81,15 +91,15 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				.left      { view.h() }
 				.less_than { view.visual_unindent() }
 				.greater_than { view.visual_indent() }
-				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.visual_d(true) } }
-				.p { view.visual_p() }
+				.d { if e.modifiers == .ctrl { view.ctrl_d() } else { view.visual_line_d(true) } }
+				.p { view.visual_line_p() }
 				// NOTE(tauraamui): undo bind is now disabled until the feature is re-done
 				// .u { if e.modifiers == .ctrl { view.ctrl_u() } }
 				.caret { view.hat() }
 				.dollar { view.dollar() }
 				.left_curly_bracket { view.jump_cursor_up_to_next_blank_line() }
 				.right_curly_bracket { view.jump_cursor_down_to_next_blank_line() }
-				.y { view.visual_y() }
+				.y { view.visual_line_y() }
 				else {}
 			}
 		}

@@ -19,6 +19,7 @@ import term.ui as tui
 import log
 import datatypes
 import strconv
+import strings
 import regex
 import lib.clipboard
 import arrays
@@ -1201,11 +1202,12 @@ fn (mut view View) char_insert(s string) {
 }
 
 fn (mut view View) insert_text(s string) {
-	defer { view.clamp_cursor_x_pos() }
 	y := view.cursor.pos.y
 	line := view.buffer.lines[y]
 	if line.len == 0 {
 		view.buffer.lines[y] = '${s}'
+		view.cursor.pos.x = s.runes().len
+		return
 	} else {
 		if view.cursor.pos.x > line.len {
 			view.cursor.pos.x = line.len
@@ -1378,11 +1380,60 @@ fn (mut view View) r() {
 	view.mode = .replace
 }
 
+// FIX(tauraamui): there's misplaced logic in this method that should belong to
+//                 the method "visual_line_y" whereby it inserts a leading and trailing
+//                 newline char before and after the "selection"
 fn (mut view View) visual_y() {
+	mut str_builder := strings.new_builder(1024)
+	defer {
+		str_builder.clear()
+		view.escape()
+	}
+
+	start := view.cursor.selection_start()
+	end := view.cursor.selection_end()
+		// *
+	if start.y == end.y {
+		// selection begins and ends on the same line
+		// *
+		line := view.buffer.lines[start.y].runes()
+		str_builder.write_runes(line[start.x..end.x + 1])
+		view.clipboard.copy(str_builder.str())
+		return
+	}
+
+	start_line := view.buffer.lines[start.y].runes()
+	str_builder.write_runes(start_line[start.x..start_line.len])
+	str_builder.write_rune(`\n`)
+
+	diff := end.y - start.y
+	if diff >= 1 {
+		for ll in view.buffer.lines[start.y + 1..end.y] {
+			str_builder.write_string(ll)
+			str_builder.write_rune(`\n`)
+		}
+	}
+
+	end_line := view.buffer.lines[end.y].runes()
+	str_builder.write_runes(end_line[..end.x + 1])
+	/*
+	if end.x == end_line.len {
+		str_builder.write_rune(`\n`)
+	}
+	*/
+
+	view.clipboard.copy(str_builder.str())
+}
+
+fn (mut view View) visual_line_y() {
 	start := view.cursor.selection_start().y
 	mut end   := view.cursor.selection_end().y
+	assert end >= 0
+	assert end < view.buffer.lines.len
+	// TODO(tauraamui): check if this bounds guard is actually needed at all
 	if end+1 >= view.buffer.lines.len { end = view.buffer.lines.len-1 }
-	view.copy_lines_into_clipboard(start, end)
+	// view.copy_lines_into_clipboard(start, end)
+	view.clipboard.copy("\n${arrays.join_to_string(view.buffer.lines[start..end + 1].clone(), '\n', fn (s string) string { return s })}\n")
 	view.escape()
 }
 
@@ -1398,14 +1449,15 @@ fn (mut view View) x() {
 }
 
 fn (mut view View) copy_lines_into_clipboard(start int, end int) {
+	assert start >= 0
+	assert end >= 0
+	assert end + 1 <= view.buffer.lines.len
 	view.clipboard.copy(arrays.join_to_string(view.buffer.lines[start..end+1].clone(), "\n", fn (s string) string { return s }))
 }
 
-fn (mut view View) read_lines_from_clipboard() []string {
-	return view.clipboard.paste()
-}
+fn (mut view View) visual_d(overwrite_y_lines bool) {}
 
-fn (mut view View) visual_d(overwrite_y_lines bool) {
+fn (mut view View) visual_line_d(overwrite_y_lines bool) {
 	defer { view.clamp_cursor_within_document_bounds() }
 	mut start := view.cursor.selection_start().y
 	mut end := view.cursor.selection_end().y
@@ -1427,9 +1479,14 @@ fn (mut view View) w() {
 	if amount == 0 {
 		view.move_cursor_down(1)
 		view.cursor.pos.x = 0
+		assert view.cursor.pos.y >= 0
+		assert view.cursor.pos.y < view.buffer.lines.len
 		line = view.buffer.lines[view.cursor.pos.y]
+		assert view.cursor.pos.x >= 0
+		assert view.cursor.pos.x < line.len
 		if line.len > 0 && is_whitespace(line[view.cursor.pos.x]) {
 			amount = calc_w_move_amount(view.cursor.pos, line, false)
+			assert amount >= 0
 		}
 	}
 	view.cursor.pos.x += amount
@@ -1442,8 +1499,10 @@ fn (mut view View) e() {
 	if amount == 0 {
 		view.move_cursor_down(1)
 		view.cursor.pos.x = 0
+		assert view.cursor.pos.y >= 0 && view.cursor.pos.y < view.buffer.lines.len
 		line = view.buffer.lines[view.cursor.pos.y]
 		amount = calc_e_move_amount(view.cursor.pos, line, false) or { view.cmd_buf.set_error(err.msg()); 0 }
+		assert amount >= 0
 	}
 	view.cursor.pos.x += amount
 }
@@ -1525,13 +1584,40 @@ fn (mut view View) shift_a() {
 	view.a()
 }
 
+@[direct_array_access]
 fn (mut view View) p() {
-	copied_lines := view.read_lines_from_clipboard()
-	view.buffer.lines.insert(view.cursor.pos.y+1, copied_lines)
-	view.move_cursor_down(copied_lines.len)
+	mut clipboard_contents := view.clipboard.paste().runes()
+	if clipboard_contents.len == 0 { return }
+
+	if clipboard_contents[0] == `\n` && clipboard_contents[clipboard_contents.len - 1] == `\n` {
+		lines := clipboard_contents[1..clipboard_contents.len - 1].string().split_into_lines()
+		view.buffer.lines.insert(view.cursor.pos.y + 1, lines)
+		view.move_cursor_down(lines.len)
+		return
+	}
+
+	start_y := view.cursor.pos.y
+	mut after_current_cursor_x_pos := ""
+	for i := 0; i < clipboard_contents.len; i++ {
+		if clipboard_contents[i] == `\n` {
+			if after_current_cursor_x_pos.len == 0 && view.cursor.pos.x < view.buffer.lines[start_y].len {
+				after_current_cursor_x_pos = view.buffer.lines[start_y][view.cursor.pos.x..]
+				view.buffer.lines[start_y] = view.buffer.lines[start_y][..view.cursor.pos.x]
+			}
+			view.buffer.lines.insert(view.cursor.pos.y + 1, "")
+			view.move_cursor_down(1)
+			continue
+		}
+		view.insert_text("${clipboard_contents[i]}")
+	}
+	current_x_pos := view.cursor.pos.x
+	view.insert_text(after_current_cursor_x_pos)
+	view.cursor.pos.x = current_x_pos
 }
 
-fn (mut view View) visual_p() {
+fn (mut view View) visual_p() {}
+
+fn (mut view View) visual_line_p() {
 	defer { view.clamp_cursor_within_document_bounds() }
 	mut start := view.cursor.selection_start().y
 	mut end := view.cursor.selection_end().y
@@ -1539,11 +1625,12 @@ fn (mut view View) visual_p() {
 	before := view.buffer.lines[..start]
 	after := view.buffer.lines[end+1..]
 
-	copied_lines := view.read_lines_from_clipboard()
+	copied_lines := view.clipboard.paste()
 
 	view.buffer.lines = before
 	view.buffer.lines << after
 	view.cursor.pos.y = start
+	// FIX(tauraamui): adjust pasting behaviour if the copy was not from a full line
 	view.buffer.lines.insert(view.cursor.pos.y, copied_lines)
 	view.move_cursor_down(copied_lines.len)
 	view.escape()

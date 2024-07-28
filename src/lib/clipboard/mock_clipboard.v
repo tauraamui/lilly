@@ -12,7 +12,7 @@ fn (mut mockclipboard MockClipboard) copy(text string) bool {
 	return !mockclipboard.was_copy_unsuccessful
 }
 
-fn (mut mockclipboard MockClipboard) paste() []string {
-	return mockclipboard.copied_content.split_into_lines()
+fn (mut mockclipboard MockClipboard) paste() string {
+	return mockclipboard.copied_content
 }
 

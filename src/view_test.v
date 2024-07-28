@@ -143,7 +143,7 @@ fn test_dd_deletes_current_line_at_start_of_doc() {
 	fake_view.d()
 
 	assert fake_view.buffer.lines == ["2. second line", "3. third line", "4. forth line"]
-	assert fake_view.read_lines_from_clipboard() == ["1. first line"]
+	assert fake_view.clipboard.paste() == "1. first line"
 }
 
 fn test_dd_deletes_current_line_in_middle_of_doc() {
@@ -157,7 +157,7 @@ fn test_dd_deletes_current_line_in_middle_of_doc() {
 
 	assert fake_view.buffer.lines == ["1. first line", "2. second line", "4. forth line"]
 	assert fake_view.cursor.pos.y == 2
-	assert fake_view.read_lines_from_clipboard() == ["3. third line"]
+	assert fake_view.clipboard.paste() == "3. third line"
 }
 
 fn test_dd_deletes_current_line_at_end_of_doc() {
@@ -174,7 +174,7 @@ fn test_dd_deletes_current_line_at_end_of_doc() {
 
 	assert fake_view.buffer.lines == ["1. first line", "2. second line"]
 	assert fake_view.cursor.pos.y == 1
-	assert fake_view.read_lines_from_clipboard() == ["3. third line"]
+	assert fake_view.clipboard.paste() == "3. third line"
 }
 
 fn test_o_inserts_sentance_line() {
@@ -841,7 +841,7 @@ fn test_visual_insert_mode_and_delete_in_place() {
 	fake_view.cursor.pos.y = 1
 
 	fake_view.shift_v()
-	fake_view.visual_d(true)
+	fake_view.visual_line_d(true)
 
 	assert fake_view.mode == .normal
 	assert fake_view.buffer.lines == ["1. first line", "3. third line", "4. forth line"]
@@ -859,13 +859,87 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 
 	fake_view.shift_v()
 	fake_view.j()
-	fake_view.visual_d(true)
+	fake_view.visual_line_d(true)
 
 	assert fake_view.mode == .normal
 	assert fake_view.buffer.lines == ["1. first line", "4. forth line"]
 }
 
-fn test_visual_selection_copy() {
+fn test_visual_selection_copy_starts_and_ends_on_same_line() {
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = [
+		"1. first line",
+		"2. second line",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line"
+	]
+
+	// ensure cursor is set to start inside second line
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+
+	fake_view.v()
+	fake_view.dollar()
+	fake_view.visual_y()
+
+	assert fake_view.clipboard.paste() == "2. second line"
+}
+
+fn test_visual_selection_copy_ends_on_halfway_in_on_next_line_down() {
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = [
+		"1. first line",
+		"2. second line",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line"
+	]
+
+	// ensure cursor is set to start inside second line
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+
+	fake_view.v()
+	fake_view.j()
+	fake_view.e()
+	fake_view.e()
+	fake_view.visual_y()
+
+	assert fake_view.clipboard.paste() == "2. second line\n3. third"
+}
+
+fn test_visual_selection_copy_starts_and_ends_a_few_lines_down() {
+	mut clip := clipboard.new()
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = [
+		"1. first line",
+		"2. second line",
+		"3. third line",
+		"4. forth line",
+		"5. fifth line"
+	]
+
+	// ensure cursor is set to start inside second line
+	fake_view.cursor.pos.x = 3
+	fake_view.cursor.pos.y = 0
+
+	fake_view.v()
+	for _ in 0..3 { fake_view.j() }
+	fake_view.visual_y()
+
+	assert fake_view.clipboard.paste() == "first line\n2. second line\n3. third line\n4. f"
+}
+
+fn test_visual_line_selection_copy() {
 	mut clip := clipboard.new()
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
@@ -884,21 +958,77 @@ fn test_visual_selection_copy() {
 
 	fake_view.shift_v()
 	fake_view.j()
-	fake_view.visual_y()
+	fake_view.visual_line_y()
 
-	assert fake_view.read_lines_from_clipboard() == [
+	clipboard_contents := fake_view.clipboard.paste()
+	assert clipboard_contents.len >= 1
+	assert clipboard_contents.runes()[0] == `\n`
+	assert clipboard_contents.runes()[clipboard_contents.runes().len - 1] == `\n`
+	clipboard_contents_lines := clipboard_contents.split_into_lines()
+	assert clipboard_contents_lines[1..] == [
 		"2. second line",
 		"3. third line"
 	]
 }
 
-fn test_paste() {
+fn test_paste_segment_of_line() {
 	mut clip := clipboard.new()
-	clip.copy(arrays.join_to_string(
-	    ["some new random contents", "with multiple lines"],
-		"\n",
-		fn (s string) string { return s }
-	))
+	clip.copy("new segment of a line")
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = [
+		"A shopping list",
+		"Strawberries x 30",
+		"Cheese, blue and red",
+		"Blueberry smoothies"
+	]
+
+	// ensure cursor is set to sit on second line
+	fake_view.cursor.pos.x = 10
+	fake_view.cursor.pos.y = 1
+
+	fake_view.p()
+
+	assert fake_view.buffer.lines == [
+		"A shopping list",
+		"Strawberrinew segment of a linees x 30",
+		"Cheese, blue and red",
+		"Blueberry smoothies"
+	]
+}
+
+fn test_paste_segment_which_does_not_start_nor_end_with_newline() {
+	mut clip := clipboard.new()
+	clip.copy("partial selection from a line\nup to some point on the next line down")
+	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
+
+	// manually set the documents contents
+	fake_view.buffer.lines = [
+		"A shopping list",
+		"Strawberries x 30",
+		"Cheese, blue and red",
+		"Blueberry smoothies"
+	]
+
+	// ensure cursor is set to sit on second line
+	fake_view.cursor.pos.x = 10
+	fake_view.cursor.pos.y = 1
+
+	fake_view.p()
+
+	assert fake_view.buffer.lines == [
+		"A shopping list",
+		"Strawberripartial selection from a line",
+		"up to some point on the next line downes x 30",
+		"Cheese, blue and red",
+		"Blueberry smoothies"
+	]
+}
+
+fn test_paste_full_lines() {
+	mut clip := clipboard.new()
+	clip.copy("\nsome new random contents\nwith multiple lines\n")
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
 	// manually set the documents contents
@@ -911,7 +1041,7 @@ fn test_paste() {
 	]
 
 	// ensure cursor is set to sit on second line
-	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.x = 14
 	fake_view.cursor.pos.y = 1
 
 	fake_view.p()
@@ -927,13 +1057,9 @@ fn test_paste() {
 	]
 }
 
-fn test_visual_paste() {
+
+fn test_copying_full_lines_with_visual_line_mode_and_pasting() {
 	mut clip := clipboard.new()
-	clip.copy(arrays.join_to_string(
-	    ["some new random contents", "with multiple lines"],
-		"\n",
-		fn (s string) string { return s }
-	))
 	mut fake_view := View{ log: unsafe { nil }, mode: .normal, clipboard: mut clip }
 
 	// manually set the documents contents
@@ -946,19 +1072,28 @@ fn test_visual_paste() {
 	]
 
 	// ensure cursor is set to sit on second line
-	fake_view.cursor.pos.x = 0
-	fake_view.cursor.pos.y = 1
+	fake_view.cursor.pos.x = 4
+	fake_view.cursor.pos.y = 0
+
 	fake_view.shift_v()
 	fake_view.j()
-
-	fake_view.visual_p()
+	fake_view.j()
+	fake_view.visual_line_y()
+	// assert clip.paste() == ""
+	fake_view.j()
+	fake_view.j()
+	fake_view.j()
+	fake_view.p()
 
 	assert fake_view.buffer.lines == [
 		"1. first line",
-		"some new random contents",
-		"with multiple lines",
+		"2. second line",
+		"3. third line",
 		"4. forth line",
-		"5. fifth line"
+		"1. first line",
+		"2. second line",
+		"3. third line",
+		"5. fifth line",
 	]
 }
 
