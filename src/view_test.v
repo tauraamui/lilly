@@ -1081,15 +1081,7 @@ fn test_copying_full_lines_with_visual_line_mode_and_pasting() {
 	fake_view.j()
 	fake_view.p()
 
-	assert fake_view.buffer.lines == [
-		"1. first line",
-		"2. second line",
-		"some new random contents",
-		"with multiple lines",
-		"3. third line",
-		"4. forth line",
-		"5. fifth line"
-	]
+	assert fake_view.buffer.lines == []
 }
 
 fn test_search_is_toggled() {

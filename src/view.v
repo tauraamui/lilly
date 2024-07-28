@@ -1416,9 +1416,11 @@ fn (mut view View) visual_y() {
 
 	end_line := view.buffer.lines[end.y].runes()
 	str_builder.write_runes(end_line[..end.x + 1])
+	/*
 	if end.x == end_line.len {
 		str_builder.write_rune(`\n`)
 	}
+	*/
 
 	view.clipboard.copy(str_builder.str())
 }
@@ -1471,9 +1473,12 @@ fn (mut view View) w() {
 	if amount == 0 {
 		view.move_cursor_down(1)
 		view.cursor.pos.x = 0
+		assert view.cursor.pos.y >= 0 && view.cursor.pos.y < view.buffer.lines.len
 		line = view.buffer.lines[view.cursor.pos.y]
+		assert view.cursor.pos.x >= 0 && view.cursor.pos.x < line.len
 		if line.len > 0 && is_whitespace(line[view.cursor.pos.x]) {
 			amount = calc_w_move_amount(view.cursor.pos, line, false)
+			assert amount >= 0
 		}
 	}
 	view.cursor.pos.x += amount
@@ -1486,8 +1491,10 @@ fn (mut view View) e() {
 	if amount == 0 {
 		view.move_cursor_down(1)
 		view.cursor.pos.x = 0
+		assert view.cursor.pos.y >= 0 && view.cursor.pos.y < view.buffer.lines.len
 		line = view.buffer.lines[view.cursor.pos.y]
 		amount = calc_e_move_amount(view.cursor.pos, line, false) or { view.cmd_buf.set_error(err.msg()); 0 }
+		assert amount >= 0
 	}
 	view.cursor.pos.x += amount
 }
