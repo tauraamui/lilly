@@ -960,7 +960,12 @@ fn test_visual_line_selection_copy() {
 	fake_view.j()
 	fake_view.visual_line_y()
 
-	assert fake_view.clipboard.paste().split_into_lines() == [
+	clipboard_contents := fake_view.clipboard.paste()
+	assert clipboard_contents.len >= 1
+	assert clipboard_contents.runes()[0] == `\n`
+	assert clipboard_contents.runes()[clipboard_contents.runes().len - 1] == `\n`
+	clipboard_contents_lines := clipboard_contents.split_into_lines()
+	assert clipboard_contents_lines[1..] == [
 		"2. second line",
 		"3. third line"
 	]
