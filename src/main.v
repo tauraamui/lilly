@@ -67,23 +67,48 @@ fn frame(mut app App) {
 
 struct Options {
 mut:
-	log_level  string
-	show_help bool
-	debug_mode bool
-	capture_panics bool
+	log_level string
+	long_show_help_flag              string
+	short_show_help_flag             string
+	show_help                        bool
+	long_debug_mode_flag             string
+	short_debug_mode_flag            string
+	debug_mode                       bool
+	long_capture_panics_flag         string
+	short_capture_panics_flag        string
+	capture_panics                   bool
+	long_disable_panic_capture_flag  string
+	short_disable_panic_capture_flag string
+	disable_panic_capture            bool
 }
 
 fn resolve_options_from_args(args []string) Options {
 	flags := cmdline.only_options(args)
-	return Options{
-		show_help: "--help" in flags || "-h" in flags
-		debug_mode: "--debug" in flags || "-d" in flags
-		capture_panics: "--capturepanics" in flags || "-cp" in flags
+	mut opts := Options {
+		long_show_help_flag:              "help",
+		short_show_help_flag:             "h",
+		long_debug_mode_flag:             "debug",
+		short_debug_mode_flag:            "d",
+		long_capture_panics_flag:         "capture-panics",
+		short_capture_panics_flag:        "cp",
+		long_disable_panic_capture_flag:  "disable-panic-capture",
+		short_disable_panic_capture_flag: "dpc"
 	}
+
+	opts.show_help = "--${opts.long_show_help_flag}" in flags || "-${opts.short_show_help_flag}" in flags
+	opts.debug_mode = "--${opts.long_debug_mode_flag}" in flags || "-${opts.short_debug_mode_flag}" in flags
+	opts.capture_panics = "--${opts.long_capture_panics_flag}" in flags || "-${opts.short_capture_panics_flag}" in flags
+	opts.disable_panic_capture = "--${opts.long_disable_panic_capture_flag}" in flags || "-${opts.short_disable_panic_capture_flag}" in flags
+
+	return opts
 }
 
-fn output_help_and_close() {
-	msg := "./lilly <option flags> <dir path/file path>\nFlags:\n\t--help (show help)\n\t--debug (enable debug log out)\n\t--capturepanics (persist panic stack trace output)"
+fn (opts Options) flags_str() string {
+	return "--${opts.long_show_help_flag} (show help)\n\t--${opts.long_debug_mode_flag} (enable debug log out)\n\t--${opts.long_disable_panic_capture_flag} (disable persistance of panic stack trace output)"
+}
+
+fn output_help_and_close(opts Options) {
+	msg := "./lilly <option flags> <dir path/file path>\nFlags:\n\t${opts.flags_str()}"
 	print_and_exit(msg)
 }
 
@@ -91,9 +116,9 @@ fn main() {
 	args := os.args[1..]
 	opts := resolve_options_from_args(args)
 
-	if opts.show_help { output_help_and_close() }
+	if opts.show_help { output_help_and_close(opts) }
 
-	if opts.capture_panics { persist_stderr_to_disk() }
+	if opts.disable_panic_capture == false { persist_stderr_to_disk() }
 
 	mut l := log.Log{}
 	l.set_level(.debug)
