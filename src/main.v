@@ -135,6 +135,8 @@ fn main() {
 	args := os.args[1..]
 	opts := resolve_options_from_args(args)
 
+	// NOTE(tauraamui): I would like it to be possible to output both the
+	//                  version and help simultaniously but this is low priority atm.
 	if opts.show_version { output_version_and_close(gitcommit_hash) }
 	if opts.show_help { output_help_and_close(opts) }
 
