@@ -38,6 +38,9 @@ mut:
 }
 
 pub fn new_splash(commit_hash string, leader_key string) Viewable {
+	assert commit_hash.len > 0
+	assert leader_key.len == 1
+
 	mut splash := SplashScreen{
 		commit_hash: commit_hash
 		file_path: "**lss**"
