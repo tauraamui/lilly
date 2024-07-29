@@ -19,6 +19,9 @@ import log
 import lib.clipboard
 import lib.draw
 import os.cmdline
+import strings
+
+const gitcommit_hash = $embed_file("./src/.githash").to_string()
 
 struct App {
 mut:
@@ -67,7 +70,10 @@ fn frame(mut app App) {
 
 struct Options {
 mut:
-	log_level string
+	log_level                        string
+	long_show_version_flag           string
+	short_show_version_flag          string
+	show_version                     bool
 	long_show_help_flag              string
 	short_show_help_flag             string
 	show_help                        bool
@@ -85,6 +91,8 @@ mut:
 fn resolve_options_from_args(args []string) Options {
 	flags := cmdline.only_options(args)
 	mut opts := Options {
+		long_show_version_flag:           "version",
+		short_show_version_flag:          "v",
 		long_show_help_flag:              "help",
 		short_show_help_flag:             "h",
 		long_debug_mode_flag:             "debug",
@@ -95,16 +103,27 @@ fn resolve_options_from_args(args []string) Options {
 		short_disable_panic_capture_flag: "dpc"
 	}
 
-	opts.show_help = "--${opts.long_show_help_flag}" in flags || "-${opts.short_show_help_flag}" in flags
-	opts.debug_mode = "--${opts.long_debug_mode_flag}" in flags || "-${opts.short_debug_mode_flag}" in flags
-	opts.capture_panics = "--${opts.long_capture_panics_flag}" in flags || "-${opts.short_capture_panics_flag}" in flags
+	opts.show_version          = "--${opts.long_show_version_flag}" in flags || "-${opts.short_show_version_flag}" in flags
+	opts.show_help             = "--${opts.long_show_help_flag}" in flags || "-${opts.short_show_help_flag}" in flags
+	opts.debug_mode            = "--${opts.long_debug_mode_flag}" in flags || "-${opts.short_debug_mode_flag}" in flags
+	opts.capture_panics        = "--${opts.long_capture_panics_flag}" in flags || "-${opts.short_capture_panics_flag}" in flags
 	opts.disable_panic_capture = "--${opts.long_disable_panic_capture_flag}" in flags || "-${opts.short_disable_panic_capture_flag}" in flags
 
 	return opts
 }
 
 fn (opts Options) flags_str() string {
-	return "--${opts.long_show_help_flag} (show help)\n\t--${opts.long_debug_mode_flag} (enable debug log out)\n\t--${opts.long_disable_panic_capture_flag} (disable persistance of panic stack trace output)"
+	mut sb := strings.new_builder(512)
+	sb.write_string("--${opts.long_show_help_flag} (show help)")
+	sb.write_string("\n\t--${opts.long_show_version_flag} (show version)")
+	sb.write_string("\n\t--${opts.long_debug_mode_flag} (enable debug log out)")
+	sb.write_string("\n\t--${opts.long_disable_panic_capture_flag} (disable persistance of panic stack trace output)")
+	return sb.str()
+}
+
+fn output_version_and_close(commit_hash string) {
+	version_label := "lilly - dev version (#${commit_hash})"
+	print_and_exit(version_label)
 }
 
 fn output_help_and_close(opts Options) {
@@ -116,6 +135,9 @@ fn main() {
 	args := os.args[1..]
 	opts := resolve_options_from_args(args)
 
+	// NOTE(tauraamui): I would like it to be possible to output both the
+	//                  version and help simultaniously but this is low priority atm.
+	if opts.show_version { output_version_and_close(gitcommit_hash) }
 	if opts.show_help { output_help_and_close(opts) }
 
 	if opts.disable_panic_capture == false { persist_stderr_to_disk() }
@@ -144,7 +166,7 @@ fn main() {
 	files := cmdline.only_non_options(args)
 	if files.len == 0 { print_and_exit("missing directoy path") }
 	if files.len > 1 { print_and_exit("too many directory paths (${files.len}) expected one") }
-	app.editor = open_editor(mut l, clipboard.new(), files[0]) or { print_and_exit("${err}"); unsafe { nil } }
+	app.editor = open_editor(mut l, clipboard.new(), gitcommit_hash, files[0]) or { print_and_exit("${err}"); unsafe { nil } }
 	if opts.debug_mode {
 		app.editor.start_debug()
 	}

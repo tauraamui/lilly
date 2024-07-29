@@ -42,7 +42,7 @@ mut:
 	quit()
 }
 
-pub fn open_editor(mut _log log.Log, _clipboard clipboard.Clipboard, workspace_root_dir string) !&Editor {
+pub fn open_editor(mut _log log.Log, _clipboard clipboard.Clipboard, commit_hash string, workspace_root_dir string) !&Editor {
 	mut editor := Editor{ clipboard: _clipboard, file_finder_modal: unsafe { nil } }
 	editor.workspace = workspace.open_workspace(
 			mut _log,
@@ -54,7 +54,7 @@ pub fn open_editor(mut _log log.Log, _clipboard clipboard.Clipboard, workspace_r
 		) or { return error("unable to open workspace '${workspace_root_dir}' -> ${err}")
 	}
 
-	editor.views << new_splash(editor.workspace.config.leader_key)
+	editor.views << new_splash(commit_hash, editor.workspace.config.leader_key)
 	editor.view = &editor.views[0]
 	return &editor
 }

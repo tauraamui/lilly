@@ -19,7 +19,6 @@ import term { strikethrough }
 import lib.draw
 
 const logo_contents  = $embed_file("./src/splash-logo.txt")
-const gitcommit_hash = $embed_file("./src/.githash").to_string()
 
 struct Logo{
 mut:
@@ -28,6 +27,7 @@ mut:
 }
 
 struct SplashScreen {
+	commit_hash string
 pub:
 	file_path   string
 mut:
@@ -37,8 +37,9 @@ mut:
 	leader_key  string
 }
 
-pub fn new_splash(leader_key string) Viewable {
+pub fn new_splash(leader_key string, commit_hash string) Viewable {
 	mut splash := SplashScreen{
+		commit_hash: commit_hash
 		file_path: "**lss**"
 		logo: Logo{
 			data: logo_contents.to_string().split_into_lines()
@@ -75,7 +76,8 @@ pub fn (splash SplashScreen) draw(mut ctx draw.Contextable) {
 	offset_y += splash.logo.data.len
 	offset_y += (ctx.window_height() - offset_y) * 0.05
 
-	version_label := "lilly - dev version (#${gitcommit_hash})"
+	version_label := "lilly - dev version (#${splash.commit_hash})"
+	// version_label := "lilly - dev version (#${gitcommit_hash})"
 	ctx.draw_text(offset_x+(ctx.window_width() / 2) - (version_label.len / 2), int(math.floor(offset_y)), version_label)
 
 	offset_y += 2
