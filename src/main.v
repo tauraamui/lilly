@@ -21,6 +21,8 @@ import lib.draw
 import os.cmdline
 import strings
 
+const gitcommit_hash = $embed_file("./src/.githash").to_string()
+
 struct App {
 mut:
 	log       &log.Log
@@ -119,6 +121,11 @@ fn (opts Options) flags_str() string {
 	return sb.str()
 }
 
+fn output_version_and_close(commit_hash string) {
+	version_label := "lilly - dev version (#${commit_hash})"
+	print_and_exit(version_label)
+}
+
 fn output_help_and_close(opts Options) {
 	msg := "./lilly <option flags> <dir path/file path>\nFlags:\n\t${opts.flags_str()}"
 	print_and_exit(msg)
@@ -128,6 +135,7 @@ fn main() {
 	args := os.args[1..]
 	opts := resolve_options_from_args(args)
 
+	if opts.show_version { output_version_and_close(gitcommit_hash) }
 	if opts.show_help { output_help_and_close(opts) }
 
 	if opts.disable_panic_capture == false { persist_stderr_to_disk() }
@@ -156,7 +164,7 @@ fn main() {
 	files := cmdline.only_non_options(args)
 	if files.len == 0 { print_and_exit("missing directoy path") }
 	if files.len > 1 { print_and_exit("too many directory paths (${files.len}) expected one") }
-	app.editor = open_editor(mut l, clipboard.new(), files[0]) or { print_and_exit("${err}"); unsafe { nil } }
+	app.editor = open_editor(mut l, clipboard.new(), gitcommit_hash, files[0]) or { print_and_exit("${err}"); unsafe { nil } }
 	if opts.debug_mode {
 		app.editor.start_debug()
 	}
