@@ -67,7 +67,10 @@ fn frame(mut app App) {
 
 struct Options {
 mut:
-	log_level string
+	log_level                        string
+	long_show_version_flag           string
+	short_show_version_flag          string
+	show_version                     bool
 	long_show_help_flag              string
 	short_show_help_flag             string
 	show_help                        bool
@@ -85,6 +88,8 @@ mut:
 fn resolve_options_from_args(args []string) Options {
 	flags := cmdline.only_options(args)
 	mut opts := Options {
+		long_show_version_flag:           "version",
+		short_show_version_flag:          "v",
 		long_show_help_flag:              "help",
 		short_show_help_flag:             "h",
 		long_debug_mode_flag:             "debug",
@@ -95,9 +100,10 @@ fn resolve_options_from_args(args []string) Options {
 		short_disable_panic_capture_flag: "dpc"
 	}
 
-	opts.show_help = "--${opts.long_show_help_flag}" in flags || "-${opts.short_show_help_flag}" in flags
-	opts.debug_mode = "--${opts.long_debug_mode_flag}" in flags || "-${opts.short_debug_mode_flag}" in flags
-	opts.capture_panics = "--${opts.long_capture_panics_flag}" in flags || "-${opts.short_capture_panics_flag}" in flags
+	opts.show_version =          "--${opts.long_show_version_flag}" in flags || "-${opts.short_show_version_flag}" in flags
+	opts.show_help =             "--${opts.long_show_help_flag}" in flags || "-${opts.short_show_help_flag}" in flags
+	opts.debug_mode =            "--${opts.long_debug_mode_flag}" in flags || "-${opts.short_debug_mode_flag}" in flags
+	opts.capture_panics =        "--${opts.long_capture_panics_flag}" in flags || "-${opts.short_capture_panics_flag}" in flags
 	opts.disable_panic_capture = "--${opts.long_disable_panic_capture_flag}" in flags || "-${opts.short_disable_panic_capture_flag}" in flags
 
 	return opts
