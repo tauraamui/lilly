@@ -51,6 +51,7 @@ pub fn new_splash(commit_hash string, leader_key string) Viewable {
 	}
 
 	for l in splash.logo.data {
+		assert l.len >= 1
 		if l.len > splash.logo.width { splash.logo.width = l.len }
 	}
 
