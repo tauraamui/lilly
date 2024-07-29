@@ -19,6 +19,7 @@ import log
 import lib.clipboard
 import lib.draw
 import os.cmdline
+import strings
 
 struct App {
 mut:
@@ -100,17 +101,22 @@ fn resolve_options_from_args(args []string) Options {
 		short_disable_panic_capture_flag: "dpc"
 	}
 
-	opts.show_version =          "--${opts.long_show_version_flag}" in flags || "-${opts.short_show_version_flag}" in flags
-	opts.show_help =             "--${opts.long_show_help_flag}" in flags || "-${opts.short_show_help_flag}" in flags
-	opts.debug_mode =            "--${opts.long_debug_mode_flag}" in flags || "-${opts.short_debug_mode_flag}" in flags
-	opts.capture_panics =        "--${opts.long_capture_panics_flag}" in flags || "-${opts.short_capture_panics_flag}" in flags
+	opts.show_version          = "--${opts.long_show_version_flag}" in flags || "-${opts.short_show_version_flag}" in flags
+	opts.show_help             = "--${opts.long_show_help_flag}" in flags || "-${opts.short_show_help_flag}" in flags
+	opts.debug_mode            = "--${opts.long_debug_mode_flag}" in flags || "-${opts.short_debug_mode_flag}" in flags
+	opts.capture_panics        = "--${opts.long_capture_panics_flag}" in flags || "-${opts.short_capture_panics_flag}" in flags
 	opts.disable_panic_capture = "--${opts.long_disable_panic_capture_flag}" in flags || "-${opts.short_disable_panic_capture_flag}" in flags
 
 	return opts
 }
 
 fn (opts Options) flags_str() string {
-	return "--${opts.long_show_help_flag} (show help)\n\t--${opts.long_debug_mode_flag} (enable debug log out)\n\t--${opts.long_disable_panic_capture_flag} (disable persistance of panic stack trace output)"
+	mut sb := strings.new_builder(512)
+	sb.write_string("--${opts.long_show_help_flag} (show help)")
+	sb.write_string("\n\t--${opts.long_show_version_flag} (show version)")
+	sb.write_string("\n\t--${opts.long_debug_mode_flag} (enable debug log out)")
+	sb.write_string("\n\t--${opts.long_disable_panic_capture_flag} (disable persistance of panic stack trace output)")
+	return sb.str()
 }
 
 fn output_help_and_close(opts Options) {
