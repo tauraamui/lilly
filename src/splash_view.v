@@ -38,6 +38,9 @@ mut:
 }
 
 pub fn new_splash(commit_hash string, leader_key string) Viewable {
+	assert commit_hash.len > 0
+	assert leader_key.len == 1
+
 	mut splash := SplashScreen{
 		commit_hash: commit_hash
 		file_path: "**lss**"
@@ -48,6 +51,7 @@ pub fn new_splash(commit_hash string, leader_key string) Viewable {
 	}
 
 	for l in splash.logo.data {
+		assert l.len >= 1
 		if l.len > splash.logo.width { splash.logo.width = l.len }
 	}
 
@@ -57,9 +61,11 @@ pub fn new_splash(commit_hash string, leader_key string) Viewable {
 pub fn (splash SplashScreen) draw(mut ctx draw.Contextable) {
 	offset_x := 1
 	mut offset_y := 1 + f64(ctx.window_height()) * 0.1
+	assert offset_y > 1
 	ctx.set_color(r: 245, g: 191, b: 243)
 	for i, l in splash.logo.data {
 		start_x := offset_x+(ctx.window_width() / 2) - (l.runes().len / 2)
+		assert start_x > 2
 		if has_colouring_directives(l) {
 			for j, c in l.runes() {
 				mut to_draw := "${c}"
