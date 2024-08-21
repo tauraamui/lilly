@@ -22,7 +22,7 @@ Our project is focused on the development of a text editor that serves as a prac
 ### Targets:
 
 - [ ] Gap buffer to replace string array
-- [ ] Within line visual mode
+- [x] Within line visual mode (kind of)
 - [ ] Fix found search result highlighting
 - [ ] Horizontal scrolling
 - [ ] Splits (horizontal + vertical)
