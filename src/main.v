@@ -179,10 +179,7 @@ fn main() {
 	)
 
 	file_path, workspace_path := resolve_file_and_workspace_dir_paths(cmdline.only_non_options(args), os.getwd) or { print_and_exit("${err}"); "", "" }
-	files := cmdline.only_non_options(args)
-	if files.len == 0 { print_and_exit("missing directoy path") }
-	if files.len > 1 { print_and_exit("too many directory paths (${files.len}) expected one") }
-	app.editor = open_editor(mut l, clipboard.new(), gitcommit_hash, files[0]) or { print_and_exit("${err}"); unsafe { nil } }
+	app.editor = open_editor(mut l, clipboard.new(), gitcommit_hash, file_path, workspace_path) or { print_and_exit("${err}"); unsafe { nil } }
 	if opts.debug_mode {
 		app.editor.start_debug()
 	}
