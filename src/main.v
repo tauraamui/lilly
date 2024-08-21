@@ -131,15 +131,17 @@ fn output_help_and_close(opts Options) {
 	print_and_exit(msg)
 }
 
-fn resolve_file_and_workspace_dir_paths(args []string) !(string, string) {
-	if args.len == 0 { return "", os.getwd() }
+type WDResolver = fn () string
+
+fn resolve_file_and_workspace_dir_paths(args []string, resolve_wd WDResolver) !(string, string) {
+	if args.len == 0 { return "", resolve_wd() }
 	if args.len == 1 {
 		file_or_dir_path := args[0]
 		if os.is_dir(file_or_dir_path) {
 			return "", file_or_dir_path
 		}
 
-		return file_or_dir_path, os.base(file_or_dir_path)
+		return file_or_dir_path, os.dir(file_or_dir_path)
 	}
 	return error("too many arguments ${args.len}, expected one")
 }
@@ -176,7 +178,7 @@ fn main() {
 		use_alternate_buffer: true
 	)
 
-	// file_path, workspace_path := resolve_file_and_workspace_dir_paths(cmdline.only_non_options(args)) or { print_and_exit(err) }
+	file_path, workspace_path := resolve_file_and_workspace_dir_paths(cmdline.only_non_options(args), os.getwd) or { print_and_exit("${err}"); "", "" }
 	files := cmdline.only_non_options(args)
 	if files.len == 0 { print_and_exit("missing directoy path") }
 	if files.len > 1 { print_and_exit("too many directory paths (${files.len}) expected one") }
