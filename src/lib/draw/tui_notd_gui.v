@@ -2,7 +2,7 @@ module draw
 
 import term.ui as tui
 
-struct Context{
+struct Context {
 mut:
 	ref &tui.Context
 }
@@ -11,21 +11,27 @@ pub fn new_context(cfg Config) &Contextable {
 	return Context{
 		ref: tui.init(
 			user_data: cfg.user_data
-			event_fn: fn [cfg] (e &tui.Event, app voidptr) {
-				cfg.event_fn(Event{ e }, app)
+			event_fn:  fn [cfg] (e &tui.Event, app voidptr) {
+				cfg.event_fn(Event{e}, app)
 			}
-			frame_fn: cfg.frame_fn
-			capture_events: cfg.capture_events
+			frame_fn:             cfg.frame_fn
+			capture_events:       cfg.capture_events
 			use_alternate_buffer: cfg.use_alternate_buffer
 		)
 	}
 }
 
-fn (mut ctx Context) rate_limit_draws() bool { return true }
+fn (mut ctx Context) rate_limit_draws() bool {
+	return true
+}
 
-fn (mut ctx Context) window_width() int { return ctx.ref.window_width }
+fn (mut ctx Context) window_width() int {
+	return ctx.ref.window_width
+}
 
-fn (mut ctx Context) window_height() int { return ctx.ref.window_height }
+fn (mut ctx Context) window_height() int {
+	return ctx.ref.window_height
+}
 
 fn (mut ctx Context) set_cursor_position(x int, y int) {
 	ctx.ref.set_cursor_position(x, y)

@@ -8,8 +8,14 @@ fn new_clipboard() Clipboard {
 	// if os_running_wayland() {
 	// 	$if !test { return WaylandClipboard{} }
 	// }
-	$if test { return MockClipboard{} }
-	return StdLibClipboard{ ref: stdlib_clipboard.new_primary() }
+	$if test {
+		return MockClipboard{}
+	}
+	return StdLibClipboard{
+		ref: stdlib_clipboard.new_primary()
+	}
 }
 
-fn os_running_wayland() bool { return os.getenv("WAYLAND_DISPLAY").len > 0 }
+fn os_running_wayland() bool {
+	return os.getenv('WAYLAND_DISPLAY').len > 0
+}

@@ -9,4 +9,3 @@ mut:
 pub fn new() Clipboard {
 	return new_clipboard()
 }
-

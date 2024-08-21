@@ -42,26 +42,29 @@ mut:
 	quit()
 }
 
-pub fn open_editor(mut _log log.Log, _clipboard clipboard.Clipboard, commit_hash string, workspace_root_dir string) !&Editor {
-	mut editor := Editor{ clipboard: _clipboard, file_finder_modal: unsafe { nil } }
-	editor.workspace = workspace.open_workspace(
-			mut _log,
-			workspace_root_dir,
-			os.is_dir,
-			os.walk,
-			os.config_dir,
-			os.read_file
-		) or { return error("unable to open workspace '${workspace_root_dir}' -> ${err}")
+pub fn open_editor(mut _log log.Log, _clipboard clipboard.Clipboard, commit_hash string, file_path string, workspace_root_dir string) !&Editor {
+	mut editor := Editor{
+		clipboard:         _clipboard
+		file_finder_modal: unsafe { nil }
+	}
+	editor.workspace = workspace.open_workspace(mut _log, workspace_root_dir, os.is_dir,
+		os.walk, os.config_dir, os.read_file) or {
+		return error("unable to open workspace '${workspace_root_dir}' -> ${err}")
 	}
 
 	editor.views << new_splash(commit_hash, editor.workspace.config.leader_key)
 	editor.view = &editor.views[0]
+	if file_path.len != 0 {
+		editor.open_file(file_path)!
+	}
 	return &editor
 }
 
 fn (mut editor Editor) start_debug() {
 	editor.debug_view = true
-	editor.view = &Debug{ file_path: "**dbg**" }
+	editor.view = &Debug{
+		file_path: '**dbg**'
+	}
 }
 
 fn (mut editor Editor) open_file(path string) ! {
@@ -70,7 +73,7 @@ fn (mut editor Editor) open_file(path string) ! {
 	// find existing view which has that file open
 	for i, view in editor.views[1..] {
 		if view.file_path == path {
-			editor.view = &editor.views[i+1]
+			editor.view = &editor.views[i + 1]
 			return
 		}
 	}
@@ -78,24 +81,28 @@ fn (mut editor Editor) open_file(path string) ! {
 	// couldn't find a view, so now search for an existing buffer with no view
 	for i, buffer in editor.buffers {
 		if buffer.file_path == path {
-			editor.views << open_view(editor.workspace.config, editor.workspace.branch(), editor.workspace.syntaxes(), editor.clipboard, mut &editor.buffers[i])
-			editor.view = &editor.views[editor.views.len-1]
+			editor.views << open_view(editor.workspace.config, editor.workspace.branch(),
+				editor.workspace.syntaxes(), editor.clipboard, mut &editor.buffers[i])
+			editor.view = &editor.views[editor.views.len - 1]
 			return
 		}
 	}
 
 	// neither existing view nor buffer was found, oh well, just load it then :)
-	mut buff := buffer.Buffer{ file_path: path }
+	mut buff := buffer.Buffer{
+		file_path: path
+	}
 	buff.load_from_path() or { return err }
 	editor.buffers << buff
-	editor.views << open_view(editor.workspace.config, editor.workspace.branch(), editor.workspace.syntaxes(), editor.clipboard, mut &editor.buffers[editor.buffers.len-1])
-	editor.view = &editor.views[editor.views.len-1]
+	editor.views << open_view(editor.workspace.config, editor.workspace.branch(), editor.workspace.syntaxes(),
+		editor.clipboard, mut &editor.buffers[editor.buffers.len - 1])
+	editor.view = &editor.views[editor.views.len - 1]
 }
 
 fn (mut editor Editor) open_file_finder() {
 	editor.file_finder_modal_open = true
 	editor.file_finder_modal = FileFinderModal{
-		file_path: "**lff**"
+		file_path:  '**lff**'
 		file_paths: editor.workspace.files()
 	}
 }
@@ -123,4 +130,3 @@ pub fn (mut editor Editor) quit() {
 	editor.view = unsafe { nil }
 	exit(0)
 }
-

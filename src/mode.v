@@ -35,11 +35,12 @@ fn (mode Mode) draw(mut ctx draw.Contextable, x int, y int) int {
 	status_line_x := x
 	status_color := mode.color()
 	mut offset := 0
-	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, "${left_rounded}${block}")
+	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, '${left_rounded}${block}')
 	offset += 2
-	paint_text_on_background(mut ctx, status_line_x + offset, status_line_y, status_color, Color{ 0, 0, 0}, label)
+	paint_text_on_background(mut ctx, status_line_x + offset, status_line_y, status_color,
+		Color{0, 0, 0}, label)
 	offset += label.len
-	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, "${block}${slant_right_flat_bottom}")
+	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, '${block}${slant_right_flat_bottom}')
 	offset += 2
 	return status_line_x + offset
 }
@@ -60,15 +61,14 @@ fn (mode Mode) color() Color {
 
 fn (mode Mode) str() string {
 	return match mode {
-		.normal  { "NORMAL"  }
-		.visual { "VISUAL" }
-		.visual_line  { "VISUAL LINE"  }
-		.insert  { "INSERT"  }
-		.command { "COMMAND" }
-		.search  { "SEARCH"  }
-		.leader  { "LEADER" }
-		.pending_delete { "NORMAL" }
-		.replace { "NORMAL" }
+		.normal { 'NORMAL' }
+		.visual { 'VISUAL' }
+		.visual_line { 'VISUAL LINE' }
+		.insert { 'INSERT' }
+		.command { 'COMMAND' }
+		.search { 'SEARCH' }
+		.leader { 'LEADER' }
+		.pending_delete { 'NORMAL' }
+		.replace { 'NORMAL' }
 	}
 }
-

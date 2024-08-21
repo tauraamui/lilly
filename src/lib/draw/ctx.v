@@ -40,15 +40,14 @@ mut:
 }
 
 pub interface Contextable {
+	Drawer
+	Colorer
 mut:
 	rate_limit_draws() bool
 	window_width() int
 	window_height() int
 
 	set_cursor_position(x int, y int)
-
-	Drawer
-	Colorer
 
 	bold()
 

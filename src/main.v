@@ -21,14 +21,14 @@ import lib.draw
 import os.cmdline
 import strings
 
-const gitcommit_hash = $embed_file("./src/.githash").to_string()
+const gitcommit_hash = $embed_file('./src/.githash').to_string()
 
 struct App {
 mut:
 	log       &log.Log
 	ui        &draw.Contextable = unsafe { nil }
-	editor    &Editor = unsafe { nil }
-	view      &View = unsafe { nil }
+	editor    &Editor           = unsafe { nil }
+	view      &View             = unsafe { nil }
 	views     []View
 	cur_split int
 	words     []string
@@ -44,7 +44,6 @@ fn (mut app App) update_view() {
 	}
 }
 
-
 fn event(e draw.Event, mut app App) {
 	match e.typ {
 		.key_down {
@@ -59,7 +58,9 @@ fn event(e draw.Event, mut app App) {
 }
 
 fn frame(mut app App) {
-	if app.ui.rate_limit_draws() && !app.changed { return }
+	if app.ui.rate_limit_draws() && !app.changed {
+		return
+	}
 	app.changed = false
 	app.ui.clear()
 
@@ -90,45 +91,67 @@ mut:
 
 fn resolve_options_from_args(args []string) Options {
 	flags := cmdline.only_options(args)
-	mut opts := Options {
-		long_show_version_flag:           "version",
-		short_show_version_flag:          "v",
-		long_show_help_flag:              "help",
-		short_show_help_flag:             "h",
-		long_debug_mode_flag:             "debug",
-		short_debug_mode_flag:            "d",
-		long_capture_panics_flag:         "capture-panics",
-		short_capture_panics_flag:        "cp",
-		long_disable_panic_capture_flag:  "disable-panic-capture",
-		short_disable_panic_capture_flag: "dpc"
+	mut opts := Options{
+		long_show_version_flag:           'version'
+		short_show_version_flag:          'v'
+		long_show_help_flag:              'help'
+		short_show_help_flag:             'h'
+		long_debug_mode_flag:             'debug'
+		short_debug_mode_flag:            'd'
+		long_capture_panics_flag:         'capture-panics'
+		short_capture_panics_flag:        'cp'
+		long_disable_panic_capture_flag:  'disable-panic-capture'
+		short_disable_panic_capture_flag: 'dpc'
 	}
 
-	opts.show_version          = "--${opts.long_show_version_flag}" in flags || "-${opts.short_show_version_flag}" in flags
-	opts.show_help             = "--${opts.long_show_help_flag}" in flags || "-${opts.short_show_help_flag}" in flags
-	opts.debug_mode            = "--${opts.long_debug_mode_flag}" in flags || "-${opts.short_debug_mode_flag}" in flags
-	opts.capture_panics        = "--${opts.long_capture_panics_flag}" in flags || "-${opts.short_capture_panics_flag}" in flags
-	opts.disable_panic_capture = "--${opts.long_disable_panic_capture_flag}" in flags || "-${opts.short_disable_panic_capture_flag}" in flags
+	opts.show_version = '--${opts.long_show_version_flag}' in flags
+		|| '-${opts.short_show_version_flag}' in flags
+	opts.show_help = '--${opts.long_show_help_flag}' in flags
+		|| '-${opts.short_show_help_flag}' in flags
+	opts.debug_mode = '--${opts.long_debug_mode_flag}' in flags
+		|| '-${opts.short_debug_mode_flag}' in flags
+	opts.capture_panics = '--${opts.long_capture_panics_flag}' in flags
+		|| '-${opts.short_capture_panics_flag}' in flags
+	opts.disable_panic_capture = '--${opts.long_disable_panic_capture_flag}' in flags
+		|| '-${opts.short_disable_panic_capture_flag}' in flags
 
 	return opts
 }
 
 fn (opts Options) flags_str() string {
 	mut sb := strings.new_builder(512)
-	sb.write_string("--${opts.long_show_help_flag} (show help)")
-	sb.write_string("\n\t--${opts.long_show_version_flag} (show version)")
-	sb.write_string("\n\t--${opts.long_debug_mode_flag} (enable debug log out)")
-	sb.write_string("\n\t--${opts.long_disable_panic_capture_flag} (disable persistance of panic stack trace output)")
+	sb.write_string('--${opts.long_show_help_flag} (show help)')
+	sb.write_string('\n\t--${opts.long_show_version_flag} (show version)')
+	sb.write_string('\n\t--${opts.long_debug_mode_flag} (enable debug log out)')
+	sb.write_string('\n\t--${opts.long_disable_panic_capture_flag} (disable persistance of panic stack trace output)')
 	return sb.str()
 }
 
 fn output_version_and_close(commit_hash string) {
-	version_label := "lilly - dev version (#${commit_hash})"
+	version_label := 'lilly - dev version (#${commit_hash})'
 	print_and_exit(version_label)
 }
 
 fn output_help_and_close(opts Options) {
-	msg := "./lilly <option flags> <dir path/file path>\nFlags:\n\t${opts.flags_str()}"
+	msg := './lilly <option flags> <dir path/file path>\nFlags:\n\t${opts.flags_str()}'
 	print_and_exit(msg)
+}
+
+type WDResolver = fn () string
+
+fn resolve_file_and_workspace_dir_paths(args []string, resolve_wd WDResolver) !(string, string) {
+	if args.len == 0 {
+		return '', resolve_wd()
+	}
+	if args.len == 1 {
+		file_or_dir_path := args[0]
+		if os.is_dir(file_or_dir_path) {
+			return '', file_or_dir_path
+		}
+
+		return file_or_dir_path, os.dir(file_or_dir_path)
+	}
+	return error('too many arguments ${args.len}, expected one')
 }
 
 fn main() {
@@ -137,45 +160,55 @@ fn main() {
 
 	// NOTE(tauraamui): I would like it to be possible to output both the
 	//                  version and help simultaniously but this is low priority atm.
-	if opts.show_version { output_version_and_close(gitcommit_hash) }
-	if opts.show_help { output_help_and_close(opts) }
+	if opts.show_version {
+		output_version_and_close(gitcommit_hash)
+	}
+	if opts.show_help {
+		output_help_and_close(opts)
+	}
 
-	if opts.disable_panic_capture == false { persist_stderr_to_disk() }
+	if opts.disable_panic_capture == false {
+		persist_stderr_to_disk()
+	}
 
 	mut l := log.Log{}
 	l.set_level(.debug)
-	l.set_full_logpath("./debug.log")
+	l.set_full_logpath('./debug.log')
 	defer {
 		l.flush()
 		l.close()
 	}
 
-    mut app := &App{
-		log: &l
+	mut app := &App{
+		log:     &l
 		changed: true
 	}
 
 	app.ui = draw.new_context(
-		user_data: app
-        event_fn: event
-        frame_fn: frame
-		capture_events: true
+		user_data:            app
+		event_fn:             event
+		frame_fn:             frame
+		capture_events:       true
 		use_alternate_buffer: true
 	)
 
-	files := cmdline.only_non_options(args)
-	if files.len == 0 { print_and_exit("missing directoy path") }
-	if files.len > 1 { print_and_exit("too many directory paths (${files.len}) expected one") }
-	app.editor = open_editor(mut l, clipboard.new(), gitcommit_hash, files[0]) or { print_and_exit("${err}"); unsafe { nil } }
+	file_path, workspace_path := resolve_file_and_workspace_dir_paths(cmdline.only_non_options(args),
+		os.getwd) or {
+		print_and_exit('${err}')
+		'', ''
+	}
+	app.editor = open_editor(mut l, clipboard.new(), gitcommit_hash, file_path, workspace_path) or {
+		print_and_exit('${err}')
+		unsafe { nil }
+	}
 	if opts.debug_mode {
 		app.editor.start_debug()
 	}
 
-    app.ui.run()!
+	app.ui.run()!
 }
 
 fn print_and_exit(msg string) {
 	println(msg)
 	exit(1)
 }
-

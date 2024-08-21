@@ -15,4 +15,3 @@ fn (mut stdlibclipboard StdLibClipboard) copy(text string) bool {
 fn (mut stdlibclipboard StdLibClipboard) paste() string {
 	return stdlibclipboard.ref.paste()
 }
-
