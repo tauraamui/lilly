@@ -91,7 +91,7 @@ fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx draw.Con
 fn (mut file_finder_modal FileFinderModal) on_key_down(e draw.Event, mut root Root) {
 	match e.code {
 		.escape {
-			root.close_file_finder()
+			root.close_finders()
 		}
 		48...57, 97...122 {
 			file_finder_modal.search.put_char(e.ascii.ascii_str())
