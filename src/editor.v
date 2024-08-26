@@ -40,9 +40,8 @@ interface Root {
 mut:
 	open_file(path string) !
 	open_file_finder()
-	close_file_finder()
 	open_buffer_finder()
-	close_buffer_finder()
+	close_finders()
 	quit()
 }
 
@@ -50,6 +49,7 @@ pub fn open_editor(mut _log log.Log, _clipboard clipboard.Clipboard, commit_hash
 	mut editor := Editor{
 		clipboard:         _clipboard
 		file_finder_modal: unsafe { nil }
+		buffer_finder_modal: unsafe { nil }
 	}
 	editor.workspace = workspace.open_workspace(mut _log, workspace_root_dir, os.is_dir,
 		os.walk, os.config_dir, os.read_file) or {
@@ -114,6 +114,11 @@ fn (mut editor Editor) open_file_finder() {
 
 fn (mut editor Editor) close_file_finder() {
 	editor.file_finder_modal_open = false
+}
+
+fn (mut editor Editor) close_finders() {
+	editor.file_finder_modal_open = false
+	editor.buffer_finder_modal_open = false
 }
 
 fn (mut editor Editor) open_buffer_finder() {
