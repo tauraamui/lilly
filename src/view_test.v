@@ -111,7 +111,7 @@ fn test_u_undos_line_insertions() {
 
 fn test_line_is_within_selection() {
 	mut cursor := Cursor{
-		pos:                 Pos{
+		pos: Pos{
 			x: 0
 			y: 5
 		}
@@ -127,7 +127,7 @@ fn test_line_is_within_selection() {
 
 fn test_selection_start_smallest_wins_check_1() {
 	mut cursor := Cursor{
-		pos:                 Pos{
+		pos: Pos{
 			x: 0
 			y: 2
 		}
@@ -142,7 +142,7 @@ fn test_selection_start_smallest_wins_check_1() {
 
 fn test_selection_start_smallest_wins_check_2() {
 	mut cursor := Cursor{
-		pos:                 Pos{
+		pos: Pos{
 			x: 0
 			y: 11
 		}
@@ -304,7 +304,7 @@ fn test_resolve_whitespace_prefix_on_line_with_no_text() {
 
 fn test_cursor_selection_start_and_end_methods_basic_situation() {
 	mut cursor := Cursor{
-		pos:                 Pos{
+		pos: Pos{
 			x: 0
 			y: 0
 		} // make position be at "beginning"
@@ -466,7 +466,7 @@ fn test_draw_text_line_within_visual_selection_start_end_on_same_line_with_tab_p
 	}
 
 	mut cursor := Cursor{
-		pos:                 Pos{
+		pos: Pos{
 			x: 16
 			y: 0
 		}
@@ -497,7 +497,7 @@ fn test_draw_text_line_within_visual_selection_start_end_on_same_line() {
 		}
 	}
 	cursor := Cursor{
-		pos:                 Pos{
+		pos: Pos{
 			x: 16
 			y: 0
 		}
@@ -529,7 +529,7 @@ fn test_draw_text_line_within_visual_selection_start_pre_line_end_post_line() {
 		}
 	}
 	cursor := Cursor{
-		pos:                 Pos{
+		pos: Pos{
 			x: 16
 			y: 2
 		}
@@ -559,7 +559,7 @@ fn test_draw_text_line_within_visual_selection_first_line_with_selection_end_on_
 		}
 	}
 	cursor := Cursor{
-		pos:                 Pos{
+		pos: Pos{
 			x: 0
 			y: 1
 		}

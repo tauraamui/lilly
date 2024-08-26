@@ -1926,8 +1926,10 @@ fn calc_w_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 				continue
 			}
 			if is_whitespace(c) {
-				return calc_w_move_amount(Pos{ x: cursor_pos.x + i +
-					1, y: cursor_pos.y }, line, true) + i + 1
+				return calc_w_move_amount(Pos{
+					x: cursor_pos.x + i + 1
+					y: cursor_pos.y
+				}, line, true) + i + 1
 			}
 			return i + 1
 		}
@@ -1950,8 +1952,10 @@ fn calc_w_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 		}
 		for i, c in line_chars[cursor_pos.x + 1..] {
 			if is_non_alpha(c) {
-				return calc_w_move_amount(Pos{ x: cursor_pos.x + i +
-					1, y: cursor_pos.y }, line, true) + i + 1
+				return calc_w_move_amount(Pos{
+					x: cursor_pos.x + i + 1
+					y: cursor_pos.y
+				}, line, true) + i + 1
 			}
 		}
 	}
@@ -2112,8 +2116,10 @@ fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 		for i, c in line_chars[..cursor_pos.x].reverse() {
 			max_i = i
 			if !is_whitespace(c) {
-				return calc_b_move_amount(Pos{ x: cursor_pos.x - (i +
-					1), y: cursor_pos.y }, line, true) + i + 1
+				return calc_b_move_amount(Pos{
+					x: cursor_pos.x - (i + 1)
+					y: cursor_pos.y
+				}, line, true) + i + 1
 			}
 		}
 		return max_i + 1 // NOTE(tauraamui): -> Really this behaviour is wrong, if nothing but whitespace between here and line start,
