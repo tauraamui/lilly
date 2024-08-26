@@ -175,6 +175,9 @@ fn (mut splash SplashScreen) eval_pending_chord(mut root Root) {
 		"ff" {
 			root.open_file_finder()
 		}
+		"fb" {
+			root.open_buffer_finder()
+		}
 		else {
 			return
 		}

@@ -38,9 +38,11 @@ mut:
 
 interface Root {
 mut:
-	open_file_finder()
 	open_file(path string) !
+	open_file_finder()
 	close_file_finder()
+	open_buffer_finder()
+	close_buffer_finder()
 	quit()
 }
 
@@ -133,6 +135,11 @@ pub fn (mut editor Editor) draw(mut ctx draw.Contextable) {
 		editor.file_finder_modal.draw(mut ctx)
 		return
 	}
+
+	if editor.buffer_finder_modal_open {
+		editor.buffer_finder_modal.draw(mut ctx)
+		return
+	}
 }
 
 pub fn (mut editor Editor) on_key_down(e draw.Event) {
@@ -145,6 +152,7 @@ pub fn (mut editor Editor) on_key_down(e draw.Event) {
 		editor.buffer_finder_modal.on_key_down(e, mut editor)
 		return
 	}
+
 	editor.view.on_key_down(e, mut editor)
 }
 
