@@ -126,7 +126,7 @@ fn (mut editor Editor) open_buffer_finder() {
 	editor.buffer_finder_modal_open = true
 	editor.buffer_finder_modal = FileFinderModal{
 		file_path: "**obf**",
-		file_paths: []
+		file_paths: editor.buffers.map(it.file_path)
 	}
 }
 
