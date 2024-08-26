@@ -17,6 +17,7 @@ module main
 import math
 import term { strikethrough }
 import lib.draw
+import encoding.utf8
 
 const logo_contents = $embed_file('./src/splash-logo.txt')
 
@@ -31,10 +32,10 @@ struct SplashScreen {
 pub:
 	file_path string
 mut:
-	logo        Logo
-	leader_mode bool
-	f_count     int
-	leader_key  string
+	logo          Logo
+	leader_mode   bool
+	leader_key    string
+	pending_chord string
 }
 
 pub fn new_splash(commit_hash string, leader_key string) Viewable {
@@ -143,29 +144,42 @@ fn has_colouring_directives(line string) bool {
 
 pub fn (mut splash SplashScreen) on_key_down(e draw.Event, mut root Root) {
 	match e.utf8 {
-		splash.leader_key { splash.leader_mode = true }
+		splash.leader_key { splash.leader_mode = true; splash.pending_chord = ""; return }
 		else {}
 	}
 	match e.code {
 		.escape {
 			if splash.leader_mode {
 				splash.leader_mode = false
+				splash.pending_chord = ""
 				return
 			}
 			root.quit()
+			return
 		}
-		// leader_key { splash.leader_mode = true }
-		// TODO(tauraamui): move to f() method, this line is a too complicated/long statement now
-		.f {
-			if splash.leader_mode {
-				splash.f_count += 1
-			}
-			if splash.f_count == 2 {
-				splash.leader_mode = false
-				splash.f_count = 0
-				root.open_file_finder()
+		else {
+			if !splash.leader_mode { return }
+			char_runes := e.utf8.runes()
+			if char_runes.len != 1 { return }
+			if utf8.is_letter(char_runes[0]) {
+				splash.pending_chord = "${splash.pending_chord}${e.utf8}"
 			}
 		}
-		else {}
 	}
+
+	splash.eval_pending_chord(mut root)
+}
+
+fn (mut splash SplashScreen) eval_pending_chord(mut root Root) {
+	match splash.pending_chord {
+		"ff" {
+			root.open_file_finder()
+		}
+		else {
+			return
+		}
+	}
+
+	splash.leader_mode = false
+	splash.pending_chord = ""
 }

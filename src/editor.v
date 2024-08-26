@@ -23,15 +23,17 @@ import lib.draw
 
 struct Editor {
 mut:
-	clipboard              clipboard.Clipboard
-	view                   &Viewable = unsafe { nil }
-	debug_view             bool
-	views                  []Viewable
-	buffers                []buffer.Buffer
-	file_finder_modal_open bool
-	file_finder_modal      Viewable
-	workspace              workspace.Workspace
-	syntaxes               []workspace.Syntax
+	clipboard                clipboard.Clipboard
+	view                     &Viewable = unsafe { nil }
+	debug_view               bool
+	views                    []Viewable
+	buffers                  []buffer.Buffer
+	file_finder_modal_open   bool
+	file_finder_modal        Viewable
+	buffer_finder_modal_open bool
+	buffer_finder_modal      Viewable
+	workspace                workspace.Workspace
+	syntaxes                 []workspace.Syntax
 }
 
 interface Root {
@@ -100,6 +102,7 @@ fn (mut editor Editor) open_file(path string) ! {
 }
 
 fn (mut editor Editor) open_file_finder() {
+	if editor.buffer_finder_modal_open { return }
 	editor.file_finder_modal_open = true
 	editor.file_finder_modal = FileFinderModal{
 		file_path:  '**lff**'
@@ -111,16 +114,35 @@ fn (mut editor Editor) close_file_finder() {
 	editor.file_finder_modal_open = false
 }
 
+fn (mut editor Editor) open_buffer_finder() {
+	if editor.file_finder_modal_open { return }
+	editor.buffer_finder_modal_open = true
+	editor.buffer_finder_modal = FileFinderModal{
+		file_path: "**obf**",
+		file_paths: []
+	}
+}
+
+fn (mut editor Editor) close_buffer_finder() {
+	editor.buffer_finder_modal_open = false
+}
+
 pub fn (mut editor Editor) draw(mut ctx draw.Contextable) {
 	editor.view.draw(mut ctx)
 	if editor.file_finder_modal_open {
 		editor.file_finder_modal.draw(mut ctx)
+		return
 	}
 }
 
 pub fn (mut editor Editor) on_key_down(e draw.Event) {
 	if editor.file_finder_modal_open {
 		editor.file_finder_modal.on_key_down(e, mut editor)
+		return
+	}
+
+	if editor.buffer_finder_modal_open {
+		editor.buffer_finder_modal.on_key_down(e, mut editor)
 		return
 	}
 	editor.view.on_key_down(e, mut editor)
