@@ -1679,6 +1679,7 @@ fn (mut view View) e() {
 fn (mut view View) b() {
 	defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
+	view.clamp_cursor_x_pos()
 	amount := calc_b_move_amount(view.cursor.pos, line, false)
 	if amount == 0 && view.cursor.pos.y > 0 {
 		view.move_cursor_up(1)
