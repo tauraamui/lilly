@@ -23,15 +23,17 @@ import lib.draw
 
 struct Editor {
 mut:
-	clipboard              clipboard.Clipboard
-	view                   &Viewable = unsafe { nil }
-	debug_view             bool
-	views                  []Viewable
-	buffers                []buffer.Buffer
-	file_finder_modal_open bool
-	file_finder_modal      Viewable
-	workspace              workspace.Workspace
-	syntaxes               []workspace.Syntax
+	clipboard                         clipboard.Clipboard
+	view                              &Viewable = unsafe { nil }
+	debug_view                        bool
+	views                             []Viewable
+	buffers                           []buffer.Buffer
+	file_finder_modal_open            bool
+	file_finder_modal                 Viewable
+	inactive_buffer_finder_modal_open bool
+	inactive_buffer_finder            Viewable
+	workspace                         workspace.Workspace
+	syntaxes                          []workspace.Syntax
 }
 
 interface Root {
