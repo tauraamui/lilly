@@ -171,6 +171,7 @@ mut:
 	is_multiline_comment      bool
 	d_count                   int
 	f_count                   int
+	b_count                   int
 	clipboard                 clipboard.Clipboard
 }
 
