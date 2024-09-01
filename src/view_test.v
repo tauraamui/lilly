@@ -26,7 +26,7 @@ const example_file = 'module history\n\nimport datatypes\nimport lib.diff { Op }
 fn test_u_undos_line_insertions() {
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: clipboard.new()
 	}
 	fake_view.buffer.lines = example_file.split_into_lines()
@@ -159,7 +159,7 @@ fn test_dd_deletes_current_line_at_start_of_doc() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. forth line']
@@ -176,7 +176,7 @@ fn test_dd_deletes_current_line_in_middle_of_doc() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. forth line']
@@ -194,7 +194,7 @@ fn test_dd_deletes_current_line_at_end_of_doc() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 	// manually set the "document" contents
