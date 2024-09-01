@@ -2345,7 +2345,7 @@ fn test_auto_closing_square_brace() {
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2403,7 +2403,7 @@ fn test_auto_closing_curley_brace_inputting_secondary_close_should_only_move_cur
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2441,7 +2441,7 @@ fn test_auto_closing_square_brace_inputting_secondary_close_should_only_move_cur
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 
