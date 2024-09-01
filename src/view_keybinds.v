@@ -20,6 +20,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 					view.b_count += 1
 					if view.f_count == 1 && view.b_count == 1 {
 						view.escape()
+						root.open_inactive_buffer_finder()
 					}
 				}
 				else {}

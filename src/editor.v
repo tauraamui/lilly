@@ -20,7 +20,7 @@ import lib.buffer
 import lib.clipboard
 import lib.workspace
 import lib.draw
-
+@[heap]
 struct Editor {
 mut:
 	clipboard                         clipboard.Clipboard
@@ -31,7 +31,7 @@ mut:
 	file_finder_modal_open            bool
 	file_finder_modal                 Viewable
 	inactive_buffer_finder_modal_open bool
-	inactive_buffer_finder            Viewable
+	inactive_buffer_finder_modal      Viewable
 	workspace                         workspace.Workspace
 	syntaxes                          []workspace.Syntax
 }
@@ -39,6 +39,7 @@ mut:
 interface Root {
 mut:
 	open_file_finder()
+	open_inactive_buffer_finder()
 	open_file(path string) !
 	close_file_finder()
 	quit()
@@ -102,10 +103,13 @@ fn (mut editor Editor) open_file(path string) ! {
 }
 
 fn (mut editor Editor) open_file_finder() {
+	if editor.inactive_buffer_finder_modal_open { return }
 	editor.file_finder_modal_open = true
 	editor.file_finder_modal = FileFinderModal{
+		title: "FILE BROWSER"
 		file_path:  '**lff**'
 		file_paths: editor.workspace.files()
+		close_fn: editor.close_file_finder
 	}
 }
 
@@ -113,10 +117,31 @@ fn (mut editor Editor) close_file_finder() {
 	editor.file_finder_modal_open = false
 }
 
+fn (mut editor Editor) open_inactive_buffer_finder() {
+	if editor.file_finder_modal_open { return }
+	editor.inactive_buffer_finder_modal_open = true
+	editor.inactive_buffer_finder_modal = FileFinderModal{
+		title: "INACTIVE BUFFERS"
+		file_path:  '**lfb**'
+		file_paths: editor.workspace.files()
+		close_fn: editor.close_inactive_buffer_finder
+	}
+}
+
+fn (mut editor Editor) close_inactive_buffer_finder() {
+	editor.inactive_buffer_finder_modal_open = false
+}
+
 pub fn (mut editor Editor) draw(mut ctx draw.Contextable) {
 	editor.view.draw(mut ctx)
+
 	if editor.file_finder_modal_open {
 		editor.file_finder_modal.draw(mut ctx)
+		return
+	}
+
+	if editor.inactive_buffer_finder_modal_open {
+		editor.inactive_buffer_finder_modal.draw(mut ctx)
 	}
 }
 
@@ -125,6 +150,12 @@ pub fn (mut editor Editor) on_key_down(e draw.Event) {
 		editor.file_finder_modal.on_key_down(e, mut editor)
 		return
 	}
+
+	if editor.inactive_buffer_finder_modal_open {
+		editor.inactive_buffer_finder_modal.on_key_down(e, mut editor)
+		return
+	}
+
 	editor.view.on_key_down(e, mut editor)
 }
 

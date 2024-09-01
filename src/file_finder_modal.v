@@ -21,8 +21,11 @@ const max_height = 20
 
 struct FileFinderModal {
 pub:
+	title      string
 	file_path  string
 	file_paths []string
+	@[required]
+	close_fn   fn()
 mut:
 	current_selection int
 	from              int
@@ -60,7 +63,7 @@ fn (mut file_finder_modal FileFinderModal) draw(mut ctx draw.Contextable) {
 	ctx.set_color(r: 245, g: 245, b: 245)
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
 	mut y_offset := 1
-	ctx.draw_text(1, y_offset, '=== FILE BROWSER ===')
+	ctx.draw_text(1, y_offset, "=== ${file_finder_modal.title} ===")
 	y_offset += 1
 	ctx.set_cursor_position(1, y_offset + file_finder_modal.current_selection - file_finder_modal.from)
 	y_offset += file_finder_modal.draw_scrollable_list(mut ctx, y_offset, file_finder_modal.resolve_file_paths())
@@ -91,7 +94,8 @@ fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx draw.Con
 fn (mut file_finder_modal FileFinderModal) on_key_down(e draw.Event, mut root Root) {
 	match e.code {
 		.escape {
-			root.close_file_finder()
+			file_finder_modal.close_fn()
+			// root.close_file_finder()
 		}
 		48...57, 97...122 {
 			file_finder_modal.search.put_char(e.ascii.ascii_str())
