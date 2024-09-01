@@ -407,6 +407,34 @@ fn test_shift_v_toggles_visual_line_mode_and_starts_selection() {
 	assert fake_view.cursor.selection_start() == Pos{6, 0}
 }
 
+fn test_visual_line_copy_and_paste_replace() {
+	mut clip := clipboard.new()
+	mut fake_view := View{
+		log:       unsafe { nil }
+		mode: .normal
+		clipboard: mut clip
+	}
+	// manually set the "document" contents
+	fake_view.buffer.lines = ['1. first line', '2. second line']
+	// ensure cursor is set to sit on sort of in the middle of the first line
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 0
+
+	// invoke the 'shift v' command
+	fake_view.shift_v()
+
+	assert fake_view.mode == .visual_line
+	assert fake_view.cursor.selection_active()
+
+	fake_view.visual_y()
+	fake_view.escape()
+	fake_view.j()
+	fake_view.shift_v()
+	fake_view.p()
+
+	assert fake_view.buffer.lines == ['1. first line', '1. first line']
+}
+
 struct MockContextable {
 mut:
 	on_draw_cb fn (x int, y int, text string)
