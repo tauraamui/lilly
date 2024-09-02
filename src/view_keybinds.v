@@ -3,22 +3,22 @@ module main
 import lib.draw
 
 fn (mut view View) on_key_down(e draw.Event, mut root Root) {
-	match view.mode {
+	match view.leader_state.mode {
 		.leader {
 			match e.code {
 				.escape {
 					view.escape()
 				}
 				.f {
-					view.f_count += 1
-					if view.f_count == 2 {
+					view.leader_state.f_count += 1
+					if view.leader_state.f_count == 2 {
 						view.escape()
 						root.open_file_finder()
 					}
 				}
 				.b {
-					view.b_count += 1
-					if view.f_count == 1 && view.b_count == 1 {
+					view.leader_state.b_count += 1
+					if view.leader_state.f_count == 1 && view.leader_state.b_count == 1 {
 						view.escape()
 						root.open_inactive_buffer_finder()
 					}
@@ -28,7 +28,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 		}
 		.normal {
 			match e.utf8 {
-				view.leader_key { view.mode = .leader }
+				view.leader_key { view.leader_state.mode = .leader }
 				else {}
 			}
 			match e.code {
@@ -289,7 +289,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				}
 				.enter {
 					view.cmd_buf.exec(mut view, mut root)
-					view.mode = .normal
+					view.leader_state.mode = .normal
 				}
 				.space {
 					view.cmd_buf.put_char(' ')

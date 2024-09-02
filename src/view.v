@@ -1528,17 +1528,17 @@ fn (mut view View) i() {
 }
 
 fn (mut view View) v() {
-	view.mode = .visual
+	view.leader_state.mode = .visual
 	view.cursor.selection_start_pos = view.cursor.pos
 }
 
 fn (mut view View) shift_v() {
-	view.mode = .visual_line
+	view.leader_state.mode = .visual_line
 	view.cursor.selection_start_pos = view.cursor.pos
 }
 
 fn (mut view View) r() {
-	view.mode = .replace
+	view.leader_state.mode = .replace
 }
 
 // FIX(tauraamui): there's misplaced logic in this method that should belong to
@@ -1716,11 +1716,11 @@ fn (mut view View) dollar() {
 }
 
 fn (mut view View) d() {
-	view.d_count += 1
-	if view.d_count == 1 {
-		view.mode = .pending_delete
+	view.leader_state.d_count += 1
+	if view.leader_state.d_count == 1 {
+		view.leader_state.mode = .pending_delete
 	}
-	if view.d_count == 2 {
+	if view.leader_state.d_count == 2 {
 		index := if view.cursor.pos.y == view.buffer.lines.len {
 			view.cursor.pos.y - 1
 		} else {
@@ -1728,9 +1728,9 @@ fn (mut view View) d() {
 		}
 		view.copy_lines_into_clipboard(index, index)
 		view.buffer.lines.delete(index)
-		view.d_count = 0
+		view.leader_state.d_count = 0
 		view.clamp_cursor_within_document_bounds()
-		view.mode = .normal
+		view.leader_state.mode = .normal
 	}
 }
 
@@ -1740,7 +1740,7 @@ fn (mut view View) u() {
 
 fn (mut view View) o() {
 	defer { view.move_cursor_down(1) }
-	view.mode = .insert
+	view.leader_state.mode = .insert
 	y := view.cursor.pos.y
 	whitespace_prefix := resolve_whitespace_prefix(view.buffer.lines[y])
 	defer { view.cursor.pos.x = whitespace_prefix.len }
@@ -1752,7 +1752,7 @@ fn (mut view View) o() {
 }
 
 fn (mut view View) shift_o() {
-	view.mode = .insert
+	view.leader_state.mode = .insert
 	y := view.cursor.pos.y
 	whitespace_prefix := resolve_whitespace_prefix(view.buffer.lines[y])
 	defer { view.cursor.pos.x = whitespace_prefix.len }
@@ -1760,7 +1760,7 @@ fn (mut view View) shift_o() {
 }
 
 fn (mut view View) a() {
-	view.mode = .insert
+	view.leader_state.mode = .insert
 	view.cursor.pos.x += 1
 }
 

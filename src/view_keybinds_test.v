@@ -271,7 +271,7 @@ fn test_sets_of_key_events_for_views_on_key_down_adjusting_cursor_position() {
 		}
 		mut fake_view := View{
 			log:       unsafe { nil }
-			mode:      .normal
+			leader_state: ViewLeaderState{ mode: .normal }
 			clipboard: mut clip
 		}
 		fake_view.buffer.lines = case.document_contents
@@ -298,7 +298,7 @@ fn test_w_moves_cursor_to_next_line_with_plain_comments() {
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 	fake_view.buffer.lines = fake_lines

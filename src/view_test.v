@@ -2068,7 +2068,7 @@ fn test_shift_a_enters_insert_mode_at_the_end_of_current_line() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2082,7 +2082,7 @@ fn test_shift_a_enters_insert_mode_at_the_end_of_current_line() {
 
 	assert fake_view.cursor.pos.x == 20
 	assert fake_view.cursor.pos.y == 1
-	assert fake_view.mode == .insert
+	assert fake_view.leader_state.mode == .insert
 }
 
 fn test_r_replaces_character_in_middle_of_line() {
@@ -2093,7 +2093,7 @@ fn test_r_replaces_character_in_middle_of_line() {
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2102,7 +2102,7 @@ fn test_r_replaces_character_in_middle_of_line() {
 	fake_view.cursor.pos.x = 4
 	fake_view.r()
 
-	assert fake_view.mode == .replace
+	assert fake_view.leader_state.mode == .replace
 
 	event := draw.Event{
 		code:  tui.KeyCode.p
@@ -2111,7 +2111,7 @@ fn test_r_replaces_character_in_middle_of_line() {
 	}
 	fake_view.on_key_down(event, mut editor)
 
-	assert fake_view.mode == .normal
+	assert fake_view.leader_state.mode == .normal
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == 'one past line'
 	assert fake_view.cursor.pos.x == 4
 	assert fake_view.cursor.pos.y == 2
@@ -2125,7 +2125,7 @@ fn test_r_replaces_character_with_special_character() {
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2134,7 +2134,7 @@ fn test_r_replaces_character_with_special_character() {
 	fake_view.cursor.pos.x = 8
 	fake_view.r()
 
-	assert fake_view.mode == .replace
+	assert fake_view.leader_state.mode == .replace
 
 	event := draw.Event{
 		code:  tui.KeyCode.exclamation
@@ -2143,7 +2143,7 @@ fn test_r_replaces_character_with_special_character() {
 	}
 	fake_view.on_key_down(event, mut editor)
 
-	assert fake_view.mode == .normal
+	assert fake_view.leader_state.mode == .normal
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == 'one last!line'
 	assert fake_view.cursor.pos.x == 8
 	assert fake_view.cursor.pos.y == 2
@@ -2157,7 +2157,7 @@ fn test_r_replaces_character_with_space() {
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2166,7 +2166,7 @@ fn test_r_replaces_character_with_space() {
 	fake_view.cursor.pos.x = 4
 	fake_view.r()
 
-	assert fake_view.mode == .replace
+	assert fake_view.leader_state.mode == .replace
 
 	event := draw.Event{
 		code:  tui.KeyCode.space
@@ -2175,7 +2175,7 @@ fn test_r_replaces_character_with_space() {
 	}
 	fake_view.on_key_down(event, mut editor)
 
-	assert fake_view.mode == .normal
+	assert fake_view.leader_state.mode == .normal
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == 'one  ast line'
 	assert fake_view.cursor.pos.x == 4
 	assert fake_view.cursor.pos.y == 2
@@ -2189,7 +2189,7 @@ fn test_r_doesnt_change_anything_when_escape_is_used() {
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2198,7 +2198,7 @@ fn test_r_doesnt_change_anything_when_escape_is_used() {
 	fake_view.cursor.pos.x = 4
 	fake_view.r()
 
-	assert fake_view.mode == .replace
+	assert fake_view.leader_state.mode == .replace
 
 	event := draw.Event{
 		code:  tui.KeyCode.escape
@@ -2206,7 +2206,7 @@ fn test_r_doesnt_change_anything_when_escape_is_used() {
 	}
 	fake_view.on_key_down(event, mut editor)
 
-	assert fake_view.mode == .normal
+	assert fake_view.leader_state.mode == .normal
 	assert fake_view.cursor.pos.x == 4
 	assert fake_view.cursor.pos.y == 2
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == 'one last line'
@@ -2220,7 +2220,7 @@ fn test_r_doesnt_change_anything_when_enter_is_used() {
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2229,7 +2229,7 @@ fn test_r_doesnt_change_anything_when_enter_is_used() {
 	fake_view.cursor.pos.x = 7
 	fake_view.r()
 
-	assert fake_view.mode == .replace
+	assert fake_view.leader_state.mode == .replace
 
 	event := draw.Event{
 		code:  tui.KeyCode.enter
@@ -2237,7 +2237,7 @@ fn test_r_doesnt_change_anything_when_enter_is_used() {
 	}
 	fake_view.on_key_down(event, mut editor)
 
-	assert fake_view.mode == .normal
+	assert fake_view.leader_state.mode == .normal
 	assert fake_view.cursor.pos.x == 7
 	assert fake_view.cursor.pos.y == 1
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == 'another line of text'
@@ -2247,7 +2247,7 @@ fn test_shift_o_adds_line_above_cursor() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2261,14 +2261,14 @@ fn test_shift_o_adds_line_above_cursor() {
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == ''
 	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 1
-	assert fake_view.mode == .insert
+	assert fake_view.leader_state.mode == .insert
 }
 
 fn test_shift_o_adds_line_above_cursor_at_start_of_file() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2282,7 +2282,7 @@ fn test_shift_o_adds_line_above_cursor_at_start_of_file() {
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == ''
 	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 0
-	assert fake_view.mode == .insert
+	assert fake_view.leader_state.mode == .insert
 }
 
 fn test_x_removes_character_in_middle_of_line() {
@@ -2290,7 +2290,7 @@ fn test_x_removes_character_in_middle_of_line() {
 
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2301,7 +2301,7 @@ fn test_x_removes_character_in_middle_of_line() {
 	fake_view.x()
 
 	assert fake_view.buffer.lines == ['this is a line of text']
-	assert fake_view.mode == .normal
+	assert fake_view.leader_state.mode == .normal
 	assert fake_view.cursor.pos.x == 14
 }
 
@@ -2310,7 +2310,7 @@ fn test_x_removes_character_and_shifts_cursor_back_at_end_of_line() {
 
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2324,7 +2324,7 @@ fn test_x_removes_character_and_shifts_cursor_back_at_end_of_line() {
 	fake_view.x()
 
 	assert fake_view.buffer.lines == ['this is a lines of tex']
-	assert fake_view.mode == .normal
+	assert fake_view.leader_state.mode == .normal
 	assert fake_view.cursor.pos.x == 21
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y].len == 22
 }
@@ -2374,7 +2374,7 @@ fn test_auto_closing_curley_brace() {
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		mode:      .normal
+		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
 
