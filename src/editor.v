@@ -123,7 +123,7 @@ fn (mut editor Editor) open_inactive_buffer_finder() {
 	editor.inactive_buffer_finder_modal = FileFinderModal{
 		title: "INACTIVE BUFFERS"
 		file_path:  '**lfb**'
-		file_paths: editor.workspace.files()
+		file_paths: editor.views.filter(it != editor.view).map(it.file_path)
 		close_fn: editor.close_inactive_buffer_finder
 	}
 }
