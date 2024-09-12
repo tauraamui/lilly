@@ -130,6 +130,11 @@ struct ScoredFilePath {
 	score   f32
 }
 
+@[inline]
+fn score_value_by_query(query string, value string) f32 {
+	return f32(int(strings.dice_coefficient(query, value) * 1000)) / 1000
+}
+
 fn (file_finder_modal FileFinderModal) resolve_file_paths() []ScoredFilePath {
 	mut scored_paths := file_finder_modal.file_paths.map(ScoredFilePath{
 		content: it
