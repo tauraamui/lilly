@@ -71,7 +71,10 @@ fn (mut editor Editor) start_debug() {
 }
 
 fn (mut editor Editor) open_file(path string) ! {
-	defer { editor.file_finder_modal_open = false }
+	defer {
+		editor.close_file_finder()
+		editor.close_inactive_buffer_finder()
+	}
 
 	// find existing view which has that file open
 	for i, view in editor.views[1..] {
@@ -123,7 +126,7 @@ fn (mut editor Editor) open_inactive_buffer_finder() {
 	editor.inactive_buffer_finder_modal = FileFinderModal{
 		title: "INACTIVE BUFFERS"
 		file_path:  '**lfb**'
-		file_paths: editor.views.filter(it != editor.view).map(it.file_path)
+		file_paths: editor.views.filter(it != editor.view && !it.file_path.starts_with("**")).map(it.file_path)
 		close_fn: editor.close_inactive_buffer_finder
 	}
 }
