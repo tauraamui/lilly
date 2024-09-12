@@ -23,13 +23,13 @@ struct FileFinderModal {
 pub:
 	title      string
 	file_path  string
-	file_paths []string
 	@[required]
 	close_fn   fn()
 mut:
 	current_selection int
 	from              int
 	search            FileSearch
+	file_paths        []string
 }
 
 struct FileSearch {
@@ -66,7 +66,7 @@ fn (mut file_finder_modal FileFinderModal) draw(mut ctx draw.Contextable) {
 	ctx.draw_text(1, y_offset, "=== ${file_finder_modal.title} ===")
 	y_offset += 1
 	ctx.set_cursor_position(1, y_offset + file_finder_modal.current_selection - file_finder_modal.from)
-	y_offset += file_finder_modal.draw_scrollable_list(mut ctx, y_offset, file_finder_modal.resolve_file_paths())
+	y_offset += file_finder_modal.draw_scrollable_list(mut ctx, y_offset, file_finder_modal.file_paths)
 	ctx.set_bg_color(r: 153, g: 95, b: 146)
 	ctx.draw_rect(1, y_offset, ctx.window_width(), y_offset)
 	search_label := 'SEARCH:'
@@ -74,7 +74,7 @@ fn (mut file_finder_modal FileFinderModal) draw(mut ctx draw.Contextable) {
 	ctx.draw_text(1 + utf8_str_visible_length(search_label) + 1, y_offset, file_finder_modal.search.query)
 }
 
-fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx draw.Contextable, y_offset int, list []ScoredFilePath) int {
+fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx draw.Contextable, y_offset int, list []string) int {
 	ctx.reset_bg_color()
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
 	ctx.draw_rect(1, y_offset, ctx.window_width(), y_offset + max_height - 1)
@@ -86,7 +86,7 @@ fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx draw.Con
 			ctx.draw_rect(1, y_offset + (i - file_finder_modal.from), ctx.window_width(),
 				y_offset + (i - file_finder_modal.from))
 		}
-		ctx.draw_text(1, y_offset + (i - file_finder_modal.from), list[i].content)
+		ctx.draw_text(1, y_offset + (i - file_finder_modal.from), list[i])
 	}
 	return y_offset + (max_height - 2)
 }
@@ -99,6 +99,7 @@ fn (mut file_finder_modal FileFinderModal) on_key_down(e draw.Event, mut root Ro
 		48...57, 97...122 {
 			file_finder_modal.search.put_char(e.ascii.ascii_str())
 			file_finder_modal.current_selection = 0
+			file_finder_modal.reorder_file_paths()
 		}
 		.down {
 			file_finder_modal.move_selection_down()
@@ -112,17 +113,19 @@ fn (mut file_finder_modal FileFinderModal) on_key_down(e draw.Event, mut root Ro
 		.backspace {
 			file_finder_modal.search.backspace()
 			file_finder_modal.current_selection = 0
+			file_finder_modal.reorder_file_paths()
 		}
 		else {
 			file_finder_modal.search.put_char(e.ascii.ascii_str())
 			file_finder_modal.current_selection = 0
+			file_finder_modal.reorder_file_paths()
 		}
 	}
 }
 
-fn (file_finder_modal FileFinderModal) file_selected(mut root Root) {
-	file_paths := file_finder_modal.resolve_file_paths()
-	root.open_file(file_paths[file_finder_modal.current_selection].content) or { panic('${err}') }
+fn (mut file_finder_modal FileFinderModal) file_selected(mut root Root) {
+	file_paths := file_finder_modal.file_paths
+	root.open_file(file_paths[file_finder_modal.current_selection]) or { panic('${err}') }
 }
 
 struct ScoredFilePath {
@@ -130,6 +133,12 @@ struct ScoredFilePath {
 	score   f32
 }
 
+@[inline]
+fn score_value_by_query(query string, value string) f32 {
+	return f32(int(strings.dice_coefficient(query, value) * 1000)) / 1000
+}
+
+/*
 fn (file_finder_modal FileFinderModal) resolve_file_paths() []ScoredFilePath {
 	mut scored_paths := file_finder_modal.file_paths.map(ScoredFilePath{
 		content: it
@@ -142,9 +151,21 @@ fn (file_finder_modal FileFinderModal) resolve_file_paths() []ScoredFilePath {
 	scored_paths.sort(a.score > b.score)
 	return scored_paths
 }
+*/
+
+fn (mut file_finder_modal FileFinderModal) reorder_file_paths() {
+	query := file_finder_modal.search.query
+	file_finder_modal.file_paths.sort_with_compare(fn [query] (a &string, b &string) int {
+		a_score := score_value_by_query(query, a)
+		b_score := score_value_by_query(query, b)
+		if a_score < b_score { return 1}
+		if b_score > a_score { return - 1 }
+		return 0
+	})
+}
 
 fn (mut file_finder_modal FileFinderModal) resolve_to() int {
-	file_paths := file_finder_modal.resolve_file_paths()
+	file_paths := file_finder_modal.file_paths
 	mut to := file_finder_modal.from + max_height
 	if to > file_paths.len {
 		to = file_paths.len
@@ -153,7 +174,7 @@ fn (mut file_finder_modal FileFinderModal) resolve_to() int {
 }
 
 fn (mut file_finder_modal FileFinderModal) move_selection_down() {
-	file_paths := file_finder_modal.resolve_file_paths()
+	file_paths := file_finder_modal.file_paths
 	file_finder_modal.current_selection += 1
 	to := file_finder_modal.resolve_to()
 	if file_finder_modal.current_selection >= to {
