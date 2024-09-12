@@ -95,10 +95,10 @@ fn (mut file_finder_modal FileFinderModal) on_key_down(e draw.Event, mut root Ro
 	match e.code {
 		.escape {
 			file_finder_modal.close_fn()
-			// root.close_file_finder()
 		}
 		48...57, 97...122 {
 			file_finder_modal.search.put_char(e.ascii.ascii_str())
+			file_finder_modal.current_selection = 0
 		}
 		.down {
 			file_finder_modal.move_selection_down()
@@ -111,9 +111,11 @@ fn (mut file_finder_modal FileFinderModal) on_key_down(e draw.Event, mut root Ro
 		}
 		.backspace {
 			file_finder_modal.search.backspace()
+			file_finder_modal.current_selection = 0
 		}
 		else {
 			file_finder_modal.search.put_char(e.ascii.ascii_str())
+			file_finder_modal.current_selection = 0
 		}
 	}
 }
