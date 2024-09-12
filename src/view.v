@@ -143,6 +143,21 @@ const auto_pairs = {
 	"'": "'"
 }
 
+struct ViewLeaderState {
+mut:
+	mode    Mode
+	d_count int
+	f_count int
+	b_count int
+}
+
+fn (mut state ViewLeaderState) reset() {
+	state.mode = .normal
+	state.d_count = 0
+	state.f_count = 0
+	state.b_count = 0
+}
+
 struct View {
 pub:
 	file_path string
@@ -151,7 +166,7 @@ mut:
 	path                      string
 	branch                    string
 	config                    workspace.Config
-	mode                      Mode
+	leader_state              ViewLeaderState
 	buffer                    buffer.Buffer
 	leader_key                string
 	cursor                    Cursor
@@ -169,8 +184,6 @@ mut:
 	syntaxes                  []workspace.Syntax
 	current_syntax_idx        int
 	is_multiline_comment      bool
-	d_count                   int
-	f_count                   int
 	clipboard                 clipboard.Clipboard
 }
 
@@ -508,7 +521,7 @@ fn open_view(config workspace.Config, branch string, syntaxes []workspace.Syntax
 		file_path:       buff.file_path
 		config:          config
 		leader_key:      config.leader_key
-		mode:            .normal
+		leader_state:     ViewLeaderState{ mode: .normal }
 		show_whitespace: false
 		clipboard:       _clipboard
 		buffer:          buff
@@ -530,7 +543,7 @@ fn (mut view View) set_current_syntax_idx(ext string) {
 
 /*
 fn (app &App) new_view(_clipboard clipboard.Clipboard) Viewable {
-	mut res := View{ log: app.log, mode: .normal, show_whitespace: false, clipboard: _clipboard }
+	mut res := View{ log: app.log, leader_state: ViewLeaderState{ mode: .normal }, show_whitespace: false, clipboard: _clipboard }
 	res.load_syntaxes()
 	res.load_config()
 	res.set_current_syntax_idx(".v")
@@ -609,9 +622,9 @@ fn (mut view View) calc_cursor_y_in_screen_space() int {
 
 @[inline]
 fn (mut view View) draw_bottom_bar_of_command_or_search(mut ctx draw.Contextable) {
-	view.cmd_buf.draw(mut ctx, view.mode == .command)
-	if view.mode == .search {
-		view.search.draw(mut ctx, view.mode == .search)
+	view.cmd_buf.draw(mut ctx, view.leader_state.mode == .command)
+	if view.leader_state.mode == .search {
+		view.search.draw(mut ctx, view.leader_state.mode == .search)
 	}
 	repeat_amount := view.chord.pending_repeat_amount()
 	ctx.draw_text(ctx.window_width() - repeat_amount.len, ctx.window_height(), repeat_amount)
@@ -619,12 +632,12 @@ fn (mut view View) draw_bottom_bar_of_command_or_search(mut ctx draw.Contextable
 
 @[inline]
 fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
-	if view.mode == .insert {
+	if view.leader_state.mode == .insert {
 		set_cursor_to_vertical_bar(mut ctx)
 	} else {
 		set_cursor_to_block(mut ctx)
 	}
-	if view.d_count == 1 || view.mode == .replace {
+	if view.leader_state.d_count == 1 || view.leader_state.mode == .replace {
 		set_cursor_to_underline(mut ctx)
 	}
 	ctx.set_cursor_position(view.x + 1 + view.calc_cursor_x_offset(),
@@ -636,8 +649,8 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 
 	view.draw_document(mut ctx)
 
-	draw_status_line(mut ctx, Status{view.mode, view.cursor.pos.x, view.cursor.pos.y, os.base(view.path), SearchSelection{
-		active:  view.mode == .search
+	draw_status_line(mut ctx, Status{view.leader_state.mode, view.cursor.pos.x, view.cursor.pos.y, os.base(view.path), SearchSelection{
+		active:  view.leader_state.mode == .search
 		total:   view.search.total_finds
 		current: view.search.current_find.match_index
 	}, view.branch})
@@ -661,7 +674,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
 	// draw cursor line
-	if view.mode != .visual_line {
+	if view.leader_state.mode != .visual_line {
 		if cursor_screen_space_y > view.code_view_height() - 1 {
 			cursor_screen_space_y = view.code_view_height() - 1
 		}
@@ -691,7 +704,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 			b: view.config.selection_highlight_color.b
 		}
 		draw_text_line(mut ctx, view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} },
-			view.cursor, view.mode, sel_highlight_color, view.x, y, document_space_y,
+			view.cursor, view.leader_state.mode, sel_highlight_color, view.x, y, document_space_y,
 			cursor_screen_space_y, linex, line)
 	}
 }
@@ -1366,14 +1379,11 @@ fn (mut view View) escape() {
 		view.clamp_cursor_within_document_bounds()
 		view.scroll_from_and_to()
 	}
-	view.mode = .normal
 	view.chord.reset()
 	view.cursor.pos.x -= 1
 	view.clamp_cursor_x_pos()
 	view.cmd_buf.clear()
 	view.search.clear()
-	view.d_count = 0
-	view.f_count = 0
 
 	// if current line only contains whitespace prefix clear the line
 	line := view.buffer.lines[view.cursor.pos.y]
@@ -1384,10 +1394,12 @@ fn (mut view View) escape() {
 
 	view.buffer.update_undo_history()
 	view.buffer.auto_close_chars = []
+
+	view.leader_state.reset()
 }
 
 fn (mut view View) escape_replace() {
-	view.mode = .normal
+	view.leader_state.mode = .normal
 }
 
 fn (mut view View) jump_cursor_to(position int) {
@@ -1448,7 +1460,7 @@ fn (mut view View) clamp_cursor_x_pos() int {
 		view.cursor.pos.x = 0
 		return 0
 	}
-	if view.mode == .insert {
+	if view.leader_state.mode == .insert {
 		if view.cursor.pos.x > line_len {
 			view.cursor.pos.x = line_len
 		}
@@ -1470,7 +1482,7 @@ fn (view View) code_view_height() int {
 }
 
 fn (mut view View) cmd() {
-	view.mode = .command
+	view.leader_state.mode = .command
 	view.cmd_buf.prepare_for_input()
 }
 
@@ -1491,7 +1503,7 @@ fn (mut view View) exec_cmd() bool {
 }
 
 fn (mut view View) search() {
-	view.mode = .search
+	view.leader_state.mode = .search
 	view.search.prepare_for_input()
 }
 
@@ -1516,23 +1528,23 @@ fn (mut view View) k() {
 }
 
 fn (mut view View) i() {
-	view.mode = .insert
+	view.leader_state.mode = .insert
 	view.clamp_cursor_x_pos()
 	view.buffer.snapshot()
 }
 
 fn (mut view View) v() {
-	view.mode = .visual
+	view.leader_state.mode = .visual
 	view.cursor.selection_start_pos = view.cursor.pos
 }
 
 fn (mut view View) shift_v() {
-	view.mode = .visual_line
+	view.leader_state.mode = .visual_line
 	view.cursor.selection_start_pos = view.cursor.pos
 }
 
 fn (mut view View) r() {
-	view.mode = .replace
+	view.leader_state.mode = .replace
 }
 
 // FIX(tauraamui): there's misplaced logic in this method that should belong to
@@ -1710,11 +1722,11 @@ fn (mut view View) dollar() {
 }
 
 fn (mut view View) d() {
-	view.d_count += 1
-	if view.d_count == 1 {
-		view.mode = .pending_delete
+	view.leader_state.d_count += 1
+	if view.leader_state.d_count == 1 {
+		view.leader_state.mode = .pending_delete
 	}
-	if view.d_count == 2 {
+	if view.leader_state.d_count == 2 {
 		index := if view.cursor.pos.y == view.buffer.lines.len {
 			view.cursor.pos.y - 1
 		} else {
@@ -1722,9 +1734,9 @@ fn (mut view View) d() {
 		}
 		view.copy_lines_into_clipboard(index, index)
 		view.buffer.lines.delete(index)
-		view.d_count = 0
+		view.leader_state.d_count = 0
 		view.clamp_cursor_within_document_bounds()
-		view.mode = .normal
+		view.leader_state.mode = .normal
 	}
 }
 
@@ -1734,7 +1746,7 @@ fn (mut view View) u() {
 
 fn (mut view View) o() {
 	defer { view.move_cursor_down(1) }
-	view.mode = .insert
+	view.leader_state.mode = .insert
 	y := view.cursor.pos.y
 	whitespace_prefix := resolve_whitespace_prefix(view.buffer.lines[y])
 	defer { view.cursor.pos.x = whitespace_prefix.len }
@@ -1746,7 +1758,7 @@ fn (mut view View) o() {
 }
 
 fn (mut view View) shift_o() {
-	view.mode = .insert
+	view.leader_state.mode = .insert
 	y := view.cursor.pos.y
 	whitespace_prefix := resolve_whitespace_prefix(view.buffer.lines[y])
 	defer { view.cursor.pos.x = whitespace_prefix.len }
@@ -1754,7 +1766,7 @@ fn (mut view View) shift_o() {
 }
 
 fn (mut view View) a() {
-	view.mode = .insert
+	view.leader_state.mode = .insert
 	view.cursor.pos.x += 1
 }
 

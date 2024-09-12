@@ -31,10 +31,22 @@ struct SplashScreen {
 pub:
 	file_path string
 mut:
-	logo        Logo
-	leader_mode bool
+	logo         Logo
+	leader_state LeaderState
+	leader_key   string
+}
+
+struct LeaderState {
+mut:
 	f_count     int
-	leader_key  string
+	b_count     int
+	leader_mode  bool
+}
+
+fn reset_leader_state(mut state LeaderState) {
+	state.leader_mode = false
+	state.f_count = 0
+	state.b_count = 0
 }
 
 pub fn new_splash(commit_hash string, leader_key string) Viewable {
@@ -143,13 +155,13 @@ fn has_colouring_directives(line string) bool {
 
 pub fn (mut splash SplashScreen) on_key_down(e draw.Event, mut root Root) {
 	match e.utf8 {
-		splash.leader_key { splash.leader_mode = true }
+		splash.leader_key { splash.leader_state.leader_mode = true }
 		else {}
 	}
 	match e.code {
 		.escape {
-			if splash.leader_mode {
-				splash.leader_mode = false
+			if splash.leader_state.leader_mode {
+				reset_leader_state(mut splash.leader_state)
 				return
 			}
 			root.quit()
@@ -157,13 +169,21 @@ pub fn (mut splash SplashScreen) on_key_down(e draw.Event, mut root Root) {
 		// leader_key { splash.leader_mode = true }
 		// TODO(tauraamui): move to f() method, this line is a too complicated/long statement now
 		.f {
-			if splash.leader_mode {
-				splash.f_count += 1
+			if splash.leader_state.leader_mode {
+				splash.leader_state.f_count += 1
 			}
-			if splash.f_count == 2 {
-				splash.leader_mode = false
-				splash.f_count = 0
+			if splash.leader_state.f_count == 2 {
 				root.open_file_finder()
+				reset_leader_state(mut splash.leader_state)
+			}
+		}
+		.b {
+			if splash.leader_state.leader_mode {
+				splash.leader_state.b_count += 1
+				if splash.leader_state.f_count == 1 && splash.leader_state.b_count >= 1 {
+					root.open_inactive_buffer_finder()
+					reset_leader_state(mut splash.leader_state)
+				}
 			}
 		}
 		else {}

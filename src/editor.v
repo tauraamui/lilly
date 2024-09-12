@@ -20,23 +20,26 @@ import lib.buffer
 import lib.clipboard
 import lib.workspace
 import lib.draw
-
+@[heap]
 struct Editor {
 mut:
-	clipboard              clipboard.Clipboard
-	view                   &Viewable = unsafe { nil }
-	debug_view             bool
-	views                  []Viewable
-	buffers                []buffer.Buffer
-	file_finder_modal_open bool
-	file_finder_modal      Viewable
-	workspace              workspace.Workspace
-	syntaxes               []workspace.Syntax
+	clipboard                         clipboard.Clipboard
+	view                              &Viewable = unsafe { nil }
+	debug_view                        bool
+	views                             []Viewable
+	buffers                           []buffer.Buffer
+	file_finder_modal_open            bool
+	file_finder_modal                 Viewable
+	inactive_buffer_finder_modal_open bool
+	inactive_buffer_finder_modal      Viewable
+	workspace                         workspace.Workspace
+	syntaxes                          []workspace.Syntax
 }
 
 interface Root {
 mut:
 	open_file_finder()
+	open_inactive_buffer_finder()
 	open_file(path string) !
 	close_file_finder()
 	quit()
@@ -68,7 +71,10 @@ fn (mut editor Editor) start_debug() {
 }
 
 fn (mut editor Editor) open_file(path string) ! {
-	defer { editor.file_finder_modal_open = false }
+	defer {
+		editor.close_file_finder()
+		editor.close_inactive_buffer_finder()
+	}
 
 	// find existing view which has that file open
 	for i, view in editor.views[1..] {
@@ -100,10 +106,13 @@ fn (mut editor Editor) open_file(path string) ! {
 }
 
 fn (mut editor Editor) open_file_finder() {
+	if editor.inactive_buffer_finder_modal_open { return }
 	editor.file_finder_modal_open = true
 	editor.file_finder_modal = FileFinderModal{
+		title: "FILE BROWSER"
 		file_path:  '**lff**'
 		file_paths: editor.workspace.files()
+		close_fn: editor.close_file_finder
 	}
 }
 
@@ -111,10 +120,31 @@ fn (mut editor Editor) close_file_finder() {
 	editor.file_finder_modal_open = false
 }
 
+fn (mut editor Editor) open_inactive_buffer_finder() {
+	if editor.file_finder_modal_open { return }
+	editor.inactive_buffer_finder_modal_open = true
+	editor.inactive_buffer_finder_modal = FileFinderModal{
+		title: "INACTIVE BUFFERS"
+		file_path:  '**lfb**'
+		file_paths: editor.views.filter(it != editor.view && !it.file_path.starts_with("**")).map(it.file_path)
+		close_fn: editor.close_inactive_buffer_finder
+	}
+}
+
+fn (mut editor Editor) close_inactive_buffer_finder() {
+	editor.inactive_buffer_finder_modal_open = false
+}
+
 pub fn (mut editor Editor) draw(mut ctx draw.Contextable) {
 	editor.view.draw(mut ctx)
+
 	if editor.file_finder_modal_open {
 		editor.file_finder_modal.draw(mut ctx)
+		return
+	}
+
+	if editor.inactive_buffer_finder_modal_open {
+		editor.inactive_buffer_finder_modal.draw(mut ctx)
 	}
 }
 
@@ -123,6 +153,12 @@ pub fn (mut editor Editor) on_key_down(e draw.Event) {
 		editor.file_finder_modal.on_key_down(e, mut editor)
 		return
 	}
+
+	if editor.inactive_buffer_finder_modal_open {
+		editor.inactive_buffer_finder_modal.on_key_down(e, mut editor)
+		return
+	}
+
 	editor.view.on_key_down(e, mut editor)
 }
 
