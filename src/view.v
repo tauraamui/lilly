@@ -151,6 +151,13 @@ mut:
 	b_count int
 }
 
+fn (mut state ViewLeaderState) reset() {
+	state.mode = .normal
+	state.d_count = 0
+	state.f_count = 0
+	state.b_count = 0
+}
+
 struct View {
 pub:
 	file_path string
@@ -1372,14 +1379,11 @@ fn (mut view View) escape() {
 		view.clamp_cursor_within_document_bounds()
 		view.scroll_from_and_to()
 	}
-	view.leader_state.mode = .normal
 	view.chord.reset()
 	view.cursor.pos.x -= 1
 	view.clamp_cursor_x_pos()
 	view.cmd_buf.clear()
 	view.search.clear()
-	view.leader_state.d_count = 0
-	view.leader_state.f_count = 0
 
 	// if current line only contains whitespace prefix clear the line
 	line := view.buffer.lines[view.cursor.pos.y]
@@ -1390,6 +1394,8 @@ fn (mut view View) escape() {
 
 	view.buffer.update_undo_history()
 	view.buffer.auto_close_chars = []
+
+	view.leader_state.reset()
 }
 
 fn (mut view View) escape_replace() {
