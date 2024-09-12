@@ -3,10 +3,13 @@ module main
 import time
 import lib.draw
 
-struct TestDrawer {}
+struct TestDrawer {
+	draw_text_callback fn (x int, y int, text string)
+}
 
 fn (mut drawer TestDrawer) draw_text(x int, y int, text string) {
-	time.sleep(1 * time.millisecond)
+	if drawer.draw_text_callback == unsafe { nil } { return }
+	drawer.draw_text_callback(x, y, text)
 }
 
 fn (mut drawer TestDrawer) write(text string) {
@@ -33,6 +36,50 @@ fn (mut drawer TestDrawer) bold() {}
 fn (mut drawer TestDrawer) reset() {}
 fn (mut drawer TestDrawer) clear() {}
 fn (mut drawer TestDrawer) flush() {}
+
+fn test_on_search_term_adjust_list_order_changes() {
+	mut drawn_text := []string{}
+	mut ref := &drawn_text
+
+	mut mock_drawer := TestDrawer{
+		draw_text_callback: fn [mut ref] (x int, y int, text string) { ref << text }
+	}
+
+	mut mock_modal := FileFinderModal{
+		file_paths: [
+			'./src/project/main.v',
+			'./src/project/lib/some_utilities.v',
+			'./src/project/lib/meta.v',
+			'./src/project/lib/database/connection.v',
+		]
+	}
+
+	mock_modal.draw(mut mock_drawer)
+
+	assert drawn_text.len > 0
+	mut cleaned_list := drawn_text[1..drawn_text.len - 2]
+	assert cleaned_list == [
+		"./src/project/main.v",
+		"./src/project/lib/some_utilities.v",
+		"./src/project/lib/meta.v",
+		"./src/project/lib/database/connection.v"
+	]
+
+	mock_modal.on_key_down(draw.Event{ utf8: "c" }, mut Editor{})
+	mock_modal.on_key_down(draw.Event{ utf8: "o" }, mut Editor{})
+	mock_modal.on_key_down(draw.Event{ utf8: "n" }, mut Editor{})
+
+	drawn_text.clear()
+	mock_modal.draw(mut mock_drawer)
+	assert drawn_text.len > 0
+	cleaned_list = drawn_text[1..drawn_text.len - 2]
+	assert cleaned_list == [
+		"./src/project/lib/database/connection.v"
+		"./src/project/lib/meta.v",
+		"./src/project/lib/some_utilities.v",
+		"./src/project/main.v",
+	]
+}
 
 fn test_current_selection_gets_zeros_on_search_term_amend() {
 	mut mock_modal := FileFinderModal{
