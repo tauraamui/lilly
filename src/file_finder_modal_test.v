@@ -1,6 +1,7 @@
 module main
 
 import time
+import arrays
 import lib.draw
 
 struct TestDrawer {
@@ -136,6 +137,31 @@ fn test_resolve_file_paths_returns_realistic_results() {
 	assert mock_modal.resolve_file_paths().map(it.content) == [
 		'./src/project/lib/some_utilities.v',
 		'./src/project/main.v',
+	]
+}
+
+fn test_score_values_by_query_success() {
+	mut paths := [
+			'./src/project/main.v',
+			'./src/project/lib/some_utilities.v',
+			'./src/project/lib/meta.v',
+			'./src/project/lib/database/connection.v',
+		]
+
+	mut scores := []f32{ len: paths.len }
+	paths.sort_with_compare(fn (a &string, b &string) int {
+		a_score := score_value_by_query("conn", a)
+		b_score := score_value_by_query("conn", b)
+		if a_score < b_score { return 1}
+		if b_score > a_score { return - 1 }
+		return 0
+	})
+
+	assert paths == [
+		'./src/project/lib/database/connection.v',
+		'./src/project/main.v',
+		'./src/project/lib/some_utilities.v',
+		'./src/project/lib/meta.v',
 	]
 }
 
