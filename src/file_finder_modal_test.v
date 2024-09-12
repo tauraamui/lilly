@@ -67,9 +67,9 @@ fn test_on_search_term_adjust_list_order_changes() {
 		"./src/project/lib/database/connection.v"
 	]
 
-	mock_modal.on_key_down(draw.Event{ utf8: "c" }, mut Editor{})
-	mock_modal.on_key_down(draw.Event{ utf8: "o" }, mut Editor{})
-	mock_modal.on_key_down(draw.Event{ utf8: "n" }, mut Editor{})
+	mock_modal.on_key_down(draw.Event{ ascii: u8("c"[0]) }, mut Editor{})
+	mock_modal.on_key_down(draw.Event{ ascii: u8("o"[0]) }, mut Editor{})
+	mock_modal.on_key_down(draw.Event{ ascii: u8("n"[0]) }, mut Editor{})
 
 	drawn_text.clear()
 	mock_modal.draw(mut mock_drawer)
