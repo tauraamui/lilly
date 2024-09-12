@@ -1,6 +1,38 @@
 module main
 
+import time
 import lib.draw
+
+struct TestDrawer {}
+
+fn (mut drawer TestDrawer) draw_text(x int, y int, text string) {
+	time.sleep(1 * time.millisecond)
+}
+
+fn (mut drawer TestDrawer) write(text string) {
+	time.sleep(1 * time.millisecond)
+}
+
+fn (mut drawer TestDrawer) draw_rect(x int, y int, width int, height int) {
+	time.sleep(1 * time.millisecond)
+}
+
+fn (mut drawer TestDrawer) draw_point(x int, y int) {
+	time.sleep(1 * time.millisecond)
+}
+
+fn (mut drawer TestDrawer) set_color(c draw.Color) {}
+fn (mut drawer TestDrawer) set_bg_color(c draw.Color) {}
+fn (mut drawer TestDrawer) reset_color() {}
+fn (mut drawer TestDrawer) reset_bg_color() {}
+fn (mut drawer TestDrawer) rate_limit_draws() bool { return false }
+fn (mut drawer TestDrawer) window_width() int { return 500 }
+fn (mut drawer TestDrawer) window_height() int { return 500 }
+fn (mut drawer TestDrawer) set_cursor_position(x int, y int) {}
+fn (mut drawer TestDrawer) bold() {}
+fn (mut drawer TestDrawer) reset() {}
+fn (mut drawer TestDrawer) clear() {}
+fn (mut drawer TestDrawer) flush() {}
 
 fn test_current_selection_gets_zeros_on_search_term_amend() {
 	mut mock_modal := FileFinderModal{
