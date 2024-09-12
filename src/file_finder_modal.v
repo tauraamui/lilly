@@ -154,9 +154,10 @@ fn (file_finder_modal FileFinderModal) resolve_file_paths() []ScoredFilePath {
 */
 
 fn (mut file_finder_modal FileFinderModal) reorder_file_paths() {
-	file_finder_modal.file_paths.sort_with_compare(fn (a &string, b &string) int {
-		a_score := score_value_by_query("conn", a)
-		b_score := score_value_by_query("conn", b)
+	query := file_finder_modal.search.query
+	file_finder_modal.file_paths.sort_with_compare(fn [query] (a &string, b &string) int {
+		a_score := score_value_by_query(query, a)
+		b_score := score_value_by_query(query, b)
 		if a_score < b_score { return 1}
 		if b_score > a_score { return - 1 }
 		return 0
