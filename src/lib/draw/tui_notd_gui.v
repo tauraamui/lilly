@@ -7,8 +7,10 @@ mut:
 	ref &tui.Context
 }
 
-pub fn new_context(cfg Config) &Contextable {
-	return Context{
+type Runner = fn () !
+
+pub fn new_context(cfg Config) (&Contextable, Runner) {
+	ctx := Context{
 		ref: tui.init(
 			user_data: cfg.user_data
 			event_fn:  fn [cfg] (e &tui.Event, app voidptr) {
@@ -19,6 +21,7 @@ pub fn new_context(cfg Config) &Contextable {
 			use_alternate_buffer: cfg.use_alternate_buffer
 		)
 	}
+	return ctx, unsafe { ctx.run }
 }
 
 fn (mut ctx Context) rate_limit_draws() bool {

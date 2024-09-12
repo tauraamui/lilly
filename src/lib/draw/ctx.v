@@ -39,9 +39,13 @@ mut:
 	reset_bg_color()
 }
 
-pub interface Contextable {
+pub interface Renderer {
 	Drawer
 	Colorer
+}
+
+pub interface Contextable {
+	Renderer
 mut:
 	rate_limit_draws() bool
 	window_width() int
@@ -53,7 +57,7 @@ mut:
 
 	reset()
 
-	run() !
+//	run() !
 	clear()
 	flush()
 }

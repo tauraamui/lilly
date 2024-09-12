@@ -184,13 +184,14 @@ fn main() {
 		changed: true
 	}
 
-	app.ui = draw.new_context(
+	ctx, run := draw.new_context(
 		user_data:            app
 		event_fn:             event
 		frame_fn:             frame
 		capture_events:       true
 		use_alternate_buffer: true
 	)
+	app.ui = ctx
 
 	file_path, workspace_path := resolve_file_and_workspace_dir_paths(cmdline.only_non_options(args),
 		os.getwd) or {
@@ -205,7 +206,7 @@ fn main() {
 		app.editor.start_debug()
 	}
 
-	app.ui.run()!
+	run()!
 }
 
 fn print_and_exit(msg string) {
