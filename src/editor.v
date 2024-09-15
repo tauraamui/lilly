@@ -49,6 +49,7 @@ pub fn open_editor(mut _log log.Log, _clipboard clipboard.Clipboard, commit_hash
 	mut editor := Editor{
 		clipboard:         _clipboard
 		file_finder_modal: unsafe { nil }
+		inactive_buffer_finder_modal: unsafe { nil }
 	}
 	editor.workspace = workspace.open_workspace(mut _log, workspace_root_dir, os.is_dir,
 		os.walk, os.config_dir, os.read_file) or {

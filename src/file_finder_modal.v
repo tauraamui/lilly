@@ -24,7 +24,7 @@ pub:
 	title      string
 	file_path  string
 	@[required]
-	close_fn   fn()
+	close_fn   ?fn()
 mut:
 	current_selection int
 	from              int
@@ -94,7 +94,9 @@ fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx draw.Con
 fn (mut file_finder_modal FileFinderModal) on_key_down(e draw.Event, mut root Root) {
 	match e.code {
 		.escape {
-			file_finder_modal.close_fn()
+			close_fn := file_finder_modal.close_fn or { return }
+			close_fn()
+			// file_finder_modal.close_fn() or { break }
 		}
 		48...57, 97...122 {
 			file_finder_modal.search.put_char(e.ascii.ascii_str())
