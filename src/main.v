@@ -202,9 +202,11 @@ fn main() {
 		print_and_exit('${err}')
 		unsafe { nil }
 	}
+	/*
 	if opts.debug_mode {
 		app.editor.start_debug()
 	}
+	*/
 
 	run()!
 }

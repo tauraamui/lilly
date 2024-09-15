@@ -14,6 +14,7 @@
 
 module main
 
+import log
 import strings
 import lib.draw
 
@@ -26,6 +27,7 @@ pub:
 	@[required]
 	close_fn   ?fn()
 mut:
+	log               log.Log
 	current_selection int
 	from              int
 	search            FileSearch
@@ -92,6 +94,7 @@ fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx draw.Con
 }
 
 fn (mut file_finder_modal FileFinderModal) on_key_down(e draw.Event, mut root Root) {
+	defer { file_finder_modal.log.debug("file list in mem: ${file_finder_modal.file_paths}") }
 	match e.code {
 		.escape {
 			close_fn := file_finder_modal.close_fn or { return }

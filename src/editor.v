@@ -38,7 +38,7 @@ mut:
 
 interface Root {
 mut:
-	open_file_finder()
+	open_file_finder(mut _log log.Log)
 	open_inactive_buffer_finder()
 	open_file(path string) !
 	close_file_finder()
@@ -56,7 +56,7 @@ pub fn open_editor(mut _log log.Log, _clipboard clipboard.Clipboard, commit_hash
 		return error("unable to open workspace '${workspace_root_dir}' -> ${err}")
 	}
 
-	editor.views << new_splash(commit_hash, editor.workspace.config.leader_key)
+	editor.views << new_splash(mut _log, commit_hash, editor.workspace.config.leader_key)
 	editor.view = &editor.views[0]
 	if file_path.len != 0 {
 		editor.open_file(file_path)!
@@ -106,13 +106,14 @@ fn (mut editor Editor) open_file(path string) ! {
 	editor.view = &editor.views[editor.views.len - 1]
 }
 
-fn (mut editor Editor) open_file_finder() {
+fn (mut editor Editor) open_file_finder(mut _log log.Log) {
 	if editor.inactive_buffer_finder_modal_open { return }
 	editor.file_finder_modal_open = true
 	editor.file_finder_modal = FileFinderModal{
+		log: _log
 		title: "FILE BROWSER"
 		file_path:  '**lff**'
-		file_paths: editor.workspace.files()
+		file_paths: editor.workspace.files().clone()
 		close_fn: editor.close_file_finder
 	}
 }

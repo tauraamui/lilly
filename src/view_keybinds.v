@@ -13,7 +13,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 					view.leader_state.f_count += 1
 					if view.leader_state.f_count == 2 {
 						view.escape()
-						root.open_file_finder()
+						root.open_file_finder(mut view.log)
 					}
 				}
 				.b {

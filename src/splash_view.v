@@ -15,6 +15,7 @@
 module main
 
 import math
+import log
 import term { strikethrough }
 import lib.draw
 
@@ -31,6 +32,7 @@ struct SplashScreen {
 pub:
 	file_path string
 mut:
+	log         log.Log
 	logo         Logo
 	leader_state LeaderState
 	leader_key   string
@@ -49,11 +51,12 @@ fn reset_leader_state(mut state LeaderState) {
 	state.b_count = 0
 }
 
-pub fn new_splash(commit_hash string, leader_key string) Viewable {
+pub fn new_splash(mut _log log.Log, commit_hash string, leader_key string) Viewable {
 	assert commit_hash.len > 0
 	assert leader_key.len == 1
 
 	mut splash := SplashScreen{
+		log: _log
 		commit_hash: commit_hash
 		file_path:   '**lss**'
 		logo:        Logo{
@@ -173,7 +176,7 @@ pub fn (mut splash SplashScreen) on_key_down(e draw.Event, mut root Root) {
 				splash.leader_state.f_count += 1
 			}
 			if splash.leader_state.f_count == 2 {
-				root.open_file_finder()
+				root.open_file_finder(mut splash.log)
 				reset_leader_state(mut splash.leader_state)
 			}
 		}
