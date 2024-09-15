@@ -2090,6 +2090,7 @@ fn test_r_replaces_character_in_middle_of_line() {
 	mut editor := Editor{
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
+		inactive_buffer_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
@@ -2122,6 +2123,7 @@ fn test_r_replaces_character_with_special_character() {
 	mut editor := Editor{
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
+		inactive_buffer_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
@@ -2154,6 +2156,7 @@ fn test_r_replaces_character_with_space() {
 	mut editor := Editor{
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
+		inactive_buffer_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
@@ -2186,6 +2189,7 @@ fn test_r_doesnt_change_anything_when_escape_is_used() {
 	mut editor := Editor{
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
+		inactive_buffer_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
@@ -2217,6 +2221,7 @@ fn test_r_doesnt_change_anything_when_enter_is_used() {
 	mut editor := Editor{
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
+		inactive_buffer_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
@@ -2342,6 +2347,7 @@ fn test_auto_closing_square_brace() {
 	mut editor := Editor{
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
+		inactive_buffer_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
@@ -2371,6 +2377,7 @@ fn test_auto_closing_curley_brace() {
 	mut editor := Editor{
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
+		inactive_buffer_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
@@ -2400,6 +2407,7 @@ fn test_auto_closing_curley_brace_inputting_secondary_close_should_only_move_cur
 	mut editor := Editor{
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
+		inactive_buffer_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
@@ -2438,6 +2446,7 @@ fn test_auto_closing_square_brace_inputting_secondary_close_should_only_move_cur
 	mut editor := Editor{
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
+		inactive_buffer_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
