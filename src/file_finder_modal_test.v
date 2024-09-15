@@ -103,6 +103,36 @@ fn test_current_selection_gets_zeros_on_search_term_amend() {
 	assert mock_modal.current_selection == 0
 }
 
+fn test_reorder_file_paths_behaves_as_expected() {
+	mut mock_modal := FileFinderModal{
+		file_path: "**tfm**"
+		file_paths: [
+			'./src/project/main.v',
+			'./src/project/lib/some_utilities.v',
+			"./src/buildfile.sh"
+		]
+	}
+
+	// invoke re-order and since no search term exists the order should remain the same
+	mock_modal.reorder_file_paths()
+
+	assert mock_modal.file_paths == [
+		'./src/project/main.v',
+		'./src/project/lib/some_utilities.v',
+		"./src/buildfile.sh"
+	]
+
+	mock_modal.search.query = "ib/some"
+
+	mock_modal.reorder_file_paths()
+
+	assert mock_modal.file_paths == [
+		'./src/project/lib/some_utilities.v',
+		"./src/buildfile.sh"
+		'./src/project/main.v',
+	]
+}
+
 /*
 fn test_resolve_file_paths_returns_realistic_results() {
 	mut mock_modal := FileFinderModal{
