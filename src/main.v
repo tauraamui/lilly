@@ -86,6 +86,8 @@ mut:
 	capture_panics                   bool
 	long_disable_panic_capture_flag  string
 	short_disable_panic_capture_flag string
+	long_log_level_label_flag        string
+	short_log_level_label_flag       string
 	disable_panic_capture            bool
 }
 
@@ -102,6 +104,8 @@ fn resolve_options_from_args(args []string) Options {
 		short_capture_panics_flag:        'cp'
 		long_disable_panic_capture_flag:  'disable-panic-capture'
 		short_disable_panic_capture_flag: 'dpc'
+		long_log_level_label_flag:        'log-level'
+		short_log_level_label_flag:       'll'
 	}
 
 	opts.show_version = '--${opts.long_show_version_flag}' in flags
@@ -114,6 +118,15 @@ fn resolve_options_from_args(args []string) Options {
 		|| '-${opts.short_capture_panics_flag}' in flags
 	opts.disable_panic_capture = '--${opts.long_disable_panic_capture_flag}' in flags
 		|| '-${opts.short_disable_panic_capture_flag}' in flags
+
+	opts.log_level = "info"
+	if "--${opts.long_log_level_label_flag}" in flags {
+		opts.log_level = cmdline.option(args, "--${opts.long_log_level_label_flag}", "")
+	}
+
+	if "-${opts.short_log_level_label_flag}" in flags {
+		opts.log_level = cmdline.option(args, "-${opts.short_log_level_label_flag}", "")
+	}
 
 	return opts
 }
