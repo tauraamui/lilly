@@ -133,11 +133,6 @@ fn (mut file_finder_modal FileFinderModal) file_selected(mut root Root) {
 	root.open_file(file_paths[file_finder_modal.current_selection]) or { panic('${err}') }
 }
 
-struct ScoredFilePath {
-	content string
-	score   f32
-}
-
 @[inline]
 fn score_value_by_query(query string, value string) f32 {
 	return f32(int(strings.dice_coefficient(query, value) * 1000)) / 1000
