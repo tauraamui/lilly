@@ -2479,3 +2479,20 @@ fn test_auto_closing_square_brace_inputting_secondary_close_should_only_move_cur
 
 	assert fake_view.cursor.pos.x == 2 // ensure cursor is on the far right side of both braces
 }
+
+fn test_search_line_correct_overwrite() {
+	mut fake_view := View{
+		log: unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: clipboard.new()
+	}
+
+	fake_view.search()
+
+	assert fake_view.leader_state.mode == .search
+	assert fake_view.cmd_buf.err_msg == ''
+	assert fake_view.cmd_buf.line == '//'
+	assert fake_view.cmd_buf.cursor_x == 1
+	assert fake_view.search.to_find == '/'
+	assert fake_view.search.cursor_x == 1
+}
