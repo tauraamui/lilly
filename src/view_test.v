@@ -2487,6 +2487,8 @@ fn test_search_line_correct_overwrite() {
 		clipboard: clipboard.new()
 	}
 
+	fake_view.cmd_buf.err_msg = "previously run unrecognised command error message"
+
 	fake_view.search()
 
 	assert fake_view.leader_state.mode == .search
