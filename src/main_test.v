@@ -93,3 +93,18 @@ fn test_resolve_options_from_args_disable_capture_panics_short_flag() {
 	mock_args := ["-dpc"]
 	assert resolve_options_from_args(mock_args).capture_panics == false
 }
+
+fn test_resolve_options_from_args_no_log_level_label_long_flag() {
+	mock_args := []string
+	assert resolve_options_from_args(mock_args).log_level == "info"
+}
+
+fn test_resolve_options_from_args_log_level_label_long_flag() {
+	mock_args := ["--log-level", "debug"]
+	assert resolve_options_from_args(mock_args).log_level == "debug"
+}
+
+fn test_resolve_options_from_args_log_level_label_short_flag() {
+	mock_args := ["-ll", "warn"]
+	assert resolve_options_from_args(mock_args).log_level == "warn"
+}
