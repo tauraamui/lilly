@@ -823,7 +823,8 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
 	line_runes []rune,
-	original_line_runes []rune) {
+	original_line_runes []rune
+) {
 	mut x_offset := 0
 	tab_count := original_line_runes[..selection_start.x].string().count('\t')
 	selection_x_offset := tab_count * 3
@@ -869,7 +870,8 @@ fn draw_text_line_visual_selection_starts_on_same_but_ends_after(mut ctx draw.Co
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
 	line_runes []rune,
-	original_line_runes []rune) {
+	original_line_runes []rune
+) {
 	mut x_offset := 0
 	tab_count := original_line_runes[..selection_start.x].string().count('\t')
 	selection_x_offset := tab_count * 3
@@ -904,7 +906,8 @@ fn draw_text_line_visual_selection_starts_before_but_ends_on_line(mut ctx draw.C
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
 	line_runes []rune,
-	original_line_runes []rune) {
+	original_line_runes []rune
+) {
 	mut x_offset := 0
 	mut sel_end_x := selection_end.x
 	tab_count := original_line_runes[..sel_end_x].string().count('\t')
@@ -939,7 +942,8 @@ fn draw_text_line_as_segments(mut ctx draw.Contextable,
 	syntax workspace.Syntax,
 	screen_space_x int, screen_space_y int,
 	document_space_y int,
-	line string) {
+	line string
+) {
 	segments, _ := resolve_line_segments(syntax, line, screen_space_y, document_space_y,
 		false)
 
