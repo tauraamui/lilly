@@ -1508,6 +1508,9 @@ fn (mut view View) exec_cmd() bool {
 
 fn (mut view View) search() {
 	view.leader_state.mode = .search
+	view.cmd_buf.clear_err()
+	view.cmd_buf.line = "//"
+	view.cmd_buf.cursor_x = 1
 	view.search.prepare_for_input()
 }
 
