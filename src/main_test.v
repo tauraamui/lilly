@@ -1,5 +1,7 @@
 module main
 
+import log
+
 fn wd_resolver() string {
 	return 'test-workspace'
 }
@@ -96,15 +98,20 @@ fn test_resolve_options_from_args_disable_capture_panics_short_flag() {
 
 fn test_resolve_options_from_args_no_log_level_label_long_flag() {
 	mock_args := []string
-	assert resolve_options_from_args(mock_args).log_level == "info"
+	assert resolve_options_from_args(mock_args).log_level == log.Level.disabled
 }
 
 fn test_resolve_options_from_args_log_level_label_long_flag() {
 	mock_args := ["--log-level", "debug"]
-	assert resolve_options_from_args(mock_args).log_level == "debug"
+	assert resolve_options_from_args(mock_args).log_level == log.Level.debug
 }
 
 fn test_resolve_options_from_args_log_level_label_short_flag() {
 	mock_args := ["-ll", "warn"]
-	assert resolve_options_from_args(mock_args).log_level == "warn"
+	assert resolve_options_from_args(mock_args).log_level == log.Level.warn
+}
+
+fn test_resolve_options_from_args_log_level_label_short_flag_with_invalid_level() {
+	mock_args := ["-ll", "smoked-sausage"]
+	assert resolve_options_from_args(mock_args).log_level == log.Level.disabled
 }
