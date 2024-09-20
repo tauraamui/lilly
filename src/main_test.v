@@ -62,6 +62,34 @@ fn test_resolve_options_from_args_debug_mode_short_flag() {
 
 	mock_args := ["-d"]
 	assert resolve_options_from_args(mock_args).debug_mode
-
 }
 
+fn test_resolve_options_from_args_no_capture_panics_flag() {
+	mock_args := []string
+	assert resolve_options_from_args(mock_args).capture_panics == false
+}
+
+fn test_resolve_options_from_args_capture_panics_long_flag() {
+	mock_args := ["--capture-panics"]
+	assert resolve_options_from_args(mock_args).capture_panics == true
+}
+
+fn test_resolve_options_from_args_capture_panics_short_flag() {
+	mock_args := ["-cp"]
+	assert resolve_options_from_args(mock_args).capture_panics == true
+}
+
+fn test_resolve_options_from_args_no_disable_capture_panics_flag() {
+	mock_args := []string
+	assert resolve_options_from_args(mock_args).capture_panics == false
+}
+
+fn test_resolve_options_from_args_disable_capture_panics_long_flag() {
+	mock_args := ["--disable-capture-panics"]
+	assert resolve_options_from_args(mock_args).capture_panics == false
+}
+
+fn test_resolve_options_from_args_disable_capture_panics_short_flag() {
+	mock_args := ["-dpc"]
+	assert resolve_options_from_args(mock_args).capture_panics == false
+}
