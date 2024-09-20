@@ -71,7 +71,7 @@ fn frame(mut app App) {
 
 struct Options {
 mut:
-	log_level                        string
+	log_level                        log.Level
 	long_show_version_flag           string
 	short_show_version_flag          string
 	show_version                     bool
@@ -119,13 +119,13 @@ fn resolve_options_from_args(args []string) Options {
 	opts.disable_panic_capture = '--${opts.long_disable_panic_capture_flag}' in flags
 		|| '-${opts.short_disable_panic_capture_flag}' in flags
 
-	opts.log_level = "info"
+	opts.log_level = .disabled
 	if "--${opts.long_log_level_label_flag}" in flags {
-		opts.log_level = cmdline.option(args, "--${opts.long_log_level_label_flag}", "")
+		opts.log_level = log.level_from_tag(cmdline.option(args, "--${opts.long_log_level_label_flag}", "").to_upper()) or { log.Level.disabled }
 	}
 
 	if "-${opts.short_log_level_label_flag}" in flags {
-		opts.log_level = cmdline.option(args, "-${opts.short_log_level_label_flag}", "")
+		opts.log_level = log.level_from_tag(cmdline.option(args, "-${opts.short_log_level_label_flag}", "").to_upper()) or { log.Level.disabled }
 	}
 
 	return opts
@@ -215,9 +215,11 @@ fn main() {
 		print_and_exit('${err}')
 		unsafe { nil }
 	}
+	/*
 	if opts.debug_mode {
 		app.editor.start_debug()
 	}
+	*/
 
 	run()!
 }
