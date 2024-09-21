@@ -1616,6 +1616,39 @@ fn test_calc_w_move_amount_code_line() {
 	assert fake_line[fake_cursor_pos.x].ascii_str() == '{'
 }
 
+fn test_calc_w_move_cursor_remains_on_same_line_when_encountering_floating_underscore() {
+	// manually set the documents contents
+	fake_lines := [
+		"mut line_segments, _ := resolve_line_segments(resolve_text_syntax(), line, 0, false)",
+		"this is the second line!"
+	]
+
+	fake_lines_str := arrays.join_to_string(fake_lines, '\n', fn (e string) string { return e })
+
+	mut fake_cursor_pos := Pos{ x: 1 }
+
+	mut amount := calc_w_move_amount(fake_cursor_pos, fake_lines_str, false)
+
+	assert amount == 3
+	fake_cursor_pos.x += amount
+	assert fake_lines_str[fake_cursor_pos.x].ascii_str() == "l"
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_lines_str, false)
+	assert amount == 13
+	fake_cursor_pos.x += amount
+	assert fake_lines_str[fake_cursor_pos.x].ascii_str() == ","
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_lines_str, false)
+	assert amount == 2
+	fake_cursor_pos.x += amount
+	assert fake_lines_str[fake_cursor_pos.x].ascii_str() == "_"
+
+	amount = calc_w_move_amount(fake_cursor_pos, fake_lines_str, false)
+	assert amount == 2
+	fake_cursor_pos.x += amount
+	assert fake_lines_str[fake_cursor_pos.x].ascii_str() == ":"
+}
+
 fn test_calc_w_move_cursor_to_next_line_with_plain_comments() {
 	// manually set the documents contents
 	fake_lines := [
