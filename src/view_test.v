@@ -2552,7 +2552,7 @@ fn test_shift_g_goes_to_bottom_of_file_command() {
 	assert fake_view.cursor.pos.y == 2
 }
 
-fn test_r_replaces_character_in_line_command() {
+fn test_shift_r_replaces_character_in_line_command() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log: unsafe { nil }
@@ -2563,10 +2563,15 @@ fn test_r_replaces_character_in_line_command() {
 	fake_view.cursor.pos.x = 2
 	fake_view.cursor.pos.y = 0
 
-	fake_view.r()
+	fake_view.leader_state.mode = .replacing
 	fake_view.replace_char(113, 'q')  // ASCII 113 is 'q'
-
 	assert fake_view.buffer.lines[0] == 'Thq quick brown fox'
+
+	fake_view.replace_char(112, 'p')  // ASCII 113 is 'q'
+	assert fake_view.buffer.lines[0] == 'Thp quick brown fox'
+
+	fake_view.escape()
+	assert fake_view.leader_state.mode == .normal
 }
 
 fn test_shift_l_goes_to_lowest_part_of_view_command() {
