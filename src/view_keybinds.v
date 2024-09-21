@@ -97,7 +97,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				}
 				.r {
 					if e.modifiers == .shift {
-						view.mode = .replacing
+						view.leader_state.mode = .replacing
 					} else {
 						view.r()
 					}
@@ -129,116 +129,6 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				}
 				.f {
 					view.f(e)
-				}
-				.d {
-					if e.modifiers == .ctrl {
-						view.ctrl_d()
-					} else {
-						view.d()
-					}
-				} // TODO(tauraamui): this will need some special attention to implement
-				.u {
-					if e.modifiers == .ctrl {
-						view.ctrl_u()
-					} else {
-						view.u()
-					}
-				}
-				.caret {
-					view.hat()
-				}
-				.dollar {
-					view.dollar()
-				}
-				.left_curly_bracket {
-					view.jump_cursor_up_to_next_blank_line()
-				}
-				.right_curly_bracket {
-					view.jump_cursor_down_to_next_blank_line()
-				}
-				.colon {
-					view.cmd()
-				}
-				.left_square_bracket {
-					view.left_square_bracket()
-				}
-				.right_square_bracket {
-					view.right_square_bracket()
-				}
-				.slash {
-					view.search()
-				}
-				.escape {
-					view.escape()
-				}
-				.h {
-					view.exec(view.chord.h())
-				}
-				.l {
-					view.exec(view.chord.l())
-				}
-				.j {
-					view.exec(view.chord.j())
-				}
-				.k {
-					view.exec(view.chord.k())
-				}
-				.i {
-					view.exec(view.chord.i())
-				}
-				.v {
-					if e.modifiers == .shift {
-						view.shift_v()
-					} else {
-						view.v()
-					}
-				}
-				.e {
-					view.exec(view.chord.e())
-				}
-				.w {
-					view.exec(view.chord.w())
-				}
-				.b {
-					view.exec(view.chord.b())
-				}
-				.o {
-					if e.modifiers == .shift {
-						view.shift_o()
-					} else {
-						view.o()
-					}
-				}
-				.a {
-					if e.modifiers == .shift {
-						view.shift_a()
-					} else {
-						view.a()
-					}
-				}
-				.p {
-					view.exec(view.chord.p())
-				}
-				.r {
-					view.r()
-				} // TODO(tauraamui): request Valentine implements chord usage for this
-				.x {
-					view.x()
-				} // TODO(tauraamui): request Valentine implements chord usage for this
-				.left {
-					view.exec(view.chord.h())
-				}
-				.right {
-					view.exec(view.chord.l())
-				}
-				.down {
-					view.exec(view.chord.j())
-				}
-				.up {
-					view.exec(view.chord.k())
-				}
-				.c {
-					view.exec(view.chord.c())
 				}
 				.d {
 					if e.modifiers == .ctrl {
@@ -623,7 +513,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 					view.replace_char(e.ascii, e.utf8)
 					view.cursor.pos.x += 1
 					view.clamp_cursor_x_pos()
-					if view.mode == .replace {
+					if view.leader_state.mode == .replace {
 						view.escape_replace()
 					}
 				}

@@ -641,7 +641,7 @@ fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
 		set_cursor_to_block(mut ctx)
 	}
 	if view.leader_state.d_count == 1 || view.g_count == 1 || view.f_count == 1 ||
-		view.mode == .replacing || view.leader_state.mode == .replace {
+		view.leader_state.mode == .replacing || view.leader_state.mode == .replace {
 		set_cursor_to_underline(mut ctx)
 	}
 	ctx.set_cursor_position(view.x + 1 + view.calc_cursor_x_offset(),
@@ -1523,7 +1523,7 @@ fn (mut view View) search() {
 
 fn (mut view View) f(e draw.Event) {
 	view.f_count += 1
-	if view.f_count == 1 { view.mode = .pending_f return }
+	if view.f_count == 1 { view.leader_state.mode = .pending_f return }
 	if view.f_count == 2 {
 		cursor_pos := view.cursor.pos.x
 		line := view.buffer.lines[view.cursor.pos.y]
@@ -1541,7 +1541,7 @@ fn (mut view View) f(e draw.Event) {
 		}
 		view.clamp_cursor_within_document_bounds()
 		view.f_count = 0
-		view.mode = .normal
+		view.leader_state.mode = .normal
 		view.escape()
 		return
 	}
@@ -1550,7 +1550,7 @@ fn (mut view View) f(e draw.Event) {
 fn (mut view View) g() {
 	repeat_amount := strconv.atoi(view.chord.pending_repeat_amount()) or { 0 }
 	view.g_count += 1
-	if view.g_count == 1 { view.mode = .pending_g }
+	if view.g_count == 1 { view.leader_state.mode = .pending_g }
 	if view.g_count == 2 {
 		if repeat_amount > 0 {
 			view.jump_cursor_to(repeat_amount - 1)
@@ -1559,7 +1559,7 @@ fn (mut view View) g() {
 			view.jump_cursor_to(0)
 		}
 		view.g_count = 0
-		view.mode = .normal
+		view.leader_state.mode = .normal
 	}
 	view.clamp_cursor_x_pos()
 }
