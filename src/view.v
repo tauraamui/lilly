@@ -1750,11 +1750,11 @@ fn (mut view View) d() {
 
 fn (mut view View) z() {
 	view.z_count += 1
-	if view.z_count == 1 { view.mode = .pending_z }
+	if view.z_count == 1 { view.leader_state.mode = .pending_z }
 	if view.z_count == 2 {
 		view.center_text_around_cursor()
 		view.z_count = 0
-		view.mode = .normal
+		view.leader_state.mode = .normal
 	}
 }
 
