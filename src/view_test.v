@@ -2499,7 +2499,7 @@ fn test_search_line_correct_overwrite() {
 	assert fake_view.search.cursor_x == 1
 }
 
-fn test_f_command() {
+fn test_f_finds_in_current_line_command() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log: unsafe { nil }
@@ -2521,7 +2521,7 @@ fn test_f_command() {
 	assert fake_view.cursor.pos.x == 5
 }
 
-fn test_g_command() {
+fn test_gg_goes_to_top_of_file_command() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log: unsafe { nil }
@@ -2537,7 +2537,7 @@ fn test_g_command() {
 	assert fake_view.cursor.pos.y == 0
 }
 
-fn test_gg_command() {
+fn test_shift_g_goes_to_bottom_of_file_command() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log: unsafe { nil }
@@ -2552,7 +2552,7 @@ fn test_gg_command() {
 	assert fake_view.cursor.pos.y == 2
 }
 
-fn test_r_command() {
+fn test_r_replaces_character_in_line_command() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log: unsafe { nil }
@@ -2567,4 +2567,55 @@ fn test_r_command() {
 	fake_view.replace_char(113, 'q')  // ASCII 113 is 'q'
 
 	assert fake_view.buffer.lines[0] == 'Thq quick brown fox'
+}
+
+fn test_shift_l_goes_to_lowest_part_of_view_command() {
+	mut clip := clipboard.new()
+	mut fake_view := View{
+		log: unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+		height: 10
+	}
+	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5', 'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10']
+	fake_view.from = 0
+	fake_view.to = 10
+
+	fake_view.shift_l()
+
+	assert fake_view.cursor.pos.y == 9
+}
+
+fn test_shift_m_goes_to_middle_part_of_view_command() {
+	mut clip := clipboard.new()
+	mut fake_view := View{
+		log: unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+		height: 10
+	}
+	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5', 'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10']
+	fake_view.from = 0
+	fake_view.to = 10
+
+	fake_view.shift_m()
+
+	assert fake_view.cursor.pos.y == 5
+}
+
+fn test_shift_h_goes_to_highest_part_of_view_command() {
+	mut clip := clipboard.new()
+	mut fake_view := View{
+		log: unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+		height: 10
+	}
+	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5', 'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10']
+	fake_view.from = 0
+	fake_view.to = 10
+
+	fake_view.shift_h()
+
+	assert fake_view.cursor.pos.y == 0
 }
