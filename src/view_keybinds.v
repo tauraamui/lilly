@@ -511,7 +511,6 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				.tab {}
 				else {
 					view.replace_char(e.ascii, e.utf8)
-					view.cursor.pos.x += 1
 					view.clamp_cursor_x_pos()
 					if view.leader_state.mode == .replace {
 						view.escape_replace()
