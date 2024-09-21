@@ -1987,6 +1987,11 @@ enum PositionWithinWord as u8 {
 }
 
 fn is_special(r rune) ?rune {
+	// We have to check for the underscore here because is_non_alpha includes
+	// underscores for large number digit separation!
+	if r == `_` {
+		return r
+	}
 	if !is_whitespace(r) && is_non_alpha(r) && !(r == `\n` || r == `\r`) {
 		return r
 	}
