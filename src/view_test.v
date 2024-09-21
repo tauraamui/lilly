@@ -2498,3 +2498,73 @@ fn test_search_line_correct_overwrite() {
 	assert fake_view.search.to_find == '/'
 	assert fake_view.search.cursor_x == 1
 }
+
+fn test_f_command() {
+	mut clip := clipboard.new()
+	mut fake_view := View{
+		log: unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = ['The quick brown fox jumps over the lazy dog']
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 0
+
+	event := draw.Event{
+		code:  tui.KeyCode.q
+		ascii: 113
+		utf8:  'q'
+	}
+	fake_view.f(event)
+	fake_view.f(event)
+
+	assert fake_view.cursor.pos.x == 5
+}
+
+fn test_g_command() {
+	mut clip := clipboard.new()
+	mut fake_view := View{
+		log: unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3']
+	fake_view.cursor.pos.y = 2
+
+	fake_view.g()
+	fake_view.g()
+
+	assert fake_view.cursor.pos.y == 0
+}
+
+fn test_gg_command() {
+	mut clip := clipboard.new()
+	mut fake_view := View{
+		log: unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3']
+	fake_view.cursor.pos.y = 2
+
+	fake_view.shift_g()
+
+	assert fake_view.cursor.pos.y == 2
+}
+
+fn test_r_command() {
+	mut clip := clipboard.new()
+	mut fake_view := View{
+		log: unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = ['The quick brown fox']
+	fake_view.cursor.pos.x = 2
+	fake_view.cursor.pos.y = 0
+
+	fake_view.r()
+	fake_view.replace_char(113, 'q')  // ASCII 113 is 'q'
+
+	assert fake_view.buffer.lines[0] == 'Thq quick brown fox'
+}
