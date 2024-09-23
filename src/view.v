@@ -1508,6 +1508,9 @@ fn (mut view View) exec_cmd() bool {
 
 fn (mut view View) search() {
 	view.leader_state.mode = .search
+	view.cmd_buf.clear_err()
+	view.cmd_buf.line = "//"
+	view.cmd_buf.cursor_x = 1
 	view.search.prepare_for_input()
 }
 
@@ -1716,6 +1719,23 @@ fn (mut view View) ctrl_u() {
 }
 
 fn (mut view View) hat() {
+	defer { view.clamp_cursor_x_pos() }
+	line := view.buffer.lines[view.cursor.pos.y]
+	if line.len == 0 { return }
+
+	mut pos := 0
+	line_chars := line.runes()
+	for is_whitespace(line_chars[pos]) {
+		pos += 1
+		if !is_whitespace(line_chars[pos]) {
+			view.cursor.pos.x = pos
+			return
+		}
+	}
+	view.cursor.pos.x = pos
+}
+
+fn (mut view View) zero() {
 	view.cursor.pos.x = 0
 }
 
@@ -1984,6 +2004,11 @@ enum PositionWithinWord as u8 {
 }
 
 fn is_special(r rune) ?rune {
+	// We have to check for the underscore here because is_non_alpha includes
+	// underscores for large number digit separation!
+	if r == `_` {
+		return r
+	}
 	if !is_whitespace(r) && is_non_alpha(r) && !(r == `\n` || r == `\r`) {
 		return r
 	}
