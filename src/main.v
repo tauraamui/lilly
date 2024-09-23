@@ -81,6 +81,9 @@ mut:
 	long_debug_mode_flag             string
 	short_debug_mode_flag            string
 	debug_mode                       bool
+	long_render_debug_mode_flag      string
+	short_render_debug_mode_flag     string
+	render_debug_mode                bool
 	long_capture_panics_flag         string
 	short_capture_panics_flag        string
 	capture_panics                   bool
@@ -100,6 +103,8 @@ fn resolve_options_from_args(args []string) Options {
 		short_show_help_flag:             'h'
 		long_debug_mode_flag:             'debug'
 		short_debug_mode_flag:            'd'
+		long_render_debug_mode_flag:      'debug'
+		short_render_debug_mode_flag:     'd'
 		long_capture_panics_flag:         'capture-panics'
 		short_capture_panics_flag:        'cp'
 		long_disable_panic_capture_flag:  'disable-panic-capture'
@@ -114,6 +119,8 @@ fn resolve_options_from_args(args []string) Options {
 		|| '-${opts.short_show_help_flag}' in flags
 	opts.debug_mode = '--${opts.long_debug_mode_flag}' in flags
 		|| '-${opts.short_debug_mode_flag}' in flags
+	opts.render_debug_mode = '--${opts.long_render_debug_mode_flag}' in flags
+		|| '-${opts.short_render_debug_mode_flag}' in flags
 	opts.capture_panics = '--${opts.long_capture_panics_flag}' in flags
 		|| '-${opts.short_capture_panics_flag}' in flags
 	opts.disable_panic_capture = '--${opts.long_disable_panic_capture_flag}' in flags
@@ -136,6 +143,7 @@ fn (opts Options) flags_str() string {
 	sb.write_string('-${opts.short_show_help_flag}, --${opts.long_show_help_flag} (show help)')
 	sb.write_string('\n\t-${opts.short_show_version_flag}, --${opts.long_show_version_flag} (show version)')
 	sb.write_string('\n\t-${opts.short_debug_mode_flag}, --${opts.long_debug_mode_flag} (enable debug log out)')
+	sb.write_string('\n\t-${opts.short_render_debug_mode_flag}, --${opts.long_render_debug_mode_flag} (enable render debug mode)')
 	sb.write_string('\n\t-${opts.short_disable_panic_capture_flag}, --${opts.long_disable_panic_capture_flag} (disable persistance of panic stack trace output)')
 	sb.write_string('\n\t-${opts.short_log_level_label_flag}, --${opts.long_log_level_label_flag} [disabled | fatal | error | warn | info | debug] (set the minimum log level to output from)')
 	return sb.str()
@@ -202,6 +210,7 @@ fn main() {
 	}
 
 	ctx, run := draw.new_context(
+		render_debug:         opts.render_debug_mode
 		user_data:            app
 		event_fn:             event
 		frame_fn:             frame
