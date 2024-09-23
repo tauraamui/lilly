@@ -2532,6 +2532,58 @@ fn test_search_line_correct_overwrite() {
 	assert fake_view.search.cursor_x == 1
 }
 
+fn test_center_text_around_cursor() {
+    mut clip := clipboard.new()
+    mut fake_view := View{
+        log: unsafe { nil }
+        leader_state: ViewLeaderState{ mode: .normal }
+        clipboard: mut clip
+        height: 10 // Set a small height for testing
+    }
+
+    // Create a document with more lines than the view height
+    fake_view.buffer.lines = [
+        'Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5',
+        'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10',
+        'Line 11', 'Line 12', 'Line 13', 'Line 14', 'Line 15'
+    ]
+
+    // Set initial view bounds
+    fake_view.from = 0
+    fake_view.to = 10
+
+    // Set cursor to Line 8
+    fake_view.cursor.pos.y = 7
+    mut original_cursor_pos := fake_view.cursor.pos.y
+
+    // Call the center_text_around_cursor function
+    fake_view.center_text_around_cursor()
+
+    // Check if the cursor position remains unchanged
+    assert fake_view.cursor.pos.y == original_cursor_pos
+
+    // Check if the view is centered correctly
+	// The '+2' is to account for the extra lines in the total
+	// height of the view, used so we don't run off the bottom
+	// of the view
+    assert fake_view.from <= original_cursor_pos
+    assert fake_view.to > original_cursor_pos
+    assert (fake_view.to - fake_view.from)+2 == fake_view.height
+
+    // Move cursor to the end and test again
+    fake_view.cursor.pos.y = 14
+    original_cursor_pos = fake_view.cursor.pos.y
+    fake_view.center_text_around_cursor()
+
+    // Check if the cursor position remains unchanged
+    assert fake_view.cursor.pos.y == original_cursor_pos
+
+    // Check if the view is adjusted for the end of the document
+	// The '+5' is to account for the extra lines in the total
+    assert fake_view.from <= original_cursor_pos
+    assert fake_view.to+5 == fake_view.buffer.lines.len
+}
+
 fn test_zero_key_handling() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
