@@ -133,10 +133,11 @@ fn resolve_options_from_args(args []string) Options {
 
 fn (opts Options) flags_str() string {
 	mut sb := strings.new_builder(512)
-	sb.write_string('--${opts.long_show_help_flag} (show help)')
-	sb.write_string('\n\t--${opts.long_show_version_flag} (show version)')
-	sb.write_string('\n\t--${opts.long_debug_mode_flag} (enable debug log out)')
-	sb.write_string('\n\t--${opts.long_disable_panic_capture_flag} (disable persistance of panic stack trace output)')
+	sb.write_string('-${opts.short_show_help_flag}, --${opts.long_show_help_flag} (show help)')
+	sb.write_string('\n\t-${opts.short_show_version_flag}, --${opts.long_show_version_flag} (show version)')
+	sb.write_string('\n\t-${opts.short_debug_mode_flag}, --${opts.long_debug_mode_flag} (enable debug log out)')
+	sb.write_string('\n\t-${opts.short_disable_panic_capture_flag}, --${opts.long_disable_panic_capture_flag} (disable persistance of panic stack trace output)')
+	sb.write_string('\n\t-${opts.short_log_level_label_flag}, --${opts.long_log_level_label_flag} [disabled | fatal | error | warn | info | debug] (set the minimum log level to output from)')
 	return sb.str()
 }
 
@@ -173,6 +174,7 @@ fn main() {
 
 	// NOTE(tauraamui): I would like it to be possible to output both the
 	//                  version and help simultaniously but this is low priority atm.
+	// 20/Sep/2024 -> future me here, I have no idea what I was on about, like why?
 	if opts.show_version {
 		output_version_and_close(gitcommit_hash)
 	}
@@ -185,11 +187,13 @@ fn main() {
 	}
 
 	mut l := log.Log{}
-	l.set_level(.debug)
-	l.set_full_logpath('./debug.log')
-	defer {
-		l.flush()
-		l.close()
+	l.set_level(opts.log_level)
+	if opts.log_level != .disabled {
+		l.set_full_logpath('./debug.log')
+		defer {
+			l.flush()
+			l.close()
+		}
 	}
 
 	mut app := &App{
@@ -215,11 +219,10 @@ fn main() {
 		print_and_exit('${err}')
 		unsafe { nil }
 	}
-	/*
+
 	if opts.debug_mode {
 		app.editor.start_debug()
 	}
-	*/
 
 	run()!
 }
