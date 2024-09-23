@@ -1720,6 +1720,23 @@ fn (mut view View) ctrl_u() {
 }
 
 fn (mut view View) hat() {
+	defer { view.clamp_cursor_x_pos() }
+	line := view.buffer.lines[view.cursor.pos.y]
+	if line.len == 0 { return }
+
+	mut pos := 0
+	line_chars := line.runes()
+	for is_whitespace(line_chars[pos]) {
+		pos += 1
+		if !is_whitespace(line_chars[pos]) {
+			view.cursor.pos.x = pos
+			return
+		}
+	}
+	view.cursor.pos.x = pos
+}
+
+fn (mut view View) zero() {
 	view.cursor.pos.x = 0
 }
 

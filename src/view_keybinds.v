@@ -143,7 +143,10 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				.slash {
 					view.search()
 				}
-				48...57 { // 0-9a
+				48...48 {
+					view.zero()	
+				}
+				49...57 { // 0-9a
 					view.chord.append_to_repeat_amount(e.ascii.ascii_str())
 				}
 				else {}
