@@ -26,10 +26,11 @@ pub:
 	@[required]
 	close_fn   ?fn()
 mut:
-	current_selection int
-	from              int
-	search            FileSearch
-	file_paths        []string
+	debug_list_entry_scores []int
+	current_selection       int
+	from                    int
+	search                  FileSearch
+	file_paths              []string
 }
 
 struct FileSearch {
