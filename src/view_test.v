@@ -2531,3 +2531,34 @@ fn test_search_line_correct_overwrite() {
 	assert fake_view.search.to_find == '/'
 	assert fake_view.search.cursor_x == 1
 }
+
+fn test_zero_key_handling() {
+	mut clip := clipboard.new()
+	mut fake_view := View{
+		log: unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.lines = ['    This is a test line', 'Another line']
+
+	// Set cursor to middle of first line
+	fake_view.cursor.pos.x = 10
+	fake_view.cursor.pos.y = 0
+
+	// Simulate '0' key press
+	fake_view.zero()
+	
+	// Verify cursor moved to start of line
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 0
+
+	// Test that other number keys still append to chord repeat amount
+	fake_view.chord.append_to_repeat_amount('5')
+	assert fake_view.chord.pending_repeat_amount() == '5'
+
+	// Ensure '0' doesn't append to repeat amount when it's the first number
+	fake_view.chord.reset()
+	fake_view.zero()
+	assert fake_view.chord.pending_repeat_amount() == ''
+}
