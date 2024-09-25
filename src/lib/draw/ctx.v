@@ -48,6 +48,7 @@ pub interface Renderer {
 pub interface Contextable {
 	Renderer
 mut:
+	render_debug() bool
 	rate_limit_draws() bool
 	window_width() int
 	window_height() int
