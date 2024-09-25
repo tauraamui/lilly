@@ -412,6 +412,8 @@ mut:
 	on_draw_cb fn (x int, y int, text string)
 }
 
+fn (mockctx MockContextable) render_debug() bool { return false }
+
 fn (mockctx MockContextable) rate_limit_draws() bool {
 	return false
 }
@@ -2600,7 +2602,7 @@ fn test_zero_key_handling() {
 
 	// Simulate '0' key press
 	fake_view.zero()
-	
+
 	// Verify cursor moved to start of line
 	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 0

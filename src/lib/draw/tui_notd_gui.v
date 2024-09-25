@@ -3,6 +3,7 @@ module draw
 import term.ui as tui
 
 struct Context {
+	render_debug bool
 mut:
 	ref &tui.Context
 }
@@ -11,6 +12,7 @@ type Runner = fn () !
 
 pub fn new_context(cfg Config) (&Contextable, Runner) {
 	ctx := Context{
+		render_debug: cfg.render_debug
 		ref: tui.init(
 			user_data: cfg.user_data
 			event_fn:  fn [cfg] (e &tui.Event, app voidptr) {
@@ -27,6 +29,8 @@ pub fn new_context(cfg Config) (&Contextable, Runner) {
 fn (mut ctx Context) rate_limit_draws() bool {
 	return true
 }
+
+fn (mut ctx Context) render_debug() bool { return ctx.render_debug }
 
 fn (mut ctx Context) window_width() int {
 	return ctx.ref.window_width

@@ -8,9 +8,10 @@ pub struct Event {
 
 pub struct Config {
 pub:
-	user_data voidptr
-	frame_fn  fn (voidptr)        @[required]
-	event_fn  fn (Event, voidptr) @[required]
+	render_debug bool
+	user_data    voidptr
+	frame_fn     fn (voidptr)        @[required]
+	event_fn     fn (Event, voidptr) @[required]
 
 	capture_events       bool
 	use_alternate_buffer bool = true
@@ -47,6 +48,7 @@ pub interface Renderer {
 pub interface Contextable {
 	Renderer
 mut:
+	render_debug() bool
 	rate_limit_draws() bool
 	window_width() int
 	window_height() int

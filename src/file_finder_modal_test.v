@@ -25,6 +25,7 @@ fn (mut drawer TestDrawer) draw_point(x int, y int) {
 	time.sleep(1 * time.millisecond)
 }
 
+fn (mut drawer TestDrawer) render_debug() bool { return false }
 fn (mut drawer TestDrawer) set_color(c draw.Color) {}
 fn (mut drawer TestDrawer) set_bg_color(c draw.Color) {}
 fn (mut drawer TestDrawer) reset_color() {}
