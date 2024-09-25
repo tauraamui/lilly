@@ -64,7 +64,8 @@ fn (mut file_finder_modal FileFinderModal) draw(mut ctx draw.Contextable) {
 	ctx.set_color(r: 245, g: 245, b: 245)
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
 	mut y_offset := 1
-	ctx.draw_text(1, y_offset, "=== ${file_finder_modal.title} ===")
+	debug_mode_str := if ctx.render_debug() { " *** RENDER DEBUG MODE ***" } else { "" }
+	ctx.draw_text(1, y_offset, "=== ${debug_mode_str} ${file_finder_modal.title} ${debug_mode_str} ===")
 	y_offset += 1
 	ctx.set_cursor_position(1, y_offset + file_finder_modal.current_selection - file_finder_modal.from)
 	y_offset += file_finder_modal.draw_scrollable_list(mut ctx, y_offset, file_finder_modal.file_paths)
