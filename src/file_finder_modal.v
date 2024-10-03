@@ -141,21 +141,6 @@ fn score_value_by_query(query string, value string) f32 {
 	return f32(int(strings.dice_coefficient(query, value) * 1000)) / 1000
 }
 
-/*
-fn (file_finder_modal FileFinderModal) resolve_file_paths() []ScoredFilePath {
-	mut scored_paths := file_finder_modal.file_paths.map(ScoredFilePath{
-		content: it
-		score:   f32(int(strings.dice_coefficient(file_finder_modal.search.query, it) * 1000)) / 1000
-	})
-	if file_finder_modal.search.query.len == 0 {
-		return scored_paths
-	}
-
-	scored_paths.sort(a.score > b.score)
-	return scored_paths
-}
-*/
-
 fn (mut file_finder_modal FileFinderModal) reorder_file_paths() {
 	query := file_finder_modal.search.query
 	file_finder_modal.file_paths.sort_with_compare(fn [query] (a &string, b &string) int {
