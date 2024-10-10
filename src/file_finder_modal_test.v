@@ -54,19 +54,18 @@ fn test_direct_sort_with_compare_on_array() {
 		"./v.mod",
 		"./README.md",
 		"./debug.log",
-		"./experiment/RobotoMono-Regular.ttf",
+		"./experiment/more-length/RobotoMono-Regular.ttf",
 		"./docs/lilly-banner.png",
 		"./experiment/main.v",
-		"./cheese.dSYM/Contents/Resources/DWARF/lilly"
-		// "./lilly.dSYM/Contents/Resources/DWARF/lilly"
+		"./lilly.dSYM/Contents/Resources/DWARF/lilly"
 	]
 
 	broken_file_paths.sort_with_compare(fn [query] (a &string, b &string) int {
 		a_score := score_value_by_query(query, a)
 		b_score := score_value_by_query(query, b)
-		if a_score < b_score { return 1   }
-		if b_score > a_score { return - 1 }
-		return 0
+		if b_score > a_score { return 1   }
+		if a_score == b_score { return 0 }
+		return -1
 	})
 
 	assert broken_file_paths[0] == "./docs/lilly-banner.png"
@@ -77,15 +76,18 @@ fn test_direct_sort_with_compare_on_array() {
 		'./src/project/lib/some_utilities.v',
 		'./src/project/LIB/META.v',
 		'./src/project/lib/database/connection.v',
-		"./lilly.dSYM/Contents/Resources/DWARF/lilly"
+		"./lilly.dSYM/Contents/Resources/DWARF/lilly",
+		"efijwifweifewf",
+		"somethingelse",
+		"onelastthing"
 	]
 
 	working_file_paths.sort_with_compare(fn [query] (a &string, b &string) int {
 		a_score := score_value_by_query(query, a)
 		b_score := score_value_by_query(query, b)
-		if a_score < b_score { return 1   }
-		if b_score > a_score { return - 1 }
-		return 0
+		if b_score > a_score { return 1   }
+		if a_score == b_score { return 0 }
+		return -1
 	})
 
 	assert working_file_paths[0] == "./src/project/lib/some_utilities.v"
