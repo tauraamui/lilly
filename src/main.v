@@ -221,8 +221,6 @@ fn main() {
 	)
 	app.ui = ctx
 
-	args.delete(args.index("debug"))
-
 	file_path, workspace_path := resolve_file_and_workspace_dir_paths(cmdline.only_non_options(args),
 		os.getwd) or {
 		print_and_exit('${err}')
