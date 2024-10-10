@@ -46,6 +46,30 @@ fn test_scoring_by_query() {
 	assert score_a < score_b
 }
 
+fn test_direct_sort_with_compare_on_array() {
+	query := "DWARF"
+	file_paths := [
+		"./LICENSE",
+		"./v.mod",
+		"./docs/lilly-banner.png",
+		"./README.md",
+		"./debug.log",
+		"./experiment/RobotoMono-Regular.ttf",
+		"./experiment/main.v",
+		"./lilly.dSYM/Contents/Resources/DWARF/lilly"
+	]
+
+	file_paths.sort_with_compare(fn [query] (a &string, b &string) int {
+		a_score := score_value_by_query(query, a)
+		b_score := score_value_by_query(query, b)
+		if a_score < b_score { return 1   }
+		if b_score > a_score { return - 1 }
+		return 0
+	})
+
+	assert file_paths == []
+}
+
 fn test_on_search_term_adjust_list_order_changes() {
 	mut drawn_text := []string{}
 	mut ref := &drawn_text
