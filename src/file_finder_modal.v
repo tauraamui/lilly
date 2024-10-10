@@ -170,10 +170,9 @@ fn (mut file_finder_modal FileFinderModal) reorder_file_paths() {
 	file_finder_modal.file_paths.sort_with_compare(fn [query, mut logger] (a &string, b &string) int {
 		a_score := score_value_by_query(query, a)
 		b_score := score_value_by_query(query, b)
-		logger.debug("QUERY: ${query}, A: ${a}, B: ${b}, A SCORE: ${a_score}, B SCORE: ${b_score}")
-		if a_score < b_score { return 1   }
-		if b_score > a_score { return - 1 }
-		return 0
+		if b_score > a_score { return 1   }
+		if a_score == b_score { return 0 }
+		return -1
 	})
 }
 
