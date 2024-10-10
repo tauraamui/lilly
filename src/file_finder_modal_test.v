@@ -39,6 +39,13 @@ fn (mut drawer TestDrawer) reset() {}
 fn (mut drawer TestDrawer) clear() {}
 fn (mut drawer TestDrawer) flush() {}
 
+fn test_scoring_by_query() {
+	score_a := score_value_by_query("filefinderpath", "/lilly/src/src.dsym/contents/resources/dwarf/src")
+	score_b := score_value_by_query("filefinderpath", "/lilly/src/file_finder_modal_test.v")
+
+	assert score_a < score_b
+}
+
 fn test_on_search_term_adjust_list_order_changes() {
 	mut drawn_text := []string{}
 	mut ref := &drawn_text

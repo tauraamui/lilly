@@ -23,6 +23,7 @@ import lib.draw
 @[heap]
 struct Editor {
 mut:
+	log                               log.Log
 	clipboard                         clipboard.Clipboard
 	view                              &Viewable = unsafe { nil }
 	debug_view                        bool
@@ -47,6 +48,7 @@ mut:
 
 pub fn open_editor(mut _log log.Log, _clipboard clipboard.Clipboard, commit_hash string, file_path string, workspace_root_dir string) !&Editor {
 	mut editor := Editor{
+		log: _log
 		clipboard:         _clipboard
 		file_finder_modal: unsafe { nil }
 		inactive_buffer_finder_modal: unsafe { nil }
@@ -110,6 +112,7 @@ fn (mut editor Editor) open_file_finder() {
 	if editor.inactive_buffer_finder_modal_open { return }
 	editor.file_finder_modal_open = true
 	editor.file_finder_modal = FileFinderModal{
+		log:    editor.log
 		title: "FILE BROWSER"
 		file_path:  '**lff**'
 		file_paths: editor.workspace.files()
@@ -125,6 +128,7 @@ fn (mut editor Editor) open_inactive_buffer_finder() {
 	if editor.file_finder_modal_open { return }
 	editor.inactive_buffer_finder_modal_open = true
 	editor.inactive_buffer_finder_modal = FileFinderModal{
+		log: editor.log
 		title: "INACTIVE BUFFERS"
 		file_path:  '**lfb**'
 		file_paths: editor.views.filter(it != editor.view && !it.file_path.starts_with("**")).map(it.file_path)

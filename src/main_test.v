@@ -1,6 +1,7 @@
 module main
 
 import log
+import os.cmdline
 
 fn wd_resolver() string {
 	return 'test-workspace'
@@ -16,6 +17,11 @@ fn test_resolve_file_and_workspace_dir_paths() {
 	], wd_resolver)!
 	assert file_path == './random-dir/test-file.txt'
 	assert workspace_path == './random-dir'
+}
+
+fn test_resolve_file_path_from_args_with_opts() {
+	mock_args := ["-ll", "debug", "-rd", "."]
+	assert cmdline.only_non_options(mock_args) == []
 }
 
 fn test_resolve_options_from_args_no_show_version_flag() {

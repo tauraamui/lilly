@@ -15,11 +15,13 @@
 module main
 
 import strings
+import log
 import lib.draw
 
 const max_height = 20
 
 struct FileFinderModal {
+	log log.Log
 pub:
 	title      string
 	file_path  string
@@ -89,6 +91,11 @@ fn (mut file_finder_modal FileFinderModal) draw_scrollable_list(mut ctx draw.Con
 				y_offset + (i - file_finder_modal.from))
 		}
 		ctx.draw_text(1, y_offset + (i - file_finder_modal.from), list[i])
+		if ctx.render_debug() {
+			file_path_visable_len := utf8_str_visible_length(list[i])
+			ctx.set_bg_color(r: 200, g: 100, b: 100)
+			ctx.draw_text(2 + file_path_visable_len, y_offset + (i - file_finder_modal.from), "${score_value_by_query(file_finder_modal.search.query, list[i])}")
+		}
 	}
 	return y_offset + (max_height - 2)
 }
@@ -159,10 +166,13 @@ fn (file_finder_modal FileFinderModal) resolve_file_paths() []ScoredFilePath {
 
 fn (mut file_finder_modal FileFinderModal) reorder_file_paths() {
 	query := file_finder_modal.search.query
-	file_finder_modal.file_paths.sort_with_compare(fn [query] (a &string, b &string) int {
+	mut logger := file_finder_modal.log
+	logger.debug("THING")
+	file_finder_modal.file_paths.sort_with_compare(fn [query, mut logger] (a &string, b &string) int {
 		a_score := score_value_by_query(query, a)
 		b_score := score_value_by_query(query, b)
-		if a_score < b_score { return 1}
+		logger.debug("QUERY: ${query}, A: ${a}, B: ${b}, A SCORE: ${a_score}, B SCORE: ${b_score}")
+		if a_score < b_score { return 1   }
 		if b_score > a_score { return - 1 }
 		return 0
 	})
