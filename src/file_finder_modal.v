@@ -166,8 +166,7 @@ fn (file_finder_modal FileFinderModal) resolve_file_paths() []ScoredFilePath {
 
 fn (mut file_finder_modal FileFinderModal) reorder_file_paths() {
 	query := file_finder_modal.search.query
-	mut logger := file_finder_modal.log
-	file_finder_modal.file_paths.sort_with_compare(fn [query, mut logger] (a &string, b &string) int {
+	file_finder_modal.file_paths.sort_with_compare(fn [query] (a &string, b &string) int {
 		a_score := score_value_by_query(query, a)
 		b_score := score_value_by_query(query, b)
 		if b_score > a_score { return 1   }
