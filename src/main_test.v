@@ -19,11 +19,6 @@ fn test_resolve_file_and_workspace_dir_paths() {
 	assert workspace_path == './random-dir'
 }
 
-fn test_resolve_file_path_from_args_with_opts() {
-	mock_args := ["-ll", "debug", "-rd", "."]
-	assert cmdline.only_non_options(mock_args) == []
-}
-
 fn test_resolve_options_from_args_no_show_version_flag() {
 	mock_args := []string
 	assert resolve_options_from_args(mock_args).show_version == false

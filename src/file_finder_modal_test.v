@@ -49,7 +49,7 @@ fn test_scoring_by_query() {
 @[assert_continues]
 fn test_direct_sort_with_compare_on_array() {
 	mut query := "lillybanner"
-	broken_file_paths := [
+	mut broken_file_paths := [
 		"./LICENSE",
 		"./v.mod",
 		"./README.md",
@@ -71,7 +71,7 @@ fn test_direct_sort_with_compare_on_array() {
 	assert broken_file_paths[0] == "./docs/lilly-banner.png"
 
 	query = "utili"
-	working_file_paths := [
+	mut working_file_paths := [
 		'./src/project/main.v',
 		'./src/project/lib/some_utilities.v',
 		'./src/project/LIB/META.v',

@@ -179,7 +179,7 @@ fn resolve_file_and_workspace_dir_paths(args []string, resolve_wd WDResolver) !(
 }
 
 fn main() {
-	mut args := os.args[1..]
+	mut args := os.args[1..].clone()
 	opts := resolve_options_from_args(args)
 
 	// NOTE(tauraamui): I would like it to be possible to output both the
