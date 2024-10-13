@@ -39,6 +39,60 @@ fn (mut drawer TestDrawer) reset() {}
 fn (mut drawer TestDrawer) clear() {}
 fn (mut drawer TestDrawer) flush() {}
 
+fn test_scoring_by_query() {
+	score_a := score_value_by_query("filefinderpath", "/lilly/src/src.dsym/contents/resources/dwarf/src")
+	score_b := score_value_by_query("filefinderpath", "/lilly/src/file_finder_modal_test.v")
+
+	assert score_a < score_b
+}
+
+@[assert_continues]
+fn test_direct_sort_with_compare_on_array() {
+	mut query := "lillybanner"
+	mut broken_file_paths := [
+		"./LICENSE",
+		"./v.mod",
+		"./README.md",
+		"./debug.log",
+		"./experiment/more-length/RobotoMono-Regular.ttf",
+		"./docs/lilly-banner.png",
+		"./experiment/main.v",
+		"./lilly.dSYM/Contents/Resources/DWARF/lilly"
+	]
+
+	broken_file_paths.sort_with_compare(fn [query] (a &string, b &string) int {
+		a_score := score_value_by_query(query, a)
+		b_score := score_value_by_query(query, b)
+		if b_score > a_score { return 1   }
+		if a_score == b_score { return 0 }
+		return -1
+	})
+
+	assert broken_file_paths[0] == "./docs/lilly-banner.png"
+
+	query = "utili"
+	mut working_file_paths := [
+		'./src/project/main.v',
+		'./src/project/lib/some_utilities.v',
+		'./src/project/LIB/META.v',
+		'./src/project/lib/database/connection.v',
+		"./lilly.dSYM/Contents/Resources/DWARF/lilly",
+		"efijwifweifewf",
+		"somethingelse",
+		"onelastthing"
+	]
+
+	working_file_paths.sort_with_compare(fn [query] (a &string, b &string) int {
+		a_score := score_value_by_query(query, a)
+		b_score := score_value_by_query(query, b)
+		if b_score > a_score { return 1   }
+		if a_score == b_score { return 0 }
+		return -1
+	})
+
+	assert working_file_paths[0] == "./src/project/lib/some_utilities.v"
+}
+
 fn test_on_search_term_adjust_list_order_changes() {
 	mut drawn_text := []string{}
 	mut ref := &drawn_text

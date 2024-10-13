@@ -1,6 +1,7 @@
 module main
 
 import log
+import os.cmdline
 
 fn wd_resolver() string {
 	return 'test-workspace'

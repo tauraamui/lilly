@@ -128,11 +128,13 @@ fn resolve_options_from_args(args []string) Options {
 
 	opts.log_level = .disabled
 	if "--${opts.long_log_level_label_flag}" in flags {
-		opts.log_level = log.level_from_tag(cmdline.option(args, "--${opts.long_log_level_label_flag}", "").to_upper()) or { log.Level.disabled }
+		log_level_option := cmdline.option(args, "--${opts.long_log_level_label_flag}", "").to_upper()
+		opts.log_level = log.level_from_tag(log_level_option) or { log.Level.disabled }
 	}
 
 	if "-${opts.short_log_level_label_flag}" in flags {
-		opts.log_level = log.level_from_tag(cmdline.option(args, "-${opts.short_log_level_label_flag}", "").to_upper()) or { log.Level.disabled }
+		log_level_option := cmdline.option(args, "-${opts.short_log_level_label_flag}", "").to_upper()
+		opts.log_level = log.level_from_tag(log_level_option) or { log.Level.disabled }
 	}
 
 	return opts
@@ -177,7 +179,7 @@ fn resolve_file_and_workspace_dir_paths(args []string, resolve_wd WDResolver) !(
 }
 
 fn main() {
-	args := os.args[1..]
+	mut args := os.args[1..].clone()
 	opts := resolve_options_from_args(args)
 
 	// NOTE(tauraamui): I would like it to be possible to output both the
