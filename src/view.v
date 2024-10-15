@@ -143,7 +143,7 @@ const auto_pairs = {
 	"'": "'"
 }
 
-struct ViewLeaderState {
+struct PendingCountStates {
 mut:
 	mode    Mode
 	d_count int
@@ -151,7 +151,7 @@ mut:
 	b_count int
 }
 
-fn (mut state ViewLeaderState) reset() {
+fn (mut state PendingCountStates) reset() {
 	state.mode = .normal
 	state.d_count = 0
 	state.f_count = 0
@@ -166,7 +166,7 @@ mut:
 	path                      string
 	branch                    string
 	config                    workspace.Config
-	leader_state              ViewLeaderState
+	pending_count_state       PendingCountStates
 	buffer                    buffer.Buffer
 	leader_key                string
 	cursor                    Cursor
@@ -516,16 +516,16 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 
 fn open_view(config workspace.Config, branch string, syntaxes []workspace.Syntax, _clipboard clipboard.Clipboard, mut buff buffer.Buffer) Viewable {
 	mut res := View{
-		log:             unsafe { nil }
-		branch:          branch
-		syntaxes:        syntaxes
-		file_path:       buff.file_path
-		config:          config
-		leader_key:      config.leader_key
-		leader_state:     ViewLeaderState{ mode: .normal }
-		show_whitespace: false
-		clipboard:       _clipboard
-		buffer:          buff
+		log:                 unsafe { nil }
+		branch:              branch
+		syntaxes:            syntaxes
+		file_path:           buff.file_path
+		config:              config
+		leader_key:          config.leader_key
+		pending_count_state: PendingCountState{ mode: .normal }
+		show_whitespace:     false
+		clipboard:           _clipboard
+		buffer:              buff
 	}
 	res.path = res.buffer.file_path
 	res.set_current_syntax_idx(os.file_ext(res.path))

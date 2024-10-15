@@ -19,10 +19,16 @@ import log
 import lib.draw
 
 const max_height = 20
+enum FileFinderId as u8 {
+	search_all_files
+	search_open_buffers
+}
+
 
 struct FileFinderModal {
 	log log.Log
 pub:
+	id         FileFinderId
 	title      string
 	file_path  string
 	@[required]

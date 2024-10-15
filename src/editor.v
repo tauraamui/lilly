@@ -30,9 +30,9 @@ mut:
 	views                             []Viewable
 	buffers                           []buffer.Buffer
 	file_finder_modal_open            bool
-	file_finder_modal                 Viewable
+	file_finder_modal                 &FileFinderModal = unsafe { nil }
 	inactive_buffer_finder_modal_open bool
-	inactive_buffer_finder_modal      Viewable
+	inactive_buffer_finder_modal      &FileFinderModal = unsafe { nil }
 	workspace                         workspace.Workspace
 	syntaxes                          []workspace.Syntax
 }
@@ -111,12 +111,13 @@ fn (mut editor Editor) open_file(path string) ! {
 fn (mut editor Editor) open_file_finder() {
 	if editor.inactive_buffer_finder_modal_open { return }
 	editor.file_finder_modal_open = true
-	editor.file_finder_modal = FileFinderModal{
-		log:    editor.log
-		title: "FILE BROWSER"
-		file_path:  '**lff**'
+	editor.file_finder_modal = &FileFinderModal{
+		id:         FileFinderId.search_all_files
+		log:        editor.log
+		file_path:  ""
+		title:      "FILE BROWSER"
 		file_paths: editor.workspace.files()
-		close_fn: editor.close_file_finder
+		close_fn:   editor.close_file_finder
 	}
 }
 
@@ -127,12 +128,13 @@ fn (mut editor Editor) close_file_finder() {
 fn (mut editor Editor) open_inactive_buffer_finder() {
 	if editor.file_finder_modal_open { return }
 	editor.inactive_buffer_finder_modal_open = true
-	editor.inactive_buffer_finder_modal = FileFinderModal{
-		log: editor.log
-		title: "INACTIVE BUFFERS"
-		file_path:  '**lfb**'
-		file_paths: editor.views.filter(it != editor.view && !it.file_path.starts_with("**")).map(it.file_path)
-		close_fn: editor.close_inactive_buffer_finder
+	editor.inactive_buffer_finder_modal = &FileFinderModal{
+		id:         FileFinderId.search_open_buffers
+		log:        editor.log
+		file_path:  ""
+		title:      "INACTIVE BUFFERS"
+		file_paths: editor.views.filter(!it.file_path.starts_with("**")).map(it.file_path)
+		close_fn:   editor.close_inactive_buffer_finder
 	}
 }
 
