@@ -3,22 +3,22 @@ module main
 import lib.draw
 
 fn (mut view View) on_key_down(e draw.Event, mut root Root) {
-	match view.leader_state.mode {
+	match view.pending_count_state.mode {
 		.leader {
 			match e.code {
 				.escape {
 					view.escape()
 				}
 				.f {
-					view.leader_state.f_count += 1
-					if view.leader_state.f_count == 2 {
+					view.pending_count_state.f_count += 1
+					if view.pending_count_state.f_count == 2 {
 						view.escape()
 						root.open_file_finder()
 					}
 				}
 				.b {
-					view.leader_state.b_count += 1
-					if view.leader_state.f_count == 1 && view.leader_state.b_count == 1 {
+					view.pending_count_state.b_count += 1
+					if view.pending_count_state.f_count == 1 && view.pending_count_state.b_count == 1 {
 						view.escape()
 						root.open_inactive_buffer_finder()
 					}
@@ -28,7 +28,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 		}
 		.normal {
 			match e.utf8 {
-				view.leader_key { view.leader_state.mode = .leader }
+				view.leader_key { view.pending_count_state.mode = .leader }
 				else {}
 			}
 			match e.code {
@@ -144,7 +144,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 					view.search()
 				}
 				48...48 {
-					view.zero()	
+					view.zero()
 				}
 				49...57 { // 0-9a
 					view.chord.append_to_repeat_amount(e.ascii.ascii_str())
@@ -293,7 +293,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				}
 				.enter {
 					view.cmd_buf.exec(mut view, mut root)
-					view.leader_state.mode = .normal
+					view.pending_count_state.mode = .normal
 				}
 				.space {
 					view.cmd_buf.put_char(' ')
