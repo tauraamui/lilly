@@ -26,7 +26,7 @@ const example_file = 'module history\n\nimport datatypes\nimport lib.diff { Op }
 fn test_u_undos_line_insertions() {
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: clipboard.new()
 	}
 	fake_view.buffer.lines = example_file.split_into_lines()
@@ -159,7 +159,7 @@ fn test_dd_deletes_current_line_at_start_of_doc() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. forth line']
@@ -176,7 +176,7 @@ fn test_dd_deletes_current_line_in_middle_of_doc() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. forth line']
@@ -194,7 +194,7 @@ fn test_dd_deletes_current_line_at_end_of_doc() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 	// manually set the "document" contents
@@ -215,7 +215,7 @@ fn test_o_inserts_sentance_line() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 	// manually set the "document" contents
@@ -226,7 +226,7 @@ fn test_o_inserts_sentance_line() {
 	// invoke the 'o' command
 	fake_view.o()
 
-	assert fake_view.leader_state.mode == .insert
+	assert fake_view.pending_count_state.mode == .insert
 	assert fake_view.buffer.lines == ['1. first line', '', '2. second line']
 	assert fake_view.cursor.pos.y == 1
 }
@@ -235,7 +235,7 @@ fn test_o_inserts_sentance_line_end_of_document() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 	// manually set the "document" contents
@@ -246,7 +246,7 @@ fn test_o_inserts_sentance_line_end_of_document() {
 	// invoke the 'o' command
 	fake_view.o()
 
-	assert fake_view.leader_state.mode == .insert
+	assert fake_view.pending_count_state.mode == .insert
 	assert fake_view.buffer.lines == ['1. first line', '2. second line', '']
 	assert fake_view.cursor.pos.y == 2
 }
@@ -255,7 +255,7 @@ fn test_o_inserts_line_and_auto_indents() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 	// manually set the "document" contents
@@ -266,7 +266,7 @@ fn test_o_inserts_line_and_auto_indents() {
 	// invoke the 'o' command
 	fake_view.o()
 
-	assert fake_view.leader_state.mode == .insert
+	assert fake_view.pending_count_state.mode == .insert
 	assert fake_view.buffer.lines == ['	1. first line', '	']
 	assert fake_view.cursor.pos.y == 1
 }
@@ -275,7 +275,7 @@ fn test_o_auto_indents_but_clears_if_nothing_added_to_line() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 	// manually set the "document" contents
@@ -287,7 +287,7 @@ fn test_o_auto_indents_but_clears_if_nothing_added_to_line() {
 	fake_view.o()
 	fake_view.escape()
 
-	assert fake_view.leader_state.mode == .normal
+	assert fake_view.pending_count_state.mode == .normal
 	assert fake_view.buffer.lines == ['	1. first line', '']
 	assert fake_view.cursor.pos.y == 0 // cursor y set back to selection start pos
 }
@@ -322,7 +322,7 @@ fn test_v_toggles_visual_mode_and_starts_selection() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 	// manually set the "document" contents
@@ -335,7 +335,7 @@ fn test_v_toggles_visual_mode_and_starts_selection() {
 	// invoke the 'v' command
 	fake_view.v()
 
-	assert fake_view.leader_state.mode == .visual
+	assert fake_view.pending_count_state.mode == .visual
 	assert fake_view.cursor.selection_active()
 	selection_start := fake_view.cursor.selection_start()
 	assert selection_start == Pos{6, 0}
@@ -351,7 +351,7 @@ fn test_v_toggles_visual_mode_move_selection_down_to_second_line_ensure_start_po
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 	// manually set the "document" contents
@@ -364,7 +364,7 @@ fn test_v_toggles_visual_mode_move_selection_down_to_second_line_ensure_start_po
 	// invoke the 'v' command
 	fake_view.v()
 
-	assert fake_view.leader_state.mode == .visual
+	assert fake_view.pending_count_state.mode == .visual
 	assert fake_view.cursor.selection_active()
 	selection_start := fake_view.cursor.selection_start()
 	assert selection_start == Pos{6, 0}
@@ -390,7 +390,7 @@ fn test_shift_v_toggles_visual_line_mode_and_starts_selection() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 	// manually set the "document" contents
@@ -402,7 +402,7 @@ fn test_shift_v_toggles_visual_line_mode_and_starts_selection() {
 	// invoke the 'shift v' command
 	fake_view.shift_v()
 
-	assert fake_view.leader_state.mode == .visual_line
+	assert fake_view.pending_count_state.mode == .visual_line
 	assert fake_view.cursor.selection_active()
 	assert fake_view.cursor.selection_start() == Pos{6, 0}
 }
@@ -594,7 +594,7 @@ fn test_enter_from_start_of_line() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .insert }
+		pending_count_state: PendingCountState{ mode: .insert }
 		clipboard: mut clip
 	}
 	// manually set the "document" contents
@@ -618,7 +618,7 @@ fn test_enter_moves_trailing_segment_to_next_line_and_moves_cursor_in_front() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .insert }
+		pending_count_state: PendingCountState{ mode: .insert }
 		clipboard: mut clip
 	}
 	// manually set the "document" contents
@@ -642,7 +642,7 @@ fn test_enter_moves_trailing_segment_to_next_line_and_moves_cursor_to_past_prefi
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .insert }
+		pending_count_state: PendingCountState{ mode: .insert }
 		clipboard: mut clip
 	}
 	fake_view.buffer.lines = [
@@ -665,7 +665,7 @@ fn test_enter_inserts_line_at_cur_pos_and_auto_indents() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .insert }
+		pending_count_state: PendingCountState{ mode: .insert }
 		clipboard: mut clip
 	}
 	// manually set the "document" contents
@@ -685,7 +685,7 @@ fn test_enter_auto_indents_but_clears_if_nothing_added_to_line() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .insert }
+		pending_count_state: PendingCountState{ mode: .insert }
 		clipboard: mut clip
 	}
 	// manually set the "document" contents
@@ -707,14 +707,14 @@ fn test_backspace_deletes_char_from_end_of_sentance() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['single line of text!']
 	// ensure cursor is set to sit on the first line
 	fake_view.cursor.pos.y = 0
-	fake_view.leader_state.mode = .insert
+	fake_view.pending_count_state.mode = .insert
 	fake_view.cursor.pos.x = fake_view.buffer.lines[fake_view.cursor.pos.y].len
 
 	// invoke backspace
@@ -730,10 +730,10 @@ fn test_backspace_deletes_char_from_start_of_sentance() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
-	fake_view.leader_state.mode = .insert
+	fake_view.pending_count_state.mode = .insert
 
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['', 'single line of text!']
@@ -751,10 +751,10 @@ fn test_backspace_moves_line_up_to_previous_line() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
-	fake_view.leader_state.mode = .insert
+	fake_view.pending_count_state.mode = .insert
 
 	// manually set the document contents
 	fake_view.buffer.lines = ['', 'single line of text!']
@@ -772,10 +772,10 @@ fn test_backspace_moves_line_up_to_end_of_previous_line() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
-	fake_view.leader_state.mode = .insert
+	fake_view.pending_count_state.mode = .insert
 
 	// manually set the document contents
 	fake_view.buffer.lines = ['i am the first line', 'single line of text!']
@@ -796,10 +796,10 @@ fn test_backspace_at_start_of_sentance_first_line_does_nothing() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
-	fake_view.leader_state.mode = .insert
+	fake_view.pending_count_state.mode = .insert
 
 	// manually set the document contents
 	fake_view.buffer.lines = ['single line of text!', '']
@@ -817,10 +817,10 @@ fn test_left_arrow_at_start_of_sentence_in_insert_mode() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
-	fake_view.leader_state.mode = .insert
+	fake_view.pending_count_state.mode = .insert
 
 	// manually set the document contents
 	fake_view.buffer.lines = ['', 'single line of text!', '']
@@ -839,10 +839,10 @@ fn test_right_arrow_at_start_of_sentence_in_insert_mode() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
-	fake_view.leader_state.mode = .insert
+	fake_view.pending_count_state.mode = .insert
 
 	// manually set the documents contents
 	fake_view.buffer.lines = ['', 'single line of text!', '']
@@ -861,10 +861,10 @@ fn test_left_arrow_at_end_of_sentence_in_insert_mode() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
-	fake_view.leader_state.mode = .insert
+	fake_view.pending_count_state.mode = .insert
 
 	// manually set the documents contents
 	fake_view.buffer.lines = ['', 'single line of text!', '']
@@ -883,10 +883,10 @@ fn test_right_arrow_at_end_of_sentence_in_insert_mode() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
-	fake_view.leader_state.mode = .insert
+	fake_view.pending_count_state.mode = .insert
 
 	// manually set the documents contents
 	fake_view.buffer.lines = ['', 'single line of text!', '']
@@ -905,7 +905,7 @@ fn test_tab_inserts_spaces() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .insert }
+		pending_count_state: PendingCountState{ mode: .insert }
 		clipboard: mut clip
 	}
 
@@ -917,7 +917,7 @@ fn test_tab_inserts_spaces() {
 
 	fake_view.insert_tab()
 
-	assert fake_view.leader_state.mode == .insert
+	assert fake_view.pending_count_state.mode == .insert
 	assert fake_view.buffer.lines == ['1. first     line']
 }
 
@@ -925,7 +925,7 @@ fn test_tab_inserts_tabs_not_spaces_if_enabled() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .insert }
+		pending_count_state: PendingCountState{ mode: .insert }
 		clipboard: mut clip
 		config:    workspace.Config{
 			insert_tabs_not_spaces: true
@@ -940,14 +940,14 @@ fn test_tab_inserts_tabs_not_spaces_if_enabled() {
 
 	fake_view.insert_tab()
 
-	assert fake_view.leader_state.mode == .insert
+	assert fake_view.pending_count_state.mode == .insert
 	assert fake_view.buffer.lines == ['1. first \tline']
 }
 
 fn test_visual_indent_indents_highlighted_lines() {
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .visual }
+		pending_count_state: PendingCountState{ mode: .visual }
 		clipboard: clipboard.new()
 		config:    workspace.Config{
 			insert_tabs_not_spaces: true
@@ -985,7 +985,7 @@ fn test_visual_indent_indents_highlighted_lines() {
 fn test_visual_unindent_unindents_highlighted_lines() {
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .visual_line }
+		pending_count_state: PendingCountState{ mode: .visual_line }
 		clipboard: clipboard.new()
 		config:    workspace.Config{
 			insert_tabs_not_spaces: true
@@ -1024,7 +1024,7 @@ fn test_visual_insert_mode_and_delete_in_place() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -1037,7 +1037,7 @@ fn test_visual_insert_mode_and_delete_in_place() {
 	fake_view.shift_v()
 	fake_view.visual_line_d(true)
 
-	assert fake_view.leader_state.mode == .normal
+	assert fake_view.pending_count_state.mode == .normal
 	assert fake_view.buffer.lines == ['1. first line', '3. third line', '4. forth line']
 }
 
@@ -1045,7 +1045,7 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -1059,7 +1059,7 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 	fake_view.j()
 	fake_view.visual_line_d(true)
 
-	assert fake_view.leader_state.mode == .normal
+	assert fake_view.pending_count_state.mode == .normal
 	assert fake_view.buffer.lines == ['1. first line', '4. forth line']
 }
 
@@ -1067,7 +1067,7 @@ fn test_visual_selection_copy_starts_and_ends_on_same_line() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -1095,7 +1095,7 @@ fn test_visual_selection_copy_ends_on_halfway_in_on_next_line_down() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -1125,7 +1125,7 @@ fn test_visual_selection_copy_starts_and_ends_a_few_lines_down() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -1155,7 +1155,7 @@ fn test_visual_line_selection_copy() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -1192,7 +1192,7 @@ fn test_paste_segment_of_line() {
 	clip.copy('new segment of a line')
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -1223,7 +1223,7 @@ fn test_paste_segment_which_does_not_start_nor_end_with_newline() {
 	clip.copy('partial selection from a line\nup to some point on the next line down')
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -1255,7 +1255,7 @@ fn test_paste_full_lines() {
 	clip.copy('\nsome new random contents\nwith multiple lines\n')
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -1289,7 +1289,7 @@ fn test_copying_full_lines_with_visual_line_mode_and_pasting() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -1332,13 +1332,13 @@ fn test_search_is_toggled() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
 	fake_view.search()
 
-	assert fake_view.leader_state.mode == .search
+	assert fake_view.pending_count_state.mode == .search
 }
 
 fn test_search_within_for_single_line() {
@@ -1437,7 +1437,7 @@ fn test_search_within_for_multiple_lines_multiple_matches_per_line() {
 fn test_move_cursor_with_b_from_start_of_line_which_preceeds_a_blank_line() {
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: clipboard.new()
 	}
 	fake_view.buffer.lines = ['1. first line', '', '3. third line']
@@ -1454,7 +1454,7 @@ fn test_move_cursor_with_b_from_start_of_line_which_preceeds_a_blank_line() {
 fn test_jump_cursor_up_to_next_blank_line() {
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: clipboard.new()
 	}
 	fake_view.buffer.lines = [
@@ -1478,7 +1478,7 @@ fn test_jump_cursor_up_to_next_blank_line() {
 fn test_jump_cursor_down_to_next_blank_line() {
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: clipboard.new()
 	}
 	fake_view.buffer.lines = [
@@ -2085,7 +2085,7 @@ fn test_a_enters_insert_mode_after_cursor_position() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2096,14 +2096,14 @@ fn test_a_enters_insert_mode_after_cursor_position() {
 	fake_view.a()
 
 	assert fake_view.cursor.pos.x == 1
-	assert fake_view.leader_state.mode == .insert
+	assert fake_view.pending_count_state.mode == .insert
 }
 
 fn test_shift_a_enters_insert_mode_at_the_end_of_current_line() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2117,7 +2117,7 @@ fn test_shift_a_enters_insert_mode_at_the_end_of_current_line() {
 
 	assert fake_view.cursor.pos.x == 20
 	assert fake_view.cursor.pos.y == 1
-	assert fake_view.leader_state.mode == .insert
+	assert fake_view.pending_count_state.mode == .insert
 }
 
 fn test_r_replaces_character_in_middle_of_line() {
@@ -2129,7 +2129,7 @@ fn test_r_replaces_character_in_middle_of_line() {
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2138,7 +2138,7 @@ fn test_r_replaces_character_in_middle_of_line() {
 	fake_view.cursor.pos.x = 4
 	fake_view.r()
 
-	assert fake_view.leader_state.mode == .replace
+	assert fake_view.pending_count_state.mode == .replace
 
 	event := draw.Event{
 		code:  tui.KeyCode.p
@@ -2147,7 +2147,7 @@ fn test_r_replaces_character_in_middle_of_line() {
 	}
 	fake_view.on_key_down(event, mut editor)
 
-	assert fake_view.leader_state.mode == .normal
+	assert fake_view.pending_count_state.mode == .normal
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == 'one past line'
 	assert fake_view.cursor.pos.x == 4
 	assert fake_view.cursor.pos.y == 2
@@ -2162,7 +2162,7 @@ fn test_r_replaces_character_with_special_character() {
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2171,7 +2171,7 @@ fn test_r_replaces_character_with_special_character() {
 	fake_view.cursor.pos.x = 8
 	fake_view.r()
 
-	assert fake_view.leader_state.mode == .replace
+	assert fake_view.pending_count_state.mode == .replace
 
 	event := draw.Event{
 		code:  tui.KeyCode.exclamation
@@ -2180,7 +2180,7 @@ fn test_r_replaces_character_with_special_character() {
 	}
 	fake_view.on_key_down(event, mut editor)
 
-	assert fake_view.leader_state.mode == .normal
+	assert fake_view.pending_count_state.mode == .normal
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == 'one last!line'
 	assert fake_view.cursor.pos.x == 8
 	assert fake_view.cursor.pos.y == 2
@@ -2195,7 +2195,7 @@ fn test_r_replaces_character_with_space() {
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2204,7 +2204,7 @@ fn test_r_replaces_character_with_space() {
 	fake_view.cursor.pos.x = 4
 	fake_view.r()
 
-	assert fake_view.leader_state.mode == .replace
+	assert fake_view.pending_count_state.mode == .replace
 
 	event := draw.Event{
 		code:  tui.KeyCode.space
@@ -2213,7 +2213,7 @@ fn test_r_replaces_character_with_space() {
 	}
 	fake_view.on_key_down(event, mut editor)
 
-	assert fake_view.leader_state.mode == .normal
+	assert fake_view.pending_count_state.mode == .normal
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == 'one  ast line'
 	assert fake_view.cursor.pos.x == 4
 	assert fake_view.cursor.pos.y == 2
@@ -2228,7 +2228,7 @@ fn test_r_doesnt_change_anything_when_escape_is_used() {
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2237,7 +2237,7 @@ fn test_r_doesnt_change_anything_when_escape_is_used() {
 	fake_view.cursor.pos.x = 4
 	fake_view.r()
 
-	assert fake_view.leader_state.mode == .replace
+	assert fake_view.pending_count_state.mode == .replace
 
 	event := draw.Event{
 		code:  tui.KeyCode.escape
@@ -2245,7 +2245,7 @@ fn test_r_doesnt_change_anything_when_escape_is_used() {
 	}
 	fake_view.on_key_down(event, mut editor)
 
-	assert fake_view.leader_state.mode == .normal
+	assert fake_view.pending_count_state.mode == .normal
 	assert fake_view.cursor.pos.x == 4
 	assert fake_view.cursor.pos.y == 2
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == 'one last line'
@@ -2260,7 +2260,7 @@ fn test_r_doesnt_change_anything_when_enter_is_used() {
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2269,7 +2269,7 @@ fn test_r_doesnt_change_anything_when_enter_is_used() {
 	fake_view.cursor.pos.x = 7
 	fake_view.r()
 
-	assert fake_view.leader_state.mode == .replace
+	assert fake_view.pending_count_state.mode == .replace
 
 	event := draw.Event{
 		code:  tui.KeyCode.enter
@@ -2277,7 +2277,7 @@ fn test_r_doesnt_change_anything_when_enter_is_used() {
 	}
 	fake_view.on_key_down(event, mut editor)
 
-	assert fake_view.leader_state.mode == .normal
+	assert fake_view.pending_count_state.mode == .normal
 	assert fake_view.cursor.pos.x == 7
 	assert fake_view.cursor.pos.y == 1
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == 'another line of text'
@@ -2287,7 +2287,7 @@ fn test_shift_o_adds_line_above_cursor() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2301,14 +2301,14 @@ fn test_shift_o_adds_line_above_cursor() {
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == ''
 	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 1
-	assert fake_view.leader_state.mode == .insert
+	assert fake_view.pending_count_state.mode == .insert
 }
 
 fn test_shift_o_adds_line_above_cursor_at_start_of_file() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2322,7 +2322,7 @@ fn test_shift_o_adds_line_above_cursor_at_start_of_file() {
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == ''
 	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 0
-	assert fake_view.leader_state.mode == .insert
+	assert fake_view.pending_count_state.mode == .insert
 }
 
 fn test_x_removes_character_in_middle_of_line() {
@@ -2330,7 +2330,7 @@ fn test_x_removes_character_in_middle_of_line() {
 
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2341,7 +2341,7 @@ fn test_x_removes_character_in_middle_of_line() {
 	fake_view.x()
 
 	assert fake_view.buffer.lines == ['this is a line of text']
-	assert fake_view.leader_state.mode == .normal
+	assert fake_view.pending_count_state.mode == .normal
 	assert fake_view.cursor.pos.x == 14
 }
 
@@ -2350,7 +2350,7 @@ fn test_x_removes_character_and_shifts_cursor_back_at_end_of_line() {
 
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2364,7 +2364,7 @@ fn test_x_removes_character_and_shifts_cursor_back_at_end_of_line() {
 	fake_view.x()
 
 	assert fake_view.buffer.lines == ['this is a lines of tex']
-	assert fake_view.leader_state.mode == .normal
+	assert fake_view.pending_count_state.mode == .normal
 	assert fake_view.cursor.pos.x == 21
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y].len == 22
 }
@@ -2386,7 +2386,7 @@ fn test_auto_closing_square_brace() {
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2416,7 +2416,7 @@ fn test_auto_closing_curley_brace() {
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2446,7 +2446,7 @@ fn test_auto_closing_curley_brace_inputting_secondary_close_should_only_move_cur
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2485,7 +2485,7 @@ fn test_auto_closing_square_brace_inputting_secondary_close_should_only_move_cur
 	}
 	mut fake_view := View{
 		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 
@@ -2518,7 +2518,7 @@ fn test_auto_closing_square_brace_inputting_secondary_close_should_only_move_cur
 fn test_search_line_correct_overwrite() {
 	mut fake_view := View{
 		log: unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: clipboard.new()
 	}
 
@@ -2526,7 +2526,7 @@ fn test_search_line_correct_overwrite() {
 
 	fake_view.search()
 
-	assert fake_view.leader_state.mode == .search
+	assert fake_view.pending_count_state.mode == .search
 	assert fake_view.cmd_buf.err_msg == ''
 	assert fake_view.cmd_buf.line == '//'
 	assert fake_view.cmd_buf.cursor_x == 1
@@ -2538,7 +2538,7 @@ fn test_center_text_around_cursor() {
     mut clip := clipboard.new()
     mut fake_view := View{
         log: unsafe { nil }
-        leader_state: ViewLeaderState{ mode: .normal }
+        pending_count_state: PendingCountState{ mode: .normal }
         clipboard: mut clip
         height: 10 // Set a small height for testing
     }
@@ -2590,7 +2590,7 @@ fn test_zero_key_handling() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
 		log: unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
+		pending_count_state: PendingCountState{ mode: .normal }
 		clipboard: mut clip
 	}
 

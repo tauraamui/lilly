@@ -143,7 +143,7 @@ const auto_pairs = {
 	"'": "'"
 }
 
-struct PendingCountStates {
+struct PendingCountState {
 mut:
 	mode    Mode
 	d_count int
@@ -151,7 +151,7 @@ mut:
 	b_count int
 }
 
-fn (mut state PendingCountStates) reset() {
+fn (mut state PendingCountState) reset() {
 	state.mode = .normal
 	state.d_count = 0
 	state.f_count = 0
@@ -166,7 +166,7 @@ mut:
 	path                      string
 	branch                    string
 	config                    workspace.Config
-	pending_count_state       PendingCountStates
+	pending_count_state       PendingCountState
 	buffer                    buffer.Buffer
 	leader_key                string
 	cursor                    Cursor
@@ -633,7 +633,7 @@ fn (mut view View) draw_bottom_bar_of_command_or_search(mut ctx draw.Contextable
 
 @[inline]
 fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
-	if view.leader_state.mode == .insert {
+	if view.pending_count_state.mode == .insert {
 		set_cursor_to_vertical_bar(mut ctx)
 	} else {
 		set_cursor_to_block(mut ctx)
