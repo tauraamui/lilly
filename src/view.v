@@ -1528,11 +1528,13 @@ fn (mut view View) l() {
 fn (mut view View) j() {
 	view.move_cursor_down(1)
 	view.clamp_cursor_x_pos()
+	view.clamp_cursor_within_document_bounds()
 }
 
 fn (mut view View) k() {
 	view.move_cursor_up(1)
 	view.clamp_cursor_x_pos()
+	view.clamp_cursor_within_document_bounds()
 }
 
 fn (mut view View) i() {
