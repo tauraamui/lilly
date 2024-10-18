@@ -1,0 +1,7 @@
+## Encoding: windows-1252
+# 0xE0: LATIN SMALL LETTER A WITH GRAVE (00E0) * 1
+à
+# 0xA3: POUND SIGN (00A3) * 1
+£
+# 0x80: EURO SIGN (20AC) * 1
+€
