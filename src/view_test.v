@@ -211,6 +211,27 @@ fn test_dd_deletes_current_line_at_end_of_doc() {
 	assert fake_view.clipboard.paste() == '3. third line'
 }
 
+fn test_dd_deletes_current_line_and_p_reinserts_it_correctly() {
+	mut clip := clipboard.new()
+	mut fake_view := View{
+		log:       unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. forth line']
+	fake_view.cursor.pos.y = 0
+
+	fake_view.d()
+	fake_view.d()
+
+	assert fake_view.buffer.lines == ['2. second line', '3. third line', '4. forth line']
+	assert fake_view.clipboard.paste() == '1. first line'
+
+	fake_view.j()
+	fake_view.p()
+	assert fake_view.buffer.lines == ['2. second line', '1. first line', '3. third line', '4. forth line']
+}
+
 fn test_o_inserts_sentance_line() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
