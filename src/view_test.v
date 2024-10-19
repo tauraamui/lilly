@@ -162,13 +162,13 @@ fn test_dd_deletes_current_line_at_start_of_doc() {
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
-	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. forth line']
+	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. fourth line']
 	fake_view.cursor.pos.y = 0
 
 	fake_view.d()
 	fake_view.d()
 
-	assert fake_view.buffer.lines == ['2. second line', '3. third line', '4. forth line']
+	assert fake_view.buffer.lines == ['2. second line', '3. third line', '4. fourth line']
 	assert fake_view.clipboard.paste() == '1. first line'
 }
 
@@ -179,13 +179,13 @@ fn test_dd_deletes_current_line_in_middle_of_doc() {
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}
-	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. forth line']
+	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. fourth line']
 	fake_view.cursor.pos.y = 2
 
 	fake_view.d()
 	fake_view.d()
 
-	assert fake_view.buffer.lines == ['1. first line', '2. second line', '4. forth line']
+	assert fake_view.buffer.lines == ['1. first line', '2. second line', '4. fourth line']
 	assert fake_view.cursor.pos.y == 2
 	assert fake_view.clipboard.paste() == '3. third line'
 }
@@ -958,7 +958,7 @@ fn test_visual_indent_indents_highlighted_lines() {
 		'1. first line',
 		'2. second line',
 		'3. third line',
-		'4. forth line',
+		'4. fourth line',
 		'5. fifth line',
 		'6. sixth line',
 	]
@@ -976,7 +976,7 @@ fn test_visual_indent_indents_highlighted_lines() {
 		'1. first line',
 		'\t2. second line',
 		'\t3. third line',
-		'\t4. forth line',
+		'\t4. fourth line',
 		'\t5. fifth line',
 		'6. sixth line',
 	]
@@ -996,7 +996,7 @@ fn test_visual_unindent_unindents_highlighted_lines() {
 		'1. first line',
 		'\t2. second line',
 		'\t3. third line',
-		'\t4. forth line',
+		'\t4. fourth line',
 		'\t5. fifth line',
 		'6. sixth line',
 	]
@@ -1014,7 +1014,7 @@ fn test_visual_unindent_unindents_highlighted_lines() {
 		'1. first line',
 		'2. second line',
 		'3. third line',
-		'4. forth line',
+		'4. fourth line',
 		'5. fifth line',
 		'6. sixth line',
 	]
@@ -1029,7 +1029,7 @@ fn test_visual_insert_mode_and_delete_in_place() {
 	}
 
 	// manually set the documents contents
-	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. forth line']
+	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. fourth line']
 	// ensure cursor is set to sit on the start of second line
 	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 1
@@ -1038,7 +1038,7 @@ fn test_visual_insert_mode_and_delete_in_place() {
 	fake_view.visual_line_d(true)
 
 	assert fake_view.leader_state.mode == .normal
-	assert fake_view.buffer.lines == ['1. first line', '3. third line', '4. forth line']
+	assert fake_view.buffer.lines == ['1. first line', '3. third line', '4. fourth line']
 }
 
 fn test_visual_insert_mode_selection_move_down_once_and_delete() {
@@ -1050,7 +1050,7 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 	}
 
 	// manually set the documents contents
-	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. forth line']
+	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. fourth line']
 	// ensure cursor is set to sit on the start of second line
 	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 1
@@ -1060,7 +1060,7 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 	fake_view.visual_line_d(true)
 
 	assert fake_view.leader_state.mode == .normal
-	assert fake_view.buffer.lines == ['1. first line', '4. forth line']
+	assert fake_view.buffer.lines == ['1. first line', '4. fourth line']
 }
 
 fn test_visual_selection_copy_starts_and_ends_on_same_line() {
@@ -1076,7 +1076,7 @@ fn test_visual_selection_copy_starts_and_ends_on_same_line() {
 		'1. first line',
 		'2. second line',
 		'3. third line',
-		'4. forth line',
+		'4. fourth line',
 		'5. fifth line',
 	]
 
@@ -1104,7 +1104,7 @@ fn test_visual_selection_copy_ends_on_halfway_in_on_next_line_down() {
 		'1. first line',
 		'2. second line',
 		'3. third line',
-		'4. forth line',
+		'4. fourth line',
 		'5. fifth line',
 	]
 
@@ -1134,7 +1134,7 @@ fn test_visual_selection_copy_starts_and_ends_a_few_lines_down() {
 		'1. first line',
 		'2. second line',
 		'3. third line',
-		'4. forth line',
+		'4. fourth line',
 		'5. fifth line',
 	]
 
@@ -1164,7 +1164,7 @@ fn test_visual_line_selection_copy() {
 		'1. first line',
 		'2. second line',
 		'3. third line',
-		'4. forth line',
+		'4. fourth line',
 		'5. fifth line',
 	]
 
@@ -1264,7 +1264,7 @@ fn test_paste_full_lines() {
 		'1. first line',
 		'2. second line',
 		'3. third line',
-		'4. forth line',
+		'4. fourth line',
 		'5. fifth line',
 	]
 
@@ -1280,7 +1280,7 @@ fn test_paste_full_lines() {
 		'some new random contents',
 		'with multiple lines',
 		'3. third line',
-		'4. forth line',
+		'4. fourth line',
 		'5. fifth line',
 	]
 }
@@ -1298,7 +1298,7 @@ fn test_copying_full_lines_with_visual_line_mode_and_pasting() {
 		'1. first line',
 		'2. second line',
 		'3. third line',
-		'4. forth line',
+		'4. fourth line',
 		'5. fifth line',
 	]
 
@@ -1320,7 +1320,7 @@ fn test_copying_full_lines_with_visual_line_mode_and_pasting() {
 		'1. first line',
 		'2. second line',
 		'3. third line',
-		'4. forth line',
+		'4. fourth line',
 		'1. first line',
 		'2. second line',
 		'3. third line',
