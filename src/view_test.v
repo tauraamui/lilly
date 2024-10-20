@@ -2535,11 +2535,9 @@ fn test_search_line_correct_overwrite() {
 }
 
 fn test_center_text_around_cursor() {
-    mut clip := clipboard.new()
     mut fake_view := View{
         log: unsafe { nil }
         leader_state: ViewLeaderState{ mode: .normal }
-        clipboard: mut clip
         height: 10 // Set a small height for testing
     }
 
@@ -2587,11 +2585,9 @@ fn test_center_text_around_cursor() {
 }
 
 fn test_zero_key_handling() {
-	mut clip := clipboard.new()
 	mut fake_view := View{
 		log: unsafe { nil }
 		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
 	}
 
 	fake_view.buffer.lines = ['    This is a test line', 'Another line']
@@ -2615,4 +2611,57 @@ fn test_zero_key_handling() {
 	fake_view.chord.reset()
 	fake_view.zero()
 	assert fake_view.chord.pending_repeat_amount() == ''
+}
+
+fn test_repeat_command_with_chord_repeat_amount() {
+    mut fake_view := View{
+        log: unsafe { nil }
+        leader_state: ViewLeaderState{ mode: .normal }
+        height: 40
+    }
+
+    // Set initial view bounds
+    fake_view.from = 0
+    fake_view.to = 0
+
+	// Test that the chord starting with a '0' doesn't move the cursor
+	fake_view.chord.append_to_repeat_amount('0')
+	assert fake_view.chord.pending_repeat_amount() == '0'
+
+	// Verify cursor moved to start of line
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 0
+
+	// Ensure '0' doesn't append to repeat amount when it's the first number
+	fake_view.chord.reset()
+	fake_view.zero()
+	assert fake_view.chord.pending_repeat_amount() == ''
+
+	// Test that the chord starting with a number then followed
+	// by a '0' moves the cursor the correct number of times
+	// This ensures that view.zero() isn't soaking up these zeros here!
+	fake_view.chord.reset()
+	fake_view.chord.append_to_repeat_amount('1')
+	fake_view.chord.append_to_repeat_amount('0')
+	assert fake_view.chord.pending_repeat_amount() == "10"
+
+	op := fake_view.chord.j()
+	assert op.kind == .move
+	assert op.direction == .down
+	assert op.repeat == 10
+
+	// Test that the chord starting with a '0', then followed a number,
+	// then another '0' still moves the cursor the correct number of times
+	// This just tests if a view.zero() somehow doesn't trigger when
+	// pressing the zero key one or more times!!
+	fake_view.chord.reset()
+	fake_view.chord.append_to_repeat_amount('0')
+	fake_view.chord.append_to_repeat_amount('2')
+	fake_view.chord.append_to_repeat_amount('0')
+	assert fake_view.chord.pending_repeat_amount() == "020"
+
+	op2 := fake_view.chord.j()
+	assert op2.kind == .move
+	assert op2.direction == .down
+	assert op2.repeat == 20
 }
