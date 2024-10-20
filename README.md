@@ -27,7 +27,7 @@ Our project is focused on the development of a text editor that serves as a prac
 - [ ] Horizontal scrolling
 - [ ] Splits (horizontal + vertical)
 - [ ] Goto def
-- [ ] List of active but not open buffers
+- [x] List of active but not open buffers
 - [x] Search/Find files
 - [ ] Workspace wide search (ripgrep + roll your own)
 
