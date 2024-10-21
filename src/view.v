@@ -1690,14 +1690,33 @@ fn (mut view View) dollar() {
 
 fn (mut view View) d() {
 	match view.leader_state.mode {
+		.normal {
+			view.leader_state.d_count += 1
+			if view.leader_state.d_count == 1 {
+				view.leader_state.mode = .pending_delete
+			}
+		}
+		.pending_delete {
+			view.leader_state.d_count += 1
+			if view.leader_state.d_count >= 2 {
+				index := if view.cursor.pos.y == view.buffer.lines.len { view.cursor.pos.y - 1 } else { view.cursor.pos.y }
+				view.clipboard.set_content(clipboardv2.ClipboardContent{
+					type: .block,
+					data: view.buffer.lines[index]
+				})
+				view.delete_line(index)
+				view.leader_state.reset()
+				view.clamp_cursor_within_document_bounds()
+			}
+		}
 		.visual_line {
 			start_index := view.cursor.selection_start().y
-			end_index := view.cursor.selection_end().y
+			mut end_index := view.cursor.selection_end().y
 			view.clipboard.set_content(clipboardv2.ClipboardContent{
 				type: .block,
 				data: view.buffer.lines[start_index..end_index + 1].join("\n")
 			})
-			view.delete_range(start_index, end_index)
+			view.delete_line_range(start_index, end_index)
 			view.cursor.pos.y = start_index
 			view.clamp_cursor_within_document_bounds()
 			view.leader_state.reset()
@@ -1716,13 +1735,19 @@ fn (mut view View) p() {
 		.block {
 			if insert_below {
 				view.buffer.lines.insert(view.cursor.pos.y + 1, content.data.split("\n"))
+				view.j()
+				view.dollar()
 			}
 		}
 		else {}
 	}
 }
 
-fn (mut view View) delete_range(start int, end int) {
+fn (mut view View) delete_line(y int) {
+	view.delete_line_range(y, y)
+}
+
+fn (mut view View) delete_line_range(start int, end int) {
 	if start == end {
 		view.buffer.lines.delete(start)
 		return
