@@ -1689,16 +1689,63 @@ fn (mut view View) dollar() {
 }
 
 fn (mut view View) d() {
+	match view.leader_state.mode {
+		.visual_line {
+			start_index := view.cursor.selection_start().y
+			end_index := view.cursor.selection_end().y
+			view.clipboard.set_content(clipboardv2.ClipboardContent{
+				type: .block,
+				data: view.buffer.lines[start_index..end_index + 1].join("\n")
+			})
+			view.delete_range(start_index, end_index)
+			view.cursor.pos.y = start_index
+			view.clamp_cursor_within_document_bounds()
+			view.leader_state.reset()
+		}
+		else {}
+	}
+}
+
+fn (mut view View) p() {
+	insert_below := match view.leader_state.mode {
+		.normal { true }
+		else { false }
+	}
+	content := view.clipboard.get_content()
+	match content.type {
+		.block {
+			if insert_below {
+				view.buffer.lines.insert(view.cursor.pos.y + 1, content.data.split("\n"))
+			}
+		}
+		else {}
+	}
+}
+
+fn (mut view View) delete_range(start int, end int) {
+	if start == end {
+		view.buffer.lines.delete(start)
+		return
+	}
+	before := view.buffer.lines[..start]
+	after  := view.buffer.lines[end + 1..]
+
+	view.buffer.lines = before
+	view.buffer.lines << after
+}
+
+/*
+fn (mut view View) d() {
 	view.leader_state.d_count += 1
 	if view.leader_state.d_count == 1 {
 		view.leader_state.mode = .pending_delete
 	}
 	if view.leader_state.d_count == 2 {
-		index := if view.cursor.pos.y == view.buffer.lines.len {
-			view.cursor.pos.y - 1
-		} else {
-			view.cursor.pos.y
-		}
+		index := if view.cursor.pos.y == view.buffer.lines.len { view.cursor.pos.y - 1 } else { view.cursor.pos.y }
+		view.clipboard.set_content(clipboardv2.ClipboardContent{
+			type: .block,
+			data: view.buffer.lines[index]
+		})
 		// view.copy_lines_into_clipboard(index, index)
 		view.buffer.lines.delete(index)
 		view.leader_state.d_count = 0
@@ -1706,6 +1753,7 @@ fn (mut view View) d() {
 		view.leader_state.mode = .normal
 	}
 }
+*/
 
 fn (mut view View) z() {
 	view.z_count += 1
@@ -1776,9 +1824,6 @@ fn (mut view View) y() {
 		.visual_line {}
 		else {}
 	}
-}
-
-fn (mut view View) p() {
 }
 
 fn (mut view View) enter() {

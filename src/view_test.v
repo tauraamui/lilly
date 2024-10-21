@@ -241,10 +241,9 @@ fn test_visual_line_select_delete_and_paste_works_correctly() {
 	}
 	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. fourth line']
 	fake_view.j()
-
 	fake_view.shift_v()
 	fake_view.j()
-	fake_view.visual_line_d(false)
+	fake_view.d()
 
 	fake_view.escape()
 	fake_view.p()
