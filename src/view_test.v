@@ -222,14 +222,20 @@ fn test_dd_deletes_current_line_and_p_reinserts_it_correctly() {
 	fake_view.cursor.pos.y = 0
 
 	fake_view.d()
+	assert fake_view.leader_state.mode == .pending_delete
 	fake_view.d()
 
 	assert fake_view.buffer.lines == ['2. second line', '3. third line', '4. forth line']
-	// assert fake_view.clipboard.paste() == '1. first line'
+	assert fake_view.clipboard.get_content() == clipboardv2.ClipboardContent{
+		type: .block,
+		data: "1. first line"
+	}
 
-	fake_view.j()
 	fake_view.p()
 	assert fake_view.buffer.lines == ['2. second line', '1. first line', '3. third line', '4. forth line']
+	assert fake_view.leader_state.mode == .normal
+	assert fake_view.cursor.pos.y == 1
+	assert fake_view.cursor.pos.x == 12
 }
 
 fn test_visual_line_select_delete_and_paste_works_correctly() {
