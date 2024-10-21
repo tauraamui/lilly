@@ -17,14 +17,14 @@ module main
 import os
 import log
 import lib.buffer
-import lib.clipboard
+import lib.clipboardv2
 import lib.workspace
 import lib.draw
 @[heap]
 struct Editor {
 mut:
 	log                               log.Log
-	clipboard                         clipboard.Clipboard
+	clipboard                         clipboardv2.Clipboard
 	view                              &Viewable = unsafe { nil }
 	debug_view                        bool
 	views                             []Viewable
@@ -46,7 +46,7 @@ mut:
 	quit()
 }
 
-pub fn open_editor(mut _log log.Log, _clipboard clipboard.Clipboard, commit_hash string, file_path string, workspace_root_dir string) !&Editor {
+pub fn open_editor(mut _log log.Log, mut _clipboard clipboardv2.Clipboard, commit_hash string, file_path string, workspace_root_dir string) !&Editor {
 	mut editor := Editor{
 		log: _log
 		clipboard:         _clipboard

@@ -1,6 +1,6 @@
 module main
 
-import lib.clipboard
+import lib.clipboardv2
 import lib.draw
 import term.ui as tui
 
@@ -264,7 +264,7 @@ fn test_sets_of_key_events_for_views_on_key_down_adjusting_cursor_position() {
 		if case.disabled {
 			continue
 		}
-		mut clip := clipboard.new()
+		mut clip := clipboardv2.new()
 		mut editor := Editor{
 			clipboard:         mut clip
 			file_finder_modal: unsafe { nil }
@@ -291,7 +291,7 @@ fn test_w_moves_cursor_to_next_line_with_plain_comments() {
 		'// Licensed under the Apache License, Version 2.0 (the "License")',
 	]
 
-	mut clip := clipboard.new()
+	mut clip := clipboardv2.new()
 	mut editor := Editor{
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
