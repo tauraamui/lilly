@@ -232,6 +232,26 @@ fn test_dd_deletes_current_line_and_p_reinserts_it_correctly() {
 	assert fake_view.buffer.lines == ['2. second line', '1. first line', '3. third line', '4. forth line']
 }
 
+fn test_visual_line_select_delete_and_paste_works_correctly() {
+	mut clip := clipboard.new()
+	mut fake_view := View{
+		log:       unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. fourth line']
+	fake_view.j()
+
+	fake_view.shift_v()
+	fake_view.j()
+	fake_view.visual_line_d(false)
+
+	fake_view.escape()
+	fake_view.p()
+
+	assert fake_view.buffer.lines == ['1. first line', '4. fourth line', '2. second line', '3. third line']
+}
+
 fn test_o_inserts_sentance_line() {
 	mut clip := clipboard.new()
 	mut fake_view := View{
