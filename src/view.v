@@ -1846,7 +1846,17 @@ fn (mut view View) shift_a() {
 
 fn (mut view View) y() {
 	match view.leader_state.mode {
-		.visual {}
+		.visual {
+			start := view.cursor.selection_start()
+			end   := view.cursor.selection_end()
+			if start.y == end.y {
+				view.clipboard.set_content(clipboardv2.ClipboardContent{
+					type: .inline,
+					data: view.buffer.lines[start.y][start.x..end.x + 1]
+				})
+				return
+			}
+		}
 		.visual_line {
 			start_index   := view.cursor.selection_start().y
 			mut end_index := view.cursor.selection_end().y
