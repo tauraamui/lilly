@@ -1732,6 +1732,7 @@ fn (mut view View) p() {
 	}
 	content := view.clipboard.get_content()
 	match content.type {
+		.none { return }
 		.block {
 			if insert_below {
 				view.buffer.lines.insert(view.cursor.pos.y + 1, content.data.split("\n"))
