@@ -235,7 +235,7 @@ fn test_dd_deletes_current_line_and_p_reinserts_it_correctly() {
 	assert fake_view.buffer.lines == ['2. second line', '1. first line', '3. third line', '4. forth line']
 	assert fake_view.leader_state.mode == .normal
 	assert fake_view.cursor.pos.y == 1
-	assert fake_view.cursor.pos.x == 12
+	assert fake_view.cursor.pos.x == 0
 }
 
 fn test_visual_line_select_delete_and_paste_works_correctly() {
