@@ -251,7 +251,11 @@ fn test_visual_line_select_delete_and_paste_works_correctly() {
 	fake_view.j()
 	fake_view.d()
 
-	fake_view.escape()
+	assert fake_view.clipboard.get_content() == clipboardv2.ClipboardContent{
+		type: .block,
+		data: "2. second line\n3. third line"
+	}
+
 	fake_view.p()
 
 	assert fake_view.buffer.lines == ['1. first line', '4. fourth line', '2. second line', '3. third line']
