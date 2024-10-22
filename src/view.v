@@ -1705,8 +1705,8 @@ fn (mut view View) d() {
 					data: view.buffer.lines[index]
 				})
 				view.delete_line(index)
-				view.leader_state.reset()
 				view.clamp_cursor_within_document_bounds()
+				view.leader_state.reset()
 			}
 		}
 		.visual_line {
@@ -1736,7 +1736,7 @@ fn (mut view View) p() {
 			if insert_below {
 				view.buffer.lines.insert(view.cursor.pos.y + 1, content.data.split("\n"))
 				view.j()
-				view.dollar()
+				view.hat()
 			}
 		}
 		else {}
