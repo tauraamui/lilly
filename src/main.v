@@ -17,6 +17,7 @@ module main
 import os
 import log
 import lib.clipboard
+import lib.clipboardv2
 import lib.draw
 import os.cmdline
 import strings
@@ -226,7 +227,8 @@ fn main() {
 		print_and_exit('${err}')
 		'', ''
 	}
-	app.editor = open_editor(mut l, clipboard.new(), gitcommit_hash, file_path, workspace_path) or {
+	mut clip := clipboardv2.new()
+	app.editor = open_editor(mut l, mut clip, gitcommit_hash, file_path, workspace_path) or {
 		print_and_exit('${err}')
 		unsafe { nil }
 	}

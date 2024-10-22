@@ -220,7 +220,8 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 					view.right_square_bracket()
 				}
 				.y {
-					view.visual_y()
+					// view.visual_y()
+					view.y()
 				}
 				else {}
 			}
@@ -264,11 +265,12 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 					if e.modifiers == .ctrl {
 						view.ctrl_d()
 					} else {
-						view.visual_line_d(true)
+						view.d()
+						// view.visual_line_d(true)
 					}
 				}
 				.p {
-					view.visual_line_p()
+					view.exec(view.chord.p())
 				}
 				// NOTE(tauraamui): undo bind is now disabled until the feature is re-done
 				// .u { if e.modifiers == .ctrl { view.ctrl_u() } }
@@ -285,7 +287,8 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 					view.jump_cursor_down_to_next_blank_line()
 				}
 				.y {
-					view.visual_line_y()
+					view.y()
+					// view.visual_line_y()
 				}
 				else {}
 			}
