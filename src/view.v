@@ -765,14 +765,16 @@ fn draw_text_line_within_visual_selection(mut ctx draw.Contextable,
 		cursor_screen_space_y, line_runes, original_line.runes())
 }
 
-fn draw_text_line_visual_selection_between_start_and_end(mut ctx draw.Contextable,
+fn draw_text_line_visual_selection_between_start_and_end(
+	mut ctx draw.Contextable,
 	syntax workspace.Syntax,
 	selection_highlight_color Color,
 	selection_start Pos, selection_end Pos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
 	line_runes []rune,
-	original_line_runes []rune) {
+	original_line_runes []rune
+) {
 	ctx.set_bg_color(
 		r: selection_highlight_color.r
 		g: selection_highlight_color.g
@@ -782,7 +784,8 @@ fn draw_text_line_visual_selection_between_start_and_end(mut ctx draw.Contextabl
 	ctx.reset_bg_color()
 }
 
-fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Contextable,
+fn draw_text_line_visual_selection_starts_and_ends_on_same_line(
+	mut ctx draw.Contextable,
 	syntax workspace.Syntax,
 	selection_highlight_color Color,
 	selection_start Pos, selection_end Pos,
@@ -792,6 +795,7 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 	original_line_runes []rune
 ) {
 	mut x_offset := 0
+	// FIXME(tauraamui): this only accounts for tab content prior to the selection and not tabs within the selection
 	tab_count := original_line_runes[..selection_start.x].string().count('\t')
 	selection_x_offset := tab_count * 3
 	pre_sel := line_runes[..selection_start.x + selection_x_offset]
