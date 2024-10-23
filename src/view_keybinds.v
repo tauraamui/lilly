@@ -198,7 +198,8 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 					if e.modifiers == .ctrl {
 						view.ctrl_d()
 					} else {
-						view.visual_d(true)
+						// view.visual_d(true)
+						view.d()
 					}
 				}
 				.caret {

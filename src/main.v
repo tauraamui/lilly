@@ -16,7 +16,6 @@ module main
 
 import os
 import log
-import lib.clipboard
 import lib.clipboardv2
 import lib.draw
 import os.cmdline
