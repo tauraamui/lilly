@@ -7,7 +7,7 @@ import os
 
 struct Context {
 	user_data voidptr
-	frame_cb  fn (v voidptr)
+	frame_cb  fn (v voidptr) @[required]
 mut:
 	gg                         &gg.Context = unsafe { nil }
 	txt_cfg                    gx.TextCfg
@@ -16,7 +16,7 @@ mut:
 	text_draws_since_last_pass int
 }
 
-pub fn new_context(cfg Config) &Contextable {
+pub fn new_context(cfg Config) (&Contextable, Runner) {
 	mut ctx := &Context{
 		user_data: cfg.user_data
 		frame_cb:  cfg.frame_fn
@@ -31,10 +31,18 @@ pub fn new_context(cfg Config) &Contextable {
 		font_path:     os.resource_abs_path('../experiment/RobotoMono-Regular.ttf')
 		frame_fn:      frame
 	)
-	return ctx
+	return ctx, unsafe { ctx.run_wrapper }
 }
 
 const font_size = 16
+
+fn (mut ctx Context) run_wrapper() ! {
+    ctx.gg.run()
+}
+
+fn (mut ctx Context) render_debug() bool {
+    return true
+}
 
 fn frame(mut ctx Context) {
 	width := gg.window_size().width

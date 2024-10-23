@@ -24,6 +24,8 @@ pub:
 	b u8
 }
 
+pub type Runner = fn () !
+
 pub interface Drawer {
 mut:
 	draw_text(x int, y int, text string)
