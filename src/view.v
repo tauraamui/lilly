@@ -19,10 +19,8 @@ import term.ui as tui
 import log
 import datatypes
 import strconv
-import strings
 import regex
 import lib.clipboardv2
-import arrays
 import lib.buffer
 import lib.workspace
 import lib.chords
@@ -541,42 +539,6 @@ fn (mut view View) set_current_syntax_idx(ext string) {
 		}
 	}
 }
-
-/*
-fn (app &App) new_view(_clipboard clipboard.Clipboard) Viewable {
-	mut res := View{ log: app.log, leader_state: ViewLeaderState{ mode: .normal }, show_whitespace: false, clipboard: _clipboard }
-	res.load_syntaxes()
-	res.load_config()
-	res.set_current_syntax_idx(".v")
-	res.cursor.selection_start = Pos{ -1, -1 }
-	return res
-}
-*/
-
-/*
-fn (mut view View) open_file(path string) {
-	view.path = path
-	view.buffer.lines = os.read_lines(path) or { []string{} }
-	// get words map
-	/*
-	if view.buffer.lines.len < 1000 {
-		println('getting words')
-		for line in view.buffer.lines {
-			words := get_clean_words(line)
-			for word in words {
-				if word !in view.words {
-					view.words << word
-				}
-			}
-		}
-	}
-	*/
-	// empty file, handle it
-	if view.buffer.lines.len == 0 {
-		view.buffer.lines << ''
-	}
-}
-*/
 
 interface Viewable {
 	file_path string
