@@ -7,5 +7,9 @@ mut:
 }
 
 pub fn new() Clipboard {
-	return new_clipboard()
+	$if windows {
+		return clipboard.new()
+	} $else {
+		return new_clipboard()
+	}
 }
