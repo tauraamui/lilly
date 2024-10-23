@@ -595,10 +595,13 @@ fn (mut view View) draw_bottom_bar_of_command_or_search(mut ctx draw.Contextable
 
 @[inline]
 fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
-	if view.leader_state.mode == .insert {
-		set_cursor_to_vertical_bar(mut ctx)
-	} else {
-		set_cursor_to_block(mut ctx)
+	match view.leader_state.mode {
+		.insert {
+			set_cursor_to_vertical_bar(mut ctx)
+		}
+		else {
+			set_cursor_to_block(mut ctx)
+		}
 	}
 	if view.leader_state.d_count == 1 || view.z_count == 1 || view.leader_state.mode == .replace {
 		set_cursor_to_underline(mut ctx)
