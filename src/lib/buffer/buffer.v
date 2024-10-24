@@ -24,30 +24,20 @@ pub fn (mut buffer Buffer) load_from_path() ! {
 	}
 }
 
-pub fn (mut buffer Buffer) undo() {
-	op_to_undo := buffer.history.pop_undo() or { return }
-	mut line_offset := 0
-	match op_to_undo.kind {
-		'ins' {
-			buffer.lines.delete(op_to_undo.line_num + line_offset)
-			line_offset -= 1
-		}
-		'del' {
-			buffer.lines.insert(op_to_undo.line_num + line_offset, op_to_undo.value)
-			line_offset += 1
-		}
-		else {}
+pub fn (buffer Buffer) iter() LineIterator {
+	return LineIterator{
+		lines: &buffer.lines
 	}
 }
 
-pub fn (mut buffer Buffer) snapshot() {
-	buffer.snapshotted_at_least_once = true
-	buffer.lines_cpy = buffer.lines.clone()
+struct LineIterator {
+	lines       []string
+mut:
+	current_idx int = -1
 }
 
-pub fn (mut buffer Buffer) update_undo_history() {
-	if !buffer.snapshotted_at_least_once {
-		return
-	}
-	buffer.history.append_ops_to_undo(buffer.lines_cpy, buffer.lines)
+pub fn (mut iterator LineIterator) next() ?string {
+	iterator.current_idx += 1
+	if iterator.current_idx >= iterator.lines.len { return none }
+	return iterator.lines[iterator.current_idx]
 }

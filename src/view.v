@@ -639,6 +639,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 	ctx.set_bg_color(r: 53, g: 53, b: 53)
 
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
+	// FIXME(tauraamui): we should flip this so that the cursor line render is left until the end
 	// draw cursor line
 	if view.leader_state.mode != .visual_line {
 		if cursor_screen_space_y > view.code_view_height() - 1 {
@@ -649,6 +650,8 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 	}
 
 	for y, line in view.buffer.lines[view.from..view.to] {
+	// for y, line in view.buffer.iter() {
+		// if !(y - view.from > 0 && y - view.from < (view.from + view.to)) { continue }
 		ctx.reset_bg_color()
 		ctx.reset_color()
 
@@ -796,7 +799,8 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(
 ) {
 	mut x_offset := 0
 	// FIXME(tauraamui): this only accounts for tab content prior to the selection and not tabs within the selection
-	tab_count := original_line_runes[..selection_start.x].string().count('\t')
+	// mut tab_count := original_line_runes[..selection_start.x].string().count('\t')
+	tab_count := original_line_runes[selection_start.x..selection_end.x].string().count('\t')
 	selection_x_offset := tab_count * 3
 	pre_sel := line_runes[..selection_start.x + selection_x_offset]
 	sel := line_runes[selection_start.x + x_offset + selection_x_offset..selection_end.x +
@@ -1366,7 +1370,6 @@ fn (mut view View) escape() {
 		view.buffer.lines[view.cursor.pos.y] = ''
 	}
 
-	view.buffer.update_undo_history()
 	view.buffer.auto_close_chars = []
 
 	view.leader_state.reset()
@@ -1509,7 +1512,6 @@ fn (mut view View) k() {
 fn (mut view View) i() {
 	view.leader_state.mode = .insert
 	view.clamp_cursor_x_pos()
-	view.buffer.snapshot()
 }
 
 fn (mut view View) v() {
@@ -1778,9 +1780,7 @@ fn (mut view View) center_text_around_cursor() {
 	view.clamp_cursor_within_document_bounds()
 }
 
-fn (mut view View) u() {
-	view.buffer.undo()
-}
+fn (mut view View) u() {}
 
 fn (mut view View) o() {
 	defer { view.move_cursor_down(1) }

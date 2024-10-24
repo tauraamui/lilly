@@ -23,92 +23,6 @@ import term.ui as tui
 
 const example_file = 'module history\n\nimport datatypes\nimport lib.diff { Op }\n\npub struct History {\nmut:\n\tundos datatypes.Stack[Op] // will actually be type diff.Op\n\tredos datatypes.Stack[Op]\n}'
 
-fn test_u_undos_line_insertions() {
-	mut fake_view := View{
-		log:       unsafe { nil }
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv2.new()
-	}
-	fake_view.buffer.lines = example_file.split_into_lines()
-
-	assert fake_view.buffer.lines == [
-		'module history',
-		'',
-		'import datatypes',
-		'import lib.diff { Op }',
-		'',
-		'pub struct History {',
-		'mut:',
-		'\tundos datatypes.Stack[Op] // will actually be type diff.Op',
-		'\tredos datatypes.Stack[Op]',
-		'}',
-	]
-
-	fake_view.cursor.pos.x = 9
-	fake_view.cursor.pos.y = 5
-	fake_view.i()
-	fake_view.enter()
-	fake_view.escape()
-
-	assert fake_view.buffer.lines == [
-		'module history',
-		'',
-		'import datatypes',
-		'import lib.diff { Op }',
-		'',
-		'pub struc',
-		't History {',
-		'mut:',
-		'\tundos datatypes.Stack[Op] // will actually be type diff.Op',
-		'\tredos datatypes.Stack[Op]',
-		'}',
-	]
-
-	fake_view.u()
-
-	assert fake_view.buffer.lines == [
-		'module history',
-		'',
-		'import datatypes',
-		'import lib.diff { Op }',
-		'',
-		'pub struc',
-		'mut:',
-		'\tundos datatypes.Stack[Op] // will actually be type diff.Op',
-		'\tredos datatypes.Stack[Op]',
-		'}',
-	]
-
-	fake_view.u()
-
-	assert fake_view.buffer.lines == [
-		'module history',
-		'',
-		'import datatypes',
-		'import lib.diff { Op }',
-		'',
-		'mut:',
-		'\tundos datatypes.Stack[Op] // will actually be type diff.Op',
-		'\tredos datatypes.Stack[Op]',
-		'}',
-	]
-
-	fake_view.u()
-
-	assert fake_view.buffer.lines == [
-		'module history',
-		'',
-		'import datatypes',
-		'import lib.diff { Op }',
-		'pub struct History {',
-		'',
-		'mut:',
-		'\tundos datatypes.Stack[Op] // will actually be type diff.Op',
-		'\tredos datatypes.Stack[Op]',
-		'}',
-	]
-}
-
 fn test_line_is_within_selection() {
 	mut cursor := Cursor{
 		pos:                 Pos{
@@ -509,11 +423,11 @@ fn (mockctx MockContextable) clear() {}
 fn (mockctx MockContextable) flush() {}
 
 fn test_draw_text_line_within_visual_selection_start_end_on_same_line_with_tab_prefix() {
-	mut drawed_text := []string{}
-	mut drawed_text_ref := &drawed_text
+	mut drawn_text := []string{}
+	mut drawn_text_ref := &drawn_text
 	mut m_ctx := MockContextable{
-		on_draw_cb: fn [mut drawed_text_ref] (x int, y int, text string) {
-			drawed_text_ref << text
+		on_draw_cb: fn [mut drawn_text_ref] (x int, y int, text string) {
+			drawn_text_ref << text
 		}
 	}
 
@@ -534,10 +448,10 @@ fn test_draw_text_line_within_visual_selection_start_end_on_same_line_with_tab_p
 		b: 10
 	}, 0, 0, 0, 0, document_line.replace('\t', ' '.repeat(4)), document_line)
 
-	assert drawed_text.len >= 1
-	assert drawed_text[0] == '    pre'
-	assert drawed_text[1] == '_sel := line'
-	assert drawed_text[2] == '_runes[..selection_start.x]'
+	assert drawn_text.len >= 1
+	assert drawn_text[0] == '    pre'
+	assert drawn_text[1] == '_sel := line'
+	assert drawn_text[2] == '_runes[..selection_start.x]'
 }
 
 fn test_draw_text_line_within_visual_selection_start_end_on_same_line() {
