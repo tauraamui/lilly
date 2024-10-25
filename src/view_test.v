@@ -1113,8 +1113,7 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 	assert fake_view.buffer.lines == ['1. first line', '4. fourth line']
 }
 
-/*
-fn test_visual_selection_copy_starts_and_ends_on_same_line() {
+fn test_visual_selection_copy_starts_and_ends_on_same_line_and_selects_whole_line() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
 		log:       unsafe { nil }
@@ -1139,9 +1138,13 @@ fn test_visual_selection_copy_starts_and_ends_on_same_line() {
 	fake_view.dollar()
 	fake_view.y()
 
-	assert fake_view.clipboard.paste() == '2. second line'
+	assert fake_view.clipboard.get_content() == clipboardv2.ClipboardContent{
+		type: .inline,
+		data: "2. second line"
+	}
 }
 
+/*
 fn test_visual_selection_copy_ends_on_halfway_in_on_next_line_down() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
