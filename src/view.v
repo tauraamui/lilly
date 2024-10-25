@@ -649,9 +649,9 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 			cursor_screen_space_y + 1)
 	}
 
-	for y, line in view.buffer.lines[view.from..view.to] {
-	// for y, line in view.buffer.iter() {
-		// if !(y - view.from > 0 && y - view.from < (view.from + view.to)) { continue }
+	for yy, line in view.buffer.iter() {
+		if yy < view.from || yy > view.to { continue }
+		y := yy - view.from
 		ctx.reset_bg_color()
 		ctx.reset_color()
 
