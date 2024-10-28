@@ -2638,3 +2638,129 @@ fn test_repeat_command_with_chord_repeat_amount() {
 	assert op2.direction == .down
 	assert op2.repeat == 20
 }
+
+fn test_f_finds_in_current_line_command() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = ['The quick brown fox jumps over the lazy dog']
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 0
+
+	event := draw.Event{
+		code:  tui.KeyCode.q
+		ascii: 113
+		utf8:  'q'
+	}
+	fake_view.f(event)
+	fake_view.f(event)
+
+	assert fake_view.cursor.pos.x == 5
+}
+
+fn test_gg_goes_to_top_of_file_command() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3']
+	fake_view.cursor.pos.y = 2
+
+	fake_view.g()
+	fake_view.g()
+
+	assert fake_view.cursor.pos.y == 0
+}
+
+fn test_shift_g_goes_to_bottom_of_file_command() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3']
+	fake_view.cursor.pos.y = 2
+
+	fake_view.shift_g()
+
+	assert fake_view.cursor.pos.y == 2
+}
+
+fn test_shift_r_replaces_character_in_line_command() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = ['The quick brown fox']
+	fake_view.cursor.pos.x = 2
+	fake_view.cursor.pos.y = 0
+
+	fake_view.leader_state.mode = .replacing
+	fake_view.replace_char(113, 'q')  // ASCII 113 is 'q'
+	assert fake_view.buffer.lines[0] == 'Thq quick brown fox'
+
+	fake_view.replace_char(112, 'p')  // ASCII 113 is 'q'
+	assert fake_view.buffer.lines[0] == 'Thp quick brown fox'
+
+	fake_view.escape()
+	assert fake_view.leader_state.mode == .normal
+}
+
+fn test_shift_l_goes_to_lowest_part_of_view_command() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+		height: 10
+	}
+	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5', 'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10']
+	fake_view.from = 0
+	fake_view.to = 10
+
+	fake_view.shift_l()
+
+	assert fake_view.cursor.pos.y == 9
+}
+
+fn test_shift_m_goes_to_middle_part_of_view_command() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+		height: 10
+	}
+	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5', 'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10']
+	fake_view.from = 0
+	fake_view.to = 10
+
+	fake_view.shift_m()
+
+	assert fake_view.cursor.pos.y == 5
+}
+
+fn test_shift_h_goes_to_highest_part_of_view_command() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+		height: 10
+	}
+	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5', 'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10']
+	fake_view.from = 0
+	fake_view.to = 10
+
+	fake_view.shift_h()
+
+	assert fake_view.cursor.pos.y == 0
+}
