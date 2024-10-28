@@ -147,6 +147,8 @@ mut:
 	d_count int
 	f_count int
 	b_count int
+	g_count int
+	z_count int
 }
 
 fn (mut state ViewLeaderState) reset() {
@@ -154,6 +156,8 @@ fn (mut state ViewLeaderState) reset() {
 	state.d_count = 0
 	state.f_count = 0
 	state.b_count = 0
+	state.g_count = 0
+	state.z_count = 0
 }
 
 struct View {
@@ -182,10 +186,6 @@ mut:
 	syntaxes                  []workspace.Syntax
 	current_syntax_idx        int
 	is_multiline_comment      bool
-	z_count                   int
-	d_count                   int
-	f_count                   int
-	g_count                   int
 	clipboard                 clipboardv2.Clipboard
 }
 
@@ -603,7 +603,7 @@ fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
 	} else {
 		set_cursor_to_block(mut ctx)
 	}
-	if view.leader_state.d_count == 1 || view.z_count == 1 || view.leader_state.mode == .replace || view.g_count == 1 || view.f_count == 1 || view.leader_state.mode == .replacing {
+	if view.leader_state.d_count == 1 || view.leader_state.z_count == 1 || view.leader_state.mode == .replace || view.leader_state.g_count == 1 || view.leader_state.f_count == 1 || view.leader_state.mode == .replacing {
 		set_cursor_to_underline(mut ctx)
 	}
 	ctx.set_cursor_position(view.x + 1 + view.calc_cursor_x_offset(),
@@ -1354,9 +1354,7 @@ fn (mut view View) escape() {
 	view.clamp_cursor_x_pos()
 	view.cmd_buf.clear()
 	view.search.clear()
-	view.d_count = 0
-	view.g_count = 0
-	view.f_count = 0
+	view.leader_state.reset()
 
 	// if current line only contains whitespace prefix clear the line
 	line := view.buffer.lines[view.cursor.pos.y]
@@ -1484,9 +1482,9 @@ fn (mut view View) search() {
 }
 
 fn (mut view View) f(e draw.Event) {
-	view.f_count += 1
-	if view.f_count == 1 { view.leader_state.mode = .pending_f return }
-	if view.f_count == 2 {
+	view.leader_state.f_count += 1
+	if view.leader_state.f_count == 1 { view.leader_state.mode = .pending_f return }
+	if view.leader_state.f_count == 2 {
 		cursor_pos := view.cursor.pos.x
 		line := view.buffer.lines[view.cursor.pos.y]
 		if line.len == 0 { return }
@@ -1502,8 +1500,7 @@ fn (mut view View) f(e draw.Event) {
 			}
 		}
 		view.clamp_cursor_within_document_bounds()
-		view.f_count = 0
-		view.leader_state.mode = .normal
+		view.leader_state.reset()
 		view.escape()
 		return
 	}
@@ -1511,17 +1508,16 @@ fn (mut view View) f(e draw.Event) {
 
 fn (mut view View) g() {
 	repeat_amount := strconv.atoi(view.chord.pending_repeat_amount()) or { 0 }
-	view.g_count += 1
-	if view.g_count == 1 { view.leader_state.mode = .pending_g }
-	if view.g_count == 2 {
+	view.leader_state.g_count += 1
+	if view.leader_state.g_count == 1 { view.leader_state.mode = .pending_g }
+	if view.leader_state.g_count == 2 {
 		if repeat_amount > 0 {
 			view.jump_cursor_to(repeat_amount - 1)
 			view.chord.reset()
 		} else {
 			view.jump_cursor_to(0)
 		}
-		view.g_count = 0
-		view.leader_state.mode = .normal
+		view.leader_state.reset()
 	}
 	view.clamp_cursor_x_pos()
 }
@@ -1819,12 +1815,11 @@ fn (mut view View) d() {
 */
 
 fn (mut view View) z() {
-	view.z_count += 1
-	if view.z_count == 1 { view.leader_state.mode = .pending_z }
-	if view.z_count == 2 {
+	view.leader_state.z_count += 1
+	if view.leader_state.z_count == 1 { view.leader_state.mode = .pending_z }
+	if view.leader_state.z_count == 2 {
 		view.center_text_around_cursor()
-		view.z_count = 0
-		view.leader_state.mode = .normal
+		view.leader_state.reset()
 	}
 }
 
