@@ -26,6 +26,9 @@ enum Mode as u8 {
 	leader
 	pending_delete
 	replace
+	replacing
+	pending_g
+	pending_f
 	pending_z
 }
 
@@ -56,6 +59,9 @@ fn (mode Mode) color() Color {
 		.search { status_purple }
 		.leader { status_purple }
 		.pending_delete { status_green }
+		.pending_g { status_green }
+		.pending_f { status_purple }
+		.replacing { status_green }
 		.replace { status_green }
 		.pending_z { status_green }
 	}
@@ -73,5 +79,8 @@ fn (mode Mode) str() string {
 		.pending_delete { 'NORMAL' }
 		.replace { 'NORMAL' }
 		.pending_z { "NORMAL" }
+		.pending_g { 'NORMAL' }
+		.pending_f { 'SEARCH' }
+		.replacing { 'NORMAL' }
 	}
 }
