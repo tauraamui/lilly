@@ -12,6 +12,7 @@
 > Features, bug fixes and issues are welcome.
 
 ![Screenshot 2023-11-17 20 07 13](https://github.com/tauraamui/lilly/assets/3159648/12e893ce-0120-4eb4-9d54-71b1a076832c)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftauraamui%2Flilly.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftauraamui%2Flilly?ref=badge_shield)
 
 ![Screenshot 2023-12-01 21 01 45](https://github.com/tauraamui/lilly/assets/3159648/e9023db2-0214-49e1-baad-9a75aa22d291)
 
@@ -60,3 +61,7 @@ Not a problem, Neovim/VIM are fantastic existing projects and are freely availab
 (experimental GUI render target)
 
 ![Screenshot 2023-12-13 21 10 40](https://github.com/tauraamui/lilly/assets/3159648/17ec7286-ecc2-4e68-addd-9c503afd45ee)
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftauraamui%2Flilly.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftauraamui%2Flilly?ref=badge_large)
