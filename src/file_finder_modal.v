@@ -136,7 +136,11 @@ fn (mut file_finder_modal FileFinderModal) on_key_down(e draw.Event, mut root Ro
 
 fn (mut file_finder_modal FileFinderModal) file_selected(mut root Root) {
 	file_paths := file_finder_modal.file_paths
-	root.open_file(file_paths[file_finder_modal.current_selection]) or { panic('${err}') }
+	selected_path := file_paths[file_finder_modal.current_selection]
+	if is_binary_file(selected_path) {
+		return
+	}
+	root.open_file(selected_path) or { panic('${err}') }
 }
 
 struct ScoredFilePath {

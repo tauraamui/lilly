@@ -73,7 +73,30 @@ fn (mut editor Editor) start_debug() {
 	}
 }
 
+fn is_binary_file(path string) bool {
+    mut f := os.open(path) or { return false }
+    mut buf := []u8{len: 1024}
+    bytes_read := f.read_bytes_into(0, mut buf) or { return false }
+    
+    // Check first N bytes for binary patterns
+    mut non_text_bytes := 0
+    for i := 0; i < bytes_read; i++ {
+        b := buf[i]
+        // Count bytes outside printable ASCII range
+        if (b < 32 && b != 9 && b != 10 && b != 13) || b > 126 {
+            non_text_bytes++
+        }
+    }
+    
+    // If more than 30% non-text bytes, consider it binary
+    return (f64(non_text_bytes) / f64(bytes_read)) > 0.3
+}
+
 fn (mut editor Editor) open_file(path string) ! {
+	if is_binary_file(path) {
+		return error('cannot open binary file "${path}"')
+	}
+
 	defer {
 		editor.close_file_finder()
 		editor.close_inactive_buffer_finder()
