@@ -65,8 +65,9 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 					view.exec(view.chord.i())
 				}
 				.v {
-					if e.modifiers == .shift {
-						view.v()
+					match e.modifiers {
+						.shift { view.shift_v() }
+						else { view.v() }
 					}
 				}
 				.e {
