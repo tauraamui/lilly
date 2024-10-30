@@ -791,6 +791,10 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 	line_runes []rune,
 	original_line_runes []rune
 ) {
+	ctx.set_bg_color(r: 53, g: 53, b: 53)
+	ctx.draw_text(screen_space_x + 1, screen_space_y + 1, line_runes.string())
+	ctx.reset_bg_color()
+	/*
 	mut x_offset := 0
 	tab_count := original_line_runes[..selection_start.x].string().count('\t')
 	selection_x_offset := tab_count * 3
@@ -827,6 +831,7 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 			document_space_y, post_sel.string())
 		x_offset += post_sel.len
 	}
+	*/
 }
 
 fn draw_text_line_visual_selection_starts_on_same_but_ends_after(mut ctx draw.Contextable,
