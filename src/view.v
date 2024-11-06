@@ -791,10 +791,18 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 	line_runes []rune,
 	original_line_runes []rune
 ) {
-	pre_selection      := line_runes[..selection_start.x]
+	selection_x_offset := (original_line_runes[..selection_start.x].string().count('\t')) * 3
+	pre_selection      := line_runes[..selection_start.x + selection_x_offset]
+	ctx.set_bg_color(r: 190, g: 10, b: 10)
 	ctx.draw_text(screen_space_x + 1, screen_space_y + 1, pre_selection.string())
-	content_after_selection_start := line_runes[selection_start.x..]
+	content_after_selection_start := line_runes[selection_x_offset + selection_start.x..]
+	ctx.set_bg_color(
+		r: selection_highlight_color.r
+		g: selection_highlight_color.g
+		b: selection_highlight_color.b
+	)
 	ctx.draw_text(screen_space_x + 1 + (line_runes.len - content_after_selection_start.len), screen_space_y + 1, content_after_selection_start.string())
+	ctx.reset_bg_color()
 	/*
 	mut x_offset := 0
 	tab_count := original_line_runes[..selection_start.x].string().count('\t')
