@@ -795,12 +795,27 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 	tab_count := original_line_runes[..selection_start.x].string().count('\t')
 	selection_x_offset := tab_count * 3
 	pre_sel := line_runes[..selection_start.x + selection_x_offset]
+	sel     := line_runes[selection_start.x + selection_x_offset..selection_end.x + selection_x_offset]
 
 	ctx.set_bg_color(r: 53, g: 53, b: 53)
 	if pre_sel.len > 0 {
-		draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y,
-			document_space_y, pre_sel.string())
+		draw_text_line_as_segments(
+			mut ctx, syntax,
+			screen_space_x, screen_space_y,
+			document_space_y, pre_sel.string()
+		)
 		x_offset += pre_sel.len
+	}
+
+	if sel.len > 0 {
+		ctx.set_bg_color(
+			r: selection_highlight_color.r
+			g: selection_highlight_color.g
+			b: selection_highlight_color.b
+		)
+		ctx.draw_text(screen_space_x + x_offset + 1, screen_space_y + 1, sel.string())
+		ctx.reset_bg_color()
+		x_offset += sel.len
 	}
 }
 
