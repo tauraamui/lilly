@@ -791,11 +791,17 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 	line_runes []rune,
 	original_line_runes []rune
 ) {
+	pre_selection      := line_runes[..selection_start.x]
+	ctx.draw_text(screen_space_x + 1, screen_space_y + 1, pre_selection.string())
+	content_after_selection_start := line_runes[selection_start.x..]
+	ctx.draw_text(screen_space_x + 1 + (line_runes.len - content_after_selection_start.len), screen_space_y + 1, content_after_selection_start.string())
+	/*
 	mut x_offset := 0
 	tab_count := original_line_runes[..selection_start.x].string().count('\t')
 	selection_x_offset := tab_count * 3
-	pre_sel := line_runes[..selection_start.x + selection_x_offset]
-	sel     := line_runes[selection_start.x + selection_x_offset..selection_end.x + selection_x_offset]
+	pre_sel  := line_runes[..selection_start.x + selection_x_offset]
+	sel      := line_runes[selection_start.x + selection_x_offset..selection_end.x + selection_x_offset]
+	post_sel := line_runes[selection_end.x + selection_x_offset..]
 
 	ctx.set_bg_color(r: 53, g: 53, b: 53)
 	if pre_sel.len > 0 {
@@ -817,6 +823,7 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 		ctx.reset_bg_color()
 		x_offset += sel.len
 	}
+	*/
 }
 
 fn draw_text_line_visual_selection_starts_on_same_but_ends_after(mut ctx draw.Contextable,
