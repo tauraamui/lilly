@@ -339,7 +339,7 @@ fn test_o_auto_indents_but_clears_if_nothing_added_to_line() {
 
 	assert fake_view.leader_state.mode == .normal
 	assert fake_view.buffer.lines == ['	1. first line', '']
-	assert fake_view.cursor.pos.y == 0 // cursor y set back to selection start pos
+	assert fake_view.cursor.pos.y == 1 // cursor y does not move to selection start pos
 }
 
 fn test_resolve_whitespace_prefix_on_line_with_text() {
@@ -1171,6 +1171,34 @@ fn test_visual_selection_copy_starts_and_ends_on_same_line_and_selects_whole_lin
 		type: .inline,
 		data: "2. second line"
 	}
+}
+
+fn test_visual_selection_mode_escaped_leaves_cursor_in_final_position() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log:       unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	// manually set the documents contents
+	fake_view.buffer.lines = [
+		'1. first line',
+		'2. second line',
+		'3. third line',
+		'4. fourth line',
+		'5. fifth line',
+	]
+
+	// ensure cursor is set to start inside second line
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+	fake_view.shift_v()
+	fake_view.j()
+	fake_view.j()
+	fake_view.j()
+	fake_view.escape()
+	assert fake_view.cursor.pos.y == 4
 }
 
 /*
