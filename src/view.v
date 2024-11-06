@@ -791,49 +791,17 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 	line_runes []rune,
 	original_line_runes []rune
 ) {
-	ctx.set_bg_color(r: 53, g: 53, b: 53)
-	// ctx.draw_text(screen_space_x + 1, screen_space_y + 1, line_runes.string())
-	draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y,
-		document_space_y, line_runes.string())
-	ctx.reset_bg_color()
-	/*
 	mut x_offset := 0
 	tab_count := original_line_runes[..selection_start.x].string().count('\t')
 	selection_x_offset := tab_count * 3
 	pre_sel := line_runes[..selection_start.x + selection_x_offset]
-	sel := line_runes[selection_start.x + x_offset + selection_x_offset..selection_end.x +
-		selection_x_offset]
-	post_sel := line_runes[selection_end.x + selection_x_offset..]
 
-	if pre_sel.len != 0 {
-		if screen_space_y == cursor_screen_space_y {
-			ctx.set_bg_color(r: 53, g: 53, b: 53)
-		}
-		draw_text_line_as_segments(mut ctx, syntax, screen_space_x + x_offset, screen_space_y,
+	ctx.set_bg_color(r: 53, g: 53, b: 53)
+	if pre_sel.len > 0 {
+		draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y,
 			document_space_y, pre_sel.string())
 		x_offset += pre_sel.len
 	}
-
-	if sel.len != 0 {
-		ctx.set_bg_color(
-			r: selection_highlight_color.r
-			g: selection_highlight_color.g
-			b: selection_highlight_color.b
-		)
-		ctx.draw_text(screen_space_x + x_offset + 1, screen_space_y + 1, sel.string())
-		ctx.reset_bg_color()
-		x_offset += sel.len
-	}
-
-	if post_sel.len != 0 {
-		if screen_space_y == cursor_screen_space_y {
-			ctx.set_bg_color(r: 53, g: 53, b: 53)
-		}
-		draw_text_line_as_segments(mut ctx, syntax, screen_space_x + x_offset, screen_space_y,
-			document_space_y, post_sel.string())
-		x_offset += post_sel.len
-	}
-	*/
 }
 
 fn draw_text_line_visual_selection_starts_on_same_but_ends_after(mut ctx draw.Contextable,
