@@ -791,8 +791,9 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 	line_runes []rune,
 	original_line_runes []rune
 ) {
-	x_offset := original_line_runes[..selection_start.x].string().count('\t') * 3
-	pre_selection := line_runes[..x_offset + selection_start.x]
+	mut x_offset := original_line_runes[..selection_start.x].string().count('\t')
+	pre_selection := line_runes[..(x_offset * 3) + selection_start.x]
+
 	ctx.set_bg_color(r: 200, g: 20, b: 20)
 	ctx.draw_text(screen_space_x + 1, screen_space_y + 1, pre_selection.string())
 	ctx.reset_bg_color()
