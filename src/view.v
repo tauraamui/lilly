@@ -802,6 +802,11 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 	ctx.set_bg_color(r: 10, g: 200, b: 10)
 	ctx.draw_text(screen_space_x + 1 + pre_selection.len, screen_space_y + 1, within_selection.string())
 	ctx.reset_bg_color()
+
+	post_selection := line_runes[selection_end.x + ((pre_tab_count + sel_tab_count) * 3)..]
+	ctx.set_bg_color(r: 10, g: 10, b: 200)
+	ctx.draw_text(screen_space_x + 1 + pre_selection.len + within_selection.len, screen_space_y + 1, post_selection.string())
+	ctx.reset_bg_color()
 }
 
 fn draw_text_line_visual_selection_starts_on_same_but_ends_after(mut ctx draw.Contextable,
