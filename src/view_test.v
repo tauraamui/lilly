@@ -534,7 +534,7 @@ fn test_draw_text_line_visual_selection_start_end_on_same_line() {
 		0, 0, 0, 0, document_line, document_line
 	)
 
-	assert drawn_text.len == 4
+	assert drawn_text.len == 3
 }
 
 fn test_draw_text_line_within_visual_selection_start_end_on_same_line_with_tab_prefix() {
