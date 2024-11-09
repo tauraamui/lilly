@@ -791,22 +791,25 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 	line_runes []rune,
 	original_line_runes []rune
 ) {
+	ctx.set_bg_color(r: 53, g: 53, b: 53)
+	defer { ctx.reset_bg_color() }
 	pre_tab_count := original_line_runes[..selection_start.x].string().count('\t')
 	pre_selection := line_runes[..selection_start.x + (pre_tab_count * 3)]
-	ctx.set_bg_color(r: 200, g: 10, b: 10)
-	ctx.draw_text(screen_space_x + 1, screen_space_y + 1, pre_selection.string())
-	ctx.reset_bg_color()
+	draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y, document_space_y, pre_selection.string())
 
 	sel_tab_count := original_line_runes[selection_start.x..selection_end.x].string().count('\t')
 	within_selection := line_runes[selection_start.x + (pre_tab_count * 3)..selection_end.x + ((pre_tab_count + sel_tab_count) * 3)]
-	ctx.set_bg_color(r: 10, g: 200, b: 10)
+	ctx.set_bg_color(
+		r: selection_highlight_color.r
+		g: selection_highlight_color.g
+		b: selection_highlight_color.b
+	)
 	ctx.draw_text(screen_space_x + 1 + pre_selection.len, screen_space_y + 1, within_selection.string())
 	ctx.reset_bg_color()
 
+	ctx.set_bg_color(r: 53, g: 53, b: 53)
 	post_selection := line_runes[selection_end.x + ((pre_tab_count + sel_tab_count) * 3)..]
-	ctx.set_bg_color(r: 10, g: 10, b: 200)
-	ctx.draw_text(screen_space_x + 1 + pre_selection.len + within_selection.len, screen_space_y + 1, post_selection.string())
-	ctx.reset_bg_color()
+	draw_text_line_as_segments(mut ctx, syntax, screen_space_x + pre_selection.len + within_selection.len, screen_space_y, document_space_y, post_selection.string())
 }
 
 fn draw_text_line_visual_selection_starts_on_same_but_ends_after(mut ctx draw.Contextable,
