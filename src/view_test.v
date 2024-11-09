@@ -508,6 +508,35 @@ fn (mockctx MockContextable) clear() {}
 
 fn (mockctx MockContextable) flush() {}
 
+struct DrawnTextRec {
+	content string
+	pos     Pos
+}
+
+fn test_draw_text_line_visual_selection_start_end_on_same_line() {
+	mut drawn_text := []DrawnTextRec{}
+	mut drawn_text_ref := &drawn_text
+
+	mut m_ctx := MockContextable{
+		on_draw_cb: fn [mut drawn_text_ref] (x int, y int, text string) {
+			drawn_text_ref << DrawnTextRec{
+				content: text,
+				pos:     Pos{ x: x, y: y }
+			}
+		}
+	}
+
+	mut m_cursor := Cursor{ pos: Pos{ x: 71, y: 0 }, selection_start_pos: Pos{ x: 44, y: 0 } }
+	document_line := 'This part of the text is before the selection but this part is within it, and this part is after it'
+	draw_text_line_within_visual_selection(
+		mut m_ctx, resolve_test_syntax(),
+		m_cursor, Color{ r: 10, g: 10, b: 10 },
+		0, 0, 0, 0, document_line, document_line
+	)
+
+	assert drawn_text.len == 3
+}
+
 fn test_draw_text_line_within_visual_selection_start_end_on_same_line_with_tab_prefix() {
 	mut drawed_text := []string{}
 	mut drawed_text_ref := &drawed_text
