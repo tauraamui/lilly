@@ -8,6 +8,7 @@ fn wd_resolver() string {
 }
 
 fn test_resolve_file_and_workspace_dir_paths() {
+	assert resolve_options_from_args([]).log_level == log.Level.disabled
 	mut file_path, mut workspace_path := resolve_file_and_workspace_dir_paths([], wd_resolver)!
 	assert file_path == ''
 	assert workspace_path == 'test-workspace'
@@ -21,6 +22,8 @@ fn test_resolve_file_and_workspace_dir_paths() {
 
 fn test_resolve_file_and_workspace_dir_paths_with_args() {
 	mock_args := ["--log-level", "debug", "."]
+
+	assert resolve_options_from_args(mock_args).log_level == log.Level.debug
 
 	mut file_path, mut workspace_path := resolve_file_and_workspace_dir_paths(mock_args, wd_resolver)!
 	assert file_path == ''
