@@ -119,7 +119,9 @@ fn (mut file_finder_modal FileFinderModal) on_key_down(e draw.Event, mut root Ro
 			file_finder_modal.move_selection_up()
 		}
 		.enter {
-			file_finder_modal.file_selected(mut root)
+			log.info(e.modifiers.str())
+			skip_byte_check := e.modifiers == .ctrl
+			file_finder_modal.file_selected(mut root, skip_byte_check)
 		}
 		.backspace {
 			file_finder_modal.search.backspace()
@@ -134,12 +136,10 @@ fn (mut file_finder_modal FileFinderModal) on_key_down(e draw.Event, mut root Ro
 	}
 }
 
-fn (mut file_finder_modal FileFinderModal) file_selected(mut root Root) {
+fn (mut file_finder_modal FileFinderModal) file_selected(mut root Root, skip_byte_check bool) {
 	file_paths := file_finder_modal.file_paths
 	selected_path := file_paths[file_finder_modal.current_selection]
-	if is_binary_file(selected_path) {
-		return
-	}
+	if !skip_byte_check && is_binary_file(selected_path) { return }
 	root.open_file(selected_path) or { panic('${err}') }
 }
 
@@ -173,7 +173,7 @@ fn (mut file_finder_modal FileFinderModal) reorder_file_paths() {
 	file_finder_modal.file_paths.sort_with_compare(fn [query] (a &string, b &string) int {
 		a_score := score_value_by_query(query, a)
 		b_score := score_value_by_query(query, b)
-		if b_score > a_score { return 1   }
+		if b_score > a_score  { return 1 }
 		if a_score == b_score { return 0 }
 		return -1
 	})

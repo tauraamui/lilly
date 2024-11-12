@@ -164,6 +164,7 @@ fn output_help_and_close(opts Options) {
 type WDResolver = fn () string
 
 fn resolve_file_and_workspace_dir_paths(args []string, resolve_wd WDResolver) !(string, string) {
+	println(args)
 	if args.len == 0 {
 		return '', resolve_wd()
 	}
@@ -221,8 +222,7 @@ fn main() {
 	)
 	app.ui = ctx
 
-	file_path, workspace_path := resolve_file_and_workspace_dir_paths(cmdline.only_non_options(args),
-		os.getwd) or {
+	file_path, workspace_path := resolve_file_and_workspace_dir_paths(cmdline.only_non_options(args), os.getwd) or {
 		print_and_exit('${err}')
 		'', ''
 	}
@@ -230,10 +230,6 @@ fn main() {
 	app.editor = open_editor(mut l, mut clip, gitcommit_hash, file_path, workspace_path) or {
 		print_and_exit('${err}')
 		unsafe { nil }
-	}
-
-	if opts.debug_mode {
-		app.editor.start_debug()
 	}
 
 	run()!
