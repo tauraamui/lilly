@@ -164,19 +164,17 @@ fn output_help_and_close(opts Options) {
 type WDResolver = fn () string
 
 fn resolve_file_and_workspace_dir_paths(args []string, resolve_wd WDResolver) !(string, string) {
-	println(args)
-	if args.len == 0 {
+	stripped_args := cmdline.only_non_options(args)
+	if stripped_args.len == 0 {
 		return '', resolve_wd()
 	}
-	if args.len == 1 {
-		file_or_dir_path := args[0]
-		if os.is_dir(file_or_dir_path) {
-			return '', file_or_dir_path
-		}
-
-		return file_or_dir_path, os.dir(file_or_dir_path)
+	index := stripped_args.len - 1
+	file_or_dir_path := stripped_args[index]
+	if os.is_dir(file_or_dir_path) {
+		return '', file_or_dir_path
 	}
-	return error('too many arguments ${args.len}, expected one')
+
+	return file_or_dir_path, os.dir(file_or_dir_path)
 }
 
 fn main() {
@@ -222,7 +220,8 @@ fn main() {
 	)
 	app.ui = ctx
 
-	file_path, workspace_path := resolve_file_and_workspace_dir_paths(cmdline.only_non_options(args), os.getwd) or {
+	file_path, workspace_path := resolve_file_and_workspace_dir_paths(cmdline.only_non_options(args),
+		os.getwd) or {
 		print_and_exit('${err}')
 		'', ''
 	}
