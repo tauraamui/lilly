@@ -1,11 +1,10 @@
 module main
 
 import time
-import arrays
 import lib.draw
 
 struct TestDrawer {
-	draw_text_callback fn (x int, y int, text string)
+	draw_text_callback fn (x int, y int, text string) @[required]
 }
 
 fn (mut drawer TestDrawer) draw_text(x int, y int, text string) {
@@ -114,7 +113,7 @@ fn test_on_search_term_adjust_list_order_changes() {
 	mock_modal.draw(mut mock_drawer)
 
 	assert drawn_text.len > 0
-	mut cleaned_list := drawn_text[1..drawn_text.len - 2]
+	mut cleaned_list := drawn_text[1..drawn_text.len - 2].clone()
 	assert cleaned_list == [
 		"./src/project/main.v",
 		"./src/project/lib/some_utilities.v",
@@ -122,14 +121,18 @@ fn test_on_search_term_adjust_list_order_changes() {
 		"./src/project/lib/database/connection.v"
 	]
 
-	mock_modal.on_key_down(draw.Event{ ascii: u8("c"[0]) }, mut Editor{})
-	mock_modal.on_key_down(draw.Event{ ascii: u8("o"[0]) }, mut Editor{})
-	mock_modal.on_key_down(draw.Event{ ascii: u8("n"[0]) }, mut Editor{})
+	mut editor := Editor{
+		file_finder_modal: mock_modal
+	}
+
+	mock_modal.on_key_down(draw.Event{ ascii: u8("c"[0]) }, mut editor)
+	mock_modal.on_key_down(draw.Event{ ascii: u8("o"[0]) }, mut editor)
+	mock_modal.on_key_down(draw.Event{ ascii: u8("n"[0]) }, mut editor)
 
 	drawn_text.clear()
 	mock_modal.draw(mut mock_drawer)
 	assert drawn_text.len > 0
-	cleaned_list = drawn_text[1..drawn_text.len - 2]
+	cleaned_list = drawn_text[1..drawn_text.len - 2].clone()
 	assert cleaned_list == [
 		"./src/project/lib/database/connection.v"
 		"./src/project/main.v",

@@ -4,7 +4,7 @@
 #                                                                                       #
 # This script was auto-generated from a Justfile by just.sh.                            #
 #                                                                                       #
-# Generated on 2024-04-30 with just.sh version 0.0.2.                                   #
+# Generated on 2024-11-10 with just.sh version 0.0.2.                                   #
 # https://github.com/jstrieb/just.sh                                                    #
 #                                                                                       #
 # Run `./just.sh --dump` to recover the original Justfile.                              #
@@ -86,6 +86,36 @@ FUN_run() {
   cd "${OLD_WD}"
   if [ -z "${FORCE_run:-}" ]; then
     HAS_RUN_run="true"
+  fi
+}
+
+FUN_run_debug_log() {
+  # Recipe setup and pre-recipe dependencies
+  test -z "${HAS_RUN_run_debug_log:-}" \
+    || test "${FORCE_run_debug_log:-}" = "true" \
+    || return 0
+
+  if [ "${FORCE_run_debug_log:-}" = "true" ]; then
+    FORCE_generate_git_hash="true"
+  fi
+  FUN_generate_git_hash
+  if [ "${FORCE_run_debug_log:-}" = "true" ]; then
+    FORCE_generate_git_hash=
+  fi
+
+  OLD_WD="$(pwd)"
+  cd "${INVOCATION_DIRECTORY}"
+
+  # Recipe body
+  echo_recipe_line 'v -g run ./src --log-level debug .'
+  env "${DEFAULT_SHELL}" ${DEFAULT_SHELL_ARGS} \
+    'v -g run ./src --log-level debug .'  \
+    || recipe_error "run-debug-log" "${LINENO:-}"
+
+  # Post-recipe dependencies and teardown
+  cd "${OLD_WD}"
+  if [ -z "${FORCE_run_debug_log:-}" ]; then
+    HAS_RUN_run_debug_log="true"
   fi
 }
 
@@ -529,9 +559,9 @@ summarizefn() {
   done
 
   if [ "${SORTED}" = "true" ]; then
-    printf "%s " apply-license-header build compile-gui experiment generate-git-hash install-license-tool nonprod-compile prod-compile run run-debug run-gui run-gui-debug symlink test
+    printf "%s " apply-license-header build compile-gui experiment generate-git-hash install-license-tool nonprod-compile prod-compile run run-debug run-debug-log run-gui run-gui-debug symlink test
   else
-    printf "%s " run run-gui run-debug run-gui-debug experiment test nonprod-compile prod-compile compile-gui generate-git-hash build apply-license-header install-license-tool symlink
+    printf "%s " run run-debug-log run-gui run-debug run-gui-debug experiment test nonprod-compile prod-compile compile-gui generate-git-hash build apply-license-header install-license-tool symlink
   fi
   echo
 
@@ -611,12 +641,14 @@ listfn() {
     echo "${LIST_PREFIX}"'prod-compile'"${BLUE}""${NOCOLOR}"
     echo "${LIST_PREFIX}"'run'"${BLUE}""${NOCOLOR}"
     echo "${LIST_PREFIX}"'run-debug'"${BLUE}""${NOCOLOR}"
+    echo "${LIST_PREFIX}"'run-debug-log'"${BLUE}""${NOCOLOR}"
     echo "${LIST_PREFIX}"'run-gui'"${BLUE}""${NOCOLOR}"
     echo "${LIST_PREFIX}"'run-gui-debug'"${BLUE}""${NOCOLOR}"
     echo "${LIST_PREFIX}"'symlink'"${BLUE}""${NOCOLOR}"
     echo "${LIST_PREFIX}"'test'"${BLUE}""${NOCOLOR}"
   else
     echo "${LIST_PREFIX}"'run'"${BLUE}""${NOCOLOR}"
+    echo "${LIST_PREFIX}"'run-debug-log'"${BLUE}""${NOCOLOR}"
     echo "${LIST_PREFIX}"'run-gui'"${BLUE}""${NOCOLOR}"
     echo "${LIST_PREFIX}"'run-debug'"${BLUE}""${NOCOLOR}"
     echo "${LIST_PREFIX}"'run-gui-debug'"${BLUE}""${NOCOLOR}"
@@ -634,9 +666,12 @@ listfn() {
 }
 
 dumpfn() {
-  cat <<"2d3363299fbc31d0"
+  cat <<"6805fe412490d7d2"
 run: generate-git-hash
     v -g run ./src .
+
+run-debug-log: generate-git-hash
+    v -g run ./src --log-level debug .
 
 run-gui: generate-git-hash
     v -g -d gui run ./src .
@@ -675,7 +710,7 @@ install-license-tool:
 
 symlink: build
 	sudo ln -s $PWD/lilly /usr/local/bin
-2d3363299fbc31d0
+6805fe412490d7d2
 }
 
 evaluatefn() {
@@ -694,7 +729,7 @@ evaluatefn() {
 }
 
 choosefn() {
-  echo 'run' 'run-gui' 'run-debug' 'run-gui-debug' 'experiment' 'test' 'nonprod-compile' 'prod-compile' 'compile-gui' 'generate-git-hash' 'build' 'apply-license-header' 'install-license-tool' 'symlink' \
+  echo 'run' 'run-debug-log' 'run-gui' 'run-debug' 'run-gui-debug' 'experiment' 'test' 'nonprod-compile' 'prod-compile' 'compile-gui' 'generate-git-hash' 'build' 'apply-license-header' 'install-license-tool' 'symlink' \
     | "${DEFAULT_SHELL}" ${DEFAULT_SHELL_ARGS} "${CHOOSER}"
 }
 
@@ -712,6 +747,13 @@ while [ "${#}" -gt 0 ]; do
     shift
     assign_variables || exit "${?}"
     FUN_run "$@"
+    RUN_DEFAULT='false'
+    ;;
+
+  run-debug-log)
+    shift
+    assign_variables || exit "${?}"
+    FUN_run_debug_log "$@"
     RUN_DEFAULT='false'
     ;;
 
@@ -961,7 +1003,7 @@ fi
 #                                                                                       #
 # This script was auto-generated from a Justfile by just.sh.                            #
 #                                                                                       #
-# Generated on 2024-04-30 with just.sh version 0.0.2.                                   #
+# Generated on 2024-11-10 with just.sh version 0.0.2.                                   #
 # https://github.com/jstrieb/just.sh                                                    #
 #                                                                                       #
 # Run `./just.sh --dump` to recover the original Justfile.                              #
