@@ -119,7 +119,6 @@ fn (mut file_finder_modal FileFinderModal) on_key_down(e draw.Event, mut root Ro
 			file_finder_modal.move_selection_up()
 		}
 		.enter {
-			log.info(e.modifiers.str())
 			skip_byte_check := e.modifiers == .ctrl
 			file_finder_modal.file_selected(mut root, skip_byte_check)
 		}
