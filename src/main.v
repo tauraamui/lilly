@@ -72,12 +72,15 @@ fn frame(mut app App) {
 struct Options {
 mut:
 	log_level                        log.Level
-	long_show_version_flag           string
-	short_show_version_flag          string
-	show_version                     bool
 	long_show_help_flag              string
 	short_show_help_flag             string
 	show_help                        bool
+	long_show_version_flag           string
+	short_show_version_flag          string
+	show_version                     bool
+	long_symlink_flag                string
+	short_symlink_flag               string
+	symlink                          bool
 	long_debug_mode_flag             string
 	short_debug_mode_flag            string
 	debug_mode                       bool
@@ -101,6 +104,8 @@ fn resolve_options_from_args(args []string) Options {
 		short_show_version_flag:          'v'
 		long_show_help_flag:              'help'
 		short_show_help_flag:             'h'
+		long_symlink_flag:                'symlink'
+		short_symlink_flag:               'ln'
 		long_debug_mode_flag:             'debug'
 		short_debug_mode_flag:            'd'
 		long_render_debug_mode_flag:      'render-debug'
@@ -113,10 +118,14 @@ fn resolve_options_from_args(args []string) Options {
 		short_log_level_label_flag:       'll'
 	}
 
-	opts.show_version = '--${opts.long_show_version_flag}' in flags
-		|| '-${opts.short_show_version_flag}' in flags
 	opts.show_help = '--${opts.long_show_help_flag}' in flags
 		|| '-${opts.short_show_help_flag}' in flags
+	opts.show_version = '--${opts.long_show_version_flag}' in flags
+		|| '-${opts.short_show_version_flag}' in flags
+	$if !windows {
+		opts.symlink = '--${opts.long_symlink_flag}' in flags
+			|| '-${opts.short_symlink_flag}' in flags
+	}
 	opts.debug_mode = '--${opts.long_debug_mode_flag}' in flags
 		|| '-${opts.short_debug_mode_flag}' in flags
 	opts.render_debug_mode = '--${opts.long_render_debug_mode_flag}' in flags
@@ -144,6 +153,9 @@ fn (opts Options) flags_str() string {
 	mut sb := strings.new_builder(512)
 	sb.write_string('-${opts.short_show_help_flag}, --${opts.long_show_help_flag} (show help)')
 	sb.write_string('\n\t-${opts.short_show_version_flag}, --${opts.long_show_version_flag} (show version)')
+	$if !windows {
+		sb.write_string('\n\t-${opts.short_symlink_flag}, --${opts.long_symlink_flag} (symlink lilly into local bin)')
+	}
 	sb.write_string('\n\t-${opts.short_debug_mode_flag}, --${opts.long_debug_mode_flag} (enable debug log out)')
 	sb.write_string('\n\t-${opts.short_render_debug_mode_flag}, --${opts.long_render_debug_mode_flag} (enable render debug mode)')
 	sb.write_string('\n\t-${opts.short_disable_panic_capture_flag}, --${opts.long_disable_panic_capture_flag} (disable persistance of panic stack trace output)')
@@ -159,6 +171,27 @@ fn output_version_and_close(commit_hash string) {
 fn output_help_and_close(opts Options) {
 	msg := './lilly <option flags> <dir path/file path>\nFlags:\n\t${opts.flags_str()}'
 	print_and_exit(msg)
+}
+
+fn symlink_and_close() {
+	$if windows { return }
+	mut link_path := "/data/data/com.termux/files/usr/bin/lilly"
+
+	if !os.is_dir("/data/data/com.termux/files") {
+		link_dir := os.local_bin_dir()
+		if !os.exists(link_dir) {
+			os.mkdir_all(link_dir) or { eprintln("failed to symlink: ${err}"); exit(1) }
+		}
+		link_path = link_dir + "/lilly"
+	}
+
+	os.rm(link_path) or {}
+	os.symlink(os.executable(), link_path) or {
+		eprintln("failed to create symlink '${link_path}'. try again with sudo.")
+	}
+
+	println("created symlink ${link_path} successfully")
+	exit(0)
 }
 
 type WDResolver = fn () string
@@ -181,12 +214,14 @@ fn main() {
 	mut args := os.args[1..].clone()
 	opts := resolve_options_from_args(args)
 
-	// NOTE(tauraamui): I would like it to be possible to output both the
-	//                  version and help simultaniously but this is low priority atm.
-	// 20/Sep/2024 -> future me here, I have no idea what I was on about, like why?
+	if opts.symlink {
+		symlink_and_close()
+	}
+
 	if opts.show_version {
 		output_version_and_close(gitcommit_hash)
 	}
+
 	if opts.show_help {
 		output_help_and_close(opts)
 	}
