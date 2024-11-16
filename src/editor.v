@@ -39,8 +39,8 @@ mut:
 
 interface Root {
 mut:
-	open_file_finder()
-	open_inactive_buffer_finder()
+	open_file_finder(special_mode bool)
+	open_inactive_buffer_finder(special_mode bool)
 	open_file(path string) !
 	close_file_finder()
 	quit()
@@ -77,7 +77,7 @@ fn is_binary_file(path string) bool {
     mut f := os.open(path) or { return false }
     mut buf := []u8{len: 1024}
     bytes_read := f.read_bytes_into(0, mut buf) or { return false }
-    
+
     // Check first N bytes for binary patterns
     mut non_text_bytes := 0
     for i := 0; i < bytes_read; i++ {
@@ -87,7 +87,7 @@ fn is_binary_file(path string) bool {
             non_text_bytes++
         }
     }
-    
+
     // If more than 30% non-text bytes, consider it binary
     return (f64(non_text_bytes) / f64(bytes_read)) > 0.3
 }
@@ -131,10 +131,11 @@ fn (mut editor Editor) open_file(path string) ! {
 	editor.view = &editor.views[editor.views.len - 1]
 }
 
-fn (mut editor Editor) open_file_finder() {
+fn (mut editor Editor) open_file_finder(special_mode bool) {
 	if editor.inactive_buffer_finder_modal_open { return }
 	editor.file_finder_modal_open = true
 	editor.file_finder_modal = FileFinderModal{
+		special_mode: special_mode
 		log:    editor.log
 		title: "FILE BROWSER"
 		file_path:  '**lff**'
@@ -147,10 +148,11 @@ fn (mut editor Editor) close_file_finder() {
 	editor.file_finder_modal_open = false
 }
 
-fn (mut editor Editor) open_inactive_buffer_finder() {
+fn (mut editor Editor) open_inactive_buffer_finder(special_mode bool) {
 	if editor.file_finder_modal_open { return }
 	editor.inactive_buffer_finder_modal_open = true
 	editor.inactive_buffer_finder_modal = FileFinderModal{
+		special_mode: special_mode
 		log: editor.log
 		title: "INACTIVE BUFFERS"
 		file_path:  '**lfb**'

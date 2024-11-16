@@ -23,10 +23,11 @@ const max_height = 20
 struct FileFinderModal {
 	log log.Log
 pub:
-	title      string
-	file_path  string
+	special_mode bool
+	title        string
+	file_path    string
 	@[required]
-	close_fn   ?fn()
+	close_fn     ?fn()
 mut:
 	debug_list_entry_scores []int
 	current_selection       int
@@ -67,7 +68,8 @@ fn (mut file_finder_modal FileFinderModal) draw(mut ctx draw.Contextable) {
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
 	mut y_offset := 1
 	debug_mode_str := if ctx.render_debug() { " *** RENDER DEBUG MODE ***" } else { "" }
-	ctx.draw_text(1, y_offset, "=== ${debug_mode_str} ${file_finder_modal.title} ${debug_mode_str} ===")
+	special_mode_str := if file_finder_modal.special_mode { " - SPECIAL MODE" } else { "" }
+	ctx.draw_text(1, y_offset, "=== ${debug_mode_str} ${file_finder_modal.title}${special_mode_str} ${debug_mode_str} ===")
 	y_offset += 1
 	ctx.set_cursor_position(1, y_offset + file_finder_modal.current_selection - file_finder_modal.from)
 	y_offset += file_finder_modal.draw_scrollable_list(mut ctx, y_offset, file_finder_modal.file_paths)
@@ -119,8 +121,7 @@ fn (mut file_finder_modal FileFinderModal) on_key_down(e draw.Event, mut root Ro
 			file_finder_modal.move_selection_up()
 		}
 		.enter {
-			log.info(e.modifiers.str())
-			skip_byte_check := e.modifiers == .ctrl
+			skip_byte_check := file_finder_modal.special_mode
 			file_finder_modal.file_selected(mut root, skip_byte_check)
 		}
 		.backspace {
