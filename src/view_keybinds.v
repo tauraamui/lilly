@@ -9,18 +9,24 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 				.escape {
 					view.escape()
 				}
+				.x {
+					if !view.leader_state.normal { view.leader_state.special = true }
+					view.leader_state.x_count += 1
+				}
 				.f {
+					if !view.leader_state.special { view.leader_state.normal = true }
 					view.leader_state.f_count += 1
 					if view.leader_state.f_count == 2 {
+						root.open_file_finder(view.leader_state.special)
 						view.escape()
-						root.open_file_finder()
 					}
 				}
 				.b {
+					if !view.leader_state.special { view.leader_state.normal = true }
 					view.leader_state.b_count += 1
 					if view.leader_state.f_count == 1 && view.leader_state.b_count == 1 {
+						root.open_inactive_buffer_finder(view.leader_state.special)
 						view.escape()
-						root.open_inactive_buffer_finder()
 					}
 				}
 				else {}

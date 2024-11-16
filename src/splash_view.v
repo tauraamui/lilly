@@ -38,6 +38,9 @@ mut:
 
 struct LeaderState {
 mut:
+	special     bool
+	normal      bool
+	x_count     int
 	f_count     int
 	b_count     int
 	leader_mode  bool
@@ -47,6 +50,8 @@ fn reset_leader_state(mut state LeaderState) {
 	state.leader_mode = false
 	state.f_count = 0
 	state.b_count = 0
+	state.special = false
+	state.normal  = false
 }
 
 pub fn new_splash(commit_hash string, leader_key string) Viewable {
@@ -168,20 +173,28 @@ pub fn (mut splash SplashScreen) on_key_down(e draw.Event, mut root Root) {
 		}
 		// leader_key { splash.leader_mode = true }
 		// TODO(tauraamui): move to f() method, this line is a too complicated/long statement now
+		.x {
+			if splash.leader_state.leader_mode {
+				splash.leader_state.x_count += 1
+				if !splash.leader_state.normal { splash.leader_state.special = true }
+			}
+		}
 		.f {
 			if splash.leader_state.leader_mode {
 				splash.leader_state.f_count += 1
+				if !splash.leader_state.special { splash.leader_state.normal = true }
 			}
 			if splash.leader_state.f_count == 2 {
-				root.open_file_finder()
+				root.open_file_finder(splash.leader_state.special)
 				reset_leader_state(mut splash.leader_state)
 			}
 		}
 		.b {
 			if splash.leader_state.leader_mode {
 				splash.leader_state.b_count += 1
+				if !splash.leader_state.special { splash.leader_state.normal = true }
 				if splash.leader_state.f_count == 1 && splash.leader_state.b_count >= 1 {
-					root.open_inactive_buffer_finder()
+					root.open_inactive_buffer_finder(splash.leader_state.special)
 					reset_leader_state(mut splash.leader_state)
 				}
 			}

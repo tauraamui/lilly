@@ -144,20 +144,26 @@ const auto_pairs = {
 struct ViewLeaderState {
 mut:
 	mode    Mode
+	special bool
+	normal  bool
 	d_count int
 	f_count int
 	b_count int
 	g_count int
 	z_count int
+	x_count int
 }
 
 fn (mut state ViewLeaderState) reset() {
-	state.mode = .normal
+	state.special = false
+	state.normal  = false
+	state.mode    = .normal
 	state.d_count = 0
 	state.f_count = 0
 	state.b_count = 0
 	state.g_count = 0
 	state.z_count = 0
+	state.x_count = 0
 }
 
 struct View {
