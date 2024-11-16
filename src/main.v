@@ -214,12 +214,14 @@ fn main() {
 	mut args := os.args[1..].clone()
 	opts := resolve_options_from_args(args)
 
-	// NOTE(tauraamui): I would like it to be possible to output both the
-	//                  version and help simultaniously but this is low priority atm.
-	// 20/Sep/2024 -> future me here, I have no idea what I was on about, like why?
+	if opts.symlink {
+		symlink_and_close()
+	}
+
 	if opts.show_version {
 		output_version_and_close(gitcommit_hash)
 	}
+
 	if opts.show_help {
 		output_help_and_close(opts)
 	}
