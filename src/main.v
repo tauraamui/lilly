@@ -72,12 +72,15 @@ fn frame(mut app App) {
 struct Options {
 mut:
 	log_level                        log.Level
-	long_show_version_flag           string
-	short_show_version_flag          string
-	show_version                     bool
 	long_show_help_flag              string
 	short_show_help_flag             string
 	show_help                        bool
+	long_show_version_flag           string
+	short_show_version_flag          string
+	show_version                     bool
+	long_symlink_flag                string
+	short_symlink_flag               string
+	symlink                          bool
 	long_debug_mode_flag             string
 	short_debug_mode_flag            string
 	debug_mode                       bool
@@ -101,6 +104,8 @@ fn resolve_options_from_args(args []string) Options {
 		short_show_version_flag:          'v'
 		long_show_help_flag:              'help'
 		short_show_help_flag:             'h'
+		long_symlink_flag:                'symlink'
+		short_symlink_flag:               'ln'
 		long_debug_mode_flag:             'debug'
 		short_debug_mode_flag:            'd'
 		long_render_debug_mode_flag:      'render-debug'
@@ -113,10 +118,14 @@ fn resolve_options_from_args(args []string) Options {
 		short_log_level_label_flag:       'll'
 	}
 
-	opts.show_version = '--${opts.long_show_version_flag}' in flags
-		|| '-${opts.short_show_version_flag}' in flags
 	opts.show_help = '--${opts.long_show_help_flag}' in flags
 		|| '-${opts.short_show_help_flag}' in flags
+	opts.show_version = '--${opts.long_show_version_flag}' in flags
+		|| '-${opts.short_show_version_flag}' in flags
+	$if !windows {
+		opts.symlink = '--${opts.long_symlink_flag}' in flags
+			|| '-${opts.short_symlink_flag}' in flags
+	}
 	opts.debug_mode = '--${opts.long_debug_mode_flag}' in flags
 		|| '-${opts.short_debug_mode_flag}' in flags
 	opts.render_debug_mode = '--${opts.long_render_debug_mode_flag}' in flags
@@ -144,6 +153,9 @@ fn (opts Options) flags_str() string {
 	mut sb := strings.new_builder(512)
 	sb.write_string('-${opts.short_show_help_flag}, --${opts.long_show_help_flag} (show help)')
 	sb.write_string('\n\t-${opts.short_show_version_flag}, --${opts.long_show_version_flag} (show version)')
+	$if !windows {
+		sb.write_string('\n\t-${opts.short_symlink_flag}, --${opts.long_symlink_flag} (symlink lilly into local bin)')
+	}
 	sb.write_string('\n\t-${opts.short_debug_mode_flag}, --${opts.long_debug_mode_flag} (enable debug log out)')
 	sb.write_string('\n\t-${opts.short_render_debug_mode_flag}, --${opts.long_render_debug_mode_flag} (enable render debug mode)')
 	sb.write_string('\n\t-${opts.short_disable_panic_capture_flag}, --${opts.long_disable_panic_capture_flag} (disable persistance of panic stack trace output)')
