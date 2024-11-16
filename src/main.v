@@ -173,6 +173,27 @@ fn output_help_and_close(opts Options) {
 	print_and_exit(msg)
 }
 
+fn symlink_and_close() {
+	$if windows { return }
+	mut link_path := "/data/data/com.termux/files/usr/bin/lilly"
+
+	if !os.is_dir("/data/data/com.termux/files") {
+		link_dir := os.local_bin_dir()
+		if !os.exists(link_dir) {
+			os.mkdir_all(link_dir) or { eprintln("failed to symlink: ${err}"); exit(1) }
+		}
+		link_path = link_dir + "/lilly"
+	}
+
+	os.rm(link_path) or {}
+	os.symlink(os.executable(), link_path) or {
+		eprintln("failed to create symlink '${link_path}'. try again with sudo.")
+	}
+
+	println("created symlink ${link_path} successfully")
+	exit(0)
+}
+
 type WDResolver = fn () string
 
 fn resolve_file_and_workspace_dir_paths(args []string, resolve_wd WDResolver) !(string, string) {
