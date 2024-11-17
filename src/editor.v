@@ -93,10 +93,6 @@ fn is_binary_file(path string) bool {
 }
 
 fn (mut editor Editor) open_file(path string) ! {
-	if is_binary_file(path) {
-		return error('cannot open binary file "${path}"')
-	}
-
 	defer {
 		editor.close_file_finder()
 		editor.close_inactive_buffer_finder()
