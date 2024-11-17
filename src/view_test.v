@@ -261,6 +261,37 @@ fn test_visual_line_select_delete_and_paste_works_correctly() {
 	assert fake_view.buffer.lines == ['1. first line', '4. fourth line', '2. second line', '3. third line']
 }
 
+fn test_visual_select_copy_and_paste_works_correctly() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log:       unsafe { nil }
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = ['This is kind of a mega line right? It is pretty long!', '2. second line', '3. third line', '4. fourth line']
+
+	// move cursor along line for a bit
+	fake_view.w()
+	fake_view.w()
+	fake_view.w()
+
+	// visual mode
+	fake_view.v()
+
+	// select some stuff
+	fake_view.e()
+	fake_view.e()
+	fake_view.e()
+	fake_view.e()
+
+	fake_view.y()
+
+	assert fake_view.clipboard.get_content() == clipboardv2.ClipboardContent{
+		type: .inline
+		data: "of a mega line"
+	}
+}
+
 fn test_o_inserts_sentance_line() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
