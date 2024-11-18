@@ -290,6 +290,13 @@ fn test_visual_select_copy_and_paste_works_correctly() {
 		type: .inline
 		data: "of a mega line"
 	}
+
+	fake_view.j()
+	fake_view.e()
+	fake_view.e()
+
+	fake_view.p()
+	assert fake_view.buffer.lines[1] == "2. secondof a mega line"
 }
 
 fn test_o_inserts_sentance_line() {
