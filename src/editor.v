@@ -109,7 +109,7 @@ fn (mut editor Editor) open_file(path string) ! {
 	// couldn't find a view, so now search for an existing buffer with no view
 	for i, buffer in editor.buffers {
 		if buffer.file_path == path {
-			editor.views << open_view(editor.workspace.config, editor.workspace.branch(),
+			editor.views << open_view(mut editor.log, editor.workspace.config, editor.workspace.branch(),
 				editor.workspace.syntaxes(), editor.clipboard, mut &editor.buffers[i])
 			editor.view = &editor.views[editor.views.len - 1]
 			return
@@ -122,7 +122,7 @@ fn (mut editor Editor) open_file(path string) ! {
 	}
 	buff.load_from_path() or { return err }
 	editor.buffers << buff
-	editor.views << open_view(editor.workspace.config, editor.workspace.branch(), editor.workspace.syntaxes(),
+	editor.views << open_view(mut editor.log, editor.workspace.config, editor.workspace.branch(), editor.workspace.syntaxes(),
 		editor.clipboard, mut &editor.buffers[editor.buffers.len - 1])
 	editor.view = &editor.views[editor.views.len - 1]
 }

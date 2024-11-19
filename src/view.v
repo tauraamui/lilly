@@ -170,7 +170,7 @@ struct View {
 pub:
 	file_path string
 mut:
-	log                       &log.Log
+	log                       log.Log
 	path                      string
 	branch                    string
 	config                    workspace.Config
@@ -521,9 +521,9 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 	cmd_buf.code = .blank
 }
 
-fn open_view(config workspace.Config, branch string, syntaxes []workspace.Syntax, _clipboard clipboardv2.Clipboard, mut buff buffer.Buffer) Viewable {
+fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes []workspace.Syntax, _clipboard clipboardv2.Clipboard, mut buff buffer.Buffer) Viewable {
 	mut res := View{
-		log:             unsafe { nil }
+		log:             _log
 		branch:          branch
 		syntaxes:        syntaxes
 		file_path:       buff.file_path
@@ -1752,6 +1752,10 @@ fn (mut view View) p() {
 	content := view.clipboard.get_content()
 	match content.type {
 		.none { return }
+		.inline {
+			line_after_cursor := view.buffer.lines[view.cursor.pos.y][view.cursor.pos.x..]
+			view.log.debug(line_after_cursor)
+		}
 		.block {
 			if insert_below {
 				view.buffer.lines.insert(view.cursor.pos.y + 1, content.data.split("\n"))
@@ -1759,7 +1763,6 @@ fn (mut view View) p() {
 				view.hat()
 			}
 		}
-		else {}
 	}
 }
 
