@@ -1753,8 +1753,8 @@ fn (mut view View) p() {
 	match content.type {
 		.none { return }
 		.inline {
-			line_after_cursor := view.buffer.lines[view.cursor.pos.y][view.cursor.pos.x..]
-			view.log.debug(line_after_cursor)
+			view.buffer.lines[view.cursor.pos.y] = "${view.buffer.lines[view.cursor.pos.y][..view.cursor.pos.x + 1]}${content.data}${view.buffer.lines[view.cursor.pos.y][view.cursor.pos.x + 1..]}"
+			view.cursor.pos.x += content.data.runes().len
 		}
 		.block {
 			if insert_below {

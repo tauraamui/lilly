@@ -271,6 +271,8 @@ fn test_visual_select_copy_and_paste_works_correctly() {
 	}
 	fake_view.buffer.lines = ['This is kind of a mega line right? It is pretty long!', '2. second line', '3. third line', '4. fourth line']
 
+	fake_view.cursor.pos.y = 0
+
 	// move cursor along line for a bit
 	fake_view.w()
 	fake_view.w()
@@ -287,17 +289,20 @@ fn test_visual_select_copy_and_paste_works_correctly() {
 
 	fake_view.y()
 
+	fake_view.escape() // TODO(tauraamui) -> this should be redundant
+
 	assert fake_view.clipboard.get_content() == clipboardv2.ClipboardContent{
 		type: .inline
 		data: "of a mega line"
 	}
 
 	fake_view.j()
+	fake_view.hat()
 	fake_view.e()
 	fake_view.e()
 
 	fake_view.p()
-	assert fake_view.buffer.lines[1] == "2. secondof a mega line"
+	assert fake_view.buffer.lines[1] == "2. secondof a mega line line"
 }
 
 fn test_o_inserts_sentance_line() {
