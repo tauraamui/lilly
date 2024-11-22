@@ -1753,8 +1753,13 @@ fn (mut view View) p() {
 	match content.type {
 		.none { return }
 		.inline {
-			view.buffer.lines[view.cursor.pos.y] = "${view.buffer.lines[view.cursor.pos.y][..view.cursor.pos.x + 1]}${content.data}${view.buffer.lines[view.cursor.pos.y][view.cursor.pos.x + 1..]}"
-			view.cursor.pos.x += content.data.runes().len
+			content_data_array := content.data.split("\n")
+			if content_data_array.len == 1 {
+				pre_cursor := view.buffer.lines[view.cursor.pos.y][..view.cursor.pos.x + 1]
+				post_cursor := view.buffer.lines[view.cursor.pos.y][view.cursor.pos.x + 1..]
+				view.buffer.lines[view.cursor.pos.y] = pre_cursor + content_data_array[0] + post_cursor
+				view.cursor.pos.x += content_data_array[0].runes().len
+			}
 		}
 		.block {
 			if insert_below {
