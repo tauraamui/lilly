@@ -19,6 +19,7 @@ import term.ui as tui
 import log
 import datatypes
 import strconv
+import strings
 import regex
 import lib.clipboardv2
 import lib.buffer
@@ -1759,6 +1760,7 @@ fn (mut view View) p() {
 				post_cursor := view.buffer.lines[view.cursor.pos.y][view.cursor.pos.x + 1..]
 				view.buffer.lines[view.cursor.pos.y] = pre_cursor + content_data_array[0] + post_cursor
 				view.cursor.pos.x += content_data_array[0].runes().len
+				return
 			}
 		}
 		.block {
@@ -1882,6 +1884,27 @@ fn (mut view View) y() {
 				})
 				return
 			}
+
+			mut sb := strings.Builder{}
+			for y in start.y..end.y {
+				if y == start.y {
+					println("y; ${y}, start_y: ${start.y}")
+					sb.write_string(view.buffer.lines[y][start.x + 1..])
+					sb.write_string("\n")
+					continue
+				}
+				if y == end.y {
+					sb.write_string(view.buffer.lines[y][..end.x + 1])
+					continue
+				}
+				sb.write_string(view.buffer.lines[y])
+				sb.write_string("\n")
+			}
+
+			view.clipboard.set_content(clipboardv2.ClipboardContent{
+				type: .inline,
+				data: sb.str()
+			})
 		}
 		.visual_line {
 			start_index   := view.cursor.selection_start().y

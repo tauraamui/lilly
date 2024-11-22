@@ -305,6 +305,54 @@ fn test_visual_select_copy_and_paste_works_correctly() {
 	assert fake_view.buffer.lines[1] == "2. secondof a mega line line"
 }
 
+fn test_visual_select_across_multiple_lines_copy_and_paste_works_correctly() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log:       log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = ['This is kind of a mega line right? It is pretty long!', '2. second line', '3. third line', '4. fourth line']
+
+	fake_view.cursor.pos.y = 0
+
+	// move cursor along line for a bit
+	fake_view.w()
+	fake_view.w()
+	fake_view.w()
+
+	// visual mode
+	fake_view.v()
+
+	// select some stuff
+	fake_view.e()
+	fake_view.e()
+	fake_view.e()
+	fake_view.e()
+
+	fake_view.j()
+
+	fake_view.e()
+	fake_view.e()
+
+	fake_view.y()
+
+	fake_view.escape() // TODO(tauraamui) -> this should be redundant
+
+	assert fake_view.clipboard.get_content() == clipboardv2.ClipboardContent{
+		type: .inline
+		data: "of a mega line"
+	}
+
+	fake_view.j()
+	fake_view.hat()
+	fake_view.e()
+	fake_view.e()
+
+	fake_view.p()
+	assert fake_view.buffer.lines[1] == "2. secondof a mega line line"
+}
+
 fn test_o_inserts_sentance_line() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
