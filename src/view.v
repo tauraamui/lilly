@@ -1884,26 +1884,18 @@ fn (mut view View) y() {
 				})
 				return
 			}
+			mut copied_line_contents := []string{}
+			println(end.y - start.y)
+			selection_line_span := end.y - start.y
+			copied_line_contents << view.buffer.lines[start.y][view.cursor.pos.x + 1..]
 
-			mut sb := strings.Builder{}
-			for y in start.y..end.y {
-				if y == start.y {
-					println("y; ${y}, start_y: ${start.y}")
-					sb.write_string(view.buffer.lines[y][start.x + 1..])
-					sb.write_string("\n")
-					continue
-				}
-				if y == end.y {
-					sb.write_string(view.buffer.lines[y][..end.x + 1])
-					continue
-				}
-				sb.write_string(view.buffer.lines[y])
-				sb.write_string("\n")
+			for i in 1..selection_line_span {
+				copied_line_contents << view.buffer.lines[start.y + i]
 			}
-
+			copied_line_contents << view.buffer.lines[end.y][..view.cursor.pos.x + 1]
 			view.clipboard.set_content(clipboardv2.ClipboardContent{
 				type: .inline,
-				data: sb.str()
+				data: copied_line_contents.join("\n")
 			})
 		}
 		.visual_line {
