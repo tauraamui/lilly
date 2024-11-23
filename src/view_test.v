@@ -17,6 +17,7 @@ module main
 import arrays
 import lib.clipboardv2
 import lib.workspace
+import lib.chords
 import json
 import lib.draw
 import term.ui as tui
@@ -316,41 +317,31 @@ fn test_visual_select_across_multiple_lines_copy_and_paste_works_correctly() {
 
 	fake_view.cursor.pos.y = 0
 
-	// move cursor along line for a bit
-	fake_view.w()
-	fake_view.w()
-	fake_view.w()
+	fake_view.dollar()
+	fake_view.exec(chords.Op{
+		repeat: 6
+		kind: .move
+		direction: .word_reverse
+	})
 
-	// visual mode
+	assert fake_view.cursor.pos.x == 28
+
 	fake_view.v()
-
-	// select some stuff
-	fake_view.e()
-	fake_view.e()
-	fake_view.e()
-	fake_view.e()
-
 	fake_view.j()
-
-	fake_view.e()
-	fake_view.e()
-
+	fake_view.dollar()
+	fake_view.exec(chords.Op{
+		repeat: 2
+		kind: .move
+		direction: .word_end
+	})
+	assert fake_view.cursor.pos.y == 2
 	fake_view.y()
-
-	fake_view.escape() // TODO(tauraamui) -> this should be redundant
+	fake_view.escape()
 
 	assert fake_view.clipboard.get_content() == clipboardv2.ClipboardContent{
 		type: .inline
-		data: "of a mega line"
+		data: "kind of a mega line right? It is pretty long!\n2. second line\n3. third"
 	}
-
-	fake_view.j()
-	fake_view.hat()
-	fake_view.e()
-	fake_view.e()
-
-	fake_view.p()
-	assert fake_view.buffer.lines[1] == "2. secondof a mega line line"
 }
 
 fn test_o_inserts_sentance_line() {
