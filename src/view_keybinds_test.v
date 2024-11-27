@@ -3,6 +3,7 @@ module main
 import lib.clipboardv2
 import lib.draw
 import term.ui as tui
+import log
 
 struct MovementKeyEventTestCase {
 	disabled            bool
@@ -270,7 +271,7 @@ fn test_sets_of_key_events_for_views_on_key_down_adjusting_cursor_position() {
 			file_finder_modal: unsafe { nil }
 		}
 		mut fake_view := View{
-			log:       unsafe { nil }
+			log:       log.Log{}
 			leader_state: ViewLeaderState{ mode: .normal }
 			clipboard: mut clip
 		}
@@ -297,7 +298,7 @@ fn test_w_moves_cursor_to_next_line_with_plain_comments() {
 		file_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
-		log:       unsafe { nil }
+		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 	}

@@ -19,6 +19,7 @@ import term.ui as tui
 import log
 import datatypes
 import strconv
+import strings
 import regex
 import lib.clipboardv2
 import lib.buffer
@@ -170,7 +171,7 @@ struct View {
 pub:
 	file_path string
 mut:
-	log                       &log.Log
+	log                       log.Log
 	path                      string
 	branch                    string
 	config                    workspace.Config
@@ -521,9 +522,9 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 	cmd_buf.code = .blank
 }
 
-fn open_view(config workspace.Config, branch string, syntaxes []workspace.Syntax, _clipboard clipboardv2.Clipboard, mut buff buffer.Buffer) Viewable {
+fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes []workspace.Syntax, _clipboard clipboardv2.Clipboard, mut buff buffer.Buffer) Viewable {
 	mut res := View{
-		log:             unsafe { nil }
+		log:             _log
 		branch:          branch
 		syntaxes:        syntaxes
 		file_path:       buff.file_path
@@ -1752,6 +1753,16 @@ fn (mut view View) p() {
 	content := view.clipboard.get_content()
 	match content.type {
 		.none { return }
+		.inline {
+			content_data_array := content.data.split("\n")
+			if content_data_array.len == 1 {
+				pre_cursor := view.buffer.lines[view.cursor.pos.y][..view.cursor.pos.x + 1]
+				post_cursor := view.buffer.lines[view.cursor.pos.y][view.cursor.pos.x + 1..]
+				view.buffer.lines[view.cursor.pos.y] = pre_cursor + content_data_array[0] + post_cursor
+				view.cursor.pos.x += content_data_array[0].runes().len
+				return
+			}
+		}
 		.block {
 			if insert_below {
 				view.buffer.lines.insert(view.cursor.pos.y + 1, content.data.split("\n"))
@@ -1759,7 +1770,6 @@ fn (mut view View) p() {
 				view.hat()
 			}
 		}
-		else {}
 	}
 }
 
@@ -1874,6 +1884,19 @@ fn (mut view View) y() {
 				})
 				return
 			}
+			mut copied_line_contents := []string{}
+			println(end.y - start.y)
+			selection_line_span := end.y - start.y
+			copied_line_contents << view.buffer.lines[start.y][view.cursor.pos.x + 1..]
+
+			for i in 1..selection_line_span {
+				copied_line_contents << view.buffer.lines[start.y + i]
+			}
+			copied_line_contents << view.buffer.lines[end.y][..view.cursor.pos.x + 1]
+			view.clipboard.set_content(clipboardv2.ClipboardContent{
+				type: .inline,
+				data: copied_line_contents.join("\n")
+			})
 		}
 		.visual_line {
 			start_index   := view.cursor.selection_start().y
