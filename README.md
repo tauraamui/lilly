@@ -60,3 +60,6 @@ Not a problem, Neovim/VIM are fantastic existing projects and are freely availab
 (experimental GUI render target)
 
 ![Screenshot 2023-12-13 21 10 40](https://github.com/tauraamui/lilly/assets/3159648/17ec7286-ecc2-4e68-addd-9c503afd45ee)
+
+![scene](https://github.com/user-attachments/assets/f1164d08-1507-492f-b919-91cbb8844cac)
+
