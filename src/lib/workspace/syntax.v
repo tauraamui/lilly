@@ -7,6 +7,10 @@ const builtin_v_syntax = $embed_file('../../syntax/v.syntax').to_string()
 const builtin_go_syntax = $embed_file('../../syntax/go.syntax').to_string()
 const builtin_c_syntax = $embed_file('../../syntax/c.syntax').to_string()
 const builtin_rust_syntax = $embed_file('../../syntax/rust.syntax').to_string()
+const builtin_js_syntax = $embed_file('../../syntax/javascript.syntax').to_string()
+const builtin_ts_syntax = $embed_file('../../syntax/typescript.syntax').to_string()
+const builtin_python_syntax = $embed_file('../../syntax/python.syntax').to_string()
+const builtin_perl_syntax = $embed_file('../../syntax/perl.syntax').to_string()
 
 pub struct Syntax {
 pub:
@@ -33,6 +37,22 @@ fn (mut workspace Workspace) load_builtin_syntaxes() {
 		panic('builtin Rust syntax file failed to decode: ${err}')
 	}
 	workspace.syntaxes << rust_syntax
+	js_syntax := json.decode(Syntax, builtin_js_syntax) or {
+		panic('builtin JavaScript syntax file failed to decode: ${err}')
+	}
+	workspace.syntaxes << js_syntax
+	ts_syntax := json.decode(Syntax, builtin_ts_syntax) or {
+		panic('builtin TypeScript syntax file failed to decode: ${err}')
+	}
+	workspace.syntaxes << ts_syntax
+	python_syntax := json.decode(Syntax, builtin_python_syntax) or {
+		panic('builtin Python syntax file failed to decode: ${err}')
+	}
+	workspace.syntaxes << python_syntax
+	perl_syntax := json.decode(Syntax, builtin_perl_syntax) or {
+		panic('builting Perl syntax file failed to decode: ${err}')
+	}
+	workspace.syntaxes << perl_syntax
 }
 
 fn (mut workspace Workspace) load_syntaxes_from_disk(config_dir fn () !string, dir_walker fn (path string, f fn (string)), read_file fn (path string) !string) ! {
@@ -72,6 +92,30 @@ fn (mut workspace Workspace) load_syntaxes_from_disk(config_dir fn () !string, d
 		if file_path.ends_with('rust.syntax') {
 			unsafe {
 				syns[3] = syn
+			}
+			return
+		}
+		if file_path.ends_with('js.syntax') {
+			unsafe {
+				syns[4] = syn
+			}
+			return
+		}
+		if file_path.ends_with('ts.syntax') {
+			unsafe {
+				syns[5] = syn
+			}
+			return
+		}
+		if file_path.ends_with('python.syntax') {
+			unsafe {
+				syns[6] = syn
+			}
+			return
+		}
+		if file_path.ends_with('perl.syntax') {
+			unsafe {
+				syns[7] = syn
 			}
 			return
 		}
