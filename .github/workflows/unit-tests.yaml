@@ -15,11 +15,14 @@ jobs:
         with:
           check-latest: true
 
+      - name: Install clockwork
+        run: v run ./install-clockwork.vsh
+
       - name: Checkout lilly
         uses: actions/checkout@v2
 
       - name: Build lilly
-        run: ./just.sh build
+        run: clockwork build
 
       - name: Run Tests
         run: v -stats test ./src
