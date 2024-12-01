@@ -31,19 +31,14 @@ Our project is focused on the development of a text editor that serves as a prac
 - [x] Search/Find files
 - [ ] Workspace wide search (ripgrep + roll your own)
 
-# How to build (requires the V compiler https://vlang.io)
+## How to build (requires the V compiler https://vlang.io)
 
-1. Install the clockwork build tool by executing this command:
+1. Install the clockwork build tool by executing this command: `v run ./install-clockwork.vsh`
 
-`v run ./install-clockwork.vsh`
+2. Build lilly by executing: `clockwork build`
+	or build and run with `clockwork run`
 
-2. Build lilly by executing:
-
-`clockwork build` or build and run with `clockwork run`
-
-You can see what other tasks are available to run with
-
-`clockwork --tasks`
+You can see what other tasks are available to run with `clockwork --tasks`
 
 # The Rationale
 ### Inclusive Functionality
