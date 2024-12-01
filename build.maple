@@ -6,7 +6,7 @@ task:build = {
 }
 
 task:run = {
-    help = 'Run lilly'
+    help = 'Runs lilly without building full binary'
     depends = [ 'generate-git-hash' ]
     run = 'v -g run ./src .'
 }
@@ -38,12 +38,12 @@ task:generate-git-hash = {
     run = 'git log -n 1 --pretty=format:"%h" | tee ./src/.githash'
 }
 
-task:apply-license-header = {
+documentation:apply-license-header = {
     help = 'Appends the license header to each source code file'
     run = 'addlicense -c "The Lilly Editor contributors" -y "2023" ./src/*.v'
 }
 
-task:install-license-tool = {
+documentation:install-license-tool = {
     help = 'REQUIRES GO: installs the program used to insert the license header into each source file'
     run = 'go install github.com/google/addlicense@latest'
 }
