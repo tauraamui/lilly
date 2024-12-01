@@ -1,5 +1,5 @@
 {
-	"name": "JavaScript",
+	"name": "TypeScript",
 	"extensions": [".ts", ".tsx"],
 	"keywords": [
 		"arguments",
