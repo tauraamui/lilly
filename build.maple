@@ -1,0 +1,50 @@
+
+task:build = {
+    help = 'Compile prod binary of lilly'
+    depends = [ 'generate-git-hash' ]
+    run = 'v ./src -o lilly -prod'
+}
+
+task:run = {
+    help = 'Runs lilly without building full binary'
+    depends = [ 'generate-git-hash' ]
+    run = 'v -g run ./src .'
+}
+
+task:run-debug-log = {
+    help = 'Run lilly with log level set to debug'
+    depends = [ 'generate-git-hash' ]
+    run = 'v -g run ./src --log-level debug .'
+}
+
+task:run-gui = {
+    help = 'Run lilly with experimental GUI as the render target'
+    depends = [ 'generate-git-hash' ]
+    run = 'v -g -d gui run ./src .'
+}
+
+task:run-debug = {
+    help = 'Run lilly in debug mode'
+}
+
+task:test = {
+    help = 'Execute all lilly tests'
+    depends = [ 'generate-git-hash' ]
+    run = 'v -g test ./src'
+}
+
+task:generate-git-hash = {
+    help = 'Generates .githash which just contains the hash of the current branches last commit hash'
+    run = 'git log -n 1 --pretty=format:"%h" | tee ./src/.githash'
+}
+
+documentation:apply-license-header = {
+    help = 'Appends the license header to each source code file'
+    run = 'addlicense -c "The Lilly Editor contributors" -y "2023" ./src/*.v'
+}
+
+documentation:install-license-tool = {
+    help = 'REQUIRES GO: installs the program used to insert the license header into each source file'
+    run = 'go install github.com/google/addlicense@latest'
+}
+
