@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - master
+      - chore/migrate-to-clockwork-builder
 jobs:
   unit_tests:
     runs-on: ubuntu-latest
