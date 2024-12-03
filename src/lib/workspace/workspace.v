@@ -55,11 +55,28 @@ pub fn open_workspace(mut _log Logger,
 
 fn (mut workspace Workspace) resolve_git_branch_name(path string, is_dir fn (path string) bool, read_file fn (path string) !string) {
 	prefix := '\uE0A0' // the git branch symbol rune
-	git_dir := os.join_path(path, '.git')
-	if is_dir(git_dir) {
-		head_contents := read_file(os.join_path(git_dir, 'HEAD')) or { return }
-		workspace.git_branch = '${prefix} ${head_contents.runes()[16..].string()}'
+	// git_dir := os.join_path(path, '.git')
+	wt := spawn currently_in_worktree()
+	in_wt := wt.wait()
+	if in_wt {
+		gb := spawn get_branch()
+		branch := gb.wait()
+		workspace.git_branch = '${prefix} ${branch}'
 	}
+	// if is_dir(git_dir) {
+	// 	head_contents := read_file(os.join_path(git_dir, 'HEAD')) or { return }
+	// 	workspace.git_branch = '${prefix} ${head_contents.runes()[16..].string()}'
+	// }
+}
+
+fn currently_in_worktree() bool {
+	res := os.execute('git rev-parse --is-inside-work-tree')
+	return res.exit_code == 0
+}
+
+fn get_branch() string {
+	res := os.execute('git branch --show-current')
+	return res.output
 }
 
 fn (mut workspace Workspace) resolve_files(path string,
@@ -104,7 +121,7 @@ fn resolve_config(mut _log Logger, config_dir fn () !string, read_file fn (path 
 // if we the editor authors have fucked up the default config file format, this kind of
 // issue should never make it out to production, hence the acceptable panic here.
 fn fallback_to_bundled_default_config() Config {
-	return json.decode(Config, workspace.builtin_lilly_config_file_content) or {
+	return json.decode(Config, builtin_lilly_config_file_content) or {
 		panic('decoding bundled config failed: ${err}')
 	}
 }
@@ -113,7 +130,7 @@ fn attempt_to_load_from_disk(config_dir fn () !string, read_file fn (path string
 	config_root_dir := config_dir() or {
 		return error('unable to resolve local config root directory')
 	}
-	config_file_full_path := os.join_path(config_root_dir, workspace.lilly_config_root_dir_name,
+	config_file_full_path := os.join_path(config_root_dir, lilly_config_root_dir_name,
 		'lilly.conf')
 	config_file_contents := read_file(config_file_full_path) or {
 		return error('local config file ${config_file_full_path} not found: ${err}')
