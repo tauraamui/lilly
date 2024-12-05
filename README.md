@@ -61,6 +61,44 @@ Not a problem, Neovim/VIM are fantastic existing projects and are freely availab
 
 ### misc + extra information
 
+### memleak checks
+
+On macOS we get this output from running:
+
+`leaks --atExit -- ./lilly .`
+
+```
+lilly(53176) MallocStackLogging: could not tag MSL-related memory as no_footprint, so those pages will be included in process footprint - (null)
+lilly(53176) MallocStackLogging: recording malloc and VM allocation stacks using lite mode
+Process 53176 is not debuggable. Due to security restrictions, leaks can only show or save contents of readonly memory of restricted processes.
+
+Process:         lilly [53176]
+Path:            /Users/USER/*/lilly
+Load Address:    0x10294c000
+Identifier:      lilly
+Version:         0
+Code Type:       ARM64
+Platform:        macOS
+Parent Process:  leaks [53172]
+
+Date/Time:       2024-12-05 11:07:02.409 +0000
+Launch Time:     2024-12-05 11:06:46.429 +0000
+OS Version:      macOS 13.2.1 (22D68)
+Report Version:  7
+Analysis Tool:   /usr/bin/leaks
+
+Physical footprint:         4513K
+Physical footprint (peak):  4529K
+Idle exit: untracked
+----
+
+leaks Report Version: 4.0, multi-line stacks
+Process 53176: 226 nodes malloced for 22 KB
+Process 53176: 0 leaks for 0 total leaked bytes.
+```
+
+Look at that. 0 memory leaks.
+
 (experimental GUI render target)
 
 ![Screenshot 2023-12-13 21 10 40](https://github.com/tauraamui/lilly/assets/3159648/17ec7286-ecc2-4e68-addd-9c503afd45ee)
