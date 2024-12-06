@@ -13,6 +13,31 @@ fn test_inserting_into_gap_buffer() {
 	assert gb.raw_str() == "123456${'_'.repeat(gap_size)}" // thanks to resizing gap is now back to "gap size" post cursor loc
 }
 
+fn test_inserting_into_gap_buffer_and_then_backspacing() {
+	mut gb := GapBuffer.new()
+	assert gb.raw_str() == "_".repeat(gap_size) // if the buffer is empty, str shows just the gap
+
+	gb.insert("This is a full sentence!") // insert a string which is 1 char less than the gap size
+	assert gb.empty_gap_space_size() == 6
+	assert gb.raw_str() == "This is a full sentence!${'_'.repeat(gap_size)}" // so we can see the gap is "nearly full", but one space is left
+
+	gb.backspace()
+	assert gb.empty_gap_space_size() == 7
+	assert gb.raw_str() == "This is a full sentence${'_'.repeat(gap_size + 1)}" // so we can see the gap is "nearly full", but one space is left
+
+	gb.backspace()
+	gb.backspace()
+	gb.backspace()
+	gb.backspace()
+
+	assert gb.empty_gap_space_size() == 11
+	assert gb.raw_str() == "This is a full sent${'_'.repeat(gap_size + 5)}" // so we can see the gap is "nearly full", but one space is left
+
+	gb.insert("A")
+	assert gb.empty_gap_space_size() == 10
+	assert gb.raw_str() == "This is a full sentA${'_'.repeat(gap_size + 4)}" // so we can see the gap is "nearly full", but one space is left
+}
+
 fn test_moving_cursor_left() {
 	mut gb := GapBuffer.new()
 
