@@ -33,7 +33,7 @@ fn GapBuffer.new() GapBuffer {
 	}
 }
 
-fn (mut gap_buffer GapBuffer) insert(s string) {
+pub fn (mut gap_buffer GapBuffer) insert(s string) {
 	for r in s.runes() {
 		gap_buffer.insert_rune(r)
 	}
@@ -46,23 +46,27 @@ fn (mut gap_buffer GapBuffer) insert_rune(r rune) {
 }
 
 fn (mut gap_buffer GapBuffer) resize_if_full() {
-	if gap_buffer.gap_start == gap_buffer.gap_end {
-		size := gap_buffer.data.len * 2
-		mut data_dest := []rune{ len: size, cap: size }
-		arrays.copy(mut data_dest, gap_buffer.data[..gap_buffer.gap_start])
+	if gap_buffer.empty_gap_space_size() != 0 { return }
+	size := gap_buffer.data.len * 2
+	mut data_dest := []rune{ len: size, cap: size }
+	arrays.copy(mut data_dest, gap_buffer.data[..gap_buffer.gap_start])
 
-		gap_start := gap_buffer.gap_start
-		gap_end := gap_buffer.gap_start + gap_size
+	gap_start := gap_buffer.gap_start
+	gap_end := gap_buffer.gap_start + gap_size
 
-		arrays.copy(mut data_dest[..gap_end], gap_buffer.data[..gap_buffer.gap_end])
+	arrays.copy(mut data_dest[..gap_end], gap_buffer.data[..gap_buffer.gap_end])
 
-		gap_buffer.data = data_dest
-		gap_buffer.gap_start = gap_start
-		gap_buffer.gap_end = gap_end
-	}
+	gap_buffer.data = data_dest
+	gap_buffer.gap_start = gap_start
+	gap_buffer.gap_end = gap_end
 }
 
-fn (gap_buffer GapBuffer) str() string {
+@[inline]
+fn (gap_buffer GapBuffer) empty_gap_space_size() int {
+	return gap_buffer.gap_end - gap_buffer.gap_start
+}
+
+fn (gap_buffer GapBuffer) raw_str() string {
 	mut sb := strings.new_builder(512)
 	sb.write_runes(gap_buffer.data[..gap_buffer.gap_start])
 	sb.write_string(strings.repeat_string("_", gap_buffer.gap_end - gap_buffer.gap_start))
