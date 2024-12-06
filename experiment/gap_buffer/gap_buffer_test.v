@@ -60,7 +60,6 @@ fn test_inserting_into_gap_buffer_and_then_deleting() {
 	assert gb.raw_str() == "This is a full${'_'.repeat(gap_size + 5)}ence!" // so we can see the gap is "nearly full", but one space is left
 }
 
-
 fn test_moving_cursor_left() {
 	mut gb := GapBuffer.new()
 
@@ -104,4 +103,6 @@ fn test_moving_cursor_left_and_then_insert() {
 
 	gb.insert("+")
 	assert gb.raw_str() == "Some test text, her??+${'_'.repeat(gap_size)}e we go!"
+
+	assert gb.str() == "Some test text, her??+e we go!"
 }

@@ -94,6 +94,11 @@ fn (gap_buffer GapBuffer) empty_gap_space_size() int {
 	return gap_buffer.gap_end - gap_buffer.gap_start
 }
 
+@[inline]
+fn (gap_buffer GapBuffer) str() string {
+	return gap_buffer.data[..gap_buffer.gap_start].string() + gap_buffer.data[gap_buffer.gap_end..].string()
+}
+
 fn (gap_buffer GapBuffer) raw_str() string {
 	mut sb := strings.new_builder(512)
 	sb.write_runes(gap_buffer.data[..gap_buffer.gap_start])
