@@ -52,5 +52,25 @@
     	"rune",
     	"complex64",
     	"complex128"
-    ]
+    ],
+	"builtins": [
+		"append",
+		"cap",
+		"clear",
+		"close",
+		"complex",
+		"copy",
+		"delete",
+		"imag",
+		"len",
+		"make",
+		"max",
+		"min",
+		"new",
+		"panic",
+		"print",
+		"println",
+		"real",
+		"recover"
+	]
 }

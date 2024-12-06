@@ -64,11 +64,15 @@ fn test_open_workspace_loads_builtin_syntax() {
 	mut mock_log := MockLogger{}
 	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker,
 		mock_fs.config_dir, mock_fs.read_file) or { panic('${err.msg()}') }
-	assert wrkspace.syntaxes.len == 4
+	assert wrkspace.syntaxes.len == 8
 	assert wrkspace.syntaxes[0].name == 'V'
 	assert wrkspace.syntaxes[1].name == 'Go'
 	assert wrkspace.syntaxes[2].name == 'C'
 	assert wrkspace.syntaxes[3].name == 'Rust'
+	assert wrkspace.syntaxes[4].name == 'JavaScript'
+	assert wrkspace.syntaxes[5].name == 'TypeScript'
+	assert wrkspace.syntaxes[6].name == 'Python'
+	assert wrkspace.syntaxes[7].name == 'Perl'
 }
 
 fn test_open_workspace_overrides_builtin_syntax() {
@@ -89,7 +93,7 @@ fn test_open_workspace_overrides_builtin_syntax() {
 	mut mock_log := MockLogger{}
 	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker,
 		mock_fs.config_dir, mock_fs.read_file) or { panic('${err.msg()}') }
-	assert wrkspace.syntaxes.len == 4
+	assert wrkspace.syntaxes.len == 8
 	assert wrkspace.syntaxes[0].name == 'V'
 	assert wrkspace.syntaxes[1].name == 'GoTest'
 }
@@ -114,8 +118,8 @@ fn test_open_workspace_loads_custom_syntax() {
 		mock_fs.config_dir, mock_fs.read_file) or { panic('${err.msg()}') }
 	assert mock_log.error_msgs.len == 1
 	assert mock_log.error_msgs[0] == 'failed to resolve config: local config file /home/test-user/.config/lilly/lilly.conf not found: file /home/test-user/.config/lilly/lilly.conf does not exist'
-	assert wrkspace.syntaxes.len == 5
+	assert wrkspace.syntaxes.len == 9
 	assert wrkspace.syntaxes[0].name == 'V'
 	assert wrkspace.syntaxes[1].name == 'Go'
-	assert wrkspace.syntaxes[4].name == 'Brainfuck'
+	assert wrkspace.syntaxes[8].name == 'Brainfuck'
 }
