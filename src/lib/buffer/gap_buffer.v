@@ -18,12 +18,14 @@ mut:
 	gap_end   int
 }
 
-fn GapBuffer.new() GapBuffer {
-	return GapBuffer{
-		data: []rune{ len: gap_size, cap: gap_size }
+fn GapBuffer.new(d string) GapBuffer {
+	mut gb := GapBuffer{
+		data:      d.runes()
 		gap_start: 0
-		gap_end: gap_size
+		gap_end:   0
 	}
+	gb.resize_if_full()
+	return gb
 }
 
 pub fn (mut gap_buffer GapBuffer) insert(s string) {
@@ -82,7 +84,7 @@ fn (mut gap_buffer GapBuffer) resize_if_full() {
 	gap_buffer.data = data_dest
 }
 
-struct LineIterator {
+pub struct LineIterator {
 	data       string
 mut:
 	line_number int
@@ -91,7 +93,7 @@ mut:
 	done bool
 }
 
-fn (mut line_iter LineIterator) next() ?string {
+pub fn (mut line_iter LineIterator) next() ?string {
 	if line_iter.done {
 		line_iter.line_start = 0
 		line_iter.line_end = 0
@@ -140,7 +142,7 @@ fn (gap_buffer GapBuffer) raw_str() string {
 
 fn main() {
 	println("Hello World!")
-	mut gb := GapBuffer.new()
+	mut gb := GapBuffer.new("")
 	gb.insert("Hello")
 	gb.insert(" Wo")
 	gb.insert("rld")

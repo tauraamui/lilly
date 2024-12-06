@@ -1,29 +1,23 @@
 module buffer
 
 fn test_inserting_into_gap_buffer() {
-	mut gb := GapBuffer.new()
-	assert gb.raw_str() == "_".repeat(gap_size) // if the buffer is empty, str shows just the gap
+	mut gb := GapBuffer.new("12345")
 
-	gb.insert("12345") // insert a string which is 1 char less than the gap size
-	assert gb.empty_gap_space_size() == 1
-	assert gb.raw_str() == "12345_" // so we can see the gap is "nearly full", but one space is left
+	assert gb.raw_str() == "${'_'.repeat(gap_size)}12345"
+
+	gb.move_cursor_right(gb.data.len - gb.gap_end) // move gap to end of the data
 
 	gb.insert("6")
-	assert gb.empty_gap_space_size() == gap_size
-	assert gb.raw_str() == "123456${'_'.repeat(gap_size)}" // thanks to resizing gap is now back to "gap size" post cursor loc
+	assert gb.raw_str() == "123456${'_'.repeat(gap_size - 1)}"
 }
 
 fn test_inserting_into_gap_buffer_and_then_backspacing() {
-	mut gb := GapBuffer.new()
-	assert gb.raw_str() == "_".repeat(gap_size) // if the buffer is empty, str shows just the gap
+	mut gb := GapBuffer.new("This is a full sentence!")
 
-	gb.insert("This is a full sentence!") // insert a string which is 1 char less than the gap size
-	assert gb.empty_gap_space_size() == 6
-	assert gb.raw_str() == "This is a full sentence!${'_'.repeat(gap_size)}" // so we can see the gap is "nearly full", but one space is left
+	gb.move_cursor_right(gb.data.len - gb.gap_end) // move gap to end of the data
 
 	gb.backspace()
-	assert gb.empty_gap_space_size() == 7
-	assert gb.raw_str() == "This is a full sentence${'_'.repeat(gap_size + 1)}" // so we can see the gap is "nearly full", but one space is left
+	assert gb.raw_str() == "This is a full sentence${'_'.repeat(gap_size + 1)}"
 
 	gb.backspace()
 	gb.backspace()
@@ -39,11 +33,10 @@ fn test_inserting_into_gap_buffer_and_then_backspacing() {
 }
 
 fn test_inserting_into_gap_buffer_and_then_deleting() {
-	mut gb := GapBuffer.new()
-	assert gb.raw_str() == "_".repeat(gap_size) // if the buffer is empty, str shows just the gap
+	mut gb := GapBuffer.new("This is a full sentence!")
 
-	gb.insert("This is a full sentence!") // insert a string which is 1 char less than the gap size
-	assert gb.empty_gap_space_size() == 6
+	gb.move_cursor_right(gb.data.len - gb.gap_end) // move gap to end of the data
+
 	assert gb.raw_str() == "This is a full sentence!${'_'.repeat(gap_size)}" // so we can see the gap is "nearly full", but one space is left
 
 	gb.move_cursor_left(10)
@@ -61,57 +54,51 @@ fn test_inserting_into_gap_buffer_and_then_deleting() {
 }
 
 fn test_moving_cursor_left() {
-	mut gb := GapBuffer.new()
+	mut gb := GapBuffer.new("Some test text, here we go!")
 
-	gb.insert("Some test text, here we go!")
-	assert gb.empty_gap_space_size() == 3
-	assert gb.raw_str() == "Some test text, here we go!${'_'.repeat(gap_size / 2)}"
+	gb.move_cursor_right(gb.data.len - gb.gap_end) // move gap to end of the data
+
+	assert gb.raw_str() == "Some test text, here we go!${'_'.repeat(gap_size)}"
 
 	gb.move_cursor_left(1)
-	assert gb.raw_str() == "Some test text, here we go${'_'.repeat(gap_size / 2)}!"
+	assert gb.raw_str() == "Some test text, here we go${'_'.repeat(gap_size)}!"
 }
 
 fn test_moving_cursor_right() {
-	mut gb := GapBuffer.new()
+	mut gb := GapBuffer.new("Some test text, here we go!")
 
-	gb.insert("Some test text, here we go!")
-	assert gb.empty_gap_space_size() == 3
-	assert gb.raw_str() == "Some test text, here we go!${'_'.repeat(gap_size / 2)}"
+	gb.move_cursor_right(4)
+	assert gb.raw_str() == "Some${'_'.repeat(gap_size)} test text, here we go!"
 
-	gb.move_cursor_right(1)
-	assert gb.raw_str() == "Some test text, here we go!${'_'.repeat(gap_size / 2)}"
-
-	gb.move_cursor_left(3)
-	assert gb.raw_str() == "Some test text, here we ${'_'.repeat(gap_size / 2)}go!"
+	gb.move_cursor_left(2)
+	assert gb.raw_str() == "So${'_'.repeat(gap_size)}me test text, here we go!"
 
 	gb.move_cursor_right(1)
-	assert gb.raw_str() == "Some test text, here we g${'_'.repeat(gap_size / 2)}o!"
+	assert gb.raw_str() == "Som${'_'.repeat(gap_size)}e test text, here we go!"
 }
 
-fn test_moving_cursor_left_and_then_insert() {
-	mut gb := GapBuffer.new()
+fn test_moving_cursor_right_and_then_insert() {
+	mut gb := GapBuffer.new("Some test text, here we go!")
 
-	gb.insert("Some test text, here we go!")
-	assert gb.empty_gap_space_size() == 3
-	assert gb.raw_str() == "Some test text, here we go!${'_'.repeat(gap_size / 2)}"
+	assert gb.raw_str() == "${'_'.repeat(gap_size)}Some test text, here we go!"
 
-	gb.move_cursor_left(8)
-	assert gb.raw_str() == "Some test text, her${'_'.repeat(gap_size / 2)}e we go!"
+	gb.move_cursor_right(8)
+	assert gb.raw_str() == "Some tes${'_'.repeat(gap_size)}t text, here we go!"
 
 	gb.insert("??")
-	assert gb.raw_str() == "Some test text, her??_e we go!"
+	assert gb.raw_str() == "Some tes??${'_'.repeat(gap_size - 2)}t text, here we go!"
 
 	gb.insert("+")
-	assert gb.raw_str() == "Some test text, her??+${'_'.repeat(gap_size)}e we go!"
+	assert gb.raw_str() == "Some tes??+${'_'.repeat(gap_size - 3)}t text, here we go!"
 
-	assert gb.str() == "Some test text, her??+e we go!"
+	assert gb.str() == "Some tes??+t text, here we go!"
 }
 
 fn test_line_iterator() {
-	mut gb := GapBuffer.new()
-	gb.insert("1. This is the first line\n2. This is the second line\n3. This is the third line.")
+	mut gb := GapBuffer.new("1. This is the first line\n2. This is the second line\n3. This is the third line.")
 
-	iter := LineIterator{ data: gb.str() }
+	// iter := LineIterator{ data: gb.str() }
+	iter := gb.iterator()
 	for i, line in iter {
 		match i {
 			0 { assert line == "1. This is the first line" }
@@ -123,8 +110,7 @@ fn test_line_iterator() {
 }
 
 fn test_line_iterator_with_lots_of_blank_lines() {
-	mut gb := GapBuffer.new()
-	gb.insert("1. This is the first line\n\n\n\n2. This is the second line\n3. This is the third line.")
+	mut gb := GapBuffer.new("1. This is the first line\n\n\n\n2. This is the second line\n3. This is the third line.")
 
 	iter := LineIterator{ data: gb.str() }
 	for i, line in iter {
@@ -139,3 +125,4 @@ fn test_line_iterator_with_lots_of_blank_lines() {
 		}
 	}
 }
+
