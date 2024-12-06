@@ -71,16 +71,12 @@ fn (mut gap_buffer GapBuffer) resize_if_full() {
 	if gap_buffer.empty_gap_space_size() != 0 { return }
 	size := gap_buffer.data.len + gap_size
 	mut data_dest := []rune{ len: size, cap: size }
-	arrays.copy(mut data_dest, gap_buffer.data[..gap_buffer.gap_start])
 
-	gap_start := gap_buffer.gap_start
-	gap_end := gap_buffer.gap_start + gap_size
-
-	arrays.copy(mut data_dest[..gap_end], gap_buffer.data[..gap_buffer.gap_end])
+	arrays.copy(mut data_dest[..gap_buffer.gap_start], gap_buffer.data[..gap_buffer.gap_start])
+	arrays.copy(mut data_dest[gap_buffer.gap_end + (gap_size - (gap_buffer.empty_gap_space_size()))..], gap_buffer.data[gap_buffer.gap_end..])
+	gap_buffer.gap_end += gap_size
 
 	gap_buffer.data = data_dest
-	gap_buffer.gap_start = gap_start
-	gap_buffer.gap_end = gap_end
 }
 
 @[inline]
