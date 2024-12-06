@@ -1617,6 +1617,8 @@ fn (mut view View) visual_line_d(overwrite_y_lines bool) {
 	view.escape()
 }
 
+// TODO(tauraamui): this method is mental, its good there's so many asserts
+//                  but... it needs re-writing
 fn (mut view View) w() {
 	defer { view.clamp_cursor_x_pos() }
 	mut line := view.buffer.lines[view.cursor.pos.y]
