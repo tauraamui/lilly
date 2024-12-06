@@ -106,3 +106,6 @@ fn test_moving_cursor_left_and_then_insert() {
 
 	assert gb.str() == "Some test text, her??+e we go!"
 }
+
+fn test_loading_in_document_into_buffer_on_init() {
+}
