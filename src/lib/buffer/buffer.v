@@ -10,9 +10,8 @@ pub mut:
 	lines            []string
 	auto_close_chars []string
 mut:
-	lines_cpy                 []string
-	history                   History
-	snapshotted_at_least_once bool
+	c_buffer   GapBuffer
+	// line_tracker LineTracker
 }
 
 pub fn (mut buffer Buffer) load_from_path() ! {
