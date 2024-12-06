@@ -45,9 +45,19 @@ fn (mut gap_buffer GapBuffer) insert_rune(r rune) {
 	gap_buffer.resize_if_full()
 }
 
+fn (mut gap_buffer GapBuffer) move_cursor_left(count int) {
+	max_allowed_count := gap_buffer.gap_start
+	to_move_count := int_min(count, max_allowed_count)
+
+	for _ in 0..to_move_count {
+		gap_buffer.data[gap_buffer.gap_end - 1] = gap_buffer.data[gap_buffer.gap_start - 1]
+		gap_buffer.gap_start -= 1
+		gap_buffer.gap_end   -= 1
+	}
+}
 fn (mut gap_buffer GapBuffer) resize_if_full() {
 	if gap_buffer.empty_gap_space_size() != 0 { return }
-	size := gap_buffer.data.len * 2
+	size := gap_buffer.data.len + gap_size
 	mut data_dest := []rune{ len: size, cap: size }
 	arrays.copy(mut data_dest, gap_buffer.data[..gap_buffer.gap_start])
 
