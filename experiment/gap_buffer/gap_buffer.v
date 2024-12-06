@@ -55,6 +55,18 @@ fn (mut gap_buffer GapBuffer) move_cursor_left(count int) {
 		gap_buffer.gap_end   -= 1
 	}
 }
+
+fn (mut gap_buffer GapBuffer) move_cursor_right(count int) {
+	max_allowed_count := gap_buffer.data.len - gap_buffer.gap_end
+	to_move_count := int_min(count, max_allowed_count)
+
+	for _ in 0..to_move_count {
+		gap_buffer.data[gap_buffer.gap_start] = gap_buffer.data[gap_buffer.gap_end]
+		gap_buffer.gap_start += 1
+		gap_buffer.gap_end   += 1
+	}
+}
+
 fn (mut gap_buffer GapBuffer) resize_if_full() {
 	if gap_buffer.empty_gap_space_size() != 0 { return }
 	size := gap_buffer.data.len + gap_size
