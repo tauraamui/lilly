@@ -1617,14 +1617,6 @@ fn (mut view View) visual_line_d(overwrite_y_lines bool) {
 	view.escape()
 }
 
-fn (mut view View) w_2() {
-	defer { view.clamp_cursor_x_pos() }
-	mut line := view.buffer.lines[view.cursor.pos.y]
-	mut amount := calc_w_move_amount(view.cursor.pos, line, false)
-}
-
-// TODO(tauraamui): this method is mental, its good there's so many asserts
-//                  but... it needs re-writing
 fn (mut view View) w() {
 	defer { view.clamp_cursor_x_pos() }
 	mut line := view.buffer.lines[view.cursor.pos.y]
@@ -1632,14 +1624,13 @@ fn (mut view View) w() {
 	if amount == 0 {
 		view.move_cursor_down(1)
 		view.cursor.pos.x = 0
-		assert view.cursor.pos.y >= 0
-		assert view.cursor.pos.y < view.buffer.lines.len
-		line = view.buffer.lines[view.cursor.pos.y]
-		assert view.cursor.pos.x >= 0
-		assert view.cursor.pos.x < line.len
-		if line.len > 0 && is_whitespace(line[view.cursor.pos.x]) {
-			amount = calc_w_move_amount(view.cursor.pos, line, false)
-			assert amount >= 0
+
+		if view.cursor.pos.y < view.buffer.lines.len {
+			line = view.buffer.lines[view.cursor.pos.y]
+			if line.len > 0 && is_whitespace(line[view.cursor.pos.x]) {
+				amount = calc_w_move_amount(view.cursor.pos, line, false)
+				assert amount >= 0
+			}
 		}
 	}
 	view.cursor.pos.x += amount
