@@ -12,3 +12,14 @@ fn test_inserting_into_gap_buffer() {
 	assert gb.empty_gap_space_size() == gap_size
 	assert gb.raw_str() == "123456${'_'.repeat(gap_size)}" // thanks to resizing gap is now back to "gap size" post cursor loc
 }
+
+fn test_moving_cursor_left() {
+	mut gb := GapBuffer.new()
+
+	gb.insert("Some test text, here we go!")
+	assert gb.empty_gap_space_size() == 3
+	assert gb.raw_str() == "Some test text, here we go!${'_'.repeat(gap_size / 2)}"
+
+	gb.move_cursor_left(1)
+	assert gb.raw_str() == "Some test text, here we go${'_'.repeat(gap_size / 2)}!"
+}
