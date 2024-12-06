@@ -89,6 +89,44 @@ fn (mut gap_buffer GapBuffer) resize_if_full() {
 	gap_buffer.data = data_dest
 }
 
+struct LineIterator {
+	data       string
+mut:
+	line_number int
+	line_start int
+	line_end  int
+	done bool
+}
+
+fn (mut line_iter LineIterator) next() ?string {
+	if line_iter.done {
+		line_iter.line_start = 0
+		line_iter.line_end = 0
+		line_iter.done = false
+		return none
+	}
+
+	line_iter.line_start = line_iter.line_end
+
+	mut trailing_newline := false
+	for c in line_iter.data[line_iter.line_start..].runes() {
+		line_iter.line_end += 1
+		if c == `\n` {
+			trailing_newline = true
+			break
+		}
+	}
+
+	line := line_iter.data[line_iter.line_start..line_iter.line_end - 1]
+	if line_iter.line_end == line_iter.data.len && !trailing_newline {
+		line_iter.done = true
+	} else {
+		line_iter.line_number += 1
+	}
+
+	return line
+}
+
 @[inline]
 fn (gap_buffer GapBuffer) empty_gap_space_size() int {
 	return gap_buffer.gap_end - gap_buffer.gap_start
