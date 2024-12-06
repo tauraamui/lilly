@@ -39,5 +39,21 @@ fn test_moving_cursor_right() {
 
 	gb.move_cursor_right(1)
 	assert gb.raw_str() == "Some test text, here we g${'_'.repeat(gap_size / 2)}o!"
+}
 
+fn test_moving_cursor_left_and_then_insert() {
+	mut gb := GapBuffer.new()
+
+	gb.insert("Some test text, here we go!")
+	assert gb.empty_gap_space_size() == 3
+	assert gb.raw_str() == "Some test text, here we go!${'_'.repeat(gap_size / 2)}"
+
+	gb.move_cursor_left(8)
+	assert gb.raw_str() == "Some test text, her${'_'.repeat(gap_size / 2)}e we go!"
+
+	gb.insert("??")
+	assert gb.raw_str() == "Some test text, her??_e we go!"
+
+	gb.insert("+")
+	assert gb.raw_str() == "Some test text, her??+${'_'.repeat(gap_size)}e we go!"
 }
