@@ -23,3 +23,21 @@ fn test_moving_cursor_left() {
 	gb.move_cursor_left(1)
 	assert gb.raw_str() == "Some test text, here we go${'_'.repeat(gap_size / 2)}!"
 }
+
+fn test_moving_cursor_right() {
+	mut gb := GapBuffer.new()
+
+	gb.insert("Some test text, here we go!")
+	assert gb.empty_gap_space_size() == 3
+	assert gb.raw_str() == "Some test text, here we go!${'_'.repeat(gap_size / 2)}"
+
+	gb.move_cursor_right(1)
+	assert gb.raw_str() == "Some test text, here we go!${'_'.repeat(gap_size / 2)}"
+
+	gb.move_cursor_left(3)
+	assert gb.raw_str() == "Some test text, here we ${'_'.repeat(gap_size / 2)}go!"
+
+	gb.move_cursor_right(1)
+	assert gb.raw_str() == "Some test text, here we g${'_'.repeat(gap_size / 2)}o!"
+
+}
