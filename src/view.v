@@ -934,6 +934,7 @@ enum SegmentKind {
 	a_comment = 2
 	a_key     = 3
 	a_lit     = 4
+	a_builtin = 5
 }
 
 struct LineSegment {
@@ -964,6 +965,17 @@ fn LineSegment.new_literal(start int, line_y int, document_space_y int, end int)
 		document_space_y: document_space_y
 		typ:              .a_lit
 		fg_color:         Color{87, 215, 217}
+	}
+}
+
+fn LineSegment.new_builtin(start int, line_y int, document_space_y int, end int) LineSegment {
+	return LineSegment{
+		start: start
+		end: end
+		y: line_y
+		document_space_y: document_space_y
+		typ: .a_builtin
+		fg_color: Color{130, 144, 250}
 	}
 }
 
@@ -1067,6 +1079,8 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, docum
 			segments << LineSegment.new_literal(start, line_y, document_space_y, i)
 		} else if word in syntax.keywords {
 			segments << LineSegment.new_key(start, line_y, document_space_y, i)
+		} else if word in syntax.builtins {
+			segments << LineSegment.new_builtin(start, line_y, document_space_y, i)
 		}
 	}
 	return segments, is_multiline_commentx
