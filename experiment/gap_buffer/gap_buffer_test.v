@@ -107,5 +107,17 @@ fn test_moving_cursor_left_and_then_insert() {
 	assert gb.str() == "Some test text, her??+e we go!"
 }
 
-fn test_loading_in_document_into_buffer_on_init() {
+fn test_line_iterator() {
+	mut gb := GapBuffer.new()
+	gb.insert("1. This is the first line\n2. This is the second line\n3. This is the third line.")
+
+	iter := LineIterator{ data: gb.str() }
+	for i, line in iter {
+		match i {
+			0 { assert line == "1. This is the first line" }
+			1 { assert line == "2. This is the second line" }
+			2 { assert line == "3. This is the third line" }
+			else{}
+		}
+	}
 }
