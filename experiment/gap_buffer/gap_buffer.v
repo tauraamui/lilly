@@ -39,6 +39,11 @@ pub fn (mut gap_buffer GapBuffer) insert(s string) {
 	}
 }
 
+pub fn (mut gap_buffer GapBuffer) backspace() {
+	if gap_buffer.gap_start == 0 { return }
+	gap_buffer.gap_start -= 1
+}
+
 fn (mut gap_buffer GapBuffer) insert_rune(r rune) {
 	gap_buffer.data[gap_buffer.gap_start] = r
 	gap_buffer.gap_start += 1
