@@ -1364,7 +1364,6 @@ fn (mut view View) escape() {
 		view.buffer.lines[view.cursor.pos.y] = ''
 	}
 
-	view.buffer.update_undo_history()
 	view.buffer.auto_close_chars = []
 
 	view.leader_state.reset()
@@ -1574,7 +1573,6 @@ fn (mut view View) k() {
 fn (mut view View) i() {
 	view.leader_state.mode = .insert
 	view.clamp_cursor_x_pos()
-	view.buffer.snapshot()
 }
 
 fn (mut view View) v() {
@@ -1850,9 +1848,7 @@ fn (mut view View) center_text_around_cursor() {
 	view.clamp_cursor_within_document_bounds()
 }
 
-fn (mut view View) u() {
-	view.buffer.undo()
-}
+fn (mut view View) u() {}
 
 fn (mut view View) o() {
 	defer { view.move_cursor_down(1) }

@@ -10,9 +10,8 @@ pub mut:
 	lines            []string
 	auto_close_chars []string
 mut:
-	lines_cpy                 []string
-	history                   History
-	snapshotted_at_least_once bool
+	c_buffer   GapBuffer
+	// line_tracker LineTracker
 }
 
 pub fn (mut buffer Buffer) load_from_path() ! {
@@ -22,32 +21,20 @@ pub fn (mut buffer Buffer) load_from_path() ! {
 	if buffer.lines.len == 0 {
 		buffer.lines = ['']
 	}
+	// TODO(tauraamui): enable this additional loading under a flag
+	/*
+	file_contents := os.read_file(buffer.file_path) or { return error("unable to open file ${buffer.file_path}: ${err}") }
+	buffer.c_buffer = GapBuffer.new(file_contents)
+	*/
 }
 
-pub fn (mut buffer Buffer) undo() {
-	op_to_undo := buffer.history.pop_undo() or { return }
-	mut line_offset := 0
-	match op_to_undo.kind {
-		'ins' {
-			buffer.lines.delete(op_to_undo.line_num + line_offset)
-			line_offset -= 1
-		}
-		'del' {
-			buffer.lines.insert(op_to_undo.line_num + line_offset, op_to_undo.value)
-			line_offset += 1
-		}
-		else {}
+pub fn (mut buffer Buffer) iterator() LineIterator {
+	return new_iterator(buffer.c_buffer)
+}
+
+fn new_iterator(buffer GapBuffer) LineIterator {
+	return LineIterator{
+		data: buffer.str()
 	}
 }
 
-pub fn (mut buffer Buffer) snapshot() {
-	buffer.snapshotted_at_least_once = true
-	buffer.lines_cpy = buffer.lines.clone()
-}
-
-pub fn (mut buffer Buffer) update_undo_history() {
-	if !buffer.snapshotted_at_least_once {
-		return
-	}
-	buffer.history.append_ops_to_undo(buffer.lines_cpy, buffer.lines)
-}
