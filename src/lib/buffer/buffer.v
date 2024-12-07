@@ -29,8 +29,12 @@ pub fn (mut buffer Buffer) load_from_path() ! {
 }
 
 pub fn (mut buffer Buffer) iterator() LineIterator {
+	return new_iterator(buffer.c_buffer)
+}
+
+fn new_iterator(buffer GapBuffer) LineIterator {
 	return LineIterator{
-		data: buffer.c_buffer.str()
+		data: buffer.str()
 	}
 }
 
