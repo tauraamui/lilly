@@ -21,8 +21,11 @@ pub fn (mut buffer Buffer) load_from_path() ! {
 	if buffer.lines.len == 0 {
 		buffer.lines = ['']
 	}
+	// TODO(tauraamui): enable this additional loading under a flag
+	/*
 	file_contents := os.read_file(buffer.file_path) or { return error("unable to open file ${buffer.file_path}: ${err}") }
 	buffer.c_buffer = GapBuffer.new(file_contents)
+	*/
 }
 
 pub fn (mut buffer Buffer) iterator() LineIterator {
