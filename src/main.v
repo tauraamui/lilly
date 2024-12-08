@@ -270,7 +270,7 @@ fn main() {
 		'', ''
 	}
 	mut clip := clipboardv2.new()
-	app.editor = open_editor(mut l, mut clip, gitcommit_hash, file_path, workspace_path) or {
+	app.editor = open_editor(mut l, mut clip, gitcommit_hash, file_path, workspace_path, opts.use_gap_buffer) or {
 		print_and_exit('${err}')
 		unsafe { nil }
 	}
