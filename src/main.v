@@ -92,9 +92,12 @@ mut:
 	capture_panics                   bool
 	long_disable_panic_capture_flag  string
 	short_disable_panic_capture_flag string
+	disable_panic_capture            bool
 	long_log_level_label_flag        string
 	short_log_level_label_flag       string
-	disable_panic_capture            bool
+	long_gap_buffer_toggle_flag      string
+	short_gap_buffer_toggle_flag     string
+	use_gap_buffer                   bool
 }
 
 fn resolve_options_from_args(args []string) Options {
@@ -116,6 +119,8 @@ fn resolve_options_from_args(args []string) Options {
 		short_disable_panic_capture_flag: 'dpc'
 		long_log_level_label_flag:        'log-level'
 		short_log_level_label_flag:       'll'
+		long_gap_buffer_toggle_flag:      'use-gap-buffer'
+		short_gap_buffer_toggle_flag:     'ugb'
 	}
 
 	opts.show_help = '--${opts.long_show_help_flag}' in flags
@@ -146,6 +151,9 @@ fn resolve_options_from_args(args []string) Options {
 		opts.log_level = log.level_from_tag(log_level_option) or { log.Level.disabled }
 	}
 
+	opts.use_gap_buffer = '--${opts.long_gap_buffer_toggle_flag}' in flags
+		|| '-${opts.short_gap_buffer_toggle_flag}' in flags
+
 	return opts
 }
 
@@ -160,6 +168,7 @@ fn (opts Options) flags_str() string {
 	sb.write_string('\n\t-${opts.short_render_debug_mode_flag}, --${opts.long_render_debug_mode_flag} (enable render debug mode)')
 	sb.write_string('\n\t-${opts.short_disable_panic_capture_flag}, --${opts.long_disable_panic_capture_flag} (disable persistance of panic stack trace output)')
 	sb.write_string('\n\t-${opts.short_log_level_label_flag}, --${opts.long_log_level_label_flag} [disabled | fatal | error | warn | info | debug] (set the minimum log level to output from)')
+	sb.write_string('\n\t-${opts.short_gap_buffer_toggle_flag}, --${opts.long_gap_buffer_toggle_flag} (enable using gap buffer)')
 	return sb.str()
 }
 
