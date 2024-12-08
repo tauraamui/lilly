@@ -1,6 +1,5 @@
 module buffer
 
-import history { History }
 import os
 
 pub struct Buffer {
