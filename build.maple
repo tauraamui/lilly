@@ -39,6 +39,12 @@ task:test = {
     run = 'v -g test ./src'
 }
 
+task:git-prune = {
+	category = "util"
+	help     = "Runs git prune to delete local copies of missing remote branches"
+	run      = "git remote prune origin"
+}
+
 task:generate-git-hash = {
     help = 'Generates .githash which just contains the hash of the current branches last commit hash'
     run = 'git log -n 1 --pretty=format:"%h" | tee ./src/.githash'
