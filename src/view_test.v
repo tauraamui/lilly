@@ -25,92 +25,6 @@ import log
 
 const example_file = 'module history\n\nimport datatypes\nimport lib.diff { Op }\n\npub struct History {\nmut:\n\tundos datatypes.Stack[Op] // will actually be type diff.Op\n\tredos datatypes.Stack[Op]\n}'
 
-fn test_u_undos_line_insertions() {
-	mut fake_view := View{
-		log:       log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv2.new()
-	}
-	fake_view.buffer.lines = example_file.split_into_lines()
-
-	assert fake_view.buffer.lines == [
-		'module history',
-		'',
-		'import datatypes',
-		'import lib.diff { Op }',
-		'',
-		'pub struct History {',
-		'mut:',
-		'\tundos datatypes.Stack[Op] // will actually be type diff.Op',
-		'\tredos datatypes.Stack[Op]',
-		'}',
-	]
-
-	fake_view.cursor.pos.x = 9
-	fake_view.cursor.pos.y = 5
-	fake_view.i()
-	fake_view.enter()
-	fake_view.escape()
-
-	assert fake_view.buffer.lines == [
-		'module history',
-		'',
-		'import datatypes',
-		'import lib.diff { Op }',
-		'',
-		'pub struc',
-		't History {',
-		'mut:',
-		'\tundos datatypes.Stack[Op] // will actually be type diff.Op',
-		'\tredos datatypes.Stack[Op]',
-		'}',
-	]
-
-	fake_view.u()
-
-	assert fake_view.buffer.lines == [
-		'module history',
-		'',
-		'import datatypes',
-		'import lib.diff { Op }',
-		'',
-		'pub struc',
-		'mut:',
-		'\tundos datatypes.Stack[Op] // will actually be type diff.Op',
-		'\tredos datatypes.Stack[Op]',
-		'}',
-	]
-
-	fake_view.u()
-
-	assert fake_view.buffer.lines == [
-		'module history',
-		'',
-		'import datatypes',
-		'import lib.diff { Op }',
-		'',
-		'mut:',
-		'\tundos datatypes.Stack[Op] // will actually be type diff.Op',
-		'\tredos datatypes.Stack[Op]',
-		'}',
-	]
-
-	fake_view.u()
-
-	assert fake_view.buffer.lines == [
-		'module history',
-		'',
-		'import datatypes',
-		'import lib.diff { Op }',
-		'pub struct History {',
-		'',
-		'mut:',
-		'\tundos datatypes.Stack[Op] // will actually be type diff.Op',
-		'\tredos datatypes.Stack[Op]',
-		'}',
-	]
-}
-
 fn test_line_is_within_selection() {
 	mut cursor := Cursor{
 		pos:                 Pos{
@@ -1698,6 +1612,23 @@ fn test_jump_cursor_down_to_next_blank_line() {
 	assert '' == fake_view.buffer.lines[fake_view.cursor.pos.y]
 	fake_view.jump_cursor_down_to_next_blank_line()
 	assert 'this is the last line of the document' == fake_view.buffer.lines[fake_view.cursor.pos.y]
+}
+
+fn test_calc_w_move_end_of_line_jumps_down_to_next_line_which_is_blank() {
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: clipboardv2.new()
+	}
+	fake_view.buffer.lines = [
+		'# Top of the file',
+		'',
+		'A line just after the blank line above it',
+	]
+
+	fake_view.cursor.pos.y = 0
+	fake_view.dollar()
+	fake_view.w()
 }
 
 fn test_calc_w_move_amount_simple_sentence_line() {

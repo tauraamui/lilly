@@ -22,6 +22,7 @@
 		"finally",
 		"for",
 		"function",
+		"global",
 		"if",
 		"implements",
 		"import",
@@ -51,9 +52,24 @@
 		"yield"
 	],
 	"literals": [
+		"Infinity",
 		"NaN",
 		"false",
+		"globalThis",
 		"true",
 		"undefined"
+	],
+	"builtins": [
+		"eval",
+		"isFinite",
+		"isNaN",
+		"parseFloat",
+		"parseInt",
+		"decodeURI",
+		"decodeURIComponent",
+		"encodeURI",
+		"encodeURIComponent",
+		"escape",
+		"unescape"
 	]
 }

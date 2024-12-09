@@ -18,40 +18,42 @@ pub:
 	extensions []string
 	keywords   []string
 	literals   []string
+	builtins   []string
 }
 
 fn (mut workspace Workspace) load_builtin_syntaxes() {
-	vsyntax := json.decode(Syntax, builtin_v_syntax) or {
+	v_syntax := json.decode(Syntax, builtin_v_syntax) or {
 		panic('builtin V syntax file failed to decode: ${err}')
 	}
-	workspace.syntaxes << vsyntax
 	go_syntax := json.decode(Syntax, builtin_go_syntax) or {
 		panic('builtin Go syntax file failed to decode: ${err}')
 	}
-	workspace.syntaxes << go_syntax
 	c_syntax := json.decode(Syntax, builtin_c_syntax) or {
 		panic('builtin C syntax file failed to decode: ${err}')
 	}
-	workspace.syntaxes << c_syntax
 	rust_syntax := json.decode(Syntax, builtin_rust_syntax) or {
 		panic('builtin Rust syntax file failed to decode: ${err}')
 	}
-	workspace.syntaxes << rust_syntax
 	js_syntax := json.decode(Syntax, builtin_js_syntax) or {
 		panic('builtin JavaScript syntax file failed to decode: ${err}')
 	}
-	workspace.syntaxes << js_syntax
 	ts_syntax := json.decode(Syntax, builtin_ts_syntax) or {
 		panic('builtin TypeScript syntax file failed to decode: ${err}')
 	}
-	workspace.syntaxes << ts_syntax
 	python_syntax := json.decode(Syntax, builtin_python_syntax) or {
 		panic('builtin Python syntax file failed to decode: ${err}')
 	}
-	workspace.syntaxes << python_syntax
 	perl_syntax := json.decode(Syntax, builtin_perl_syntax) or {
 		panic('builting Perl syntax file failed to decode: ${err}')
 	}
+
+	workspace.syntaxes << v_syntax
+	workspace.syntaxes << go_syntax
+	workspace.syntaxes << c_syntax
+	workspace.syntaxes << rust_syntax
+	workspace.syntaxes << js_syntax
+	workspace.syntaxes << ts_syntax
+	workspace.syntaxes << python_syntax
 	workspace.syntaxes << perl_syntax
 }
 

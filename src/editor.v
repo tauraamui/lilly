@@ -27,6 +27,7 @@ mut:
 	clipboard                         clipboardv2.Clipboard
 	view                              &Viewable = unsafe { nil }
 	debug_view                        bool
+	use_gap_buffer                    bool
 	views                             []Viewable
 	buffers                           []buffer.Buffer
 	file_finder_modal_open            bool
@@ -46,10 +47,16 @@ mut:
 	quit()
 }
 
-pub fn open_editor(mut _log log.Log, mut _clipboard clipboardv2.Clipboard, commit_hash string, file_path string, workspace_root_dir string) !&Editor {
+pub fn open_editor(
+	mut _log log.Log,
+	mut _clipboard clipboardv2.Clipboard,
+	commit_hash string, file_path string,
+	workspace_root_dir string, use_gap_buffer bool,
+) !&Editor {
 	mut editor := Editor{
 		log: _log
 		clipboard:         _clipboard
+		use_gap_buffer: use_gap_buffer
 		file_finder_modal: unsafe { nil }
 		inactive_buffer_finder_modal: unsafe { nil }
 	}
@@ -120,7 +127,7 @@ fn (mut editor Editor) open_file(path string) ! {
 	mut buff := buffer.Buffer{
 		file_path: path
 	}
-	buff.load_from_path() or { return err }
+	buff.load_from_path(editor.use_gap_buffer) or { return err }
 	editor.buffers << buff
 	editor.views << open_view(mut editor.log, editor.workspace.config, editor.workspace.branch(), editor.workspace.syntaxes(),
 		editor.clipboard, mut &editor.buffers[editor.buffers.len - 1])

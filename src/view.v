@@ -933,6 +933,7 @@ enum SegmentKind {
 	a_comment = 2
 	a_key     = 3
 	a_lit     = 4
+	a_builtin = 5
 }
 
 struct LineSegment {
@@ -963,6 +964,17 @@ fn LineSegment.new_literal(start int, line_y int, document_space_y int, end int)
 		document_space_y: document_space_y
 		typ:              .a_lit
 		fg_color:         Color{87, 215, 217}
+	}
+}
+
+fn LineSegment.new_builtin(start int, line_y int, document_space_y int, end int) LineSegment {
+	return LineSegment{
+		start: start
+		end: end
+		y: line_y
+		document_space_y: document_space_y
+		typ: .a_builtin
+		fg_color: Color{130, 144, 250}
 	}
 }
 
@@ -1066,6 +1078,8 @@ fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, docum
 			segments << LineSegment.new_literal(start, line_y, document_space_y, i)
 		} else if word in syntax.keywords {
 			segments << LineSegment.new_key(start, line_y, document_space_y, i)
+		} else if word in syntax.builtins {
+			segments << LineSegment.new_builtin(start, line_y, document_space_y, i)
 		}
 	}
 	return segments, is_multiline_commentx
@@ -1349,7 +1363,6 @@ fn (mut view View) escape() {
 		view.buffer.lines[view.cursor.pos.y] = ''
 	}
 
-	view.buffer.update_undo_history()
 	view.buffer.auto_close_chars = []
 
 	view.leader_state.reset()
@@ -1559,7 +1572,6 @@ fn (mut view View) k() {
 fn (mut view View) i() {
 	view.leader_state.mode = .insert
 	view.clamp_cursor_x_pos()
-	view.buffer.snapshot()
 }
 
 fn (mut view View) v() {
@@ -1623,14 +1635,13 @@ fn (mut view View) w() {
 	if amount == 0 {
 		view.move_cursor_down(1)
 		view.cursor.pos.x = 0
-		assert view.cursor.pos.y >= 0
-		assert view.cursor.pos.y < view.buffer.lines.len
-		line = view.buffer.lines[view.cursor.pos.y]
-		assert view.cursor.pos.x >= 0
-		assert view.cursor.pos.x < line.len
-		if line.len > 0 && is_whitespace(line[view.cursor.pos.x]) {
-			amount = calc_w_move_amount(view.cursor.pos, line, false)
-			assert amount >= 0
+
+		if view.cursor.pos.y < view.buffer.lines.len {
+			line = view.buffer.lines[view.cursor.pos.y]
+			if line.len > 0 && is_whitespace(line[view.cursor.pos.x]) {
+				amount = calc_w_move_amount(view.cursor.pos, line, false)
+				assert amount >= 0
+			}
 		}
 	}
 	view.cursor.pos.x += amount
@@ -1836,9 +1847,7 @@ fn (mut view View) center_text_around_cursor() {
 	view.clamp_cursor_within_document_bounds()
 }
 
-fn (mut view View) u() {
-	view.buffer.undo()
-}
+fn (mut view View) u() {}
 
 fn (mut view View) o() {
 	defer { view.move_cursor_down(1) }
