@@ -35,7 +35,8 @@ pub fn open_workspace(mut _log Logger,
 	is_dir fn (path string) bool,
 	dir_walker fn (path string, f fn (string)),
 	config_dir fn () !string,
-	read_file fn (path string) !string) !Workspace {
+	read_file fn (path string) !string,
+	execute fn (cmd string) os.Result) !Workspace {
 	path := root_path
 	if !is_dir(path) {
 		return error('${path} is not a directory')
@@ -45,7 +46,7 @@ pub fn open_workspace(mut _log Logger,
 	}
 
 	wrkspace.resolve_files(path, is_dir, dir_walker)
-	wrkspace.resolve_git_branch_name(path, is_dir, read_file)
+	wrkspace.resolve_git_branch_name(execute)
 	wrkspace.load_builtin_syntaxes()
 	wrkspace.load_syntaxes_from_disk(config_dir, dir_walker, read_file) or {
 		return error('unable to load syntaxes')
@@ -53,29 +54,24 @@ pub fn open_workspace(mut _log Logger,
 	return wrkspace
 }
 
-fn (mut workspace Workspace) resolve_git_branch_name(path string, is_dir fn (path string) bool, read_file fn (path string) !string) {
+fn (mut workspace Workspace) resolve_git_branch_name(execute fn (cmd string) os.Result) {
 	prefix := '\uE0A0' // the git branch symbol rune
-	// git_dir := os.join_path(path, '.git')
-	wt := spawn currently_in_worktree()
+	wt := spawn currently_in_worktree(execute)
 	in_wt := wt.wait()
 	if in_wt {
-		gb := spawn get_branch()
+		gb := spawn get_branch(execute)
 		branch := gb.wait()
 		workspace.git_branch = '${prefix} ${branch}'
 	}
-	// if is_dir(git_dir) {
-	// 	head_contents := read_file(os.join_path(git_dir, 'HEAD')) or { return }
-	// 	workspace.git_branch = '${prefix} ${head_contents.runes()[16..].string()}'
-	// }
 }
 
-fn currently_in_worktree() bool {
-	res := os.execute('git rev-parse --is-inside-work-tree')
+fn currently_in_worktree(execute fn (cmd string) os.Result) bool {
+	res := execute('git rev-parse --is-inside-work-tree')
 	return res.exit_code == 0
 }
 
-fn get_branch() string {
-	res := os.execute('git branch --show-current')
+fn get_branch(execute fn (cmd string) os.Result) string {
+	res := execute('git branch --show-current')
 	return res.output
 }
 

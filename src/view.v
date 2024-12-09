@@ -19,7 +19,6 @@ import term.ui as tui
 import log
 import datatypes
 import strconv
-import strings
 import regex
 import lib.clipboardv2
 import lib.buffer
