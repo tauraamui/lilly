@@ -11,7 +11,34 @@ fn test_buffer_load_from_path() {
 	assert buffer.lines == ["1. This is a first line", "2. This is a second line", "3. This is a third line"]
 }
 
-fn test_buffer_load_from_path_use_gap_buffer() {
+fn test_buffer_load_from_path_and_iterate() {
+	read_lines := fn (path string) ![]string {
+		return ["1. This is a first line", "2. This is a second line", "3. This is a third line"]
+	}
+
+	mut buffer := Buffer{}
+	buffer.load_from_path(read_lines, false)!
+
+	assert buffer.lines == ["1. This is a first line", "2. This is a second line", "3. This is a third line"]
+
+	mut cb_invoked_count := 0
+	mut cb_invoked_ref := &cb_invoked_count
+	cb := fn [mut cb_invoked_ref] (id int, line string) {
+		unsafe { *cb_invoked_ref += 1 }
+		match id {
+			0 { assert line == "1. This is a first line" }
+			1 { assert line == "2. This is a second line" }
+			2 { assert line == "3. This is a third line" }
+			else {}
+		}
+	}
+
+	buffer.iterate(cb)
+
+	assert cb_invoked_count == 3
+}
+
+fn test_buffer_load_from_path_with_gap_buffer_and_iterate() {
 	read_lines := fn (path string) ![]string {
 		return ["1. This is a first line", "2. This is a second line", "3. This is a third line"]
 	}
@@ -19,11 +46,20 @@ fn test_buffer_load_from_path_use_gap_buffer() {
 	mut buffer := Buffer{}
 	buffer.load_from_path(read_lines, true)!
 
-	assert buffer.lines == ["1. This is a first line", "2. This is a second line", "3. This is a third line"]
-
-	for _, line in buffer.gap_buffer_iterator() or { return } {
-		println("LINE: ${line}")
+	mut cb_invoked_count := 0
+	mut cb_invoked_ref := &cb_invoked_count
+	cb := fn [mut cb_invoked_ref] (id int, line string) {
+		unsafe { *cb_invoked_ref += 1 }
+		match id {
+			0 { assert line == "1. This is a first line" }
+			1 { assert line == "2. This is a second line" }
+			2 { assert line == "3. This is a third line" }
+			else {}
+		}
 	}
 
-	assert 12 == 30
+
+	buffer.iterate(cb)
+
+	assert cb_invoked_count == 3
 }

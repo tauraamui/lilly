@@ -1,7 +1,5 @@
 module buffer
 
-import os
-
 pub struct Buffer {
 pub:
 	file_path string
@@ -29,22 +27,41 @@ pub fn (mut buffer Buffer) load_from_path(read_lines fn (path string) ![]string,
 	}
 }
 
+pub interface Iterator {
+mut:
+	next() ?string
+}
+
 pub struct LineIterator {
+	data_ref []string
+mut:
+	idx int
 }
 
-pub fn (line_iterator LineIterator) next() ?string {
-	return none
+pub fn (mut iter LineIterator) next() ?string {
+	if iter.idx >= iter.data_ref.len {
+		return none
+	}
+	defer { iter.idx += 1 }
+	return iter.data_ref[iter.idx]
 }
 
-pub fn (buffer Buffer) line_iterator() ?LineIterator {
-	if !buffer.use_gap_buffer { return none }
-	return LineIterator{}
+pub fn (buffer Buffer) iterate(cb fn (id int, line string)) {
+	mut iter := buffer.iterator()
+	mut idx  := 0
+	for {
+		line := iter.next() or { break }
+		cb(idx, line)
+		idx += 1
+	}
 }
 
-pub fn (buffer Buffer) gap_buffer_iterator() ?GapBufferIterator {
+pub fn (buffer Buffer) iterator() Iterator {
 	if buffer.use_gap_buffer {
 		return new_gap_buffer_iterator(buffer.c_buffer)
 	}
-	return none
+	return LineIterator{
+		data_ref: buffer.lines
+	}
 }
 
