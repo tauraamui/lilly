@@ -654,13 +654,17 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 			cursor_screen_space_y + 1)
 	}
 
-	for y, line in view.buffer.lines[view.from..view.to] {
+	view.buffer.iterate(fn [mut view, mut ctx, cursor_screen_space_y] (y int, line string) {
+		if y < view.from || y > view.to { return }
+
+		screen_space_y := y - view.from
+
 		ctx.reset_bg_color()
 		ctx.reset_color()
 
-		view.draw_text_line_number(mut ctx, y)
+		view.draw_text_line_number(mut ctx, screen_space_y)
 
-		document_space_y := view.from + y
+		document_space_y := view.from + screen_space_y
 
 		mut linex := line.replace('\t', ' '.repeat(4))
 		mut max_width := view.width
@@ -676,9 +680,9 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 			b: view.config.selection_highlight_color.b
 		}
 		draw_text_line(mut ctx, view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} },
-			view.cursor, view.leader_state.mode, sel_highlight_color, view.x, y, document_space_y,
+			view.cursor, view.leader_state.mode, sel_highlight_color, view.x, screen_space_y, document_space_y,
 			cursor_screen_space_y, linex, line)
-	}
+	})
 }
 
 fn draw_text_line(mut ctx draw.Contextable,
