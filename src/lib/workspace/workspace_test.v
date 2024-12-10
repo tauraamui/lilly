@@ -1,6 +1,7 @@
 module workspace
 
 import term.ui as tui
+import os
 
 struct MockLogger {
 mut:
@@ -9,6 +10,19 @@ mut:
 
 fn (mut mock_log MockLogger) error(msg string) {
 	mock_log.error_msgs << msg
+}
+
+struct MockOS {
+  branch string
+  exit_code int
+}
+
+fn (mock_os MockOS) execute(cmd string) os.Result {
+  match cmd {
+    'git rev-parse --is-inside-work-tree' { return os.Result{exit_code: mock_os.exit_code} }
+    'git branch --show-current' { return os.Result{exit_code: mock_os.exit_code, output: mock_os.branch } }
+    else { return os.Result{exit_code: 1, output: 'no matching command found'} }
+  }
 }
 
 struct MockFS {
@@ -68,9 +82,15 @@ fn test_open_workspace_files_and_config() {
 			'/home/test-user/.config/lilly/lilly.conf': '{ "relative_line_numbers": true, "insert_tabs_not_spaces": false, "selection_highlight_color": { "r": 96, "g": 138, "b": 143 } }'
 		}
 	}
+
+	mock_os := MockOS{
+	  branch: "git-branch-status-line"
+		exit_code: 0
+	}
+
 	mut mock_log := MockLogger{}
 	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker,
-		mock_fs.config_dir, mock_fs.read_file) or { panic('${err}') }
+		mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err}') }
 
 	assert wrkspace.files == [
 		'/dev/fake-project/src/main.v',
@@ -103,9 +123,15 @@ fn test_open_workspace_files_but_fallsback_to_embedded_config() {
 		}
 		file_contents: {}
 	}
+
+	mock_os := MockOS{
+	  branch: "git-branch-status-line"
+		exit_code: 0
+	}
+
 	mut mock_log := MockLogger{}
 	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker,
-		mock_fs.config_dir, mock_fs.read_file) or { panic('${err}') }
+		mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err}') }
 
 	assert wrkspace.files == [
 		'/dev/fake-project/src/main.v',
@@ -139,13 +165,17 @@ fn test_open_workspace_resolves_git_branch() {
 			'/dev/fake-project/src':            ['main.v', 'some_other_code.v']
 			'/dev/fake-project/research-notes': ['brainstorm.pdf', 'article-links.txt']
 		}
-		file_contents: {
-			'/dev/fake-project/.git/HEAD': 'ref: refs/heads/feat/git-branch-status-line'
-		}
+		file_contents: {}
 	}
+
+	mock_os := MockOS{
+	  branch: "feat/git-branch-status-line"
+		exit_code: 0
+	}
+
 	mut mock_log := MockLogger{}
 	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker,
-		mock_fs.config_dir, mock_fs.read_file) or { panic('${err}') }
+		mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err}') }
 
 	assert wrkspace.git_branch == '\uE0A0 feat/git-branch-status-line'
 
