@@ -127,7 +127,7 @@ fn (mut editor Editor) open_file(path string) ! {
 	mut buff := buffer.Buffer{
 		file_path: path
 	}
-	buff.load_from_path(editor.use_gap_buffer) or { return err }
+	buff.load_from_path(os.read_lines, editor.use_gap_buffer) or { return err }
 	editor.buffers << buff
 	editor.views << open_view(mut editor.log, editor.workspace.config, editor.workspace.branch(), editor.workspace.syntaxes(),
 		editor.clipboard, mut &editor.buffers[editor.buffers.len - 1])

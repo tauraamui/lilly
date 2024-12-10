@@ -84,44 +84,6 @@ fn (mut gap_buffer GapBuffer) resize_if_full() {
 	gap_buffer.data = data_dest
 }
 
-pub struct GapBufferLineIterator {
-	data       string
-mut:
-	line_number int
-	line_start int
-	line_end  int
-	done bool
-}
-
-pub fn (mut line_iter GapBufferLineIterator) next() ?string {
-	if line_iter.done {
-		line_iter.line_start = 0
-		line_iter.line_end = 0
-		line_iter.done = false
-		return none
-	}
-
-	line_iter.line_start = line_iter.line_end
-
-	mut trailing_newline := false
-	for c in line_iter.data[line_iter.line_start..].runes() {
-		line_iter.line_end += 1
-		if c == `\n` {
-			trailing_newline = true
-			break
-		}
-	}
-
-	line := line_iter.data[line_iter.line_start..line_iter.line_end - 1]
-	if line_iter.line_end == line_iter.data.len && !trailing_newline {
-		line_iter.done = true
-	} else {
-		line_iter.line_number += 1
-	}
-
-	return line
-}
-
 @[inline]
 fn (gap_buffer GapBuffer) empty_gap_space_size() int {
 	return gap_buffer.gap_end - gap_buffer.gap_start
@@ -140,12 +102,38 @@ fn (gap_buffer GapBuffer) raw_str() string {
 	return sb.str()
 }
 
-fn main() {
-	println("Hello World!")
-	mut gb := GapBuffer.new("")
-	gb.insert("Hello")
-	gb.insert(" Wo")
-	gb.insert("rld")
-	gb.insert("!")
-	println(gb.str())
+const lf := `\n`
+
+struct GapBufferIterator {
+	data  string
+mut:
+	line_start int
+	done       bool
 }
+
+fn new_gap_buffer_iterator(buffer GapBuffer) GapBufferIterator {
+	return GapBufferIterator{
+		data: buffer.str()
+	}
+}
+
+pub fn (mut iter GapBufferIterator) next() ?string {
+	if iter.done { return none }
+	mut line := ?string(none)
+	for index in iter.line_start..iter.data.len {
+		if iter.data[index] == lf {
+			line = iter.data[iter.line_start..index]
+			iter.line_start = index + 1
+			break
+		}
+
+		if index + 1 == iter.data.len {
+			iter.done = true
+			line = iter.data[iter.line_start..]
+			break
+		}
+	}
+
+	return line
+}
+
