@@ -108,6 +108,7 @@ struct GapBufferIterator {
 	data  string
 mut:
 	line_start int
+	done       bool
 }
 
 fn new_gap_buffer_iterator(buffer GapBuffer) GapBufferIterator {
@@ -117,11 +118,18 @@ fn new_gap_buffer_iterator(buffer GapBuffer) GapBufferIterator {
 }
 
 pub fn (mut iter GapBufferIterator) next() ?string {
+	if iter.done { return none }
 	mut line := ?string(none)
 	for index in iter.line_start..iter.data.len {
 		if iter.data[index] == lf {
 			line = iter.data[iter.line_start..index]
 			iter.line_start = index + 1
+			break
+		}
+
+		if index + 1 == iter.data.len {
+			iter.done = true
+			line = iter.data[iter.line_start..]
 			break
 		}
 	}
