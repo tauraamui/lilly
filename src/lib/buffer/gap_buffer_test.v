@@ -98,30 +98,36 @@ fn test_line_iterator() {
 	mut gb := GapBuffer.new("1. This is the first line.\n2. This is the second line.\n3. This is the third line.")
 
 	iter := new_gap_buffer_iterator(gb)
+	mut count := 0
 	for i, line in iter {
 		match i {
-			0 { assert line == "1. This is the first line." }
-			1 { assert line == "2. This is the second line." }
-			2 { assert line == "3. This is the third line." }
+			0 { assert line == "1. This is the first line."; count += 1 }
+			1 { assert line == "2. This is the second line."; count += 1 }
+			2 { assert line == "3. This is the third line."; count += 1 }
 			else{}
 		}
 	}
+
+	assert count == 3
 }
 
 fn test_line_iterator_with_lots_of_blank_lines() {
 	mut gb := GapBuffer.new("1. This is the first line.\n\n\n\n2. This is the second line.\n3. This is the third line.")
 
 	iter := new_gap_buffer_iterator(gb)
+	mut count := 0
 	for i, line in iter {
 		match i {
-			0 { assert line == "1. This is the first line." }
-			1 { assert line == "" }
-			2 { assert line == "" }
-			3 { assert line == "" }
-			4 { assert line == "2. This is the second line." }
-			5 { assert line == "3. This is the third line." }
+			0 { assert line == "1. This is the first line."; count += 1 }
+			1 { assert line == ""; count += 1 }
+			2 { assert line == ""; count += 1 }
+			3 { assert line == ""; count += 1 }
+			4 { assert line == "2. This is the second line."; count += 1 }
+			5 { assert line == "3. This is the third line."; count += 1 }
 			else{}
 		}
 	}
+
+	assert count == 6
 }
 
