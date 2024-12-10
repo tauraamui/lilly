@@ -1,5 +1,7 @@
 module workspace
 
+import os
+
 struct MockLogger {
 mut:
 	error_msgs []string
@@ -7,6 +9,12 @@ mut:
 
 fn (mut mock_log MockLogger) error(msg string) {
 	mock_log.error_msgs << msg
+}
+
+struct MockOS {}
+
+fn (mock_os MockOS) execute(cmd string) os.Result {
+  return os.Result{exit_code: 0, output: "branch"}
 }
 
 struct MockFS {
@@ -61,9 +69,11 @@ fn test_open_workspace_loads_builtin_syntax() {
 		file_contents: {}
 	}
 
+	mock_os := MockOS{}
+
 	mut mock_log := MockLogger{}
 	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker,
-		mock_fs.config_dir, mock_fs.read_file) or { panic('${err.msg()}') }
+		mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err.msg()}') }
 	assert wrkspace.syntaxes.len == 8
 	assert wrkspace.syntaxes[0].name == 'V'
 	assert wrkspace.syntaxes[1].name == 'Go'
@@ -90,9 +100,11 @@ fn test_open_workspace_overrides_builtin_syntax() {
 		}
 	}
 
+	mock_os := MockOS{}
+
 	mut mock_log := MockLogger{}
 	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker,
-		mock_fs.config_dir, mock_fs.read_file) or { panic('${err.msg()}') }
+		mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err.msg()}') }
 	assert wrkspace.syntaxes.len == 8
 	assert wrkspace.syntaxes[0].name == 'V'
 	assert wrkspace.syntaxes[1].name == 'GoTest'
@@ -113,9 +125,11 @@ fn test_open_workspace_loads_custom_syntax() {
 		}
 	}
 
+	mock_os := MockOS{}
+
 	mut mock_log := MockLogger{}
 	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker,
-		mock_fs.config_dir, mock_fs.read_file) or { panic('${err.msg()}') }
+		mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err.msg()}') }
 	assert mock_log.error_msgs.len == 1
 	assert mock_log.error_msgs[0] == 'failed to resolve config: local config file /home/test-user/.config/lilly/lilly.conf not found: file /home/test-user/.config/lilly/lilly.conf does not exist'
 	assert wrkspace.syntaxes.len == 9

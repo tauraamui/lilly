@@ -61,7 +61,7 @@ pub fn open_editor(
 		inactive_buffer_finder_modal: unsafe { nil }
 	}
 	editor.workspace = workspace.open_workspace(mut _log, workspace_root_dir, os.is_dir,
-		os.walk, os.config_dir, os.read_file) or {
+		os.walk, os.config_dir, os.read_file, os.execute) or {
 		return error("unable to open workspace '${workspace_root_dir}' -> ${err}")
 	}
 
