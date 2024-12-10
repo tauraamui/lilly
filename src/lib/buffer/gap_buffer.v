@@ -84,7 +84,7 @@ fn (mut gap_buffer GapBuffer) resize_if_full() {
 	gap_buffer.data = data_dest
 }
 
-pub struct GapBufferLineIterator {
+struct GapBufferIterator {
 	data       string
 mut:
 	line_number int
@@ -93,7 +93,13 @@ mut:
 	done bool
 }
 
-pub fn (mut line_iter GapBufferLineIterator) next() ?string {
+fn new_gap_buffer_iterator(buffer GapBuffer) GapBufferIterator {
+	return GapBufferIterator{
+		data: buffer.str()
+	}
+}
+
+pub fn (mut line_iter GapBufferIterator) next() ?string {
 	if line_iter.done {
 		line_iter.line_start = 0
 		line_iter.line_end = 0
@@ -140,12 +146,3 @@ fn (gap_buffer GapBuffer) raw_str() string {
 	return sb.str()
 }
 
-fn main() {
-	println("Hello World!")
-	mut gb := GapBuffer.new("")
-	gb.insert("Hello")
-	gb.insert(" Wo")
-	gb.insert("rld")
-	gb.insert("!")
-	println(gb.str())
-}
