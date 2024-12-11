@@ -1324,26 +1324,12 @@ fn (mut view View) char_insert(s string) {
 }
 
 fn (mut view View) insert_text(s string) {
-	y := view.cursor.pos.y
-	line := view.buffer.lines[y]
-	if line.len == 0 {
-		view.buffer.lines[y] = '${s}'
-		view.cursor.pos.x = s.runes().len
-		return
-	} else {
-		if view.cursor.pos.x > line.len {
-			view.cursor.pos.x = line.len
-		}
-		uline := line.runes()
-		if view.cursor.pos.x > uline.len {
-			return
-		}
-		left := uline[..view.cursor.pos.x].string()
-		right := uline[view.cursor.pos.x..uline.len].string()
-		// insert char in the middle
-		view.buffer.lines[y] = '${left}${s}${right}'
-	}
-	view.cursor.pos.x += s.runes().len
+	// TODO(tauraamui): remove this heinous hack as soon as possible
+	view.buffer.cursor.x = view.cursor.pos.x
+	view.buffer.cursor.y = view.cursor.pos.y
+	view.buffer.insert_text(s)
+	view.cursor.pos.x = view.buffer.cursor.x
+	view.cursor.pos.y = view.buffer.cursor.y
 }
 
 fn (mut view View) escape() {
@@ -1576,6 +1562,7 @@ fn (mut view View) k() {
 fn (mut view View) i() {
 	view.leader_state.mode = .insert
 	view.clamp_cursor_x_pos()
+	view.buffer.move_cursor_to(view.cursor.pos.x, view.cursor.pos.y)
 }
 
 fn (mut view View) v() {
