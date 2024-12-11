@@ -4,10 +4,10 @@ pub struct Buffer {
 pub:
 	file_path string
 pub mut:
-	lines            []string
 	auto_close_chars []string
 	cursor           Pos
 mut:
+	lines            []string
 	use_gap_buffer   bool
 	c_buffer         GapBuffer
 	// line_tracker LineTracker

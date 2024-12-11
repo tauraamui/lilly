@@ -1324,9 +1324,6 @@ fn (mut view View) char_insert(s string) {
 }
 
 fn (mut view View) insert_text(s string) {
-	// TODO(tauraamui): remove this heinous hack as soon as possible
-	view.buffer.cursor.x = view.cursor.pos.x
-	view.buffer.cursor.y = view.cursor.pos.y
 	view.buffer.insert_text(s)
 	view.cursor.pos.x = view.buffer.cursor.x
 	view.cursor.pos.y = view.buffer.cursor.y
