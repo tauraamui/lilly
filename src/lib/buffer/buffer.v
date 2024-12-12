@@ -69,8 +69,6 @@ pub fn (mut buffer Buffer) insert_text(s string) {
 
 		buffer.lines[buffer.cursor.y] = "${left}${s}${right}"
 	}
-
-	buffer.cursor.x += s.runes().len
 }
 
 pub interface Iterator {
