@@ -78,6 +78,9 @@ mut:
 	long_show_version_flag           string
 	short_show_version_flag          string
 	show_version                     bool
+	long_show_config_dir_flag        string
+	short_show_config_dir_flag       string
+	show_config_root_dir             bool
 	long_symlink_flag                string
 	short_symlink_flag               string
 	symlink                          bool
@@ -103,10 +106,12 @@ mut:
 fn resolve_options_from_args(args []string) Options {
 	flags := cmdline.only_options(args)
 	mut opts := Options{
-		long_show_version_flag:           'version'
-		short_show_version_flag:          'v'
 		long_show_help_flag:              'help'
 		short_show_help_flag:             'h'
+		long_show_version_flag:           'version'
+		short_show_version_flag:          'v'
+		long_show_config_dir_flag:        'show-config-root'
+		short_show_config_dir_flag:       'scr'
 		long_symlink_flag:                'symlink'
 		short_symlink_flag:               'ln'
 		long_debug_mode_flag:             'debug'
@@ -127,6 +132,8 @@ fn resolve_options_from_args(args []string) Options {
 		|| '-${opts.short_show_help_flag}' in flags
 	opts.show_version = '--${opts.long_show_version_flag}' in flags
 		|| '-${opts.short_show_version_flag}' in flags
+	opts.show_config_root_dir = '--${opts.long_show_config_dir_flag}' in flags
+		|| '-${opts.short_show_config_dir_flag}' in flags
 	$if !windows {
 		opts.symlink = '--${opts.long_symlink_flag}' in flags
 			|| '-${opts.short_symlink_flag}' in flags
@@ -161,6 +168,7 @@ fn (opts Options) flags_str() string {
 	mut sb := strings.new_builder(512)
 	sb.write_string('-${opts.short_show_help_flag}, --${opts.long_show_help_flag} (show help)')
 	sb.write_string('\n\t-${opts.short_show_version_flag}, --${opts.long_show_version_flag} (show version)')
+	sb.write_string('\n\t-${opts.short_show_config_dir_flag}, --${opts.long_show_config_dir_flag} (show root config dir)')
 	$if !windows {
 		sb.write_string('\n\t-${opts.short_symlink_flag}, --${opts.long_symlink_flag} (symlink lilly into local bin)')
 	}
@@ -172,14 +180,19 @@ fn (opts Options) flags_str() string {
 	return sb.str()
 }
 
+fn output_help_and_close(opts Options) {
+	msg := './lilly <option flags> <dir path/file path>\nFlags:\n\t${opts.flags_str()}'
+	print_and_exit(msg)
+}
+
 fn output_version_and_close(commit_hash string) {
 	version_label := 'lilly - dev version (#${commit_hash})'
 	print_and_exit(version_label)
 }
 
-fn output_help_and_close(opts Options) {
-	msg := './lilly <option flags> <dir path/file path>\nFlags:\n\t${opts.flags_str()}'
-	print_and_exit(msg)
+fn output_config_root_dir_and_close(config_root_dir string) {
+	config_root_dir_label := 'lilly - config root dir (#${config_root_dir})'
+	print_and_exit(config_root_dir_label)
 }
 
 fn symlink_and_close() {
@@ -229,6 +242,10 @@ fn main() {
 
 	if opts.show_version {
 		output_version_and_close(gitcommit_hash)
+	}
+
+	if opts.show_config_root_dir {
+		output_config_root_dir_and_close(os.config_dir()!)
 	}
 
 	if opts.show_help {
