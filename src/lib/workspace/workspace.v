@@ -5,7 +5,7 @@ import json
 import term.ui as tui
 
 const builtin_lilly_config_file_content = $embed_file('../../config/lilly.conf').to_string()
-const lilly_config_root_dir_name = 'lilly'
+pub const lilly_config_root_dir_name = 'lilly'
 const lilly_syntaxes_dir_name = 'syntaxes'
 
 pub struct Workspace {
