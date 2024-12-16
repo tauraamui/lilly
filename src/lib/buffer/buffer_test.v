@@ -79,3 +79,11 @@ fn test_buffer_o_inserts_empty_line() {
 	buffer.o()
 	assert buffer.str() == "1. first line\n\n2. second line\n3. third line"
 }
+
+fn test_buffer_enter_inserts_newline_line() {
+	mut buffer := Buffer{}
+	buffer.c_buffer = GapBuffer.new("1. first line\n2. second line\n3. third line")
+	buffer.cursor.x = 4
+	buffer.enter()
+	assert buffer.str() == "1. f\nirst line\n2. second line\n3. third line"
+}
