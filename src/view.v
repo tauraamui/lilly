@@ -1324,9 +1324,30 @@ fn (mut view View) char_insert(s string) {
 }
 
 fn (mut view View) insert_text(s string) {
-	view.buffer.insert_text(s)
-	view.cursor.pos.x = view.buffer.cursor.x
-	view.cursor.pos.y = view.buffer.cursor.y
+	if view.buffer.use_gap_buffer {
+		view.buffer.insert_text(s)
+		return
+	}
+	y := view.cursor.pos.y
+	line := view.buffer.lines[y]
+	if line.len == 0 {
+		view.buffer.lines[y] = '${s}'
+		view.cursor.pos.x = s.runes().len
+		return
+	} else {
+		if view.cursor.pos.x > line.len {
+			view.cursor.pos.x = line.len
+		}
+		uline := line.runes()
+		if view.cursor.pos.x > uline.len {
+			return
+		}
+		left := uline[..view.cursor.pos.x].string()
+		right := uline[view.cursor.pos.x..uline.len].string()
+		// insert char in the middle
+		view.buffer.lines[y] = '${left}${s}${right}'
+	}
+	view.cursor.pos.x += s.runes().len
 }
 
 fn (mut view View) escape() {
@@ -1617,8 +1638,10 @@ fn (mut view View) visual_line_d(overwrite_y_lines bool) {
 }
 
 fn (mut view View) w() {
-	view.buffer.w()
-	/*
+	if view.buffer.use_gap_buffer {
+		view.buffer.w()
+		return
+	}
 	defer { view.clamp_cursor_x_pos() }
 	mut line := view.buffer.lines[view.cursor.pos.y]
 	mut amount := calc_w_move_amount(view.cursor.pos, line, false)
@@ -1635,7 +1658,6 @@ fn (mut view View) w() {
 		}
 	}
 	view.cursor.pos.x += amount
-	*/
 }
 
 fn (mut view View) e() {
