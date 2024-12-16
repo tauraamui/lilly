@@ -1580,7 +1580,6 @@ fn (mut view View) k() {
 fn (mut view View) i() {
 	view.leader_state.mode = .insert
 	view.clamp_cursor_x_pos()
-	view.buffer.move_cursor_to(view.cursor.pos.x, view.cursor.pos.y)
 }
 
 fn (mut view View) v() {

@@ -38,14 +38,6 @@ pub fn (mut buffer Buffer) load_contents_into_gap(contents string) {
 	buffer.c_buffer = GapBuffer.new(contents)
 }
 
-pub fn (mut buffer Buffer) move_cursor_to(x int, y int) {
-	buffer.cursor.x = x
-	buffer.cursor.y = y
-	if buffer.use_gap_buffer {
-		// TODO(tauraamui): move the gap to the correct position offset
-	}
-}
-
 pub fn (mut buffer Buffer) insert_text(s string) {
 	buffer.c_buffer.insert(s)
 }
