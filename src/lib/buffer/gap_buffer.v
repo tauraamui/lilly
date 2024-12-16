@@ -84,6 +84,57 @@ fn (mut gap_buffer GapBuffer) resize_if_full() {
 	gap_buffer.data = data_dest
 }
 
+pub fn (gap_buffer GapBuffer) in_bounds(pos Pos) bool {
+	_ := gap_buffer.find_offset(pos) or { return false }
+	return true
+}
+
+fn (gap_buffer GapBuffer) find_offset(pos Pos) ?int {
+	pre_gap_data := gap_buffer.data[..gap_buffer.gap_start]
+
+	mut line := 0
+	mut line_offset := 0
+
+	for offset, c in pre_gap_data {
+		if line == pos.y && line_offset == pos.x {
+			return offset
+		}
+
+		if c == lf {
+			line += 1
+			line_offset = 0
+			continue
+		}
+
+		line_offset += 1
+	}
+
+	if line == pos.y && line_offset == pos.x {
+		return gap_buffer.gap_start + (gap_buffer.gap_end - gap_buffer.gap_start)
+	}
+
+	post_gap_data := gap_buffer.data[gap_buffer.gap_start + (gap_buffer.gap_end - gap_buffer.gap_start)..]
+	for offset, c in post_gap_data {
+		if line == pos.y && line_offset == pos.x {
+			return gap_buffer.gap_start + (gap_buffer.gap_end - gap_buffer.gap_start) + offset
+		}
+
+		if c == lf {
+			line += 1
+			line_offset = 0
+			continue
+		}
+
+		line_offset += 1
+	}
+
+	if line == pos.y && line_offset == pos.x {
+		return gap_buffer.data.len
+	}
+
+	return none
+}
+
 @[inline]
 fn (gap_buffer GapBuffer) empty_gap_space_size() int {
 	return gap_buffer.gap_end - gap_buffer.gap_start
