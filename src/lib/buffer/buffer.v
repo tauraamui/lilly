@@ -51,9 +51,9 @@ pub fn (mut buffer Buffer) insert_text(s string) {
 }
 
 pub fn (mut buffer Buffer) o() {
-	// find the end of the existing line and insert after that
-	buffer.c_buffer.insert("\n")
+	buffer.cursor.x = 0
 	buffer.cursor.y += 1
+	buffer.c_buffer.insert_at("\n", buffer.cursor)
 }
 
 pub fn (mut buffer Buffer) w() {}

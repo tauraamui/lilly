@@ -34,6 +34,12 @@ pub fn (mut gap_buffer GapBuffer) insert(s string) {
 	}
 }
 
+pub fn (mut gap_buffer GapBuffer) insert_at(s string, pos Pos) {
+	offset := gap_buffer.find_offset(pos) or { return }
+	gap_buffer.move_cursor(offset - gap_size)
+	gap_buffer.insert(s)
+}
+
 pub fn (mut gap_buffer GapBuffer) backspace() {
 	if gap_buffer.gap_start == 0 { return }
 	gap_buffer.gap_start -= 1
@@ -48,6 +54,18 @@ fn (mut gap_buffer GapBuffer) insert_rune(r rune) {
 	gap_buffer.data[gap_buffer.gap_start] = r
 	gap_buffer.gap_start += 1
 	gap_buffer.resize_if_full()
+}
+
+fn (mut gap_buffer GapBuffer) move_cursor(offset int) {
+	if offset < gap_buffer.gap_start {
+		gap_buffer.move_cursor_left(gap_buffer.gap_start - offset)
+		return
+	}
+
+	if offset > gap_buffer.gap_start {
+		gap_buffer.move_cursor_right(offset - gap_buffer.gap_start)
+		return
+	}
 }
 
 fn (mut gap_buffer GapBuffer) move_cursor_left(count int) {
