@@ -45,7 +45,7 @@ pub fn (mut buffer Buffer) insert_text(s string) {
 pub fn (mut buffer Buffer) o() {
 	buffer.cursor.x = 0
 	buffer.cursor.y += 1
-	buffer.c_buffer.insert_at("\n", buffer.cursor)
+	buffer.c_buffer.insert_at(lf.str(), buffer.cursor)
 }
 
 pub fn (mut buffer Buffer) w() {}
