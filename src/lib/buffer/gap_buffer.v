@@ -35,8 +35,9 @@ pub fn (mut gap_buffer GapBuffer) insert(s string) {
 }
 
 pub fn (mut gap_buffer GapBuffer) insert_at(s string, pos Pos) {
+	gap_sizee := gap_buffer.gap_end - gap_buffer.gap_start
 	offset := gap_buffer.find_offset(pos) or { return }
-	gap_buffer.move_cursor(offset - gap_size)
+	gap_buffer.move_cursor(offset - gap_sizee)
 	gap_buffer.insert(s)
 }
 
