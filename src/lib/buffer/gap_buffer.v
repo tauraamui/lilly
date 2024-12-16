@@ -3,7 +3,7 @@ module buffer
 import strings
 import arrays
 
-const gap_size = 6
+const gap_size = 32
 
 struct LineTracker {
 	line_starts []int
