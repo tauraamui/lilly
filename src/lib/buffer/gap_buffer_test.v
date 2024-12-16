@@ -24,11 +24,11 @@ fn test_inserting_into_gap_buffer_and_then_backspacing() {
 	gb.backspace()
 	gb.backspace()
 
-	assert gb.empty_gap_space_size() == 11
+	assert gb.empty_gap_space_size() == gap_size + 5 // gap_size is set as a constant within `gap_buffer.v`
 	assert gb.raw_str() == "This is a full sent${'_'.repeat(gap_size + 5)}" // so we can see the gap is "nearly full", but one space is left
 
 	gb.insert("A")
-	assert gb.empty_gap_space_size() == 10
+	assert gb.empty_gap_space_size() == gap_size + 4
 	assert gb.raw_str() == "This is a full sentA${'_'.repeat(gap_size + 4)}" // so we can see the gap is "nearly full", but one space is left
 }
 
