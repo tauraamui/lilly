@@ -6,8 +6,8 @@ pub:
 pub mut:
 	auto_close_chars []string
 	cursor           Pos
-mut:
 	lines            []string
+mut:
 	use_gap_buffer   bool
 	c_buffer         GapBuffer
 	// line_tracker LineTracker
@@ -69,6 +69,26 @@ pub fn (mut buffer Buffer) insert_text(s string) {
 
 		buffer.lines[buffer.cursor.y] = "${left}${s}${right}"
 	}
+}
+
+pub fn (mut buffer Buffer) w() {
+	if buffer.use_gap_buffer { return }
+	defer { buffer.clamp_cursor_x_pos() }
+	mut line := buffer.lines[buffer.cursor.y]
+	mut amount := calc_w_move_amount(buffer.cursor, line, false)
+	if amount == 0 {
+		buffer.move_cursor_down(1)
+		buffer.cursor.x = 0
+
+		if buffer.cursor.y < buffer.lines.len {
+			line = buffer.lines[buffer.cursor.y]
+			if line.len > 0 && is_whitespace(line[buffer.cursor.x]) {
+				amount = calc_w_move_amount(buffer.cursor, line, false)
+				assert amount >= 0
+			}
+		}
+	}
+	buffer.cursor.x += amount
 }
 
 pub interface Iterator {

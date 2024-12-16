@@ -1617,6 +1617,8 @@ fn (mut view View) visual_line_d(overwrite_y_lines bool) {
 }
 
 fn (mut view View) w() {
+	view.buffer.w()
+	/*
 	defer { view.clamp_cursor_x_pos() }
 	mut line := view.buffer.lines[view.cursor.pos.y]
 	mut amount := calc_w_move_amount(view.cursor.pos, line, false)
@@ -1633,6 +1635,7 @@ fn (mut view View) w() {
 		}
 	}
 	view.cursor.pos.x += amount
+	*/
 }
 
 fn (mut view View) e() {
