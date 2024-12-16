@@ -94,6 +94,20 @@ fn test_moving_cursor_right_and_then_insert() {
 	assert gb.str() == "Some tes??+t text, here we go!"
 }
 
+fn test_find_offset() {
+	mut gb := GapBuffer.new("1. First line\n2. Second line!\n3. Third line :3")
+
+	assert gb.gap_start == 0
+	gap_size := gb.gap_end - gb.gap_start
+	assert gb.find_offset(Pos{ x: 0, y: 0 })! == gap_size
+	assert gb.find_offset(Pos{ x: 3, y: 0 })! == gap_size + 3
+	assert gb.find_offset(Pos{ x: 0, y: 1 })! == gap_size + 14
+	assert gb.find_offset(Pos{ x: 4, y: 1 })! == gap_size + 18
+	assert gb.in_bounds(Pos{ y: 255 }) == false
+	assert gb.in_bounds(Pos{ y: 2 })
+	assert gb.in_bounds(Pos{ y: 3 }) == false
+}
+
 fn test_line_iterator() {
 	mut gb := GapBuffer.new("1. This is the first line.\n2. This is the second line.\n3. This is the third line.")
 
