@@ -48,6 +48,12 @@ pub fn (mut buffer Buffer) o() {
 	buffer.c_buffer.insert_at(lf.str(), buffer.cursor)
 }
 
+pub fn (mut buffer Buffer) enter() {
+	buffer.c_buffer.insert_at(lf.str(), buffer.cursor)
+	buffer.cursor.x = 0
+	buffer.cursor.y += 1
+}
+
 pub fn (mut buffer Buffer) w() {}
 
 pub fn (mut buffer Buffer) str() string {
