@@ -1863,6 +1863,10 @@ fn (mut view View) center_text_around_cursor() {
 fn (mut view View) u() {}
 
 fn (mut view View) o() {
+	if view.buffer.use_gap_buffer {
+		view.buffer.o()
+		return
+	}
 	defer { view.move_cursor_down(1) }
 	view.leader_state.mode = .insert
 	y := view.cursor.pos.y

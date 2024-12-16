@@ -63,3 +63,11 @@ fn test_buffer_load_from_path_with_gap_buffer_and_iterate() {
 
 	assert cb_invoked_count == 3
 }
+
+fn test_buffer_insert_text() {
+	mut buffer := Buffer{}
+	buffer.c_buffer = GapBuffer.new("")
+	buffer.insert_text("Some text to insert!")
+
+	assert buffer.str() == "Some text to insert!"
+}

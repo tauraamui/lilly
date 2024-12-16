@@ -258,6 +258,26 @@ fn test_visual_select_across_multiple_lines_copy_and_paste_works_correctly() {
 	}
 }
 
+fn test_insert_text() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	// manually set the "document" contents
+	fake_view.buffer.lines = ['1. first line', '2. second line']
+	// ensure cursor is set to sit on the first line
+	fake_view.cursor.pos.y = 0
+
+	fake_view.insert_text("Random words!")
+
+	assert fake_view.leader_state.mode == .normal
+	assert fake_view.buffer.lines == ['Random words!1. first line', '2. second line']
+	assert fake_view.cursor.pos.x == 13
+	assert fake_view.cursor.pos.y == 0
+}
+
 fn test_o_inserts_sentance_line() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{

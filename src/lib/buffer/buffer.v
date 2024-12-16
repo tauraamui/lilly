@@ -29,9 +29,13 @@ pub fn (mut buffer Buffer) load_from_path(read_lines fn (path string) ![]string,
 
 	if use_gap_buffer {
 		buffer.use_gap_buffer = use_gap_buffer
-		file_contents := buffer.lines.join("\n")
-		buffer.c_buffer = GapBuffer.new(file_contents)
+		buffer.load_contents_into_gap(buffer.lines.join("\n"))
 	}
+}
+
+pub fn (mut buffer Buffer) load_contents_into_gap(contents string) {
+	if !buffer.use_gap_buffer { return }
+	buffer.c_buffer = GapBuffer.new(contents)
 }
 
 pub fn (mut buffer Buffer) move_cursor_to(x int, y int) {
@@ -43,14 +47,19 @@ pub fn (mut buffer Buffer) move_cursor_to(x int, y int) {
 }
 
 pub fn (mut buffer Buffer) insert_text(s string) {
-	if buffer.use_gap_buffer {
-		buffer.c_buffer.insert(s)
-		return
-	}
+	buffer.c_buffer.insert(s)
 }
 
-pub fn (mut buffer Buffer) w() {
-	if !buffer.use_gap_buffer { return }
+pub fn (mut buffer Buffer) o() {
+	// find the end of the existing line and insert after that
+	buffer.c_buffer.insert("\n")
+	buffer.cursor.y += 1
+}
+
+pub fn (mut buffer Buffer) w() {}
+
+pub fn (mut buffer Buffer) str() string {
+	return buffer.c_buffer.str()
 }
 
 pub interface Iterator {
