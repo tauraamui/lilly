@@ -175,7 +175,7 @@ fn (gap_buffer GapBuffer) raw_str() string {
 	return sb.str()
 }
 
-const lf := `\n`
+pub const lf := `\n`
 
 struct GapBufferIterator {
 	data  string
