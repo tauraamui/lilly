@@ -1323,7 +1323,20 @@ fn (mut view View) char_insert(s string) {
 	view.insert_text(s)
 }
 
-fn (mut view View) insert_text(s string) {
+fn (mut view View) insert_text_gb(s string) {
+	view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
+	chars := s.runes()
+	for c in chars {
+		view.buffer.write(c)
+		view.cursor.pos.x += 1
+		if c == buffer.lf {
+			view.cursor.pos.y += 1
+			view.cursor.pos.x = 0
+		}
+	}
+}
+
+fn (mut view View) insert_text_lb(s string) {
 	y := view.cursor.pos.y
 	line := view.buffer.lines[y]
 	if line.len == 0 {
@@ -1344,6 +1357,14 @@ fn (mut view View) insert_text(s string) {
 		view.buffer.lines[y] = '${left}${s}${right}'
 	}
 	view.cursor.pos.x += s.runes().len
+}
+
+fn (mut view View) insert_text(s string) {
+	if view.buffer.use_gap_buffer {
+		view.insert_text_gb(s)
+		return
+	}
+	view.insert_text_lb(s)
 }
 
 fn (mut view View) escape() {
@@ -1633,6 +1654,9 @@ fn (mut view View) visual_line_d(overwrite_y_lines bool) {
 }
 
 fn (mut view View) w() {
+	if view.buffer.use_gap_buffer {
+		return
+	}
 	defer { view.clamp_cursor_x_pos() }
 	mut line := view.buffer.lines[view.cursor.pos.y]
 	mut amount := calc_w_move_amount(view.cursor.pos, line, false)
@@ -1854,6 +1878,12 @@ fn (mut view View) center_text_around_cursor() {
 fn (mut view View) u() {}
 
 fn (mut view View) o() {
+	if view.buffer.use_gap_buffer {
+		view.cursor.pos.y += 1
+		view.insert_text(buffer.lf.str())
+		view.cursor.pos.y -= 1
+		return
+	}
 	defer { view.move_cursor_down(1) }
 	view.leader_state.mode = .insert
 	y := view.cursor.pos.y

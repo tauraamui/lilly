@@ -4,12 +4,18 @@ pub struct Buffer {
 pub:
 	file_path string
 pub mut:
-	lines            []string
 	auto_close_chars []string
-mut:
+	lines            []string
 	use_gap_buffer   bool
+mut:
 	c_buffer         GapBuffer
 	// line_tracker LineTracker
+}
+
+pub struct Pos {
+pub mut:
+	x int
+	y int
 }
 
 pub fn (mut buffer Buffer) load_from_path(read_lines fn (path string) ![]string, use_gap_buffer bool) ! {
@@ -22,9 +28,29 @@ pub fn (mut buffer Buffer) load_from_path(read_lines fn (path string) ![]string,
 
 	if use_gap_buffer {
 		buffer.use_gap_buffer = use_gap_buffer
-		file_contents := buffer.lines.join("\n")
-		buffer.c_buffer = GapBuffer.new(file_contents)
+		buffer.load_contents_into_gap(buffer.lines.join("\n"))
 	}
+}
+
+pub fn (mut buffer Buffer) load_contents_into_gap(contents string) {
+	if !buffer.use_gap_buffer { return }
+	buffer.c_buffer = GapBuffer.new(contents)
+}
+
+pub fn (mut buffer Buffer) move_cursor_to(pos Pos) {
+	buffer.c_buffer.move_cursor_to(pos)
+}
+
+pub fn (mut buffer Buffer) write(r rune) {
+	buffer.c_buffer.insert(r)
+}
+
+pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
+	buffer.c_buffer.insert_at(r, pos)
+}
+
+pub fn (mut buffer Buffer) str() string {
+	return buffer.c_buffer.str()
 }
 
 pub interface Iterator {

@@ -63,3 +63,19 @@ fn test_buffer_load_from_path_with_gap_buffer_and_iterate() {
 
 	assert cb_invoked_count == 3
 }
+
+fn test_buffer_insert_text() {
+	mut buffer := Buffer{}
+	buffer.c_buffer = GapBuffer.new("")
+
+	for r in "Some text to insert!".runes() { buffer.write(r) }
+
+	assert buffer.str() == "Some text to insert!"
+}
+
+fn test_buffer_enter_inserts_newline_line() {
+	mut buffer := Buffer{}
+	buffer.c_buffer = GapBuffer.new("1. first line\n2. second line\n3. third line")
+	buffer.write_at(lf, Pos{ x: 4, y: 0 })
+	assert buffer.str() == "1. f\nirst line\n2. second line\n3. third line"
+}
