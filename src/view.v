@@ -1881,10 +1881,9 @@ fn (mut view View) u() {}
 
 fn (mut view View) o() {
 	if view.buffer.use_gap_buffer {
-		view.cursor.pos.y += 1
+		view.cursor.pos.x = view.buffer.find_end_of_line(buffer.Pos{ y: view.cursor.pos.y }) or { 0 }
 		view.i()
 		view.insert_text(buffer.lf.str())
-		view.cursor.pos.y -= 1
 		return
 	}
 	view.leader_state.mode = .insert
