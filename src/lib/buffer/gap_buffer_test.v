@@ -7,7 +7,7 @@ fn test_inserting_into_gap_buffer() {
 
 	gb.move_cursor_right(gb.data.len - gb.gap_end) // move gap to end of the data
 
-	gb.insert("6")
+	for c in "6".runes() { gb.insert(c) }
 	assert gb.raw_str() == "123456${'_'.repeat(gap_size - 1)}"
 }
 
@@ -27,7 +27,7 @@ fn test_inserting_into_gap_buffer_and_then_backspacing() {
 	assert gb.empty_gap_space_size() == gap_size + 5 // gap_size is set as a constant within `gap_buffer.v`
 	assert gb.raw_str() == "This is a full sent${'_'.repeat(gap_size + 5)}" // so we can see the gap is "nearly full", but one space is left
 
-	gb.insert("A")
+	for c in "A".runes() { gb.insert(c) }
 	assert gb.empty_gap_space_size() == gap_size + 4
 	assert gb.raw_str() == "This is a full sentA${'_'.repeat(gap_size + 4)}" // so we can see the gap is "nearly full", but one space is left
 }
@@ -85,10 +85,10 @@ fn test_moving_cursor_right_and_then_insert() {
 	gb.move_cursor_right(8)
 	assert gb.raw_str() == "Some tes${'_'.repeat(gap_size)}t text, here we go!"
 
-	gb.insert("??")
+	for c in "??".runes() { gb.insert(c) }
 	assert gb.raw_str() == "Some tes??${'_'.repeat(gap_size - 2)}t text, here we go!"
 
-	gb.insert("+")
+	for c in "+".runes() { gb.insert(c) }
 	assert gb.raw_str() == "Some tes??+${'_'.repeat(gap_size - 3)}t text, here we go!"
 
 	assert gb.str() == "Some tes??+t text, here we go!"

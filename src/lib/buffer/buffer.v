@@ -5,7 +5,6 @@ pub:
 	file_path string
 pub mut:
 	auto_close_chars []string
-	cursor           Pos
 	lines            []string
 	use_gap_buffer   bool
 mut:
@@ -38,23 +37,17 @@ pub fn (mut buffer Buffer) load_contents_into_gap(contents string) {
 	buffer.c_buffer = GapBuffer.new(contents)
 }
 
-pub fn (mut buffer Buffer) insert_text(s string) {
-	buffer.c_buffer.insert(s)
+pub fn (mut buffer Buffer) move_cursor_to(pos Pos) {
+	buffer.c_buffer.move_cursor_to(pos)
 }
 
-pub fn (mut buffer Buffer) o() {
-	buffer.cursor.x = 0
-	buffer.cursor.y += 1
-	buffer.c_buffer.insert_at(lf.str(), buffer.cursor)
+pub fn (mut buffer Buffer) write(r rune) {
+	buffer.c_buffer.insert(r)
 }
 
-pub fn (mut buffer Buffer) enter() {
-	buffer.c_buffer.insert_at(lf.str(), buffer.cursor)
-	buffer.cursor.x = 0
-	buffer.cursor.y += 1
+pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
+	buffer.c_buffer.insert_at(r, pos)
 }
-
-pub fn (mut buffer Buffer) w() {}
 
 pub fn (mut buffer Buffer) str() string {
 	return buffer.c_buffer.str()

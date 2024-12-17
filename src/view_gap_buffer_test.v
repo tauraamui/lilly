@@ -45,5 +45,5 @@ fn test_o_inserts_empty_line() {
 		""
 		"2. second line"
 	]
-	assert fake_view.buffer.cursor.y == 1
+	assert fake_view.cursor.pos.y == 1
 }

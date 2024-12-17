@@ -28,17 +28,19 @@ fn GapBuffer.new(d string) GapBuffer {
 	return gb
 }
 
-pub fn (mut gap_buffer GapBuffer) insert(s string) {
-	for r in s.runes() {
-		gap_buffer.insert_rune(r)
-	}
-}
-
-pub fn (mut gap_buffer GapBuffer) insert_at(s string, pos Pos) {
+pub fn (mut gap_buffer GapBuffer) move_cursor_to(pos Pos) {
 	gap_sizee := gap_buffer.gap_end - gap_buffer.gap_start
 	offset := gap_buffer.find_offset(pos) or { return }
 	gap_buffer.move_cursor(offset - gap_sizee)
-	gap_buffer.insert(s)
+}
+
+pub fn (mut gap_buffer GapBuffer) insert(r rune) {
+	gap_buffer.insert_rune(r)
+}
+
+pub fn (mut gap_buffer GapBuffer) insert_at(r rune, pos Pos) {
+	gap_buffer.move_cursor_to(pos)
+	gap_buffer.insert_rune(r)
 }
 
 pub fn (mut gap_buffer GapBuffer) backspace() {
