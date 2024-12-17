@@ -108,6 +108,13 @@ fn test_find_offset() {
 	assert gb.in_bounds(Pos{ y: 3 }) == false
 }
 
+fn test_find_end_of_line() {
+	mut gb := GapBuffer.new("1. First line\n2. Second line!\n3. Third line :3")
+	assert gb.find_end_of_line(Pos{ x: 0, y: 0 })! == 45
+	assert gb.find_end_of_line(Pos{ x: 0, y: 1 })! == 45
+	assert gb.find_end_of_line(Pos{ x: 0, y: 2 })! == 45
+}
+
 fn test_line_iterator() {
 	mut gb := GapBuffer.new("1. This is the first line.\n2. This is the second line.\n3. This is the third line.")
 
