@@ -1324,7 +1324,7 @@ fn (mut view View) char_insert(s string) {
 }
 
 fn (mut view View) insert_text_gb(s string) {
-	view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
+	// view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
 	chars := s.runes()
 	for c in chars {
 		view.buffer.write(c)
@@ -1596,6 +1596,8 @@ fn (mut view View) k() {
 
 fn (mut view View) i() {
 	view.leader_state.mode = .insert
+	view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
+	if view.buffer.use_gap_buffer { return }
 	view.clamp_cursor_x_pos()
 }
 
@@ -1879,13 +1881,13 @@ fn (mut view View) u() {}
 
 fn (mut view View) o() {
 	if view.buffer.use_gap_buffer {
-		view.cursor.pos.y += 1
+		view.cursor.pos.x = view.buffer.find_end_of_line(buffer.Pos{ y: view.cursor.pos.y }) or { 0 }
+		view.i()
 		view.insert_text(buffer.lf.str())
-		view.cursor.pos.y -= 1
 		return
 	}
-	defer { view.move_cursor_down(1) }
 	view.leader_state.mode = .insert
+	defer { view.move_cursor_down(1) }
 	y := view.cursor.pos.y
 	whitespace_prefix := resolve_whitespace_prefix(view.buffer.lines[y])
 	defer { view.cursor.pos.x = whitespace_prefix.len }
@@ -1897,6 +1899,13 @@ fn (mut view View) o() {
 }
 
 fn (mut view View) shift_o() {
+	if view.buffer.use_gap_buffer {
+		view.cursor.pos.x = 0
+		view.i()
+		view.insert_text(buffer.lf.str())
+		view.cursor.pos.y -= 1
+		return
+	}
 	view.leader_state.mode = .insert
 	y := view.cursor.pos.y
 	whitespace_prefix := resolve_whitespace_prefix(view.buffer.lines[y])

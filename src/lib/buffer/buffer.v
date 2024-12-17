@@ -53,6 +53,10 @@ pub fn (mut buffer Buffer) str() string {
 	return buffer.c_buffer.str()
 }
 
+pub fn (buffer Buffer) find_end_of_line(pos Pos) ?int {
+	return buffer.c_buffer.find_end_of_line(pos)
+}
+
 pub interface Iterator {
 mut:
 	next() ?string

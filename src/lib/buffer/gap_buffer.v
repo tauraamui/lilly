@@ -110,6 +110,18 @@ pub fn (gap_buffer GapBuffer) in_bounds(pos Pos) bool {
 	return true
 }
 
+pub fn (gap_buffer GapBuffer) find_end_of_line(pos Pos) ?int {
+	offset := gap_buffer.find_offset(pos) or { return none }
+
+	data := gap_buffer.data[offset..]
+	for count, r in data {
+		if r == lf { return count }
+	}
+
+	// FIXME(tauraamui): subtract how much gap is within the result
+	return data.len
+}
+
 // FIXME(tauraamui): I think this function doesn't need to include the gap as part of the offset'
 fn (gap_buffer GapBuffer) find_offset(pos Pos) ?int {
 	pre_gap_data := gap_buffer.data[..gap_buffer.gap_start]
