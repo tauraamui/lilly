@@ -218,6 +218,13 @@ fn test_w_moves_to_start_of_next_word() {
 	fake_view.buffer.use_gap_buffer = true
 	// manually set the "document" contents
 	fake_view.buffer.load_contents_into_gap("This is the first line.\n2. second line")
-	assert fake_view.buffer.find_next_word_start(buffer.Pos{ x: 0, y: 0 })! == buffer.Pos{ x: 5, y: 0 }
+
+	fake_view.w()
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.w()
+	assert fake_view.cursor.pos.x == 8
+	assert fake_view.cursor.pos.y == 0
 }
 
