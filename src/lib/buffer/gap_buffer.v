@@ -123,15 +123,33 @@ pub fn (gap_buffer GapBuffer) find_end_of_line(pos Pos) ?int {
 	return gap_buffer.data[offset..].len
 }
 
-pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) ?Pos {
-	offset := gap_buffer.find_offset(pos) or { return none }
+pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) Pos {
+	offset := gap_buffer.find_offset(pos) or { return pos }
 
-	println("CURRENT VALUE: ${gap_buffer.data[offset]}")
+	started_within_current_word := !is_whitespace(gap_buffer.data[offset])
+	next_char_offset            := gap_buffer.find_offset(Pos{ x: pos.x + 1, y: pos.y }) or { -1 }
+	started_at_word_end         := next_char_offset >= 0 && is_whitespace(gap_buffer.data[next_char_offset])
+	mut found_word_end := false
+	println("WITHIN WORD: ${started_within_current_word}, AT WORD END: ${started_at_word_end}")
+	mut new_pos := Pos{ x: pos.x, y: pos.y }
 	for count, r in gap_buffer.data[offset..] {
 		cc := (count + offset)
 		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end { continue }
+
+		if r == lf {
+			new_pos.x = 0
+			new_pos.y += 1
+		}
+
+		if started_within_current_word && !started_at_word_end {
+			if !found_word_end {
+				found_word_end = is_whitespace(r)
+				continue
+			}
+			// if
+		}
 	}
-	return none
+	return new_pos
 }
 
 // FIXME(tauraamui): I think this function doesn't need to include the gap as part of the offset'
@@ -234,3 +252,18 @@ pub fn (mut iter GapBufferIterator) next() ?string {
 	return line
 }
 
+fn is_non_alpha(c rune) bool {
+	return c != `_` && !is_alpha(c)
+}
+
+fn is_alpha(r rune) bool {
+	return (r >= `a` && r <= `z`) || (r >= `A` && r <= `Z`) || (r >= `0` && r <= `9`)
+}
+
+fn is_whitespace(r rune) bool {
+	return r == ` ` || r == `\t` || r == `\n` || r == `\r`
+}
+
+fn is_alpha_underscore(r int) bool {
+	return is_alpha(u8(r)) || u8(r) == `_` || u8(r) == `#` || u8(r) == `$`
+}
