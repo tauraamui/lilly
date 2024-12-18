@@ -1662,6 +1662,9 @@ fn (mut view View) visual_line_d(overwrite_y_lines bool) {
 
 fn (mut view View) w() {
 	if view.buffer.use_gap_buffer {
+		pos := view.buffer.find_next_word_start(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+		view.cursor.pos.x = pos.x
+		view.cursor.pos.y = pos.y
 		return
 	}
 	defer { view.clamp_cursor_x_pos() }

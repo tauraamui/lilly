@@ -130,7 +130,6 @@ pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) Pos {
 	next_char_offset            := gap_buffer.find_offset(Pos{ x: pos.x + 1, y: pos.y }) or { -1 }
 	started_at_word_end         := next_char_offset >= 0 && is_whitespace(gap_buffer.data[next_char_offset])
 	mut found_word_end := false
-	println("WITHIN WORD: ${started_within_current_word}, AT WORD END: ${started_at_word_end}")
 	mut new_pos := Pos{ x: pos.x, y: pos.y }
 	for count, r in gap_buffer.data[offset..] {
 		cc := (count + offset)
