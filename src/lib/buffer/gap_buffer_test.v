@@ -42,13 +42,13 @@ fn test_inserting_into_gap_buffer_and_then_deleting() {
 	gb.move_cursor_left(10)
 	assert gb.raw_str() == "This is a full${'_'.repeat(gap_size)} sentence!" // so we can see the gap is "nearly full", but one space is left
 
-	gb.delete()
+	gb.delete(false)
 	assert gb.raw_str() == "This is a full${'_'.repeat(gap_size + 1)}sentence!" // so we can see the gap is "nearly full", but one space is left
 
-	gb.delete()
-	gb.delete()
-	gb.delete()
-	gb.delete()
+	gb.delete(false)
+	gb.delete(false)
+	gb.delete(false)
+	gb.delete(false)
 
 	assert gb.raw_str() == "This is a full${'_'.repeat(gap_size + 5)}ence!" // so we can see the gap is "nearly full", but one space is left
 }
