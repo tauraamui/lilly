@@ -1616,6 +1616,11 @@ fn (mut view View) r() {
 }
 
 fn (mut view View) x() {
+	if view.buffer.use_gap_buffer {
+		view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
+		view.buffer.delete()
+		return
+	}
 	defer { view.clamp_cursor_x_pos() }
 	x := view.cursor.pos.x
 	y := view.cursor.pos.y
