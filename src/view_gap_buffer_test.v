@@ -182,3 +182,27 @@ fn test_x_does_not_remove_characters_on_multi_line_document_if_at_line_end() {
 	assert fake_view.cursor.pos.y == 0
 }
 
+fn test_x_removes_characters_up_to_end_of_line() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("1. first line\n2. second line\n3. third line")
+
+	for _ in 0..14 { // slightly beyond end of line
+		fake_view.x()
+	}
+
+	lines := fake_view.buffer.str().split("\n")
+	assert lines == [
+		""
+		"2. second line"
+		"3. third line"
+	]
+	assert fake_view.cursor.pos.y == 0
+}
