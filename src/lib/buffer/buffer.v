@@ -49,6 +49,10 @@ pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
 	buffer.c_buffer.insert_at(r, pos)
 }
 
+pub fn (mut buffer Buffer) delete() {
+	buffer.c_buffer.delete(true)
+}
+
 pub fn (mut buffer Buffer) str() string {
 	return buffer.c_buffer.str()
 }

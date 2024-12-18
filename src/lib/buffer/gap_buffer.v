@@ -48,7 +48,8 @@ pub fn (mut gap_buffer GapBuffer) backspace() {
 	gap_buffer.gap_start -= 1
 }
 
-pub fn (mut gap_buffer GapBuffer) delete() {
+pub fn (mut gap_buffer GapBuffer) delete(ignore_newlines bool) {
+	if ignore_newlines && gap_buffer.gap_end < gap_buffer.data.len && gap_buffer.data[gap_buffer.gap_end] == lf { return }
 	if gap_buffer.gap_end + 1 == gap_buffer.data.len { return }
 	gap_buffer.gap_end += 1
 }
