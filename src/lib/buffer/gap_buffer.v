@@ -139,15 +139,22 @@ pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) Pos {
 		if r == lf {
 			new_pos.x = 0
 			new_pos.y += 1
+			continue
 		}
+
 
 		if started_within_current_word && !started_at_word_end {
 			if !found_word_end {
 				found_word_end = is_whitespace(r)
-				continue
 			}
-			// if
+			if found_word_end {
+				if !is_whitespace(r) {
+					break
+				}
+			}
 		}
+
+		new_pos.x += 1
 	}
 	return new_pos
 }
