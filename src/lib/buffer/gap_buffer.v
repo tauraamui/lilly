@@ -123,6 +123,17 @@ pub fn (gap_buffer GapBuffer) find_end_of_line(pos Pos) ?int {
 	return gap_buffer.data[offset..].len
 }
 
+pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) ?Pos {
+	offset := gap_buffer.find_offset(pos) or { return none }
+
+	println("CURRENT VALUE: ${gap_buffer.data[offset]}")
+	for count, r in gap_buffer.data[offset..] {
+		cc := (count + offset)
+		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end { continue }
+	}
+	return none
+}
+
 // FIXME(tauraamui): I think this function doesn't need to include the gap as part of the offset'
 fn (gap_buffer GapBuffer) find_offset(pos Pos) ?int {
 	pre_gap_data := gap_buffer.data[..gap_buffer.gap_start]

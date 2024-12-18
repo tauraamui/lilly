@@ -61,6 +61,10 @@ pub fn (buffer Buffer) find_end_of_line(pos Pos) ?int {
 	return buffer.c_buffer.find_end_of_line(pos)
 }
 
+pub fn (buffer Buffer) find_next_word_start(pos Pos) ?Pos {
+	return buffer.c_buffer.find_next_word_start(pos)
+}
+
 pub interface Iterator {
 mut:
 	next() ?string
