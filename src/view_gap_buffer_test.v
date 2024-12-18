@@ -206,3 +206,18 @@ fn test_x_removes_characters_up_to_end_of_line() {
 	]
 	assert fake_view.cursor.pos.y == 0
 }
+
+fn test_w_moves_to_start_of_next_word() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("This is the first line.\n2. second line")
+	assert fake_view.buffer.find_next_word_start(buffer.Pos{ x: 0, y: 0 })! == buffer.Pos{ x: 555, y: 0 }
+}
+
