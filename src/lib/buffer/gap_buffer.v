@@ -138,8 +138,14 @@ pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) Pos {
 
 	mut found_word_end := false
 	mut new_pos := Pos{ x: pos.x, y: pos.y }
+	// FIX(tauraamui): currently due to the layout of the logic flow
+	//                 we're unable to deduce that movement should only
+	//                 occur as long as we actually reach a next word start.
+	// For example:
+	//     At the moment if we're moving from the last word but we don' find
+	//     a new line start pre the end of the document then the result should
+	//     really be the original position, no movement required.
 	for count, r in gap_buffer.data[offset..] {
-
 		if r == lf {
 			new_pos.x = 0
 			new_pos.y += 1
