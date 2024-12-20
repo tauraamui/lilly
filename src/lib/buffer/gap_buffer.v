@@ -129,18 +129,29 @@ pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) Pos {
 	started_within_current_word := !is_whitespace(gap_buffer.data[offset])
 	next_char_offset            := gap_buffer.find_offset(Pos{ x: pos.x + 1, y: pos.y }) or { -1 }
 	started_at_word_end         := next_char_offset >= 0 && is_whitespace(gap_buffer.data[next_char_offset])
-	mut found_word_end := false
-	mut new_pos := Pos{ x: pos.x, y: pos.y }
+	mut elapsed_line            := false
+
 	for count, r in gap_buffer.data[offset..] {
 		cc := (count + offset)
 		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end { continue }
+	}
+
+	mut found_word_end := false
+	mut new_pos := Pos{ x: pos.x, y: pos.y }
+	for count, r in gap_buffer.data[offset..] {
 
 		if r == lf {
 			new_pos.x = 0
 			new_pos.y += 1
+			elapsed_line = true
 			continue
 		}
 
+		if elapsed_line {
+			if !is_whitespace(r) {
+				break
+			}
+		}
 
 		if started_within_current_word && !started_at_word_end {
 			if !found_word_end {
