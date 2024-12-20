@@ -108,7 +108,7 @@ pub fn (splash SplashScreen) draw(mut ctx draw.Contextable) {
 	offset_y += splash.logo.data.len
 	offset_y += (ctx.window_height() - offset_y) * 0.05
 
-	version_label := 'lilly - dev version (#${splash.commit_hash})'
+	version_label := 'lilly - dev version (#${splash.commit_hash}) leader = ${resolve_whitespace_to_name(splash.leader_key)}'
 	// version_label := "lilly - dev version (#${gitcommit_hash})"
 	ctx.draw_text(offset_x + (ctx.window_width() / 2) - (version_label.len / 2), int(math.floor(offset_y)),
 		version_label)
@@ -147,6 +147,13 @@ pub fn (splash SplashScreen) draw(mut ctx draw.Contextable) {
 	copyright_footer := 'the lilly editor authors ©'
 	ctx.draw_text(offset_x + (ctx.window_width() / 2) - (copyright_footer.len / 2), int(math.floor(offset_y)),
 		copyright_footer)
+}
+
+fn resolve_whitespace_to_name(leader_key string) string {
+	match leader_key {
+		" " { return "space" }
+		else { return leader_key }
+	}
 }
 
 fn has_colouring_directives(line string) bool {
