@@ -149,6 +149,7 @@ pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) Pos {
 
 		if elapsed_line {
 			if !is_whitespace(r) {
+				elapsed_line = false
 				break
 			}
 		}
