@@ -257,4 +257,8 @@ fn test_w_moves_to_start_of_next_word_across_a_newline() {
 	fake_view.w()
 	assert fake_view.cursor.pos.x == 10
 	assert fake_view.cursor.pos.y == 1
+
+	fake_view.w()
+	assert fake_view.cursor.pos.x == 10
+	assert fake_view.cursor.pos.y == 1
 }
