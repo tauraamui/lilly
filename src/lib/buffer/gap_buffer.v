@@ -48,7 +48,8 @@ pub fn (mut gap_buffer GapBuffer) backspace() {
 	gap_buffer.gap_start -= 1
 }
 
-pub fn (mut gap_buffer GapBuffer) delete() {
+pub fn (mut gap_buffer GapBuffer) delete(ignore_newlines bool) {
+	if ignore_newlines && gap_buffer.gap_end < gap_buffer.data.len && gap_buffer.data[gap_buffer.gap_end] == lf { return }
 	if gap_buffer.gap_end + 1 == gap_buffer.data.len { return }
 	gap_buffer.gap_end += 1
 }
@@ -113,13 +114,66 @@ pub fn (gap_buffer GapBuffer) in_bounds(pos Pos) bool {
 pub fn (gap_buffer GapBuffer) find_end_of_line(pos Pos) ?int {
 	offset := gap_buffer.find_offset(pos) or { return none }
 
-	data := gap_buffer.data[offset..]
-	for count, r in data {
+	for count, r in gap_buffer.data[offset..] {
+		cc := (count + offset)
+		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end { continue }
 		if r == lf { return count }
 	}
 
-	// FIXME(tauraamui): subtract how much gap is within the result
-	return data.len
+	return gap_buffer.data[offset..].len
+}
+
+pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) Pos {
+	offset := gap_buffer.find_offset(pos) or { return pos }
+
+	started_within_current_word := !is_whitespace(gap_buffer.data[offset])
+	next_char_offset            := gap_buffer.find_offset(Pos{ x: pos.x + 1, y: pos.y }) or { -1 }
+	started_at_word_end         := next_char_offset >= 0 && is_whitespace(gap_buffer.data[next_char_offset])
+	mut elapsed_line            := false
+
+	for count, r in gap_buffer.data[offset..] {
+		cc := (count + offset)
+		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end { continue }
+	}
+
+	mut found_word_end := false
+	mut new_pos := Pos{ x: pos.x, y: pos.y }
+	// FIX(tauraamui): currently due to the layout of the logic flow
+	//                 we're unable to deduce that movement should only
+	//                 occur as long as we actually reach a next word start.
+	// For example:
+	//     At the moment if we're moving from the last word but we don' find
+	//     a new line start pre the end of the document then the result should
+	//     really be the original position, no movement required.
+	for count, r in gap_buffer.data[offset..] {
+		if r == lf {
+			new_pos.x = 0
+			new_pos.y += 1
+			elapsed_line = true
+			continue
+		}
+
+		if elapsed_line {
+			if !is_whitespace(r) {
+				elapsed_line = false
+				break
+			}
+		}
+
+		if started_within_current_word && !started_at_word_end {
+			if !found_word_end {
+				found_word_end = is_whitespace(r)
+			}
+			if found_word_end {
+				if !is_whitespace(r) {
+					break
+				}
+			}
+		}
+
+		new_pos.x += 1
+	}
+	return new_pos
 }
 
 // FIXME(tauraamui): I think this function doesn't need to include the gap as part of the offset'
@@ -222,3 +276,18 @@ pub fn (mut iter GapBufferIterator) next() ?string {
 	return line
 }
 
+fn is_non_alpha(c rune) bool {
+	return c != `_` && !is_alpha(c)
+}
+
+fn is_alpha(r rune) bool {
+	return (r >= `a` && r <= `z`) || (r >= `A` && r <= `Z`) || (r >= `0` && r <= `9`)
+}
+
+fn is_whitespace(r rune) bool {
+	return r == ` ` || r == `\t` || r == `\n` || r == `\r`
+}
+
+fn is_alpha_underscore(r int) bool {
+	return is_alpha(u8(r)) || u8(r) == `_` || u8(r) == `#` || u8(r) == `$`
+}

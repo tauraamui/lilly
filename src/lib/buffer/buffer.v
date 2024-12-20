@@ -49,12 +49,20 @@ pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
 	buffer.c_buffer.insert_at(r, pos)
 }
 
+pub fn (mut buffer Buffer) delete() {
+	buffer.c_buffer.delete(true)
+}
+
 pub fn (mut buffer Buffer) str() string {
 	return buffer.c_buffer.str()
 }
 
 pub fn (buffer Buffer) find_end_of_line(pos Pos) ?int {
 	return buffer.c_buffer.find_end_of_line(pos)
+}
+
+pub fn (buffer Buffer) find_next_word_start(pos Pos) ?Pos {
+	return buffer.c_buffer.find_next_word_start(pos)
 }
 
 pub interface Iterator {
