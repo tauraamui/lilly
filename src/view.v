@@ -1686,12 +1686,14 @@ fn (mut view View) w() {
 }
 
 fn (mut view View) e() {
+	/*
 	if view.buffer.use_gap_buffer {
 		pos := view.buffer.find_next_word_end(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
 		view.cursor.pos.x = pos.x
 		view.cursor.pos.y = pos.y
 		return
 	}
+	*/
 	defer { view.clamp_cursor_x_pos() }
 	mut line := view.buffer.lines[view.cursor.pos.y]
 	mut amount := calc_e_move_amount(view.cursor.pos, line, false) or {
