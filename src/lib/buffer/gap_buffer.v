@@ -136,7 +136,15 @@ pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) ?Pos {
 		offset = gap_buffer.find_offset(pos) or { return none }
 	}
 
+	mut next_found_char_is_word := false
 	for count, c in gap_buffer.data[offset..] {
+		// on the first char/current char
+		if count == 0 {
+			if is_whitespace(c) {
+				next_found_char_is_word = true
+				continue
+			}
+		}
 	}
 
 	return cursor_loc
