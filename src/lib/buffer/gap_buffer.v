@@ -123,57 +123,23 @@ pub fn (gap_buffer GapBuffer) find_end_of_line(pos Pos) ?int {
 	return gap_buffer.data[offset..].len
 }
 
-pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) Pos {
-	offset := gap_buffer.find_offset(pos) or { return pos }
+pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) ?Pos {
+	mut cursor_loc := pos
+	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
-	started_within_current_word := !is_whitespace(gap_buffer.data[offset])
-	next_char_offset            := gap_buffer.find_offset(Pos{ x: pos.x + 1, y: pos.y }) or { -1 }
-	started_at_word_end         := next_char_offset >= 0 && is_whitespace(gap_buffer.data[next_char_offset])
-	mut elapsed_line            := false
-
-	for count, r in gap_buffer.data[offset..] {
-		cc := (count + offset)
-		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end { continue }
+	if gap_buffer.data[offset] == lf {
+		cursor_loc.x = 0
+		cursor_loc.y += 1
+		// below we're returning because it means that there is no line past
+		// the newline char, ie we've reached the end of the document so we want
+		// to do absolutely nothing
+		offset = gap_buffer.find_offset(pos) or { return none }
 	}
 
-	mut found_word_end := false
-	mut new_pos := Pos{ x: pos.x, y: pos.y }
-	// FIX(tauraamui): currently due to the layout of the logic flow
-	//                 we're unable to deduce that movement should only
-	//                 occur as long as we actually reach a next word start.
-	// For example:
-	//     At the moment if we're moving from the last word but we don' find
-	//     a new line start pre the end of the document then the result should
-	//     really be the original position, no movement required.
-	for count, r in gap_buffer.data[offset..] {
-		if r == lf {
-			new_pos.x = 0
-			new_pos.y += 1
-			elapsed_line = true
-			continue
-		}
-
-		if elapsed_line {
-			if !is_whitespace(r) {
-				elapsed_line = false
-				break
-			}
-		}
-
-		if started_within_current_word && !started_at_word_end {
-			if !found_word_end {
-				found_word_end = is_whitespace(r)
-			}
-			if found_word_end {
-				if !is_whitespace(r) {
-					break
-				}
-			}
-		}
-
-		new_pos.x += 1
+	for count, c in gap_buffer.data[offset..] {
 	}
-	return new_pos
+
+	return cursor_loc
 }
 
 // FIXME(tauraamui): I think this function doesn't need to include the gap as part of the offset'
