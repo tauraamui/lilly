@@ -145,6 +145,10 @@ pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) ?Pos {
 				continue
 			}
 		}
+		if next_found_char_is_word && !is_whitespace(c) {
+			cursor_loc.x += count
+			break
+		}
 	}
 
 	return cursor_loc
