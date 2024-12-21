@@ -131,7 +131,7 @@ pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) Pos {
 	started_at_word_end         := next_char_offset >= 0 && is_whitespace(gap_buffer.data[next_char_offset])
 	mut elapsed_line            := false
 
-	for count, r in gap_buffer.data[offset..] {
+	for count, _ in gap_buffer.data[offset..] {
 		cc := (count + offset)
 		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end { continue }
 	}
@@ -145,7 +145,7 @@ pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) Pos {
 	//     At the moment if we're moving from the last word but we don' find
 	//     a new line start pre the end of the document then the result should
 	//     really be the original position, no movement required.
-	for count, r in gap_buffer.data[offset..] {
+	for r in gap_buffer.data[offset..] {
 		if r == lf {
 			new_pos.x = 0
 			new_pos.y += 1
