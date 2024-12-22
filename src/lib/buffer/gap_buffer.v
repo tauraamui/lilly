@@ -123,57 +123,66 @@ pub fn (gap_buffer GapBuffer) find_end_of_line(pos Pos) ?int {
 	return gap_buffer.data[offset..].len
 }
 
-pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) Pos {
-	offset := gap_buffer.find_offset(pos) or { return pos }
+pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) ?Pos {
+	mut cursor_loc := pos
+	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
-	started_within_current_word := !is_whitespace(gap_buffer.data[offset])
-	next_char_offset            := gap_buffer.find_offset(Pos{ x: pos.x + 1, y: pos.y }) or { -1 }
-	started_at_word_end         := next_char_offset >= 0 && is_whitespace(gap_buffer.data[next_char_offset])
-	mut elapsed_line            := false
-
-	for count, _ in gap_buffer.data[offset..] {
-		cc := (count + offset)
-		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end { continue }
+	mut scanner := WordStartScanner{
+		start_pos: cursor_loc
+	}
+	for index, c in gap_buffer.data[offset..] {
+		scanner.consume(index, c)
+		if scanner.done() {
+			return scanner.result()
+		}
 	}
 
-	mut found_word_end := false
-	mut new_pos := Pos{ x: pos.x, y: pos.y }
-	// FIX(tauraamui): currently due to the layout of the logic flow
-	//                 we're unable to deduce that movement should only
-	//                 occur as long as we actually reach a next word start.
-	// For example:
-	//     At the moment if we're moving from the last word but we don' find
-	//     a new line start pre the end of the document then the result should
-	//     really be the original position, no movement required.
-	for r in gap_buffer.data[offset..] {
-		if r == lf {
-			new_pos.x = 0
-			new_pos.y += 1
-			elapsed_line = true
-			continue
-		}
+	return none
+}
 
-		if elapsed_line {
-			if !is_whitespace(r) {
-				elapsed_line = false
-				break
-			}
-		}
+struct WordStartScanner {
+mut:
+	start_pos  Pos
+	compound_x int
+	compound_y int
+	previous   rune
+	if_next_is_newline_stop_there bool
+	done       bool
+	res        ?Pos
+}
 
-		if started_within_current_word && !started_at_word_end {
-			if !found_word_end {
-				found_word_end = is_whitespace(r)
-			}
-			if found_word_end {
-				if !is_whitespace(r) {
-					break
-				}
-			}
-		}
+fn (mut s WordStartScanner) consume(index int, c rune) {
+	defer { s.previous = c }
 
-		new_pos.x += 1
+	if !is_whitespace(c) {
+		if is_whitespace(s.previous) {
+			s.done = true
+			return
+		}
+		s.compound_x += 1
 	}
-	return new_pos
+
+	if is_whitespace(c) {
+		s.compound_x += 1
+		if c == lf {
+			s.compound_x = 0
+			s.start_pos.x = 0
+			if s.previous == lf {
+				s.done = true
+				return
+			}
+			s.compound_y += 1
+		}
+		return
+	}
+}
+
+fn (mut s WordStartScanner) done() bool {
+	return s.done
+}
+
+fn (mut s WordStartScanner) result() Pos {
+	return Pos{ x: s.start_pos.x + s.compound_x, y: s.start_pos.y + s.compound_y }
 }
 
 // FIXME(tauraamui): I think this function doesn't need to include the gap as part of the offset'
