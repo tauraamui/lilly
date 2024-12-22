@@ -219,7 +219,6 @@ fn test_w_moves_to_start_of_next_word() {
 	// manually set the "document" contents
 	fake_view.buffer.load_contents_into_gap("This is the first line.\n2. second line")
 
-	/*
 	fake_view.w()
 	assert fake_view.cursor.pos.x == 5
 	assert fake_view.cursor.pos.y == 0
@@ -227,7 +226,6 @@ fn test_w_moves_to_start_of_next_word() {
 	fake_view.w()
 	assert fake_view.cursor.pos.x == 8
 	assert fake_view.cursor.pos.y == 0
-	*/
 }
 
 fn test_w_moves_to_start_of_next_line_if_on_empty_line() {
@@ -245,7 +243,6 @@ fn test_w_moves_to_start_of_next_line_if_on_empty_line() {
 	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 1
 
-	/*
 	fake_view.w()
 	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 2
@@ -253,7 +250,6 @@ fn test_w_moves_to_start_of_next_line_if_on_empty_line() {
 	fake_view.w()
 	assert fake_view.cursor.pos.x == 3
 	assert fake_view.cursor.pos.y == 2
-	*/
 }
 
 fn test_w_moves_from_blank_line_to_next() {
@@ -350,7 +346,6 @@ fn test_w_moves_to_start_of_next_word_across_a_newline() {
 
 	fake_view.cursor.pos.x = 12
 
-	/*
 	fake_view.w()
 	assert fake_view.cursor.pos.x == 18
 	assert fake_view.cursor.pos.y == 0
@@ -362,7 +357,6 @@ fn test_w_moves_to_start_of_next_word_across_a_newline() {
 	fake_view.w()
 	assert fake_view.cursor.pos.x == 3
 	assert fake_view.cursor.pos.y == 1
-	*/
 }
 
 fn test_w_moves_to_start_of_next_word_up_to_document_end() {
@@ -380,11 +374,9 @@ fn test_w_moves_to_start_of_next_word_up_to_document_end() {
 	fake_view.cursor.pos.x = 10
 	fake_view.cursor.pos.y = 1
 
-	/*
 	fake_view.w()
 	assert fake_view.cursor.pos.x == 10
 	assert fake_view.cursor.pos.y == 1
-	*/
 }
 
 fn test_w_moves_to_start_of_next_word_from_whitespace() {
@@ -402,9 +394,7 @@ fn test_w_moves_to_start_of_next_word_from_whitespace() {
 	fake_view.cursor.pos.x = 3
 	fake_view.cursor.pos.y = 0
 
-	/*
 	fake_view.w()
 	assert fake_view.cursor.pos.x == 16
 	assert fake_view.cursor.pos.y == 0
-	*/
 }
