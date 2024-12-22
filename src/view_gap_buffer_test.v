@@ -248,8 +248,8 @@ fn test_w_moves_to_start_of_next_line_if_on_empty_line() {
 	assert fake_view.cursor.pos.y == 2
 
 	fake_view.w()
-	assert fake_view.cursor.pos.x == 8
-	assert fake_view.cursor.pos.y == 0
+	assert fake_view.cursor.pos.x == 3
+	assert fake_view.cursor.pos.y == 2
 }
 
 

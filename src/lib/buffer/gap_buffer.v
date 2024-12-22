@@ -127,31 +127,80 @@ pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
-	if gap_buffer.data[offset] == lf {
-		cursor_loc.x = 0
-		cursor_loc.y += 1
-		// below we're returning because it means that there is no line past
-		// the newline char, ie we've reached the end of the document so we want
-		// to do absolutely nothing
-		offset = gap_buffer.find_offset(pos) or { return none }
+	mut scanner := WordStartScanner{
+		start_pos: cursor_loc
 	}
-
-	mut next_found_char_is_word := false
-	for count, c in gap_buffer.data[offset..] {
-		// on the first char/current char
-		if count == 0 {
-			if is_whitespace(c) {
-				next_found_char_is_word = true
-				continue
-			}
-		}
-		if next_found_char_is_word && !is_whitespace(c) {
-			cursor_loc.x += count
-			break
+	for index, c in gap_buffer.data[offset..] {
+		scanner.consume(index, c)
+		if scanner.done() {
+			return scanner.result()
 		}
 	}
 
-	return cursor_loc
+	return none
+}
+
+struct WordStartScanner {
+mut:
+	start_pos  Pos
+	compound_x int
+	compound_y int
+	previous   rune
+	done       bool
+	res        ?Pos
+}
+
+fn (mut s WordStartScanner) consume(index int, c rune) {
+	defer { s.previous = c }
+
+	if index == 0 {
+		if c == lf {
+			s.start_pos.x = 0
+			s.compound_x = 0
+			s.compound_y += 1
+			s.done = true
+		}
+		return
+	}
+
+	if !is_whitespace(s.previous) && !is_whitespace(c) {
+		s.compound_x += 1
+		return
+	}
+
+	if !is_whitespace(s.previous) && is_whitespace(c) {
+		s.compound_x += 1
+		if c == lf {
+			s.start_pos.x = 0
+			s.compound_x = 0
+			s.compound_y += 1
+		}
+		return
+	}
+
+	if is_whitespace(s.previous) && is_whitespace(c) {
+		s.compound_x += 1
+		if c == lf {
+			s.start_pos.x = 0
+			s.compound_x = 0
+			s.compound_y += 1
+		}
+		return
+	}
+
+	if is_whitespace(s.previous) && !is_whitespace(c) {
+		s.compound_x += 1
+		s.done = true
+		return
+	}
+}
+
+fn (mut s WordStartScanner) done() bool {
+	return s.done
+}
+
+fn (mut s WordStartScanner) result() Pos {
+	return Pos{ x: s.start_pos.x + s.compound_x, y: s.start_pos.y + s.compound_y }
 }
 
 // FIXME(tauraamui): I think this function doesn't need to include the gap as part of the offset'
