@@ -146,6 +146,7 @@ mut:
 	compound_x int
 	compound_y int
 	previous   rune
+	if_next_is_newline_stop_there bool
 	done       bool
 	res        ?Pos
 }
@@ -153,14 +154,25 @@ mut:
 fn (mut s WordStartScanner) consume(index int, c rune) {
 	defer { s.previous = c }
 
-	if index == 0 {
-		return
+	if !is_whitespace(c) {
+		if is_whitespace(s.previous) {
+			s.done = true
+			return
+		}
+		s.compound_x += 1
 	}
 
-	if s.previous == lf && c == lf {
-		s.compound_x = 0
-		s.compound_y += 1
-		s.done = true
+	if is_whitespace(c) {
+		s.compound_x += 1
+		if c == lf {
+			s.compound_x = 0
+			s.start_pos.x = 0
+			if s.previous == lf {
+				s.done = true
+				return
+			}
+			s.compound_y += 1
+		}
 		return
 	}
 }
