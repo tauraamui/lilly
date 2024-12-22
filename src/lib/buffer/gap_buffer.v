@@ -186,7 +186,6 @@ mut:
 	compound_x int
 	compound_y int
 	previous   rune
-	if_next_is_newline_stop_there bool
 	done       bool
 	res        ?Pos
 }
@@ -235,7 +234,6 @@ mut:
 	compound_x int
 	compound_y int
 	previous   rune
-	if_next_is_newline_stop_there bool
 	done       bool
 	res        ?Pos
 }
@@ -248,7 +246,6 @@ fn (mut s WordEndScanner) consume(index int, c rune) {
 	defer { s.previous = c }
 
 	if is_whitespace(c) {
-		s.compound_x += 1
 		if c == lf {
 			s.compound_x = 0
 			s.start_pos.x = 0
@@ -257,8 +254,9 @@ fn (mut s WordEndScanner) consume(index int, c rune) {
 				return
 			}
 			s.compound_y += 1
+			return
 		}
-		return
+		s.compound_x += 1
 	}
 }
 
