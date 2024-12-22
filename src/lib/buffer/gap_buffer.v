@@ -154,42 +154,12 @@ fn (mut s WordStartScanner) consume(index int, c rune) {
 	defer { s.previous = c }
 
 	if index == 0 {
-		if c == lf {
-			s.start_pos.x = 0
-			s.compound_x = 0
-			s.compound_y += 1
-			s.done = true
-		}
 		return
 	}
 
-	if !is_whitespace(s.previous) && !is_whitespace(c) {
-		s.compound_x += 1
-		return
-	}
-
-	if !is_whitespace(s.previous) && is_whitespace(c) {
-		s.compound_x += 1
-		if c == lf {
-			s.start_pos.x = 0
-			s.compound_x = 0
-			s.compound_y += 1
-		}
-		return
-	}
-
-	if is_whitespace(s.previous) && is_whitespace(c) {
-		s.compound_x += 1
-		if c == lf {
-			s.start_pos.x = 0
-			s.compound_x = 0
-			s.compound_y += 1
-		}
-		return
-	}
-
-	if is_whitespace(s.previous) && !is_whitespace(c) {
-		s.compound_x += 1
+	if s.previous == lf && c == lf {
+		s.compound_x = 0
+		s.compound_y += 1
 		s.done = true
 		return
 	}
