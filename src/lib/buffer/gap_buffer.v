@@ -247,6 +247,19 @@ fn (mut s WordEndScanner) init(pos Pos) {
 fn (mut s WordEndScanner) consume(index int, c rune) {
 	defer { s.previous = c }
 
+	if is_whitespace(c) {
+		s.compound_x += 1
+		if c == lf {
+			s.compound_x = 0
+			s.start_pos.x = 0
+			if s.previous == lf {
+				s.done = true
+				return
+			}
+			s.compound_y += 1
+		}
+		return
+	}
 }
 
 fn (mut s WordEndScanner) done() bool {
