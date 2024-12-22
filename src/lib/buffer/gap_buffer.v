@@ -129,8 +129,14 @@ pub fn (gap_buffer GapBuffer) find_with_scanner(pos Pos, mut scanner Scanner) ?P
 
 	scanner.init(cursor_loc)
 
+	mut gap_count := 0
 	for index, c in gap_buffer.data[offset..] {
-		scanner.consume(index, c)
+		cc := (index + offset)
+		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end {
+			gap_count += 1
+			continue
+		}
+		scanner.consume(index - gap_count, c)
 		if scanner.done() {
 			return scanner.result()
 		}
