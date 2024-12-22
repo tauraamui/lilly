@@ -298,7 +298,7 @@ fn test_w_moves_from_end_line_to_blank_next_line() {
 
 	fake_view.buffer.use_gap_buffer = true
 	// manually set the "document" contents
-	fake_view.buffer.load_contents_into_gap("T\n\nX")
+	fake_view.buffer.load_contents_into_gap("T\n\nX\n")
 
 	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 0
@@ -326,6 +326,10 @@ fn test_w_moves_from_end_of_word_to_start_of_next() {
 
 	fake_view.cursor.pos.x = 4
 	fake_view.cursor.pos.y = 0
+
+	fake_view.w()
+	assert fake_view.cursor.pos.x == 11
+	assert fake_view.cursor.pos.y == 0
 
 	fake_view.w()
 	assert fake_view.cursor.pos.x == 11
