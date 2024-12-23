@@ -426,6 +426,10 @@ fn test_e_moves_to_end_of_next_word() {
 	fake_view.e()
 	assert fake_view.cursor.pos.x == 8
 	assert fake_view.cursor.pos.y == 0
+
+	fake_view.e()
+	assert fake_view.cursor.pos.x == 14
+	assert fake_view.cursor.pos.y == 0
 }
 
 fn test_e_moves_from_blank_line_to_next() {
