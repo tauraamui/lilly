@@ -403,7 +403,7 @@ fn test_w_moves_to_start_of_next_word_from_whitespace() {
 	assert fake_view.cursor.pos.y == 0
 }
 
-fn test_w_moves_to_end_of_next_word() {
+fn test_e_moves_to_end_of_next_word() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
 		log: log.Log{}
@@ -413,7 +413,7 @@ fn test_w_moves_to_end_of_next_word() {
 
 	fake_view.buffer.use_gap_buffer = true
 	// manually set the "document" contents
-	fake_view.buffer.load_contents_into_gap("This is the first line.\n2. second line")
+	fake_view.buffer.load_contents_into_gap("This is a line, the first line.\n2. second line")
 
 	fake_view.e()
 	assert fake_view.cursor.pos.x == 3
@@ -421,6 +421,10 @@ fn test_w_moves_to_end_of_next_word() {
 
 	fake_view.e()
 	assert fake_view.cursor.pos.x == 6
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.e()
+	assert fake_view.cursor.pos.x == 8
 	assert fake_view.cursor.pos.y == 0
 }
 
