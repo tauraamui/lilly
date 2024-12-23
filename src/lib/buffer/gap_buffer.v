@@ -234,6 +234,8 @@ mut:
 	compound_x int
 	compound_y int
 	previous   rune
+	next_non_whitespace_is_start bool
+	next_whitespace_is_end bool
 	done       bool
 	res        ?Pos
 }
@@ -245,19 +247,7 @@ fn (mut s WordEndScanner) init(pos Pos) {
 fn (mut s WordEndScanner) consume(index int, c rune) {
 	defer { s.previous = c }
 
-	if is_whitespace(c) {
-		if c == lf {
-			s.compound_x = 0
-			s.start_pos.x = 0
-			if s.previous == lf {
-				s.done = true
-				return
-			}
-			s.compound_y += 1
-			return
-		}
-		s.compound_x += 1
-	}
+	s.compound_x += 1
 }
 
 fn (mut s WordEndScanner) done() bool {

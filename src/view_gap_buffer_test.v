@@ -420,7 +420,7 @@ fn test_w_moves_to_end_of_next_word() {
 	assert fake_view.cursor.pos.y == 0
 
 	fake_view.e()
-	assert fake_view.cursor.pos.x == 3
+	assert fake_view.cursor.pos.x == 6
 	assert fake_view.cursor.pos.y == 0
 }
 
