@@ -123,15 +123,20 @@ pub fn (gap_buffer GapBuffer) find_end_of_line(pos Pos) ?int {
 	return gap_buffer.data[offset..].len
 }
 
-pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) ?Pos {
+pub fn (gap_buffer GapBuffer) find_with_scanner(pos Pos, mut scanner Scanner) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
-	mut scanner := WordStartScanner{
-		start_pos: cursor_loc
-	}
+	scanner.init(cursor_loc)
+
+	mut gap_count := 0
 	for index, c in gap_buffer.data[offset..] {
-		scanner.consume(index, c)
+		cc := (index + offset)
+		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end {
+			gap_count += 1
+			continue
+		}
+		scanner.consume(index - gap_count, c)
 		if scanner.done() {
 			return scanner.result()
 		}
@@ -140,15 +145,53 @@ pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) ?Pos {
 	return none
 }
 
+pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) ?Pos {
+	return gap_buffer.find_with_scanner(pos, mut WordStartScanner{})
+}
+
+pub fn (gap_buffer GapBuffer) find_next_word_end(pos Pos) ?Pos {
+	return gap_buffer.find_with_scanner(pos, mut WordEndScanner{})
+}
+
+
+@[inline]
+fn (gap_buffer GapBuffer) empty_gap_space_size() int {
+	return gap_buffer.gap_end - gap_buffer.gap_start
+}
+
+@[inline]
+fn (gap_buffer GapBuffer) str() string {
+	return gap_buffer.data[..gap_buffer.gap_start].string() + gap_buffer.data[gap_buffer.gap_end..].string()
+}
+
+fn (gap_buffer GapBuffer) raw_str() string {
+	mut sb := strings.new_builder(512)
+	sb.write_runes(gap_buffer.data[..gap_buffer.gap_start])
+	sb.write_string(strings.repeat_string("_", gap_buffer.gap_end - gap_buffer.gap_start))
+	sb.write_runes(gap_buffer.data[gap_buffer.gap_end..])
+	return sb.str()
+}
+
+interface Scanner {
+mut:
+	init(pos Pos)
+	consume(index int, c rune)
+	done() bool
+	result() Pos
+}
+
 struct WordStartScanner {
 mut:
 	start_pos  Pos
 	compound_x int
 	compound_y int
 	previous   rune
-	if_next_is_newline_stop_there bool
 	done       bool
 	res        ?Pos
+}
+
+fn (mut s WordStartScanner) init(pos Pos) {
+	s.start_pos = pos
 }
 
 fn (mut s WordStartScanner) consume(index int, c rune) {
@@ -182,6 +225,54 @@ fn (mut s WordStartScanner) done() bool {
 }
 
 fn (mut s WordStartScanner) result() Pos {
+	return Pos{ x: s.start_pos.x + s.compound_x, y: s.start_pos.y + s.compound_y }
+}
+
+struct WordEndScanner {
+mut:
+	start_pos  Pos
+	compound_x int
+	compound_y int
+	previous   rune
+	done       bool
+	res        ?Pos
+}
+
+fn (mut s WordEndScanner) init(pos Pos) {
+	s.start_pos = pos
+}
+
+fn (mut s WordEndScanner) consume(index int, c rune) {
+	defer { s.previous = c }
+
+	if is_whitespace(c) && !is_whitespace(s.previous) && index > 1 {
+		s.done = true
+		s.compound_x -= 1
+		return
+	}
+
+	if is_whitespace(c) {
+		s.compound_x += 1
+		if c == lf {
+			s.compound_x = 0
+			s.start_pos.x = 0
+			if s.previous == lf {
+				s.done = true
+				return
+			}
+			s.compound_y += 1
+		}
+		return
+	}
+
+	s.compound_x += 1
+}
+
+fn (mut s WordEndScanner) done() bool {
+	return s.done
+}
+
+fn (mut s WordEndScanner) result() Pos {
 	return Pos{ x: s.start_pos.x + s.compound_x, y: s.start_pos.y + s.compound_y }
 }
 
@@ -230,24 +321,6 @@ fn (gap_buffer GapBuffer) find_offset(pos Pos) ?int {
 	}
 
 	return none
-}
-
-@[inline]
-fn (gap_buffer GapBuffer) empty_gap_space_size() int {
-	return gap_buffer.gap_end - gap_buffer.gap_start
-}
-
-@[inline]
-fn (gap_buffer GapBuffer) str() string {
-	return gap_buffer.data[..gap_buffer.gap_start].string() + gap_buffer.data[gap_buffer.gap_end..].string()
-}
-
-fn (gap_buffer GapBuffer) raw_str() string {
-	mut sb := strings.new_builder(512)
-	sb.write_runes(gap_buffer.data[..gap_buffer.gap_start])
-	sb.write_string(strings.repeat_string("_", gap_buffer.gap_end - gap_buffer.gap_start))
-	sb.write_runes(gap_buffer.data[gap_buffer.gap_end..])
-	return sb.str()
 }
 
 pub const lf := `\n`
