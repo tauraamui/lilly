@@ -468,3 +468,20 @@ fn test_e_moves_from_blank_line_to_next() {
 	assert fake_view.cursor.pos.y == 4
 }
 
+fn test_b_moves_to_start_of_current_word() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("This is a line, the first line.\n2. second line")
+
+	fake_view.cursor.pos.x = 3
+	fake_view.cursor.pos.y = 0
+
+	fake_view.b()
+}

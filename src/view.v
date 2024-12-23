@@ -1713,6 +1713,12 @@ fn (mut view View) e() {
 }
 
 fn (mut view View) b() {
+	if view.buffer.use_gap_buffer {
+		pos := view.buffer.find_prev_word_start(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+		view.cursor.pos.x = pos.x
+		view.cursor.pos.y = pos.y
+		return
+	}
 	defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
 	view.clamp_cursor_x_pos()

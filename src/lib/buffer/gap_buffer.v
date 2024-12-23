@@ -153,6 +153,9 @@ pub fn (gap_buffer GapBuffer) find_next_word_end(pos Pos) ?Pos {
 	return gap_buffer.find_with_scanner(pos, mut WordEndScanner{})
 }
 
+pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
+	return none
+}
 
 @[inline]
 fn (gap_buffer GapBuffer) empty_gap_space_size() int {
