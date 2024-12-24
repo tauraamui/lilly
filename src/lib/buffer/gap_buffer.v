@@ -276,6 +276,9 @@ fn (mut s WordStartScanner) consume_reverse(index int, c rune) {
 	}
 
 	if is_whitespace(c) {
+		if c == lf {
+			s.compound_y += 1
+		}
 		if !is_whitespace(s.previous) {
 			s.done = true
 			return

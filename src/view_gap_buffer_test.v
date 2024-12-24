@@ -508,7 +508,7 @@ fn test_b_moves_to_end_of_previous_line_if_on_empty_line() {
 	fake_view.cursor.pos.y = 1
 
 	fake_view.b()
-	assert fake_view.cursor.pos.y == 0
 	assert fake_view.cursor.pos.x == 18
+	assert fake_view.cursor.pos.y == 0
 }
 
