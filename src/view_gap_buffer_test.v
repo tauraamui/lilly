@@ -480,11 +480,11 @@ fn test_b_moves_to_start_of_current_word() {
 	// manually set the "document" contents
 	fake_view.buffer.load_contents_into_gap("This is a line, the first line.\n2. second line")
 
-	fake_view.cursor.pos.x = 3
+	fake_view.cursor.pos.x = 6
 	fake_view.cursor.pos.y = 0
 
 	fake_view.b()
-	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.x == 5
 	assert fake_view.cursor.pos.y == 0
 
 	fake_view.b()
@@ -508,6 +508,7 @@ fn test_b_moves_to_end_of_previous_line_if_on_empty_line() {
 	fake_view.cursor.pos.y = 1
 
 	fake_view.b()
+	println("This is the first line.\n\n2. second line".split_into_lines()[fake_view.cursor.pos.y][fake_view.cursor.pos.x].ascii_str())
 	assert fake_view.cursor.pos.x == 18
 	assert fake_view.cursor.pos.y == 0
 }

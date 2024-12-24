@@ -184,6 +184,18 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 		}
 		scanner.consume(index - gap_count, data_window[index])
 		if scanner.set_x_to_line_end {
+			current_resolved_cursor_offset := gap_buffer.find_offset(scanner.result()) or { 0 }
+			mut x_len := 0
+			for j := index - 1; j >= 0; j-- {
+				if j > gap_start && j < gap_end {
+					continue
+				}
+				if gap_buffer.data[j] == lf {
+					break
+				}
+				x_len += 1
+			}
+			println(current_resolved_cursor_offset)
 			// TODO(tauraamui): In this case we've scanned backwards
 			//                  and jumped up to a higher line in the
 			//                  document. But now we need to scan ahead
@@ -191,8 +203,8 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 			//                  we've just moved to to set the scanners cursor.x
 			//                  to that.
 			// eg., (setting some static value for now to illustrate)
-			line_len := 299
-			scanner.start_pos.x = line_len
+			scanner.start_pos.x = x_len
+			scanner.set_x_to_line_end = false
 		}
 		if scanner.done() {
 			return scanner.result()
@@ -291,6 +303,7 @@ fn (mut s WordStartScanner) consume_reverse(index int, c rune) {
 	if is_whitespace(c) {
 		if c == lf {
 			s.compound_y += 1
+			s.compound_x = 0
 			s.set_x_to_line_end = true
 			return
 		}
