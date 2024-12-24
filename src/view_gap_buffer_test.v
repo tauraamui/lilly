@@ -491,3 +491,24 @@ fn test_b_moves_to_start_of_current_word() {
 	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 0
 }
+
+fn test_b_moves_to_end_of_previous_line_if_on_empty_line() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("This is the first line.\n\n2. second line")
+
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+
+	fake_view.b()
+	assert fake_view.cursor.pos.y == 0
+	assert fake_view.cursor.pos.x == 18
+}
+
