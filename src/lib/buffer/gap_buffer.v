@@ -171,7 +171,24 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 		reverse: true
 	}
 
-	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset, gap_buffer.gap_start, gap_buffer.gap_end)
+	gap_start := gap_buffer.gap_start
+	gap_end := gap_buffer.gap_end
+	mut data_window := gap_buffer.data[..offset]
+	mut gap_count := 0
+	for index := data_window.len - 1; index >= 0; index-- {
+		if index > gap_start && index < gap_end {
+			continue
+		}
+		if index > gap_end {
+			gap_count = gap_size
+		}
+		scanner.consume(index - gap_count, data_window[index])
+		if scanner.done() {
+			return scanner.result()
+		}
+	}
+
+	return none
 }
 
 @[inline]
@@ -205,6 +222,7 @@ mut:
 	compound_x int
 	compound_y int
 	previous   rune
+	set_previous bool
 	reverse   bool
 	done       bool
 	res        ?Pos
@@ -245,18 +263,29 @@ fn (mut s WordStartScanner) consume_forward(index int, c rune) {
 }
 
 fn (mut s WordStartScanner) consume_reverse(index int, c rune) {
-	defer { s.previous = c }
+	if index == 0 && !is_whitespace(c) {
+		s.done = true
+		if s.set_previous {
+			s.compound_x -= 1
+		}
+		return
+	}
+
+	defer {
+		s.previous = c
+		s.set_previous = true
+	}
 
 	if !is_whitespace(c) {
 		if is_whitespace(s.previous) {
 			s.done = true
 			return
 		}
-		s.compound_x += 1
+		s.compound_x -= 1
 	}
 
 	if is_whitespace(c) {
-		s.compound_x += 1
+		s.compound_x -= 1
 		if c == lf {
 			s.compound_x = 0
 			s.start_pos.x = 0
@@ -264,7 +293,7 @@ fn (mut s WordStartScanner) consume_reverse(index int, c rune) {
 				s.done = true
 				return
 			}
-			s.compound_y += 1
+			s.compound_y -= 1
 		}
 		return
 	}
