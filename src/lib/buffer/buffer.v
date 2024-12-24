@@ -70,7 +70,7 @@ pub fn (buffer Buffer) find_next_word_end(pos Pos) ?Pos {
 }
 
 pub fn (buffer Buffer) find_prev_word_start(pos Pos) ?Pos {
-	return buffer.c_buffer.find_prev_word_start(pos Pos)
+	return buffer.c_buffer.find_prev_word_start(pos)
 }
 
 pub interface Iterator {

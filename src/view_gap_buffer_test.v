@@ -484,4 +484,7 @@ fn test_b_moves_to_start_of_current_word() {
 	fake_view.cursor.pos.y = 0
 
 	fake_view.b()
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 0
 }
