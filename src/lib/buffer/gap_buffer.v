@@ -123,28 +123,6 @@ pub fn (gap_buffer GapBuffer) find_end_of_line(pos Pos) ?int {
 	return gap_buffer.data[offset..].len
 }
 
-pub fn (gap_buffer GapBuffer) find_with_scanner(pos Pos, mut scanner Scanner) ?Pos {
-	mut cursor_loc := pos
-	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
-
-	scanner.init(cursor_loc)
-
-	mut gap_count := 0
-	for index, c in gap_buffer.data[offset..] {
-		cc := (index + offset)
-		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end {
-			gap_count += 1
-			continue
-		}
-		scanner.consume(index - gap_count, c)
-		if scanner.done() {
-			return scanner.result()
-		}
-	}
-
-	return none
-}
-
 fn resolve_cursor_pos(mut scanner Scanner, data []rune, offset int, gap_start int, gap_end int) ?Pos {
 	mut gap_count := 0
 	for index, c in data[offset..] {
@@ -216,7 +194,6 @@ fn (gap_buffer GapBuffer) raw_str() string {
 
 interface Scanner {
 mut:
-	init(pos Pos)
 	consume(index int, c rune)
 	done() bool
 	result() Pos
@@ -231,10 +208,6 @@ mut:
 	reverse   bool
 	done       bool
 	res        ?Pos
-}
-
-fn (mut s WordStartScanner) init(pos Pos) {
-	s.start_pos = pos
 }
 
 fn (mut s WordStartScanner) consume(index int, c rune) {
@@ -313,10 +286,6 @@ mut:
 	previous   rune
 	done       bool
 	res        ?Pos
-}
-
-fn (mut s WordEndScanner) init(pos Pos) {
-	s.start_pos = pos
 }
 
 fn (mut s WordEndScanner) consume(index int, c rune) {
