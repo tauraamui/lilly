@@ -263,40 +263,26 @@ fn (mut s WordStartScanner) consume_forward(index int, c rune) {
 }
 
 fn (mut s WordStartScanner) consume_reverse(index int, c rune) {
-	if index == 0 && !is_whitespace(c) {
-		s.done = true
-		if s.set_previous {
-			s.compound_x -= 1
-		}
-		return
-	}
-
 	defer {
 		s.previous = c
 		s.set_previous = true
 	}
-
-	if !is_whitespace(c) {
-		if is_whitespace(s.previous) {
-			s.done = true
-			return
-		}
-		s.compound_x -= 1
-	}
-
-	if is_whitespace(c) {
-		s.compound_x -= 1
-		if c == lf {
-			s.compound_x = 0
-			s.start_pos.x = 0
-			if s.previous == lf {
-				s.done = true
-				return
-			}
-			s.compound_y -= 1
+	if index == 0 && !is_whitespace(c) {
+		s.done = true
+		if s.set_previous {
+			s.compound_x += 1
 		}
 		return
 	}
+
+	if is_whitespace(c) {
+		if !is_whitespace(s.previous) {
+			s.done = true
+			return
+		}
+	}
+
+	s.compound_x += 1
 }
 
 fn (mut s WordStartScanner) done() bool {
@@ -304,6 +290,9 @@ fn (mut s WordStartScanner) done() bool {
 }
 
 fn (mut s WordStartScanner) result() Pos {
+	if s.reverse {
+		return Pos{ x: s.start_pos.x - s.compound_x, y: s.start_pos.y - s.compound_y }
+	}
 	return Pos{ x: s.start_pos.x + s.compound_x, y: s.start_pos.y + s.compound_y }
 }
 
