@@ -181,20 +181,7 @@ pub fn (gap_buffer GapBuffer) find_next_word_end(pos Pos) ?Pos {
 		start_pos: cursor_loc
 	}
 
-	mut gap_count := 0
-	for index, c in gap_buffer.data[offset..] {
-		cc := (index + offset)
-		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end {
-			gap_count += 1
-			continue
-		}
-		scanner.consume(index - gap_count, c)
-		if scanner.done() {
-			return scanner.result()
-		}
-	}
-
-	return none
+	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset, gap_buffer.gap_start, gap_buffer.gap_end)
 }
 
 pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
@@ -206,20 +193,7 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 		reverse: true
 	}
 
-	mut gap_count := 0
-	for index, c in gap_buffer.data[offset..] {
-		cc := (index + offset)
-		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end {
-			gap_count += 1
-			continue
-		}
-		scanner.consume(index - gap_count, c)
-		if scanner.done() {
-			return scanner.result()
-		}
-	}
-
-	return none
+	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset, gap_buffer.gap_start, gap_buffer.gap_end)
 }
 
 @[inline]
