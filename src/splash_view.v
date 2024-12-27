@@ -176,7 +176,7 @@ pub fn (mut splash SplashScreen) on_key_down(e draw.Event, mut root Root) {
 				reset_leader_state(mut splash.leader_state)
 				return
 			}
-			root.quit()
+			root.quit() or {}
 		}
 		// leader_key { splash.leader_mode = true }
 		// TODO(tauraamui): move to f() method, this line is a too complicated/long statement now

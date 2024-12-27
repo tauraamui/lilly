@@ -22,6 +22,6 @@ fn (mut debug Debug) draw(mut ctx draw.Contextable) {
 
 fn (mut debug Debug) on_key_down(e draw.Event, mut r Root) {
 	if e.code == .escape {
-		r.quit()
+		r.quit() or {}
 	}
 }

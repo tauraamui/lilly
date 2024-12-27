@@ -44,7 +44,8 @@ mut:
 	open_inactive_buffer_finder(special_mode bool)
 	open_file(path string) !
 	close_file_finder()
-	quit()
+	quit() !
+	force_quit()
 }
 
 pub fn open_editor(
@@ -195,7 +196,26 @@ pub fn (mut editor Editor) on_key_down(e draw.Event) {
 	editor.view.on_key_down(e, mut editor)
 }
 
-pub fn (mut editor Editor) quit() {
+pub fn (mut editor Editor) quit() ! {
+	// Filter out splash/special views and check only file views
+    file_views := editor.views.filter(!it.file_path.starts_with('**'))
+    mut dirty_count := 0
+    for view in file_views {
+        if view is View {
+            if view.buffer.dirty {
+                dirty_count++
+            }
+        }
+    }
+
+	if dirty_count > 0 {
+		return error("Cannot quit: ${dirty_count} unsaved buffer(s). Save changes or use :q! to force quit")
+	}
 	editor.view = unsafe { nil }
 	exit(0)
+}
+
+pub fn (mut editor Editor) force_quit() {
+    editor.view = unsafe { nil }
+    exit(0)
 }
