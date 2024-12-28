@@ -508,7 +508,6 @@ fn test_b_moves_to_end_of_previous_line_if_on_empty_line() {
 	fake_view.cursor.pos.y = 1
 
 	fake_view.b()
-	println("This is the first line.\n\n2. second line".split_into_lines()[fake_view.cursor.pos.y][fake_view.cursor.pos.x].ascii_str())
 	assert fake_view.cursor.pos.x == 18
 	assert fake_view.cursor.pos.y == 0
 }
