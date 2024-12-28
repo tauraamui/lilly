@@ -195,14 +195,6 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 				}
 				x_len += 1
 			}
-			println(current_resolved_cursor_offset)
-			// TODO(tauraamui): In this case we've scanned backwards
-			//                  and jumped up to a higher line in the
-			//                  document. But now we need to scan ahead
-			//                  to figure out the total length of the line
-			//                  we've just moved to to set the scanners cursor.x
-			//                  to that.
-			// eg., (setting some static value for now to illustrate)
 			scanner.start_pos.x = x_len
 			scanner.set_x_to_line_end = false
 		}
