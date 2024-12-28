@@ -307,7 +307,7 @@ fn (mut s WordStartScanner) consume_reverse(index int, c rune) {
 			s.set_x_to_line_end = true
 			return
 		}
-		if !is_whitespace(s.previous) {
+		if s.set_previous && !is_whitespace(s.previous) {
 			s.done = true
 			return
 		}
