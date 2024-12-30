@@ -171,14 +171,16 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 	}
 	mut current_line_len := 0
 	mut gap_count := 0
+	mut short_circuited := false
 	data := gap_buffer.data[..offset + 1].reverse()
 	for index, c in data {
 		real_index := data.len - index
-		if (real_index >= gap_buffer.gap_start && real_index <= gap_buffer.gap_end) {
+		if (real_index > gap_buffer.gap_start && real_index < gap_buffer.gap_end) {
 			gap_count += 1
 			continue
 		}
-		if scanner.consume(real_index - gap_count, c, current_line_len) {
+		short_circuited = scanner.consume(real_index - gap_count, c, current_line_len, short_circuited)
+		if short_circuited {
 			current_line_len = 0
 			for ii := index + 1; ii < data.len; ii++ {
 				rii := data.len - ii
@@ -281,10 +283,11 @@ mut:
 	compound_y int
 	previous rune
 	set_previous bool
+	find_next_whitespace bool
 	done     bool
 }
 
-fn (mut s ReverseWordStartScanner) consume(index int, c rune, line_len int) bool {
+fn (mut s ReverseWordStartScanner) consume(index int, c rune, line_len int, short_circuited bool) bool {
 	defer {
 		s.previous = c
 		s.set_previous = true
@@ -300,17 +303,11 @@ fn (mut s ReverseWordStartScanner) consume(index int, c rune, line_len int) bool
 	}
 
 	if c == lf {
-		s.compound_y += 1
+		if !short_circuited {
+			s.compound_y += 1
+		}
+		s.compound_x = 0
 		return true
-	}
-
-	if !is_whitespace(c) {
-		s.compound_x += 1
-	}
-
-	if is_whitespace(c) && s.set_previous && !is_whitespace(s.previous) {
-		s.done = true
-		return false
 	}
 
 	return false
@@ -320,7 +317,11 @@ fn (s ReverseWordStartScanner) done() bool {
 	return s.done
 }
 
-fn (s ReverseWordStartScanner) result() Pos {
+fn (mut s ReverseWordStartScanner) result() Pos {
+	defer {
+		s.compound_x = 0
+		s.compound_y = 0
+	}
 	return Pos{ x: s.start_pos.x - s.compound_x, y: s.start_pos.y - s.compound_y }
 }
 
