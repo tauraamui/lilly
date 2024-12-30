@@ -167,7 +167,15 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
 	mut gap_count := 0
-	data := gap_buffer.data[..offset + 1]
+	data := gap_buffer.data[..offset + 1].reverse()
+	for index, c in data {
+		real_index := data.len - index
+		if real_index > gap_buffer.gap_start && real_index < gap_buffer.gap_end {
+			gap_count += 1
+			continue
+		}
+		println("REAL INDEX: ${real_index}, RUNE: ${c}")
+	}
 
 	return pos
 }
