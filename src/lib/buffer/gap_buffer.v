@@ -166,44 +166,10 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
-	mut scanner := WordStartScanner{
-		start_pos: cursor_loc
-		reverse: true
-	}
-
-	gap_start := gap_buffer.gap_start
-	gap_end := gap_buffer.gap_end
-	mut data_window := gap_buffer.data[..offset]
 	mut gap_count := 0
-	for index := data_window.len - 1; index >= 0; index-- {
-		if index > gap_start && index < gap_end {
-			continue
-		}
-		if index > gap_end {
-			gap_count = gap_size
-		}
-		scanner.consume(index - gap_count, data_window[index])
-		if scanner.set_x_to_line_end {
-			current_resolved_cursor_offset := gap_buffer.find_offset(scanner.result()) or { 0 }
-			mut x_len := 0
-			for j := index - 1; j >= 0; j-- {
-				if j > gap_start && j < gap_end {
-					continue
-				}
-				if gap_buffer.data[j] == lf {
-					break
-				}
-				x_len += 1
-			}
-			scanner.start_pos.x = x_len
-			scanner.set_x_to_line_end = false
-		}
-		if scanner.done() {
-			return scanner.result()
-		}
-	}
+	data := gap_buffer.data[..offset + 1]
 
-	return none
+	return pos
 }
 
 @[inline]
@@ -238,21 +204,12 @@ mut:
 	compound_y int
 	previous   rune
 	set_previous bool
-	reverse   bool
 	set_x_to_line_end bool
 	done       bool
 	res        ?Pos
 }
 
 fn (mut s WordStartScanner) consume(index int, c rune) {
-	if s.reverse {
-		s.consume_reverse(index, c)
-		return
-	}
-	s.consume_forward(index, c)
-}
-
-fn (mut s WordStartScanner) consume_forward(index int, c rune) {
 	defer { s.previous = c }
 
 	if !is_whitespace(c) {
@@ -279,43 +236,11 @@ fn (mut s WordStartScanner) consume_forward(index int, c rune) {
 	return
 }
 
-fn (mut s WordStartScanner) consume_reverse(index int, c rune) {
-	defer {
-		s.previous = c
-		s.set_previous = true
-	}
-	if index == 0 && !is_whitespace(c) {
-		s.done = true
-		if s.set_previous {
-			s.compound_x += 1
-		}
-		return
-	}
-
-	if is_whitespace(c) {
-		if c == lf {
-			s.compound_y += 1
-			s.compound_x = 1
-			s.set_x_to_line_end = true
-			return
-		}
-		if s.set_previous && !is_whitespace(s.previous) {
-			s.done = true
-			return
-		}
-	}
-
-	s.compound_x += 1
-}
-
 fn (mut s WordStartScanner) done() bool {
 	return s.done
 }
 
 fn (mut s WordStartScanner) result() Pos {
-	if s.reverse {
-		return Pos{ x: s.start_pos.x - s.compound_x, y: s.start_pos.y - s.compound_y }
-	}
 	return Pos{ x: s.start_pos.x + s.compound_x, y: s.start_pos.y + s.compound_y }
 }
 
