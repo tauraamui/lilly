@@ -166,15 +166,19 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
+	mut scanner := ReverseWordStartScanner{}
 	mut gap_count := 0
 	data := gap_buffer.data[..offset + 1].reverse()
 	for index, c in data {
 		real_index := data.len - index
-		if real_index > gap_buffer.gap_start && real_index < gap_buffer.gap_end {
+		if (real_index >= gap_buffer.gap_start && real_index <= gap_buffer.gap_end) {
 			gap_count += 1
 			continue
 		}
-		println("REAL INDEX: ${real_index}, RUNE: ${c}")
+		scanner.consume(real_index - gap_count, c)
+		if scanner.done() {
+			return scanner.result()
+		}
 	}
 
 	return pos
@@ -244,12 +248,38 @@ fn (mut s WordStartScanner) consume(index int, c rune) {
 	return
 }
 
-fn (mut s WordStartScanner) done() bool {
+fn (s WordStartScanner) done() bool {
 	return s.done
 }
 
 fn (mut s WordStartScanner) result() Pos {
 	return Pos{ x: s.start_pos.x + s.compound_x, y: s.start_pos.y + s.compound_y }
+}
+
+struct ReverseWordStartScanner {
+mut:
+	start_pos  Pos
+	compound_x int
+	compound_y int
+	previous rune
+	set_previous bool
+	done     bool
+}
+
+fn (mut s ReverseWordStartScanner) consume(index int, c rune) {
+	defer {
+		s.previous = c
+		s.set_previous = true
+	}
+	println("INDEX: ${index} RUNE: ${c} PREVIOUS: ${s.previous}")
+}
+
+fn (s ReverseWordStartScanner) done() bool {
+	return s.done
+}
+
+fn (s ReverseWordStartScanner) result() Pos {
+	return Pos{ x: s.start_pos.x - s.compound_x, y: s.start_pos.y - s.compound_y }
 }
 
 struct WordEndScanner {
