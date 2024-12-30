@@ -312,20 +312,15 @@ fn (mut s ReverseWordStartScanner) consume(index int, c rune, line_len int, shor
 
 	if is_whitespace(c) {
 		if s.set_previous && !is_whitespace(s.previous) {
-			if s.non_whitespace_count > 1 {
-				s.compound_x -= 1
-				s.done = true
-				return false
-			}
+			s.compound_x -= 1
+			s.done = true
+			return false
 		}
 		s.compound_x += 1
-		s.non_whitespace_count = 0
-		return false
 	}
 
 	if !is_whitespace(c) {
 		s.compound_x += 1
-		s.non_whitespace_count += 1
 	}
 
 	return false
