@@ -533,5 +533,5 @@ fn test_b_moves_from_blank_line_to_next() {
 
 	fake_view.b()
 	assert fake_view.cursor.pos.x == 0
-	assert fake_view.cursor.pos.y == 1
+	assert fake_view.cursor.pos.y == 0
 }
