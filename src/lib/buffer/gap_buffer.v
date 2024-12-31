@@ -162,46 +162,30 @@ pub fn (gap_buffer GapBuffer) find_next_word_end(pos Pos) ?Pos {
 	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset, gap_buffer.gap_start, gap_buffer.gap_end)
 }
 
+struct FindPrevWordStartScanData {
+mut:
+	iter_count    int // excluding gaps
+	previous_char rune
+	zero_val_char rune // never set this to anything
+}
+
 pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
-	mut scanner := ReverseWordStartScanner{
-		start_pos: pos
-	}
-	mut current_line_len := 0
-	mut gap_count := 0
-	mut short_circuited := false
-	data := gap_buffer.data[..offset + 1].reverse()
-	for index, c in data {
-		real_index := data.len - index
-		if (real_index > gap_buffer.gap_start && real_index < gap_buffer.gap_end) {
-			gap_count += 1
-			continue
-		}
-		short_circuited = scanner.consume(real_index - gap_count, c, current_line_len, short_circuited)
-		if short_circuited {
-			current_line_len = 0
-			for ii := index + 1; ii < data.len; ii++ {
-				rii := data.len - ii
-				if (rii >= gap_buffer.gap_start && rii <= gap_buffer.gap_end) {
-					continue
-				}
-				if ii == index + 1 {
-					continue
-				}
-				if data[ii] == lf {
-					break
-				}
-				current_line_len += 1
-			}
-		}
-		if scanner.done() {
-			break
-		}
+	mut scan_data := FindPrevWordStartScanData{}
+	data := gap_buffer.data[..offset + 1]
+	for i := data.len - 1; i >= 0; i-- {
+		if i < gap_buffer.gap_end && i > gap_buffer.gap_start { continue }
+		cchar := data[i]
+		if cchar == scan_data.zero_val_char { continue }
+
+		scan_data.iter_count += 1
+
+		println("INDEX: ${i}, ITER COUNT: ${scan_data.iter_count}, RUNE: ${cchar}")
 	}
 
-	return scanner.result()
+	return cursor_loc
 }
 
 @[inline]
