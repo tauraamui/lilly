@@ -177,15 +177,42 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 	data := gap_buffer.data[..offset + 1]
 	for i := data.len - 1; i >= 0; i-- {
 		if i < gap_buffer.gap_end && i > gap_buffer.gap_start { continue }
-		cchar := data[i]
-		if cchar == scan_data.zero_val_char { continue }
-
-		scan_data.iter_count += 1
-
-		println("INDEX: ${i}, ITER COUNT: ${scan_data.iter_count}, RUNE: ${cchar}")
+		index := i - (gap_buffer.gap_end + gap_buffer.gap_start)
+		if previous_word_start_apply_rune_to_cursor_pos(mut scan_data, mut cursor_loc, index, data[i]) {
+			break
+		}
 	}
 
 	return cursor_loc
+}
+
+fn previous_word_start_apply_rune_to_cursor_pos(mut scan_data FindPrevWordStartScanData, mut cursor_loc Pos, index int, cchar rune) bool {
+	defer { scan_data.previous_char = cchar }
+	if cchar == scan_data.zero_val_char { return false }
+
+	scan_data.iter_count += 1
+	// println("INDEX: ${index} ITER COUNT: ${scan_data.iter_count}, RUNE: ${cchar}")
+
+	if !is_whitespace(cchar) {
+		cursor_loc.x -= 1
+	}
+
+	if is_whitespace(cchar) {
+		if scan_data.iter_count > 2 {
+			if scan_data.previous_char != scan_data.zero_val_char && !is_whitespace(scan_data.previous_char) {
+				cursor_loc.x += 1
+				return true
+			}
+		}
+		cursor_loc.x -= 1
+	}
+
+	if index <= 0 {
+		cursor_loc.x += 1
+		return true
+	}
+
+	return false
 }
 
 @[inline]
