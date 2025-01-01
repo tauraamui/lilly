@@ -169,26 +169,37 @@ mut:
 	zero_val_char rune // never set this to anything
 }
 
-pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
+pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) Pos {
 	mut cursor_loc := pos
-	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
+	mut offset := gap_buffer.find_offset(cursor_loc) or { return pos }
 
 	mut scan_data := FindPrevWordStartScanData{}
 	data := gap_buffer.data[..offset + 1]
 	for i := data.len - 1; i >= 0; i-- {
 		if i < gap_buffer.gap_end && i > gap_buffer.gap_start { continue }
 		index := i - (gap_buffer.gap_end + gap_buffer.gap_start)
-		if previous_word_start_apply_rune_to_cursor_pos(mut scan_data, mut cursor_loc, index, data[i]) {
-			break
+		op_code := previous_word_start_apply_rune_to_cursor_pos(mut scan_data, mut cursor_loc, index, data[i])
+		match op_code {
+			0 {
+				continue
+			}
+			1 {
+				break
+			}
+			2 {
+				// TODO(tauraamui):
+				// do sub loop here to find x pos for jumped up line
+			}
+			else {}
 		}
 	}
 
 	return cursor_loc
 }
 
-fn previous_word_start_apply_rune_to_cursor_pos(mut scan_data FindPrevWordStartScanData, mut cursor_loc Pos, index int, cchar rune) bool {
+fn previous_word_start_apply_rune_to_cursor_pos(mut scan_data FindPrevWordStartScanData, mut cursor_loc Pos, index int, cchar rune) int {
 	defer { scan_data.previous_char = cchar }
-	if cchar == scan_data.zero_val_char { return false }
+	if cchar == scan_data.zero_val_char { return 0 }
 
 	scan_data.iter_count += 1
 	// println("INDEX: ${index} ITER COUNT: ${scan_data.iter_count}, RUNE: ${cchar}")
@@ -198,10 +209,18 @@ fn previous_word_start_apply_rune_to_cursor_pos(mut scan_data FindPrevWordStartS
 	}
 
 	if is_whitespace(cchar) {
+		if cchar == lf {
+			cursor_loc.y -= 1
+			cursor_loc.x = 0
+			if scan_data.iter_count == 2 {
+				return 1
+			}
+			return 2
+		}
 		if scan_data.iter_count > 2 {
 			if scan_data.previous_char != scan_data.zero_val_char && !is_whitespace(scan_data.previous_char) {
 				cursor_loc.x += 1
-				return true
+				return 1
 			}
 		}
 		cursor_loc.x -= 1
@@ -209,10 +228,10 @@ fn previous_word_start_apply_rune_to_cursor_pos(mut scan_data FindPrevWordStartS
 
 	if index <= 0 {
 		cursor_loc.x += 1
-		return true
+		return 1
 	}
 
-	return false
+	return 0
 }
 
 @[inline]
