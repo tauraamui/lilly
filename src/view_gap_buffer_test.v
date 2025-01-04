@@ -508,11 +508,10 @@ fn test_b_moves_to_end_of_previous_line_if_on_empty_line() {
 	fake_view.cursor.pos.y = 1
 
 	fake_view.b()
-	assert fake_view.cursor.pos.x == 18
 	assert fake_view.cursor.pos.y == 0
+	assert fake_view.cursor.pos.x == 19
 }
 
-/*
 fn test_b_moves_from_blank_line_to_next() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
@@ -536,4 +535,3 @@ fn test_b_moves_from_blank_line_to_next() {
 	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 0
 }
-*/
