@@ -537,3 +537,30 @@ fn test_b_moves_from_blank_line_to_next() {
 	assert fake_view.cursor.pos.y == 0
 }
 */
+
+fn test_enter_inserts_newline_at_cursor_in_middle_of_line() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("This is a sentence, it is in fact the first sentence.")
+
+	fake_view.cursor.pos.x = 20
+	fake_view.cursor.pos.y = 0
+
+	fake_view.enter()
+
+	lines := fake_view.buffer.str().split("\n")
+	assert lines == [
+		"This is a sentence, ",
+		"it is in fact the first sentence."
+	]
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 1
+}
