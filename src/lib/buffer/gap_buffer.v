@@ -123,16 +123,11 @@ pub fn (gap_buffer GapBuffer) find_end_of_line(pos Pos) ?int {
 	return gap_buffer.data[offset..].len
 }
 
-pub fn (gap_buffer GapBuffer) find_with_scanner(pos Pos, mut scanner Scanner) ?Pos {
-	mut cursor_loc := pos
-	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
-
-	scanner.init(cursor_loc)
-
+fn resolve_cursor_pos(mut scanner Scanner, data []rune, offset int, gap_start int, gap_end int) ?Pos {
 	mut gap_count := 0
-	for index, c in gap_buffer.data[offset..] {
+	for index, c in data[offset..] {
 		cc := (index + offset)
-		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end {
+		if cc > gap_start && cc < gap_end {
 			gap_count += 1
 			continue
 		}
@@ -146,13 +141,82 @@ pub fn (gap_buffer GapBuffer) find_with_scanner(pos Pos, mut scanner Scanner) ?P
 }
 
 pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) ?Pos {
-	return gap_buffer.find_with_scanner(pos, mut WordStartScanner{})
+	mut cursor_loc := pos
+	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
+
+	mut scanner := WordStartScanner{
+		start_pos: cursor_loc
+	}
+
+	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset, gap_buffer.gap_start, gap_buffer.gap_end)
 }
 
 pub fn (gap_buffer GapBuffer) find_next_word_end(pos Pos) ?Pos {
-	return gap_buffer.find_with_scanner(pos, mut WordEndScanner{})
+	mut cursor_loc := pos
+	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
+
+	mut scanner := WordEndScanner{
+		start_pos: cursor_loc
+	}
+
+	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset, gap_buffer.gap_start, gap_buffer.gap_end)
 }
 
+pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
+	mut cursor_loc := pos
+	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
+
+	if offset > gap_buffer.gap_end {
+		offset -= gap_buffer.gap_end - gap_buffer.gap_start
+	}
+
+	data_pre_gap := gap_buffer.data[..gap_buffer.gap_start]
+	data_post_gap := gap_buffer.data[gap_buffer.gap_end..]
+
+	mut previous_cchar := rune(-1)
+	mut data := arrays.merge(data_pre_gap, data_post_gap)[..offset]
+	for i := data.len - 1; i >= 0; i-- {
+		iter_count := data.len - 1 - i
+		cchar := data[i]
+		if iter_count >= 1 { previous_cchar = data[i + 1] }
+
+		if is_whitespace(cchar) && cchar != lf {
+			if iter_count >= 1 && !is_whitespace(previous_cchar) {
+				break
+			}
+			cursor_loc.x -= 1
+			continue
+		}
+
+		if cchar == lf {
+			cursor_loc.y -= 1
+			mut line_len := 0
+			for j := i; j >= 0; j-- {
+				if i == j { continue }
+				if data[j] == lf {
+					line_len = i - j
+					break
+				}
+				if j == 0 {
+					line_len = i
+					break
+				}
+			}
+			cursor_loc.x = line_len
+			if cursor_loc.x == 0 {
+				break
+			}
+			continue
+		}
+
+		if !is_whitespace(cchar) {
+			cursor_loc.x -= 1
+			continue
+		}
+	}
+
+	return cursor_loc
+}
 
 @[inline]
 fn (gap_buffer GapBuffer) empty_gap_space_size() int {
@@ -174,7 +238,6 @@ fn (gap_buffer GapBuffer) raw_str() string {
 
 interface Scanner {
 mut:
-	init(pos Pos)
 	consume(index int, c rune)
 	done() bool
 	result() Pos
@@ -186,12 +249,10 @@ mut:
 	compound_x int
 	compound_y int
 	previous   rune
+	set_previous bool
+	set_x_to_line_end bool
 	done       bool
 	res        ?Pos
-}
-
-fn (mut s WordStartScanner) init(pos Pos) {
-	s.start_pos = pos
 }
 
 fn (mut s WordStartScanner) consume(index int, c rune) {
@@ -218,14 +279,77 @@ fn (mut s WordStartScanner) consume(index int, c rune) {
 		}
 		return
 	}
+	return
 }
 
-fn (mut s WordStartScanner) done() bool {
+fn (s WordStartScanner) done() bool {
 	return s.done
 }
 
 fn (mut s WordStartScanner) result() Pos {
 	return Pos{ x: s.start_pos.x + s.compound_x, y: s.start_pos.y + s.compound_y }
+}
+
+struct ReverseWordStartScanner {
+mut:
+	start_pos  Pos
+	compound_x int
+	compound_y int
+	previous rune
+	set_previous bool
+	non_whitespace_count int
+	done     bool
+}
+
+fn (mut s ReverseWordStartScanner) consume(index int, c rune, line_len int, short_circuited bool) bool {
+	defer {
+		s.previous = c
+		s.set_previous = true
+	}
+
+	if s.set_previous && s.previous == lf {
+		if line_len == 0 {
+			s.done = true
+			return false
+		}
+		s.compound_x = 0
+		s.start_pos.x = line_len
+	}
+
+	if c == lf {
+		if !short_circuited {
+			s.compound_y += 1
+		}
+		s.compound_x = 0
+		return true
+	}
+
+	if is_whitespace(c) {
+		if s.set_previous && !is_whitespace(s.previous) {
+			s.compound_x -= 1
+			s.done = true
+			return false
+		}
+		s.compound_x += 1
+	}
+
+	if !is_whitespace(c) {
+		s.compound_x += 1
+	}
+
+	return false
+}
+
+fn (s ReverseWordStartScanner) done() bool {
+	return s.done
+}
+
+fn (mut s ReverseWordStartScanner) result() Pos {
+	defer {
+		s.compound_x = 0
+		s.compound_y = 0
+	}
+	return Pos{ x: s.start_pos.x - s.compound_x, y: s.start_pos.y - s.compound_y }
 }
 
 struct WordEndScanner {
@@ -236,10 +360,6 @@ mut:
 	previous   rune
 	done       bool
 	res        ?Pos
-}
-
-fn (mut s WordEndScanner) init(pos Pos) {
-	s.start_pos = pos
 }
 
 fn (mut s WordEndScanner) consume(index int, c rune) {
