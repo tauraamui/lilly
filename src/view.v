@@ -406,7 +406,15 @@ fn (mut cmd_buf CmdBuffer) prepare_for_input() {
 fn (mut cmd_buf CmdBuffer) exec(mut view View, mut root Root) {
 	match view.cmd_buf.line {
 		':q' {
-			root.quit()
+			root.quit() or {
+				cmd_buf.code = .unsuccessful
+				cmd_buf.set_error(err.msg())
+				return
+			}
+			cmd_buf.code = .successful
+		}
+		':q!' {
+			root.force_quit()
 			cmd_buf.code = .successful
 		}
 		':toggle whitespace' {
@@ -424,12 +432,16 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View, mut root Root) {
 		':w' {
 			cmd_buf.code = .successful
 			view.save_file() or { cmd_buf.code = .unsuccessful }
+			if cmd_buf.code == .successful {
+				view.buffer.dirty = false
+			}
 		}
 		':wq' {
 			cmd_buf.code = .successful
 			view.save_file() or { cmd_buf.code = .unsuccessful }
+			view.buffer.dirty = false
 			if cmd_buf.code == .successful {
-				root.quit()
+				root.quit() or {}
 			}
 		}
 		':version' {
@@ -625,7 +637,7 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 		active:  view.leader_state.mode == .search
 		total:   view.search.total_finds
 		current: view.search.current_find.match_index
-	}, view.branch})
+	}, view.branch, view.buffer.dirty})
 
 	view.draw_bottom_bar_of_command_or_search(mut ctx)
 
@@ -1334,11 +1346,13 @@ fn (mut view View) insert_text_gb(s string) {
 			view.cursor.pos.x = 0
 		}
 	}
+	view.buffer.dirty = true
 }
 
 fn (mut view View) insert_text_lb(s string) {
 	y := view.cursor.pos.y
 	line := view.buffer.lines[y]
+	view.buffer.dirty = true
 	if line.len == 0 {
 		view.buffer.lines[y] = '${s}'
 		view.cursor.pos.x = s.runes().len
@@ -1987,6 +2001,7 @@ fn (mut view View) y() {
 fn (mut view View) enter() {
 	y := view.cursor.pos.y
 	mut whitespace_prefix := resolve_whitespace_prefix(view.buffer.lines[y])
+	view.buffer.dirty = true
 	if whitespace_prefix.len == view.buffer.lines[y].len { // if the current line only has whitespace on it
 		view.buffer.lines[y] = ''
 		whitespace_prefix = ''
@@ -2019,6 +2034,7 @@ fn (mut view View) backspace() {
 	}
 
 	mut line := view.buffer.lines[y]
+	view.buffer.dirty = true
 
 	if view.cursor.pos.x == 0 {
 		previous_line := view.buffer.lines[y - 1]

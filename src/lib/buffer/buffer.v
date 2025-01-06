@@ -7,6 +7,7 @@ pub mut:
 	auto_close_chars []string
 	lines            []string
 	use_gap_buffer   bool
+	dirty            bool
 mut:
 	c_buffer         GapBuffer
 	// line_tracker LineTracker

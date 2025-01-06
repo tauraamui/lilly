@@ -29,6 +29,7 @@ struct Status {
 	file_name  string
 	selection  SearchSelection
 	git_branch string
+	dirty      bool
 }
 
 fn draw_status_line(mut ctx draw.Contextable, status Status) {
@@ -44,7 +45,8 @@ fn draw_status_line(mut ctx draw.Contextable, status Status) {
 
 	// if filename provided, render its segment next
 	if status.file_name.len > 0 {
-		offset += draw_file_name_segment(mut ctx, offset, y, status.file_name)
+        dirty_indicator := if status.dirty { ' [+]' } else { '' }
+        offset += draw_file_name_segment(mut ctx, offset, y, status.file_name + dirty_indicator)
 	}
 
 	// if search selection active/provided, render it's segment next
