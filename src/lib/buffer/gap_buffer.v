@@ -173,10 +173,56 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
-	mut data := gap_buffer.data[..offset]
-	if gap_buffer.gap_start <
-	println(data)
-	return none
+	if offset > gap_buffer.gap_end {
+		offset -= gap_buffer.gap_end - gap_buffer.gap_start
+	}
+
+	data_pre_gap := gap_buffer.data[..gap_buffer.gap_start]
+	data_post_gap := gap_buffer.data[gap_buffer.gap_end..]
+
+	mut previous_cchar := rune(-1)
+	mut data := arrays.merge(data_pre_gap, data_post_gap)[..offset]
+	for i := data.len - 1; i >= 0; i-- {
+		iter_count := data.len - 1 - i
+		cchar := data[i]
+		if iter_count >= 1 { previous_cchar = data[i + 1] }
+
+		if is_whitespace(cchar) && cchar != lf {
+			if iter_count >= 1 && !is_whitespace(previous_cchar) {
+				break
+			}
+			cursor_loc.x -= 1
+			continue
+		}
+
+		if cchar == lf {
+			cursor_loc.y -= 1
+			mut line_len := 0
+			for j := i; j >= 0; j-- {
+				if i == j { continue }
+				if data[j] == lf {
+					line_len = i - j
+					break
+				}
+				if j == 0 {
+					line_len = i
+					break
+				}
+			}
+			cursor_loc.x = line_len
+			if cursor_loc.x == 0 {
+				break
+			}
+			continue
+		}
+
+		if !is_whitespace(cchar) {
+			cursor_loc.x -= 1
+			continue
+		}
+	}
+
+	return cursor_loc
 }
 
 @[inline]
