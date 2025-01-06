@@ -162,13 +162,6 @@ pub fn (gap_buffer GapBuffer) find_next_word_end(pos Pos) ?Pos {
 	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset, gap_buffer.gap_start, gap_buffer.gap_end)
 }
 
-struct FindPrevWordStartScanData {
-mut:
-	iter_count    int // excluding gaps
-	previous_char rune
-	zero_val_char rune // never set this to anything
-}
-
 pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
