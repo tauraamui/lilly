@@ -279,7 +279,6 @@ fn (mut s WordStartScanner) consume(index int, c rune) {
 		}
 		return
 	}
-	return
 }
 
 fn (s WordStartScanner) done() bool {
@@ -487,7 +486,7 @@ fn is_alpha(r rune) bool {
 }
 
 fn is_whitespace(r rune) bool {
-	return r == ` ` || r == `\t` || r == `\n` || r == `\r`
+	return r == ` ` || r == `\t` || r == lf || r == `\r`
 }
 
 fn is_alpha_underscore(r int) bool {
