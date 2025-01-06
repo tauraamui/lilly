@@ -1999,6 +1999,12 @@ fn (mut view View) y() {
 }
 
 fn (mut view View) enter() {
+	if view.buffer.use_gap_buffer {
+		view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
+		view.insert_text(buffer.lf.str())
+		view.cursor.pos.x = 0
+		return
+	}
 	y := view.cursor.pos.y
 	mut whitespace_prefix := resolve_whitespace_prefix(view.buffer.lines[y])
 	view.buffer.dirty = true
