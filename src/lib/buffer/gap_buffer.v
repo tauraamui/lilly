@@ -169,87 +169,14 @@ mut:
 	zero_val_char rune // never set this to anything
 }
 
-pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) Pos {
+pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 	mut cursor_loc := pos
-	mut offset := gap_buffer.find_offset(cursor_loc) or { return pos }
+	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
-	mut scan_data := FindPrevWordStartScanData{}
-	data := gap_buffer.data[..offset + 1]
-	for i := data.len - 1; i >= 0; i-- {
-		if i < gap_buffer.gap_end && i > gap_buffer.gap_start { continue }
-		index := i - (gap_buffer.gap_end + gap_buffer.gap_start)
-		op_code := previous_word_start_apply_rune_to_cursor_pos(mut scan_data, mut cursor_loc, index, data[i])
-		match op_code {
-			.keep_scanning {
-				continue
-			}
-			.stop_scanning {
-				break
-			}
-			.find_line_end_set_cursor_x {
-				mut max := 0
-				inner_loop: for j := i; j >= 0; j-- {
-					if j < gap_buffer.gap_end && j > gap_buffer.gap_start { continue inner_loop }
-					cchar := data[j]
-					if cchar == scan_data.zero_val_char { continue inner_loop }
-					if cchar == lf {
-						max = (i - (gap_buffer.gap_end + gap_buffer.gap_start)) - (j - (gap_buffer.gap_end + gap_buffer.gap_start))
-						cursor_loc.x = max
-						break inner_loop
-					}
-				}
-				max = (i - (gap_buffer.gap_end + gap_buffer.gap_start))
-				cursor_loc.x = max
-			}
-		}
-	}
-
-	return cursor_loc
-}
-
-enum OpCode as u8 {
-	keep_scanning
-	stop_scanning
-	find_line_end_set_cursor_x
-}
-
-fn previous_word_start_apply_rune_to_cursor_pos(mut scan_data FindPrevWordStartScanData, mut cursor_loc Pos, index int, cchar rune) OpCode {
-	defer { scan_data.previous_char = cchar }
-	if cchar == scan_data.zero_val_char { return .keep_scanning }
-
-	scan_data.iter_count += 1
-
-	if !is_whitespace(cchar) {
-		cursor_loc.x -= 1
-	}
-
-	if is_whitespace(cchar) {
-		// need to ignore the line feed we start on (I think?)
-		if cchar == lf {
-			cursor_loc.y -= 1
-			if cursor_loc.y < 0 { cursor_loc.y = 0 }
-			// cursor_loc.x = 0
-			if scan_data.iter_count == 2 {
-				return .stop_scanning
-			}
-			scan_data.iter_count = 0
-			return .find_line_end_set_cursor_x
-		}
-		if scan_data.iter_count > 2 {
-			if scan_data.previous_char != scan_data.zero_val_char && !is_whitespace(scan_data.previous_char) {
-				cursor_loc.x += 1
-				return .stop_scanning
-			}
-		}
-		cursor_loc.x -= 1
-	}
-
-	if index <= 0 {
-		cursor_loc.x += 1
-		return .stop_scanning
-	}
-
-	return .keep_scanning
+	mut data := gap_buffer.data[..offset]
+	if gap_buffer.gap_start <
+	println(data)
+	return none
 }
 
 @[inline]
