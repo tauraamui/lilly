@@ -292,7 +292,6 @@ pub fn (gap_buffer GapBuffer) down(pos Pos) ?Pos {
 	data := arrays.merge(data_pre_gap, data_post_gap)[offset..]
 
 	if data.len == 0 { return none }
-	if offset + 1 >= data.len { return none }
 
 	mut found_newline := false
 	mut newline_index := 0
@@ -313,7 +312,7 @@ pub fn (gap_buffer GapBuffer) down(pos Pos) ?Pos {
 	}
 	line_len := data.len - newline_index
 	if line_len < cursor_loc.x {
-		cursor_loc.x = line_len
+		cursor_loc.x = line_len - 1
 	}
 	return cursor_loc
 }
@@ -335,11 +334,7 @@ pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 	data := arrays.merge(data_pre_gap, data_post_gap)
 
 	if data.len == 0 { return none }
-	if offset + 1 >= data.len { return none }
 
-	for index, cchar in data[offset..] {
-		println("INDEX: ${index}, CHAR: ${cchar}")
-	}
 	return none
 }
 
