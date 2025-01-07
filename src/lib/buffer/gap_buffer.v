@@ -239,9 +239,7 @@ pub fn (gap_buffer GapBuffer) left(pos Pos) ?Pos {
 	if offset - 1 < 0 { return none }
 
 	if data[offset - 1] == lf {
-		cursor_loc.x = 0
-		cursor_loc.y -= 1
-		return cursor_loc
+		return none
 	}
 
 	cursor_loc.x -= 1
@@ -269,9 +267,7 @@ pub fn (gap_buffer GapBuffer) right(pos Pos) ?Pos {
 	if offset + 1 >= data.len { return none }
 
 	if data[offset + 1] == lf {
-		cursor_loc.x = 0
-		cursor_loc.y += 1
-		return cursor_loc
+		return none
 	}
 
 	cursor_loc.x += 1
