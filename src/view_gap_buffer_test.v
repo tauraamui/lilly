@@ -765,7 +765,7 @@ fn test_left_arrow_at_start_of_sentence() {
 	assert fake_view.cursor.pos.y == 0
 }
 
-fn test_left_arrow_at_end_of_sentence() {
+fn test_right_arrow_at_start_of_sentence() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
 		log: log.Log{}
@@ -777,11 +777,32 @@ fn test_left_arrow_at_end_of_sentence() {
 	// manually set the "document" contents
 	fake_view.buffer.load_contents_into_gap("\nsingle line of text!\n")
 
-	fake_view.cursor.pos.x = 20
+	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 1
 
-	fake_view.left()
+	fake_view.right()
 
-	assert fake_view.cursor.pos.x == 19
+	assert fake_view.cursor.pos.x == 1
+	assert fake_view.cursor.pos.y == 1
+}
+
+fn test_right_arrow_at_end_of_sentence() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("\nsingle line of text!\n")
+
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+
+	fake_view.right()
+
+	assert fake_view.cursor.pos.x == 1
 	assert fake_view.cursor.pos.y == 1
 }
