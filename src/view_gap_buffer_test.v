@@ -764,3 +764,24 @@ fn test_left_arrow_at_start_of_sentence() {
 	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 0
 }
+
+fn test_left_arrow_at_end_of_sentence() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("\nsingle line of text!\n")
+
+	fake_view.cursor.pos.x = 20
+	fake_view.cursor.pos.y = 1
+
+	fake_view.left()
+
+	assert fake_view.cursor.pos.x == 19
+	assert fake_view.cursor.pos.y == 1
+}
