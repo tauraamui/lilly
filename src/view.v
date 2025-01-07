@@ -2042,6 +2042,7 @@ fn (mut view View) backspace() {
 			return
 		}
 		view.cursor.pos.x -= 1
+		if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
 		return
 	}
 	y := view.cursor.pos.y
