@@ -86,6 +86,14 @@ pub fn (buffer Buffer) right(pos Pos) ?Pos {
 	return buffer.c_buffer.right(pos)
 }
 
+pub fn (buffer Buffer) down(pos Pos) ?Pos {
+	return buffer.c_buffer.down(pos)
+}
+
+pub fn (buffer Buffer) up(pos Pos) ?Pos {
+	return buffer.c_buffer.up(pos)
+}
+
 pub interface Iterator {
 mut:
 	next() ?string

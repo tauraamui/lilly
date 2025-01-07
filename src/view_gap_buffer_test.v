@@ -771,6 +771,27 @@ fn test_left_arrow_at_start_of_sentence() {
 	assert fake_view.cursor.pos.y == 1
 }
 
+fn test_left_arrow_at_end_of_sentence() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("\nsingle line of text!\n")
+
+	fake_view.cursor.pos.x = 19
+	fake_view.cursor.pos.y = 1
+
+	fake_view.left()
+
+	assert fake_view.cursor.pos.x == 18
+	assert fake_view.cursor.pos.y == 1
+}
+
 fn test_right_arrow_at_start_of_sentence() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
@@ -812,6 +833,112 @@ fn test_right_arrow_at_end_of_sentence() {
 	assert fake_view.cursor.pos.x == 19
 	assert fake_view.cursor.pos.y == 1
 }
+
+fn test_h_at_start_of_sentence() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("\nsingle line of text!\n")
+
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+
+	fake_view.h()
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 1
+}
+
+fn test_h_at_end_of_sentence() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("\nsingle line of text!\n")
+
+	fake_view.cursor.pos.x = 19
+	fake_view.cursor.pos.y = 1
+
+	fake_view.h()
+
+	assert fake_view.cursor.pos.x == 18
+	assert fake_view.cursor.pos.y == 1
+}
+
+fn test_l_at_start_of_sentence() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("\nsingle line of text!\n")
+
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+
+	fake_view.l()
+
+	assert fake_view.cursor.pos.x == 1
+	assert fake_view.cursor.pos.y == 1
+}
+
+fn test_l_at_end_of_sentence() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("\nsingle line of text!\n")
+
+	fake_view.cursor.pos.x = 19
+	fake_view.cursor.pos.y = 1
+
+	fake_view.l()
+
+	assert fake_view.cursor.pos.x == 19
+	assert fake_view.cursor.pos.y == 1
+}
+
+fn test_j_at_start_of_sentence() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("\nsingle line of text!\n")
+
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 1
+
+	fake_view.j()
+
+	assert fake_view.cursor.pos.x == 1
+	assert fake_view.cursor.pos.y == 2
+}
+
 
 fn test_tab_inserts_a_tab_not_spaces() {
 	mut clip := clipboardv2.new()
