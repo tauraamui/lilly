@@ -249,6 +249,36 @@ pub fn (gap_buffer GapBuffer) left(pos Pos) ?Pos {
 	return cursor_loc
 }
 
+pub fn (gap_buffer GapBuffer) right(pos Pos) ?Pos {
+	mut cursor_loc := pos
+	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
+
+	if offset > gap_buffer.gap_end {
+		offset -= gap_buffer.gap_end - gap_buffer.gap_start
+	}
+
+	// 07/01/25 FIX(tauraamui): this is unacceptable for just moving the cursor
+	//                          one position left or right, however its the fastest
+	//                          method to implement for now, but this needs to be
+	//                          optimised
+	data_pre_gap := gap_buffer.data[..gap_buffer.gap_start]
+	data_post_gap := gap_buffer.data[gap_buffer.gap_end..]
+	data := arrays.merge(data_pre_gap, data_post_gap)
+
+	if data.len == 0 { return none }
+	if offset + 1 >= data.len { return none }
+
+	if data[offset + 1] == lf {
+		cursor_loc.x = 0
+		cursor_loc.y += 1
+		return cursor_loc
+	}
+
+	cursor_loc.x += 1
+
+	return cursor_loc
+}
+
 @[inline]
 fn (gap_buffer GapBuffer) empty_gap_space_size() int {
 	return gap_buffer.gap_end - gap_buffer.gap_start
