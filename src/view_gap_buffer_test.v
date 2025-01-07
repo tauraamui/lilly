@@ -939,6 +939,47 @@ fn test_j_at_start_of_sentence() {
 	assert fake_view.cursor.pos.y == 2
 }
 
+fn test_j_in_middle_of_sentence_retain_x_pos_second_line_is_long_enough() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("\nFirst line of multiple lines of text!\nSecond line of multiple")
+
+	fake_view.cursor.pos.x = 10
+	fake_view.cursor.pos.y = 1
+
+	fake_view.j()
+
+	assert fake_view.cursor.pos.x == 10
+	assert fake_view.cursor.pos.y == 2
+}
+
+fn test_j_in_middle_of_sentence_does_not_retain_x_pos_second_line_is_too_short() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("\nFirst line of multiple lines of text!\nSecond")
+
+	fake_view.cursor.pos.x = 10
+	fake_view.cursor.pos.y = 1
+
+	fake_view.j()
+
+	assert fake_view.cursor.pos.x == 7
+	assert fake_view.cursor.pos.y == 2
+}
 
 fn test_tab_inserts_a_tab_not_spaces() {
 	mut clip := clipboardv2.new()
