@@ -289,15 +289,33 @@ pub fn (gap_buffer GapBuffer) down(pos Pos) ?Pos {
 	//                          optimised
 	data_pre_gap := gap_buffer.data[..gap_buffer.gap_start]
 	data_post_gap := gap_buffer.data[gap_buffer.gap_end..]
-	data := arrays.merge(data_pre_gap, data_post_gap)
+	data := arrays.merge(data_pre_gap, data_post_gap)[offset..]
 
 	if data.len == 0 { return none }
 	if offset + 1 >= data.len { return none }
 
-	for index, cchar in data[offset..] {
-		println("INDEX: ${index}, CHAR: ${cchar}")
+	mut found_newline := false
+	mut newline_index := 0
+	for index, cchar in data {
+		if index == 0 { continue }
+		if cchar == lf {
+			if found_newline {
+				line_len := index - newline_index
+				if line_len < cursor_loc.x {
+					cursor_loc.x = line_len
+				}
+				return cursor_loc
+			}
+			found_newline = true
+			newline_index = index
+			cursor_loc.y += 1
+		}
 	}
-	return none
+	line_len := data.len - newline_index
+	if line_len < cursor_loc.x {
+		cursor_loc.x = line_len
+	}
+	return cursor_loc
 }
 
 pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
