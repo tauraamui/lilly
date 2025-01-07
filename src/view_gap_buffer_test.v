@@ -3,6 +3,12 @@ module main
 import log
 import lib.clipboardv2
 import lib.buffer
+import lib.workspace
+
+// NOTE(tauraamui) [07/01/25]: there is a lot of duplication in the setup of these tests
+//                  also, the fact that we're invoking the edit related methods
+//                  on view directly technically means that the .mode value is
+//                  irrelevant
 
 fn test_insert_text() {
 	mut clip := clipboardv2.new()
@@ -805,4 +811,54 @@ fn test_right_arrow_at_end_of_sentence() {
 
 	assert fake_view.cursor.pos.x == 1
 	assert fake_view.cursor.pos.y == 1
+}
+
+fn test_tab_inserts_a_tab_not_spaces() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+		config: workspace.Config{
+			insert_tabs_not_spaces: true
+		}
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("1. first line")
+
+	fake_view.cursor.pos.x = 9
+	fake_view.cursor.pos.y = 0
+
+	fake_view.insert_tab()
+
+	assert fake_view.buffer.str().split("\n") == [
+		"1. first \tline"
+	]
+}
+
+fn test_tab_inserts_spaces_not_a_tab() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+		config: workspace.Config{
+			insert_tabs_not_spaces: false
+		}
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("1. first line")
+
+	fake_view.cursor.pos.x = 9
+	fake_view.cursor.pos.y = 0
+
+	fake_view.insert_tab()
+
+	assert fake_view.buffer.str().split("\n") == [
+		"1. first     line"
+	]
 }
