@@ -43,9 +43,10 @@ pub fn (mut gap_buffer GapBuffer) insert_at(r rune, pos Pos) {
 	gap_buffer.insert_rune(r)
 }
 
-pub fn (mut gap_buffer GapBuffer) backspace() {
-	if gap_buffer.gap_start == 0 { return }
+pub fn (mut gap_buffer GapBuffer) backspace() bool {
+	if gap_buffer.gap_start == 0 { return false }
 	gap_buffer.gap_start -= 1
+	return gap_buffer.data[gap_buffer.gap_start] == lf
 }
 
 pub fn (mut gap_buffer GapBuffer) delete(ignore_newlines bool) {

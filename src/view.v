@@ -2033,6 +2033,18 @@ fn resolve_whitespace_prefix(line string) string {
 }
 
 fn (mut view View) backspace() {
+	if view.buffer.use_gap_buffer {
+		view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
+		if view.buffer.backspace() {
+			view.cursor.pos.y -= 1
+			// 07/01/25 TODO(tauraamui): set view cursor x pos to end of line
+			view.cursor.pos.x = 0
+			return
+		}
+		view.cursor.pos.x -= 1
+		if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
+		return
+	}
 	y := view.cursor.pos.y
 
 	if view.cursor.pos.x == 0 && y == 0 {
