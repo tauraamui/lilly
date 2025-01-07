@@ -935,7 +935,7 @@ fn test_j_at_start_of_sentence() {
 
 	fake_view.j()
 
-	assert fake_view.cursor.pos.x == 1
+	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 2
 }
 
