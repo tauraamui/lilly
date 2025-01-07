@@ -1575,6 +1575,10 @@ fn (mut view View) shift_g() {
 }
 
 fn (mut view View) h() {
+	if view.buffer.use_gap_buffer {
+		view.left()
+		return
+	}
 	view.cursor.pos.x -= 1
 	view.clamp_cursor_x_pos()
 }
@@ -1585,6 +1589,10 @@ fn (mut view View) shift_h() {
 }
 
 fn (mut view View) l() {
+	if view.buffer.use_gap_buffer {
+		view.right()
+		return
+	}
 	view.cursor.pos.x += 1
 	view.clamp_cursor_x_pos()
 }
@@ -1600,12 +1608,20 @@ fn (mut view View) shift_m() {
 }
 
 fn (mut view View) j() {
+	if view.buffer.use_gap_buffer {
+		view.down()
+		return
+	}
 	view.move_cursor_down(1)
 	view.clamp_cursor_x_pos()
 	view.clamp_cursor_within_document_bounds()
 }
 
 fn (mut view View) k() {
+	if view.buffer.use_gap_buffer {
+		view.up()
+		return
+	}
 	view.move_cursor_up(1)
 	view.clamp_cursor_x_pos()
 	view.clamp_cursor_within_document_bounds()
@@ -2107,6 +2123,24 @@ fn (mut view View) right() {
 	}
 	view.cursor.pos.x += 1
 	view.clamp_cursor_x_pos()
+}
+
+fn (mut view View) down() {
+	if view.buffer.use_gap_buffer {
+		pos := view.buffer.down(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+		view.cursor.pos.x = pos.x
+		view.cursor.pos.y = pos.y
+		return
+	}
+}
+
+fn (mut view View) up() {
+	if view.buffer.use_gap_buffer {
+		pos := view.buffer.up(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+		view.cursor.pos.x = pos.x
+		view.cursor.pos.y = pos.y
+		return
+	}
 }
 
 fn count_repeated_sequence(char_rune rune, line []rune) int {
