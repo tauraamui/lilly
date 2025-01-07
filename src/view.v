@@ -1277,6 +1277,9 @@ fn (mut view View) exec(op chords.Op) {
 }
 
 fn (mut view View) insert_tab() {
+	if view.buffer.use_gap_buffer {
+		view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
+	}
 	if view.config.insert_tabs_not_spaces {
 		view.insert_text('\t')
 		return
@@ -2096,6 +2099,12 @@ fn (mut view View) left() {
 }
 
 fn (mut view View) right() {
+	if view.buffer.use_gap_buffer {
+		pos := view.buffer.right(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+		view.cursor.pos.x = pos.x
+		view.cursor.pos.y = pos.y
+		return
+	}
 	view.cursor.pos.x += 1
 	view.clamp_cursor_x_pos()
 }
