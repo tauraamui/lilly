@@ -744,7 +744,7 @@ fn test_backspace_removing_newlines() {
 	assert fake_view.cursor.pos.y == 0
 }
 
-fn test_left_arrow_at_start_of_sentence_in_insert_mode() {
+fn test_left_arrow_at_start_of_sentence() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
 		log: log.Log{}
