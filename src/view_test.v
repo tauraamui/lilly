@@ -929,6 +929,7 @@ fn test_left_arrow_at_start_of_sentence_in_insert_mode() {
 	fake_view.left()
 
 	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 1 // this is desired for left move using list of lines buffer
 }
 
 fn test_right_arrow_at_start_of_sentence_in_insert_mode() {

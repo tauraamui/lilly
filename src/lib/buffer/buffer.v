@@ -78,6 +78,10 @@ pub fn (buffer Buffer) find_prev_word_start(pos Pos) ?Pos {
 	return buffer.c_buffer.find_prev_word_start(pos)
 }
 
+pub fn (buffer Buffer) left(pos Pos) ?Pos {
+	return buffer.c_buffer.left(pos)
+}
+
 pub interface Iterator {
 mut:
 	next() ?string
