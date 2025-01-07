@@ -977,7 +977,7 @@ fn test_j_in_middle_of_sentence_does_not_retain_x_pos_second_line_is_too_short()
 
 	fake_view.j()
 
-	assert fake_view.cursor.pos.x == 7
+	assert fake_view.cursor.pos.x == 5
 	assert fake_view.cursor.pos.y == 2
 }
 

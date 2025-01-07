@@ -312,7 +312,7 @@ pub fn (gap_buffer GapBuffer) down(pos Pos) ?Pos {
 	}
 	line_len := data.len - newline_index
 	if line_len < cursor_loc.x {
-		cursor_loc.x = line_len - 1
+		cursor_loc.x = line_len
 	}
 	return cursor_loc
 }
