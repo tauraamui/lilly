@@ -304,12 +304,13 @@ pub fn (gap_buffer GapBuffer) down(pos Pos) ?Pos {
 		}
 		if already_found_newline {
 			cursor_loc.x += 1
+			if cursor_loc.x > pos.x {
+				cursor_loc.x = pos.x
+				break
+			}
 		}
 	}
 
-	if cursor_loc.y > pos.y && cursor_loc.x > pos.x {
-		cursor_loc.x = pos.x
-	}
 	if cursor_loc.x < 0 { cursor_loc.x = 0 }
 
 	return cursor_loc
