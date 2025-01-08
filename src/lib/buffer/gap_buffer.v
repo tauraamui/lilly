@@ -294,7 +294,7 @@ pub fn (gap_buffer GapBuffer) down(pos Pos) ?Pos {
 	if data.len == 0 { return none }
 
 	mut already_found_newline := false
-	for index, cchar in data {
+	for cchar in data {
 		if cchar == lf {
 			if already_found_newline { break }
 			already_found_newline = true
