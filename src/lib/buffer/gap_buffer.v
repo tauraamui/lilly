@@ -410,68 +410,6 @@ fn (mut s WordStartScanner) result() Pos {
 	return Pos{ x: s.start_pos.x + s.compound_x, y: s.start_pos.y + s.compound_y }
 }
 
-struct ReverseWordStartScanner {
-mut:
-	start_pos  Pos
-	compound_x int
-	compound_y int
-	previous rune
-	set_previous bool
-	non_whitespace_count int
-	done     bool
-}
-
-fn (mut s ReverseWordStartScanner) consume(index int, c rune, line_len int, short_circuited bool) bool {
-	defer {
-		s.previous = c
-		s.set_previous = true
-	}
-
-	if s.set_previous && s.previous == lf {
-		if line_len == 0 {
-			s.done = true
-			return false
-		}
-		s.compound_x = 0
-		s.start_pos.x = line_len
-	}
-
-	if c == lf {
-		if !short_circuited {
-			s.compound_y += 1
-		}
-		s.compound_x = 0
-		return true
-	}
-
-	if is_whitespace(c) {
-		if s.set_previous && !is_whitespace(s.previous) {
-			s.compound_x -= 1
-			s.done = true
-			return false
-		}
-		s.compound_x += 1
-	}
-
-	if !is_whitespace(c) {
-		s.compound_x += 1
-	}
-
-	return false
-}
-
-fn (s ReverseWordStartScanner) done() bool {
-	return s.done
-}
-
-fn (mut s ReverseWordStartScanner) result() Pos {
-	defer {
-		s.compound_x = 0
-		s.compound_y = 0
-	}
-	return Pos{ x: s.start_pos.x - s.compound_x, y: s.start_pos.y - s.compound_y }
-}
-
 struct WordEndScanner {
 mut:
 	start_pos  Pos
