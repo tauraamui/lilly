@@ -283,7 +283,7 @@ pub fn (gap_buffer GapBuffer) down(pos Pos) ?Pos {
 		offset -= gap_buffer.gap_end - gap_buffer.gap_start
 	}
 
-	// 07/01/25 FIX(tauraamui): this is unacceptable for just moving the cursor
+	// FIX(tauraamui) [07/01/25]: this is unacceptable for just moving the cursor
 	//                          one position left or right, however its the fastest
 	//                          method to implement for now, but this needs to be
 	//                          optimised
@@ -292,29 +292,26 @@ pub fn (gap_buffer GapBuffer) down(pos Pos) ?Pos {
 	data := arrays.merge(data_pre_gap, data_post_gap)[offset..]
 
 	if data.len == 0 { return none }
-	if offset + 1 >= data.len { return none }
 
-	mut found_newline := false
-	mut newline_index := 0
-	for index, cchar in data {
-		if index == 0 { continue }
+	mut already_found_newline := false
+	for cchar in data {
 		if cchar == lf {
-			if found_newline {
-				line_len := index - newline_index
-				if line_len < cursor_loc.x {
-					cursor_loc.x = line_len
-				}
-				return cursor_loc
-			}
-			found_newline = true
-			newline_index = index
+			if already_found_newline { break }
+			already_found_newline = true
 			cursor_loc.y += 1
+			cursor_loc.x = -1
+			continue
+		}
+		if already_found_newline {
+			cursor_loc.x += 1
 		}
 	}
-	line_len := data.len - newline_index
-	if line_len < cursor_loc.x {
-		cursor_loc.x = line_len
+
+	if cursor_loc.y > pos.y && cursor_loc.x > pos.x {
+		cursor_loc.x = pos.x
 	}
+	if cursor_loc.x < 0 { cursor_loc.x = 0 }
+
 	return cursor_loc
 }
 
@@ -326,7 +323,7 @@ pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 		offset -= gap_buffer.gap_end - gap_buffer.gap_start
 	}
 
-	// 07/01/25 FIX(tauraamui): this is unacceptable for just moving the cursor
+	// FIX(tauraamui) [07/01/25]: this is unacceptable for just moving the cursor
 	//                          one position left or right, however its the fastest
 	//                          method to implement for now, but this needs to be
 	//                          optimised
@@ -335,11 +332,7 @@ pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 	data := arrays.merge(data_pre_gap, data_post_gap)
 
 	if data.len == 0 { return none }
-	if offset + 1 >= data.len { return none }
 
-	for index, cchar in data[offset..] {
-		println("INDEX: ${index}, CHAR: ${cchar}")
-	}
 	return none
 }
 
@@ -413,68 +406,6 @@ fn (s WordStartScanner) done() bool {
 
 fn (mut s WordStartScanner) result() Pos {
 	return Pos{ x: s.start_pos.x + s.compound_x, y: s.start_pos.y + s.compound_y }
-}
-
-struct ReverseWordStartScanner {
-mut:
-	start_pos  Pos
-	compound_x int
-	compound_y int
-	previous rune
-	set_previous bool
-	non_whitespace_count int
-	done     bool
-}
-
-fn (mut s ReverseWordStartScanner) consume(index int, c rune, line_len int, short_circuited bool) bool {
-	defer {
-		s.previous = c
-		s.set_previous = true
-	}
-
-	if s.set_previous && s.previous == lf {
-		if line_len == 0 {
-			s.done = true
-			return false
-		}
-		s.compound_x = 0
-		s.start_pos.x = line_len
-	}
-
-	if c == lf {
-		if !short_circuited {
-			s.compound_y += 1
-		}
-		s.compound_x = 0
-		return true
-	}
-
-	if is_whitespace(c) {
-		if s.set_previous && !is_whitespace(s.previous) {
-			s.compound_x -= 1
-			s.done = true
-			return false
-		}
-		s.compound_x += 1
-	}
-
-	if !is_whitespace(c) {
-		s.compound_x += 1
-	}
-
-	return false
-}
-
-fn (s ReverseWordStartScanner) done() bool {
-	return s.done
-}
-
-fn (mut s ReverseWordStartScanner) result() Pos {
-	defer {
-		s.compound_x = 0
-		s.compound_y = 0
-	}
-	return Pos{ x: s.start_pos.x - s.compound_x, y: s.start_pos.y - s.compound_y }
 }
 
 struct WordEndScanner {
