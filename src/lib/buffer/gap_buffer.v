@@ -283,7 +283,7 @@ pub fn (gap_buffer GapBuffer) down(pos Pos) ?Pos {
 		offset -= gap_buffer.gap_end - gap_buffer.gap_start
 	}
 
-	// 07/01/25 FIX(tauraamui): this is unacceptable for just moving the cursor
+	// FIX(tauraamui) [07/01/25]: this is unacceptable for just moving the cursor
 	//                          one position left or right, however its the fastest
 	//                          method to implement for now, but this needs to be
 	//                          optimised
@@ -325,7 +325,7 @@ pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 		offset -= gap_buffer.gap_end - gap_buffer.gap_start
 	}
 
-	// 07/01/25 FIX(tauraamui): this is unacceptable for just moving the cursor
+	// FIX(tauraamui) [07/01/25]: this is unacceptable for just moving the cursor
 	//                          one position left or right, however its the fastest
 	//                          method to implement for now, but this needs to be
 	//                          optimised
