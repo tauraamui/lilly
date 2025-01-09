@@ -79,13 +79,13 @@ pub fn (buffer Buffer) find_prev_word_start(pos Pos) ?Pos {
 }
 
 pub fn (buffer Buffer) left(pos Pos, insert_mode bool) ?Pos {
-	if !buffer.use_gap_buffer {
-		mut cursor := pos
-		cursor.x -= 1
-		cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
-		return cursor
+	if buffer.use_gap_buffer {
+		return buffer.c_buffer.left(pos)
 	}
-	return buffer.c_buffer.left(pos)
+	mut cursor := pos
+	cursor.x -= 1
+	cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
+	return cursor
 }
 
 pub fn (buffer Buffer) right(pos Pos) ?Pos {
@@ -108,14 +108,20 @@ fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
 	if cursor.y > buffer.lines.len - 1 {
 		cursor.y = buffer.lines.len - 1
 	}
-	println("CURSOR: ${cursor}")
 	return cursor
 }
 
 fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
 	mut clamped := buffer.clamp_cursor_within_document_bounds(pos)
-	println("CLAMPPED: ${clamped}")
 	if clamped.x < 0 { clamped.x = 0 }
+
+	current_line_len := buffer.lines[pos.y].runes().len
+
+	if insert_mode {
+		if clamped.x > current_line_len {
+			clamped.x = current_line_len
+		}
+	}
 	return clamped
 }
 
