@@ -2102,16 +2102,9 @@ fn (mut view View) backspace() {
 }
 
 fn (mut view View) left() {
-	// if view.buffer.use_gap_buffer {
-		pos := view.buffer.left(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
-		view.cursor.pos.x = pos.x
-		view.cursor.pos.y = pos.y
-		// return
-	// }
-	// view.cursor.pos.x -= 1
-	// if view.cursor.pos.x < 0 {
-	//	view.cursor.pos.x = 0
-	// }
+	pos := view.buffer.left(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
 }
 
 fn (mut view View) right() {
