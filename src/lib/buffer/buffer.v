@@ -78,8 +78,14 @@ pub fn (buffer Buffer) find_prev_word_start(pos Pos) ?Pos {
 	return buffer.c_buffer.find_prev_word_start(pos)
 }
 
-pub fn (buffer Buffer) left(pos Pos) ?Pos {
-	return buffer.c_buffer.left(pos)
+pub fn (buffer Buffer) left(pos Pos, insert_mode bool) ?Pos {
+	if buffer.use_gap_buffer {
+		return buffer.c_buffer.left(pos)
+	}
+	mut cursor := pos
+	cursor.x -= 1
+	cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
+	return cursor
 }
 
 pub fn (buffer Buffer) right(pos Pos) ?Pos {
@@ -92,6 +98,31 @@ pub fn (buffer Buffer) down(pos Pos) ?Pos {
 
 pub fn (buffer Buffer) up(pos Pos) ?Pos {
 	return buffer.c_buffer.up(pos)
+}
+
+fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
+	mut cursor := pos
+	if pos.y < 0 {
+		cursor.y = 0
+	}
+	if cursor.y > buffer.lines.len - 1 {
+		cursor.y = buffer.lines.len - 1
+	}
+	return cursor
+}
+
+fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
+	mut clamped := buffer.clamp_cursor_within_document_bounds(pos)
+	if clamped.x < 0 { clamped.x = 0 }
+
+	current_line_len := buffer.lines[pos.y].runes().len
+
+	if insert_mode {
+		if clamped.x > current_line_len {
+			clamped.x = current_line_len
+		}
+	}
+	return clamped
 }
 
 pub interface Iterator {
