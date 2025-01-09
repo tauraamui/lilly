@@ -234,6 +234,7 @@ pub fn (gap_buffer GapBuffer) left(pos Pos) ?Pos {
 	data_pre_gap := gap_buffer.data[..gap_buffer.gap_start]
 	data_post_gap := gap_buffer.data[gap_buffer.gap_end..]
 	data := arrays.merge(data_pre_gap, data_post_gap)
+	//
 
 	if data.len == 0 { return none }
 	if offset - 1 < 0 { return none }
@@ -262,6 +263,7 @@ pub fn (gap_buffer GapBuffer) right(pos Pos) ?Pos {
 	data_pre_gap := gap_buffer.data[..gap_buffer.gap_start]
 	data_post_gap := gap_buffer.data[gap_buffer.gap_end..]
 	data := arrays.merge(data_pre_gap, data_post_gap)
+	//
 
 	if data.len == 0 { return none }
 	if offset + 1 >= data.len { return none }
@@ -284,12 +286,13 @@ pub fn (gap_buffer GapBuffer) down(pos Pos) ?Pos {
 	}
 
 	// FIX(tauraamui) [07/01/25]: this is unacceptable for just moving the cursor
-	//                          one position left or right, however its the fastest
+	//                          one position up or down, however its the fastest
 	//                          method to implement for now, but this needs to be
 	//                          optimised
 	data_pre_gap := gap_buffer.data[..gap_buffer.gap_start]
 	data_post_gap := gap_buffer.data[gap_buffer.gap_end..]
 	data := arrays.merge(data_pre_gap, data_post_gap)[offset..]
+	//
 
 	if data.len == 0 { return none }
 
@@ -331,6 +334,7 @@ pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 	data_pre_gap := gap_buffer.data[..gap_buffer.gap_start]
 	data_post_gap := gap_buffer.data[gap_buffer.gap_end..]
 	data := arrays.merge(data_pre_gap, data_post_gap)
+	//
 
 	if data.len == 0 { return none }
 
