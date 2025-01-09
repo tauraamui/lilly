@@ -981,6 +981,69 @@ fn test_j_in_middle_of_sentence_does_not_retain_x_pos_second_line_is_too_short()
 	assert fake_view.cursor.pos.y == 2
 }
 
+fn test_k_at_start_of_sentence() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("\nsingle line of text!\n")
+
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 2
+
+	fake_view.k()
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 1
+}
+
+fn test_k_in_middle_of_sentence_retain_x_pos_second_line_is_long_enough() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("\nFirst line of multiple lines of text!\nSecond line of multiple")
+
+	fake_view.cursor.pos.x = 10
+	fake_view.cursor.pos.y = 2
+
+	fake_view.k()
+
+	assert fake_view.cursor.pos.x == 10
+	assert fake_view.cursor.pos.y == 1
+}
+
+fn test_k_in_middle_of_sentence_does_not_retain_x_pos_second_line_is_too_short() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("\nFirst\nSecond line of multiple lines of text!")
+
+	fake_view.cursor.pos.x = 10
+	fake_view.cursor.pos.y = 2
+
+	fake_view.k()
+
+	assert fake_view.cursor.pos.x == 4
+	assert fake_view.cursor.pos.y == 1
+}
+
 fn test_tab_inserts_a_tab_not_spaces() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
