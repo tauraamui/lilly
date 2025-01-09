@@ -88,8 +88,14 @@ pub fn (buffer Buffer) left(pos Pos, insert_mode bool) ?Pos {
 	return cursor
 }
 
-pub fn (buffer Buffer) right(pos Pos) ?Pos {
-	return buffer.c_buffer.right(pos)
+pub fn (buffer Buffer) right(pos Pos, insert_mode bool) ?Pos {
+	if buffer.use_gap_buffer {
+		return buffer.c_buffer.right(pos)
+	}
+	mut cursor := pos
+	cursor.x += 1
+	cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
+	return cursor
 }
 
 pub fn (buffer Buffer) down(pos Pos) ?Pos {
