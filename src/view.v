@@ -2108,14 +2108,9 @@ fn (mut view View) left() {
 }
 
 fn (mut view View) right() {
-	if view.buffer.use_gap_buffer {
-		pos := view.buffer.right(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
-		view.cursor.pos.x = pos.x
-		view.cursor.pos.y = pos.y
-		return
-	}
-	view.cursor.pos.x += 1
-	view.clamp_cursor_x_pos()
+	pos := view.buffer.right(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
 }
 
 fn (mut view View) down() {
