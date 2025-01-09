@@ -338,7 +338,27 @@ pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 
 	if data.len == 0 { return none }
 
-	return none
+	mut already_found_newline := false
+	for cchar in data {
+		if cchar == lf {
+			if already_found_newline { break }
+			already_found_newline = true
+			cursor_loc.y -= 1
+			cursor_loc.x = -1
+			continue
+		}
+		if already_found_newline {
+			cursor_loc.x += 1
+			if cursor_loc.x > pos.x {
+				cursor_loc.x = pos.x
+				break
+			}
+		}
+	}
+
+	if cursor_loc.x < 0 { cursor_loc.x = 0 }
+
+	return cursor_loc
 }
 
 
