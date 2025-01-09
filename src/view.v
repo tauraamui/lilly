@@ -2114,21 +2114,15 @@ fn (mut view View) right() {
 }
 
 fn (mut view View) down() {
-	if view.buffer.use_gap_buffer {
-		pos := view.buffer.down(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
-		view.cursor.pos.x = pos.x
-		view.cursor.pos.y = pos.y
-		return
-	}
+	pos := view.buffer.down(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
 }
 
 fn (mut view View) up() {
-	if view.buffer.use_gap_buffer {
-		pos := view.buffer.up(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
-		view.cursor.pos.x = pos.x
-		view.cursor.pos.y = pos.y
-		return
-	}
+	pos := view.buffer.up(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
 }
 
 fn count_repeated_sequence(char_rune rune, line []rune) int {

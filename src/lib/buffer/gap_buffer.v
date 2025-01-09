@@ -361,6 +361,9 @@ pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 	return cursor_loc
 }
 
+pub fn (gap_buffer GapBuffer) up_to_next_blank_line(pos Pos) ?Pos {
+	return none
+}
 
 @[inline]
 fn (gap_buffer GapBuffer) empty_gap_space_size() int {
