@@ -387,12 +387,15 @@ pub fn (gap_buffer GapBuffer) up_to_next_blank_line(pos Pos) ?Pos {
 			compound_y += 1
 			if i - 1 >= 0 {
 				if data[i - 1] == lf {
-					cursor_loc.x = 0
-					cursor_loc.y -= compound_y
 					break
 				}
 			}
 		}
+	}
+
+	if compound_y > 0 {
+		cursor_loc.x = 0
+		cursor_loc.y -= compound_y
 	}
 
 	return cursor_loc
