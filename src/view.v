@@ -2383,12 +2383,10 @@ fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 }
 
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
-	if view.buffer.use_gap_buffer {
-		pos := view.buffer.up_to_next_blank_line(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
-		view.cursor.pos.x = pos.x
-		view.cursor.pos.y = pos.y
-		return
-	}
+	pos := view.buffer.up_to_next_blank_line(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
+	/*
 	view.clamp_cursor_within_document_bounds()
 	if view.cursor.pos.y == 0 {
 		return
@@ -2408,6 +2406,7 @@ fn (mut view View) jump_cursor_up_to_next_blank_line() {
 	}
 
 	view.move_cursor_up(view.cursor.pos.y)
+	*/
 }
 
 fn (mut view View) jump_cursor_down_to_next_blank_line() {

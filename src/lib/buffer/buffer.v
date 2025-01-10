@@ -122,6 +122,13 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
 
 	if buffer.lines.len == 0 { return none }
 
+	for i := cursor.y; i >= 0; i-- {
+		if i == cursor.y { continue }
+		if buffer.lines[i].len == 0 {
+			// cursor.y -= i
+		}
+	}
+
 	return none
 }
 
