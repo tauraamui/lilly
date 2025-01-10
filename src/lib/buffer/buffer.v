@@ -140,6 +140,13 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
 	return none
 }
 
+pub fn (buffer Buffer) down_to_next_blank_line(pos Pos) ?Pos {
+	if buffer.use_gap_buffer {
+		return buffer.c_buffer.down_to_next_blank_line(pos)
+	}
+	return none
+}
+
 fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
 	mut cursor := pos
 	if pos.y < 0 {
