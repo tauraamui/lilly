@@ -1066,6 +1066,8 @@ fn test_jump_cursor_up_to_next_blank_line() {
 
 	fake_view.cursor.pos.y = 4
 	fake_view.jump_cursor_up_to_next_blank_line()
+
+	assert fake_view.cursor.pos.y == 1
 }
 
 fn test_tab_inserts_a_tab_not_spaces() {
