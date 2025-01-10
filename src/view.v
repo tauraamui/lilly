@@ -2386,6 +2386,7 @@ fn (mut view View) jump_cursor_up_to_next_blank_line() {
 	pos := view.buffer.up_to_next_blank_line(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
 	view.cursor.pos.x = pos.x
 	view.cursor.pos.y = pos.y
+	view.scroll_from_and_to()
 }
 
 fn (mut view View) jump_cursor_down_to_next_blank_line() {
