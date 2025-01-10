@@ -2114,21 +2114,15 @@ fn (mut view View) right() {
 }
 
 fn (mut view View) down() {
-	if view.buffer.use_gap_buffer {
-		pos := view.buffer.down(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
-		view.cursor.pos.x = pos.x
-		view.cursor.pos.y = pos.y
-		return
-	}
+	pos := view.buffer.down(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
 }
 
 fn (mut view View) up() {
-	if view.buffer.use_gap_buffer {
-		pos := view.buffer.up(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
-		view.cursor.pos.x = pos.x
-		view.cursor.pos.y = pos.y
-		return
-	}
+	pos := view.buffer.up(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
 }
 
 fn count_repeated_sequence(char_rune rune, line []rune) int {
@@ -2389,25 +2383,9 @@ fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 }
 
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
-	view.clamp_cursor_within_document_bounds()
-	if view.cursor.pos.y == 0 {
-		return
-	}
-	if view.buffer.lines.len == 0 {
-		return
-	}
-
-	for i := view.cursor.pos.y; i > 0; i-- {
-		if i == view.cursor.pos.y {
-			continue
-		}
-		if view.buffer.lines[i].len == 0 {
-			view.move_cursor_up(view.cursor.pos.y - i)
-			return
-		}
-	}
-
-	view.move_cursor_up(view.cursor.pos.y)
+	pos := view.buffer.up_to_next_blank_line(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
 }
 
 fn (mut view View) jump_cursor_down_to_next_blank_line() {

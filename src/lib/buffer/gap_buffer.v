@@ -361,6 +361,45 @@ pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 	return cursor_loc
 }
 
+pub fn (gap_buffer GapBuffer) up_to_next_blank_line(pos Pos) ?Pos {
+	mut cursor_loc := pos
+	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
+
+	if offset > gap_buffer.gap_end {
+		offset -= gap_buffer.gap_end - gap_buffer.gap_start
+	}
+
+	// NOTE(tauraamui) [10/01/25]:
+	// this copying of the two sides of the buffer might be worth
+	// it for this kind of long distance movement of the cursor
+	// but I would still much prefer iteration that can ignore the
+	// gap without making the maths all wacky for tracking how far
+	// we've actually elapsed in the data as opposed to how much
+	// was the gap size. Should probably benchmark and alloc profile
+	// the two different options.
+	data_pre_gap := gap_buffer.data[..gap_buffer.gap_start]
+	data_post_gap := gap_buffer.data[gap_buffer.gap_end..]
+	data := arrays.merge(data_pre_gap, data_post_gap)
+
+	mut compound_y := 0
+	for i := offset; i >= 0; i-- {
+		if data[i] == lf {
+			compound_y += 1
+			if i - 1 >= 0 {
+				if data[i - 1] == lf {
+					break
+				}
+			}
+		}
+	}
+
+	if compound_y > 0 {
+		cursor_loc.x = 0
+		cursor_loc.y -= compound_y
+	}
+
+	return cursor_loc
+}
 
 @[inline]
 fn (gap_buffer GapBuffer) empty_gap_space_size() int {

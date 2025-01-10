@@ -98,12 +98,46 @@ pub fn (buffer Buffer) right(pos Pos, insert_mode bool) ?Pos {
 	return cursor
 }
 
-pub fn (buffer Buffer) down(pos Pos) ?Pos {
-	return buffer.c_buffer.down(pos)
+pub fn (buffer Buffer) down(pos Pos, insert_mode bool) ?Pos {
+	if buffer.use_gap_buffer {
+		return buffer.c_buffer.down(pos)
+	}
+	return none
 }
 
-pub fn (buffer Buffer) up(pos Pos) ?Pos {
-	return buffer.c_buffer.up(pos)
+pub fn (buffer Buffer) up(pos Pos, insert_mode bool) ?Pos {
+	if buffer.use_gap_buffer {
+		return buffer.c_buffer.up(pos)
+	}
+	return none
+}
+
+pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
+	if buffer.use_gap_buffer {
+		return buffer.c_buffer.up_to_next_blank_line(pos)
+	}
+	mut cursor := pos
+	cursor = buffer.clamp_cursor_within_document_bounds(pos)
+	if cursor.y == 0 { return none }
+
+	if buffer.lines.len == 0 { return none }
+
+	mut compound_y := 0
+	for i := cursor.y; i >= 0; i-- {
+		if i == cursor.y { continue }
+		compound_y += 1
+		if buffer.lines[i].len == 0 {
+			break
+		}
+	}
+
+	if compound_y > 0 {
+		cursor.x = 0
+		cursor.y -= compound_y
+		return cursor
+	}
+
+	return none
 }
 
 fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {

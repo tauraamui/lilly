@@ -1044,6 +1044,32 @@ fn test_k_in_middle_of_sentence_does_not_retain_x_pos_second_line_is_too_short()
 	assert fake_view.cursor.pos.y == 1
 }
 
+fn test_jump_cursor_up_to_next_blank_line() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap([
+		"# Top of the file",
+		"",
+		"Some fake block of text which may or may not be",
+		"more than one line in size, so it can be used for",
+		"this testing scenario",
+		"",
+		"this is the last line of the document"
+	].join("\n"))
+
+	fake_view.cursor.pos.y = 4
+	fake_view.jump_cursor_up_to_next_blank_line()
+
+	assert fake_view.cursor.pos.y == 1
+}
+
 fn test_tab_inserts_a_tab_not_spaces() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
