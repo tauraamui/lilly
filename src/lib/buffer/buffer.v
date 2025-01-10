@@ -122,14 +122,21 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
 
 	if buffer.lines.len == 0 { return none }
 
+	mut compound_y := 0
 	for i := cursor.y; i >= 0; i-- {
 		if i == cursor.y { continue }
+		compound_y += 1
 		if buffer.lines[i].len == 0 {
-			// cursor.y -= i
+			break
 		}
 	}
 
-	return none
+	if compound_y > 0 {
+		cursor.x = 0
+		cursor.y -= compound_y
+	}
+
+	return cursor
 }
 
 fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
