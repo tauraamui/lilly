@@ -134,9 +134,10 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
 	if compound_y > 0 {
 		cursor.x = 0
 		cursor.y -= compound_y
+		return cursor
 	}
 
-	return cursor
+	return none
 }
 
 fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
