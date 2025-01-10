@@ -2386,27 +2386,6 @@ fn (mut view View) jump_cursor_up_to_next_blank_line() {
 	pos := view.buffer.up_to_next_blank_line(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
 	view.cursor.pos.x = pos.x
 	view.cursor.pos.y = pos.y
-	/*
-	view.clamp_cursor_within_document_bounds()
-	if view.cursor.pos.y == 0 {
-		return
-	}
-	if view.buffer.lines.len == 0 {
-		return
-	}
-
-	for i := view.cursor.pos.y; i > 0; i-- {
-		if i == view.cursor.pos.y {
-			continue
-		}
-		if view.buffer.lines[i].len == 0 {
-			view.move_cursor_up(view.cursor.pos.y - i)
-			return
-		}
-	}
-
-	view.move_cursor_up(view.cursor.pos.y)
-	*/
 }
 
 fn (mut view View) jump_cursor_down_to_next_blank_line() {
