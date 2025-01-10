@@ -382,7 +382,6 @@ pub fn (gap_buffer GapBuffer) up_to_next_blank_line(pos Pos) ?Pos {
 	data := arrays.merge(data_pre_gap, data_post_gap)
 
 	mut compound_y := 0
-	mut blank_found := false
 	for i := offset; i >= 0; i-- {
 		if data[i] == lf {
 			compound_y += 1
