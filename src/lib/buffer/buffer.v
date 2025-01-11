@@ -144,6 +144,18 @@ pub fn (buffer Buffer) down_to_next_blank_line(pos Pos) ?Pos {
 	if buffer.use_gap_buffer {
 		return buffer.c_buffer.down_to_next_blank_line(pos)
 	}
+
+	mut cursor := pos
+	cursor = buffer.clamp_cursor_within_document_bounds(pos)
+	if cursor.y == 0 { return none }
+
+	if buffer.lines.len == 0 { return none }
+
+	mut compound_y := 0
+	for i := cursor.y; i < buffer.lines.len; i++ {
+		// println(i)
+	}
+
 	return none
 }
 
