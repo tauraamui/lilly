@@ -2414,7 +2414,8 @@ fn (mut view View) left_square_bracket() {
 	view.left_bracket_press_count += 1
 
 	if view.left_bracket_press_count >= 2 {
-		view.move_cursor_up(view.cursor.pos.y)
+		view.cursor.pos.y = 0
+		view.scroll_from_and_to()
 		view.left_bracket_press_count = 0
 	}
 }
