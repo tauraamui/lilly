@@ -52,6 +52,7 @@ pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
 
 pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
 	mut cursor := pos
+	if cursor.x == 0 && cursor.y == 0 { return none }
 	if buffer.use_gap_buffer {
 		buffer.move_cursor_to(pos)
 		if buffer.c_buffer.backspace() {
@@ -61,7 +62,38 @@ pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
 		}
 		cursor.x -= 1
 		if cursor.x < 0 { cursor.x = 0 }
+		return cursor
 	}
+
+	mut line := buffer.lines[cursor.y]
+	if cursor.x == 0 {
+		previous_line := buffer.lines[cursor.y - 1]
+		buffer.lines[cursor.y - 1] = "${previous_line}${buffer.lines[cursor.y]}"
+		buffer.lines.delete(cursor.y)
+		cursor.y -= 1
+		cursor = buffer.clamp_cursor_within_document_bounds(cursor)
+		cursor.x = previous_line.len
+
+		if cursor.y < 0 {
+			cursor.y = 0
+		}
+		return cursor
+	}
+
+	if cursor.x == line.len {
+		buffer.lines[cursor.y] = line.runes()[..line.len - 1].string()
+		cursor.x = buffer.lines[cursor.y].len
+		return cursor
+	}
+
+	before := line.runes()[..cursor.x - 1].string()
+	after := line.runes()[cursor.x..].string()
+	buffer.lines[cursor.y] = "${before}${after}"
+	cursor.x -= 1
+	if cursor.x < 0 {
+		cursor.x = 0
+	}
+
 	return cursor
 }
 
