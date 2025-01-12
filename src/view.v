@@ -1440,8 +1440,12 @@ fn (mut view View) scroll_from_and_to() {
 	if view.cursor.pos.y < view.from {
 		diff := view.from - view.cursor.pos.y
 		view.from -= diff
+		view.to   -= diff
 		if view.from < 0 {
 			view.from = 0
+		}
+		if view.to < 0 {
+			view.to = 0
 		}
 		return
 	}
@@ -1652,6 +1656,7 @@ fn (mut view View) x() {
 	if view.buffer.use_gap_buffer {
 		view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
 		view.buffer.delete()
+		view.scroll_from_and_to()
 		return
 	}
 	defer { view.clamp_cursor_x_pos() }
@@ -1698,6 +1703,7 @@ fn (mut view View) w() {
 		pos := view.buffer.find_next_word_start(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
 		view.cursor.pos.x = pos.x
 		view.cursor.pos.y = pos.y
+		view.scroll_from_and_to()
 		return
 	}
 	defer { view.clamp_cursor_x_pos() }
@@ -1723,6 +1729,7 @@ fn (mut view View) e() {
 		pos := view.buffer.find_next_word_end(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
 		view.cursor.pos.x = pos.x
 		view.cursor.pos.y = pos.y
+		view.scroll_from_and_to()
 		return
 	}
 	defer { view.clamp_cursor_x_pos() }
@@ -1750,6 +1757,7 @@ fn (mut view View) b() {
 		pos := view.buffer.find_prev_word_start(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
 		view.cursor.pos.x = pos.x
 		view.cursor.pos.y = pos.y
+		view.scroll_from_and_to()
 		return
 	}
 	defer { view.clamp_cursor_x_pos() }
@@ -1937,6 +1945,7 @@ fn (mut view View) o() {
 		view.cursor.pos.x = view.buffer.find_end_of_line(buffer.Pos{ y: view.cursor.pos.y }) or { 0 }
 		view.i()
 		view.insert_text(buffer.lf.str())
+		view.scroll_from_and_to()
 		return
 	}
 	view.leader_state.mode = .insert
@@ -1957,6 +1966,7 @@ fn (mut view View) shift_o() {
 		view.i()
 		view.insert_text(buffer.lf.str())
 		view.cursor.pos.y -= 1
+		view.scroll_from_and_to()
 		return
 	}
 	view.leader_state.mode = .insert
@@ -2021,6 +2031,7 @@ fn (mut view View) enter() {
 		view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
 		view.insert_text(buffer.lf.str())
 		view.cursor.pos.x = 0
+		view.scroll_from_and_to()
 		return
 	}
 	y := view.cursor.pos.y
@@ -2061,6 +2072,7 @@ fn (mut view View) backspace() {
 		}
 		view.cursor.pos.x -= 1
 		if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
+		view.scroll_from_and_to()
 		return
 	}
 	y := view.cursor.pos.y
@@ -2116,12 +2128,14 @@ fn (mut view View) down() {
 	pos := view.buffer.down(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
 	view.cursor.pos.x = pos.x
 	view.cursor.pos.y = pos.y
+	view.scroll_from_and_to()
 }
 
 fn (mut view View) up() {
 	pos := view.buffer.up(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
 	view.cursor.pos.x = pos.x
 	view.cursor.pos.y = pos.y
+	view.scroll_from_and_to()
 }
 
 fn count_repeated_sequence(char_rune rune, line []rune) int {
@@ -2400,7 +2414,8 @@ fn (mut view View) left_square_bracket() {
 	view.left_bracket_press_count += 1
 
 	if view.left_bracket_press_count >= 2 {
-		view.move_cursor_up(view.cursor.pos.y)
+		view.cursor.pos.y = 0
+		view.scroll_from_and_to()
 		view.left_bracket_press_count = 0
 	}
 }
@@ -2410,7 +2425,8 @@ fn (mut view View) right_square_bracket() {
 	view.right_bracket_press_count += 1
 
 	if view.right_bracket_press_count >= 2 {
-		view.move_cursor_down(view.buffer.lines.len - view.cursor.pos.y)
+		view.cursor.pos.y = view.buffer.lines.len - 1
+		view.scroll_from_and_to()
 		view.right_bracket_press_count = 0
 	}
 }
