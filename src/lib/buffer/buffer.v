@@ -71,7 +71,16 @@ pub fn (mut buffer Buffer) enter(pos Pos) ?Pos {
 		buffer.move_cursor_to(pos)
 		return buffer.insert_text(pos, lf.str())
 	}
-	return none
+
+	mut cursor := pos
+	y := cursor.y
+	after_cursor := buffer.lines[y].runes()[cursor.x..].string()
+	buffer.lines[y] = buffer.lines[y].runes()[..cursor.x].string()
+	buffer.lines.insert(y + 1, after_cursor)
+	cursor.y -= 1
+	cursor = buffer.clamp_cursor_within_document_bounds(cursor)
+	cursor.x = 0
+	return cursor
 }
 
 pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {

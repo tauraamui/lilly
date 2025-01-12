@@ -2032,6 +2032,7 @@ fn (mut view View) enter() {
 	view.cursor.pos.y = pos.y
 	view.scroll_from_and_to()
 
+	/*
 	if view.buffer.use_gap_buffer {
 		view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
 		view.insert_text(buffer.lf.str())
@@ -2053,6 +2054,7 @@ fn (mut view View) enter() {
 	view.move_cursor_down(1)
 	view.cursor.pos.x = whitespace_prefix.len
 	view.clamp_cursor_x_pos()
+	*/
 }
 
 fn resolve_whitespace_prefix(line string) string {
