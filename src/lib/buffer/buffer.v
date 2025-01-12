@@ -50,8 +50,19 @@ pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
 	buffer.c_buffer.insert_at(r, pos)
 }
 
-pub fn (mut buffer Buffer) backspace() bool {
-	return buffer.c_buffer.backspace()
+pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
+	mut cursor := pos
+	if buffer.use_gap_buffer {
+		buffer.move_cursor_to(pos)
+		if buffer.c_buffer.backspace() {
+			cursor.y -= 1
+			cursor.x = buffer.find_end_of_line(cursor) or { 0 }
+			return cursor
+		}
+		cursor.x -= 1
+		if cursor.x < 0 { cursor.x = 0 }
+	}
+	return cursor
 }
 
 pub fn (mut buffer Buffer) delete() {
