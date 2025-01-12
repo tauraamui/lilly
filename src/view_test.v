@@ -2855,6 +2855,29 @@ fn test_gg_goes_to_top_of_file_command() {
 	assert fake_view.cursor.pos.y == 0
 }
 
+fn test_left_square_brace_goes_to_top_of_file() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = []string{}
+	for i in 0..100 {
+		fake_view.buffer.lines << "Line ${i}"
+	}
+	fake_view.from = 50
+	fake_view.to = 100
+	fake_view.cursor.pos.y = 80
+
+	fake_view.left_square_bracket()
+	fake_view.left_square_bracket()
+
+	assert fake_view.cursor.pos.y == 0
+	assert fake_view.from == 0
+	assert fake_view.to == 50
+}
+
 fn test_shift_g_goes_to_bottom_of_file_command() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
