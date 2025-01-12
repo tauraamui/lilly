@@ -746,7 +746,17 @@ fn test_backspace_removing_newlines() {
 		"This is the first sentence.This is the second sentence."
 	]
 
-	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.x == 27
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.backspace()
+
+	lines = fake_view.buffer.str().split("\n")
+	assert lines == [
+		"This is the first sentenceThis is the second sentence."
+	]
+
+	assert fake_view.cursor.pos.x == 26
 	assert fake_view.cursor.pos.y == 0
 }
 

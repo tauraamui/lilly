@@ -2062,54 +2062,11 @@ fn resolve_whitespace_prefix(line string) string {
 }
 
 fn (mut view View) backspace() {
-	if view.buffer.use_gap_buffer {
-		view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
-		if view.buffer.backspace() {
-			view.cursor.pos.y -= 1
-			// 07/01/25 TODO(tauraamui): set view cursor x pos to end of line
-			view.cursor.pos.x = 0
-			return
-		}
-		view.cursor.pos.x -= 1
-		if view.cursor.pos.x < 0 { view.cursor.pos.x = 0 }
-		view.scroll_from_and_to()
-		return
-	}
-	y := view.cursor.pos.y
-
-	if view.cursor.pos.x == 0 && y == 0 {
-		return
-	}
-
-	mut line := view.buffer.lines[y]
-	view.buffer.dirty = true
-
-	if view.cursor.pos.x == 0 {
-		previous_line := view.buffer.lines[y - 1]
-		view.buffer.lines[y - 1] = '${previous_line}${view.buffer.lines[y]}'
-		view.buffer.lines.delete(y)
-		view.move_cursor_up(1)
-		view.cursor.pos.x = previous_line.len
-
-		if view.cursor.pos.y < 0 {
-			view.cursor.pos.y = 0
-		}
-		return
-	}
-
-	if view.cursor.pos.x == line.len {
-		view.buffer.lines[y] = line.runes()[..line.len - 1].string()
-		view.cursor.pos.x = view.buffer.lines[y].len
-		return
-	}
-
-	before := line.runes()[..view.cursor.pos.x - 1].string()
-	after := line.runes()[view.cursor.pos.x..].string()
-	view.buffer.lines[y] = '${before}${after}'
-	view.cursor.pos.x -= 1
-	if view.cursor.pos.x < 0 {
-		view.cursor.pos.x = 0
-	}
+	pos := view.buffer.backspace(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
+	view.scroll_from_and_to()
+	return
 }
 
 fn (mut view View) left() {
