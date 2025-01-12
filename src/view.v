@@ -1989,7 +1989,6 @@ fn (mut view View) y() {
 				return
 			}
 			mut copied_line_contents := []string{}
-			println(end.y - start.y)
 			selection_line_span := end.y - start.y
 			copied_line_contents << view.buffer.lines[start.y][view.cursor.pos.x + 1..]
 
@@ -2390,25 +2389,10 @@ fn (mut view View) jump_cursor_up_to_next_blank_line() {
 }
 
 fn (mut view View) jump_cursor_down_to_next_blank_line() {
-	view.clamp_cursor_within_document_bounds()
-	if view.buffer.lines.len == 0 {
-		return
-	}
-	if view.cursor.pos.y == view.buffer.lines.len {
-		return
-	}
-
-	for i := view.cursor.pos.y; i < view.buffer.lines.len; i++ {
-		if i == view.cursor.pos.y {
-			continue
-		}
-		if view.buffer.lines[i].len == 0 {
-			view.move_cursor_down(i - view.cursor.pos.y)
-			return
-		}
-	}
-
-	view.move_cursor_down(view.buffer.lines.len - view.cursor.pos.y)
+	pos := view.buffer.down_to_next_blank_line(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
+	view.scroll_from_and_to()
 }
 
 fn (mut view View) left_square_bracket() {
