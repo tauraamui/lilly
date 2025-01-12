@@ -2027,6 +2027,11 @@ fn (mut view View) y() {
 }
 
 fn (mut view View) enter() {
+	pos := view.buffer.enter(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
+	view.scroll_from_and_to()
+
 	if view.buffer.use_gap_buffer {
 		view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
 		view.insert_text(buffer.lf.str())
