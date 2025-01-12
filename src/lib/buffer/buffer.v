@@ -42,12 +42,36 @@ pub fn (mut buffer Buffer) move_cursor_to(pos Pos) {
 	buffer.c_buffer.move_cursor_to(pos)
 }
 
+pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
+	mut cursor := pos
+	if buffer.use_gap_buffer {
+		for c in s.runes() {
+			buffer.write(c)
+			cursor.x += 1
+			if c == lf {
+				cursor.y += 1
+				cursor.x = 0
+			}
+		}
+		return cursor
+	}
+	return none
+}
+
 pub fn (mut buffer Buffer) write(r rune) {
 	buffer.c_buffer.insert(r)
 }
 
 pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
 	buffer.c_buffer.insert_at(r, pos)
+}
+
+pub fn (mut buffer Buffer) enter(pos Pos) ?Pos {
+	if buffer.use_gap_buffer {
+		buffer.move_cursor_to(pos)
+		return buffer.insert_text(pos, lf.str())
+	}
+	return none
 }
 
 pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
