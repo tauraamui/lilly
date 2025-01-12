@@ -74,13 +74,30 @@ pub fn (mut buffer Buffer) enter(pos Pos) ?Pos {
 
 	mut cursor := pos
 	y := cursor.y
+	mut whitespace_prefix := resolve_whitespace_prefix_from_line_str(buffer.lines[y])
+	if whitespace_prefix.len == buffer.lines[y].len {
+		buffer.lines[y] = ""
+		whitespace_prefix = ""
+		cursor.x = 0
+	}
 	after_cursor := buffer.lines[y].runes()[cursor.x..].string()
 	buffer.lines[y] = buffer.lines[y].runes()[..cursor.x].string()
-	buffer.lines.insert(y + 1, after_cursor)
+	buffer.lines.insert(y + 1, "${whitespace_prefix}${after_cursor}")
 	cursor.y += 1
 	cursor = buffer.clamp_cursor_within_document_bounds(cursor)
-	cursor.x = 0
+	cursor.x = whitespace_prefix.len
 	return cursor
+}
+
+fn resolve_whitespace_prefix_from_line_str(line string) string {
+	mut prefix_ends := 0
+	for i, c in line {
+		if !is_whitespace(c) {
+			prefix_ends = i
+			return line[..prefix_ends]
+		}
+	}
+	return line
 }
 
 pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
