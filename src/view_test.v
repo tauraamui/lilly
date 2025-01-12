@@ -2893,6 +2893,32 @@ fn test_shift_g_goes_to_bottom_of_file_command() {
 	assert fake_view.cursor.pos.y == 2
 }
 
+fn test_right_square_brace_goes_to_top_of_file() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = []string{}
+	for i in 0..100 {
+		fake_view.buffer.lines << "Line ${i}"
+	}
+	fake_view.from = 0
+	fake_view.to = 50
+	fake_view.cursor.pos.y = 30
+
+	fake_view.right_square_bracket()
+	fake_view.right_square_bracket()
+
+	assert fake_view.cursor.pos.y == 99
+	assert fake_view.from == 50
+	// NOTE(tauraamui) [12/01/25]: at the moment from and to scrolling only really moves "from"
+	//                             in some situations to does not move but this all still somehow
+	//                             works. This needs to be investigated and re-worked.
+	assert fake_view.to == 50
+}
+
 fn test_shift_r_replaces_character_in_line_command() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
