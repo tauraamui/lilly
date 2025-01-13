@@ -289,6 +289,22 @@ pub fn (buffer Buffer) down_to_next_blank_line(pos Pos) ?Pos {
 	return none
 }
 
+pub fn (mut buffer Buffer) replace_char(pos Pos, code u8, str string) {
+	if buffer.use_gap_buffer {
+		assert true == false
+		return
+	}
+
+	if code < 32 {
+		return
+	}
+	cursor := pos
+	line := buffer.lines[pos.y].runes()
+	start := line[..cursor.x]
+	end := line[cursor.x + 1..]
+	buffer.lines[cursor.y] = "${start.string()}${str}${end.string()}"
+}
+
 fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
 	mut cursor := pos
 	if pos.y < 0 {
