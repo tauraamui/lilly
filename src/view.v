@@ -1540,12 +1540,7 @@ fn (mut view View) shift_g() {
 }
 
 fn (mut view View) h() {
-	// if view.buffer.use_gap_buffer {
-		view.left()
-		// return
-	// }
-	// view.cursor.pos.x -= 1
-	// view.clamp_cursor_x_pos()
+	view.left()
 }
 
 fn (mut view View) shift_h() {
@@ -1554,12 +1549,7 @@ fn (mut view View) shift_h() {
 }
 
 fn (mut view View) l() {
-	if view.buffer.use_gap_buffer {
-		view.right()
-		return
-	}
-	view.cursor.pos.x += 1
-	view.clamp_cursor_x_pos()
+	view.right()
 }
 
 fn (mut view View) shift_l() {
@@ -1573,6 +1563,8 @@ fn (mut view View) shift_m() {
 }
 
 fn (mut view View) j() {
+	view.down()
+	/*
 	if view.buffer.use_gap_buffer {
 		view.down()
 		return
@@ -1580,6 +1572,7 @@ fn (mut view View) j() {
 	view.move_cursor_down(1)
 	view.clamp_cursor_x_pos()
 	view.clamp_cursor_within_document_bounds()
+	*/
 }
 
 fn (mut view View) k() {
