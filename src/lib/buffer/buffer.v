@@ -214,7 +214,11 @@ pub fn (buffer Buffer) down(pos Pos, insert_mode bool) ?Pos {
 	if buffer.use_gap_buffer {
 		return buffer.c_buffer.down(pos)
 	}
-	return none
+	mut cursor := pos
+	cursor.y += 1
+	cursor = buffer.clamp_cursor_within_document_bounds(cursor)
+	cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
+	return cursor
 }
 
 pub fn (buffer Buffer) up(pos Pos, insert_mode bool) ?Pos {
@@ -302,6 +306,15 @@ fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
 		if clamped.x > current_line_len {
 			clamped.x = current_line_len
 		}
+	} else {
+		diff := pos.x - (current_line_len - 1)
+		if diff > 0 {
+			clamped.x = current_line_len - 1
+			return clamped
+		}
+	}
+	if clamped.x < 0 {
+		clamped.x = 0
 	}
 	return clamped
 }
