@@ -1564,25 +1564,10 @@ fn (mut view View) shift_m() {
 
 fn (mut view View) j() {
 	view.down()
-	/*
-	if view.buffer.use_gap_buffer {
-		view.down()
-		return
-	}
-	view.move_cursor_down(1)
-	view.clamp_cursor_x_pos()
-	view.clamp_cursor_within_document_bounds()
-	*/
 }
 
 fn (mut view View) k() {
-	if view.buffer.use_gap_buffer {
-		view.up()
-		return
-	}
-	view.move_cursor_up(1)
-	view.clamp_cursor_x_pos()
-	view.clamp_cursor_within_document_bounds()
+	view.up()
 }
 
 fn (mut view View) i() {
