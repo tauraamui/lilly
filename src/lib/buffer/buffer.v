@@ -225,7 +225,11 @@ pub fn (buffer Buffer) up(pos Pos, insert_mode bool) ?Pos {
 	if buffer.use_gap_buffer {
 		return buffer.c_buffer.up(pos)
 	}
-	return none
+	mut cursor := pos
+	cursor.y -= 1
+	cursor = buffer.clamp_cursor_within_document_bounds(cursor)
+	cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
+	return cursor
 }
 
 pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
