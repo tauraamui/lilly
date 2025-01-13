@@ -2311,13 +2311,7 @@ fn (mut view View) right_square_bracket() {
 }
 
 fn (mut view View) replace_char(code u8, str string) {
-	if code < 32 {
-		return
-	}
-	line := view.buffer.lines[view.cursor.pos.y].runes()
-	start := line[..view.cursor.pos.x]
-	end := line[view.cursor.pos.x + 1..]
-	view.buffer.lines[view.cursor.pos.y] = '${start.string()}${str}${end.string()}'
+	view.buffer.replace_char(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, code, str)
 }
 
 fn (mut view View) close_pair(c string) bool {
