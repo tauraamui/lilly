@@ -1338,50 +1338,11 @@ fn (mut view View) char_insert(s string) {
 	view.insert_text(s)
 }
 
-fn (mut view View) insert_text_gb(s string) {
-	// view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
-	chars := s.runes()
-	for c in chars {
-		view.buffer.write(c)
-		view.cursor.pos.x += 1
-		if c == buffer.lf {
-			view.cursor.pos.y += 1
-			view.cursor.pos.x = 0
-		}
-	}
-	view.buffer.dirty = true
-}
-
-fn (mut view View) insert_text_lb(s string) {
-	y := view.cursor.pos.y
-	line := view.buffer.lines[y]
-	view.buffer.dirty = true
-	if line.len == 0 {
-		view.buffer.lines[y] = '${s}'
-		view.cursor.pos.x = s.runes().len
-		return
-	} else {
-		if view.cursor.pos.x > line.len {
-			view.cursor.pos.x = line.len
-		}
-		uline := line.runes()
-		if view.cursor.pos.x > uline.len {
-			return
-		}
-		left := uline[..view.cursor.pos.x].string()
-		right := uline[view.cursor.pos.x..uline.len].string()
-		// insert char in the middle
-		view.buffer.lines[y] = '${left}${s}${right}'
-	}
-	view.cursor.pos.x += s.runes().len
-}
-
 fn (mut view View) insert_text(s string) {
-	if view.buffer.use_gap_buffer {
-		view.insert_text_gb(s)
-		return
-	}
-	view.insert_text_lb(s)
+	pos := view.buffer.insert_text(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, s) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
+	view.scroll_from_and_to()
 }
 
 fn (mut view View) escape() {

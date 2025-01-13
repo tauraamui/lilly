@@ -68,7 +68,7 @@ fn test_buffer_insert_text() {
 	mut buffer := Buffer{}
 	buffer.c_buffer = GapBuffer.new("")
 
-	for r in "Some text to insert!".runes() { buffer.write(r) }
+	for r in "Some text to insert!".runes() { buffer.c_buffer.insert(r) }
 
 	assert buffer.str() == "Some text to insert!"
 }

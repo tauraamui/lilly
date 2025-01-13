@@ -46,7 +46,7 @@ pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 	mut cursor := pos
 	if buffer.use_gap_buffer {
 		for c in s.runes() {
-			buffer.write(c)
+			buffer.c_buffer.insert(c)
 			cursor.x += 1
 			if c == lf {
 				cursor.y += 1
@@ -55,11 +55,30 @@ pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 		}
 		return cursor
 	}
-	return none
-}
 
-pub fn (mut buffer Buffer) write(r rune) {
-	buffer.c_buffer.insert(r)
+	cursor = pos
+	y := cursor.y
+	mut line := buffer.lines[y]
+	if line.len == 0 {
+		buffer.lines[y] = "${s}"
+		cursor.x = s.runes().len
+		return cursor
+	}
+
+	if cursor.x > line.len {
+		cursor.x = line.len
+	}
+	uline := line.runes()
+	if cursor.x > uline.len {
+		return cursor
+	}
+	left := uline[..cursor.x].string()
+	right := uline[cursor.x..uline.len].string()
+	buffer.lines[y] = "${left}${s}${right}"
+
+	cursor.x += s.runes().len
+
+	return cursor
 }
 
 pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
