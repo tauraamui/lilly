@@ -216,8 +216,9 @@ pub fn (buffer Buffer) down(pos Pos, insert_mode bool) ?Pos {
 	}
 	mut cursor := pos
 	cursor.y += 1
-	cursor = buffer.clamp_cursor_within_document_bounds(cursor)
-	cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
+	if cursor.x > buffer.lines[cursor.y].len {
+		cursor.x = buffer.lines[cursor.y].len
+	}
 	return cursor
 }
 
@@ -227,8 +228,9 @@ pub fn (buffer Buffer) up(pos Pos, insert_mode bool) ?Pos {
 	}
 	mut cursor := pos
 	cursor.y -= 1
-	cursor = buffer.clamp_cursor_within_document_bounds(cursor)
-	cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
+	if cursor.x > buffer.lines[cursor.y].len {
+		cursor.x = buffer.lines[cursor.y].len
+	}
 	return cursor
 }
 
