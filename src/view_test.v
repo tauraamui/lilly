@@ -1164,6 +1164,45 @@ fn test_move_cursor_down_with_down_proceeds_to_next_line_with_x_maxed() {
 	assert fake_view.cursor.pos.y == 4
 }
 
+fn test_move_cursor_down_with_down_proceeds_to_next_line_with_x_maxed_contains_blank_lines() {
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: clipboardv2.new()
+	}
+	fake_view.buffer.lines = [
+		'1. first line with five words',
+		'',
+		'3. third line with five words',
+		'',
+		'5. fifth line with five words',
+	]
+
+	fake_view.cursor.pos.x = 5
+	fake_view.cursor.pos.y = 0
+
+	fake_view.down()
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 1
+
+	fake_view.down()
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 2
+
+	for _ in 0..2 { fake_view.down() }
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 4
+
+	fake_view.down()
+
+	// ensure cursor within document bounds
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 4
+}
+
 fn test_move_cursor_up_with_up_proceeds_to_previous_line_with_x_maxed() {
 	mut fake_view := View{
 		log: log.Log{}
@@ -1200,6 +1239,45 @@ fn test_move_cursor_up_with_up_proceeds_to_previous_line_with_x_maxed() {
 
 	// ensure cursor within document bounds
 	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 0
+}
+
+fn test_move_cursor_up_with_up_proceeds_to_next_line_with_x_maxed_contains_blank_lines() {
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: clipboardv2.new()
+	}
+	fake_view.buffer.lines = [
+		'1. first line with five words',
+		"",
+		'3. third line with five words',
+		"",
+		'5. fifth line with five words',
+	]
+
+	fake_view.cursor.pos.x = 5
+	fake_view.cursor.pos.y = 4
+
+	fake_view.up()
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 3
+
+	fake_view.up()
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 2
+
+	for _ in 0..2 { fake_view.k() }
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.up()
+
+	// ensure cursor within document bounds
+	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 0
 }
 
