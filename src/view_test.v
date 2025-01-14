@@ -992,6 +992,38 @@ fn test_move_cursor_left_with_h_proceeds_to_start_of_line() {
 
 }
 
+fn test_move_cursor_right_with_l_proceeds_to_end_of_line() {
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: clipboardv2.new()
+	}
+	fake_view.buffer.lines = ['1. first line']
+
+	fake_view.cursor.pos.x = 5
+	fake_view.cursor.pos.y = 0
+
+	fake_view.l()
+
+	assert fake_view.cursor.pos.x == 6
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.l()
+
+	assert fake_view.cursor.pos.x == 7
+	assert fake_view.cursor.pos.y == 0
+
+	for _ in 0..5 { fake_view.l() }
+
+	assert fake_view.cursor.pos.x == 12
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.l()
+
+	// ensure cursor within document bounds
+	assert fake_view.cursor.pos.x == 12
+	assert fake_view.cursor.pos.y == 0
+}
 
 fn test_left_arrow_at_end_of_sentence_in_insert_mode() {
 	mut clip := clipboardv2.new()
