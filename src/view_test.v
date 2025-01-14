@@ -958,6 +958,41 @@ fn test_right_arrow_at_start_of_sentence_in_insert_mode() {
 	assert fake_view.cursor.pos.x == 1
 }
 
+fn test_move_cursor_left_with_h_proceeds_to_start_of_line() {
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: clipboardv2.new()
+	}
+	fake_view.buffer.lines = ['1. first line']
+
+	fake_view.cursor.pos.x = 9
+	fake_view.cursor.pos.y = 0
+
+	fake_view.h()
+
+	assert fake_view.cursor.pos.x == 8
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.h()
+
+	assert fake_view.cursor.pos.x == 7
+	assert fake_view.cursor.pos.y == 0
+
+	for _ in 0..7 { fake_view.h() }
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.h()
+
+	// ensure cursor within document bounds
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 0
+
+}
+
+
 fn test_left_arrow_at_end_of_sentence_in_insert_mode() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
@@ -1570,40 +1605,6 @@ fn test_search_within_for_multiple_lines_multiple_matches_per_line() {
 	assert looped_back_first_result.start == 30
 	assert looped_back_first_result.end == 38
 	assert looped_back_first_result.line == 0
-}
-
-fn test_move_cursor_left_with_h_proceeds_to_start_of_line() {
-	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv2.new()
-	}
-	fake_view.buffer.lines = ['1. first line']
-
-	fake_view.cursor.pos.x = 9
-	fake_view.cursor.pos.y = 0
-
-	fake_view.h()
-
-	assert fake_view.cursor.pos.x == 8
-	assert fake_view.cursor.pos.y == 0
-
-	fake_view.h()
-
-	assert fake_view.cursor.pos.x == 7
-	assert fake_view.cursor.pos.y == 0
-
-	for _ in 0..7 { fake_view.h() }
-
-	assert fake_view.cursor.pos.x == 0
-	assert fake_view.cursor.pos.y == 0
-
-	fake_view.h()
-
-	// ensure cursor within document bounds
-	assert fake_view.cursor.pos.x == 0
-	assert fake_view.cursor.pos.y == 0
-
 }
 
 fn test_move_cursor_with_b_from_start_of_line_which_preceeds_a_blank_line() {
