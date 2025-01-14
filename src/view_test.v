@@ -913,6 +913,374 @@ fn test_backspace_at_start_of_sentance_first_line_does_nothing() {
 	assert fake_view.buffer.lines == ['single line of text!', '']
 }
 
+fn test_move_cursor_left_with_h_proceeds_to_start_of_line() {
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: clipboardv2.new()
+	}
+	fake_view.buffer.lines = ['1. first line']
+
+	fake_view.cursor.pos.x = 9
+	fake_view.cursor.pos.y = 0
+
+	fake_view.h()
+
+	assert fake_view.cursor.pos.x == 8
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.h()
+
+	assert fake_view.cursor.pos.x == 7
+	assert fake_view.cursor.pos.y == 0
+
+	for _ in 0..7 { fake_view.h() }
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.h()
+
+	// ensure cursor within document bounds
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 0
+
+}
+
+fn test_move_cursor_right_with_l_proceeds_to_end_of_line() {
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: clipboardv2.new()
+	}
+	fake_view.buffer.lines = ['1. first line']
+
+	fake_view.cursor.pos.x = 5
+	fake_view.cursor.pos.y = 0
+
+	fake_view.l()
+
+	assert fake_view.cursor.pos.x == 6
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.l()
+
+	assert fake_view.cursor.pos.x == 7
+	assert fake_view.cursor.pos.y == 0
+
+	for _ in 0..5 { fake_view.l() }
+
+	assert fake_view.cursor.pos.x == 12
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.l()
+
+	// ensure cursor within document bounds
+	assert fake_view.cursor.pos.x == 12
+	assert fake_view.cursor.pos.y == 0
+}
+
+fn test_move_cursor_down_with_j_proceeds_to_next_line_with_x_maxed() {
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: clipboardv2.new()
+	}
+	fake_view.buffer.lines = [
+		'1. first line with five words',
+		'2. second line with five words',
+		'3. third line with five words',
+		'4. forth line with five words',
+		'5. fifth line with five words',
+	]
+
+	fake_view.cursor.pos.x = 5
+	fake_view.cursor.pos.y = 0
+
+	fake_view.j()
+
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 1
+
+	fake_view.j()
+
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 2
+
+	for _ in 0..2 { fake_view.j() }
+
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 4
+
+	fake_view.j()
+
+	// ensure cursor within document bounds
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 4
+}
+
+fn test_move_cursor_up_with_k_proceeds_to_previous_line_with_x_maxed() {
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: clipboardv2.new()
+	}
+	fake_view.buffer.lines = [
+		'1. first line with five words',
+		'2. second line with five words',
+		'3. third line with five words',
+		'4. forth line with five words',
+		'5. fifth line with five words',
+	]
+
+	fake_view.cursor.pos.x = 5
+	fake_view.cursor.pos.y = 4
+
+	fake_view.k()
+
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 3
+
+	fake_view.k()
+
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 2
+
+	for _ in 0..2 { fake_view.k() }
+
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.k()
+
+	// ensure cursor within document bounds
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 0
+}
+
+fn test_move_cursor_left_with_left_proceeds_to_start_of_line() {
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: clipboardv2.new()
+	}
+	fake_view.buffer.lines = ['1. first line']
+
+	fake_view.cursor.pos.x = 9
+	fake_view.cursor.pos.y = 0
+
+	fake_view.left()
+
+	assert fake_view.cursor.pos.x == 8
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.left()
+
+	assert fake_view.cursor.pos.x == 7
+	assert fake_view.cursor.pos.y == 0
+
+	for _ in 0..7 { fake_view.left() }
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.left()
+
+	// ensure cursor within document bounds
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 0
+
+}
+
+fn test_move_cursor_right_with_right_proceeds_to_end_of_line() {
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: clipboardv2.new()
+	}
+	fake_view.buffer.lines = ['1. first line']
+
+	fake_view.cursor.pos.x = 5
+	fake_view.cursor.pos.y = 0
+
+	fake_view.right()
+
+	assert fake_view.cursor.pos.x == 6
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.right()
+
+	assert fake_view.cursor.pos.x == 7
+	assert fake_view.cursor.pos.y == 0
+
+	for _ in 0..5 { fake_view.right() }
+
+	assert fake_view.cursor.pos.x == 12
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.right()
+
+	// ensure cursor within document bounds
+	assert fake_view.cursor.pos.x == 12
+	assert fake_view.cursor.pos.y == 0
+}
+
+fn test_move_cursor_down_with_down_proceeds_to_next_line_with_x_maxed() {
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: clipboardv2.new()
+	}
+	fake_view.buffer.lines = [
+		'1. first line with five words',
+		'2. second line with five words',
+		'3. third line with five words',
+		'4. forth line with five words',
+		'5. fifth line with five words',
+	]
+
+	fake_view.cursor.pos.x = 5
+	fake_view.cursor.pos.y = 0
+
+	fake_view.down()
+
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 1
+
+	fake_view.down()
+
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 2
+
+	for _ in 0..2 { fake_view.down() }
+
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 4
+
+	fake_view.down()
+
+	// ensure cursor within document bounds
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 4
+}
+
+fn test_move_cursor_down_with_down_proceeds_to_next_line_with_x_maxed_contains_blank_lines() {
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: clipboardv2.new()
+	}
+	fake_view.buffer.lines = [
+		'1. first line with five words',
+		'',
+		'3. third line with five words',
+		'',
+		'5. fifth line with five words',
+	]
+
+	fake_view.cursor.pos.x = 5
+	fake_view.cursor.pos.y = 0
+
+	fake_view.down()
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 1
+
+	fake_view.down()
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 2
+
+	for _ in 0..2 { fake_view.down() }
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 4
+
+	fake_view.down()
+
+	// ensure cursor within document bounds
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 4
+}
+
+fn test_move_cursor_up_with_up_proceeds_to_previous_line_with_x_maxed() {
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: clipboardv2.new()
+	}
+	fake_view.buffer.lines = [
+		'1. first line with five words',
+		'2. second line with five words',
+		'3. third line with five words',
+		'4. forth line with five words',
+		'5. fifth line with five words',
+	]
+
+	fake_view.cursor.pos.x = 5
+	fake_view.cursor.pos.y = 4
+
+	fake_view.up()
+
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 3
+
+	fake_view.up()
+
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 2
+
+	for _ in 0..2 { fake_view.k() }
+
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.up()
+
+	// ensure cursor within document bounds
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 0
+}
+
+fn test_move_cursor_up_with_up_proceeds_to_next_line_with_x_maxed_contains_blank_lines() {
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: clipboardv2.new()
+	}
+	fake_view.buffer.lines = [
+		'1. first line with five words',
+		"",
+		'3. third line with five words',
+		"",
+		'5. fifth line with five words',
+	]
+
+	fake_view.cursor.pos.x = 5
+	fake_view.cursor.pos.y = 4
+
+	fake_view.up()
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 3
+
+	fake_view.up()
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 2
+
+	for _ in 0..2 { fake_view.k() }
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.up()
+
+	// ensure cursor within document bounds
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 0
+}
+
 fn test_left_arrow_at_start_of_sentence_in_insert_mode() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
@@ -936,28 +1304,6 @@ fn test_left_arrow_at_start_of_sentence_in_insert_mode() {
 	assert fake_view.cursor.pos.y == 1 // this is desired for left move using list of lines buffer
 }
 
-fn test_right_arrow_at_start_of_sentence_in_insert_mode() {
-	mut clip := clipboardv2.new()
-	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-	}
-	fake_view.leader_state.mode = .insert
-
-	// manually set the documents contents
-	fake_view.buffer.lines = ['', 'single line of text!', '']
-	// ensure cursor is set to sit on the second line
-	fake_view.cursor.pos.y = 1
-	// ensure cursor is set to sit on the first char of the line
-	fake_view.cursor.pos.x = 0
-
-	// invoke right
-	fake_view.right()
-
-	assert fake_view.cursor.pos.x == 1
-}
-
 fn test_left_arrow_at_end_of_sentence_in_insert_mode() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
@@ -978,6 +1324,28 @@ fn test_left_arrow_at_end_of_sentence_in_insert_mode() {
 	fake_view.left()
 
 	assert fake_view.cursor.pos.x == 19
+}
+
+fn test_right_arrow_at_start_of_sentence_in_insert_mode() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.leader_state.mode = .insert
+
+	// manually set the documents contents
+	fake_view.buffer.lines = ['', 'single line of text!', '']
+	// ensure cursor is set to sit on the second line
+	fake_view.cursor.pos.y = 1
+	// ensure cursor is set to sit on the first char of the line
+	fake_view.cursor.pos.x = 0
+
+	// invoke right
+	fake_view.right()
+
+	assert fake_view.cursor.pos.x == 1
 }
 
 fn test_right_arrow_at_end_of_sentence_in_insert_mode() {

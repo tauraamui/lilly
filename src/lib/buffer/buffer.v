@@ -216,6 +216,9 @@ pub fn (buffer Buffer) down(pos Pos, insert_mode bool) ?Pos {
 	}
 	mut cursor := pos
 	cursor.y += 1
+	if cursor.y >= buffer.lines.len - 1 {
+		cursor.y = buffer.lines.len - 1
+	}
 	if cursor.x > buffer.lines[cursor.y].len {
 		cursor.x = buffer.lines[cursor.y].len
 	}
@@ -228,6 +231,9 @@ pub fn (buffer Buffer) up(pos Pos, insert_mode bool) ?Pos {
 	}
 	mut cursor := pos
 	cursor.y -= 1
+	if cursor.y < 0 {
+		cursor.y = 0
+	}
 	if cursor.x > buffer.lines[cursor.y].len {
 		cursor.x = buffer.lines[cursor.y].len
 	}
