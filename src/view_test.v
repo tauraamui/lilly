@@ -913,29 +913,6 @@ fn test_backspace_at_start_of_sentance_first_line_does_nothing() {
 	assert fake_view.buffer.lines == ['single line of text!', '']
 }
 
-fn test_left_arrow_at_start_of_sentence_in_insert_mode() {
-	mut clip := clipboardv2.new()
-	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-	}
-	fake_view.leader_state.mode = .insert
-
-	// manually set the document contents
-	fake_view.buffer.lines = ['', 'single line of text!', '']
-	// ensure cursor is set to sit on the second line
-	fake_view.cursor.pos.y = 1
-	// ensure cursor is set to sit on the first char of the line
-	fake_view.cursor.pos.x = 0
-
-	// invoke left
-	fake_view.left()
-
-	assert fake_view.cursor.pos.x == 0
-	assert fake_view.cursor.pos.y == 1 // this is desired for left move using list of lines buffer
-}
-
 fn test_move_cursor_left_with_h_proceeds_to_start_of_line() {
 	mut fake_view := View{
 		log: log.Log{}
@@ -1226,7 +1203,7 @@ fn test_move_cursor_up_with_up_proceeds_to_previous_line_with_x_maxed() {
 	assert fake_view.cursor.pos.y == 0
 }
 
-fn test_right_arrow_at_start_of_sentence_in_insert_mode() {
+fn test_left_arrow_at_start_of_sentence_in_insert_mode() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
 		log: log.Log{}
@@ -1235,17 +1212,18 @@ fn test_right_arrow_at_start_of_sentence_in_insert_mode() {
 	}
 	fake_view.leader_state.mode = .insert
 
-	// manually set the documents contents
+	// manually set the document contents
 	fake_view.buffer.lines = ['', 'single line of text!', '']
 	// ensure cursor is set to sit on the second line
 	fake_view.cursor.pos.y = 1
 	// ensure cursor is set to sit on the first char of the line
 	fake_view.cursor.pos.x = 0
 
-	// invoke right
-	fake_view.right()
+	// invoke left
+	fake_view.left()
 
-	assert fake_view.cursor.pos.x == 1
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 1 // this is desired for left move using list of lines buffer
 }
 
 fn test_left_arrow_at_end_of_sentence_in_insert_mode() {
@@ -1268,6 +1246,28 @@ fn test_left_arrow_at_end_of_sentence_in_insert_mode() {
 	fake_view.left()
 
 	assert fake_view.cursor.pos.x == 19
+}
+
+fn test_right_arrow_at_start_of_sentence_in_insert_mode() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.leader_state.mode = .insert
+
+	// manually set the documents contents
+	fake_view.buffer.lines = ['', 'single line of text!', '']
+	// ensure cursor is set to sit on the second line
+	fake_view.cursor.pos.y = 1
+	// ensure cursor is set to sit on the first char of the line
+	fake_view.cursor.pos.x = 0
+
+	// invoke right
+	fake_view.right()
+
+	assert fake_view.cursor.pos.x == 1
 }
 
 fn test_right_arrow_at_end_of_sentence_in_insert_mode() {
