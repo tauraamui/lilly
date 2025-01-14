@@ -1025,6 +1025,45 @@ fn test_move_cursor_right_with_l_proceeds_to_end_of_line() {
 	assert fake_view.cursor.pos.y == 0
 }
 
+fn test_move_cursor_down_with_j_proceeds_to_next_line_with_x_maxed() {
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: clipboardv2.new()
+	}
+	fake_view.buffer.lines = [
+		'1. first line with five words',
+		'2. second line with five words',
+		'3. third line with five words',
+		'4. forth line with five words',
+		'5. fifth line with five words',
+	]
+
+	fake_view.cursor.pos.x = 5
+	fake_view.cursor.pos.y = 0
+
+	fake_view.j()
+
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 1
+
+	fake_view.j()
+
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 2
+
+	for _ in 0..2 { fake_view.j() }
+
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 4
+
+	fake_view.j()
+
+	// ensure cursor within document bounds
+	assert fake_view.cursor.pos.x == 5
+	assert fake_view.cursor.pos.y == 4
+}
+
 fn test_left_arrow_at_end_of_sentence_in_insert_mode() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
