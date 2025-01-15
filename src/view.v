@@ -1277,14 +1277,13 @@ fn (mut view View) exec(op chords.Op) {
 }
 
 fn (mut view View) insert_tab() {
-	if view.buffer.use_gap_buffer {
-		view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
-	}
-	if view.config.insert_tabs_not_spaces {
-		view.insert_text('\t')
-		return
-	}
-	view.insert_text(' '.repeat(4))
+	pos := view.buffer.insert_tab(
+		buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y },
+		view.config.insert_tabs_not_spaces,
+	) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
+	view.scroll_from_and_to()
 }
 
 fn (mut view View) visual_indent() {

@@ -81,8 +81,20 @@ pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 	return cursor
 }
 
+// NOTE(tauraamui) [15/01/25]: I don't like the implications of the existence of this method,
+//                             need to review all its potential usages and hopefully remove it.
 pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
 	buffer.c_buffer.insert_at(r, pos)
+}
+
+pub fn (mut buffer Buffer) insert_tab(pos Pos, tabs_not_spaces bool) ?Pos {
+	if buffer.use_gap_buffer {
+		buffer.move_cursor_to(pos)
+	}
+	if tabs_not_spaces {
+		return buffer.insert_text(pos, '\t')
+	}
+	return buffer.insert_text(pos, ' '.repeat(4))
 }
 
 pub fn (mut buffer Buffer) enter(pos Pos) ?Pos {
