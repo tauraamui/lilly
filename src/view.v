@@ -1286,6 +1286,9 @@ fn (mut view View) insert_tab() {
 	view.scroll_from_and_to()
 }
 
+// NOTE(tauraamui) [15/01/25]: The mechanisms around selections needs to be properly
+//                             thought through before this stuff is migrated to the
+//                             buffer wrapper type data structure.
 fn (mut view View) visual_indent() {
 	mut start := view.cursor.selection_start().y
 	mut end := view.cursor.selection_end().y
@@ -1318,6 +1321,9 @@ fn subtract_prefix_from_line(prefix string, line string) string {
 	return line
 }
 
+// NOTE(tauraamui) [15/01/25]: Hmm tracking which file a buffer represents should
+//                             be handled by the buffer itself, so this needs to
+//                             be re-worked as part of migrating this to the buffer
 fn (mut view View) save_file() ! {
 	if view.path == '' {
 		return
