@@ -1388,6 +1388,9 @@ fn test_tab_inserts_spaces() {
 
 	assert fake_view.leader_state.mode == .insert
 	assert fake_view.buffer.lines == ['1. first     line']
+
+	assert fake_view.cursor.pos.x == 13
+	assert fake_view.cursor.pos.y == 0
 }
 
 fn test_tab_inserts_tabs_not_spaces_if_enabled() {
@@ -1411,6 +1414,9 @@ fn test_tab_inserts_tabs_not_spaces_if_enabled() {
 
 	assert fake_view.leader_state.mode == .insert
 	assert fake_view.buffer.lines == ['1. first \tline']
+
+	assert fake_view.cursor.pos.x == 10
+	assert fake_view.cursor.pos.y == 0
 }
 
 fn test_visual_indent_indents_highlighted_lines() {
