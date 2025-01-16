@@ -131,6 +131,26 @@ fn resolve_whitespace_prefix_from_line_str(line string) string {
 	return line
 }
 
+pub fn (mut buffer Buffer) x(pos Pos) ?Pos {
+	mut cursor := pos
+	cursor = buffer.clamp_cursor_within_document_bounds(cursor)
+	if buffer.use_gap_buffer {
+		buffer.move_cursor_to(pos)
+		if buffer.delete(true) {
+			line_end := buffer.find_end_of_line(cursor) or { return none }
+			if cursor.x > line_end { cursor.x = line_end }
+			return cursor
+		}
+		return none
+	}
+	line := buffer.lines[cursor.y].runes()
+	if line.len == 0 { return none }
+	start := line[..cursor.x]
+	end   := line[cursor.x + 1..]
+	buffer.lines[cursor.y] = "${start.string()}${end.string()}"
+	return buffer.clamp_cursor_x_pos(buffer.clamp_cursor_within_document_bounds(cursor), false)
+}
+
 pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
 	mut cursor := pos
 	if cursor.x == 0 && cursor.y == 0 { return none }
@@ -178,8 +198,8 @@ pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
 	return cursor
 }
 
-pub fn (mut buffer Buffer) delete() {
-	buffer.c_buffer.delete(true)
+pub fn (mut buffer Buffer) delete(ignore_newlines bool) bool {
+	return buffer.c_buffer.delete(ignore_newlines)
 }
 
 pub fn (mut buffer Buffer) str() string {
@@ -337,7 +357,8 @@ fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
 }
 
 fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
-	mut clamped := buffer.clamp_cursor_within_document_bounds(pos)
+	// mut clamped := buffer.clamp_cursor_within_document_bounds(pos)
+	mut clamped := pos
 	if clamped.x < 0 { clamped.x = 0 }
 
 	current_line_len := buffer.lines[pos.y].runes().len

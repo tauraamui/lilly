@@ -1597,20 +1597,9 @@ fn (mut view View) r() {
 }
 
 fn (mut view View) x() {
-	if view.buffer.use_gap_buffer {
-		view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
-		view.buffer.delete()
-		view.scroll_from_and_to()
-		return
-	}
-	defer { view.clamp_cursor_x_pos() }
-	x := view.cursor.pos.x
-	y := view.cursor.pos.y
-
-	line := view.buffer.lines[y].runes()
-	start := line[..x]
-	end := line[x + 1..]
-	view.buffer.lines[y] = '${start.string()}${end.string()}'
+	pos := view.buffer.x(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
 }
 
 /*
