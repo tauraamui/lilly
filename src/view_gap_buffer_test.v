@@ -224,6 +224,7 @@ fn test_x_does_not_remove_characters_on_multi_line_document_if_at_line_end() {
 		"2. second line"
 		"3. third line"
 	]
+	assert fake_view.cursor.pos.x == 13
 	assert fake_view.cursor.pos.y == 0
 }
 
