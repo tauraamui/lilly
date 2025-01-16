@@ -350,7 +350,6 @@ fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
 		diff := pos.x - (current_line_len - 1)
 		if diff > 0 {
 			clamped.x = current_line_len - 1
-			return clamped
 		}
 	}
 	if clamped.x < 0 {
