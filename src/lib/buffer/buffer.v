@@ -378,16 +378,6 @@ pub fn (mut iter LineIterator) next() ?string {
 	return iter.data_ref[iter.idx]
 }
 
-pub fn (buffer Buffer) iterate(cb fn (id int, line string)) {
-	mut iter := buffer.iterator()
-	mut idx  := 0
-	for {
-		line := iter.next() or { break }
-		cb(idx, line)
-		idx += 1
-	}
-}
-
 pub fn (buffer Buffer) iterator() Iterator {
 	if buffer.use_gap_buffer {
 		return new_gap_buffer_iterator(buffer.c_buffer)

@@ -666,8 +666,8 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 			cursor_screen_space_y + 1)
 	}
 
-	view.buffer.iterate(fn [mut view, mut ctx, cursor_screen_space_y] (y int, line string) {
-		if y < view.from || y > view.to { return }
+	for y, line in view.buffer.iterator() {
+		if y < view.from || y > view.to { continue }
 
 		screen_space_y := y - view.from
 
@@ -694,7 +694,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 		draw_text_line(mut ctx, view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} },
 			view.cursor, view.leader_state.mode, sel_highlight_color, view.x, screen_space_y, document_space_y,
 			cursor_screen_space_y, linex, line)
-	})
+	}
 }
 
 fn draw_text_line(mut ctx draw.Contextable,
