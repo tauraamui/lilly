@@ -2918,6 +2918,13 @@ fn test_x_removes_character_and_shifts_cursor_back_at_end_of_line() {
 	assert fake_view.leader_state.mode == .normal
 	assert fake_view.cursor.pos.x == 21
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y].len == 22
+
+	fake_view.x()
+
+	assert fake_view.buffer.lines == ['this is a lines of te']
+	assert fake_view.leader_state.mode == .normal
+	assert fake_view.cursor.pos.x == 20
+	assert fake_view.buffer.lines[fake_view.cursor.pos.y].len == 21
 }
 
 fn test_find_position_within_word_lines() {
