@@ -3,7 +3,7 @@ module buffer
 import strings
 import arrays
 
-const gap_size = 32
+pub const gap_size = 32
 
 struct LineTracker {
 	line_starts []int
@@ -245,11 +245,12 @@ pub fn (gap_buffer GapBuffer) left(pos Pos) ?Pos {
 	}
 
 	cursor_loc.x -= 1
+	if cursor_loc.x < 0 { cursor_loc.x = 0 }
 
 	return cursor_loc
 }
 
-pub fn (gap_buffer GapBuffer) right(pos Pos) ?Pos {
+pub fn (gap_buffer GapBuffer) right(pos Pos, insert_mode bool) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
@@ -274,6 +275,8 @@ pub fn (gap_buffer GapBuffer) right(pos Pos) ?Pos {
 	}
 
 	cursor_loc.x += 1
+
+	println(cursor_loc)
 
 	return cursor_loc
 }
