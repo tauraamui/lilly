@@ -3,7 +3,7 @@ module buffer
 import strings
 import arrays
 
-const gap_size = 32
+pub const gap_size = 32
 
 struct LineTracker {
 	line_starts []int
@@ -54,6 +54,14 @@ pub fn (mut gap_buffer GapBuffer) delete(ignore_newlines bool) bool {
 	if gap_buffer.gap_end + 1 == gap_buffer.data.len { return false }
 	gap_buffer.gap_end += 1
 	return true
+}
+
+pub fn (mut gap_buffer GapBuffer) x(pos Pos) ?Pos {
+	gap_buffer.move_cursor_to(pos)
+	distance_to_end_of_line := gap_buffer.find_end_of_line(pos) or { 0 }
+	if distance_to_end_of_line == 0 { return none }
+	gap_buffer.gap_end += 1
+	return pos
 }
 
 fn (mut gap_buffer GapBuffer) insert_rune(r rune) {
@@ -220,6 +228,8 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 	return cursor_loc
 }
 
+// TODO(tauraamui) [20/01/25]: Need to adjust movement behaviour based on mode,
+//                             so basically when we're in insert mode do the thing.
 pub fn (gap_buffer GapBuffer) left(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
@@ -238,18 +248,19 @@ pub fn (gap_buffer GapBuffer) left(pos Pos) ?Pos {
 	//
 
 	if data.len == 0 { return none }
-	if offset - 1 < 0 { return none }
+	if cursor_loc.x - 1 < 0 { return none }
 
-	if data[offset - 1] == lf {
+	if data[cursor_loc.x - 1] == lf {
 		return none
 	}
 
 	cursor_loc.x -= 1
+	if cursor_loc.x < 0 { cursor_loc.x = 0 }
 
 	return cursor_loc
 }
 
-pub fn (gap_buffer GapBuffer) right(pos Pos) ?Pos {
+pub fn (gap_buffer GapBuffer) right(pos Pos, insert_mode bool) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
@@ -267,9 +278,9 @@ pub fn (gap_buffer GapBuffer) right(pos Pos) ?Pos {
 	//
 
 	if data.len == 0 { return none }
-	if offset + 1 >= data.len { return none }
+	if cursor_loc.x + 1 >= data.len { return none }
 
-	if data[offset + 1] == lf {
+	if data[cursor_loc.x + 1] == lf {
 		return none
 	}
 

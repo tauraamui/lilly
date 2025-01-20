@@ -133,15 +133,12 @@ fn resolve_whitespace_prefix_from_line_str(line string) string {
 
 pub fn (mut buffer Buffer) x(pos Pos) ?Pos {
 	mut cursor := pos
-	cursor = buffer.clamp_cursor_within_document_bounds(cursor)
+	// TODO(tauraamui): Move this stuff into gap buffer directly
+	//                  as there's now confusion as to which methods here
+	//                  can be safely used by the gap buffer impl and which
+	//                  can not.
 	if buffer.use_gap_buffer {
-		buffer.move_cursor_to(pos)
-		if buffer.delete(true) {
-			line_end := buffer.find_end_of_line(cursor) or { return none }
-			if cursor.x > line_end { cursor.x = line_end }
-			return cursor
-		}
-		return none
+		return buffer.c_buffer.x(cursor)
 	}
 	line := buffer.lines[cursor.y].runes()
 	if line.len == 0 { return none }
@@ -206,6 +203,10 @@ pub fn (mut buffer Buffer) str() string {
 	return buffer.c_buffer.str()
 }
 
+pub fn (mut buffer Buffer) raw_str() string {
+	return buffer.c_buffer.raw_str()
+}
+
 pub fn (buffer Buffer) find_end_of_line(pos Pos) ?int {
 	return buffer.c_buffer.find_end_of_line(pos)
 }
@@ -234,7 +235,7 @@ pub fn (buffer Buffer) left(pos Pos, insert_mode bool) ?Pos {
 
 pub fn (buffer Buffer) right(pos Pos, insert_mode bool) ?Pos {
 	if buffer.use_gap_buffer {
-		return buffer.c_buffer.right(pos)
+		return buffer.c_buffer.right(pos, insert_mode)
 	}
 	mut cursor := pos
 	cursor.x += 1
@@ -246,6 +247,9 @@ pub fn (buffer Buffer) down(pos Pos, insert_mode bool) ?Pos {
 	if buffer.use_gap_buffer {
 		return buffer.c_buffer.down(pos)
 	}
+	// FIXME(tauraamui) [17/01/25]: Both up and down MUST take the insert mode
+	//                              toggle into account when doing a total line
+	//                              length and truncation adjustment/check.
 	mut cursor := pos
 	cursor.y += 1
 	if cursor.y >= buffer.lines.len - 1 {
