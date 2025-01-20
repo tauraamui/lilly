@@ -169,6 +169,16 @@ fn (mut editor Editor) close_inactive_buffer_finder() {
 	editor.inactive_buffer_finder_modal_open = false
 }
 
+fn (mut editor Editor) open_todo_comments_finder() {
+	if editor.todo_comments_finder_modal_open { return }
+	editor.todo_comments_finder_modal_open = true
+	editor.todo_comments_finder_modal = TodoCommentsFinderModal{
+	}
+}
+
+fn (mut editor Editor) close_todo_comments_finder() {
+}
+
 pub fn (mut editor Editor) draw(mut ctx draw.Contextable) {
 	editor.view.draw(mut ctx)
 
@@ -179,6 +189,12 @@ pub fn (mut editor Editor) draw(mut ctx draw.Contextable) {
 
 	if editor.inactive_buffer_finder_modal_open {
 		editor.inactive_buffer_finder_modal.draw(mut ctx)
+		return
+	}
+
+	if editor.todo_comments_finder_modal_open {
+		editor.todo_comments_finder_modal.draw(mut ctx)
+		return
 	}
 }
 
@@ -190,6 +206,11 @@ pub fn (mut editor Editor) on_key_down(e draw.Event) {
 
 	if editor.inactive_buffer_finder_modal_open {
 		editor.inactive_buffer_finder_modal.on_key_down(e, mut editor)
+		return
+	}
+
+	if editor.todo_comments_finder_modal_open {
+		editor.todo_comments_finder_modal.on_key_down(e, mut editor)
 		return
 	}
 
