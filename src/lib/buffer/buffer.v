@@ -133,6 +133,10 @@ fn resolve_whitespace_prefix_from_line_str(line string) string {
 
 pub fn (mut buffer Buffer) x(pos Pos) ?Pos {
 	mut cursor := pos
+	// TODO(tauraamui): Move this stuff into gap buffer directly
+	//                  as there's now confusion as to which methods here
+	//                  can be safely used by the gap buffer impl and which
+	//                  can not.
 	if buffer.use_gap_buffer {
 		buffer.move_cursor_to(pos)
 		if buffer.delete(true) {
