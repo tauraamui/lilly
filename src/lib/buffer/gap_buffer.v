@@ -56,6 +56,14 @@ pub fn (mut gap_buffer GapBuffer) delete(ignore_newlines bool) bool {
 	return true
 }
 
+pub fn (mut gap_buffer GapBuffer) x(pos Pos) ?Pos {
+	gap_buffer.move_cursor_to(pos)
+	distance_to_end_of_line := gap_buffer.find_end_of_line(pos) or { 0 }
+	if distance_to_end_of_line == 0 { return none }
+	gap_buffer.gap_end += 1
+	return pos
+}
+
 fn (mut gap_buffer GapBuffer) insert_rune(r rune) {
 	gap_buffer.data[gap_buffer.gap_start] = r
 	gap_buffer.gap_start += 1
@@ -220,6 +228,8 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 	return cursor_loc
 }
 
+// TODO(tauraamui) [20/01/25]: Need to adjust movement behaviour based on mode,
+//                             so basically when we're in insert mode do the thing.
 pub fn (gap_buffer GapBuffer) left(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
@@ -238,9 +248,9 @@ pub fn (gap_buffer GapBuffer) left(pos Pos) ?Pos {
 	//
 
 	if data.len == 0 { return none }
-	if offset - 1 < 0 { return none }
+	if cursor_loc.x - 1 < 0 { return none }
 
-	if data[offset - 1] == lf {
+	if data[cursor_loc.x - 1] == lf {
 		return none
 	}
 
@@ -268,9 +278,9 @@ pub fn (gap_buffer GapBuffer) right(pos Pos, insert_mode bool) ?Pos {
 	//
 
 	if data.len == 0 { return none }
-	if offset + 1 >= data.len { return none }
+	if cursor_loc.x + 1 >= data.len { return none }
 
-	if data[offset + 1] == lf {
+	if data[cursor_loc.x + 1] == lf {
 		return none
 	}
 

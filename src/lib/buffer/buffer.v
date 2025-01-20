@@ -138,11 +138,7 @@ pub fn (mut buffer Buffer) x(pos Pos) ?Pos {
 	//                  can be safely used by the gap buffer impl and which
 	//                  can not.
 	if buffer.use_gap_buffer {
-		buffer.move_cursor_to(pos)
-		if buffer.delete(true) {
-			return cursor
-		}
-		return none
+		return buffer.c_buffer.x(cursor)
 	}
 	line := buffer.lines[cursor.y].runes()
 	if line.len == 0 { return none }

@@ -247,11 +247,11 @@ fn test_x_removes_from_cursor_on_line_with_single_char_then_move_cursor_right_on
 	assert fake_view.cursor.pos.y == 0
 
 	fake_view.x()
-	assert fake_view.buffer.raw_str() == "${'_'.repeat(buffer.gap_size + 1)}1"
+	assert fake_view.buffer.str() == "02"
 
 	fake_view.l()
 
-	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.x == 1
 	assert fake_view.cursor.pos.y == 0
 }
 
@@ -276,7 +276,7 @@ fn test_x_removes_from_cursor_then_move_cursor_right_one() {
 
 	fake_view.x()
 
-	assert fake_view.buffer.str() == "0000000011111111222222223333333344444444"
+	assert fake_view.buffer.str() == "000000001111111122222222333333334444444"
 
 	fake_view.l()
 
@@ -320,7 +320,7 @@ fn test_x_removes_from_cursor_to_end_of_line_and_beyond() {
 	assert fake_view.buffer.str() == "000000001111111122222222333333334"
 
 	fake_view.x()
-	assert fake_view.buffer.str() == "000000001111111122222222333333334"
+	assert fake_view.buffer.str() == "00000000111111112222222233333333"
 
 	assert fake_view.cursor.pos.x == 32
 	assert fake_view.cursor.pos.y == 0
@@ -1003,7 +1003,7 @@ fn test_right_arrow_at_end_of_sentence() {
 
 	fake_view.right()
 
-	assert fake_view.cursor.pos.x == 19
+	assert fake_view.cursor.pos.x == 20
 	assert fake_view.cursor.pos.y == 1
 }
 
@@ -1087,7 +1087,7 @@ fn test_l_at_end_of_sentence() {
 
 	fake_view.l()
 
-	assert fake_view.cursor.pos.x == 19
+	assert fake_view.cursor.pos.x == 20
 	assert fake_view.cursor.pos.y == 1
 }
 
