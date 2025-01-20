@@ -146,6 +146,7 @@ mut:
 	mode    Mode
 	special bool
 	normal  bool
+	suffix  []string
 	d_count int
 	f_count int
 	b_count int
@@ -158,6 +159,7 @@ fn (mut state ViewLeaderState) reset() {
 	state.special = false
 	state.normal  = false
 	state.mode    = .normal
+	state.suffix.clear()
 	state.d_count = 0
 	state.f_count = 0
 	state.b_count = 0
