@@ -276,8 +276,6 @@ pub fn (gap_buffer GapBuffer) right(pos Pos, insert_mode bool) ?Pos {
 
 	cursor_loc.x += 1
 
-	println(cursor_loc)
-
 	return cursor_loc
 }
 
