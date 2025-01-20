@@ -131,6 +131,23 @@ fn resolve_whitespace_prefix_from_line_str(line string) string {
 	return line
 }
 
+pub fn (mut buffer Buffer) x(pos Pos) ?Pos {
+	mut cursor := pos
+	// TODO(tauraamui): Move this stuff into gap buffer directly
+	//                  as there's now confusion as to which methods here
+	//                  can be safely used by the gap buffer impl and which
+	//                  can not.
+	if buffer.use_gap_buffer {
+		return buffer.c_buffer.x(cursor)
+	}
+	line := buffer.lines[cursor.y].runes()
+	if line.len == 0 { return none }
+	start := line[..cursor.x]
+	end   := line[cursor.x + 1..]
+	buffer.lines[cursor.y] = "${start.string()}${end.string()}"
+	return buffer.clamp_cursor_x_pos(buffer.clamp_cursor_within_document_bounds(cursor), false)
+}
+
 pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
 	mut cursor := pos
 	if cursor.x == 0 && cursor.y == 0 { return none }
@@ -178,12 +195,16 @@ pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
 	return cursor
 }
 
-pub fn (mut buffer Buffer) delete() {
-	buffer.c_buffer.delete(true)
+pub fn (mut buffer Buffer) delete(ignore_newlines bool) bool {
+	return buffer.c_buffer.delete(ignore_newlines)
 }
 
 pub fn (mut buffer Buffer) str() string {
 	return buffer.c_buffer.str()
+}
+
+pub fn (mut buffer Buffer) raw_str() string {
+	return buffer.c_buffer.raw_str()
 }
 
 pub fn (buffer Buffer) find_end_of_line(pos Pos) ?int {
@@ -214,7 +235,7 @@ pub fn (buffer Buffer) left(pos Pos, insert_mode bool) ?Pos {
 
 pub fn (buffer Buffer) right(pos Pos, insert_mode bool) ?Pos {
 	if buffer.use_gap_buffer {
-		return buffer.c_buffer.right(pos)
+		return buffer.c_buffer.right(pos, insert_mode)
 	}
 	mut cursor := pos
 	cursor.x += 1
@@ -226,6 +247,9 @@ pub fn (buffer Buffer) down(pos Pos, insert_mode bool) ?Pos {
 	if buffer.use_gap_buffer {
 		return buffer.c_buffer.down(pos)
 	}
+	// FIXME(tauraamui) [17/01/25]: Both up and down MUST take the insert mode
+	//                              toggle into account when doing a total line
+	//                              length and truncation adjustment/check.
 	mut cursor := pos
 	cursor.y += 1
 	if cursor.y >= buffer.lines.len - 1 {
@@ -337,7 +361,8 @@ fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
 }
 
 fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
-	mut clamped := buffer.clamp_cursor_within_document_bounds(pos)
+	// mut clamped := buffer.clamp_cursor_within_document_bounds(pos)
+	mut clamped := pos
 	if clamped.x < 0 { clamped.x = 0 }
 
 	current_line_len := buffer.lines[pos.y].runes().len
@@ -350,7 +375,6 @@ fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
 		diff := pos.x - (current_line_len - 1)
 		if diff > 0 {
 			clamped.x = current_line_len - 1
-			return clamped
 		}
 	}
 	if clamped.x < 0 {
@@ -376,16 +400,6 @@ pub fn (mut iter LineIterator) next() ?string {
 	}
 	defer { iter.idx += 1 }
 	return iter.data_ref[iter.idx]
-}
-
-pub fn (buffer Buffer) iterate(cb fn (id int, line string)) {
-	mut iter := buffer.iterator()
-	mut idx  := 0
-	for {
-		line := iter.next() or { break }
-		cb(idx, line)
-		idx += 1
-	}
 }
 
 pub fn (buffer Buffer) iterator() Iterator {

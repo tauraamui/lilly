@@ -200,6 +200,129 @@ fn test_x_removes_characters_on_single_line_document() {
 	assert lines == [
 		"This is a single lincument that happens to be quite long."
 	]
+	assert fake_view.cursor.pos.x == 20
+	assert fake_view.cursor.pos.y == 0
+}
+
+fn test_x_removes_from_cursor_then_move_cursor_left_one() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("0000000011111111222222223333333344444444")
+
+	fake_view.h()
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.x()
+
+	fake_view.h()
+
+	assert fake_view.cursor.pos.x == 0
+	assert fake_view.cursor.pos.y == 0
+}
+
+fn test_x_removes_from_cursor_on_line_with_single_char_then_move_cursor_right_one() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("012")
+
+	assert fake_view.buffer.raw_str() == "${'_'.repeat(buffer.gap_size)}012"
+
+	fake_view.l()
+	assert fake_view.cursor.pos.x == 1
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.x()
+	assert fake_view.buffer.str() == "02"
+
+	fake_view.l()
+
+	assert fake_view.cursor.pos.x == 1
+	assert fake_view.cursor.pos.y == 0
+}
+
+
+fn test_x_removes_from_cursor_then_move_cursor_right_one() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("0000000011111111222222223333333344444444")
+
+	fake_view.cursor.pos.x = 38
+
+	fake_view.l()
+	assert fake_view.cursor.pos.x == 39
+	assert fake_view.cursor.pos.y == 0
+
+	fake_view.x()
+
+	assert fake_view.buffer.str() == "000000001111111122222222333333334444444"
+
+	fake_view.l()
+
+	assert fake_view.cursor.pos.x == 39
+	assert fake_view.cursor.pos.y == 0
+}
+
+fn test_x_removes_from_cursor_to_end_of_line_and_beyond() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("0000000011111111222222223333333344444444")
+
+	fake_view.cursor.pos.x = 32
+
+	fake_view.x()
+	assert fake_view.buffer.str() == "000000001111111122222222333333334444444"
+
+	fake_view.x()
+	assert fake_view.buffer.str() == "00000000111111112222222233333333444444"
+
+	fake_view.x()
+	assert fake_view.buffer.str() == "0000000011111111222222223333333344444"
+
+	fake_view.x()
+	assert fake_view.buffer.str() == "000000001111111122222222333333334444"
+
+	fake_view.x()
+	assert fake_view.buffer.str() == "00000000111111112222222233333333444"
+
+	fake_view.x()
+	assert fake_view.buffer.str() == "0000000011111111222222223333333344"
+
+	fake_view.x()
+	assert fake_view.buffer.str() == "000000001111111122222222333333334"
+
+	fake_view.x()
+	assert fake_view.buffer.str() == "00000000111111112222222233333333"
+
+	assert fake_view.cursor.pos.x == 32
 	assert fake_view.cursor.pos.y == 0
 }
 
@@ -224,6 +347,7 @@ fn test_x_does_not_remove_characters_on_multi_line_document_if_at_line_end() {
 		"2. second line"
 		"3. third line"
 	]
+	assert fake_view.cursor.pos.x == 13
 	assert fake_view.cursor.pos.y == 0
 }
 
@@ -879,7 +1003,7 @@ fn test_right_arrow_at_end_of_sentence() {
 
 	fake_view.right()
 
-	assert fake_view.cursor.pos.x == 19
+	assert fake_view.cursor.pos.x == 20
 	assert fake_view.cursor.pos.y == 1
 }
 
@@ -963,7 +1087,7 @@ fn test_l_at_end_of_sentence() {
 
 	fake_view.l()
 
-	assert fake_view.cursor.pos.x == 19
+	assert fake_view.cursor.pos.x == 20
 	assert fake_view.cursor.pos.y == 1
 }
 
@@ -1194,3 +1318,30 @@ fn test_tab_inserts_spaces_not_a_tab() {
 		"1. first     line"
 	]
 }
+
+fn test_find_end_of_line() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+		config: workspace.Config{
+			insert_tabs_not_spaces: false
+		}
+	}
+
+	fake_view.buffer.use_gap_buffer = true
+	// manually set the "document" contents
+	fake_view.buffer.load_contents_into_gap("1. first line\n2. second line and slightly longer!")
+
+	fake_view.cursor.pos.x = 0
+	fake_view.cursor.pos.y = 0
+
+	mut x_pos := fake_view.buffer.find_end_of_line(buffer.Pos{ y: fake_view.cursor.pos.y }) or { 0 }
+	assert x_pos == 13
+
+	fake_view.cursor.pos.y = 1
+	x_pos = fake_view.buffer.find_end_of_line(buffer.Pos{ y: fake_view.cursor.pos.y }) or { 0 }
+	assert x_pos == 35
+}
+

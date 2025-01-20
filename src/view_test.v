@@ -1370,6 +1370,28 @@ fn test_right_arrow_at_end_of_sentence_in_insert_mode() {
 	assert fake_view.cursor.pos.x == 20
 }
 
+fn test_right_arrow_on_empty_line_in_normal_mode() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log: log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	// fake_view.leader_state.mode = .insert
+
+	// manually set the documents contents
+	fake_view.buffer.lines = ['', 'single line of text!', '']
+	// ensure cursor is set to sit on the second line
+	fake_view.cursor.pos.y = 0
+	// ensure the cursor is set to sit on the last char of the line
+	fake_view.cursor.pos.x = 0
+
+	// invoke right
+	fake_view.right()
+
+	assert fake_view.cursor.pos.x == 0
+}
+
 fn test_tab_inserts_spaces() {
 	mut clip := clipboardv2.new()
 	mut fake_view := View{
@@ -2896,6 +2918,13 @@ fn test_x_removes_character_and_shifts_cursor_back_at_end_of_line() {
 	assert fake_view.leader_state.mode == .normal
 	assert fake_view.cursor.pos.x == 21
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y].len == 22
+
+	fake_view.x()
+
+	assert fake_view.buffer.lines == ['this is a lines of te']
+	assert fake_view.leader_state.mode == .normal
+	assert fake_view.cursor.pos.x == 20
+	assert fake_view.buffer.lines[fake_view.cursor.pos.y].len == 21
 }
 
 fn test_find_position_within_word_lines() {

@@ -146,6 +146,8 @@ mut:
 	mode    Mode
 	special bool
 	normal  bool
+	suffix  []string
+	// TODO(tauraamui) [23/01/25] look into decomissioning these
 	d_count int
 	f_count int
 	b_count int
@@ -158,6 +160,7 @@ fn (mut state ViewLeaderState) reset() {
 	state.special = false
 	state.normal  = false
 	state.mode    = .normal
+	state.suffix.clear()
 	state.d_count = 0
 	state.f_count = 0
 	state.b_count = 0
@@ -176,7 +179,7 @@ mut:
 	config                    workspace.Config
 	leader_state              ViewLeaderState
 	buffer                    buffer.Buffer
-	leader_key                string
+	leader_key                string = " "
 	cursor                    Cursor
 	cmd_buf                   CmdBuffer
 	search                    Search
@@ -666,8 +669,8 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 			cursor_screen_space_y + 1)
 	}
 
-	view.buffer.iterate(fn [mut view, mut ctx, cursor_screen_space_y] (y int, line string) {
-		if y < view.from || y > view.to { return }
+	for y, line in view.buffer.iterator() {
+		if y < view.from || y > view.to { continue }
 
 		screen_space_y := y - view.from
 
@@ -694,7 +697,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 		draw_text_line(mut ctx, view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} },
 			view.cursor, view.leader_state.mode, sel_highlight_color, view.x, screen_space_y, document_space_y,
 			cursor_screen_space_y, linex, line)
-	})
+	}
 }
 
 fn draw_text_line(mut ctx draw.Contextable,
@@ -1365,13 +1368,15 @@ fn (mut view View) escape() {
 	view.leader_state.reset()
 
 	// if current line only contains whitespace prefix clear the line
-	line := view.buffer.lines[view.cursor.pos.y]
-	whitespace_prefix := resolve_whitespace_prefix(line)
-	if whitespace_prefix.len == line.len {
-		view.buffer.lines[view.cursor.pos.y] = ''
+	if view.buffer.lines.len > 0 {
+		line := view.buffer.lines[view.cursor.pos.y]
+		whitespace_prefix := resolve_whitespace_prefix(line)
+		if whitespace_prefix.len == line.len {
+			view.buffer.lines[view.cursor.pos.y] = ''
+		}
 	}
 
-	view.buffer.auto_close_chars = []
+	view.buffer.auto_close_chars.clear()
 
 	view.leader_state.reset()
 }
@@ -1437,6 +1442,7 @@ fn (mut view View) num_of_lines_in_view() int {
 
 fn (mut view View) clamp_cursor_x_pos() int {
 	view.clamp_cursor_within_document_bounds()
+	if view.buffer.lines.len == 0 { return 0 }
 	line_len := view.buffer.lines[view.cursor.pos.y].runes().len
 	if line_len == 0 {
 		view.cursor.pos.x = 0
@@ -1597,20 +1603,9 @@ fn (mut view View) r() {
 }
 
 fn (mut view View) x() {
-	if view.buffer.use_gap_buffer {
-		view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
-		view.buffer.delete()
-		view.scroll_from_and_to()
-		return
-	}
-	defer { view.clamp_cursor_x_pos() }
-	x := view.cursor.pos.x
-	y := view.cursor.pos.y
-
-	line := view.buffer.lines[y].runes()
-	start := line[..x]
-	end := line[x + 1..]
-	view.buffer.lines[y] = '${start.string()}${end.string()}'
+	pos := view.buffer.x(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
 }
 
 /*
