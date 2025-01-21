@@ -19,6 +19,42 @@ import lib.draw
 import term.ui as tui
 import log
 
+struct MockRoot {
+}
+
+fn (mut root MockRoot) open_file_finder(special_mode bool) {}
+fn (mut root MockRoot) open_inactive_buffer_finder(special_mode bool) {}
+fn (mut root MockRoot) open_file(path string) ! { return }
+fn (mut root MockRoot) close_file_finder() {}
+fn (mut root MockRoot) quit() ! { return }
+fn (mut root MockRoot) force_quit() {}
+
+fn test_view_keybind_key_event_of_value_leader_key_changes_mode_to_leader() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log:       log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = [] // NOTE(tauraamui) [21/01/25] can be empty just not nil
+
+	mut m_root := MockRoot{}
+	fake_view.on_key_down(
+		draw.Event{
+			utf8: fake_view.leader_key
+		},
+		mut m_root
+	)
+
+	assert fake_view.leader_state.mode == .leader
+
+	fake_view.on_key_down(
+		draw.Event{ code: .escape }, mut m_root
+	)
+
+	assert fake_view.leader_state.mode == .normal
+}
+
 struct MovementKeyEventTestCase {
 	disabled            bool
 	name                string
