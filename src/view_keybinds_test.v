@@ -20,12 +20,26 @@ import term.ui as tui
 import log
 
 struct MockRoot {
+mut:
+	file_finder_open bool
+	close_file_finder_invoked bool
+	special_mode     bool
 }
 
-fn (mut root MockRoot) open_file_finder(special_mode bool) {}
+fn (mut root MockRoot) open_file_finder(special_mode bool) {
+	root.file_finder_open = true
+	root.special_mode = special_mode
+}
+
 fn (mut root MockRoot) open_inactive_buffer_finder(special_mode bool) {}
 fn (mut root MockRoot) open_file(path string) ! { return }
-fn (mut root MockRoot) close_file_finder() {}
+
+fn (mut root MockRoot) close_file_finder() {
+	root.close_file_finder_invoked = true
+	root.file_finder_open = false
+	root.special_mode = false
+}
+
 fn (mut root MockRoot) quit() ! { return }
 fn (mut root MockRoot) force_quit() {}
 
@@ -49,10 +63,89 @@ fn test_view_keybind_key_event_of_value_leader_key_changes_mode_to_leader() {
 	assert fake_view.leader_state.mode == .leader
 
 	fake_view.on_key_down(
+		draw.Event{
+			code: .escape
+		},
+		mut m_root
+	)
+
+	assert fake_view.leader_state.mode == .normal
+}
+
+fn test_view_keybind_leader_then_ff_suffix_opens_file_finder() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log:       log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = [] // NOTE(tauraamui) [21/01/25] can be empty just not nil
+
+	mut m_root := MockRoot{}
+	fake_view.on_key_down(
+		draw.Event{
+			utf8: fake_view.leader_key
+		},
+		mut m_root
+	)
+
+	assert fake_view.leader_state.mode == .leader
+
+	fake_view.on_key_down(
+		draw.Event{ code: .f }, mut m_root
+	)
+
+	assert fake_view.leader_state.mode == .leader
+
+	fake_view.on_key_down(
+		draw.Event{ code: .f }, mut m_root
+	)
+
+	assert fake_view.leader_state.mode == .normal
+	assert m_root.file_finder_open
+	assert m_root.special_mode == false
+
+	fake_view.on_key_down(
 		draw.Event{ code: .escape }, mut m_root
 	)
 
 	assert fake_view.leader_state.mode == .normal
+	assert m_root.file_finder_open == false
+	assert m_root.special_mode == false
+}
+
+fn test_view_keybind_leader_then_xff_suffix_opens_file_finder_in_special_mode() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log:       log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = [] // NOTE(tauraamui) [21/01/25] can be empty just not nil
+
+	mut m_root := MockRoot{}
+	fake_view.on_key_down(
+		draw.Event{
+			utf8: fake_view.leader_key
+		},
+		mut m_root
+	)
+
+	assert fake_view.leader_state.mode == .leader
+
+	fake_view.on_key_down(
+		draw.Event{ code: .f }, mut m_root
+	)
+
+	assert fake_view.leader_state.mode == .leader
+
+	fake_view.on_key_down(
+		draw.Event{ code: .f }, mut m_root
+	)
+
+	assert fake_view.leader_state.mode == .normal
+	assert m_root.file_finder_open
+	assert m_root.special_mode == false
 }
 
 struct MovementKeyEventTestCase {
