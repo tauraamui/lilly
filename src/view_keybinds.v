@@ -21,34 +21,11 @@ fn (mut view View) on_key_down_leader_mode(e draw.Event, mut root Root) {
 		.escape {
 			view.escape()
 		}
-		/*
 		.x, .f, .b {
 			view.leader_state.suffix << e.code.str()
 		}
-		*/
-		.x {
-			if !view.leader_state.normal { view.leader_state.special = true }
-			view.leader_state.x_count += 1
-		}
-		.f {
-			if !view.leader_state.special { view.leader_state.normal = true }
-			view.leader_state.f_count += 1
-			if view.leader_state.f_count == 2 {
-				root.open_file_finder(view.leader_state.special)
-				view.escape()
-			}
-		}
-		.b {
-			if !view.leader_state.special { view.leader_state.normal = true }
-			view.leader_state.b_count += 1
-			if view.leader_state.f_count == 1 && view.leader_state.b_count == 1 {
-				root.open_inactive_buffer_finder(view.leader_state.special)
-				view.escape()
-			}
-		}
 		else {}
 	}
-	/*
 
 	match view.leader_state.suffix {
 		["f", "f"] {
@@ -59,9 +36,12 @@ fn (mut view View) on_key_down_leader_mode(e draw.Event, mut root Root) {
 			root.open_file_finder(true)
 			view.escape()
 		}
+		["f", "b"] {
+			root.open_inactive_buffer_finder(view.leader_state.special)
+			view.escape()
+		}
 		else {}
 	}
-	*/
 }
 
 fn (mut view View) on_key_down(e draw.Event, mut root Root) {
