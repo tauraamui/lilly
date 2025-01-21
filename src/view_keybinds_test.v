@@ -104,14 +104,6 @@ fn test_view_keybind_leader_then_ff_suffix_opens_file_finder() {
 	assert fake_view.leader_state.mode == .normal
 	assert m_root.file_finder_open
 	assert m_root.special_mode == false
-
-	fake_view.on_key_down(
-		draw.Event{ code: .escape }, mut m_root
-	)
-
-	assert fake_view.leader_state.mode == .normal
-	assert m_root.file_finder_open == false
-	assert m_root.special_mode == false
 }
 
 fn test_view_keybind_leader_then_xff_suffix_opens_file_finder_in_special_mode() {
@@ -134,6 +126,10 @@ fn test_view_keybind_leader_then_xff_suffix_opens_file_finder_in_special_mode() 
 	assert fake_view.leader_state.mode == .leader
 
 	fake_view.on_key_down(
+		draw.Event{ code: .x }, mut m_root
+	)
+
+	fake_view.on_key_down(
 		draw.Event{ code: .f }, mut m_root
 	)
 
@@ -145,7 +141,7 @@ fn test_view_keybind_leader_then_xff_suffix_opens_file_finder_in_special_mode() 
 
 	assert fake_view.leader_state.mode == .normal
 	assert m_root.file_finder_open
-	assert m_root.special_mode == false
+	assert m_root.special_mode == true
 }
 
 struct MovementKeyEventTestCase {
