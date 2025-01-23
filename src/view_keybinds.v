@@ -16,330 +16,347 @@ module main
 
 import lib.draw
 
+fn (mut view View) on_key_down_leader_mode(e draw.Event, mut root Root) {
+	match e.code {
+		.escape {
+			view.escape()
+		}
+		.x, .f, .b {
+			view.leader_state.suffix << e.code.str()
+		}
+		else {}
+	}
+
+	match view.leader_state.suffix {
+		["f", "f"] {
+			root.open_file_finder(false)
+			view.escape()
+		}
+		["x","f","f"] {
+			root.open_file_finder(true)
+			view.escape()
+		}
+		["f", "b"] {
+			root.open_inactive_buffer_finder(view.leader_state.special)
+			view.escape()
+		}
+		else {}
+	}
+}
+
+fn (mut view View) on_key_down_normal_mode(e draw.Event, mut root Root) {
+	match e.utf8 {
+		view.leader_key { view.leader_state.mode = .leader }
+		else {}
+	}
+	match e.code {
+		.escape {
+			view.escape()
+		}
+		.h {
+			if e.modifiers == .shift {
+				view.shift_h()
+			} else {
+				view.exec(view.chord.h())
+			}
+		}
+		.l {
+			if e.modifiers == .shift {
+				view.shift_l()
+			} else {
+				view.exec(view.chord.l())
+			}
+		}
+		.m {
+			if e.modifiers == .shift {
+				view.shift_m()
+			} else {
+			}
+		}
+		.j {
+			view.exec(view.chord.j())
+		}
+		.k {
+			view.exec(view.chord.k())
+		}
+		.i {
+			view.exec(view.chord.i())
+		}
+		.v {
+			match e.modifiers {
+				.shift { view.shift_v() }
+				else { view.v() }
+			}
+		}
+		.e {
+			view.exec(view.chord.e())
+		}
+		.w {
+			view.exec(view.chord.w())
+		}
+		.b {
+			view.exec(view.chord.b())
+		}
+		.o {
+			if e.modifiers == .shift {
+				view.shift_o()
+			} else {
+				view.o()
+			}
+		}
+		.a {
+			if e.modifiers == .shift {
+				view.shift_a()
+			} else {
+				view.a()
+			}
+		}
+		.p {
+			view.exec(view.chord.p())
+		}
+		.g {
+			if e.modifiers == .shift {
+				view.shift_g()
+			} else {
+				view.g()
+			}
+		}
+		.f {
+			view.f(e)
+		}
+		.r {
+			if e.modifiers == .shift {
+				view.leader_state.mode = .replacing
+			} else {
+				view.r()
+			}
+		} // TODO(tauraamui): request Valentine implements chord usage for this
+		.x {
+			view.x()
+		} // TODO(tauraamui): request Valentine implements chord usage for this
+		.left {
+			view.exec(view.chord.h())
+		}
+		.right {
+			view.exec(view.chord.l())
+		}
+		.down {
+			view.exec(view.chord.j())
+		}
+		.up {
+			view.exec(view.chord.k())
+		}
+		.c {
+			view.exec(view.chord.c())
+		}
+		.z     { view.z() }
+		.d {
+			if e.modifiers == .ctrl {
+				view.ctrl_d()
+			} else {
+				view.d()
+			}
+		} // TODO(tauraamui): this will need some special attention to implement
+		.u {
+			if e.modifiers == .ctrl {
+				view.ctrl_u()
+			} else {
+				view.u()
+			}
+		}
+		.caret {
+			view.hat()
+		}
+		.dollar {
+			view.dollar()
+		}
+		.left_curly_bracket {
+			view.jump_cursor_up_to_next_blank_line()
+		}
+		.right_curly_bracket {
+			view.jump_cursor_down_to_next_blank_line()
+		}
+		.colon {
+			view.cmd()
+		}
+		.left_square_bracket {
+			view.left_square_bracket()
+		}
+		.right_square_bracket {
+			view.right_square_bracket()
+		}
+		.slash {
+			view.search()
+		}
+		48...48 {
+			if view.chord.pending_repeat_amount() != '' {
+				view.chord.append_to_repeat_amount(e.ascii.ascii_str())
+			} else {
+				view.zero()
+			}
+		}
+		49...57 { // 0-9a
+			view.chord.append_to_repeat_amount(e.ascii.ascii_str())
+		}
+		else {}
+	}
+}
+
+fn (mut view View) on_key_down_visual_mode(e draw.Event, mut root Root) {
+	match e.code {
+		.escape {
+			view.escape()
+		}
+		.e {
+			view.exec(view.chord.e())
+		}
+		.w {
+			view.exec(view.chord.w())
+		}
+		.b {
+			view.exec(view.chord.b())
+		}
+		.h {
+			view.h()
+		}
+		.l {
+			view.l()
+		}
+		.j {
+			view.j()
+		}
+		.k {
+			view.k()
+		}
+		.up {
+			view.k()
+		}
+		.right {
+			view.l()
+		}
+		.down {
+			view.j()
+		}
+		.left {
+			view.h()
+		}
+		.d {
+			if e.modifiers == .ctrl {
+				view.ctrl_d()
+			} else {
+				// view.visual_d(true)
+				view.d()
+			}
+		}
+		.caret {
+			view.hat()
+		}
+		.dollar {
+			view.dollar()
+		}
+		.left_curly_bracket {
+			view.jump_cursor_up_to_next_blank_line()
+		}
+		.right_curly_bracket {
+			view.jump_cursor_down_to_next_blank_line()
+		}
+		.left_square_bracket {
+			view.left_square_bracket()
+		}
+		.right_square_bracket {
+			view.right_square_bracket()
+		}
+		.y {
+			// view.visual_y()
+			view.y()
+		}
+		else {}
+	}
+}
+
+fn (mut view View) on_key_down_visual_line_mode(e draw.Event, mut root Root) {
+	match e.code {
+		.escape {
+			view.escape()
+		}
+		.h {
+			view.h()
+		}
+		.l {
+			view.l()
+		}
+		.j {
+			view.j()
+		}
+		.k {
+			view.k()
+		}
+		.up {
+			view.k()
+		}
+		.right {
+			view.l()
+		}
+		.down {
+			view.j()
+		}
+		.left {
+			view.h()
+		}
+		.less_than {
+			view.visual_unindent()
+		}
+		.greater_than {
+			view.visual_indent()
+		}
+		.d {
+			if e.modifiers == .ctrl {
+				view.ctrl_d()
+			} else {
+				view.d()
+				// view.visual_line_d(true)
+			}
+		}
+		.p {
+			view.exec(view.chord.p())
+		}
+		// NOTE(tauraamui): undo bind is now disabled until the feature is re-done
+		// .u { if e.modifiers == .ctrl { view.ctrl_u() } }
+		.caret {
+			view.hat()
+		}
+		.dollar {
+			view.dollar()
+		}
+		.left_curly_bracket {
+			view.jump_cursor_up_to_next_blank_line()
+		}
+		.right_curly_bracket {
+			view.jump_cursor_down_to_next_blank_line()
+		}
+		.y {
+			view.y()
+			// view.visual_line_y()
+		}
+		else {}
+	}
+}
+
 fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 	match view.leader_state.mode {
 		.leader {
-			match e.code {
-				.escape {
-					view.escape()
-				}
-				.x {
-					if !view.leader_state.normal { view.leader_state.special = true }
-					view.leader_state.x_count += 1
-				}
-				.f {
-					if !view.leader_state.special { view.leader_state.normal = true }
-					view.leader_state.f_count += 1
-					if view.leader_state.f_count == 2 {
-						root.open_file_finder(view.leader_state.special)
-						view.escape()
-					}
-				}
-				.b {
-					if !view.leader_state.special { view.leader_state.normal = true }
-					view.leader_state.b_count += 1
-					if view.leader_state.f_count == 1 && view.leader_state.b_count == 1 {
-						root.open_inactive_buffer_finder(view.leader_state.special)
-						view.escape()
-					}
-				}
-				else {}
-			}
+			view.on_key_down_leader_mode(e, mut root)
+			return
 		}
 		.normal {
-			match e.utf8 {
-				view.leader_key { view.leader_state.mode = .leader }
-				else {}
-			}
-			match e.code {
-				.escape {
-					view.escape()
-				}
-				.h {
-					if e.modifiers == .shift {
-						view.shift_h()
-					} else {
-						view.exec(view.chord.h())
-					}
-				}
-				.l {
-					if e.modifiers == .shift {
-						view.shift_l()
-					} else {
-						view.exec(view.chord.l())
-					}
-				}
-				.m {
-					if e.modifiers == .shift {
-						view.shift_m()
-					} else {
-					}
-				}
-				.j {
-					view.exec(view.chord.j())
-				}
-				.k {
-					view.exec(view.chord.k())
-				}
-				.i {
-					view.exec(view.chord.i())
-				}
-				.v {
-					match e.modifiers {
-						.shift { view.shift_v() }
-						else { view.v() }
-					}
-				}
-				.e {
-					view.exec(view.chord.e())
-				}
-				.w {
-					view.exec(view.chord.w())
-				}
-				.b {
-					view.exec(view.chord.b())
-				}
-				.o {
-					if e.modifiers == .shift {
-						view.shift_o()
-					} else {
-						view.o()
-					}
-				}
-				.a {
-					if e.modifiers == .shift {
-						view.shift_a()
-					} else {
-						view.a()
-					}
-				}
-				.p {
-					view.exec(view.chord.p())
-				}
-				.g {
-					if e.modifiers == .shift {
-						view.shift_g()
-					} else {
-						view.g()
-					}
-				}
-				.f {
-					view.f(e)
-				}
-				.r {
-					if e.modifiers == .shift {
-						view.leader_state.mode = .replacing
-					} else {
-						view.r()
-					}
-				} // TODO(tauraamui): request Valentine implements chord usage for this
-				.x {
-					view.x()
-				} // TODO(tauraamui): request Valentine implements chord usage for this
-				.left {
-					view.exec(view.chord.h())
-				}
-				.right {
-					view.exec(view.chord.l())
-				}
-				.down {
-					view.exec(view.chord.j())
-				}
-				.up {
-					view.exec(view.chord.k())
-				}
-				.c {
-					view.exec(view.chord.c())
-				}
-				.z     { view.z() }
-				.d {
-					if e.modifiers == .ctrl {
-						view.ctrl_d()
-					} else {
-						view.d()
-					}
-				} // TODO(tauraamui): this will need some special attention to implement
-				.u {
-					if e.modifiers == .ctrl {
-						view.ctrl_u()
-					} else {
-						view.u()
-					}
-				}
-				.caret {
-					view.hat()
-				}
-				.dollar {
-					view.dollar()
-				}
-				.left_curly_bracket {
-					view.jump_cursor_up_to_next_blank_line()
-				}
-				.right_curly_bracket {
-					view.jump_cursor_down_to_next_blank_line()
-				}
-				.colon {
-					view.cmd()
-				}
-				.left_square_bracket {
-					view.left_square_bracket()
-				}
-				.right_square_bracket {
-					view.right_square_bracket()
-				}
-				.slash {
-					view.search()
-				}
-				48...48 {
-					if view.chord.pending_repeat_amount() != '' {
-						view.chord.append_to_repeat_amount(e.ascii.ascii_str())
-					} else {
-						view.zero()
-					}
-				}
-				49...57 { // 0-9a
-					view.chord.append_to_repeat_amount(e.ascii.ascii_str())
-				}
-				else {}
-			}
+			view.on_key_down_normal_mode(e, mut root)
+			return
 		}
 		.visual {
-			match e.code {
-				.escape {
-					view.escape()
-				}
-				.e {
-					view.exec(view.chord.e())
-				}
-				.w {
-					view.exec(view.chord.w())
-				}
-				.b {
-					view.exec(view.chord.b())
-				}
-				.h {
-					view.h()
-				}
-				.l {
-					view.l()
-				}
-				.j {
-					view.j()
-				}
-				.k {
-					view.k()
-				}
-				.up {
-					view.k()
-				}
-				.right {
-					view.l()
-				}
-				.down {
-					view.j()
-				}
-				.left {
-					view.h()
-				}
-				.d {
-					if e.modifiers == .ctrl {
-						view.ctrl_d()
-					} else {
-						// view.visual_d(true)
-						view.d()
-					}
-				}
-				.caret {
-					view.hat()
-				}
-				.dollar {
-					view.dollar()
-				}
-				.left_curly_bracket {
-					view.jump_cursor_up_to_next_blank_line()
-				}
-				.right_curly_bracket {
-					view.jump_cursor_down_to_next_blank_line()
-				}
-				.left_square_bracket {
-					view.left_square_bracket()
-				}
-				.right_square_bracket {
-					view.right_square_bracket()
-				}
-				.y {
-					// view.visual_y()
-					view.y()
-				}
-				else {}
-			}
+			view.on_key_down_visual_mode(e, mut root)
 		}
 		.visual_line {
-			match e.code {
-				.escape {
-					view.escape()
-				}
-				.h {
-					view.h()
-				}
-				.l {
-					view.l()
-				}
-				.j {
-					view.j()
-				}
-				.k {
-					view.k()
-				}
-				.up {
-					view.k()
-				}
-				.right {
-					view.l()
-				}
-				.down {
-					view.j()
-				}
-				.left {
-					view.h()
-				}
-				.less_than {
-					view.visual_unindent()
-				}
-				.greater_than {
-					view.visual_indent()
-				}
-				.d {
-					if e.modifiers == .ctrl {
-						view.ctrl_d()
-					} else {
-						view.d()
-						// view.visual_line_d(true)
-					}
-				}
-				.p {
-					view.exec(view.chord.p())
-				}
-				// NOTE(tauraamui): undo bind is now disabled until the feature is re-done
-				// .u { if e.modifiers == .ctrl { view.ctrl_u() } }
-				.caret {
-					view.hat()
-				}
-				.dollar {
-					view.dollar()
-				}
-				.left_curly_bracket {
-					view.jump_cursor_up_to_next_blank_line()
-				}
-				.right_curly_bracket {
-					view.jump_cursor_down_to_next_blank_line()
-				}
-				.y {
-					view.y()
-					// view.visual_line_y()
-				}
-				else {}
-			}
+			view.on_key_down_visual_line_mode(e, mut root)
 		}
 		.command {
 			match e.code {
