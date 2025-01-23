@@ -274,6 +274,74 @@ fn (mut view View) on_key_down_visual_mode(e draw.Event, mut root Root) {
 	}
 }
 
+fn (mut view View) on_key_down_visual_line_mode(e draw.Event, mut root Root) {
+	match e.code {
+		.escape {
+			view.escape()
+		}
+		.h {
+			view.h()
+		}
+		.l {
+			view.l()
+		}
+		.j {
+			view.j()
+		}
+		.k {
+			view.k()
+		}
+		.up {
+			view.k()
+		}
+		.right {
+			view.l()
+		}
+		.down {
+			view.j()
+		}
+		.left {
+			view.h()
+		}
+		.less_than {
+			view.visual_unindent()
+		}
+		.greater_than {
+			view.visual_indent()
+		}
+		.d {
+			if e.modifiers == .ctrl {
+				view.ctrl_d()
+			} else {
+				view.d()
+				// view.visual_line_d(true)
+			}
+		}
+		.p {
+			view.exec(view.chord.p())
+		}
+		// NOTE(tauraamui): undo bind is now disabled until the feature is re-done
+		// .u { if e.modifiers == .ctrl { view.ctrl_u() } }
+		.caret {
+			view.hat()
+		}
+		.dollar {
+			view.dollar()
+		}
+		.left_curly_bracket {
+			view.jump_cursor_up_to_next_blank_line()
+		}
+		.right_curly_bracket {
+			view.jump_cursor_down_to_next_blank_line()
+		}
+		.y {
+			view.y()
+			// view.visual_line_y()
+		}
+		else {}
+	}
+}
+
 fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 	match view.leader_state.mode {
 		.leader {
@@ -288,71 +356,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 			view.on_key_down_visual_mode(e, mut root)
 		}
 		.visual_line {
-			match e.code {
-				.escape {
-					view.escape()
-				}
-				.h {
-					view.h()
-				}
-				.l {
-					view.l()
-				}
-				.j {
-					view.j()
-				}
-				.k {
-					view.k()
-				}
-				.up {
-					view.k()
-				}
-				.right {
-					view.l()
-				}
-				.down {
-					view.j()
-				}
-				.left {
-					view.h()
-				}
-				.less_than {
-					view.visual_unindent()
-				}
-				.greater_than {
-					view.visual_indent()
-				}
-				.d {
-					if e.modifiers == .ctrl {
-						view.ctrl_d()
-					} else {
-						view.d()
-						// view.visual_line_d(true)
-					}
-				}
-				.p {
-					view.exec(view.chord.p())
-				}
-				// NOTE(tauraamui): undo bind is now disabled until the feature is re-done
-				// .u { if e.modifiers == .ctrl { view.ctrl_u() } }
-				.caret {
-					view.hat()
-				}
-				.dollar {
-					view.dollar()
-				}
-				.left_curly_bracket {
-					view.jump_cursor_up_to_next_blank_line()
-				}
-				.right_curly_bracket {
-					view.jump_cursor_down_to_next_blank_line()
-				}
-				.y {
-					view.y()
-					// view.visual_line_y()
-				}
-				else {}
-			}
+			view.on_key_down_visual_line_mode(e, mut root)
 		}
 		.command {
 			match e.code {
