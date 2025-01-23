@@ -147,6 +147,7 @@ mut:
 	special bool
 	normal  bool
 	suffix  []string
+	// TODO(tauraamui) [23/01/25] look into decomissioning these
 	d_count int
 	f_count int
 	b_count int
