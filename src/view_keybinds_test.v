@@ -201,6 +201,33 @@ fn test_view_keybind_leader_then_fb_suffix_opens_inactive_buffer_finder() {
 	assert m_root.special_mode == false
 }
 
+fn test_view_keybind_leader_then_ftc_suffix_opens_todo_comments_finder() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log:       log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = [] // NOTE(tauraamui) [21/01/25] can be empty just not nil
+
+	mut m_root := MockRoot{}
+	fake_view.on_key_down(
+		draw.Event{
+			utf8: fake_view.leader_key
+		},
+		mut m_root
+	)
+
+	assert fake_view.leader_state.mode == .leader
+
+	fake_view.on_key_down(draw.Event{ code: .f }, mut m_root)
+	fake_view.on_key_down(draw.Event{ code: .t }, mut m_root)
+	fake_view.on_key_down(draw.Event{ code: .c }, mut m_root)
+
+	// assert fake_view.leader_state.mode == .normal
+	assert m_root.todo_comments_finder_open
+}
+
 struct MovementKeyEventTestCase {
 	disabled            bool
 	name                string
