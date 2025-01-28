@@ -21,7 +21,7 @@ fn (mut view View) on_key_down_leader_mode(e draw.Event, mut root Root) {
 		.escape {
 			view.escape()
 		}
-		.x, .f, .b {
+		.x, .f, .t, .b, .c {
 			view.leader_state.suffix << e.code.str()
 		}
 		else {}
@@ -34,6 +34,7 @@ fn (mut view View) on_key_down_leader_mode(e draw.Event, mut root Root) {
 		}
 		["f", "t", "c"] {
 			root.open_todo_comments_finder()
+			view.escape()
 		}
 		["x","f","f"] {
 			root.open_file_finder(true)
