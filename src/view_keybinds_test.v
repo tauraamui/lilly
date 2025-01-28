@@ -21,10 +21,13 @@ import log
 
 struct MockRoot {
 mut:
-	file_finder_open            bool
-	inactive_buffer_finder_open bool
-	close_file_finder_invoked   bool
-	special_mode                bool
+	file_finder_open                     bool
+	inactive_buffer_finder_open          bool
+	close_inactive_buffer_finder_invoked bool
+	close_file_finder_invoked            bool
+	todo_comments_finder_open            bool
+	close_todo_comments_finder_invoked   bool
+	special_mode                         bool
 }
 
 fn (mut root MockRoot) open_file_finder(special_mode bool) {
@@ -37,12 +40,27 @@ fn (mut root MockRoot) open_inactive_buffer_finder(special_mode bool) {
 	root.special_mode = special_mode
 }
 
+fn (mut root MockRoot) open_todo_comments_finder() {
+	root.todo_comments_finder_open = true
+}
+
 fn (mut root MockRoot) open_file(path string) ! { return }
 
 fn (mut root MockRoot) close_file_finder() {
 	root.close_file_finder_invoked = true
 	root.file_finder_open = false
 	root.special_mode = false
+}
+
+fn (mut root MockRoot) close_inactive_buffer_finder() {
+	root.close_inactive_buffer_finder_invoked = true
+	root.inactive_buffer_finder_open = false
+	root.special_mode = false
+}
+
+fn (mut root MockRoot) close_todo_comments_finder() {
+	root.close_todo_comments_finder_invoked = true
+	root.todo_comments_finder_open = false
 }
 
 fn (mut root MockRoot) quit() ! { return }

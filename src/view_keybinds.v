@@ -32,6 +32,9 @@ fn (mut view View) on_key_down_leader_mode(e draw.Event, mut root Root) {
 			root.open_file_finder(false)
 			view.escape()
 		}
+		["f", "t", "c"] {
+			root.open_todo_comments_finder()
+		}
 		["x","f","f"] {
 			root.open_file_finder(true)
 			view.escape()
