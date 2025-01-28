@@ -65,6 +65,7 @@ pub fn open_editor(
 		use_gap_buffer: use_gap_buffer
 		file_finder_modal: unsafe { nil }
 		inactive_buffer_finder_modal: unsafe { nil }
+		todo_comments_finder_modal: unsafe { nil }
 	}
 	editor.workspace = workspace.open_workspace(mut _log, workspace_root_dir, os.is_dir,
 		os.walk, os.config_dir, os.read_file, os.execute) or {

@@ -77,7 +77,8 @@ fn get_branch(execute fn (cmd string) os.Result) string {
 
 fn (mut workspace Workspace) resolve_files(path string,
 	is_dir fn (path string) bool,
-	dir_walker fn (path string, f fn (string))) {
+	dir_walker fn (path string, f fn (string))
+) {
 	mut files_ref := &workspace.files
 	dir_walker(path, fn [mut files_ref, is_dir] (file_path string) {
 		if file_path.contains('.git') {
@@ -89,6 +90,16 @@ fn (mut workspace Workspace) resolve_files(path string,
 		}
 		files_ref << file_path
 	})
+}
+
+pub fn (workspace Workspace) find_todo_comments() []string {
+	mut files := []string{ len: workspace.files.len }
+	mut threads := []thread{}
+	return files
+}
+
+pub fn search_file_for_todo_comments(path string) bool {
+	return false
 }
 
 pub fn (workspace Workspace) branch() string {

@@ -5,6 +5,7 @@ import lib.draw
 
 struct TodoCommentFinderModal {
 	log log.Log
+	file_paths []string
 pub:
 	title       string
 	file_path   string
@@ -21,6 +22,8 @@ fn (mut todo_comment_finder_modal TodoCommentFinderModal) draw(mut ctx draw.Cont
 	debug_mode_str := if ctx.render_debug() { " ***RENDER DEBUG MODE ***" } else { "" }
 
 	ctx.draw_text(1, y_offset, "=== ${debug_mode_str} ${todo_comment_finder_modal.title} ${debug_mode_str} ===") // draw header
+	y_offset += 1
+	ctx.draw_rect(1, y_offset, ctx.window_width(), y_offset + max_height)
 }
 
 fn (mut todo_comment_finder_modal TodoCommentFinderModal) on_key_down(e draw.Event, mut root Root) {
