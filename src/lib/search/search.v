@@ -1,6 +1,6 @@
 module search
 
-fn compute_lps(pattern string, mut lps []int) {
+fn compute_lps(pattern []rune, mut lps []int) {
 	mut i := 1
 	mut j := 0
 
@@ -20,7 +20,7 @@ fn compute_lps(pattern string, mut lps []int) {
 	}
 }
 
-pub fn kmp(text string, pattern string) int {
+pub fn kmp(text []rune, pattern []rune) int {
 	mut lps := []int{ len: pattern.len }
 	compute_lps(pattern, mut lps)
 
