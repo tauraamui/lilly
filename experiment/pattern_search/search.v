@@ -1,42 +1,43 @@
-@[translated]
 module main
 
-fn compute_lpsa_rray(pattern string, pattern_length int, lps []int) {
-	length := 0
-	// length of the previous longest prefix suffix
+fn compute_lps_buffer(pattern string, mut lps []int) {
+	mut length := 0
+
+	// lps index 0 is always 0
 	lps[0] = 0
-	// lps[0] is always 0
-	i := 1
-	for i < pattern_length {
+
+	mut i := 1
+	for i < pattern.len {
 		if pattern[i] == pattern[length] {
-			length++
+			length += 1
 			lps[i] = length
-			i++
-		} else {
-			if length != 0 {
-				length = lps[length - 1]
-			} else {
-				lps[i] = 0
-				i++
-			}
+			i += 1
+			continue
 		}
+		if length != 0 {
+			length = lps[length - 1]
+			continue
+		}
+		lps[i] = 0
+		i += 1
 	}
+	println(lps)
 }
 
 fn kmps_earch(text string, pattern string) {
 	text_length := text.len
 	pattern_length := pattern.len
-	lps := []int{ len: pattern_length }
+	mut lps := []int{ len: pattern_length }
 	// Preallocated memory for LPS array
-	compute_lpsa_rray(pattern, pattern_length, lps)
-	i := 0
+	compute_lps_buffer(pattern, mut lps)
+	mut i := 0
 	// index for text
-	j := 0
+	mut j := 0
 	// index for pattern
 	for i < text_length {
 		if pattern[j] == text[i] {
-			i++
-			j++
+			i += 1
+			j += 1
 		}
 		if j == pattern_length {
 			println("Pattern found at index ${i - j}")
@@ -45,7 +46,7 @@ fn kmps_earch(text string, pattern string) {
 			if j != 0 {
 				j = lps[j - 1]
 			} else {
-				i++
+				i += 1
 			}
 		}
 	}
