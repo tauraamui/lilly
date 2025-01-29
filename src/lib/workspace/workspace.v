@@ -92,16 +92,6 @@ fn (mut workspace Workspace) resolve_files(path string,
 	})
 }
 
-pub fn (workspace Workspace) find_todo_comments() []string {
-	mut files := []string{ len: workspace.files.len }
-	mut threads := []thread{}
-	return files
-}
-
-pub fn search_file_for_todo_comments(path string) bool {
-	return false
-}
-
 pub fn (workspace Workspace) branch() string {
 	return workspace.git_branch
 }

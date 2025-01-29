@@ -57,6 +57,9 @@ fn test_buffer_load_from_path_with_gap_buffer_and_iterate() {
 	assert iteration_count == 3
 }
 
+fn test_buffer_load_from_path_and_search_for_pattern() {
+}
+
 fn test_buffer_insert_text() {
 	mut buffer := Buffer{}
 	buffer.c_buffer = GapBuffer.new("")
@@ -67,7 +70,7 @@ fn test_buffer_insert_text() {
 }
 
 fn test_buffer_enter_inserts_newline_line() {
-	mut buffer := Buffer{}
+	mut buffer := Buffer{ use_gap_buffer: true }
 	buffer.c_buffer = GapBuffer.new("1. first line\n2. second line\n3. third line")
 	buffer.write_at(lf, Pos{ x: 4, y: 0 })
 	assert buffer.str() == "1. f\nirst line\n2. second line\n3. third line"

@@ -1,5 +1,7 @@
 module buffer
 
+import lib.search
+
 pub struct Buffer {
 pub:
 	file_path string
@@ -41,6 +43,21 @@ pub fn (mut buffer Buffer) load_contents_into_gap(contents string) {
 pub fn (mut buffer Buffer) move_cursor_to(pos Pos) {
 	buffer.c_buffer.move_cursor_to(pos)
 }
+
+/*
+pub fn (buffer Buffer) find_all_todo_comments() {
+	if buffer.use_gap_buffer {
+		return
+		// index := search.kmp(buffer.c_buffer)
+		// println("found todo comment: @${}")
+	}
+	for y, line in buffer.lines {
+		match_index := search.kmp(line.runes(), "TODO".runes())
+		if match_index == -1 { continue }
+		println("FOUND TODO COMMENT: LINE_Y: ${y}, POS: ${match_index}")
+	}
+}
+*/
 
 pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 	mut cursor := pos
@@ -84,6 +101,7 @@ pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 // NOTE(tauraamui) [15/01/25]: I don't like the implications of the existence of this method,
 //                             need to review all its potential usages and hopefully remove it.
 pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
+	if !buffer.use_gap_buffer { return }
 	buffer.c_buffer.insert_at(r, pos)
 }
 
