@@ -17,3 +17,13 @@ fn test_kmp_search() {
 	assert kmp(text, pattern) == 5
 }
 
+fn test_kmp_rudimentary_attempt_select_full_comment() {
+	mut text := "// TODO(tauraamui) [29/01/25]: some comment contents"
+	mut pattern := "TODO"
+	start := kmp(text, pattern)
+	end   := kmp(text, "]:") + "]:".len
+	assert start == 3
+	assert end == 30
+	assert text[start..end].str() == "TODO(tauraamui) [29/01/25]:"
+}
+
