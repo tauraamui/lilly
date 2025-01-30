@@ -2,6 +2,7 @@ module buffer
 
 import strings
 import arrays
+import lib.search
 
 pub const gap_size = 32
 
@@ -656,17 +657,25 @@ pub fn (mut iter LineIteratorFromGapBuffer) next() ?string {
 }
 
 struct PatternMatchIteratorFromGapBuffer {
-	pattern []rune
-	data    []rune
+	pattern   []rune
+	data      []rune
+	gap_start int
+	gap_end   int
 mut:
-	idx int
-	done bool
+	idx        int
+	done       bool
+	line_start int
+	line_num   int
 }
 
 fn new_gap_buffer_pattern_match_iterator(pattern []rune, buffer GapBuffer) PatternMatchIterator {
+	mut data := buffer.runes()[..buffer.gap_start]
+	data << buffer.runes()[buffer.gap_end..]
 	return PatternMatchIteratorFromGapBuffer{
-		pattern: pattern
-		data: buffer.runes()
+		pattern:   pattern
+		data:      data
+		gap_start: buffer.gap_start
+		gap_end:   buffer.gap_end
 	}
 }
 
