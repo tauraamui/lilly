@@ -22,7 +22,7 @@ fn test_buffer_load_from_path_and_iterate() {
 	assert buffer.lines == ["1. This is a first line", "2. This is a second line", "3. This is a third line"]
 
 	mut iteration_count := 0
-	for id, line in buffer.iterator() {
+	for id, line in buffer.line_iterator() {
 		iteration_count += 1
 		match id {
 			0 { assert line == "1. This is a first line" }
@@ -44,7 +44,7 @@ fn test_buffer_load_from_path_with_gap_buffer_and_iterate() {
 	buffer.load_from_path(read_lines, true)!
 
 	mut iteration_count := 0
-	for id, line in buffer.iterator() {
+	for id, line in buffer.line_iterator() {
 		iteration_count += 1
 		match id {
 			0 { assert line == "1. This is a first line" }

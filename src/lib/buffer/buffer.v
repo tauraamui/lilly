@@ -420,7 +420,7 @@ pub fn (mut iter LineIterator) next() ?string {
 	return iter.data_ref[iter.idx]
 }
 
-pub fn (buffer Buffer) iterator() Iterator {
+pub fn (buffer Buffer) line_iterator() Iterator {
 	if buffer.use_gap_buffer {
 		return new_gap_buffer_iterator(buffer.c_buffer)
 	}
