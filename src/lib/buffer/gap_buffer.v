@@ -463,6 +463,11 @@ fn (gap_buffer GapBuffer) str() string {
 	return gap_buffer.data[..gap_buffer.gap_start].string() + gap_buffer.data[gap_buffer.gap_end..].string()
 }
 
+@[inline]
+fn (gap_buffer GapBuffer) runes() []rune {
+	return gap_buffer.data
+}
+
 fn (gap_buffer GapBuffer) raw_str() string {
 	mut sb := strings.new_builder(512)
 	sb.write_runes(gap_buffer.data[..gap_buffer.gap_start])
@@ -648,6 +653,30 @@ pub fn (mut iter LineIteratorFromGapBuffer) next() ?string {
 	}
 
 	return line
+}
+
+struct PatternMatchIteratorFromGapBuffer {
+	pattern []rune
+	data    []rune
+mut:
+	idx int
+	done bool
+}
+
+fn new_gap_buffer_pattern_match_iterator(pattern []rune, buffer GapBuffer) PatternMatchIterator {
+	return PatternMatchIteratorFromGapBuffer{
+		pattern: pattern
+		data: buffer.runes()
+	}
+}
+
+pub fn (mut iter PatternMatchIteratorFromGapBuffer) next() ?Match {
+	iter.done = true
+	return none
+}
+
+pub fn (iter PatternMatchIteratorFromGapBuffer) done() bool {
+	return iter.done
 }
 
 fn is_non_alpha(c rune) bool {

@@ -406,9 +406,9 @@ fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
 }
 
 pub interface PatternMatchIterator {
+	done() bool
 mut:
 	next() ?Match
-	done() bool
 }
 
 pub struct Match {
@@ -450,7 +450,7 @@ pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 	}
 }
 
-pub fn (mut iter PatternMatchIteratorFromLinesList) done() bool {
+pub fn (iter PatternMatchIteratorFromLinesList) done() bool {
 	return iter.done
 }
 
@@ -484,6 +484,9 @@ pub fn (buffer Buffer) line_iterator() LineIterator {
 
 pub fn (buffer Buffer) match_iterator(pattern []rune) PatternMatchIterator {
 	// if buffer.use_gap_buffer {}
+	if buffer.use_gap_buffer {
+		return new_gap_buffer_pattern_match_iterator(pattern, buffer.c_buffer)
+	}
 	return PatternMatchIteratorFromLinesList{
 		data_ref: buffer.lines
 		pattern: pattern
