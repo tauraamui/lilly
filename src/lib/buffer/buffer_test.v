@@ -57,7 +57,24 @@ fn test_buffer_load_from_path_with_gap_buffer_and_iterate() {
 	assert iteration_count == 3
 }
 
-fn test_buffer_load_from_path_and_search_for_pattern() {
+fn test_buffer_load_from_path_and_iterate_over_pattern_matches() {
+	read_lines := fn (path string) ![]string {
+		return ["1. This is a first line", "// TODO(tauraamui) [30/01/25]: this line has a comment to find", "2. This is a second line", "3. This is a third line"]
+	}
+
+	mut buffer := Buffer{}
+	buffer.load_from_path(read_lines, false)!
+
+	mut iteration_count := 0
+	mut match_iter := buffer.match_iterator("TODO".runes())
+	for !match_iter.done() {
+		found_match := match_iter.next() or { continue }
+		assert found_match == Match{
+			x: 3,
+			y: 1,
+			contents: "TODO"
+		}
+	}
 }
 
 fn test_buffer_insert_text() {
