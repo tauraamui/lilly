@@ -401,6 +401,55 @@ fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
 	return clamped
 }
 
+pub interface PatternMatchIterator {
+mut:
+	next() ?Match
+	done() bool
+}
+
+pub struct Match {
+	x int
+	y int
+	contents string
+}
+
+struct PatternMatchIteratorFromLinesList {
+	pattern  []rune
+	data_ref []string
+mut:
+	idx int
+	done bool
+}
+
+pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
+	if iter.idx >= iter.data_ref.len {
+		iter.done = true
+		return none
+	}
+	defer { iter.idx += 1 }
+
+	// search for pattern within line
+	// NOTE(tauraamui): for the buffer that contains the document in a list/array of strings, one string per line
+	//                  doing this descrete pattern search per line makes sense, however ordinarilly I don't want
+	//                  to do pattern searches in pieces, one piece per line but more of searching within "blocks"
+	//                  of data that doesn't start and end with a newline.
+	line_to_search := iter.data_ref[iter.idx].runes()
+	found_index := search.kmp(line_to_search, iter.pattern)
+	if found_index == -1 {
+		return none
+	}
+
+	return Match{
+		x: found_index
+		y: iter.idx
+		contents: line_to_search[found_index..found_index + iter.pattern.len].string()
+	}
+}
+
+pub fn (mut iter PatternMatchIteratorFromLinesList) done() bool {
+	return iter.done
+}
+
 pub interface LineIterator {
 mut:
 	next() ?string
