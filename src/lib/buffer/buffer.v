@@ -22,16 +22,20 @@ pub mut:
 }
 
 pub fn (mut buffer Buffer) load_from_path(read_lines fn (path string) ![]string, use_gap_buffer bool) ! {
+	if use_gap_buffer {
+		lines := read_lines(buffer.file_path) or {
+			return error("unable to open file ${buffer.file_path}: ${err}")
+		}
+		buffer.use_gap_buffer = use_gap_buffer
+		buffer.load_contents_into_gap(lines.join("\n"))
+		return
+	}
+
 	buffer.lines = read_lines(buffer.file_path) or {
-		return error('unable to open file ${buffer.file_path} ${err}')
+		return error('unable to open file ${buffer.file_path}: ${err}')
 	}
 	if buffer.lines.len == 0 {
 		buffer.lines = ['']
-	}
-
-	if use_gap_buffer {
-		buffer.use_gap_buffer = use_gap_buffer
-		buffer.load_contents_into_gap(buffer.lines.join("\n"))
 	}
 }
 
