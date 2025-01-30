@@ -401,18 +401,18 @@ fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
 	return clamped
 }
 
-pub interface Iterator {
+pub interface LineIterator {
 mut:
 	next() ?string
 }
 
-pub struct LineIterator {
+struct LineIteratorFromLinesList {
 	data_ref []string
 mut:
 	idx int
 }
 
-pub fn (mut iter LineIterator) next() ?string {
+pub fn (mut iter LineIteratorFromLinesList) next() ?string {
 	if iter.idx >= iter.data_ref.len {
 		return none
 	}
@@ -420,11 +420,11 @@ pub fn (mut iter LineIterator) next() ?string {
 	return iter.data_ref[iter.idx]
 }
 
-pub fn (buffer Buffer) line_iterator() Iterator {
+pub fn (buffer Buffer) line_iterator() LineIterator {
 	if buffer.use_gap_buffer {
 		return new_gap_buffer_iterator(buffer.c_buffer)
 	}
-	return LineIterator{
+	return LineIteratorFromLinesList{
 		data_ref: buffer.lines
 	}
 }
