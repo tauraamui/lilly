@@ -475,7 +475,7 @@ pub fn (mut iter LineIteratorFromLinesList) next() ?string {
 
 pub fn (buffer Buffer) line_iterator() LineIterator {
 	if buffer.use_gap_buffer {
-		return new_gap_buffer_iterator(buffer.c_buffer)
+		return new_gap_buffer_line_iterator(buffer.c_buffer)
 	}
 	return LineIteratorFromLinesList{
 		data_ref: buffer.lines

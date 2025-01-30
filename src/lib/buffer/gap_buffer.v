@@ -617,20 +617,20 @@ fn (gap_buffer GapBuffer) find_offset(pos Pos) ?int {
 
 pub const lf := `\n`
 
-struct GapBufferIterator {
+struct LineIteratorFromGapBuffer {
 	data  string
 mut:
 	line_start int
 	done       bool
 }
 
-fn new_gap_buffer_iterator(buffer GapBuffer) GapBufferIterator {
-	return GapBufferIterator{
+fn new_gap_buffer_line_iterator(buffer GapBuffer) LineIterator {
+	return LineIteratorFromGapBuffer{
 		data: buffer.str()
 	}
 }
 
-pub fn (mut iter GapBufferIterator) next() ?string {
+pub fn (mut iter LineIteratorFromGapBuffer) next() ?string {
 	if iter.done { return none }
 	mut line := ?string(none)
 	for index in iter.line_start..iter.data.len {
