@@ -73,8 +73,7 @@ fn test_buffer_load_from_path_and_iterate_over_pattern_matches() {
 		found_match := match_iter.next() or { continue }
 		found_match_count += 1
 		assert found_match == Match{
-			x: 3,
-			y: 1,
+			pos: Pos{ x: 3, y: 1 }
 			contents: "TODO"
 		}
 	}
@@ -99,8 +98,7 @@ fn test_buffer_load_from_path_with_gap_buffer_and_iterate_over_pattern_matches()
 		found_match := match_iter.next() or { continue }
 		found_match_count += 1
 		assert found_match == Match{
-			x: 3,
-			y: 1,
+			pos: Pos{ x: 3, y: 1 }
 			contents: "TODO"
 		}
 	}

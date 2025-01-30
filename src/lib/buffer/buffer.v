@@ -412,8 +412,7 @@ mut:
 }
 
 pub struct Match {
-	x int
-	y int
+	pos      Pos
 	contents string
 }
 
@@ -444,8 +443,7 @@ pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 	}
 
 	return Match{
-		x: found_index
-		y: iter.idx
+		pos: Pos{ x: found_index, y: iter.idx }
 		contents: line_to_search[found_index..found_index + iter.pattern.len].string()
 	}
 }
