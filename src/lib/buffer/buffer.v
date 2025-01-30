@@ -478,3 +478,11 @@ pub fn (buffer Buffer) line_iterator() LineIterator {
 	}
 }
 
+pub fn (buffer Buffer) match_iterator(pattern []rune) PatternMatchIterator {
+	// if buffer.use_gap_buffer {}
+	return PatternMatchIteratorFromLinesList{
+		data_ref: buffer.lines
+		pattern: pattern
+	}
+}
+
