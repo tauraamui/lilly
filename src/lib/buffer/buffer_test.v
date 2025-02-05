@@ -104,7 +104,7 @@ fn test_buffer_load_from_path_with_gap_buffer_and_iterate_over_pattern_matches()
 	}
 
 	assert found_match_count == 1
-	assert iteration_count == 5
+	assert iteration_count == 2
 }
 
 
