@@ -33,7 +33,7 @@ fn (mut todo_comment_finder_modal TodoCommentFinderModal) draw_scrollable_list(m
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
 	ctx.draw_rect(1, y_offset, ctx.window_width(), y_offset + max_height - 1)
 	for i, m_match in todo_comment_finder_modal.matches {
-		ctx.draw_text(1, y_offset + (i * 5), m_match.contents)
+		ctx.draw_text(1, y_offset + (i), m_match.contents)
 	}
 	return 100
 }
