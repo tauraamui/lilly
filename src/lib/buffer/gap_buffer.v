@@ -2,6 +2,7 @@ module buffer
 
 import strings
 import arrays
+import lib.search
 
 pub const gap_size = 32
 
@@ -463,6 +464,11 @@ fn (gap_buffer GapBuffer) str() string {
 	return gap_buffer.data[..gap_buffer.gap_start].string() + gap_buffer.data[gap_buffer.gap_end..].string()
 }
 
+@[inline]
+fn (gap_buffer GapBuffer) runes() []rune {
+	return gap_buffer.data
+}
+
 fn (gap_buffer GapBuffer) raw_str() string {
 	mut sb := strings.new_builder(512)
 	sb.write_runes(gap_buffer.data[..gap_buffer.gap_start])
@@ -617,20 +623,20 @@ fn (gap_buffer GapBuffer) find_offset(pos Pos) ?int {
 
 pub const lf := `\n`
 
-struct GapBufferIterator {
+struct LineIteratorFromGapBuffer {
 	data  string
 mut:
 	line_start int
 	done       bool
 }
 
-fn new_gap_buffer_iterator(buffer GapBuffer) GapBufferIterator {
-	return GapBufferIterator{
+fn new_gap_buffer_line_iterator(buffer GapBuffer) LineIterator {
+	return LineIteratorFromGapBuffer{
 		data: buffer.str()
 	}
 }
 
-pub fn (mut iter GapBufferIterator) next() ?string {
+pub fn (mut iter LineIteratorFromGapBuffer) next() ?string {
 	if iter.done { return none }
 	mut line := ?string(none)
 	for index in iter.line_start..iter.data.len {
@@ -648,6 +654,50 @@ pub fn (mut iter GapBufferIterator) next() ?string {
 	}
 
 	return line
+}
+
+struct PatternMatchIteratorFromGapBuffer {
+	pattern   []rune
+	data      []rune
+mut:
+	line_id    int
+	line_iter  LineIterator
+	done       bool
+}
+
+fn new_gap_buffer_pattern_match_iterator(pattern []rune, buffer GapBuffer) PatternMatchIterator {
+	mut data := buffer.runes()[..buffer.gap_start]
+	data << buffer.runes()[buffer.gap_end..]
+	return PatternMatchIteratorFromGapBuffer{
+		pattern:   pattern
+		line_iter: new_gap_buffer_line_iterator(buffer)
+	}
+}
+
+pub fn (mut iter PatternMatchIteratorFromGapBuffer) next() ?Match {
+	for {
+		current_line_id := iter.line_id
+		line_to_search := iter.line_iter.next() or {
+			iter.done = true
+			break
+		}
+		iter.line_id += 1
+		found_index := search.kmp(line_to_search.runes(), iter.pattern)
+		if found_index == -1 {
+			continue
+		}
+
+		return Match{
+			pos: Pos{ x: found_index, y: current_line_id }
+			contents: line_to_search.runes()[found_index..found_index + iter.pattern.len].string()
+		}
+	}
+
+	return none
+}
+
+pub fn (iter PatternMatchIteratorFromGapBuffer) done() bool {
+	return iter.done
 }
 
 fn is_non_alpha(c rune) bool {

@@ -1,5 +1,7 @@
 module buffer
 
+import lib.search
+
 pub struct Buffer {
 pub:
 	file_path string
@@ -20,16 +22,20 @@ pub mut:
 }
 
 pub fn (mut buffer Buffer) load_from_path(read_lines fn (path string) ![]string, use_gap_buffer bool) ! {
+	if use_gap_buffer {
+		lines := read_lines(buffer.file_path) or {
+			return error("unable to open file ${buffer.file_path}: ${err}")
+		}
+		buffer.use_gap_buffer = use_gap_buffer
+		buffer.load_contents_into_gap(lines.join("\n"))
+		return
+	}
+
 	buffer.lines = read_lines(buffer.file_path) or {
-		return error('unable to open file ${buffer.file_path} ${err}')
+		return error('unable to open file ${buffer.file_path}: ${err}')
 	}
 	if buffer.lines.len == 0 {
 		buffer.lines = ['']
-	}
-
-	if use_gap_buffer {
-		buffer.use_gap_buffer = use_gap_buffer
-		buffer.load_contents_into_gap(buffer.lines.join("\n"))
 	}
 }
 
@@ -41,6 +47,21 @@ pub fn (mut buffer Buffer) load_contents_into_gap(contents string) {
 pub fn (mut buffer Buffer) move_cursor_to(pos Pos) {
 	buffer.c_buffer.move_cursor_to(pos)
 }
+
+/*
+pub fn (buffer Buffer) find_all_todo_comments() {
+	if buffer.use_gap_buffer {
+		return
+		// index := search.kmp(buffer.c_buffer)
+		// println("found todo comment: @${}")
+	}
+	for y, line in buffer.lines {
+		match_index := search.kmp(line.runes(), "TODO".runes())
+		if match_index == -1 { continue }
+		println("FOUND TODO COMMENT: LINE_Y: ${y}, POS: ${match_index}")
+	}
+}
+*/
 
 pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 	mut cursor := pos
@@ -84,6 +105,7 @@ pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 // NOTE(tauraamui) [15/01/25]: I don't like the implications of the existence of this method,
 //                             need to review all its potential usages and hopefully remove it.
 pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
+	if !buffer.use_gap_buffer { return }
 	buffer.c_buffer.insert_at(r, pos)
 }
 
@@ -383,18 +405,66 @@ fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
 	return clamped
 }
 
-pub interface Iterator {
+pub interface PatternMatchIterator {
+	done() bool
+mut:
+	next() ?Match
+}
+
+pub struct Match {
+pub:
+	pos      Pos
+	contents string
+}
+
+struct PatternMatchIteratorFromLinesList {
+	pattern  []rune
+	data_ref []string
+mut:
+	idx int
+	done bool
+}
+
+pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
+	if iter.idx >= iter.data_ref.len {
+		iter.done = true
+		return none
+	}
+	defer { iter.idx += 1 }
+
+	// search for pattern within line
+	// NOTE(tauraamui): for the buffer that contains the document in a list/array of strings, one string per line
+	//                  doing this descrete pattern search per line makes sense, however ordinarilly I don't want
+	//                  to do pattern searches in pieces, one piece per line but more of searching within "blocks"
+	//                  of data that doesn't start and end with a newline.
+	line_to_search := iter.data_ref[iter.idx].runes()
+	found_index := search.kmp(line_to_search, iter.pattern)
+	if found_index == -1 {
+		return none
+	}
+
+	return Match{
+		pos: Pos{ x: found_index, y: iter.idx }
+		contents: line_to_search[found_index..found_index + iter.pattern.len].string()
+	}
+}
+
+pub fn (iter PatternMatchIteratorFromLinesList) done() bool {
+	return iter.done
+}
+
+pub interface LineIterator {
 mut:
 	next() ?string
 }
 
-pub struct LineIterator {
+struct LineIteratorFromLinesList {
 	data_ref []string
 mut:
 	idx int
 }
 
-pub fn (mut iter LineIterator) next() ?string {
+pub fn (mut iter LineIteratorFromLinesList) next() ?string {
 	if iter.idx >= iter.data_ref.len {
 		return none
 	}
@@ -402,12 +472,23 @@ pub fn (mut iter LineIterator) next() ?string {
 	return iter.data_ref[iter.idx]
 }
 
-pub fn (buffer Buffer) iterator() Iterator {
+pub fn (buffer Buffer) line_iterator() LineIterator {
 	if buffer.use_gap_buffer {
-		return new_gap_buffer_iterator(buffer.c_buffer)
+		return new_gap_buffer_line_iterator(buffer.c_buffer)
 	}
-	return LineIterator{
+	return LineIteratorFromLinesList{
 		data_ref: buffer.lines
+	}
+}
+
+pub fn (buffer Buffer) match_iterator(pattern []rune) PatternMatchIterator {
+	// if buffer.use_gap_buffer {}
+	if buffer.use_gap_buffer {
+		return new_gap_buffer_pattern_match_iterator(pattern, buffer.c_buffer)
+	}
+	return PatternMatchIteratorFromLinesList{
+		data_ref: buffer.lines
+		pattern: pattern
 	}
 }
 

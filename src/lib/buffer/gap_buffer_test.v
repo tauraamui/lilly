@@ -118,7 +118,7 @@ fn test_find_end_of_line() {
 fn test_line_iterator() {
 	mut gb := GapBuffer.new("1. This is the first line.\n2. This is the second line.\n3. This is the third line.")
 
-	iter := new_gap_buffer_iterator(gb)
+	iter := new_gap_buffer_line_iterator(gb)
 	mut count := 0
 	for i, line in iter {
 		match i {
@@ -135,7 +135,7 @@ fn test_line_iterator() {
 fn test_line_iterator_with_lots_of_blank_lines() {
 	mut gb := GapBuffer.new("1. This is the first line.\n\n\n\n2. This is the second line.\n3. This is the third line.")
 
-	iter := new_gap_buffer_iterator(gb)
+	iter := new_gap_buffer_line_iterator(gb)
 	mut count := 0
 	for i, line in iter {
 		match i {

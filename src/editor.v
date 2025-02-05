@@ -34,6 +34,8 @@ mut:
 	file_finder_modal                 Viewable
 	inactive_buffer_finder_modal_open bool
 	inactive_buffer_finder_modal      Viewable
+	todo_comments_finder_modal_open   bool
+	todo_comments_finder_modal        Viewable
 	workspace                         workspace.Workspace
 	syntaxes                          []workspace.Syntax
 }
@@ -41,9 +43,12 @@ mut:
 interface Root {
 mut:
 	open_file_finder(special_mode bool)
-	open_inactive_buffer_finder(special_mode bool)
-	open_file(path string) !
 	close_file_finder()
+	open_inactive_buffer_finder(special_mode bool)
+	close_inactive_buffer_finder()
+	open_todo_comments_finder()
+	close_todo_comments_finder()
+	open_file(path string) !
 	quit() !
 	force_quit()
 }
@@ -60,6 +65,7 @@ pub fn open_editor(
 		use_gap_buffer: use_gap_buffer
 		file_finder_modal: unsafe { nil }
 		inactive_buffer_finder_modal: unsafe { nil }
+		todo_comments_finder_modal: unsafe { nil }
 	}
 	editor.workspace = workspace.open_workspace(mut _log, workspace_root_dir, os.is_dir,
 		os.walk, os.config_dir, os.read_file, os.execute) or {
@@ -169,6 +175,33 @@ fn (mut editor Editor) close_inactive_buffer_finder() {
 	editor.inactive_buffer_finder_modal_open = false
 }
 
+fn (mut editor Editor) open_todo_comments_finder() {
+	defer { editor.log.flush() }
+	mut matches := []buffer.Match{}
+	editor.log.debug("searching ${editor.buffers[0].file_path} for matches to 'TODO'")
+
+	mut match_iter := editor.buffers[0].match_iterator("TODO".runes())
+	for !match_iter.done() {
+		m_match := match_iter.next() or { continue }
+		editor.log.debug("found match: ${m_match.contents}")
+		matches << m_match
+	}
+
+	if editor.todo_comments_finder_modal_open { return }
+	editor.todo_comments_finder_modal_open = true
+	editor.todo_comments_finder_modal = TodoCommentFinderModal{
+		log: editor.log
+		title: "TODO COMMENTS FINDER"
+		file_path: "**tcf**"
+		close_fn: editor.close_todo_comments_finder
+		matches: matches
+	}
+}
+
+fn (mut editor Editor) close_todo_comments_finder() {
+	editor.todo_comments_finder_modal_open = false
+}
+
 pub fn (mut editor Editor) draw(mut ctx draw.Contextable) {
 	editor.view.draw(mut ctx)
 
@@ -179,6 +212,12 @@ pub fn (mut editor Editor) draw(mut ctx draw.Contextable) {
 
 	if editor.inactive_buffer_finder_modal_open {
 		editor.inactive_buffer_finder_modal.draw(mut ctx)
+		return
+	}
+
+	if editor.todo_comments_finder_modal_open {
+		editor.todo_comments_finder_modal.draw(mut ctx)
+		return
 	}
 }
 
@@ -190,6 +229,11 @@ pub fn (mut editor Editor) on_key_down(e draw.Event) {
 
 	if editor.inactive_buffer_finder_modal_open {
 		editor.inactive_buffer_finder_modal.on_key_down(e, mut editor)
+		return
+	}
+
+	if editor.todo_comments_finder_modal_open {
+		editor.todo_comments_finder_modal.on_key_down(e, mut editor)
 		return
 	}
 

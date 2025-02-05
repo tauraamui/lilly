@@ -21,10 +21,13 @@ import log
 
 struct MockRoot {
 mut:
-	file_finder_open            bool
-	inactive_buffer_finder_open bool
-	close_file_finder_invoked   bool
-	special_mode                bool
+	file_finder_open                     bool
+	inactive_buffer_finder_open          bool
+	close_inactive_buffer_finder_invoked bool
+	close_file_finder_invoked            bool
+	todo_comments_finder_open            bool
+	close_todo_comments_finder_invoked   bool
+	special_mode                         bool
 }
 
 fn (mut root MockRoot) open_file_finder(special_mode bool) {
@@ -37,12 +40,27 @@ fn (mut root MockRoot) open_inactive_buffer_finder(special_mode bool) {
 	root.special_mode = special_mode
 }
 
+fn (mut root MockRoot) open_todo_comments_finder() {
+	root.todo_comments_finder_open = true
+}
+
 fn (mut root MockRoot) open_file(path string) ! { return }
 
 fn (mut root MockRoot) close_file_finder() {
 	root.close_file_finder_invoked = true
 	root.file_finder_open = false
 	root.special_mode = false
+}
+
+fn (mut root MockRoot) close_inactive_buffer_finder() {
+	root.close_inactive_buffer_finder_invoked = true
+	root.inactive_buffer_finder_open = false
+	root.special_mode = false
+}
+
+fn (mut root MockRoot) close_todo_comments_finder() {
+	root.close_todo_comments_finder_invoked = true
+	root.todo_comments_finder_open = false
 }
 
 fn (mut root MockRoot) quit() ! { return }
@@ -181,6 +199,33 @@ fn test_view_keybind_leader_then_fb_suffix_opens_inactive_buffer_finder() {
 	assert fake_view.leader_state.mode == .normal
 	assert m_root.inactive_buffer_finder_open
 	assert m_root.special_mode == false
+}
+
+fn test_view_keybind_leader_then_ftc_suffix_opens_todo_comments_finder() {
+	mut clip := clipboardv2.new()
+	mut fake_view := View{
+		log:       log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+	}
+	fake_view.buffer.lines = [] // NOTE(tauraamui) [21/01/25] can be empty just not nil
+
+	mut m_root := MockRoot{}
+	fake_view.on_key_down(
+		draw.Event{
+			utf8: fake_view.leader_key
+		},
+		mut m_root
+	)
+
+	assert fake_view.leader_state.mode == .leader
+
+	fake_view.on_key_down(draw.Event{ code: .f }, mut m_root)
+	fake_view.on_key_down(draw.Event{ code: .t }, mut m_root)
+	fake_view.on_key_down(draw.Event{ code: .c }, mut m_root)
+
+	// assert fake_view.leader_state.mode == .normal
+	assert m_root.todo_comments_finder_open
 }
 
 struct MovementKeyEventTestCase {

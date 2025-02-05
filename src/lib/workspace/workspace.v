@@ -77,7 +77,8 @@ fn get_branch(execute fn (cmd string) os.Result) string {
 
 fn (mut workspace Workspace) resolve_files(path string,
 	is_dir fn (path string) bool,
-	dir_walker fn (path string, f fn (string))) {
+	dir_walker fn (path string, f fn (string))
+) {
 	mut files_ref := &workspace.files
 	dir_walker(path, fn [mut files_ref, is_dir] (file_path string) {
 		if file_path.contains('.git') {
