@@ -28,7 +28,7 @@ struct App {
 mut:
 	log       &log.Log
 	ui        &draw.Contextable = unsafe { nil }
-	editor    &Editor           = unsafe { nil }
+	lilly     &Lilly           = unsafe { nil }
 	view      &View             = unsafe { nil }
 	views     []View
 	cur_split int
@@ -49,7 +49,7 @@ fn event(e draw.Event, mut app App) {
 	match e.typ {
 		.key_down {
 			app.changed = true
-			app.editor.on_key_down(e)
+			app.lilly.on_key_down(e)
 		}
 		.resized {
 			app.changed = true
@@ -65,7 +65,7 @@ fn frame(mut app App) {
 	app.changed = false
 	app.ui.clear()
 
-	app.editor.draw(mut app.ui)
+	app.lilly.draw(mut app.ui)
 
 	app.ui.flush()
 }
@@ -289,7 +289,7 @@ fn main() {
 		'', ''
 	}
 	mut clip := clipboardv2.new()
-	app.editor = open_editor(mut l, mut clip, gitcommit_hash, file_path, workspace_path, opts.use_gap_buffer) or {
+	app.lilly = open_lilly(mut l, mut clip, gitcommit_hash, file_path, workspace_path, opts.use_gap_buffer) or {
 		print_and_exit('${err}')
 		unsafe { nil }
 	}

@@ -1,4 +1,4 @@
-// Copyright 2024 The Lilly Editor contributors
+// Copyright 2024 The Lilly lilly contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -489,7 +489,7 @@ fn test_sets_of_key_events_for_views_on_key_down_adjusting_cursor_position() {
 			continue
 		}
 		mut clip := clipboardv2.new()
-		mut editor := Editor{
+		mut lilly := Lilly{
 			clipboard:         mut clip
 			file_finder_modal: unsafe { nil }
 		}
@@ -503,20 +503,20 @@ fn test_sets_of_key_events_for_views_on_key_down_adjusting_cursor_position() {
 		kevent := draw.Event{
 			code: case.code
 		}
-		fake_view.on_key_down(kevent, mut editor)
+		fake_view.on_key_down(kevent, mut lilly)
 		assert fake_view.cursor.pos == case.expected_cursor_pos, 'test case ${case.name} - expected cursor pos assertion failed'
 	}
 }
 
 fn test_w_moves_cursor_to_next_line_with_plain_comments() {
 	fake_lines := [
-		'// Copyright 2023 The Lilly Editor contributors',
+		'// Copyright 2023 The Lilly Lilly contributors',
 		'//',
 		'// Licensed under the Apache License, Version 2.0 (the "License")',
 	]
 
 	mut clip := clipboardv2.new()
-	mut editor := Editor{
+	mut lilly := Lilly{
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
 	}
@@ -533,7 +533,7 @@ fn test_w_moves_cursor_to_next_line_with_plain_comments() {
 		code: tui.KeyCode.w
 	}
 
-	fake_view.on_key_down(kevent, mut editor)
+	fake_view.on_key_down(kevent, mut lilly)
 	assert fake_view.cursor.pos.y == 1
 	assert fake_view.cursor.pos.x == 0
 }

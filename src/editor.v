@@ -21,7 +21,7 @@ import lib.clipboardv2
 import lib.workspace
 import lib.draw
 @[heap]
-struct Editor {
+struct Lilly {
 mut:
 	log                               log.Log
 	clipboard                         clipboardv2.Clipboard
@@ -53,13 +53,13 @@ mut:
 	force_quit()
 }
 
-pub fn open_editor(
+pub fn open_lilly(
 	mut _log log.Log,
 	mut _clipboard clipboardv2.Clipboard,
 	commit_hash string, file_path string,
 	workspace_root_dir string, use_gap_buffer bool,
-) !&Editor {
-	mut editor := Editor{
+) !&Lilly {
+	mut lilly := Lilly{
 		log: _log
 		clipboard:         _clipboard
 		use_gap_buffer: use_gap_buffer
@@ -67,22 +67,22 @@ pub fn open_editor(
 		inactive_buffer_finder_modal: unsafe { nil }
 		todo_comments_finder_modal: unsafe { nil }
 	}
-	editor.workspace = workspace.open_workspace(mut _log, workspace_root_dir, os.is_dir,
+	lilly.workspace = workspace.open_workspace(mut _log, workspace_root_dir, os.is_dir,
 		os.walk, os.config_dir, os.read_file, os.execute) or {
 		return error("unable to open workspace '${workspace_root_dir}' -> ${err}")
 	}
 
-	editor.views << new_splash(commit_hash, editor.workspace.config.leader_key)
-	editor.view = &editor.views[0]
+	lilly.views << new_splash(commit_hash, lilly.workspace.config.leader_key)
+	lilly.view = &lilly.views[0]
 	if file_path.len != 0 {
-		editor.open_file(file_path)!
+		lilly.open_file(file_path)!
 	}
-	return &editor
+	return &lilly
 }
 
-fn (mut editor Editor) start_debug() {
-	editor.debug_view = true
-	editor.view = &Debug{
+fn (mut lilly Lilly) start_debug() {
+	lilly.debug_view = true
+	lilly.view = &Debug{
 		file_path: '**dbg**'
 	}
 }
@@ -106,26 +106,26 @@ fn is_binary_file(path string) bool {
     return (f64(non_text_bytes) / f64(bytes_read)) > 0.3
 }
 
-fn (mut editor Editor) open_file(path string) ! {
+fn (mut lilly Lilly) open_file(path string) ! {
 	defer {
-		editor.close_file_finder()
-		editor.close_inactive_buffer_finder()
+		lilly.close_file_finder()
+		lilly.close_inactive_buffer_finder()
 	}
 
 	// find existing view which has that file open
-	for i, view in editor.views[1..] {
+	for i, view in lilly.views[1..] {
 		if view.file_path == path {
-			editor.view = &editor.views[i + 1]
+			lilly.view = &lilly.views[i + 1]
 			return
 		}
 	}
 
 	// couldn't find a view, so now search for an existing buffer with no view
-	for i, buffer in editor.buffers {
+	for i, buffer in lilly.buffers {
 		if buffer.file_path == path {
-			editor.views << open_view(mut editor.log, editor.workspace.config, editor.workspace.branch(),
-				editor.workspace.syntaxes(), editor.clipboard, mut &editor.buffers[i])
-			editor.view = &editor.views[editor.views.len - 1]
+			lilly.views << open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
+				lilly.workspace.syntaxes(), lilly.clipboard, mut &lilly.buffers[i])
+			lilly.view = &lilly.views[lilly.views.len - 1]
 			return
 		}
 	}
@@ -134,115 +134,115 @@ fn (mut editor Editor) open_file(path string) ! {
 	mut buff := buffer.Buffer{
 		file_path: path
 	}
-	buff.load_from_path(os.read_lines, editor.use_gap_buffer) or { return err }
-	editor.buffers << buff
-	editor.views << open_view(mut editor.log, editor.workspace.config, editor.workspace.branch(), editor.workspace.syntaxes(),
-		editor.clipboard, mut &editor.buffers[editor.buffers.len - 1])
-	editor.view = &editor.views[editor.views.len - 1]
+	buff.load_from_path(os.read_lines, lilly.use_gap_buffer) or { return err }
+	lilly.buffers << buff
+	lilly.views << open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(), lilly.workspace.syntaxes(),
+		lilly.clipboard, mut &lilly.buffers[lilly.buffers.len - 1])
+	lilly.view = &lilly.views[lilly.views.len - 1]
 }
 
-fn (mut editor Editor) open_file_finder(special_mode bool) {
-	if editor.inactive_buffer_finder_modal_open { return }
-	editor.file_finder_modal_open = true
-	editor.file_finder_modal = FileFinderModal{
+fn (mut lilly Lilly) open_file_finder(special_mode bool) {
+	if lilly.inactive_buffer_finder_modal_open { return }
+	lilly.file_finder_modal_open = true
+	lilly.file_finder_modal = FileFinderModal{
 		special_mode: special_mode
-		log:    editor.log
+		log:    lilly.log
 		title: "FILE BROWSER"
 		file_path:  '**lff**'
-		file_paths: editor.workspace.files()
-		close_fn: editor.close_file_finder
+		file_paths: lilly.workspace.files()
+		close_fn: lilly.close_file_finder
 	}
 }
 
-fn (mut editor Editor) close_file_finder() {
-	editor.file_finder_modal_open = false
+fn (mut lilly Lilly) close_file_finder() {
+	lilly.file_finder_modal_open = false
 }
 
-fn (mut editor Editor) open_inactive_buffer_finder(special_mode bool) {
-	if editor.file_finder_modal_open { return }
-	editor.inactive_buffer_finder_modal_open = true
-	editor.inactive_buffer_finder_modal = FileFinderModal{
+fn (mut lilly Lilly) open_inactive_buffer_finder(special_mode bool) {
+	if lilly.file_finder_modal_open { return }
+	lilly.inactive_buffer_finder_modal_open = true
+	lilly.inactive_buffer_finder_modal = FileFinderModal{
 		special_mode: special_mode
-		log: editor.log
+		log: lilly.log
 		title: "INACTIVE BUFFERS"
 		file_path:  '**lfb**'
-		file_paths: editor.views.filter(it != editor.view && !it.file_path.starts_with("**")).map(it.file_path)
-		close_fn: editor.close_inactive_buffer_finder
+		file_paths: lilly.views.filter(it != lilly.view && !it.file_path.starts_with("**")).map(it.file_path)
+		close_fn: lilly.close_inactive_buffer_finder
 	}
 }
 
-fn (mut editor Editor) close_inactive_buffer_finder() {
-	editor.inactive_buffer_finder_modal_open = false
+fn (mut lilly Lilly) close_inactive_buffer_finder() {
+	lilly.inactive_buffer_finder_modal_open = false
 }
 
-fn (mut editor Editor) open_todo_comments_finder() {
-	defer { editor.log.flush() }
+fn (mut lilly Lilly) open_todo_comments_finder() {
+	defer { lilly.log.flush() }
 	mut matches := []buffer.Match{}
-	editor.log.debug("searching ${editor.buffers[0].file_path} for matches to 'TODO'")
+	lilly.log.debug("searching ${lilly.buffers[0].file_path} for matches to 'TODO'")
 
-	mut match_iter := editor.buffers[0].match_iterator("TODO".runes())
+	mut match_iter := lilly.buffers[0].match_iterator("TODO".runes())
 	for !match_iter.done() {
 		m_match := match_iter.next() or { continue }
-		editor.log.debug("found match: ${m_match.contents}")
+		lilly.log.debug("found match: ${m_match.contents}")
 		matches << m_match
 	}
 
-	if editor.todo_comments_finder_modal_open { return }
-	editor.todo_comments_finder_modal_open = true
-	editor.todo_comments_finder_modal = TodoCommentFinderModal{
-		log: editor.log
+	if lilly.todo_comments_finder_modal_open { return }
+	lilly.todo_comments_finder_modal_open = true
+	lilly.todo_comments_finder_modal = TodoCommentFinderModal{
+		log: lilly.log
 		title: "TODO COMMENTS FINDER"
 		file_path: "**tcf**"
-		close_fn: editor.close_todo_comments_finder
+		close_fn: lilly.close_todo_comments_finder
 		matches: matches
 	}
 }
 
-fn (mut editor Editor) close_todo_comments_finder() {
-	editor.todo_comments_finder_modal_open = false
+fn (mut lilly Lilly) close_todo_comments_finder() {
+	lilly.todo_comments_finder_modal_open = false
 }
 
-pub fn (mut editor Editor) draw(mut ctx draw.Contextable) {
-	editor.view.draw(mut ctx)
+pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
+	lilly.view.draw(mut ctx)
 
-	if editor.file_finder_modal_open {
-		editor.file_finder_modal.draw(mut ctx)
+	if lilly.file_finder_modal_open {
+		lilly.file_finder_modal.draw(mut ctx)
 		return
 	}
 
-	if editor.inactive_buffer_finder_modal_open {
-		editor.inactive_buffer_finder_modal.draw(mut ctx)
+	if lilly.inactive_buffer_finder_modal_open {
+		lilly.inactive_buffer_finder_modal.draw(mut ctx)
 		return
 	}
 
-	if editor.todo_comments_finder_modal_open {
-		editor.todo_comments_finder_modal.draw(mut ctx)
+	if lilly.todo_comments_finder_modal_open {
+		lilly.todo_comments_finder_modal.draw(mut ctx)
 		return
 	}
 }
 
-pub fn (mut editor Editor) on_key_down(e draw.Event) {
-	if editor.file_finder_modal_open {
-		editor.file_finder_modal.on_key_down(e, mut editor)
+pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
+	if lilly.file_finder_modal_open {
+		lilly.file_finder_modal.on_key_down(e, mut lilly)
 		return
 	}
 
-	if editor.inactive_buffer_finder_modal_open {
-		editor.inactive_buffer_finder_modal.on_key_down(e, mut editor)
+	if lilly.inactive_buffer_finder_modal_open {
+		lilly.inactive_buffer_finder_modal.on_key_down(e, mut lilly)
 		return
 	}
 
-	if editor.todo_comments_finder_modal_open {
-		editor.todo_comments_finder_modal.on_key_down(e, mut editor)
+	if lilly.todo_comments_finder_modal_open {
+		lilly.todo_comments_finder_modal.on_key_down(e, mut lilly)
 		return
 	}
 
-	editor.view.on_key_down(e, mut editor)
+	lilly.view.on_key_down(e, mut lilly)
 }
 
-pub fn (mut editor Editor) quit() ! {
+pub fn (mut lilly Lilly) quit() ! {
 	// Filter out splash/special views and check only file views
-    file_views := editor.views.filter(!it.file_path.starts_with('**'))
+    file_views := lilly.views.filter(!it.file_path.starts_with('**'))
     mut dirty_count := 0
     for view in file_views {
         if view is View {
@@ -255,11 +255,11 @@ pub fn (mut editor Editor) quit() ! {
 	if dirty_count > 0 {
 		return error("Cannot quit: ${dirty_count} unsaved buffer(s). Save changes or use :q! to force quit")
 	}
-	editor.view = unsafe { nil }
+	lilly.view = unsafe { nil }
 	exit(0)
 }
 
-pub fn (mut editor Editor) force_quit() {
-    editor.view = unsafe { nil }
+pub fn (mut lilly Lilly) force_quit() {
+    lilly.view = unsafe { nil }
     exit(0)
 }
