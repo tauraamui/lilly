@@ -176,6 +176,17 @@ fn (mut editor Editor) close_inactive_buffer_finder() {
 }
 
 fn (mut editor Editor) open_todo_comments_finder() {
+	defer { editor.log.flush() }
+	mut matches := []buffer.Match{}
+	editor.log.debug("searching ${editor.buffers[0].file_path} for matches to 'TODO'")
+
+	mut match_iter := editor.buffers[0].match_iterator("TODO".runes())
+	for !match_iter.done() {
+		m_match := match_iter.next() or { continue }
+		editor.log.debug("found match: ${m_match.contents}")
+		matches << m_match
+	}
+
 	if editor.todo_comments_finder_modal_open { return }
 	editor.todo_comments_finder_modal_open = true
 	editor.todo_comments_finder_modal = TodoCommentFinderModal{
@@ -183,6 +194,7 @@ fn (mut editor Editor) open_todo_comments_finder() {
 		title: "TODO COMMENTS FINDER"
 		file_path: "**tcf**"
 		close_fn: editor.close_todo_comments_finder
+		matches: matches
 	}
 }
 

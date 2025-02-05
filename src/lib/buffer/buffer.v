@@ -412,6 +412,7 @@ mut:
 }
 
 pub struct Match {
+pub:
 	pos      Pos
 	contents string
 }
