@@ -659,13 +659,10 @@ pub fn (mut iter LineIteratorFromGapBuffer) next() ?string {
 struct PatternMatchIteratorFromGapBuffer {
 	pattern   []rune
 	data      []rune
-	gap_start int
-	gap_end   int
 mut:
-	idx        int
+	line_id    int
+	line_iter  LineIterator
 	done       bool
-	line_start int
-	line_num   int
 }
 
 fn new_gap_buffer_pattern_match_iterator(pattern []rune, buffer GapBuffer) PatternMatchIterator {
@@ -673,14 +670,29 @@ fn new_gap_buffer_pattern_match_iterator(pattern []rune, buffer GapBuffer) Patte
 	data << buffer.runes()[buffer.gap_end..]
 	return PatternMatchIteratorFromGapBuffer{
 		pattern:   pattern
-		data:      data
-		gap_start: buffer.gap_start
-		gap_end:   buffer.gap_end
+		line_iter: new_gap_buffer_line_iterator(buffer)
 	}
 }
 
 pub fn (mut iter PatternMatchIteratorFromGapBuffer) next() ?Match {
-	iter.done = true
+	for {
+		current_line_id := iter.line_id
+		line_to_search := iter.line_iter.next() or {
+			iter.done = true
+			break
+		}
+		iter.line_id += 1
+		found_index := search.kmp(line_to_search.runes(), iter.pattern)
+		if found_index == -1 {
+			continue
+		}
+
+		return Match{
+			pos: Pos{ x: found_index, y: current_line_id }
+			contents: line_to_search.runes()[found_index..found_index + iter.pattern.len].string()
+		}
+	}
+
 	return none
 }
 
