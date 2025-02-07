@@ -1,4 +1,4 @@
-// Copyright 2024 The Lilly Editor contributors
+// Copyright 2024 The Lilly Editor.contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import lib.buffer
 import lib.workspace
 
 fn test_quit_with_dirty_buffers() {
-    mut editor := Editor{
+    mut lilly := Lilly{
         log: log.Log{}
         clipboard: clipboardv2.new()
         use_gap_buffer: true
@@ -32,12 +32,12 @@ fn test_quit_with_dirty_buffers() {
         file_path: 'test.txt'
     }
     buff.dirty = true
-    editor.buffers << buff
-    editor.views << open_view(mut editor.log, workspace.Config{}, '', [], editor.clipboard, mut &editor.buffers[0])
+    lilly.buffers << buff
+    lilly.views << open_view(mut lilly.log, workspace.Config{}, '', [], lilly.clipboard, mut &lilly.buffers[0])
 
     // Attempt to quit should return error
     mut got_expected_error := false
-    editor.quit() or {
+    lilly.quit() or {
         got_expected_error = err.msg() == "Cannot quit: 1 unsaved buffer(s). Save changes or use :q! to force quit"
         return
     }
@@ -45,7 +45,7 @@ fn test_quit_with_dirty_buffers() {
 }
 
 fn test_quit_with_clean_buffers() {
-    mut editor := Editor{
+    mut lilly := Lilly{
         log: log.Log{}
         clipboard: clipboardv2.new()
         use_gap_buffer: true
@@ -54,9 +54,9 @@ fn test_quit_with_clean_buffers() {
     mut buff := buffer.Buffer{
         file_path: 'test.txt'
     }
-    editor.buffers << buff
-    editor.views << open_view(mut editor.log, workspace.Config{}, '', [], editor.clipboard, mut &editor.buffers[0])
+    lilly.buffers << buff
+    lilly.views << open_view(mut lilly.log, workspace.Config{}, '', [], lilly.clipboard, mut &lilly.buffers[0])
 
     // Clean buffers should allow quit
-    editor.quit()!
+    lilly.quit()!
 }

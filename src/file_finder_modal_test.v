@@ -135,13 +135,13 @@ fn test_on_search_term_adjust_list_order_changes() {
 		"./src/project/lib/database/connection.v"
 	]
 
-	mut editor := Editor{
+	mut lilly := Lilly{
 		file_finder_modal: mock_modal
 	}
 
-	mock_modal.on_key_down(draw.Event{ ascii: u8("c"[0]) }, mut editor)
-	mock_modal.on_key_down(draw.Event{ ascii: u8("o"[0]) }, mut editor)
-	mock_modal.on_key_down(draw.Event{ ascii: u8("n"[0]) }, mut editor)
+	mock_modal.on_key_down(draw.Event{ ascii: u8("c"[0]) }, mut lilly)
+	mock_modal.on_key_down(draw.Event{ ascii: u8("o"[0]) }, mut lilly)
+	mock_modal.on_key_down(draw.Event{ ascii: u8("n"[0]) }, mut lilly)
 
 	drawn_text.clear()
 	mock_modal.draw(mut mock_drawer)
@@ -165,13 +165,13 @@ fn test_current_selection_gets_zeros_on_search_term_amend() {
 	}
 
 	assert mock_modal.current_selection == 0
-	mock_modal.on_key_down(draw.Event{utf8: "d"}, mut Editor{})
+	mock_modal.on_key_down(draw.Event{utf8: "d"}, mut Lilly{})
 	assert mock_modal.current_selection == 0
 
-	mock_modal.on_key_down(draw.Event{code: .down}, mut Editor{})
+	mock_modal.on_key_down(draw.Event{code: .down}, mut Lilly{})
 	assert mock_modal.current_selection == 1
 
-	mock_modal.on_key_down(draw.Event{utf8: "r"}, mut Editor{})
+	mock_modal.on_key_down(draw.Event{utf8: "r"}, mut Lilly{})
 	assert mock_modal.current_selection == 0
 }
 
