@@ -1,16 +1,16 @@
 module core
 
-const block = '█'
-const slant_left_flat_bottom = ''
-const left_rounded = ''
-const slant_left_flat_top = ''
-const slant_right_flat_bottom = ''
-const right_rounded = ''
-const slant_right_flat_top = ''
+pub const block = '█'
+pub const slant_left_flat_bottom = ''
+pub const left_rounded = ''
+pub const slant_left_flat_top = ''
+pub const slant_right_flat_bottom = ''
+pub const right_rounded = ''
+pub const slant_right_flat_top = ''
 
-const rune_digits = [`0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`]
+pub const rune_digits = [`0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`]
 
-const zero_width_unicode = [
+pub const zero_width_unicode = [
 	`\u034f`, // U+034F COMBINING GRAPHEME JOINER
 	`\u061c`, // U+061C ARABIC LETTER MARK
 	`\u17b4`, // U+17B4 KHMER VOWEL INHERENT AQ

@@ -16,12 +16,12 @@ module core
 
 import lib.draw
 
-const status_green = draw.Color{145, 237, 145}
-const status_orange = draw.Color{237, 207, 123}
-const status_lilac = draw.Color{194, 110, 230}
-const status_dark_lilac = draw.Color{154, 119, 209}
-const status_cyan = draw.Color{138, 222, 237}
-const status_purple = draw.Color{130, 144, 250}
+pub const status_green = draw.Color{145, 237, 145}
+pub const status_orange = draw.Color{237, 207, 123}
+pub const status_lilac = draw.Color{194, 110, 230}
+pub const status_dark_lilac = draw.Color{154, 119, 209}
+pub const status_cyan = draw.Color{138, 222, 237}
+pub const status_purple = draw.Color{130, 144, 250}
 
 pub enum Mode as u8 {
 	normal
