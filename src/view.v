@@ -26,6 +26,7 @@ import lib.workspace
 import lib.chords
 import lib.draw
 import lib.core
+import lib.ui
 
 struct Cursor {
 mut:
@@ -595,11 +596,20 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 
 	view.draw_document(mut ctx)
 
-	draw_status_line(mut ctx, Status{view.leader_state.mode, view.cursor.pos.x, view.cursor.pos.y, os.base(view.path), SearchSelection{
-		active:  view.leader_state.mode == .search
-		total:   view.search.total_finds
-		current: view.search.current_find.match_index
-	}, view.branch, view.buffer.dirty})
+	ui.draw_status_line(
+		mut ctx, ui.Status{
+			view.leader_state.mode,
+			view.cursor.pos.x, view.cursor.pos.y,
+			os.base(view.path),
+			ui.SearchSelection{
+				active:  view.leader_state.mode == .search
+				total:   view.search.total_finds
+				current: view.search.current_find.match_index
+			},
+			view.branch,
+			view.buffer.dirty
+		}
+	)
 
 	view.draw_bottom_bar_of_command_or_search(mut ctx)
 

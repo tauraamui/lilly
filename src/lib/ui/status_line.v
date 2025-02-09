@@ -12,18 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module main
+module ui
 
 import lib.draw
 import lib.core
 
-struct SearchSelection {
+pub struct SearchSelection {
+pub:
 	active  bool
 	total   int
 	current int
 }
 
-struct Status {
+pub struct Status {
+pub:
 	mode       core.Mode
 	cursor_x   int
 	cursor_y   int
@@ -33,7 +35,7 @@ struct Status {
 	dirty      bool
 }
 
-fn draw_status_line(mut ctx draw.Contextable, status Status) {
+pub fn draw_status_line(mut ctx draw.Contextable, status Status) {
 	defer { ctx.reset() }
 
 	y := ctx.window_height() - 1
