@@ -551,7 +551,7 @@ fn test_draw_text_line_visual_selection_start_end_on_same_line() {
 	document_line := 'This part of the text is before the selection but this part is within it, and this part is after it'
 	draw_text_line_within_visual_selection(
 		mut m_ctx, resolve_test_syntax(),
-		m_cursor, Color{ r: 10, g: 10, b: 10 },
+		m_cursor, draw.Color{ r: 10, g: 10, b: 10 },
 		0, 0, 0, 0, document_line, document_line
 	)
 
@@ -578,7 +578,7 @@ fn test_draw_text_line_within_visual_selection_start_end_on_same_line_with_tab_p
 		}
 	}
 	document_line := '\tpre_sel := line_runes[..selection_start.x]'
-	draw_text_line_within_visual_selection(mut m_ctx, resolve_test_syntax(), cursor, Color{
+	draw_text_line_within_visual_selection(mut m_ctx, resolve_test_syntax(), cursor, draw.Color{
 		r: 10
 		g: 10
 		b: 10
@@ -610,7 +610,7 @@ fn test_draw_text_line_within_visual_selection_start_end_on_same_line() {
 	}
 
 	document_line := 'This is a line to draw.'
-	draw_text_line_within_visual_selection(mut m_ctx, resolve_test_syntax(), cursor, Color{
+	draw_text_line_within_visual_selection(mut m_ctx, resolve_test_syntax(), cursor, draw.Color{
 		r: 10
 		g: 10
 		b: 10
@@ -642,7 +642,7 @@ fn test_draw_text_line_within_visual_selection_start_pre_line_end_post_line() {
 	}
 
 	document_line := 'This is a line to draw.'
-	draw_text_line_within_visual_selection(mut m_ctx, resolve_test_syntax(), cursor, Color{
+	draw_text_line_within_visual_selection(mut m_ctx, resolve_test_syntax(), cursor, draw.Color{
 		r: 10
 		g: 10
 		b: 10
@@ -672,14 +672,14 @@ fn test_draw_text_line_within_visual_selection_first_line_with_selection_end_on_
 	}
 
 	mut document_line := 'This is a line to draw.'
-	draw_text_line_within_visual_selection(mut m_ctx, resolve_test_syntax(), cursor, Color{
+	draw_text_line_within_visual_selection(mut m_ctx, resolve_test_syntax(), cursor, draw.Color{
 		r: 10
 		g: 10
 		b: 10
 	}, 0, 0, 0, 0, document_line.replace('\t', ' '.repeat(4)), document_line)
 
 	document_line = 'This is a second line.'
-	draw_text_line_within_visual_selection(mut m_ctx, resolve_test_syntax(), cursor, Color{
+	draw_text_line_within_visual_selection(mut m_ctx, resolve_test_syntax(), cursor, draw.Color{
 		r: 10
 		g: 10
 		b: 10
@@ -2677,6 +2677,7 @@ fn test_r_replaces_character_in_middle_of_line() {
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
 		inactive_buffer_finder_modal: unsafe { nil }
+		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log: log.Log{}
@@ -2710,6 +2711,7 @@ fn test_r_replaces_character_with_special_character() {
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
 		inactive_buffer_finder_modal: unsafe { nil }
+		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log: log.Log{}
@@ -2743,6 +2745,7 @@ fn test_r_replaces_character_with_space() {
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
 		inactive_buffer_finder_modal: unsafe { nil }
+		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log: log.Log{}
@@ -2776,6 +2779,7 @@ fn test_r_doesnt_change_anything_when_escape_is_used() {
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
 		inactive_buffer_finder_modal: unsafe { nil }
+		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log: log.Log{}
@@ -2808,6 +2812,7 @@ fn test_r_doesnt_change_anything_when_enter_is_used() {
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
 		inactive_buffer_finder_modal: unsafe { nil }
+		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log: log.Log{}
@@ -2941,6 +2946,7 @@ fn test_auto_closing_square_brace() {
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
 		inactive_buffer_finder_modal: unsafe { nil }
+		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log: log.Log{}
@@ -2971,6 +2977,7 @@ fn test_auto_closing_curley_brace() {
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
 		inactive_buffer_finder_modal: unsafe { nil }
+		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log: log.Log{}
@@ -3001,6 +3008,7 @@ fn test_auto_closing_curley_brace_inputting_secondary_close_should_only_move_cur
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
 		inactive_buffer_finder_modal: unsafe { nil }
+		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log: log.Log{}
@@ -3040,6 +3048,7 @@ fn test_auto_closing_square_brace_inputting_secondary_close_should_only_move_cur
 		clipboard:         mut clip
 		file_finder_modal: unsafe { nil }
 		inactive_buffer_finder_modal: unsafe { nil }
+		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log: log.Log{}

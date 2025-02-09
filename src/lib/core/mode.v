@@ -12,11 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module main
+module core
 
 import lib.draw
 
-enum Mode as u8 {
+pub const status_green = draw.Color{145, 237, 145}
+pub const status_orange = draw.Color{237, 207, 123}
+pub const status_lilac = draw.Color{194, 110, 230}
+pub const status_dark_lilac = draw.Color{154, 119, 209}
+pub const status_cyan = draw.Color{138, 222, 237}
+pub const status_purple = draw.Color{130, 144, 250}
+
+pub enum Mode as u8 {
 	normal
 	visual
 	visual_line
@@ -32,24 +39,24 @@ enum Mode as u8 {
 	pending_z
 }
 
-fn (mode Mode) draw(mut ctx draw.Contextable, x int, y int) int {
+pub fn (mode Mode) draw(mut ctx draw.Contextable, x int, y int) int {
 	defer { ctx.reset() }
 	label := mode.str()
 	status_line_y := y
 	status_line_x := x
 	status_color := mode.color()
 	mut offset := 0
-	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, '${left_rounded}${block}')
+	draw.paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, '${left_rounded}${block}')
 	offset += 2
-	paint_text_on_background(mut ctx, status_line_x + offset, status_line_y, status_color,
-		Color{0, 0, 0}, label)
+	draw.paint_text_on_background(mut ctx, status_line_x + offset, status_line_y, status_color,
+		draw.Color{0, 0, 0}, label)
 	offset += label.len
-	paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, '${block}${slant_right_flat_bottom}')
+	draw.paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, '${block}${slant_right_flat_bottom}')
 	offset += 2
 	return status_line_x + offset
 }
 
-fn (mode Mode) color() Color {
+pub fn (mode Mode) color() draw.Color {
 	return match mode {
 		.normal { status_green }
 		.visual { status_lilac }
@@ -67,7 +74,7 @@ fn (mode Mode) color() Color {
 	}
 }
 
-fn (mode Mode) str() string {
+pub fn (mode Mode) str() string {
 	return match mode {
 		.normal { 'NORMAL' }
 		.visual { 'VISUAL' }

@@ -25,6 +25,8 @@ import lib.buffer
 import lib.workspace
 import lib.chords
 import lib.draw
+import lib.core
+import lib.ui
 
 struct Cursor {
 mut:
@@ -91,48 +93,6 @@ mut:
 	y int
 }
 
-const block = '█'
-const slant_left_flat_bottom = ''
-const left_rounded = ''
-const slant_left_flat_top = ''
-const slant_right_flat_bottom = ''
-const right_rounded = ''
-const slant_right_flat_top = ''
-
-const status_green = Color{145, 237, 145}
-const status_orange = Color{237, 207, 123}
-const status_lilac = Color{194, 110, 230}
-const status_dark_lilac = Color{154, 119, 209}
-const status_cyan = Color{138, 222, 237}
-const status_purple = Color{130, 144, 250}
-
-const rune_digits = [`0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`]
-
-const zero_width_unicode = [
-	`\u034f`, // U+034F COMBINING GRAPHEME JOINER
-	`\u061c`, // U+061C ARABIC LETTER MARK
-	`\u17b4`, // U+17B4 KHMER VOWEL INHERENT AQ
-	`\u17b5`, // U+17B5 KHMER VOWEL INHERENT AA
-	`\u200a`, // U+200A HAIR SPACE
-	`\u200b`, // U+200B ZERO WIDTH SPACE
-	`\u200c`, // U+200C ZERO WIDTH NON-JOINER
-	`\u200d`, // U+200D ZERO WIDTH JOINER
-	`\u200e`, // U+200E LEFT-TO-RIGHT MARK
-	`\u200f`, // U+200F RIGHT-TO-LEFT MARK
-	`\u2060`, // U+2060 WORD JOINER
-	`\u2061`, // U+2061 FUNCTION APPLICATION
-	`\u2062`, // U+2062 INVISIBLE TIMES
-	`\u2063`, // U+2063 INVISIBLE SEPARATOR
-	`\u2064`, // U+2064 INVISIBLE PLUS
-	`\u206a`, // U+206A INHIBIT SYMMETRIC SWAPPING
-	`\u206b`, // U+206B ACTIVATE SYMMETRIC SWAPPING
-	`\u206c`, // U+206C INHIBIT ARABIC FORM SHAPING
-	`\u206d`, // U+206D ACTIVATE ARABIC FORM SHAPING
-	`\u206e`, // U+206E NATIONAL DIGIT SHAPES
-	`\u206f`, // U+206F NOMINAL DIGIT SHAPES
-	`\ufeff`, // U+FEFF ZERO WIDTH NO-BREAK SPACE
-]
-
 const auto_pairs = {
 	'}': '{'
 	']': '['
@@ -143,7 +103,7 @@ const auto_pairs = {
 
 struct ViewLeaderState {
 mut:
-	mode    Mode
+	mode    core.Mode
 	special bool
 	normal  bool
 	suffix  []string
@@ -354,13 +314,13 @@ enum CmdCode as u8 {
 	disabled
 }
 
-fn (code CmdCode) color() Color {
+fn (code CmdCode) color() draw.Color {
 	return match code {
-		.blank { Color{230, 230, 230} }
-		.successful { Color{100, 230, 110} }
-		.unsuccessful { Color{230, 110, 100} }
-		.unrecognised { Color{230, 110, 100} }
-		.disabled { Color{150, 150, 150} }
+		.blank { draw.Color{230, 230, 230} }
+		.successful { draw.Color{100, 230, 110} }
+		.unsuccessful { draw.Color{230, 110, 100} }
+		.unrecognised { draw.Color{230, 110, 100} }
+		.disabled { draw.Color{150, 150, 150} }
 	}
 }
 
@@ -636,11 +596,20 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 
 	view.draw_document(mut ctx)
 
-	draw_status_line(mut ctx, Status{view.leader_state.mode, view.cursor.pos.x, view.cursor.pos.y, os.base(view.path), SearchSelection{
-		active:  view.leader_state.mode == .search
-		total:   view.search.total_finds
-		current: view.search.current_find.match_index
-	}, view.branch, view.buffer.dirty})
+	ui.draw_status_line(
+		mut ctx, ui.Status{
+			view.leader_state.mode,
+			view.cursor.pos.x, view.cursor.pos.y,
+			os.base(view.path),
+			ui.SearchSelection{
+				active:  view.leader_state.mode == .search
+				total:   view.search.total_finds
+				current: view.search.current_find.match_index
+			},
+			view.branch,
+			view.buffer.dirty
+		}
+	)
 
 	view.draw_bottom_bar_of_command_or_search(mut ctx)
 
@@ -689,7 +658,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 		}
 
 		linex = linex.runes()[..max_width].string()
-		sel_highlight_color := Color{
+		sel_highlight_color := draw.Color{
 			r: view.config.selection_highlight_color.r
 			g: view.config.selection_highlight_color.g
 			b: view.config.selection_highlight_color.b
@@ -703,8 +672,8 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 fn draw_text_line(mut ctx draw.Contextable,
 	syntax workspace.Syntax,
 	cursor Cursor,
-	current_mode Mode,
-	selection_highlight_color Color,
+	current_mode core.Mode,
+	selection_highlight_color draw.Color,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
 	line string,
@@ -750,7 +719,7 @@ fn draw_text_line(mut ctx draw.Contextable,
 fn draw_text_line_within_visual_selection(mut ctx draw.Contextable,
 	syntax workspace.Syntax,
 	cursor Cursor,
-	selection_highlight_color Color,
+	selection_highlight_color draw.Color,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
 	line string,
@@ -792,7 +761,7 @@ fn draw_text_line_within_visual_selection(mut ctx draw.Contextable,
 
 fn draw_text_line_visual_selection_between_start_and_end(mut ctx draw.Contextable,
 	syntax workspace.Syntax,
-	selection_highlight_color Color,
+	selection_highlight_color draw.Color,
 	selection_start Pos, selection_end Pos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
@@ -809,7 +778,7 @@ fn draw_text_line_visual_selection_between_start_and_end(mut ctx draw.Contextabl
 
 fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Contextable,
 	syntax workspace.Syntax,
-	selection_highlight_color Color,
+	selection_highlight_color draw.Color,
 	selection_start Pos, selection_end Pos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
@@ -839,7 +808,7 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 
 fn draw_text_line_visual_selection_starts_on_same_but_ends_after(mut ctx draw.Contextable,
 	syntax workspace.Syntax,
-	selection_highlight_color Color,
+	selection_highlight_color draw.Color,
 	selection_start Pos, selection_end Pos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
@@ -875,7 +844,7 @@ fn draw_text_line_visual_selection_starts_on_same_but_ends_after(mut ctx draw.Co
 
 fn draw_text_line_visual_selection_starts_before_but_ends_on_line(mut ctx draw.Contextable,
 	syntax workspace.Syntax,
-	selection_highlight_color Color,
+	selection_highlight_color draw.Color,
 	selection_start Pos, selection_end Pos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
@@ -961,7 +930,7 @@ struct LineSegment {
 	y                int
 	document_space_y int
 	typ              SegmentKind
-	fg_color         Color
+	fg_color         draw.Color
 }
 
 fn LineSegment.new_key(start int, line_y int, document_space_y int, end int) LineSegment {
@@ -971,7 +940,7 @@ fn LineSegment.new_key(start int, line_y int, document_space_y int, end int) Lin
 		y:                line_y
 		document_space_y: document_space_y
 		typ:              .a_key
-		fg_color:         Color{255, 126, 182}
+		fg_color:         draw.Color{255, 126, 182}
 	}
 }
 
@@ -982,7 +951,7 @@ fn LineSegment.new_literal(start int, line_y int, document_space_y int, end int)
 		y:                line_y
 		document_space_y: document_space_y
 		typ:              .a_lit
-		fg_color:         Color{87, 215, 217}
+		fg_color:         draw.Color{87, 215, 217}
 	}
 }
 
@@ -993,7 +962,7 @@ fn LineSegment.new_builtin(start int, line_y int, document_space_y int, end int)
 		y: line_y
 		document_space_y: document_space_y
 		typ: .a_builtin
-		fg_color: Color{130, 144, 250}
+		fg_color: draw.Color{130, 144, 250}
 	}
 }
 
@@ -1004,7 +973,7 @@ fn LineSegment.new_string(start int, line_y int, document_space_y int, end int) 
 		y:                line_y
 		document_space_y: document_space_y
 		typ:              .a_string
-		fg_color:         Color{87, 215, 217}
+		fg_color:         draw.Color{87, 215, 217}
 	}
 }
 
@@ -1015,7 +984,7 @@ fn LineSegment.new_comment(start int, line_y int, document_space_y int, end int)
 		y:                line_y
 		document_space_y: document_space_y
 		typ:              .a_comment
-		fg_color:         Color{130, 130, 130}
+		fg_color:         draw.Color{130, 130, 130}
 	}
 }
 
@@ -1194,24 +1163,6 @@ fn set_cursor_to_underline(mut ctx draw.Contextable) {
 
 fn set_cursor_to_vertical_bar(mut ctx draw.Contextable) {
 	ctx.write('\x1b[6 q')
-}
-
-struct Color {
-	r u8
-	g u8
-	b u8
-}
-
-fn paint_shape_text(mut ctx draw.Contextable, x int, y int, color Color, text string) {
-	ctx.set_color(r: color.r, g: color.g, b: color.b)
-	ctx.reset_bg_color()
-	ctx.draw_text(x, y, text)
-}
-
-fn paint_text_on_background(mut ctx draw.Contextable, x int, y int, bg_color Color, fg_color Color, text string) {
-	ctx.set_bg_color(r: bg_color.r, g: bg_color.g, b: bg_color.b)
-	ctx.set_color(r: fg_color.r, g: fg_color.g, b: fg_color.b)
-	ctx.draw_text(x, y, text)
 }
 
 fn (mut view View) exec(op chords.Op) {
