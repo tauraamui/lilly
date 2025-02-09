@@ -15,6 +15,7 @@
 module main
 
 import lib.draw
+import lib.core
 
 struct SearchSelection {
 	active  bool
@@ -23,7 +24,7 @@ struct SearchSelection {
 }
 
 struct Status {
-	mode       Mode
+	mode       core.Mode
 	cursor_x   int
 	cursor_y   int
 	file_name  string
@@ -60,20 +61,20 @@ fn draw_status_line(mut ctx draw.Contextable, status Status) {
 	}
 
 	// draw leaning end of base status line bar
-	paint_shape_text(mut ctx, offset, y, Color{25, 25, 25}, '${slant_left_flat_top}')
+	draw.paint_shape_text(mut ctx, offset, y, draw.Color{25, 25, 25}, '${core.slant_left_flat_top}')
 
 	// render the cursor status as a right trailing segment
 	draw_cursor_position_segment(mut ctx, 1, y, status.cursor_x, status.cursor_y)
 }
 
 fn draw_file_name_segment(mut ctx draw.Contextable, x int, y int, file_name string) int {
-	paint_shape_text(mut ctx, x, y, Color{86, 86, 86}, '${slant_left_flat_top}${block}')
+	draw.paint_shape_text(mut ctx, x, y, draw.Color{86, 86, 86}, '${core.slant_left_flat_top}${core.block}')
 	mut offset := 2
 	ctx.bold()
-	paint_text_on_background(mut ctx, x + offset, y, Color{86, 86, 86}, Color{230, 230, 230},
+	draw.paint_text_on_background(mut ctx, x + offset, y, draw.Color{86, 86, 86}, draw.Color{230, 230, 230},
 		file_name)
 	offset += file_name.len
-	paint_shape_text(mut ctx, x + offset, y, Color{86, 86, 86}, '${block}${slant_right_flat_bottom}')
+	draw.paint_shape_text(mut ctx, x + offset, y, draw.Color{86, 86, 86}, '${core.block}${core.slant_right_flat_bottom}')
 	offset += 2
 	return offset
 }
@@ -81,35 +82,35 @@ fn draw_file_name_segment(mut ctx draw.Contextable, x int, y int, file_name stri
 fn draw_search_selection_info_segment(mut ctx draw.Contextable, x int, y int, selection SearchSelection) int {
 	selection_info_label := '${selection.current}/${selection.total}'
 	mut offset := 2
-	paint_shape_text(mut ctx, x, y, status_purple, '${slant_left_flat_top}${block}')
-	paint_text_on_background(mut ctx, x + offset, y, status_purple, Color{230, 230, 230},
+	draw.paint_shape_text(mut ctx, x, y, core.status_purple, '${core.slant_left_flat_top}${core.block}')
+	draw.paint_text_on_background(mut ctx, x + offset, y, core.status_purple, draw.Color{230, 230, 230},
 		selection_info_label)
 	offset += selection_info_label.len
-	paint_shape_text(mut ctx, x + offset, y, status_purple, '${block}${slant_right_flat_bottom}')
+	draw.paint_shape_text(mut ctx, x + offset, y, core.status_purple, '${core.block}${core.slant_right_flat_bottom}')
 	offset += 2
 	return offset
 }
 
 fn draw_git_branch_section(mut ctx draw.Contextable, x int, y int, git_branch string) int {
-	paint_shape_text(mut ctx, x, y, status_dark_lilac, '${slant_left_flat_top}${block}')
+	draw.paint_shape_text(mut ctx, x, y, core.status_dark_lilac, '${core.slant_left_flat_top}${core.block}')
 	mut offset := 2
-	paint_text_on_background(mut ctx, x + offset, y, status_dark_lilac, Color{230, 230, 230},
+	draw.paint_text_on_background(mut ctx, x + offset, y, core.status_dark_lilac, draw.Color{230, 230, 230},
 		git_branch)
 	offset += git_branch.runes().len - 1
-	paint_shape_text(mut ctx, x + offset, y, Color{154, 119, 209}, '${block}${slant_right_flat_bottom}')
+	draw.paint_shape_text(mut ctx, x + offset, y, draw.Color{154, 119, 209}, '${core.block}${core.slant_right_flat_bottom}')
 	offset += 2
 	return offset
 }
 
 fn draw_cursor_position_segment(mut ctx draw.Contextable, x int, y int, cursor_x int, cursor_y int) int {
 	cursor_info_label := '${cursor_y + 1}:${cursor_x + 1}'
-	paint_shape_text(mut ctx, ctx.window_width() - 1, y, Color{245, 42, 42}, '${block}${block}')
+	draw.paint_shape_text(mut ctx, ctx.window_width() - 1, y, draw.Color{245, 42, 42}, '${core.block}${core.block}')
 	ctx.bold()
-	paint_text_on_background(mut ctx, ctx.window_width() - 1 - cursor_info_label.len,
-		y, Color{245, 42, 42}, Color{255, 255, 255}, cursor_info_label)
-	paint_shape_text(mut ctx, ctx.window_width() - 2 - cursor_info_label.len - 2, y, Color{245, 42, 42},
-		'${slant_right_flat_top}${slant_left_flat_bottom}${block}')
-	paint_shape_text(mut ctx, ctx.window_width() - 2 - cursor_info_label.len - 2, y, Color{25, 25, 25},
-		'${slant_right_flat_top}')
+	draw.paint_text_on_background(mut ctx, ctx.window_width() - 1 - cursor_info_label.len,
+		y, draw.Color{245, 42, 42}, draw.Color{255, 255, 255}, cursor_info_label)
+	draw.paint_shape_text(mut ctx, ctx.window_width() - 2 - cursor_info_label.len - 2, y, draw.Color{245, 42, 42},
+		'${core.slant_right_flat_top}${core.slant_left_flat_bottom}${core.block}')
+	draw.paint_shape_text(mut ctx, ctx.window_width() - 2 - cursor_info_label.len - 2, y, draw.Color{25, 25, 25},
+		'${core.slant_right_flat_top}')
 	return 0
 }
