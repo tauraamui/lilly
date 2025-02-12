@@ -106,7 +106,18 @@ fn is_binary_file(path string) bool {
     return (f64(non_text_bytes) / f64(bytes_read)) > 0.3
 }
 
+fn (mut lilly Lilly) open_file_v2(path string) ! {
+	defer {
+		lilly.close_file_finder()
+		lilly.close_inactive_buffer_finder()
+	}
+}
+
 fn (mut lilly Lilly) open_file(path string) ! {
+	return lilly.open_file_with_reader(path, os.read_lines)
+}
+
+fn (mut lilly Lilly) open_file_with_reader(path string, read_lines fn (path string) ![]string) ! {
 	defer {
 		lilly.close_file_finder()
 		lilly.close_inactive_buffer_finder()
@@ -134,7 +145,7 @@ fn (mut lilly Lilly) open_file(path string) ! {
 	mut buff := buffer.Buffer{
 		file_path: path
 	}
-	buff.load_from_path(os.read_lines, lilly.use_gap_buffer) or { return err }
+	buff.load_from_path(read_lines, lilly.use_gap_buffer) or { return err }
 	lilly.buffers << buff
 	lilly.views << open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(), lilly.workspace.syntaxes(),
 		lilly.clipboard, mut &lilly.buffers[lilly.buffers.len - 1])
