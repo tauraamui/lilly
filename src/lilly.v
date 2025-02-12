@@ -20,6 +20,9 @@ import lib.buffer
 import lib.clipboardv2
 import lib.workspace
 import lib.draw
+
+type BufferGuid_t = string
+
 @[heap]
 struct Lilly {
 mut:
@@ -30,6 +33,8 @@ mut:
 	use_gap_buffer                    bool
 	views                             []Viewable
 	buffers                           []buffer.Buffer
+	file_buffers                      map[string]buffer.Buffer
+	buffer_views                      map[BufferGuid_t]Viewable
 	file_finder_modal_open            bool
 	file_finder_modal                 Viewable
 	inactive_buffer_finder_modal_open bool
@@ -114,7 +119,22 @@ fn (mut lilly Lilly) open_file_v2(path string) ! {
 }
 
 fn (mut lilly Lilly) open_file(path string) ! {
+	lilly.open_file_with_reader_v2(path, os.read_lines)!
 	return lilly.open_file_with_reader(path, os.read_lines)
+}
+
+fn (mut lilly Lilly) open_file_with_reader_v2(path string, read_lines fn (path string) ![]string) ! {
+	defer {
+		lilly.close_file_finder()
+		lilly.close_inactive_buffer_finder()
+	}
+
+	mut buff := buffer.Buffer{ file_path: path }
+	buff.load_from_path(read_lines, lilly.use_gap_buffer) or { return err }
+
+	lilly.file_buffers[buff.file_path] = buff
+	lilly.buffer_views["ijiwefjiewjfijefoie"] = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
+				lilly.workspace.syntaxes(), lilly.clipboard, mut buff)
 }
 
 fn (mut lilly Lilly) open_file_with_reader(path string, read_lines fn (path string) ![]string) ! {
