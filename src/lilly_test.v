@@ -30,7 +30,7 @@ fn (mut m_line_reader MockLineReader) read_lines(path string) ![]string {
 	return m_line_reader.line_data
 }
 
-fn test_something_to_be_false() {
+fn test_lilly_opens_file_loads_into_buffer_and_view() {
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard: mut clip
@@ -48,6 +48,7 @@ fn test_something_to_be_false() {
 
 	lilly.open_file_with_reader("test-file.txt", m_line_reader.read_lines) or { assert false }
 
+	assert m_line_reader.given_path == "test-file.txt"
 	assert lilly.views.len   == 1
 	assert lilly.buffers.len == 1
 }
