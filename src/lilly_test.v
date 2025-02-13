@@ -13,9 +13,7 @@
 // limitations under the License.
 
 module main
-import log
 import lib.clipboardv2
-import lib.buffer
 import lib.workspace
 
 @[heap]
@@ -68,7 +66,6 @@ fn test_lilly_opens_file_loads_into_buffer_and_view_if_done_twice_does_not_creat
 
 	assert lilly.views.len == 0
 	assert lilly.buffers.len == 0
-	assert lilly.view.file_path == ""
 
 	lilly.open_file_with_reader("test-file.txt", m_line_reader.read_lines) or { assert false }
 
@@ -107,7 +104,8 @@ fn test_lilly_open_file_v2_loads_into_file_buffer_and_buffer_view_maps() {
 	assert lilly.buffers.len == 0
 
 	file_buff := lilly.file_buffers["test-file.txt"] or { assert false, "failed to find buffer instance for path: test-file.txt" }
-	_ := lilly.buffer_views[file_buff.uuid]          or { assert false, "failed to find view instance for buffer of uuid: ${file_buff.uuid}" }
+	buff_view := lilly.buffer_views[file_buff.uuid]  or { assert false, "failed to find view instance for buffer of uuid: ${file_buff.uuid}" }
+	assert lilly.view == buff_view
 }
 
 // TODO(tauraamui) [12/02/2025] something is horrendously broken with the below tests, its so bad that its making the
