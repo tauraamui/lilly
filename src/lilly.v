@@ -20,16 +20,19 @@ import lib.buffer
 import lib.clipboardv2
 import lib.workspace
 import lib.draw
+
 @[heap]
 struct Lilly {
 mut:
 	log                               log.Log
 	clipboard                         clipboardv2.Clipboard
-	view                              &Viewable = unsafe { nil }
+	view                              Viewable
 	debug_view                        bool
 	use_gap_buffer                    bool
 	views                             []Viewable
 	buffers                           []buffer.Buffer
+	file_buffers                      map[string]buffer.Buffer
+	buffer_views                      map[buffer.UUID_t]Viewable
 	file_finder_modal_open            bool
 	file_finder_modal                 Viewable
 	inactive_buffer_finder_modal_open bool
@@ -106,16 +109,50 @@ fn is_binary_file(path string) bool {
     return (f64(non_text_bytes) / f64(bytes_read)) > 0.3
 }
 
+fn (mut lilly Lilly) open_file_v2(path string) ! {
+	return lilly.open_file_with_reader_v2(path, os.read_lines)
+}
+
 fn (mut lilly Lilly) open_file(path string) ! {
+	return lilly.open_file_with_reader(path, os.read_lines)
+}
+
+fn (mut lilly Lilly) open_file_with_reader_v2(path string, line_reader fn (path string) ![]string) ! {
+	defer {
+		lilly.close_file_finder()
+		lilly.close_inactive_buffer_finder()
+	}
+
+	if mut existing_file_buff := lilly.file_buffers[path] {
+		if existing_view := lilly.buffer_views[existing_file_buff.uuid] {
+			lilly.view = existing_view
+			return
+		}
+		lilly.view = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
+					lilly.workspace.syntaxes(), lilly.clipboard, mut existing_file_buff)
+		lilly.buffer_views[existing_file_buff.uuid] = lilly.view
+		return
+	}
+
+	mut buff := buffer.Buffer.new(path, lilly.use_gap_buffer)
+	buff.read_lines(line_reader) or { return err }
+
+	lilly.file_buffers[path] = buff
+	lilly.view = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
+				lilly.workspace.syntaxes(), lilly.clipboard, mut buff)
+	lilly.buffer_views[buff.uuid] = lilly.view
+}
+
+fn (mut lilly Lilly) open_file_with_reader(path string, line_reader fn (path string) ![]string) ! {
 	defer {
 		lilly.close_file_finder()
 		lilly.close_inactive_buffer_finder()
 	}
 
 	// find existing view which has that file open
-	for i, view in lilly.views[1..] {
+	for i, view in lilly.views {
 		if view.file_path == path {
-			lilly.view = &lilly.views[i + 1]
+			lilly.view = &lilly.views[i]
 			return
 		}
 	}
@@ -131,10 +168,8 @@ fn (mut lilly Lilly) open_file(path string) ! {
 	}
 
 	// neither existing view nor buffer was found, oh well, just load it then :)
-	mut buff := buffer.Buffer{
-		file_path: path
-	}
-	buff.load_from_path(os.read_lines, lilly.use_gap_buffer) or { return err }
+	mut buff := buffer.Buffer.new(path, lilly.use_gap_buffer)
+	buff.read_lines(line_reader) or { return err }
 	lilly.buffers << buff
 	lilly.views << open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(), lilly.workspace.syntaxes(),
 		lilly.clipboard, mut &lilly.buffers[lilly.buffers.len - 1])
