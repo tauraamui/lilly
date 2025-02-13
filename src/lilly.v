@@ -26,7 +26,7 @@ struct Lilly {
 mut:
 	log                               log.Log
 	clipboard                         clipboardv2.Clipboard
-	view                              &Viewable = unsafe { nil }
+	view                              Viewable
 	debug_view                        bool
 	use_gap_buffer                    bool
 	views                             []Viewable
@@ -127,12 +127,23 @@ fn (mut lilly Lilly) open_file_with_reader_v2(path string, line_reader fn (path 
 		lilly.close_inactive_buffer_finder()
 	}
 
+	if mut existing_file_buff := lilly.file_buffers[path] {
+		if existing_file_buff.uuid in lilly.buffer_views {
+			return
+		}
+		lilly.view = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
+					lilly.workspace.syntaxes(), lilly.clipboard, mut existing_file_buff)
+		lilly.buffer_views[existing_file_buff.uuid] = lilly.view
+		return
+	}
+
 	mut buff := buffer.Buffer.new(path, lilly.use_gap_buffer)
 	buff.read_lines(line_reader) or { return err }
 
 	lilly.file_buffers[path] = buff
-	lilly.buffer_views[buff.uuid] = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
+	lilly.view = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
 				lilly.workspace.syntaxes(), lilly.clipboard, mut buff)
+	lilly.buffer_views[buff.uuid] = lilly.view
 }
 
 fn (mut lilly Lilly) open_file_with_reader(path string, line_reader fn (path string) ![]string) ! {
