@@ -128,7 +128,8 @@ fn (mut lilly Lilly) open_file_with_reader_v2(path string, line_reader fn (path 
 	}
 
 	if mut existing_file_buff := lilly.file_buffers[path] {
-		if existing_file_buff.uuid in lilly.buffer_views {
+		if existing_view := lilly.buffer_views[existing_file_buff.uuid] {
+			lilly.view = existing_view
 			return
 		}
 		lilly.view = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
