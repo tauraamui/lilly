@@ -144,7 +144,7 @@ fn (mut lilly Lilly) open_file_with_reader(path string, line_reader fn (path str
 	// find existing view which has that file open
 	for i, view in lilly.views {
 		if view.file_path == path {
-			lilly.view = &lilly.views[i + 1]
+			lilly.view = &lilly.views[i]
 			return
 		}
 	}
