@@ -2,8 +2,11 @@ module buffer
 
 import lib.search
 
+pub type UUID_t = string
+
 pub struct Buffer {
 pub:
+	uuid      UUID_t
 	file_path string
 pub mut:
 	auto_close_chars []string

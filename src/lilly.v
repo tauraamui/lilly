@@ -21,8 +21,6 @@ import lib.clipboardv2
 import lib.workspace
 import lib.draw
 
-type BufferGuid_t = string
-
 @[heap]
 struct Lilly {
 mut:
@@ -34,7 +32,7 @@ mut:
 	views                             []Viewable
 	buffers                           []buffer.Buffer
 	file_buffers                      map[string]buffer.Buffer
-	buffer_views                      map[BufferGuid_t]Viewable
+	buffer_views                      map[buffer.UUID_t]Viewable
 	file_finder_modal_open            bool
 	file_finder_modal                 Viewable
 	inactive_buffer_finder_modal_open bool
