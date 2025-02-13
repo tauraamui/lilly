@@ -53,6 +53,32 @@ fn test_lilly_opens_file_loads_into_buffer_and_view() {
 	assert lilly.buffers.len == 1
 }
 
+fn test_lilly_open_file_v2_loads_into_file_buffer_and_buffer_view_maps() {
+	mut clip := clipboardv2.new()
+	mut lilly := Lilly{
+		clipboard: mut clip
+		file_finder_modal: unsafe { nil }
+		inactive_buffer_finder_modal: unsafe { nil }
+		todo_comments_finder_modal: unsafe { nil }
+	}
+
+	mut m_line_reader := MockLineReader{
+		line_data: ["This is a fake document that doesn't exist on disk anywhere"]
+	}
+
+	assert lilly.views.len == 0
+	assert lilly.buffers.len == 0
+
+	lilly.open_file_with_reader_v2("test-file.txt", m_line_reader.read_lines) or { assert false }
+
+	assert m_line_reader.given_path == "test-file.txt"
+	assert lilly.views.len   == 0
+	assert lilly.buffers.len == 0
+
+	file_buff := lilly.file_buffers["test-file.txt"] or { assert false, "failed to find buffer instance for path: test-file.txt" }
+	_ := lilly.buffer_views[file_buff.uuid]          or { assert false, "failed to find view instance for buffer of uuid: ${file_buff.uuid}" }
+}
+
 // TODO(tauraamui) [12/02/2025] something is horrendously broken with the below tests, its so bad that its making the
 //                              v test suite runner have some kind of stroke for all of the other asserts in this file...
 /*
