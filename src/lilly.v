@@ -130,8 +130,8 @@ fn (mut lilly Lilly) open_file_with_reader_v2(path string, line_reader fn (path 
 	mut buff := buffer.Buffer.new(path, lilly.use_gap_buffer)
 	buff.read_lines(line_reader) or { return err }
 
-	lilly.file_buffers[buff.file_path] = buff
-	lilly.buffer_views["ijiwefjiewjfijefoie"] = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
+	lilly.file_buffers[path] = buff
+	lilly.buffer_views[buff.uuid] = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
 				lilly.workspace.syntaxes(), lilly.clipboard, mut buff)
 }
 
