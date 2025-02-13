@@ -1,22 +1,9 @@
 module buffer
 
 import lib.search
+import rand
 
 pub type UUID_t = string
-
-pub struct Buffer {
-pub:
-	uuid      UUID_t
-	file_path string
-pub mut:
-	auto_close_chars []string
-	lines            []string
-	use_gap_buffer   bool
-	dirty            bool
-mut:
-	c_buffer         GapBuffer
-	// line_tracker LineTracker
-}
 
 pub struct Pos {
 pub mut:
@@ -24,17 +11,39 @@ pub mut:
 	y int
 }
 
-pub fn (mut buffer Buffer) load_from_path(read_lines fn (path string) ![]string, use_gap_buffer bool) ! {
-	if use_gap_buffer {
-		lines := read_lines(buffer.file_path) or {
+@[noinit]
+pub struct Buffer {
+pub:
+	uuid      UUID_t
+	file_path string
+	use_gap_buffer   bool
+pub mut:
+	auto_close_chars []string
+	lines            []string
+	dirty            bool
+mut:
+	c_buffer         GapBuffer
+	// line_tracker LineTracker
+}
+
+pub fn Buffer.new(file_path string, use_gap bool) Buffer {
+	return Buffer{
+		uuid: rand.uuid_v4()
+		file_path: file_path
+		use_gap_buffer: use_gap
+	}
+}
+
+pub fn (mut buffer Buffer) read_lines(line_reader fn (path string) ![]string) ! {
+	if buffer.use_gap_buffer {
+		lines := line_reader(buffer.file_path) or {
 			return error("unable to open file ${buffer.file_path}: ${err}")
 		}
-		buffer.use_gap_buffer = use_gap_buffer
 		buffer.load_contents_into_gap(lines.join("\n"))
 		return
 	}
 
-	buffer.lines = read_lines(buffer.file_path) or {
+	buffer.lines = line_reader(buffer.file_path) or {
 		return error('unable to open file ${buffer.file_path}: ${err}')
 	}
 	if buffer.lines.len == 0 {

@@ -121,21 +121,21 @@ fn (mut lilly Lilly) open_file(path string) ! {
 	return lilly.open_file_with_reader(path, os.read_lines)
 }
 
-fn (mut lilly Lilly) open_file_with_reader_v2(path string, read_lines fn (path string) ![]string) ! {
+fn (mut lilly Lilly) open_file_with_reader_v2(path string, line_reader fn (path string) ![]string) ! {
 	defer {
 		lilly.close_file_finder()
 		lilly.close_inactive_buffer_finder()
 	}
 
-	mut buff := buffer.Buffer{ file_path: path }
-	buff.load_from_path(read_lines, lilly.use_gap_buffer) or { return err }
+	mut buff := buffer.Buffer.new(path, lilly.use_gap_buffer)
+	buff.read_lines(line_reader) or { return err }
 
 	lilly.file_buffers[buff.file_path] = buff
 	lilly.buffer_views["ijiwefjiewjfijefoie"] = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
 				lilly.workspace.syntaxes(), lilly.clipboard, mut buff)
 }
 
-fn (mut lilly Lilly) open_file_with_reader(path string, read_lines fn (path string) ![]string) ! {
+fn (mut lilly Lilly) open_file_with_reader(path string, line_reader fn (path string) ![]string) ! {
 	defer {
 		lilly.close_file_finder()
 		lilly.close_inactive_buffer_finder()
@@ -160,10 +160,8 @@ fn (mut lilly Lilly) open_file_with_reader(path string, read_lines fn (path stri
 	}
 
 	// neither existing view nor buffer was found, oh well, just load it then :)
-	mut buff := buffer.Buffer{
-		file_path: path
-	}
-	buff.load_from_path(read_lines, lilly.use_gap_buffer) or { return err }
+	mut buff := buffer.Buffer.new(path, lilly.use_gap_buffer)
+	buff.read_lines(line_reader) or { return err }
 	lilly.buffers << buff
 	lilly.views << open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(), lilly.workspace.syntaxes(),
 		lilly.clipboard, mut &lilly.buffers[lilly.buffers.len - 1])
