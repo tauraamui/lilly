@@ -18,6 +18,7 @@ import arrays
 import lib.clipboardv2
 import lib.workspace
 import lib.chords
+import lib.buffer
 import json
 import lib.draw
 import term.ui as tui
@@ -77,6 +78,7 @@ fn test_dd_deletes_current_line_at_start_of_doc() {
 		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. fourth line']
 	fake_view.cursor.pos.y = 0
@@ -94,6 +96,7 @@ fn test_dd_deletes_current_line_in_middle_of_doc() {
 		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. fourth line']
 	fake_view.cursor.pos.y = 2
@@ -112,6 +115,7 @@ fn test_dd_deletes_current_line_at_end_of_doc() {
 		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line']
@@ -133,6 +137,7 @@ fn test_dd_deletes_current_line_and_p_reinserts_it_correctly() {
 		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. forth line']
 	fake_view.cursor.pos.y = 0
@@ -160,6 +165,7 @@ fn test_visual_line_select_delete_and_paste_works_correctly() {
 		log:      log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. fourth line']
 	fake_view.j()
@@ -183,6 +189,7 @@ fn test_visual_select_copy_and_paste_works_correctly() {
 		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['This is kind of a mega line right? It is pretty long!', '2. second line', '3. third line', '4. fourth line']
 
@@ -226,6 +233,7 @@ fn test_visual_select_across_multiple_lines_copy_and_paste_works_correctly() {
 		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['This is kind of a mega line right? It is pretty long!', '2. second line', '3. third line', '4. fourth line']
 
@@ -264,6 +272,7 @@ fn test_insert_text() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['1. first line', '2. second line']
@@ -284,6 +293,7 @@ fn test_o_inserts_sentance_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['1. first line', '2. second line']
@@ -304,6 +314,7 @@ fn test_o_inserts_sentance_line_end_of_document() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['1. first line', '2. second line']
@@ -324,6 +335,7 @@ fn test_o_inserts_line_and_auto_indents() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['	1. first line']
@@ -344,6 +356,7 @@ fn test_o_auto_indents_but_clears_if_nothing_added_to_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['	1. first line']
@@ -391,6 +404,7 @@ fn test_v_toggles_visual_mode_and_starts_selection() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['1. first line']
@@ -420,6 +434,7 @@ fn test_v_toggles_visual_mode_move_selection_down_to_second_line_ensure_start_po
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['1. first line', '//']
@@ -463,6 +478,7 @@ fn test_shift_v_toggles_visual_line_mode_and_starts_selection() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['1. first line']
@@ -696,6 +712,7 @@ fn test_enter_from_start_of_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .insert }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = [
@@ -720,6 +737,7 @@ fn test_enter_moves_trailing_segment_to_next_line_and_moves_cursor_in_front() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .insert }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = [
@@ -744,6 +762,7 @@ fn test_enter_moves_trailing_segment_to_next_line_and_moves_cursor_to_past_prefi
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .insert }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = [
 		'    1. first line with whitespace prefix',
@@ -767,6 +786,7 @@ fn test_enter_inserts_line_at_cur_pos_and_auto_indents() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .insert }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['	indented first line']
@@ -787,6 +807,7 @@ fn test_enter_auto_indents_but_clears_if_nothing_added_to_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .insert }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['	indented first line']
@@ -809,6 +830,7 @@ fn test_backspace_deletes_char_from_end_of_sentance() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['single line of text!']
@@ -832,6 +854,7 @@ fn test_backspace_deletes_char_from_start_of_sentance() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.leader_state.mode = .insert
 
@@ -853,6 +876,7 @@ fn test_backspace_moves_line_up_to_previous_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.leader_state.mode = .insert
 
@@ -874,6 +898,7 @@ fn test_backspace_moves_line_up_to_end_of_previous_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.leader_state.mode = .insert
 
@@ -898,6 +923,7 @@ fn test_backspace_at_start_of_sentance_first_line_does_nothing() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.leader_state.mode = .insert
 
@@ -918,6 +944,7 @@ fn test_move_cursor_left_with_h_proceeds_to_start_of_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: clipboardv2.new()
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['1. first line']
 
@@ -952,6 +979,7 @@ fn test_move_cursor_right_with_l_proceeds_to_end_of_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: clipboardv2.new()
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['1. first line']
 
@@ -985,6 +1013,7 @@ fn test_move_cursor_down_with_j_proceeds_to_next_line_with_x_maxed() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: clipboardv2.new()
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = [
 		'1. first line with five words',
@@ -1024,6 +1053,7 @@ fn test_move_cursor_up_with_k_proceeds_to_previous_line_with_x_maxed() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: clipboardv2.new()
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = [
 		'1. first line with five words',
@@ -1063,6 +1093,7 @@ fn test_move_cursor_left_with_left_proceeds_to_start_of_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: clipboardv2.new()
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['1. first line']
 
@@ -1097,6 +1128,7 @@ fn test_move_cursor_right_with_right_proceeds_to_end_of_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: clipboardv2.new()
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['1. first line']
 
@@ -1130,6 +1162,7 @@ fn test_move_cursor_down_with_down_proceeds_to_next_line_with_x_maxed() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: clipboardv2.new()
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = [
 		'1. first line with five words',
@@ -1169,6 +1202,7 @@ fn test_move_cursor_down_with_down_proceeds_to_next_line_with_x_maxed_contains_b
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: clipboardv2.new()
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = [
 		'1. first line with five words',
@@ -1208,6 +1242,7 @@ fn test_move_cursor_up_with_up_proceeds_to_previous_line_with_x_maxed() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: clipboardv2.new()
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = [
 		'1. first line with five words',
@@ -1247,6 +1282,7 @@ fn test_move_cursor_up_with_up_proceeds_to_next_line_with_x_maxed_contains_blank
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: clipboardv2.new()
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = [
 		'1. first line with five words',
@@ -1287,6 +1323,7 @@ fn test_left_arrow_at_start_of_sentence_in_insert_mode() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.leader_state.mode = .insert
 
@@ -1310,6 +1347,7 @@ fn test_left_arrow_at_end_of_sentence_in_insert_mode() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.leader_state.mode = .insert
 
@@ -1332,6 +1370,7 @@ fn test_right_arrow_at_start_of_sentence_in_insert_mode() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.leader_state.mode = .insert
 
@@ -1354,6 +1393,7 @@ fn test_right_arrow_at_end_of_sentence_in_insert_mode() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.leader_state.mode = .insert
 
@@ -1376,6 +1416,7 @@ fn test_right_arrow_on_empty_line_in_normal_mode() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	// fake_view.leader_state.mode = .insert
 
@@ -1398,6 +1439,7 @@ fn test_tab_inserts_spaces() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .insert }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	// manually set the documents contents
@@ -1424,6 +1466,7 @@ fn test_tab_inserts_tabs_not_spaces_if_enabled() {
 		config:    workspace.Config{
 			insert_tabs_not_spaces: true
 		}
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	// manually set the documents contents
@@ -1449,6 +1492,7 @@ fn test_visual_indent_indents_highlighted_lines() {
 		config:    workspace.Config{
 			insert_tabs_not_spaces: true
 		}
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = [
@@ -1487,6 +1531,7 @@ fn test_visual_unindent_unindents_highlighted_lines() {
 		config:    workspace.Config{
 			insert_tabs_not_spaces: true
 		}
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = [
@@ -1523,6 +1568,7 @@ fn test_visual_insert_mode_and_delete_in_place() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	// manually set the documents contents
@@ -1544,6 +1590,7 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	// manually set the documents contents
@@ -1566,6 +1613,7 @@ fn test_visual_selection_copy_starts_and_ends_on_same_line_and_selects_whole_lin
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	// manually set the documents contents
@@ -1597,6 +1645,7 @@ fn test_visual_selection_mode_escaped_leaves_cursor_in_final_position() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	// manually set the documents contents
@@ -1626,6 +1675,7 @@ fn test_visual_selection_copy_ends_on_halfway_in_on_next_line_down() {
 		log:       unsafe { nil }
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	// manually set the documents contents
@@ -1656,6 +1706,7 @@ fn test_visual_selection_copy_starts_and_ends_a_few_lines_down() {
 		log:       unsafe { nil }
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	// manually set the documents contents
@@ -1686,6 +1737,7 @@ fn test_visual_line_selection_copy() {
 		log:       unsafe { nil }
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	// manually set the documents contents
@@ -1723,6 +1775,7 @@ fn test_paste_segment_of_line() {
 		log:       unsafe { nil }
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	// manually set the documents contents
@@ -1754,6 +1807,7 @@ fn test_paste_segment_which_does_not_start_nor_end_with_newline() {
 		log:       unsafe { nil }
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	// manually set the documents contents
@@ -1790,6 +1844,7 @@ fn test_paste_full_lines() {
 		log:       unsafe { nil }
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	// manually set the documents contents
@@ -1824,6 +1879,7 @@ fn test_copying_full_lines_with_visual_line_mode_and_pasting() {
 		log:       unsafe { nil }
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	// manually set the documents contents
@@ -1868,6 +1924,7 @@ fn test_search_is_toggled() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.search()
@@ -1973,6 +2030,7 @@ fn test_move_cursor_with_b_from_start_of_line_which_preceeds_a_blank_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: clipboardv2.new()
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['1. first line', '', '3. third line']
 
@@ -1990,6 +2048,7 @@ fn test_jump_cursor_up_to_next_blank_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: clipboardv2.new()
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = [
 		'# Top of the file',
@@ -2014,6 +2073,7 @@ fn test_jump_cursor_down_to_next_blank_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: clipboardv2.new()
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = [
 		'# Top of the file',
@@ -2040,6 +2100,7 @@ fn test_calc_w_move_end_of_line_jumps_down_to_next_line_which_is_blank() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: clipboardv2.new()
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = [
 		'# Top of the file',
@@ -2638,6 +2699,7 @@ fn test_a_enters_insert_mode_after_cursor_position() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = ['single line of text!']
@@ -2656,6 +2718,7 @@ fn test_shift_a_enters_insert_mode_at_the_end_of_current_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = ['some line of text', 'single line of text!', 'a third line!']
@@ -2683,6 +2746,7 @@ fn test_r_replaces_character_in_middle_of_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = ['some random line', 'another line of text', 'one last line']
@@ -2717,6 +2781,7 @@ fn test_r_replaces_character_with_special_character() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = ['some random line', 'another line of text', 'one last line']
@@ -2751,6 +2816,7 @@ fn test_r_replaces_character_with_space() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = ['some random line', 'another line of text', 'one last line']
@@ -2785,6 +2851,7 @@ fn test_r_doesnt_change_anything_when_escape_is_used() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = ['some random line', 'another line of text', 'one last line']
@@ -2818,6 +2885,7 @@ fn test_r_doesnt_change_anything_when_enter_is_used() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = ['some random line', 'another line of text', 'one last line']
@@ -2845,6 +2913,7 @@ fn test_shift_o_adds_line_above_cursor() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = ['some line of text', 'another line of text']
@@ -2866,6 +2935,7 @@ fn test_shift_o_adds_line_above_cursor_at_start_of_file() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = ['some line of text', 'another line of text']
@@ -2888,6 +2958,7 @@ fn test_x_removes_character_in_middle_of_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = ['this is a lines of text']
@@ -2908,6 +2979,7 @@ fn test_x_removes_character_and_shifts_cursor_back_at_end_of_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = ['this is a lines of text']
@@ -2952,6 +3024,7 @@ fn test_auto_closing_square_brace() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = ['']
@@ -2983,6 +3056,7 @@ fn test_auto_closing_curley_brace() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = ['']
@@ -3014,6 +3088,7 @@ fn test_auto_closing_curley_brace_inputting_secondary_close_should_only_move_cur
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = ['']
@@ -3054,6 +3129,7 @@ fn test_auto_closing_square_brace_inputting_secondary_close_should_only_move_cur
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = ['']
@@ -3087,6 +3163,7 @@ fn test_search_line_correct_overwrite() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: clipboardv2.new()
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.cmd_buf.err_msg = "previously run unrecognised command error message"
@@ -3106,6 +3183,7 @@ fn test_center_text_around_cursor() {
 		log: log.Log{}
         leader_state: ViewLeaderState{ mode: .normal }
         height: 10 // Set a small height for testing
+		buffer: buffer.Buffer.new("", false)
     }
 
     // Create a document with more lines than the view height
@@ -3155,6 +3233,7 @@ fn test_zero_key_handling() {
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
+		buffer: buffer.Buffer.new("", false)
 	}
 
 	fake_view.buffer.lines = ['    This is a test line', 'Another line']
@@ -3185,6 +3264,7 @@ fn test_repeat_command_with_chord_repeat_amount() {
 		log: log.Log{}
         leader_state: ViewLeaderState{ mode: .normal }
         height: 40
+		buffer: buffer.Buffer.new("", false)
     }
 
     // Set initial view bounds
@@ -3239,6 +3319,7 @@ fn test_f_finds_in_current_line_command() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['The quick brown fox jumps over the lazy dog']
 	fake_view.cursor.pos.x = 0
@@ -3261,6 +3342,7 @@ fn test_gg_goes_to_top_of_file_command() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3']
 	fake_view.cursor.pos.y = 2
@@ -3277,6 +3359,7 @@ fn test_left_square_brace_goes_to_top_of_file() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = []string{}
 	for i in 0..100 {
@@ -3300,6 +3383,7 @@ fn test_shift_g_goes_to_bottom_of_file_command() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3']
 	fake_view.cursor.pos.y = 2
@@ -3315,6 +3399,7 @@ fn test_right_square_brace_goes_to_top_of_file() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = []string{}
 	for i in 0..100 {
@@ -3341,6 +3426,7 @@ fn test_shift_r_replaces_character_in_line_command() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['The quick brown fox']
 	fake_view.cursor.pos.x = 2
@@ -3364,6 +3450,7 @@ fn test_shift_l_goes_to_lowest_part_of_view_command() {
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 		height: 10
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5', 'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10']
 	fake_view.from = 0
@@ -3381,6 +3468,7 @@ fn test_shift_m_goes_to_middle_part_of_view_command() {
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 		height: 10
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5', 'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10']
 	fake_view.from = 0
@@ -3398,6 +3486,7 @@ fn test_shift_h_goes_to_highest_part_of_view_command() {
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
 		height: 10
+		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5', 'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10']
 	fake_view.from = 0
