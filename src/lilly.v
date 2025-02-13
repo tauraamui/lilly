@@ -110,14 +110,10 @@ fn is_binary_file(path string) bool {
 }
 
 fn (mut lilly Lilly) open_file_v2(path string) ! {
-	defer {
-		lilly.close_file_finder()
-		lilly.close_inactive_buffer_finder()
-	}
+	return lilly.open_file_with_reader_v2(path, os.read_lines)
 }
 
 fn (mut lilly Lilly) open_file(path string) ! {
-	lilly.open_file_with_reader_v2(path, os.read_lines)!
 	return lilly.open_file_with_reader(path, os.read_lines)
 }
 
