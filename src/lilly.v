@@ -191,12 +191,23 @@ fn (mut lilly Lilly) open_file_finder(special_mode bool) {
 	}
 }
 
+fn (mut lilly Lilly) open_file_picker(special_mode bool) {
+	if lilly.file_picker_modal == none {
+		mut fp_modal := ui.FilePickerModal.new(lilly.workspace.files())
+		fp_modal.open()
+		lilly.file_picker_modal = fp_modal
+		return
+	}
+
+	mut fp_modal := lilly.file_picker_modal or { return }
+	fp_modal.open()
+}
+
 fn (mut lilly Lilly) close_file_finder() {
 	lilly.file_finder_modal_open = false
-	// NOTE(tauraamui) [12/02/2025]: this seems risky or something something god i'm so tired, night night
-	//                               right, I think I just wanted to say don't worry about this usage of
-	//                               the file picker, a type which has not been fully realised or correctly
-	//                               integrated as of yet...
+}
+
+fn (mut lilly Lilly) close_file_picker() {
 	mut file_picker := lilly.file_picker_modal or { return }
 	file_picker.close()
 	lilly.file_picker_modal = none
