@@ -48,7 +48,7 @@ pub fn FilePickerModal.new(file_paths []string, special_mode bool) FilePickerMod
 	return FilePickerModal{
 		file_paths: file_paths
 		special_mode: special_mode
-		search: FileSearch{ query: "view" }
+		search: FileSearch{}
 	}
 }
 

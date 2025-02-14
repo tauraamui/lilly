@@ -286,7 +286,7 @@ pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
 		if fp_modal.is_open() {
 			action := fp_modal.on_key_down(e)
 			match action.op {
-				.no_op { }
+				.no_op { lilly.file_picker_modal = fp_modal }
 				// NOTE(tauraamui) [12/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
 				.select_op {
 					lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
