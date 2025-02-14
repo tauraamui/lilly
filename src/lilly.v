@@ -192,16 +192,14 @@ fn (mut lilly Lilly) open_file_finder(special_mode bool) {
 }
 
 fn (mut lilly Lilly) open_file_picker(special_mode bool) {
-	if lilly.file_picker_modal == none {
-		mut fp_modal := ui.FilePickerModal.new(lilly.workspace.files())
+	if mut fp_modal := lilly.file_picker_modal {
+		if fp_modal.is_open() { return }
 		fp_modal.open()
-		lilly.file_picker_modal = fp_modal
 		return
 	}
-
-	mut fp_modal := lilly.file_picker_modal or { return }
-	if fp_modal.is_open() { return }
+	mut fp_modal := ui.FilePickerModal.new(lilly.workspace.files())
 	fp_modal.open()
+	lilly.file_picker_modal = fp_modal
 }
 
 fn (mut lilly Lilly) close_file_finder() {
@@ -260,6 +258,11 @@ fn (mut lilly Lilly) close_todo_comments_finder() {
 
 pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
 	lilly.view.draw(mut ctx)
+
+	if fp_modal := lilly.file_picker_modal {
+		fp_modal.draw(mut ctx)
+		return
+	}
 
 	if lilly.file_finder_modal_open {
 		lilly.file_finder_modal.draw(mut ctx)
