@@ -200,6 +200,7 @@ fn (mut lilly Lilly) open_file_picker(special_mode bool) {
 	}
 
 	mut fp_modal := lilly.file_picker_modal or { return }
+	if fp_modal.is_open() { return }
 	fp_modal.open()
 }
 
