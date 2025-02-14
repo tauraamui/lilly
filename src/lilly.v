@@ -20,6 +20,7 @@ import lib.buffer
 import lib.clipboardv2
 import lib.workspace
 import lib.draw
+import lib.ui
 
 @[heap]
 struct Lilly {
@@ -33,6 +34,7 @@ mut:
 	buffers                           []buffer.Buffer
 	file_buffers                      map[string]buffer.Buffer
 	buffer_views                      map[buffer.UUID_t]Viewable
+	file_picker_modal                 ?ui.FilePickerModal
 	file_finder_modal_open            bool
 	file_finder_modal                 Viewable
 	inactive_buffer_finder_modal_open bool
@@ -191,6 +193,13 @@ fn (mut lilly Lilly) open_file_finder(special_mode bool) {
 
 fn (mut lilly Lilly) close_file_finder() {
 	lilly.file_finder_modal_open = false
+	// NOTE(tauraamui) [12/02/2025]: this seems risky or something something god i'm so tired, night night
+	//                               right, I think I just wanted to say don't worry about this usage of
+	//                               the file picker, a type which has not been fully realised or correctly
+	//                               integrated as of yet...
+	mut file_picker := lilly.file_picker_modal or { return }
+	file_picker.close()
+	lilly.file_picker_modal = none
 }
 
 fn (mut lilly Lilly) open_inactive_buffer_finder(special_mode bool) {
