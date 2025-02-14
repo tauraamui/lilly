@@ -259,7 +259,7 @@ fn (mut lilly Lilly) close_todo_comments_finder() {
 pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
 	lilly.view.draw(mut ctx)
 
-	if fp_modal := lilly.file_picker_modal {
+	if mut fp_modal := lilly.file_picker_modal {
 		fp_modal.draw(mut ctx)
 		return
 	}
@@ -281,6 +281,16 @@ pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
 }
 
 pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
+	if mut fp_modal := lilly.file_picker_modal {
+		action := fp_modal.on_key_down(e)
+		match action.op {
+			.no_op {}
+			// NOTE(tauraamui) [12/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
+			.select_op { lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }; return }
+			.close_op { lilly.close_file_picker(); return }
+		}
+	}
+
 	if lilly.file_finder_modal_open {
 		lilly.file_finder_modal.on_key_down(e, mut lilly)
 		return
