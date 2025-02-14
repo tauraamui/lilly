@@ -44,9 +44,11 @@ fn (mut file_search FileSearch) backspace() {
 	}
 }
 
-pub fn FilePickerModal.new(file_paths []string) FilePickerModal {
+pub fn FilePickerModal.new(file_paths []string, special_mode bool) FilePickerModal {
 	return FilePickerModal{
 		file_paths: file_paths
+		special_mode: special_mode
+		search: FileSearch{ query: "view" }
 	}
 }
 

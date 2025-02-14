@@ -48,6 +48,7 @@ mut:
 interface Root {
 mut:
 	open_file_finder(special_mode bool)
+	open_file_picker(special_mode bool)
 	close_file_finder()
 	open_inactive_buffer_finder(special_mode bool)
 	close_inactive_buffer_finder()
@@ -197,7 +198,7 @@ fn (mut lilly Lilly) open_file_picker(special_mode bool) {
 		fp_modal.open()
 		return
 	}
-	mut fp_modal := ui.FilePickerModal.new(lilly.workspace.files())
+	mut fp_modal := ui.FilePickerModal.new(lilly.workspace.files(), special_mode)
 	fp_modal.open()
 	lilly.file_picker_modal = fp_modal
 }
@@ -282,18 +283,20 @@ pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
 
 pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
 	if mut fp_modal := lilly.file_picker_modal {
-		action := fp_modal.on_key_down(e)
-		match action.op {
-			.no_op {}
-			// NOTE(tauraamui) [12/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
-			.select_op { lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }; return }
-			.close_op { lilly.close_file_picker(); return }
+		if fp_modal.is_open() {
+			action := fp_modal.on_key_down(e)
+			match action.op {
+				.no_op { }
+				// NOTE(tauraamui) [12/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
+				.select_op {
+					lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
+					lilly.close_file_picker()
+					return
+				}
+				.close_op { lilly.close_file_picker(); return }
+			}
+			return
 		}
-	}
-
-	if lilly.file_finder_modal_open {
-		lilly.file_finder_modal.on_key_down(e, mut lilly)
-		return
 	}
 
 	if lilly.inactive_buffer_finder_modal_open {

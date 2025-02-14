@@ -192,7 +192,8 @@ pub fn (mut splash SplashScreen) on_key_down(e draw.Event, mut root Root) {
 				if !splash.leader_state.special { splash.leader_state.normal = true }
 			}
 			if splash.leader_state.f_count == 2 {
-				root.open_file_finder(splash.leader_state.special)
+				// root.open_file_finder(splash.leader_state.special)
+				root.open_file_picker(splash.leader_state.special)
 				reset_leader_state(mut splash.leader_state)
 			}
 		}
