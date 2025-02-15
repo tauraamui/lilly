@@ -8,8 +8,9 @@ const max_height = 20
 
 @[noinit]
 pub struct FilePickerModal {
+	title          string
 pub mut:
-	special_mode bool // NOTE(tsauraamui) [14/02/2025] will likely deprecate or change this for now
+	special_mode   bool // NOTE(tsauraamui) [14/02/2025] will likely deprecate or change this for now
 mut:
 	file_paths     []string
 	search         FileSearch
@@ -44,8 +45,9 @@ fn (mut file_search FileSearch) backspace() {
 	}
 }
 
-pub fn FilePickerModal.new(file_paths []string, special_mode bool) FilePickerModal {
+pub fn FilePickerModal.new(title string, file_paths []string, special_mode bool) FilePickerModal {
 	return FilePickerModal{
+		title: if title.len == 0 { "FILE PICKER" } else { title }
 		file_paths: file_paths
 		special_mode: special_mode
 		search: FileSearch{}
@@ -63,7 +65,7 @@ pub fn (mut f_picker FilePickerModal) draw(mut ctx draw.Contextable) {
 	mut y_offset := 1
 	debug_mode_str := if ctx.render_debug() { " *** RENDER DEBUG MODE ***" } else { "" }
 	special_mode_str := if f_picker.special_mode { " - SPECIAL MODE" } else { "" }
-	ctx.draw_text(1, y_offset, "=== ${debug_mode_str} FILE PICKER${special_mode_str} ${debug_mode_str} ===")
+	ctx.draw_text(1, y_offset, "=== ${debug_mode_str} ${f_picker.title}${special_mode_str} ${debug_mode_str} ===")
 	y_offset += 1
 	ctx.set_cursor_position(1, y_offset + f_picker.current_sel_id - f_picker.from)
 	y_offset += f_picker.draw_scrollable_list(mut ctx, y_offset, f_picker.file_paths)

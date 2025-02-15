@@ -199,7 +199,7 @@ fn (mut lilly Lilly) open_file_picker(special_mode bool) {
 		lilly.file_picker_modal = file_picker
 		return
 	}
-	mut file_picker := ui.FilePickerModal.new(lilly.workspace.files(), special_mode)
+	mut file_picker := ui.FilePickerModal.new("", lilly.workspace.files(), special_mode)
 	file_picker.open()
 	lilly.file_picker_modal = file_picker
 }
@@ -237,7 +237,7 @@ fn (mut lilly Lilly) open_inactive_buffer_picker(special_mode bool) {
 	// TODO(tauraamui) [15/02/2025]: resolve all file paths for any buffers with no view instance
 	//                               or any view which is not the current/active view
 	file_paths := []string{}
-	mut inactive_buffer_picker := ui.FilePickerModal.new(file_paths, special_mode)
+	mut inactive_buffer_picker := ui.FilePickerModal.new("INACTIVE BUFFERS PICKER", file_paths, special_mode)
 	inactive_buffer_picker.open()
 	lilly.inactive_buffer_picker_modal = inactive_buffer_picker
 }
