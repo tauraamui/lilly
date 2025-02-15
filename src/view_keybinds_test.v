@@ -22,10 +22,12 @@ import log
 
 struct MockRoot {
 mut:
+	file_picker_open                     bool
 	file_finder_open                     bool
 	inactive_buffer_finder_open          bool
 	close_inactive_buffer_finder_invoked bool
 	close_file_finder_invoked            bool
+	close_file_picker_invoked            bool
 	todo_comments_finder_open            bool
 	close_todo_comments_finder_invoked   bool
 	special_mode                         bool
@@ -33,6 +35,11 @@ mut:
 
 fn (mut root MockRoot) open_file_finder(special_mode bool) {
 	root.file_finder_open = true
+	root.special_mode = special_mode
+}
+
+fn (mut root MockRoot) open_file_picker(special_mode bool) {
+	root.file_picker_open = true
 	root.special_mode = special_mode
 }
 
@@ -50,6 +57,12 @@ fn (mut root MockRoot) open_file(path string) ! { return }
 fn (mut root MockRoot) close_file_finder() {
 	root.close_file_finder_invoked = true
 	root.file_finder_open = false
+	root.special_mode = false
+}
+
+fn (mut root MockRoot) close_file_picker() {
+	root.close_file_picker_invoked = true
+	root.file_picker_open = false
 	root.special_mode = false
 }
 
@@ -497,7 +510,6 @@ fn test_sets_of_key_events_for_views_on_key_down_adjusting_cursor_position() {
 		mut clip := clipboardv2.new()
 		mut lilly := Lilly{
 			clipboard:         mut clip
-			file_finder_modal: unsafe { nil }
 		}
 		mut fake_view := View{
 			log:       log.Log{}
@@ -525,7 +537,6 @@ fn test_w_moves_cursor_to_next_line_with_plain_comments() {
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard:         mut clip
-		file_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
 		log:       log.Log{}

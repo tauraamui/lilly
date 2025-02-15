@@ -35,6 +35,7 @@ mut:
 	file_buffers                      map[string]buffer.Buffer
 	buffer_views                      map[buffer.UUID_t]Viewable
 	file_picker_modal                 ?ui.FilePickerModal
+	inactive_buffer_picker_modal      ?ui.FilePickerModal
 	inactive_buffer_finder_modal_open bool
 	inactive_buffer_finder_modal      Viewable
 	todo_comments_finder_modal_open   bool
@@ -193,7 +194,7 @@ fn (mut lilly Lilly) open_file_finder(special_mode bool) {
 
 fn (mut lilly Lilly) open_file_picker(special_mode bool) {
 	if mut file_picker := lilly.file_picker_modal {
-		if file_picker.is_open() { return }
+		if file_picker.is_open() { return } // this should never be reached
 		file_picker.open()
 		lilly.file_picker_modal = file_picker
 		return
@@ -204,7 +205,7 @@ fn (mut lilly Lilly) open_file_picker(special_mode bool) {
 }
 
 fn (mut lilly Lilly) close_file_finder() {
-	lilly.file_finder_modal_open = false
+	// lilly.file_finder_modal_open = false
 }
 
 fn (mut lilly Lilly) close_file_picker() {
@@ -213,13 +214,8 @@ fn (mut lilly Lilly) close_file_picker() {
 	lilly.file_picker_modal = none
 }
 
-fn (mut lilly Lilly) open_inactive_buffer_picker(special_mode bool) {
-	if mut inactive_buffer_picker := lilly.inactive_buffer_picker_modal {
-	}
-}
-
 fn (mut lilly Lilly) open_inactive_buffer_finder(special_mode bool) {
-	if lilly.file_finder_modal_open { return }
+	// if lilly.file_finder_modal_open { return }
 	lilly.inactive_buffer_finder_modal_open = true
 	lilly.inactive_buffer_finder_modal = FileFinderModal{
 		special_mode: special_mode
@@ -231,8 +227,29 @@ fn (mut lilly Lilly) open_inactive_buffer_finder(special_mode bool) {
 	}
 }
 
+fn (mut lilly Lilly) open_inactive_buffer_picker(special_mode bool) {
+	if mut inactive_buffer_picker := lilly.inactive_buffer_picker_modal {
+		if inactive_buffer_picker.is_open() { return } // this should never happen/be reached
+		inactive_buffer_picker.open()
+		lilly.inactive_buffer_picker_modal = inactive_buffer_picker
+		return
+	}
+	// TODO(tauraamui) [15/02/2025]: resolve all file paths for any buffers with no view instance
+	//                               or any view which is not the current/active view
+	file_paths := []string{}
+	mut inactive_buffer_picker := ui.FilePickerModal.new(file_paths, special_mode)
+	inactive_buffer_picker.open()
+	lilly.inactive_buffer_picker_modal = inactive_buffer_picker
+}
+
 fn (mut lilly Lilly) close_inactive_buffer_finder() {
 	lilly.inactive_buffer_finder_modal_open = false
+}
+
+fn (mut lilly Lilly) close_inactive_buffer_picker() {
+	mut inactive_buffer_picker := lilly.inactive_buffer_picker_modal or { return }
+	inactive_buffer_picker.close()
+	lilly.inactive_buffer_picker_modal = none
 }
 
 fn (mut lilly Lilly) open_todo_comments_finder() {
