@@ -47,8 +47,7 @@ mut:
 interface Root {
 mut:
 	open_file_picker(special_mode bool)
-	open_inactive_buffer_finder(special_mode bool)
-	close_inactive_buffer_finder()
+	open_inactive_buffer_picker(special_mode bool)
 	open_todo_comments_finder()
 	close_todo_comments_finder()
 	open_file(path string) !
@@ -214,6 +213,9 @@ fn (mut lilly Lilly) close_file_picker() {
 	lilly.file_picker_modal = none
 }
 
+// disabled but not removed yet
+// TODO(tauraamui) [15/02/2025]: remove this method at some point but not yet
+/*
 fn (mut lilly Lilly) open_inactive_buffer_finder(special_mode bool) {
 	// if lilly.file_finder_modal_open { return }
 	lilly.inactive_buffer_finder_modal_open = true
@@ -226,6 +228,7 @@ fn (mut lilly Lilly) open_inactive_buffer_finder(special_mode bool) {
 		close_fn: lilly.close_inactive_buffer_finder
 	}
 }
+*/
 
 fn (mut lilly Lilly) open_inactive_buffer_picker(special_mode bool) {
 	if mut inactive_buffer_picker := lilly.inactive_buffer_picker_modal {
@@ -243,7 +246,7 @@ fn (mut lilly Lilly) open_inactive_buffer_picker(special_mode bool) {
 }
 
 fn (mut lilly Lilly) close_inactive_buffer_finder() {
-	lilly.inactive_buffer_finder_modal_open = false
+	// lilly.inactive_buffer_finder_modal_open = false
 }
 
 fn (mut lilly Lilly) close_inactive_buffer_picker() {
@@ -282,14 +285,15 @@ fn (mut lilly Lilly) close_todo_comments_finder() {
 pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
 	lilly.view.draw(mut ctx)
 
-	if mut fp_modal := lilly.file_picker_modal {
-		fp_modal.draw(mut ctx)
-		lilly.file_picker_modal = fp_modal // draw internally can mutate state so ensure we keep this
+	if mut file_picker := lilly.file_picker_modal {
+		file_picker.draw(mut ctx)
+		lilly.file_picker_modal = file_picker // draw internally can mutate state so ensure we keep this
 		return
 	}
 
-	if lilly.inactive_buffer_finder_modal_open {
-		lilly.inactive_buffer_finder_modal.draw(mut ctx)
+	if mut inactive_buffer_picker := lilly.inactive_buffer_picker {
+		inactive_buffer_picker.draw(mut ctx)
+		lilly.inactive_buffer_picker_modal = inactive_buffer_picker// draw internally can mutate state so ensure we keep this
 		return
 	}
 
@@ -300,16 +304,18 @@ pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
 }
 
 pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
-	if mut fp_modal := lilly.file_picker_modal {
-		if fp_modal.is_open() {
-			lilly.file_picker_on_key_down(mut fp_modal, e)
+	if mut file_picker := lilly.file_picker_modal {
+		if file_picker.is_open() {
+			lilly.file_picker_on_key_down(mut file_picker, e)
 			return
 		}
 	}
 
-	if lilly.inactive_buffer_finder_modal_open {
-		lilly.inactive_buffer_finder_modal.on_key_down(e, mut lilly)
-		return
+	if mut inactive_buffer_picker := lilly.inactive_buffer_picker_modal {
+		if inactive_buffer_picker.is_open() {
+			lilly.file_picker_on_key_down(mut inactive_buffer_picker, e)
+			return
+		}
 	}
 
 	if lilly.todo_comments_finder_modal_open {
