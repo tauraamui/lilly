@@ -35,8 +35,6 @@ mut:
 	file_buffers                      map[string]buffer.Buffer
 	buffer_views                      map[buffer.UUID_t]Viewable
 	file_picker_modal                 ?ui.FilePickerModal
-	file_finder_modal_open            bool
-	file_finder_modal                 Viewable
 	inactive_buffer_finder_modal_open bool
 	inactive_buffer_finder_modal      Viewable
 	todo_comments_finder_modal_open   bool
@@ -47,9 +45,7 @@ mut:
 
 interface Root {
 mut:
-	open_file_finder(special_mode bool)
 	open_file_picker(special_mode bool)
-	close_file_finder()
 	open_inactive_buffer_finder(special_mode bool)
 	close_inactive_buffer_finder()
 	open_todo_comments_finder()
@@ -69,7 +65,6 @@ pub fn open_lilly(
 		log: _log
 		clipboard:         _clipboard
 		use_gap_buffer: use_gap_buffer
-		file_finder_modal: unsafe { nil }
 		inactive_buffer_finder_modal: unsafe { nil }
 		todo_comments_finder_modal: unsafe { nil }
 	}
@@ -179,6 +174,9 @@ fn (mut lilly Lilly) open_file_with_reader(path string, line_reader fn (path str
 	lilly.view = &lilly.views[lilly.views.len - 1]
 }
 
+// disabled but not removed yet
+// TODO(tauraamui) [14/02/2025]: remove this method at some point but not yet
+/*
 fn (mut lilly Lilly) open_file_finder(special_mode bool) {
 	if lilly.inactive_buffer_finder_modal_open { return }
 	lilly.file_finder_modal_open = true
@@ -191,16 +189,18 @@ fn (mut lilly Lilly) open_file_finder(special_mode bool) {
 		close_fn: lilly.close_file_finder
 	}
 }
+*/
 
 fn (mut lilly Lilly) open_file_picker(special_mode bool) {
-	if mut fp_modal := lilly.file_picker_modal {
-		if fp_modal.is_open() { return }
-		fp_modal.open()
+	if mut file_picker := lilly.file_picker_modal {
+		if file_picker.is_open() { return }
+		file_picker.open()
+		lilly.file_picker_modal = file_picker
 		return
 	}
-	mut fp_modal := ui.FilePickerModal.new(lilly.workspace.files(), special_mode)
-	fp_modal.open()
-	lilly.file_picker_modal = fp_modal
+	mut file_picker := ui.FilePickerModal.new(lilly.workspace.files(), special_mode)
+	file_picker.open()
+	lilly.file_picker_modal = file_picker
 }
 
 fn (mut lilly Lilly) close_file_finder() {
@@ -211,6 +211,11 @@ fn (mut lilly Lilly) close_file_picker() {
 	mut file_picker := lilly.file_picker_modal or { return }
 	file_picker.close()
 	lilly.file_picker_modal = none
+}
+
+fn (mut lilly Lilly) open_inactive_buffer_picker(special_mode bool) {
+	if mut inactive_buffer_picker := lilly.inactive_buffer_picker_modal {
+	}
 }
 
 fn (mut lilly Lilly) open_inactive_buffer_finder(special_mode bool) {
@@ -262,11 +267,7 @@ pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
 
 	if mut fp_modal := lilly.file_picker_modal {
 		fp_modal.draw(mut ctx)
-		return
-	}
-
-	if lilly.file_finder_modal_open {
-		lilly.file_finder_modal.draw(mut ctx)
+		lilly.file_picker_modal = fp_modal // draw internally can mutate state so ensure we keep this
 		return
 	}
 
@@ -284,17 +285,7 @@ pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
 pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
 	if mut fp_modal := lilly.file_picker_modal {
 		if fp_modal.is_open() {
-			action := fp_modal.on_key_down(e)
-			match action.op {
-				.no_op { lilly.file_picker_modal = fp_modal }
-				// NOTE(tauraamui) [12/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
-				.select_op {
-					lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
-					lilly.close_file_picker()
-					return
-				}
-				.close_op { lilly.close_file_picker(); return }
-			}
+			lilly.file_picker_on_key_down(mut fp_modal, e)
 			return
 		}
 	}
@@ -310,6 +301,20 @@ pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
 	}
 
 	lilly.view.on_key_down(e, mut lilly)
+}
+
+pub fn (mut lilly Lilly) file_picker_on_key_down(mut fp_modal ui.FilePickerModal, e draw.Event) {
+	action := fp_modal.on_key_down(e)
+	match action.op {
+		.no_op { lilly.file_picker_modal = fp_modal }
+		// NOTE(tauraamui) [12/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
+		.select_op {
+			lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
+			lilly.close_file_picker()
+			return
+		}
+		.close_op { lilly.close_file_picker(); return }
+	}
 }
 
 pub fn (mut lilly Lilly) quit() ! {
