@@ -136,7 +136,7 @@ fn test_on_search_term_adjust_list_order_changes() {
 	]
 
 	mut lilly := Lilly{
-		file_finder_modal: mock_modal
+		// file_finder_modal: mock_modal
 	}
 
 	mock_modal.on_key_down(draw.Event{ ascii: u8("c"[0]) }, mut lilly)

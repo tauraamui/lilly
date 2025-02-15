@@ -24,6 +24,7 @@ struct MockRoot {
 mut:
 	file_picker_open                     bool
 	file_finder_open                     bool
+	inactive_buffer_picker_open          bool
 	inactive_buffer_finder_open          bool
 	close_inactive_buffer_finder_invoked bool
 	close_file_finder_invoked            bool
@@ -45,6 +46,11 @@ fn (mut root MockRoot) open_file_picker(special_mode bool) {
 
 fn (mut root MockRoot) open_inactive_buffer_finder(special_mode bool) {
 	root.inactive_buffer_finder_open = true
+	root.special_mode = special_mode
+}
+
+fn (mut root MockRoot) open_inactive_buffer_picker(special_mode bool) {
+	root.inactive_buffer_picker_open = true
 	root.special_mode = special_mode
 }
 
@@ -141,7 +147,7 @@ fn test_view_keybind_leader_then_ff_suffix_opens_file_finder() {
 	)
 
 	assert fake_view.leader_state.mode == .normal
-	assert m_root.file_finder_open
+	assert m_root.file_finder_open, "the file finder modal was not opened as expected"
 	assert m_root.special_mode == false
 }
 
@@ -180,7 +186,7 @@ fn test_view_keybind_leader_then_xff_suffix_opens_file_finder_in_special_mode() 
 	)
 
 	assert fake_view.leader_state.mode == .normal
-	assert m_root.file_finder_open
+	assert m_root.file_finder_open, "the file finder modal was not opened as expected"
 	assert m_root.special_mode == true
 }
 
@@ -215,7 +221,7 @@ fn test_view_keybind_leader_then_fb_suffix_opens_inactive_buffer_finder() {
 	)
 
 	assert fake_view.leader_state.mode == .normal
-	assert m_root.inactive_buffer_finder_open
+	assert m_root.inactive_buffer_finder_open, "the inactive buffer finder modal was not opened as expected"
 	assert m_root.special_mode == false
 }
 

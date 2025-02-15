@@ -291,7 +291,7 @@ pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
 		return
 	}
 
-	if mut inactive_buffer_picker := lilly.inactive_buffer_picker {
+	if mut inactive_buffer_picker := lilly.inactive_buffer_picker_modal {
 		inactive_buffer_picker.draw(mut ctx)
 		lilly.inactive_buffer_picker_modal = inactive_buffer_picker// draw internally can mutate state so ensure we keep this
 		return
