@@ -314,6 +314,7 @@ pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
 	if mut inactive_buffer_picker := lilly.inactive_buffer_picker_modal {
 		if inactive_buffer_picker.is_open() {
 			lilly.file_picker_on_key_down(mut inactive_buffer_picker, e)
+			lilly.inactive_buffer_picker_on_key_down(mut inactive_buffer_picker, e)
 			return
 		}
 	}
@@ -337,6 +338,20 @@ pub fn (mut lilly Lilly) file_picker_on_key_down(mut fp_modal ui.FilePickerModal
 			return
 		}
 		.close_op { lilly.close_file_picker(); return }
+	}
+}
+
+pub fn (mut lilly Lilly) inactive_buffer_picker_on_key_down(mut inactive_buffer_picker ui.FilePickerModal, e draw.Event) {
+	action := inactive_buffer_picker.on_key_down(e)
+	match action.op {
+		.no_op { lilly.inactive_buffer_picker_modal = inactive_buffer_picker }
+		// NOTE(tauraamui) [16/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
+		.select_op {
+			lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
+			lilly.close_inactive_buffer_picker()
+			return
+		}
+		.close_op { lilly.close_inactive_buffer_picker(); return }
 	}
 }
 
