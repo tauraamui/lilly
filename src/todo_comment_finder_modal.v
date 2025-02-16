@@ -4,6 +4,8 @@ import log
 import lib.draw
 import lib.buffer
 
+const max_height = 20
+
 struct TodoCommentFinderModal {
 	log log.Log
 	file_paths []string
