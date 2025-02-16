@@ -53,7 +53,6 @@ fn test_lilly_opens_file_loads_into_buffer_and_view_if_done_twice_does_not_creat
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard: mut clip
-		inactive_buffer_finder_modal: unsafe { nil }
 		todo_comments_finder_modal: unsafe { nil }
 	}
 

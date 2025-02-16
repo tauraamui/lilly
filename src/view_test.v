@@ -2738,7 +2738,6 @@ fn test_r_replaces_character_in_middle_of_line() {
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard:         mut clip
-		inactive_buffer_finder_modal: unsafe { nil }
 		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
@@ -2772,7 +2771,6 @@ fn test_r_replaces_character_with_special_character() {
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard:         mut clip
-		inactive_buffer_finder_modal: unsafe { nil }
 		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
@@ -2806,7 +2804,6 @@ fn test_r_replaces_character_with_space() {
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard:         mut clip
-		inactive_buffer_finder_modal: unsafe { nil }
 		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
@@ -2840,7 +2837,6 @@ fn test_r_doesnt_change_anything_when_escape_is_used() {
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard:         mut clip
-		inactive_buffer_finder_modal: unsafe { nil }
 		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
@@ -2873,7 +2869,6 @@ fn test_r_doesnt_change_anything_when_enter_is_used() {
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard:         mut clip
-		inactive_buffer_finder_modal: unsafe { nil }
 		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
@@ -3011,7 +3006,6 @@ fn test_auto_closing_square_brace() {
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard:         mut clip
-		inactive_buffer_finder_modal: unsafe { nil }
 		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
@@ -3042,7 +3036,6 @@ fn test_auto_closing_curley_brace() {
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard:         mut clip
-		inactive_buffer_finder_modal: unsafe { nil }
 		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
@@ -3073,7 +3066,6 @@ fn test_auto_closing_curley_brace_inputting_secondary_close_should_only_move_cur
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard:         mut clip
-		inactive_buffer_finder_modal: unsafe { nil }
 		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
@@ -3113,7 +3105,6 @@ fn test_auto_closing_square_brace_inputting_secondary_close_should_only_move_cur
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard:         mut clip
-		inactive_buffer_finder_modal: unsafe { nil }
 		todo_comments_finder_modal: unsafe { nil }
 	}
 	mut fake_view := View{
