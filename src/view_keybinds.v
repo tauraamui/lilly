@@ -29,7 +29,7 @@ fn (mut view View) on_key_down_leader_mode(e draw.Event, mut root Root) {
 
 	match view.leader_state.suffix {
 		["f", "f"] {
-			root.open_file_finder(false)
+			root.open_file_picker(false)
 			view.escape()
 		}
 		["f", "t", "c"] {
@@ -37,11 +37,11 @@ fn (mut view View) on_key_down_leader_mode(e draw.Event, mut root Root) {
 			view.escape()
 		}
 		["x","f","f"] {
-			root.open_file_finder(true)
+			root.open_file_picker(true)
 			view.escape()
 		}
 		["f", "b"] {
-			root.open_inactive_buffer_finder(view.leader_state.special)
+			root.open_inactive_buffer_picker(view.leader_state.special)
 			view.escape()
 		}
 		else {}

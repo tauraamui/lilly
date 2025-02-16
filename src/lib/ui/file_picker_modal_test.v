@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module main
+module ui
 
 import time
 import lib.draw
@@ -114,15 +114,16 @@ fn test_on_search_term_adjust_list_order_changes() {
 		draw_text_callback: fn [mut ref] (x int, y int, text string) { ref << text }
 	}
 
-	mut mock_modal := FileFinderModal{
-		file_path: "**tfm**"
-		file_paths: [
+	mut mock_modal := FilePickerModal.new(
+		"**tfm**",
+		[
 			'./src/project/main.v',
 			'./src/project/lib/some_utilities.v',
 			'./src/project/lib/meta.v',
 			'./src/project/lib/database/connection.v',
-		]
-	}
+		],
+		false
+	)
 
 	mock_modal.draw(mut mock_drawer)
 
@@ -135,13 +136,9 @@ fn test_on_search_term_adjust_list_order_changes() {
 		"./src/project/lib/database/connection.v"
 	]
 
-	mut lilly := Lilly{
-		file_finder_modal: mock_modal
-	}
-
-	mock_modal.on_key_down(draw.Event{ ascii: u8("c"[0]) }, mut lilly)
-	mock_modal.on_key_down(draw.Event{ ascii: u8("o"[0]) }, mut lilly)
-	mock_modal.on_key_down(draw.Event{ ascii: u8("n"[0]) }, mut lilly)
+	mock_modal.on_key_down(draw.Event{ ascii: u8("c"[0]) })
+	mock_modal.on_key_down(draw.Event{ ascii: u8("o"[0]) })
+	mock_modal.on_key_down(draw.Event{ ascii: u8("n"[0]) })
 
 	drawn_text.clear()
 	mock_modal.draw(mut mock_drawer)
@@ -156,66 +153,71 @@ fn test_on_search_term_adjust_list_order_changes() {
 }
 
 fn test_current_selection_gets_zeros_on_search_term_amend() {
-	mut mock_modal := FileFinderModal{
-		file_path: "**tfm**"
-		file_paths: [
+	mut mock_modal := FilePickerModal.new(
+		"**tfm**",
+		[
 			'./src/project/main.v',
 			'./src/project/lib/some_utilities.v',
-		]
-	}
+		],
+		false
+	)
 
-	assert mock_modal.current_selection == 0
-	mock_modal.on_key_down(draw.Event{utf8: "d"}, mut Lilly{})
-	assert mock_modal.current_selection == 0
+	assert mock_modal.current_sel_id == 0
+	mock_modal.on_key_down(draw.Event{utf8: "d"})
+	assert mock_modal.current_sel_id == 0
 
-	mock_modal.on_key_down(draw.Event{code: .down}, mut Lilly{})
-	assert mock_modal.current_selection == 1
+	mock_modal.on_key_down(draw.Event{code: .down})
+	assert mock_modal.current_sel_id == 1
 
-	mock_modal.on_key_down(draw.Event{utf8: "r"}, mut Lilly{})
-	assert mock_modal.current_selection == 0
+	mock_modal.on_key_down(draw.Event{utf8: "r"})
+	assert mock_modal.current_sel_id == 0
 }
 
-/*
-fn test_resolve_file_paths_returns_realistic_results() {
-	mut mock_modal := FileFinderModal{
-		file_path: "**tfm**"
-		file_paths: [
+fn test_reorder_file_paths_provides_realistic_results() {
+	mut mock_modal := FilePickerModal.new(
+		"**tfm**",
+		[
 			'./src/project/main.v',
 			'./src/project/lib/some_utilities.v',
-		]
-	}
+		],
+		false
+	)
 
 	mock_modal.search.query = 'some'
-	assert mock_modal.resolve_file_paths().map(it.content) == [
+	mock_modal.reorder_file_paths()
+	assert mock_modal.file_paths == [
 		'./src/project/lib/some_utilities.v',
 		'./src/project/main.v',
 	]
 
 	mock_modal.search.query = 'mai'
-	assert mock_modal.resolve_file_paths().map(it.content) == [
+	mock_modal.reorder_file_paths()
+	assert mock_modal.file_paths == [
 		'./src/project/main.v',
 		'./src/project/lib/some_utilities.v',
 	]
 
 	mock_modal.search.query = 'proj'
-	assert mock_modal.resolve_file_paths().map(it.content) == [
+	mock_modal.reorder_file_paths()
+	assert mock_modal.file_paths == [
 		'./src/project/main.v',
 		'./src/project/lib/some_utilities.v',
 	]
 
 	mock_modal.search.query = ''
-	assert mock_modal.resolve_file_paths().map(it.content) == [
+	mock_modal.reorder_file_paths()
+	assert mock_modal.file_paths == [
 		'./src/project/main.v',
 		'./src/project/lib/some_utilities.v',
 	]
 
 	mock_modal.search.query = 'zkf'
-	assert mock_modal.resolve_file_paths().map(it.content) == [
-		'./src/project/lib/some_utilities.v',
+	mock_modal.reorder_file_paths()
+	assert mock_modal.file_paths == [
 		'./src/project/main.v',
+		'./src/project/lib/some_utilities.v',
 	]
 }
-*/
 
 fn test_score_values_by_query_success() {
 	mut paths := [

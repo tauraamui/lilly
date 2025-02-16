@@ -35,10 +35,7 @@ mut:
 	file_buffers                      map[string]buffer.Buffer
 	buffer_views                      map[buffer.UUID_t]Viewable
 	file_picker_modal                 ?ui.FilePickerModal
-	file_finder_modal_open            bool
-	file_finder_modal                 Viewable
-	inactive_buffer_finder_modal_open bool
-	inactive_buffer_finder_modal      Viewable
+	inactive_buffer_picker_modal      ?ui.FilePickerModal
 	todo_comments_finder_modal_open   bool
 	todo_comments_finder_modal        Viewable
 	workspace                         workspace.Workspace
@@ -47,10 +44,8 @@ mut:
 
 interface Root {
 mut:
-	open_file_finder(special_mode bool)
-	close_file_finder()
-	open_inactive_buffer_finder(special_mode bool)
-	close_inactive_buffer_finder()
+	open_file_picker(special_mode bool)
+	open_inactive_buffer_picker(special_mode bool)
 	open_todo_comments_finder()
 	close_todo_comments_finder()
 	open_file(path string) !
@@ -68,8 +63,6 @@ pub fn open_lilly(
 		log: _log
 		clipboard:         _clipboard
 		use_gap_buffer: use_gap_buffer
-		file_finder_modal: unsafe { nil }
-		inactive_buffer_finder_modal: unsafe { nil }
 		todo_comments_finder_modal: unsafe { nil }
 	}
 	lilly.workspace = workspace.open_workspace(mut _log, workspace_root_dir, os.is_dir,
@@ -120,11 +113,6 @@ fn (mut lilly Lilly) open_file(path string) ! {
 }
 
 fn (mut lilly Lilly) open_file_with_reader_v2(path string, line_reader fn (path string) ![]string) ! {
-	defer {
-		lilly.close_file_finder()
-		lilly.close_inactive_buffer_finder()
-	}
-
 	if mut existing_file_buff := lilly.file_buffers[path] {
 		if existing_view := lilly.buffer_views[existing_file_buff.uuid] {
 			lilly.view = existing_view
@@ -146,11 +134,6 @@ fn (mut lilly Lilly) open_file_with_reader_v2(path string, line_reader fn (path 
 }
 
 fn (mut lilly Lilly) open_file_with_reader(path string, line_reader fn (path string) ![]string) ! {
-	defer {
-		lilly.close_file_finder()
-		lilly.close_inactive_buffer_finder()
-	}
-
 	// find existing view which has that file open
 	for i, view in lilly.views {
 		if view.file_path == path {
@@ -178,45 +161,43 @@ fn (mut lilly Lilly) open_file_with_reader(path string, line_reader fn (path str
 	lilly.view = &lilly.views[lilly.views.len - 1]
 }
 
-fn (mut lilly Lilly) open_file_finder(special_mode bool) {
-	if lilly.inactive_buffer_finder_modal_open { return }
-	lilly.file_finder_modal_open = true
-	lilly.file_finder_modal = FileFinderModal{
-		special_mode: special_mode
-		log:    lilly.log
-		title: "FILE BROWSER"
-		file_path:  '**lff**'
-		file_paths: lilly.workspace.files()
-		close_fn: lilly.close_file_finder
+fn (mut lilly Lilly) open_file_picker(special_mode bool) {
+	if mut file_picker := lilly.file_picker_modal {
+		if file_picker.is_open() { return } // this should never be reached
+		file_picker.open()
+		lilly.file_picker_modal = file_picker
+		return
 	}
+	mut file_picker := ui.FilePickerModal.new("", lilly.workspace.files(), special_mode)
+	file_picker.open()
+	lilly.file_picker_modal = file_picker
 }
 
-fn (mut lilly Lilly) close_file_finder() {
-	lilly.file_finder_modal_open = false
-	// NOTE(tauraamui) [12/02/2025]: this seems risky or something something god i'm so tired, night night
-	//                               right, I think I just wanted to say don't worry about this usage of
-	//                               the file picker, a type which has not been fully realised or correctly
-	//                               integrated as of yet...
+fn (mut lilly Lilly) close_file_picker() {
 	mut file_picker := lilly.file_picker_modal or { return }
 	file_picker.close()
 	lilly.file_picker_modal = none
 }
 
-fn (mut lilly Lilly) open_inactive_buffer_finder(special_mode bool) {
-	if lilly.file_finder_modal_open { return }
-	lilly.inactive_buffer_finder_modal_open = true
-	lilly.inactive_buffer_finder_modal = FileFinderModal{
-		special_mode: special_mode
-		log: lilly.log
-		title: "INACTIVE BUFFERS"
-		file_path:  '**lfb**'
-		file_paths: lilly.views.filter(it != lilly.view && !it.file_path.starts_with("**")).map(it.file_path)
-		close_fn: lilly.close_inactive_buffer_finder
+fn (mut lilly Lilly) open_inactive_buffer_picker(special_mode bool) {
+	if mut inactive_buffer_picker := lilly.inactive_buffer_picker_modal {
+		if inactive_buffer_picker.is_open() { return } // this should never happen/be reached
+		inactive_buffer_picker.open()
+		lilly.inactive_buffer_picker_modal = inactive_buffer_picker
+		return
 	}
+	// TODO(tauraamui) [15/02/2025]: resolve all file paths for any buffers with no view instance
+	//                               or any view which is not the current/active view
+	file_paths := []string{}
+	mut inactive_buffer_picker := ui.FilePickerModal.new("INACTIVE BUFFERS PICKER", file_paths, special_mode)
+	inactive_buffer_picker.open()
+	lilly.inactive_buffer_picker_modal = inactive_buffer_picker
 }
 
-fn (mut lilly Lilly) close_inactive_buffer_finder() {
-	lilly.inactive_buffer_finder_modal_open = false
+fn (mut lilly Lilly) close_inactive_buffer_picker() {
+	mut inactive_buffer_picker := lilly.inactive_buffer_picker_modal or { return }
+	inactive_buffer_picker.close()
+	lilly.inactive_buffer_picker_modal = none
 }
 
 fn (mut lilly Lilly) open_todo_comments_finder() {
@@ -249,13 +230,15 @@ fn (mut lilly Lilly) close_todo_comments_finder() {
 pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
 	lilly.view.draw(mut ctx)
 
-	if lilly.file_finder_modal_open {
-		lilly.file_finder_modal.draw(mut ctx)
+	if mut file_picker := lilly.file_picker_modal {
+		file_picker.draw(mut ctx)
+		lilly.file_picker_modal = file_picker // draw internally can mutate state so ensure we keep this
 		return
 	}
 
-	if lilly.inactive_buffer_finder_modal_open {
-		lilly.inactive_buffer_finder_modal.draw(mut ctx)
+	if mut inactive_buffer_picker := lilly.inactive_buffer_picker_modal {
+		inactive_buffer_picker.draw(mut ctx)
+		lilly.inactive_buffer_picker_modal = inactive_buffer_picker// draw internally can mutate state so ensure we keep this
 		return
 	}
 
@@ -266,14 +249,19 @@ pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
 }
 
 pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
-	if lilly.file_finder_modal_open {
-		lilly.file_finder_modal.on_key_down(e, mut lilly)
-		return
+	if mut file_picker := lilly.file_picker_modal {
+		if file_picker.is_open() {
+			lilly.file_picker_on_key_down(mut file_picker, e)
+			return
+		}
 	}
 
-	if lilly.inactive_buffer_finder_modal_open {
-		lilly.inactive_buffer_finder_modal.on_key_down(e, mut lilly)
-		return
+	if mut inactive_buffer_picker := lilly.inactive_buffer_picker_modal {
+		if inactive_buffer_picker.is_open() {
+			lilly.file_picker_on_key_down(mut inactive_buffer_picker, e)
+			lilly.inactive_buffer_picker_on_key_down(mut inactive_buffer_picker, e)
+			return
+		}
 	}
 
 	if lilly.todo_comments_finder_modal_open {
@@ -282,6 +270,34 @@ pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
 	}
 
 	lilly.view.on_key_down(e, mut lilly)
+}
+
+pub fn (mut lilly Lilly) file_picker_on_key_down(mut fp_modal ui.FilePickerModal, e draw.Event) {
+	action := fp_modal.on_key_down(e)
+	match action.op {
+		.no_op { lilly.file_picker_modal = fp_modal }
+		// NOTE(tauraamui) [12/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
+		.select_op {
+			lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
+			lilly.close_file_picker()
+			return
+		}
+		.close_op { lilly.close_file_picker(); return }
+	}
+}
+
+pub fn (mut lilly Lilly) inactive_buffer_picker_on_key_down(mut inactive_buffer_picker ui.FilePickerModal, e draw.Event) {
+	action := inactive_buffer_picker.on_key_down(e)
+	match action.op {
+		.no_op { lilly.inactive_buffer_picker_modal = inactive_buffer_picker }
+		// NOTE(tauraamui) [16/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
+		.select_op {
+			lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
+			lilly.close_inactive_buffer_picker()
+			return
+		}
+		.close_op { lilly.close_inactive_buffer_picker(); return }
+	}
 }
 
 pub fn (mut lilly Lilly) quit() ! {
