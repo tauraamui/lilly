@@ -32,7 +32,6 @@ fn test_lilly_opens_file_loads_into_buffer_and_view() {
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard: mut clip
-		inactive_buffer_finder_modal: unsafe { nil }
 		todo_comments_finder_modal: unsafe { nil }
 	}
 
@@ -83,7 +82,6 @@ fn test_lilly_open_file_v2_loads_into_file_buffer_and_buffer_view_maps() {
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard: mut clip
-		inactive_buffer_finder_modal: unsafe { nil }
 		todo_comments_finder_modal: unsafe { nil }
 	}
 

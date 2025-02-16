@@ -36,8 +36,6 @@ mut:
 	buffer_views                      map[buffer.UUID_t]Viewable
 	file_picker_modal                 ?ui.FilePickerModal
 	inactive_buffer_picker_modal      ?ui.FilePickerModal
-	inactive_buffer_finder_modal_open bool
-	inactive_buffer_finder_modal      Viewable
 	todo_comments_finder_modal_open   bool
 	todo_comments_finder_modal        Viewable
 	workspace                         workspace.Workspace
@@ -65,7 +63,6 @@ pub fn open_lilly(
 		log: _log
 		clipboard:         _clipboard
 		use_gap_buffer: use_gap_buffer
-		inactive_buffer_finder_modal: unsafe { nil }
 		todo_comments_finder_modal: unsafe { nil }
 	}
 	lilly.workspace = workspace.open_workspace(mut _log, workspace_root_dir, os.is_dir,
@@ -116,11 +113,6 @@ fn (mut lilly Lilly) open_file(path string) ! {
 }
 
 fn (mut lilly Lilly) open_file_with_reader_v2(path string, line_reader fn (path string) ![]string) ! {
-	defer {
-		lilly.close_file_finder()
-		lilly.close_inactive_buffer_finder()
-	}
-
 	if mut existing_file_buff := lilly.file_buffers[path] {
 		if existing_view := lilly.buffer_views[existing_file_buff.uuid] {
 			lilly.view = existing_view
@@ -142,11 +134,6 @@ fn (mut lilly Lilly) open_file_with_reader_v2(path string, line_reader fn (path 
 }
 
 fn (mut lilly Lilly) open_file_with_reader(path string, line_reader fn (path string) ![]string) ! {
-	defer {
-		lilly.close_file_finder()
-		lilly.close_inactive_buffer_finder()
-	}
-
 	// find existing view which has that file open
 	for i, view in lilly.views {
 		if view.file_path == path {
@@ -174,23 +161,6 @@ fn (mut lilly Lilly) open_file_with_reader(path string, line_reader fn (path str
 	lilly.view = &lilly.views[lilly.views.len - 1]
 }
 
-// disabled but not removed yet
-// TODO(tauraamui) [14/02/2025]: remove this method at some point but not yet
-/*
-fn (mut lilly Lilly) open_file_finder(special_mode bool) {
-	if lilly.inactive_buffer_finder_modal_open { return }
-	lilly.file_finder_modal_open = true
-	lilly.file_finder_modal = FileFinderModal{
-		special_mode: special_mode
-		log:    lilly.log
-		title: "FILE BROWSER"
-		file_path:  '**lff**'
-		file_paths: lilly.workspace.files()
-		close_fn: lilly.close_file_finder
-	}
-}
-*/
-
 fn (mut lilly Lilly) open_file_picker(special_mode bool) {
 	if mut file_picker := lilly.file_picker_modal {
 		if file_picker.is_open() { return } // this should never be reached
@@ -203,32 +173,11 @@ fn (mut lilly Lilly) open_file_picker(special_mode bool) {
 	lilly.file_picker_modal = file_picker
 }
 
-fn (mut lilly Lilly) close_file_finder() {
-	// lilly.file_finder_modal_open = false
-}
-
 fn (mut lilly Lilly) close_file_picker() {
 	mut file_picker := lilly.file_picker_modal or { return }
 	file_picker.close()
 	lilly.file_picker_modal = none
 }
-
-// disabled but not removed yet
-// TODO(tauraamui) [15/02/2025]: remove this method at some point but not yet
-/*
-fn (mut lilly Lilly) open_inactive_buffer_finder(special_mode bool) {
-	// if lilly.file_finder_modal_open { return }
-	lilly.inactive_buffer_finder_modal_open = true
-	lilly.inactive_buffer_finder_modal = FileFinderModal{
-		special_mode: special_mode
-		log: lilly.log
-		title: "INACTIVE BUFFERS"
-		file_path:  '**lfb**'
-		file_paths: lilly.views.filter(it != lilly.view && !it.file_path.starts_with("**")).map(it.file_path)
-		close_fn: lilly.close_inactive_buffer_finder
-	}
-}
-*/
 
 fn (mut lilly Lilly) open_inactive_buffer_picker(special_mode bool) {
 	if mut inactive_buffer_picker := lilly.inactive_buffer_picker_modal {
@@ -243,10 +192,6 @@ fn (mut lilly Lilly) open_inactive_buffer_picker(special_mode bool) {
 	mut inactive_buffer_picker := ui.FilePickerModal.new("INACTIVE BUFFERS PICKER", file_paths, special_mode)
 	inactive_buffer_picker.open()
 	lilly.inactive_buffer_picker_modal = inactive_buffer_picker
-}
-
-fn (mut lilly Lilly) close_inactive_buffer_finder() {
-	// lilly.inactive_buffer_finder_modal_open = false
 }
 
 fn (mut lilly Lilly) close_inactive_buffer_picker() {
