@@ -147,7 +147,7 @@ fn test_view_keybind_leader_then_ff_suffix_opens_file_finder() {
 	)
 
 	assert fake_view.leader_state.mode == .normal
-	assert m_root.file_finder_open, "the file finder modal was not opened as expected"
+	assert m_root.file_picker_open, "the file picker modal was not opened as expected"
 	assert m_root.special_mode == false
 }
 
@@ -186,7 +186,7 @@ fn test_view_keybind_leader_then_xff_suffix_opens_file_finder_in_special_mode() 
 	)
 
 	assert fake_view.leader_state.mode == .normal
-	assert m_root.file_finder_open, "the file finder modal was not opened as expected"
+	assert m_root.file_picker_open, "the file picker modal was not opened as expected"
 	assert m_root.special_mode == true
 }
 
@@ -221,7 +221,7 @@ fn test_view_keybind_leader_then_fb_suffix_opens_inactive_buffer_finder() {
 	)
 
 	assert fake_view.leader_state.mode == .normal
-	assert m_root.inactive_buffer_finder_open, "the inactive buffer finder modal was not opened as expected"
+	assert m_root.inactive_buffer_picker_open, "the inactive buffer picker modal was not opened as expected"
 	assert m_root.special_mode == false
 }
 
