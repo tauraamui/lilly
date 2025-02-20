@@ -36,8 +36,7 @@ mut:
 	buffer_views                      map[buffer.UUID_t]Viewable
 	file_picker_modal                 ?ui.FilePickerModal
 	inactive_buffer_picker_modal      ?ui.FilePickerModal
-	todo_comments_finder_modal_open   bool
-	todo_comments_finder_modal        Viewable
+	todo_comments_picker_modal        ?ui.TodoCommentsPickerModal
 	workspace                         workspace.Workspace
 	syntaxes                          []workspace.Syntax
 }
