@@ -32,7 +32,6 @@ fn test_lilly_opens_file_loads_into_buffer_and_view() {
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard: mut clip
-		todo_comments_finder_modal: unsafe { nil }
 	}
 
 	mut m_line_reader := MockLineReader{
@@ -53,7 +52,6 @@ fn test_lilly_opens_file_loads_into_buffer_and_view_if_done_twice_does_not_creat
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard: mut clip
-		todo_comments_finder_modal: unsafe { nil }
 	}
 
 	mut m_line_reader := MockLineReader{
@@ -81,7 +79,6 @@ fn test_lilly_open_file_v2_loads_into_file_buffer_and_buffer_view_maps() {
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard: mut clip
-		todo_comments_finder_modal: unsafe { nil }
 	}
 
 	mut m_line_reader := MockLineReader{

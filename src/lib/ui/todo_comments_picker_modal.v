@@ -16,13 +16,13 @@ pub fn TodoCommentPickerModal.new(matches []buffer.Match) TodoCommentPickerModal
 	}
 }
 
-pub fn (todo_comment_picker_modal TodoCommentPickerModal) open() {
+pub fn (mut todo_comment_picker_modal TodoCommentPickerModal) open() {
 	todo_comment_picker_modal.open = true
 }
 
 pub fn (todo_comment_picker_modal TodoCommentPickerModal) is_open() bool { return todo_comment_picker_modal.open }
 
-pub fn (todo_comment_picker_modal TodoCommentPickerModal) close() {
+pub fn (mut todo_comment_picker_modal TodoCommentPickerModal) close() {
 	todo_comment_picker_modal.open = false
 }
 
@@ -34,7 +34,7 @@ pub fn (mut todo_comment_picker_modal TodoCommentPickerModal) draw(mut ctx draw.
 	mut y_offset := 1
 	debug_mode_str := if ctx.render_debug() { " ***RENDER DEBUG MODE ***" } else { "" }
 
-	ctx.draw_text(1, y_offset, "=== ${debug_mode_str} ${todo_comment_picker_modal.title} ${debug_mode_str} ===") // draw header
+	ctx.draw_text(1, y_offset, "=== ${debug_mode_str} TODO COMMENTS PICKER ${debug_mode_str} ===") // draw header
 	y_offset += 1
 	y_offset += todo_comment_picker_modal.draw_scrollable_list(mut ctx, y_offset, todo_comment_picker_modal.matches)
 }
