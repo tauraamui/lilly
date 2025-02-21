@@ -271,6 +271,13 @@ pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
 	lilly.view.on_key_down(e, mut lilly)
 }
 
+// TODO(tauraamui) [21/02/2025]: since these methods receive a concrete ref to the modal directly, rather than this logic
+//                               being directly within the optional type unwrap scope where we're really modifying the result
+//                               of the unwrap rather than the value/field on the struct that the optional was derived from, it might
+//                               be the case that we can merge the two below methods relating to opening a file buffer in a view,
+//                               if it's no longer necessary to re-assign the modified modal instance to it's corresponding struct field
+//
+//                               need to do some testing to be sure.
 pub fn (mut lilly Lilly) file_picker_on_key_down(mut fp_modal ui.FilePickerModal, e draw.Event) {
 	action := fp_modal.on_key_down(e)
 	match action.op {
