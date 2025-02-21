@@ -36,7 +36,7 @@ mut:
 	buffer_views                      map[buffer.UUID_t]Viewable
 	file_picker_modal                 ?ui.FilePickerModal
 	inactive_buffer_picker_modal      ?ui.FilePickerModal
-	todo_comments_picker_modal        ?ui.TodoCommentsPickerModal
+	todo_comments_picker_modal        ?ui.TodoCommentPickerModal
 	workspace                         workspace.Workspace
 	syntaxes                          []workspace.Syntax
 }
@@ -45,8 +45,7 @@ interface Root {
 mut:
 	open_file_picker(special_mode bool)
 	open_inactive_buffer_picker(special_mode bool)
-	open_todo_comments_finder()
-	close_todo_comments_finder()
+	open_todo_comments_picker()
 	open_file(path string) !
 	quit() !
 	force_quit()
@@ -62,7 +61,6 @@ pub fn open_lilly(
 		log: _log
 		clipboard:         _clipboard
 		use_gap_buffer: use_gap_buffer
-		todo_comments_finder_modal: unsafe { nil }
 	}
 	lilly.workspace = workspace.open_workspace(mut _log, workspace_root_dir, os.is_dir,
 		os.walk, os.config_dir, os.read_file, os.execute) or {
@@ -199,31 +197,30 @@ fn (mut lilly Lilly) close_inactive_buffer_picker() {
 	lilly.inactive_buffer_picker_modal = none
 }
 
-fn (mut lilly Lilly) open_todo_comments_finder() {
-	defer { lilly.log.flush() }
-	mut matches := []buffer.Match{}
-	lilly.log.debug("searching ${lilly.buffers[0].file_path} for matches to 'TODO'")
+fn (mut lilly Lilly) open_todo_comments_picker() {
+	if mut todo_comments_picker := lilly.todo_comments_picker_modal {
+		if todo_comments_picker.is_open() { return }
+		todo_comments_picker.open()
+		lilly.todo_comments_picker_modal = todo_comments_picker
+		return
+	}
 
+	mut matches := []buffer.Match{}
 	mut match_iter := lilly.buffers[0].match_iterator("TODO".runes())
 	for !match_iter.done() {
 		m_match := match_iter.next() or { continue }
-		lilly.log.debug("found match: ${m_match.contents}")
 		matches << m_match
 	}
 
-	if lilly.todo_comments_finder_modal_open { return }
-	lilly.todo_comments_finder_modal_open = true
-	lilly.todo_comments_finder_modal = TodoCommentFinderModal{
-		log: lilly.log
-		title: "TODO COMMENTS FINDER"
-		file_path: "**tcf**"
-		close_fn: lilly.close_todo_comments_finder
-		matches: matches
-	}
+	mut todo_comments_picker := ui.TodoCommentPickerModal.new(matches)
+	todo_comments_picker.open()
+	lilly.todo_comments_picker_modal = todo_comments_picker
 }
 
-fn (mut lilly Lilly) close_todo_comments_finder() {
-	lilly.todo_comments_finder_modal_open = false
+fn (mut lilly Lilly) close_todo_comments_picker() {
+	mut todo_comments_picker := lilly.todo_comments_picker_modal or { return }
+	todo_comments_picker.close()
+	lilly.todo_comments_picker_modal = none
 }
 
 pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
@@ -241,8 +238,9 @@ pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
 		return
 	}
 
-	if lilly.todo_comments_finder_modal_open {
-		lilly.todo_comments_finder_modal.draw(mut ctx)
+	if mut todo_comments_picker := lilly.todo_comments_picker_modal {
+		todo_comments_picker.draw(mut ctx)
+		lilly.todo_comments_picker_modal = todo_comments_picker
 		return
 	}
 }
@@ -257,15 +255,16 @@ pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
 
 	if mut inactive_buffer_picker := lilly.inactive_buffer_picker_modal {
 		if inactive_buffer_picker.is_open() {
-			lilly.file_picker_on_key_down(mut inactive_buffer_picker, e)
 			lilly.inactive_buffer_picker_on_key_down(mut inactive_buffer_picker, e)
 			return
 		}
 	}
 
-	if lilly.todo_comments_finder_modal_open {
-		lilly.todo_comments_finder_modal.on_key_down(e, mut lilly)
-		return
+	if mut todo_comments_picker := lilly.todo_comments_picker_modal {
+		if todo_comments_picker.is_open() {
+			lilly.todo_comments_picker_on_key_down(mut todo_comments_picker, e)
+			return
+		}
 	}
 
 	lilly.view.on_key_down(e, mut lilly)
@@ -283,7 +282,7 @@ pub fn (mut lilly Lilly) file_picker_on_key_down(mut fp_modal ui.FilePickerModal
 	match action.op {
 		.no_op { lilly.file_picker_modal = fp_modal }
 		// NOTE(tauraamui) [12/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
-		.select_op {
+		.open_file_op {
 			lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
 			lilly.close_file_picker()
 			return
@@ -297,7 +296,21 @@ pub fn (mut lilly Lilly) inactive_buffer_picker_on_key_down(mut inactive_buffer_
 	match action.op {
 		.no_op { lilly.inactive_buffer_picker_modal = inactive_buffer_picker }
 		// NOTE(tauraamui) [16/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
-		.select_op {
+		.open_file_op {
+			lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
+			lilly.close_inactive_buffer_picker()
+			return
+		}
+		.close_op { lilly.close_inactive_buffer_picker(); return }
+	}
+}
+
+pub fn (mut lilly Lilly) todo_comments_picker_on_key_down(mut todo_comments_picker ui.TodoCommentPickerModal, e draw.Event) {
+	action := todo_comments_picker.on_key_down(e)
+	match action.op {
+		.no_op { lilly.todo_comments_picker_modal = todo_comments_picker }
+		// NOTE(tauraamui) [16/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
+		.open_file_op {
 			lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
 			lilly.close_inactive_buffer_picker()
 			return
