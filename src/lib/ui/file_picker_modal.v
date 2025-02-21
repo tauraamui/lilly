@@ -109,7 +109,7 @@ pub:
 pub enum ActionOp as u8 {
 	no_op
 	close_op
-	select_op
+	open_file_op
 }
 
 pub fn (mut f_picker FilePickerModal) on_key_down(e draw.Event) Action {
@@ -177,7 +177,7 @@ fn (mut f_picker FilePickerModal) file_selected(skip_byte_check bool) Action {
 	file_paths := f_picker.file_paths
 	selected_path := file_paths[f_picker.current_sel_id]
 	if !skip_byte_check && is_binary_file(selected_path) { return Action{ op: .no_op } }
-	return Action{ op: .select_op, file_path: selected_path }
+	return Action{ op: .open_file_op, file_path: selected_path }
 }
 
 fn (mut f_picker FilePickerModal) reorder_file_paths() {

@@ -33,7 +33,7 @@ fn (mut view View) on_key_down_leader_mode(e draw.Event, mut root Root) {
 			view.escape()
 		}
 		["f", "t", "c"] {
-			root.open_todo_comments_finder()
+			root.open_todo_comments_picker()
 			view.escape()
 		}
 		["x","f","f"] {
