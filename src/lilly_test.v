@@ -28,7 +28,7 @@ fn (mut m_line_reader MockLineReader) read_lines(path string) ![]string {
 	return m_line_reader.line_data
 }
 
-fn test_lilly_opens_file_loads_into_buffer_and_view() {
+fn test_lilly_open_file_loads_into_file_buffer_and_buffer_view_maps() {
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard: mut clip
@@ -38,59 +38,10 @@ fn test_lilly_opens_file_loads_into_buffer_and_view() {
 		line_data: ["This is a fake document that doesn't exist on disk anywhere"]
 	}
 
-	assert lilly.views.len == 0
-	assert lilly.buffers.len == 0
-
-	lilly.open_file_with_reader("test-file.txt", m_line_reader.read_lines) or { assert false }
-
-	assert m_line_reader.given_path == "test-file.txt"
-	assert lilly.views.len   == 1
-	assert lilly.buffers.len == 1
-}
-
-fn test_lilly_opens_file_loads_into_buffer_and_view_if_done_twice_does_not_create_extra_instances() {
-	mut clip := clipboardv2.new()
-	mut lilly := Lilly{
-		clipboard: mut clip
-	}
-
-	mut m_line_reader := MockLineReader{
-		line_data: ["This is a fake document that doesn't exist on disk anywhere"]
-	}
-
-	assert lilly.views.len == 0
-	assert lilly.buffers.len == 0
-
-	lilly.open_file_with_reader("test-file.txt", m_line_reader.read_lines) or { assert false }
-
-	assert m_line_reader.given_path == "test-file.txt"
-	assert lilly.views.len   == 1
-	assert lilly.buffers.len == 1
-	assert lilly.view.file_path == "test-file.txt"
-
-	lilly.open_file_with_reader("test-file.txt", m_line_reader.read_lines) or { assert false }
-	assert lilly.views.len   == 1
-	assert lilly.buffers.len == 1
-	assert lilly.view.file_path == "test-file.txt"
-}
-
-
-fn test_lilly_open_file_v2_loads_into_file_buffer_and_buffer_view_maps() {
-	mut clip := clipboardv2.new()
-	mut lilly := Lilly{
-		clipboard: mut clip
-	}
-
-	mut m_line_reader := MockLineReader{
-		line_data: ["This is a fake document that doesn't exist on disk anywhere"]
-	}
-
-	assert lilly.views.len == 0
-	assert lilly.buffers.len == 0
 	assert lilly.file_buffers.len == 0
 	assert lilly.buffer_views.len == 0
 
-	lilly.open_file_with_reader_v2("test-file.txt", m_line_reader.read_lines) or { assert false }
+	lilly.open_file_with_reader("test-file.txt", m_line_reader.read_lines) or { assert false }
 
 	assert m_line_reader.given_path == "test-file.txt"
 	assert lilly.file_buffers.len == 1
@@ -101,7 +52,7 @@ fn test_lilly_open_file_v2_loads_into_file_buffer_and_buffer_view_maps() {
 	assert lilly.view == buff_view
 }
 
-fn test_lilly_open_file_v2_loads_into_file_buffer_and_buffer_view_maps_if_done_twice_does_not_create_extra_instances() {
+fn test_lilly_open_file_loads_into_file_buffer_and_buffer_view_maps_if_done_twice_does_not_create_extra_instances() {
 	mut clip := clipboardv2.new()
 	mut lilly := Lilly{
 		clipboard: mut clip
@@ -111,12 +62,10 @@ fn test_lilly_open_file_v2_loads_into_file_buffer_and_buffer_view_maps_if_done_t
 		line_data: ["This is a fake document that doesn't exist on disk anywhere"]
 	}
 
-	assert lilly.views.len == 0
-	assert lilly.buffers.len == 0
 	assert lilly.file_buffers.len == 0
 	assert lilly.buffer_views.len == 0
 
-	lilly.open_file_with_reader_v2("test-file.txt", m_line_reader.read_lines) or { assert false }
+	lilly.open_file_with_reader("test-file.txt", m_line_reader.read_lines) or { assert false }
 
 	assert m_line_reader.given_path == "test-file.txt"
 	assert lilly.file_buffers.len == 1
@@ -127,7 +76,7 @@ fn test_lilly_open_file_v2_loads_into_file_buffer_and_buffer_view_maps_if_done_t
 	mut buff_view := lilly.buffer_views[file_buff.uuid]  or { assert false, "failed to find view instance for buffer of uuid: ${file_buff.uuid}" }
 	assert lilly.view == buff_view
 
-	lilly.open_file_with_reader_v2("test-file.txt", m_line_reader.read_lines) or { assert false }
+	lilly.open_file_with_reader("test-file.txt", m_line_reader.read_lines) or { assert false }
 	assert lilly.file_buffers.len == 1
 	assert lilly.buffer_views.len == 1
 	assert lilly.view.file_path == "test-file.txt"
