@@ -30,8 +30,6 @@ mut:
 	view                              Viewable
 	debug_view                        bool
 	use_gap_buffer                    bool
-	views                             []Viewable
-	buffers                           []buffer.Buffer
 	file_buffers                      map[string]buffer.Buffer
 	buffer_views                      map[buffer.UUID_t]Viewable
 	file_picker_modal                 ?ui.FilePickerModal
@@ -67,8 +65,7 @@ pub fn open_lilly(
 		return error("unable to open workspace '${workspace_root_dir}' -> ${err}")
 	}
 
-	lilly.views << new_splash(commit_hash, lilly.workspace.config.leader_key)
-	lilly.view = &lilly.views[0]
+	lilly.view = new_splash(commit_hash, lilly.workspace.config.leader_key)
 	if file_path.len != 0 {
 		lilly.open_file(file_path)!
 	}
@@ -101,15 +98,11 @@ fn is_binary_file(path string) bool {
     return (f64(non_text_bytes) / f64(bytes_read)) > 0.3
 }
 
-fn (mut lilly Lilly) open_file_v2(path string) ! {
-	return lilly.open_file_with_reader_v2(path, os.read_lines)
-}
-
 fn (mut lilly Lilly) open_file(path string) ! {
 	return lilly.open_file_with_reader(path, os.read_lines)
 }
 
-fn (mut lilly Lilly) open_file_with_reader_v2(path string, line_reader fn (path string) ![]string) ! {
+fn (mut lilly Lilly) open_file_with_reader(path string, line_reader fn (path string) ![]string) ! {
 	if mut existing_file_buff := lilly.file_buffers[path] {
 		if existing_view := lilly.buffer_views[existing_file_buff.uuid] {
 			lilly.view = existing_view
@@ -128,34 +121,6 @@ fn (mut lilly Lilly) open_file_with_reader_v2(path string, line_reader fn (path 
 	lilly.view = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
 				lilly.workspace.syntaxes(), lilly.clipboard, mut buff)
 	lilly.buffer_views[buff.uuid] = lilly.view
-}
-
-fn (mut lilly Lilly) open_file_with_reader(path string, line_reader fn (path string) ![]string) ! {
-	// find existing view which has that file open
-	for i, view in lilly.views {
-		if view.file_path == path {
-			lilly.view = &lilly.views[i]
-			return
-		}
-	}
-
-	// couldn't find a view, so now search for an existing buffer with no view
-	for i, buffer in lilly.buffers {
-		if buffer.file_path == path {
-			lilly.views << open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
-				lilly.workspace.syntaxes(), lilly.clipboard, mut &lilly.buffers[i])
-			lilly.view = &lilly.views[lilly.views.len - 1]
-			return
-		}
-	}
-
-	// neither existing view nor buffer was found, oh well, just load it then :)
-	mut buff := buffer.Buffer.new(path, lilly.use_gap_buffer)
-	buff.read_lines(line_reader) or { return err }
-	lilly.buffers << buff
-	lilly.views << open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(), lilly.workspace.syntaxes(),
-		lilly.clipboard, mut &lilly.buffers[lilly.buffers.len - 1])
-	lilly.view = &lilly.views[lilly.views.len - 1]
 }
 
 fn (mut lilly Lilly) open_file_picker(special_mode bool) {
@@ -206,7 +171,12 @@ fn (mut lilly Lilly) open_todo_comments_picker() {
 	}
 
 	mut matches := []buffer.Match{}
-	mut match_iter := lilly.buffers[0].match_iterator("TODO".runes())
+	// NOTE(tauraamui) [22/02/2025]: this is by far my favourite/preferred method to access the buffer of the current
+	//                               active view, rather than trying to do a circular ref to the view's buffer field
+	//                               which itself is a reference to the value within this map, we should access the buffer
+	//                               in the map directly
+	mut match_iter := lilly.file_buffers[lilly.view.file_path].match_iterator("TODO".runes())
+
 	for !match_iter.done() {
 		m_match := match_iter.next() or { continue }
 		matches << m_match
@@ -283,7 +253,7 @@ pub fn (mut lilly Lilly) file_picker_on_key_down(mut fp_modal ui.FilePickerModal
 		.no_op { lilly.file_picker_modal = fp_modal }
 		// NOTE(tauraamui) [12/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
 		.open_file_op {
-			lilly.open_file_v2(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
+			lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
 			lilly.close_file_picker()
 			return
 		}
@@ -316,16 +286,10 @@ pub fn (mut lilly Lilly) todo_comments_picker_on_key_down(mut todo_comments_pick
 }
 
 pub fn (mut lilly Lilly) quit() ! {
-	// Filter out splash/special views and check only file views
-    file_views := lilly.views.filter(!it.file_path.starts_with('**'))
-    mut dirty_count := 0
-    for view in file_views {
-        if view is View {
-            if view.buffer.dirty {
-                dirty_count++
-            }
-        }
-    }
+	mut dirty_count := 0
+	for _, buff in lilly.file_buffers {
+		if buff.dirty { dirty_count += 1 }
+	}
 
 	if dirty_count > 0 {
 		return error("Cannot quit: ${dirty_count} unsaved buffer(s). Save changes or use :q! to force quit")
