@@ -283,7 +283,7 @@ pub fn (mut lilly Lilly) file_picker_on_key_down(mut fp_modal ui.FilePickerModal
 		.no_op { lilly.file_picker_modal = fp_modal }
 		// NOTE(tauraamui) [12/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
 		.open_file_op {
-			lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
+			lilly.open_file_v2(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
 			lilly.close_file_picker()
 			return
 		}
