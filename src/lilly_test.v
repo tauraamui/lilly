@@ -41,7 +41,7 @@ fn test_lilly_open_file_loads_into_file_buffer_and_buffer_view_maps() {
 	assert lilly.file_buffers.len == 0
 	assert lilly.buffer_views.len == 0
 
-	lilly.open_file_with_reader("test-file.txt", m_line_reader.read_lines) or { assert false }
+	lilly.open_file_with_reader_at("test-file.txt", Pos{}, m_line_reader.read_lines) or { assert false }
 
 	assert m_line_reader.given_path == "test-file.txt"
 	assert lilly.file_buffers.len == 1
@@ -65,7 +65,7 @@ fn test_lilly_open_file_loads_into_file_buffer_and_buffer_view_maps_if_done_twic
 	assert lilly.file_buffers.len == 0
 	assert lilly.buffer_views.len == 0
 
-	lilly.open_file_with_reader("test-file.txt", m_line_reader.read_lines) or { assert false }
+	lilly.open_file_with_reader_at("test-file.txt", Pos{}, m_line_reader.read_lines) or { assert false }
 
 	assert m_line_reader.given_path == "test-file.txt"
 	assert lilly.file_buffers.len == 1
@@ -76,7 +76,7 @@ fn test_lilly_open_file_loads_into_file_buffer_and_buffer_view_maps_if_done_twic
 	mut buff_view := lilly.buffer_views[file_buff.uuid]  or { assert false, "failed to find view instance for buffer of uuid: ${file_buff.uuid}" }
 	assert lilly.view == buff_view
 
-	lilly.open_file_with_reader("test-file.txt", m_line_reader.read_lines) or { assert false }
+	lilly.open_file_with_reader_at("test-file.txt", Pos{}, m_line_reader.read_lines) or { assert false }
 	assert lilly.file_buffers.len == 1
 	assert lilly.buffer_views.len == 1
 	assert lilly.view.file_path == "test-file.txt"
