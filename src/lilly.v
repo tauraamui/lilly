@@ -99,10 +99,16 @@ fn is_binary_file(path string) bool {
 }
 
 fn (mut lilly Lilly) open_file(path string) ! {
-	return lilly.open_file_with_reader(path, os.read_lines)
+	// TODO(tauraamui) [22/02/2025]: implement deriving the position from the file path
+	//                               suffix (optional segment within path)
+	return lilly.open_file_at(path, Pos{ x: 0, y: 0 })
 }
 
-fn (mut lilly Lilly) open_file_with_reader(path string, line_reader fn (path string) ![]string) ! {
+fn (mut lilly Lilly) open_file_at(path string, pos Pos) ! {
+	return lilly.open_file_with_reader_at(path, pos, os.read_lines)
+}
+
+fn (mut lilly Lilly) open_file_with_reader_at(path string, pos Pos, line_reader fn (path string) ![]string) ! {
 	if mut existing_file_buff := lilly.file_buffers[path] {
 		if existing_view := lilly.buffer_views[existing_file_buff.uuid] {
 			lilly.view = existing_view
