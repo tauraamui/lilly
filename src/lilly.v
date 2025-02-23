@@ -131,36 +131,29 @@ fn (mut lilly Lilly) open_file_with_reader_at(path string, pos Pos, line_reader 
 const colon = ":".runes()[0]
 
 fn extract_pos_from_path(file_path string) Pos {
-	mut pos := Pos{}
+	mut pos := Pos{ x: -1, y: -1}
 
-	mut colon_positions := [-1, -1]
-	mut last_index := -1
-	for i, c in file_path.runes() {
+	mut from_index := file_path.len
+	for i := file_path.len - 1; i >= 0; i-- {
+		c := file_path[i]
 		if c != colon { continue }
-
-		if last_index == 0 {
-			colon_positions[1] = i
-			last_index = 1
+		if from_index == file_path.len {
+			pos_x_str := file_path[i + 1..from_index]
+			pos.y = strconv.atoi(pos_x_str) or { 0 }
+			from_index = i
 			continue
 		}
 
-		colon_positions[0] = i
-		last_index = 0
+		if from_index < file_path.len {
+			pos.x = pos.y
+			pos_y_str := file_path[i + 1..from_index]
+			pos.y = strconv.atoi(pos_y_str) or { 0 }
+			break
+		}
 	}
 
-	first_colon_index := colon_positions[0]
-	if first_colon_index == -1 { return pos }
-	mut second_colon_index := colon_positions[1]
-	if second_colon_index == -1 || first_colon_index > second_colon_index { second_colon_index = file_path.len }
-
-	pos_y_str := file_path[first_colon_index + 1..second_colon_index]
-	pos.y = strconv.atoi(pos_y_str) or { return pos }
-
-	if second_colon_index == file_path.len { return pos }
-
-	if second_colon_index + 1 == file_path.len { return pos }
-	pos_x_str := file_path[second_colon_index + 1..]
-	pos.x = strconv.atoi(pos_x_str) or { return pos }
+	if pos.x == -1 { pos.x = 0 }
+	if pos.y == -1 { pos.y = 0 }
 
 	return pos
 }
