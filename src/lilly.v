@@ -100,7 +100,8 @@ fn is_binary_file(path string) bool {
 }
 
 fn (mut lilly Lilly) open_file(path string) ! {
-	return lilly.open_file_at(path, extract_pos_from_path(path))
+	extracted_path, extracted_pos := extract_pos_from_path(path)
+	return lilly.open_file_at(extracted_path, extracted_pos)
 }
 
 fn (mut lilly Lilly) open_file_at(path string, pos Pos) ! {
@@ -130,10 +131,11 @@ fn (mut lilly Lilly) open_file_with_reader_at(path string, pos Pos, line_reader 
 
 const colon = ":".runes()[0]
 
-fn extract_pos_from_path(file_path string) Pos {
+fn extract_pos_from_path(file_path string) (string, Pos) {
 	mut pos := Pos{ x: -1, y: -1}
 
 	mut from_index := file_path.len
+	mut last_colon_index := 0
 	for i := file_path.len - 1; i >= 0; i-- {
 		c := file_path[i]
 		if c != colon { continue }
@@ -141,6 +143,7 @@ fn extract_pos_from_path(file_path string) Pos {
 			pos_x_str := file_path[i + 1..from_index]
 			pos.y = strconv.atoi(pos_x_str) or { 0 }
 			from_index = i
+			last_colon_index = i
 			continue
 		}
 
@@ -148,14 +151,16 @@ fn extract_pos_from_path(file_path string) Pos {
 			pos.x = pos.y
 			pos_y_str := file_path[i + 1..from_index]
 			pos.y = strconv.atoi(pos_y_str) or { 0 }
+			last_colon_index = i
 			break
 		}
 	}
 
 	if pos.x == -1 { pos.x = 0 }
 	if pos.y == -1 { pos.y = 0 }
+	if last_colon_index == 0 { last_colon_index = file_path.len }
 
-	return pos
+	return file_path[..last_colon_index], pos
 }
 
 fn (mut lilly Lilly) open_file_picker(special_mode bool) {
