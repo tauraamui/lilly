@@ -111,6 +111,14 @@ fn test_lilly_extract_pos_from_path() {
 	assert extracted_path == "fake_file.v"
 	assert extracted_pos == Pos{ x: 0, y: 0 } // this should just immediately considered an invalid format
 
+	extracted_path, extracted_pos = extract_pos_from_path("fake_file.v:::")
+	assert extracted_path == "fake_file.v:"
+	assert extracted_pos == Pos{ x: 0, y: 0 } // this should just immediately considered an invalid format
+
+	extracted_path, extracted_pos = extract_pos_from_path("fake_file.v::::")
+	assert extracted_path == "fake_file.v::"
+	assert extracted_pos == Pos{ x: 0, y: 0 } // this should just immediately considered an invalid format
+
 	extracted_path, extracted_pos = extract_pos_from_path(":")
 	assert extracted_path == ":"
 	assert extracted_pos == Pos{ x: 0, y: 0 } // this should just immediately considered an invalid format
