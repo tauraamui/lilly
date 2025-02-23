@@ -100,9 +100,7 @@ fn is_binary_file(path string) bool {
 }
 
 fn (mut lilly Lilly) open_file(path string) ! {
-	// TODO(tauraamui) [22/02/2025]: implement deriving the position from the file path
-	//                               suffix (optional segment within path)
-	return lilly.open_file_at(path, Pos{ x: 0, y: 0 })
+	return lilly.open_file_at(path, extract_pos_from_path(path))
 }
 
 fn (mut lilly Lilly) open_file_at(path string, pos Pos) ! {
