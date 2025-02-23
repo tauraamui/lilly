@@ -91,6 +91,8 @@ fn test_lilly_extract_pos_from_path() {
 	assert extract_pos_from_path("fake_file.v:4")      == Pos{ x: 0, y: 4 }
 	assert extract_pos_from_path("x::::::::.v:55:101") == Pos{ x: 101, y: 55 }
 	assert extract_pos_from_path("fake_file.v:30:10")  == Pos{ x: 10, y: 30 }
+	assert extract_pos_from_path("fake_file.v::10")    == Pos{ x: 0, y: 0 } // this should just immediately considered an invalid format
+	assert extract_pos_from_path("fake_file.v:")       == Pos{ x: 0, y: 0 } // this should just immediately considered an invalid format
 }
 
 // TODO(tauraamui) [12/02/2025] something is horrendously broken with the below tests, its so bad that its making the
