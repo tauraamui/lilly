@@ -16,6 +16,7 @@ module main
 
 import os
 import log
+import strconv
 import lib.buffer
 import lib.clipboardv2
 import lib.workspace
@@ -99,9 +100,7 @@ fn is_binary_file(path string) bool {
 }
 
 fn (mut lilly Lilly) open_file(path string) ! {
-	// TODO(tauraamui) [22/02/2025]: implement deriving the position from the file path
-	//                               suffix (optional segment within path)
-	return lilly.open_file_at(path, Pos{ x: 0, y: 0 })
+	return lilly.open_file_at(path, extract_pos_from_path(path))
 }
 
 fn (mut lilly Lilly) open_file_at(path string, pos Pos) ! {
@@ -127,6 +126,43 @@ fn (mut lilly Lilly) open_file_with_reader_at(path string, pos Pos, line_reader 
 	lilly.view = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
 				lilly.workspace.syntaxes(), lilly.clipboard, mut buff)
 	lilly.buffer_views[buff.uuid] = lilly.view
+}
+
+const colon = ":".runes()[0]
+
+fn extract_pos_from_path(file_path string) Pos {
+	mut pos := Pos{}
+
+	mut colon_positions := [-1, -1]
+	mut last_index := -1
+	for i, c in file_path.runes() {
+		if c != colon { continue }
+
+		if last_index == 0 {
+			colon_positions[1] = i
+			last_index = 1
+			continue
+		}
+
+		colon_positions[0] = i
+		last_index = 0
+	}
+
+	first_colon_index := colon_positions[0]
+	if first_colon_index == -1 { return pos }
+	mut second_colon_index := colon_positions[1]
+	if second_colon_index == -1 || first_colon_index > second_colon_index { second_colon_index = file_path.len }
+
+	pos_y_str := file_path[first_colon_index + 1..second_colon_index]
+	pos.y = strconv.atoi(pos_y_str) or { return pos }
+
+	if second_colon_index == file_path.len { return pos }
+
+	if second_colon_index + 1 == file_path.len { return pos }
+	pos_x_str := file_path[second_colon_index + 1..]
+	pos.x = strconv.atoi(pos_x_str) or { return pos }
+
+	return pos
 }
 
 fn (mut lilly Lilly) open_file_picker(special_mode bool) {
