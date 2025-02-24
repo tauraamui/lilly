@@ -160,6 +160,8 @@ fn test_lilly_resolve_inactive_file_buffer_paths() {
 	lilly.open_file_with_reader_at("different-test-file.txt", Pos{}, m_line_reader.read_lines) or { assert false }
 
 	assert lilly.view.file_path == "different-test-file.txt"
+
+	assert lilly.resolve_inactive_file_buffer_paths() == ["test-file.txt"]
 }
 
 // TODO(tauraamui) [12/02/2025] something is horrendously broken with the below tests, its so bad that its making the
