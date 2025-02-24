@@ -196,6 +196,9 @@ fn (mut lilly Lilly) open_inactive_buffer_picker(special_mode bool) {
 	lilly.inactive_buffer_picker_modal = inactive_buffer_picker
 }
 
+fn (mut lilly Lilly) resolve_inactive_file_buffers() []string {
+}
+
 fn (mut lilly Lilly) close_inactive_buffer_picker() {
 	mut inactive_buffer_picker := lilly.inactive_buffer_picker_modal or { return }
 	inactive_buffer_picker.close()
