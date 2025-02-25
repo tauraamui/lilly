@@ -111,6 +111,10 @@ fn test_lilly_extract_pos_from_path() {
 	assert extracted_path == "fake_file.v"
 	assert extracted_pos == Pos{ x: 0, y: 0 } // this should just immediately considered an invalid format
 
+	extracted_path, extracted_pos = extract_pos_from_path("112:95")
+	assert extracted_path == "112"
+	assert extracted_pos == Pos{ x: 0, y: 95 }
+
 	extracted_path, extracted_pos = extract_pos_from_path("fake_file.v:::")
 	assert extracted_path == "fake_file.v:"
 	assert extracted_pos == Pos{ x: 0, y: 0 } // this should just immediately considered an invalid format
@@ -132,9 +136,32 @@ fn test_lilly_extract_pos_from_path() {
 	assert extracted_pos == Pos{ x: 0, y: 0 } // this should just immediately considered an invalid format
 }
 
-fn assert_multi(exp_str string, exp_pos Pos, act_str string, act_pos Pos) {
-	assert exp_str == act_str
-	assert exp_pos == act_pos
+fn test_lilly_resolve_inactive_file_buffer_paths() {
+	mut lilly := Lilly{}
+
+	mut m_line_reader := MockLineReader{
+		line_data: ["This is a fake document that doesn't exist on disk anywhere"]
+	}
+
+	assert lilly.file_buffers.len == 0
+	assert lilly.buffer_views.len == 0
+
+	lilly.open_file_with_reader_at("test-file.txt", Pos{}, m_line_reader.read_lines) or { assert false }
+
+	assert lilly.file_buffers.len == 1
+	assert lilly.buffer_views.len == 1
+
+	assert lilly.view.file_path == "test-file.txt"
+
+	m_line_reader = MockLineReader{
+		line_data: ["This is another fake document that doesn't exist on disk anywhere"]
+	}
+
+	lilly.open_file_with_reader_at("different-test-file.txt", Pos{}, m_line_reader.read_lines) or { assert false }
+
+	assert lilly.view.file_path == "different-test-file.txt"
+
+	assert lilly.resolve_inactive_file_buffer_paths() == ["test-file.txt"]
 }
 
 // TODO(tauraamui) [12/02/2025] something is horrendously broken with the below tests, its so bad that its making the
