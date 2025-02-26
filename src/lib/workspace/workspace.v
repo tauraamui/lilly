@@ -36,7 +36,8 @@ pub fn open_workspace(mut _log Logger,
 	dir_walker fn (path string, f fn (string)),
 	config_dir fn () !string,
 	read_file fn (path string) !string,
-	execute fn (cmd string) os.Result) !Workspace {
+	execute fn (cmd string) os.Result
+) !Workspace {
 	path := root_path
 	if !is_dir(path) {
 		return error('${path} is not a directory')
@@ -96,7 +97,7 @@ pub fn (workspace Workspace) branch() string {
 	return workspace.git_branch
 }
 
-pub fn (workspace Workspace) files() []string {
+pub fn (workspace Workspace) get_files() []string {
 	return workspace.files
 }
 

@@ -25,6 +25,7 @@ import lib.ui
 
 @[heap]
 struct Lilly {
+	line_reader                       fn (file_path string) ![]string
 mut:
 	log                               log.Log
 	clipboard                         clipboardv2.Clipboard
@@ -37,6 +38,7 @@ mut:
 	inactive_buffer_picker_modal      ?ui.FilePickerModal
 	todo_comments_picker_modal        ?ui.TodoCommentPickerModal
 	workspace                         workspace.Workspace
+	resolve_workspace_files           ?fn () []string
 	syntaxes                          []workspace.Syntax
 }
 
@@ -60,11 +62,13 @@ pub fn open_lilly(
 		log: _log
 		clipboard:         _clipboard
 		use_gap_buffer: use_gap_buffer
+		line_reader:    os.read_lines
 	}
 	lilly.workspace = workspace.open_workspace(mut _log, workspace_root_dir, os.is_dir,
 		os.walk, os.config_dir, os.read_file, os.execute) or {
 		return error("unable to open workspace '${workspace_root_dir}' -> ${err}")
 	}
+	lilly.resolve_workspace_files = lilly.workspace.get_files
 
 	lilly.view = new_splash(commit_hash, lilly.workspace.config.leader_key)
 	if file_path.len != 0 {
@@ -105,7 +109,7 @@ fn (mut lilly Lilly) open_file(path string) ! {
 }
 
 fn (mut lilly Lilly) open_file_at(path string, pos Pos) ! {
-	return lilly.open_file_with_reader_at(path, pos, os.read_lines)
+	return lilly.open_file_with_reader_at(path, pos, lilly.line_reader)
 }
 
 fn (mut lilly Lilly) open_file_with_reader_at(path string, pos Pos, line_reader fn (path string) ![]string) ! {
@@ -170,7 +174,8 @@ fn (mut lilly Lilly) open_file_picker(special_mode bool) {
 		lilly.file_picker_modal = file_picker
 		return
 	}
-	mut file_picker := ui.FilePickerModal.new("", lilly.workspace.files(), special_mode)
+	mut resolve_files := lilly.resolve_workspace_files or { lilly.workspace.get_files }
+	mut file_picker := ui.FilePickerModal.new("", resolve_files(), special_mode)
 	file_picker.open()
 	lilly.file_picker_modal = file_picker
 }
@@ -213,6 +218,7 @@ fn (mut lilly Lilly) open_todo_comments_picker() {
 		return
 	}
 
+	/*
 	mut matches := []buffer.Match{}
 	// NOTE(tauraamui) [22/02/2025]: this is by far my favourite/preferred method to access the buffer of the current
 	//                               active view, rather than trying to do a circular ref to the view's buffer field
@@ -224,10 +230,55 @@ fn (mut lilly Lilly) open_todo_comments_picker() {
 		m_match := match_iter.next() or { continue }
 		matches << m_match
 	}
+	*/
 
-	mut todo_comments_picker := ui.TodoCommentPickerModal.new(matches)
+	mut todo_comments_picker := ui.TodoCommentPickerModal.new(lilly.resolve_todo_comments_matches())
 	todo_comments_picker.open()
 	lilly.todo_comments_picker_modal = todo_comments_picker
+}
+
+// TODO(tauraamui) [26/02/2025]: needs to be parallelised heavily the traversal over the match
+//                               iterator is a key candidate for using threads and channels
+fn (mut lilly Lilly) resolve_todo_comments_matches() []buffer.Match {
+	mut matches := []buffer.Match{}
+
+	open_file_buffer_paths := lilly.file_buffers.keys()
+	for file_path in open_file_buffer_paths {
+		mut file_buffer_match_iter := lilly.file_buffers[file_path].match_iterator("TODO".runes())
+		for !file_buffer_match_iter.done() {
+			m_match := file_buffer_match_iter.next() or { continue }
+			matches << m_match
+		}
+	}
+
+	resolve_workspace_files := lilly.resolve_workspace_files or { lilly.workspace.get_files }
+	unopened_file_paths := resolve_workspace_files().filter(!open_file_buffer_paths.contains(it))
+	for file_path in unopened_file_paths {
+		mut buff := buffer.Buffer.new(file_path, lilly.use_gap_buffer)
+		buff.read_lines(lilly.line_reader) or { continue }
+		mut file_buffer_match_iter := buff.match_iterator("TODO".runes())
+		for !file_buffer_match_iter.done() {
+			m_match := file_buffer_match_iter.next() or { continue }
+			matches << m_match
+		}
+	}
+
+	return matches
+}
+
+fn (mut lilly Lilly) resolve_todo_comments_for_active_buffer(mut matches []buffer.Match) {
+	mut match_iter := lilly.file_buffers[lilly.view.file_path].match_iterator("TODO".runes())
+
+	for !match_iter.done() {
+		m_match := match_iter.next() or { continue }
+		matches << m_match
+	}
+}
+
+fn (mut lilly Lilly) resolve_todo_comments_across_workspace() []buffer.Match {
+	mut matches := []buffer.Match{}
+
+	return matches
 }
 
 fn (mut lilly Lilly) close_todo_comments_picker() {
