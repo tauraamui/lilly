@@ -6,6 +6,7 @@ import lib.buffer
 pub struct TodoCommentPickerModal {
 mut:
 	open bool
+	from int
 pub:
 	matches []buffer.Match
 }
@@ -39,12 +40,23 @@ pub fn (mut todo_comment_picker_modal TodoCommentPickerModal) draw(mut ctx draw.
 	y_offset += todo_comment_picker_modal.draw_scrollable_list(mut ctx, y_offset, todo_comment_picker_modal.matches)
 }
 
+fn (mut todo_comment_picker_modal TodoCommentPickerModal) resolve_to() int {
+	matches := todo_comment_picker_modal.matches
+	mut to := todo_comment_picker_modal.from + max_height
+	if to > matches.len {
+		to = matches.len
+	}
+	return to
+}
+
 pub fn (mut todo_comment_picker_modal TodoCommentPickerModal) draw_scrollable_list(mut ctx draw.Contextable, y_offset int, list []buffer.Match) int {
 	ctx.reset_bg_color()
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
 	ctx.draw_rect(1, y_offset, ctx.window_width(), y_offset + max_height - 1)
-	for i, m_match in todo_comment_picker_modal.matches {
-		ctx.draw_text(1, y_offset + (i), m_match.contents)
+	to := todo_comment_picker_modal.resolve_to()
+	for i := todo_comment_picker_modal.from; i < to; i++ {
+		ctx.set_bg_color(r: 15, g: 15, b: 15)
+		ctx.draw_text(1, y_offset + (i - todo_comment_picker_modal.from), list[i].contents)
 	}
 	return 100
 }
