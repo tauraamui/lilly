@@ -457,10 +457,12 @@ pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 		return none
 	}
 
+	// mut max_index := found_index + iter.pattern.len
+
 	return Match{
 		file_path: iter.file_path
 		pos: Pos{ x: found_index, y: iter.idx }
-		contents: line_to_search[found_index..found_index + iter.pattern.len].string()
+		contents: line_to_search[found_index..].string()
 	}
 }
 
