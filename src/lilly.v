@@ -248,7 +248,19 @@ fn (mut lilly Lilly) resolve_todo_comments_matches() []buffer.Match {
 			matches << m_match
 		}
 	}
-	// lilly.resolve_todo_comments_for_active_buffer(mut matches)
+
+	resolve_workspace_files := lilly.resolve_workspace_files or { lilly.workspace.get_files }
+	unopened_file_paths := resolve_workspace_files().filter(!open_file_buffer_paths.contains(it))
+	for file_path in unopened_file_paths {
+		mut buff := buffer.Buffer.new(file_path, lilly.use_gap_buffer)
+		buff.read_lines(lilly.line_reader) or { continue }
+		mut file_buffer_match_iter := buff.match_iterator("TODO".runes())
+		for !file_buffer_match_iter.done() {
+			m_match := file_buffer_match_iter.next() or { continue }
+			matches << m_match
+		}
+	}
+
 	return matches
 }
 
