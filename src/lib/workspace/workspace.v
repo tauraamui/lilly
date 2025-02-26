@@ -36,7 +36,8 @@ pub fn open_workspace(mut _log Logger,
 	dir_walker fn (path string, f fn (string)),
 	config_dir fn () !string,
 	read_file fn (path string) !string,
-	execute fn (cmd string) os.Result) !Workspace {
+	execute fn (cmd string) os.Result
+) !Workspace {
 	path := root_path
 	if !is_dir(path) {
 		return error('${path} is not a directory')
