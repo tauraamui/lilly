@@ -133,8 +133,12 @@ fn test_lilly_resolve_matches_across_all_open_file_buffers_only_loaded_file_has_
 	assert lilly.buffer_views.len == 1
 
 	assert lilly.resolve_todo_comments_matches() == [
-		buffer.Match{ pos: buffer.Pos{ x: 3, y: 0 }, contents: "TODO"},
-		buffer.Match{ pos: buffer.Pos{ x: 35, y: 1 }, contents: "TODO"}
+		buffer.Match{
+			file_path: "loaded-test-file.txt", pos: buffer.Pos{ x: 3, y: 0 }, contents: "TODO"
+		},
+		buffer.Match{
+			file_path: "unopened-file-as-yet.txt", pos: buffer.Pos{ x: 35, y: 1 }, contents: "TODO"
+		}
 	]
 }
 

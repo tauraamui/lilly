@@ -425,13 +425,15 @@ mut:
 
 pub struct Match {
 pub:
-	pos      Pos
-	contents string
+	file_path string
+	pos       Pos
+	contents  string
 }
 
 struct PatternMatchIteratorFromLinesList {
-	pattern  []rune
-	data_ref []string
+	file_path string
+	pattern   []rune
+	data_ref  []string
 mut:
 	idx int
 	done bool
@@ -456,6 +458,7 @@ pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 	}
 
 	return Match{
+		file_path: iter.file_path
 		pos: Pos{ x: found_index, y: iter.idx }
 		contents: line_to_search[found_index..found_index + iter.pattern.len].string()
 	}
@@ -499,6 +502,7 @@ pub fn (buffer Buffer) match_iterator(pattern []rune) PatternMatchIterator {
 		return new_gap_buffer_pattern_match_iterator(pattern, buffer.c_buffer)
 	}
 	return PatternMatchIteratorFromLinesList{
+		file_path: buffer.file_path
 		data_ref: buffer.lines
 		pattern: pattern
 	}

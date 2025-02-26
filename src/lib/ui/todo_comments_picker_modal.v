@@ -56,7 +56,8 @@ pub fn (mut todo_comment_picker_modal TodoCommentPickerModal) draw_scrollable_li
 	to := todo_comment_picker_modal.resolve_to()
 	for i := todo_comment_picker_modal.from; i < to; i++ {
 		ctx.set_bg_color(r: 15, g: 15, b: 15)
-		ctx.draw_text(1, y_offset + (i - todo_comment_picker_modal.from), list[i].contents)
+		list_item_content := "${list[i].file_path}:${list[i].pos.y}:${list[i].pos.x}"
+		ctx.draw_text(1, y_offset + (i - todo_comment_picker_modal.from), list_item_content)
 	}
 	return 100
 }
