@@ -237,6 +237,8 @@ fn (mut lilly Lilly) open_todo_comments_picker() {
 	lilly.todo_comments_picker_modal = todo_comments_picker
 }
 
+// TODO(tauraamui) [26/02/2025]: needs to be parallelised heavily the traversal over the match
+//                               iterator is a key candidate for using threads and channels
 fn (mut lilly Lilly) resolve_todo_comments_matches() []buffer.Match {
 	mut matches := []buffer.Match{}
 
