@@ -25,7 +25,7 @@ import lib.ui
 
 @[heap]
 struct Lilly {
-	line_reader                       fn (file_path string) ![]string
+	line_reader                       ?fn (file_path string) ![]string
 mut:
 	log                               log.Log
 	clipboard                         clipboardv2.Clipboard
@@ -109,7 +109,7 @@ fn (mut lilly Lilly) open_file(path string) ! {
 }
 
 fn (mut lilly Lilly) open_file_at(path string, pos Pos) ! {
-	return lilly.open_file_with_reader_at(path, pos, lilly.line_reader)
+	return lilly.open_file_with_reader_at(path, pos, lilly.line_reader or { os.read_lines })
 }
 
 fn (mut lilly Lilly) open_file_with_reader_at(path string, pos Pos, line_reader fn (path string) ![]string) ! {
@@ -218,52 +218,55 @@ fn (mut lilly Lilly) open_todo_comments_picker() {
 		return
 	}
 
-	/*
-	mut matches := []buffer.Match{}
-	// NOTE(tauraamui) [22/02/2025]: this is by far my favourite/preferred method to access the buffer of the current
-	//                               active view, rather than trying to do a circular ref to the view's buffer field
-	//                               which itself is a reference to the value within this map, we should access the buffer
-	//                               in the map directly
-	mut match_iter := lilly.file_buffers[lilly.view.file_path].match_iterator("TODO".runes())
-
-	for !match_iter.done() {
-		m_match := match_iter.next() or { continue }
-		matches << m_match
-	}
-	*/
-
 	mut todo_comments_picker := ui.TodoCommentPickerModal.new(lilly.resolve_todo_comments_matches())
 	todo_comments_picker.open()
 	lilly.todo_comments_picker_modal = todo_comments_picker
 }
 
-// TODO(tauraamui) [26/02/2025]: needs to be parallelised heavily the traversal over the match
-//                               iterator is a key candidate for using threads and channels
 fn (mut lilly Lilly) resolve_todo_comments_matches() []buffer.Match {
 	mut matches := []buffer.Match{}
+	match_ch    := chan buffer.Match{}
+	mut threads := []thread{}
+
+	mut matches_ref := &matches
+	read_thread_ref := go read_matches_from_channel_write_to_array(mut matches_ref, match_ch)
 
 	open_file_buffer_paths := lilly.file_buffers.keys()
 	for file_path in open_file_buffer_paths {
-		mut file_buffer_match_iter := lilly.file_buffers[file_path].match_iterator("TODO".runes())
-		for !file_buffer_match_iter.done() {
-			m_match := file_buffer_match_iter.next() or { continue }
-			matches << m_match
-		}
+		threads << go resolve_matches_within_buffer(lilly.file_buffers[file_path], match_ch)
 	}
 
 	resolve_workspace_files := lilly.resolve_workspace_files or { lilly.workspace.get_files }
 	unopened_file_paths := resolve_workspace_files().filter(!open_file_buffer_paths.contains(it))
+	line_reader := lilly.line_reader or { os.read_lines }
 	for file_path in unopened_file_paths {
-		mut buff := buffer.Buffer.new(file_path, lilly.use_gap_buffer)
-		buff.read_lines(lilly.line_reader) or { continue }
-		mut file_buffer_match_iter := buff.match_iterator("TODO".runes())
-		for !file_buffer_match_iter.done() {
-			m_match := file_buffer_match_iter.next() or { continue }
-			matches << m_match
-		}
+		threads << go fn (line_reader fn (path string) ![]string, use_gap_buffer bool, file_path string, match_ch chan buffer.Match) {
+			mut buff := buffer.Buffer.new(file_path, use_gap_buffer)
+			buff.read_lines(line_reader) or { return }
+			resolve_matches_within_buffer(buff, match_ch)
+		}(line_reader, lilly.use_gap_buffer, file_path, match_ch)
 	}
 
+	threads.wait()
+	match_ch.close()
+	read_thread_ref.wait()
+
 	return matches
+}
+
+fn read_matches_from_channel_write_to_array(mut matches []buffer.Match, match_ch chan buffer.Match) {
+	for {
+		m := <-match_ch or { break }
+		matches << m
+	}
+}
+
+fn resolve_matches_within_buffer(file_buffer buffer.Buffer, matches chan buffer.Match) {
+	mut match_iter := file_buffer.match_iterator("TODO".runes())
+	for !match_iter.done() {
+		m_match := match_iter.next() or { continue }
+		matches <- m_match
+	}
 }
 
 fn (mut lilly Lilly) resolve_todo_comments_for_active_buffer(mut matches []buffer.Match) {
