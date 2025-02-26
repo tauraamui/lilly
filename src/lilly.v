@@ -213,6 +213,7 @@ fn (mut lilly Lilly) open_todo_comments_picker() {
 		return
 	}
 
+	/*
 	mut matches := []buffer.Match{}
 	// NOTE(tauraamui) [22/02/2025]: this is by far my favourite/preferred method to access the buffer of the current
 	//                               active view, rather than trying to do a circular ref to the view's buffer field
@@ -224,10 +225,28 @@ fn (mut lilly Lilly) open_todo_comments_picker() {
 		m_match := match_iter.next() or { continue }
 		matches << m_match
 	}
+	*/
 
-	mut todo_comments_picker := ui.TodoCommentPickerModal.new(matches)
+	mut todo_comments_picker := ui.TodoCommentPickerModal.new(lilly.resolve_todo_comments_across_workspace())
 	todo_comments_picker.open()
 	lilly.todo_comments_picker_modal = todo_comments_picker
+}
+
+fn (mut lilly Lilly) resolve_todo_comments_across_workspace() []buffer.Match {
+	mut matches := []buffer.Match{}
+
+	for file_path in lilly.workspace.files() {
+		if existing_buffer := lilly.file_buffers[file_path] {
+			mut match_iter := existing_buffer.match_iterator("TODO".runes())
+			for !match_iter.done() {
+				m_match := match_iter.next() or { continue }
+				matches << m_match
+			}
+			continue
+		}
+	}
+
+	return matches
 }
 
 fn (mut lilly Lilly) close_todo_comments_picker() {
