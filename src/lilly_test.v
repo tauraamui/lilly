@@ -108,6 +108,9 @@ fn test_lilly_resolve_matches_across_all_open_file_buffers_only_loaded_file_has_
 
 	mut lilly := Lilly{
 		line_reader: mock_fs.read_lines
+		resolve_workspace_files: fn () []string {
+			return ["unopened-file-as-yet.txt"]
+		}
 	}
 
 	mut m_line_reader := MockLineReader{
