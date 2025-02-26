@@ -100,7 +100,10 @@ fn (m_fs MockFS) read_lines(path string) ![]string {
 
 fn test_lilly_resolve_matches_across_all_open_file_buffers_only_loaded_file_has_match() {
 	mock_fs := MockFS{
-		files: { "unopened-file-as-yet.txt": ["This file is pretending to be on disk and not open yet."] }
+		files: { "unopened-file-as-yet.txt": [
+			"This file is pretending to be on disk and not open yet.",
+			"If we have several lines we can // TODO(tauraamui) [26/02/2025]: finish writing lin.."
+		] }
 	}
 
 	mut lilly := Lilly{
