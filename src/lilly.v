@@ -218,20 +218,6 @@ fn (mut lilly Lilly) open_todo_comments_picker() {
 		return
 	}
 
-	/*
-	mut matches := []buffer.Match{}
-	// NOTE(tauraamui) [22/02/2025]: this is by far my favourite/preferred method to access the buffer of the current
-	//                               active view, rather than trying to do a circular ref to the view's buffer field
-	//                               which itself is a reference to the value within this map, we should access the buffer
-	//                               in the map directly
-	mut match_iter := lilly.file_buffers[lilly.view.file_path].match_iterator("TODO".runes())
-
-	for !match_iter.done() {
-		m_match := match_iter.next() or { continue }
-		matches << m_match
-	}
-	*/
-
 	mut todo_comments_picker := ui.TodoCommentPickerModal.new(lilly.resolve_todo_comments_matches())
 	todo_comments_picker.open()
 	lilly.todo_comments_picker_modal = todo_comments_picker
