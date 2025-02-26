@@ -86,6 +86,42 @@ fn test_lilly_open_file_loads_into_file_buffer_and_buffer_view_maps_if_done_twic
 	assert lilly.view == buff_view
 }
 
+struct MockFS {
+	files map[string][]string
+}
+
+fn (m_fs MockFS) read_lines(path string) ![]string {
+	if lines := m_fs.files[path] {
+		return lines
+	}
+	return error("unable to find file: ${path}")
+}
+
+fn test_lilly_resolve_matches_across_all_open_file_buffers() {
+	mock_fs := MockFS{
+		files: { "unopened-file-as-yet.txt": ["This file is pretending to be on disk and not open yet."] }
+	}
+
+	mut lilly := Lilly{
+		line_reader: mock_fs.read_lines
+	}
+
+	mut m_line_reader := MockLineReader{
+		line_data: ["This file has been loaded by the user at the time of comment match search!"]
+	}
+
+	assert lilly.file_buffers.len == 0
+	assert lilly.buffer_views.len == 0
+
+	lilly.open_file_with_reader_at("loaded-test-file.txt", Pos{}, m_line_reader.read_lines) or { assert false }
+
+	assert lilly.file_buffers.len == 1
+	assert lilly.buffer_views.len == 1
+}
+
+fn test_lilly_resolve_matches_across_all_files_within_workspace() {
+}
+
 fn test_lilly_extract_pos_from_path() {
 	mut extracted_path, mut extracted_pos := extract_pos_from_path("fake_file.v")
 	assert extracted_path == "fake_file.v"
