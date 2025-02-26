@@ -25,6 +25,7 @@ import lib.ui
 
 @[heap]
 struct Lilly {
+	line_reader fn (file_path string) ![]string
 mut:
 	log                               log.Log
 	clipboard                         clipboardv2.Clipboard
@@ -60,6 +61,7 @@ pub fn open_lilly(
 		log: _log
 		clipboard:         _clipboard
 		use_gap_buffer: use_gap_buffer
+		line_reader:    os.read_lines
 	}
 	lilly.workspace = workspace.open_workspace(mut _log, workspace_root_dir, os.is_dir,
 		os.walk, os.config_dir, os.read_file, os.execute) or {
@@ -105,7 +107,7 @@ fn (mut lilly Lilly) open_file(path string) ! {
 }
 
 fn (mut lilly Lilly) open_file_at(path string, pos Pos) ! {
-	return lilly.open_file_with_reader_at(path, pos, os.read_lines)
+	return lilly.open_file_with_reader_at(path, pos, lilly.line_reader)
 }
 
 fn (mut lilly Lilly) open_file_with_reader_at(path string, pos Pos, line_reader fn (path string) ![]string) ! {
@@ -227,24 +229,28 @@ fn (mut lilly Lilly) open_todo_comments_picker() {
 	}
 	*/
 
-	mut todo_comments_picker := ui.TodoCommentPickerModal.new(lilly.resolve_todo_comments_across_workspace())
+	mut todo_comments_picker := ui.TodoCommentPickerModal.new(lilly.resolve_todo_comments_matches())
 	todo_comments_picker.open()
 	lilly.todo_comments_picker_modal = todo_comments_picker
 }
 
+fn (mut lilly Lilly) resolve_todo_comments_matches() []buffer.Match {
+	mut matches := []buffer.Match{}
+	lilly.resolve_todo_comments_for_active_buffer(mut matches)
+	return matches
+}
+
+fn (mut lilly Lilly) resolve_todo_comments_for_active_buffer(mut matches []buffer.Match) {
+	mut match_iter := lilly.file_buffers[lilly.view.file_path].match_iterator("TODO".runes())
+
+	for !match_iter.done() {
+		m_match := match_iter.next() or { continue }
+		matches << m_match
+	}
+}
+
 fn (mut lilly Lilly) resolve_todo_comments_across_workspace() []buffer.Match {
 	mut matches := []buffer.Match{}
-
-	for file_path in lilly.workspace.files() {
-		if existing_buffer := lilly.file_buffers[file_path] {
-			mut match_iter := existing_buffer.match_iterator("TODO".runes())
-			for !match_iter.done() {
-				m_match := match_iter.next() or { continue }
-				matches << m_match
-			}
-			continue
-		}
-	}
 
 	return matches
 }
