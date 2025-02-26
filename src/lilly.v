@@ -239,7 +239,16 @@ fn (mut lilly Lilly) open_todo_comments_picker() {
 
 fn (mut lilly Lilly) resolve_todo_comments_matches() []buffer.Match {
 	mut matches := []buffer.Match{}
-	lilly.resolve_todo_comments_for_active_buffer(mut matches)
+
+	open_file_buffer_paths := lilly.file_buffers.keys()
+	for file_path in open_file_buffer_paths {
+		mut file_buffer_match_iter := lilly.file_buffers[file_path].match_iterator("TODO".runes())
+		for !file_buffer_match_iter.done() {
+			m_match := file_buffer_match_iter.next() or { continue }
+			matches << m_match
+		}
+	}
+	// lilly.resolve_todo_comments_for_active_buffer(mut matches)
 	return matches
 }
 
