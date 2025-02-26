@@ -270,7 +270,8 @@ fn resolve_matches_within_buffer(file_buffer buffer.Buffer, matches chan buffer.
 }
 
 fn (mut lilly Lilly) resolve_todo_comments_for_active_buffer(mut matches []buffer.Match) {
-	mut match_iter := lilly.file_buffers[lilly.view.file_path].match_iterator("TODO".runes())
+	file_path := lilly.view.file_path
+	mut match_iter := lilly.file_buffers[file_path].match_iterator("TODO".runes())
 
 	for !match_iter.done() {
 		m_match := match_iter.next() or { continue }
