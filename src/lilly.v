@@ -25,7 +25,7 @@ import lib.ui
 
 @[heap]
 struct Lilly {
-	line_reader fn (file_path string) ![]string
+	line_reader                       fn (file_path string) ![]string
 mut:
 	log                               log.Log
 	clipboard                         clipboardv2.Clipboard
@@ -38,6 +38,7 @@ mut:
 	inactive_buffer_picker_modal      ?ui.FilePickerModal
 	todo_comments_picker_modal        ?ui.TodoCommentPickerModal
 	workspace                         workspace.Workspace
+	resolve_workspace_files           ?fn () []string
 	syntaxes                          []workspace.Syntax
 }
 
@@ -67,6 +68,7 @@ pub fn open_lilly(
 		os.walk, os.config_dir, os.read_file, os.execute) or {
 		return error("unable to open workspace '${workspace_root_dir}' -> ${err}")
 	}
+	lilly.resolve_workspace_files = lilly.workspace.get_files
 
 	lilly.view = new_splash(commit_hash, lilly.workspace.config.leader_key)
 	if file_path.len != 0 {
@@ -172,7 +174,8 @@ fn (mut lilly Lilly) open_file_picker(special_mode bool) {
 		lilly.file_picker_modal = file_picker
 		return
 	}
-	mut file_picker := ui.FilePickerModal.new("", lilly.workspace.files(), special_mode)
+	mut resolve_files := lilly.resolve_workspace_files or { lilly.workspace.get_files }
+	mut file_picker := ui.FilePickerModal.new("", resolve_files(), special_mode)
 	file_picker.open()
 	lilly.file_picker_modal = file_picker
 }

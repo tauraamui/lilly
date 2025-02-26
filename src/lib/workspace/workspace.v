@@ -97,7 +97,7 @@ pub fn (workspace Workspace) branch() string {
 	return workspace.git_branch
 }
 
-pub fn (workspace Workspace) files() []string {
+pub fn (workspace Workspace) get_files() []string {
 	return workspace.files
 }
 
