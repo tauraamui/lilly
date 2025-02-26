@@ -254,11 +254,11 @@ fn (mut lilly Lilly) resolve_todo_comments_matches() []buffer.Match {
 	resolve_workspace_files := lilly.resolve_workspace_files or { lilly.workspace.get_files }
 	unopened_file_paths := resolve_workspace_files().filter(!open_file_buffer_paths.contains(it))
 	for file_path in unopened_file_paths {
-		threads << go fn (lilly Lilly, file_path string, match_ch chan buffer.Match) {
-			mut buff := buffer.Buffer.new(file_path, lilly.use_gap_buffer)
-			buff.read_lines(lilly.line_reader) or { return }
+		threads << go fn (line_reader fn (path string) ![]string, use_gap_buffer bool, file_path string, match_ch chan buffer.Match) {
+			mut buff := buffer.Buffer.new(file_path, use_gap_buffer)
+			buff.read_lines(line_reader) or { return }
 			resolve_matches_within_buffer(buff, match_ch)
-		}(lilly, file_path, match_ch)
+		}(lilly.line_reader, lilly.use_gap_buffer, file_path, match_ch)
 	}
 
 	threads.wait()
