@@ -17,7 +17,6 @@ module main
 import os
 import log
 import strconv
-import time
 import lib.buffer
 import lib.clipboardv2
 import lib.workspace
@@ -26,7 +25,7 @@ import lib.ui
 
 @[heap]
 struct Lilly {
-	line_reader                       fn (file_path string) ![]string
+	line_reader                       ?fn (file_path string) ![]string
 mut:
 	log                               log.Log
 	clipboard                         clipboardv2.Clipboard
@@ -110,7 +109,7 @@ fn (mut lilly Lilly) open_file(path string) ! {
 }
 
 fn (mut lilly Lilly) open_file_at(path string, pos Pos) ! {
-	return lilly.open_file_with_reader_at(path, pos, lilly.line_reader)
+	return lilly.open_file_with_reader_at(path, pos, lilly.line_reader or { os.read_lines })
 }
 
 fn (mut lilly Lilly) open_file_with_reader_at(path string, pos Pos, line_reader fn (path string) ![]string) ! {
@@ -253,12 +252,13 @@ fn (mut lilly Lilly) resolve_todo_comments_matches() []buffer.Match {
 
 	resolve_workspace_files := lilly.resolve_workspace_files or { lilly.workspace.get_files }
 	unopened_file_paths := resolve_workspace_files().filter(!open_file_buffer_paths.contains(it))
+	line_reader := lilly.line_reader or { os.read_lines }
 	for file_path in unopened_file_paths {
 		threads << go fn (line_reader fn (path string) ![]string, use_gap_buffer bool, file_path string, match_ch chan buffer.Match) {
 			mut buff := buffer.Buffer.new(file_path, use_gap_buffer)
 			buff.read_lines(line_reader) or { return }
 			resolve_matches_within_buffer(buff, match_ch)
-		}(lilly.line_reader, lilly.use_gap_buffer, file_path, match_ch)
+		}(line_reader, lilly.use_gap_buffer, file_path, match_ch)
 	}
 
 	threads.wait()
