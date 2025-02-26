@@ -15,6 +15,7 @@
 module main
 import lib.clipboardv2
 import lib.workspace
+import lib.buffer
 
 @[heap]
 struct MockLineReader {
@@ -97,7 +98,7 @@ fn (m_fs MockFS) read_lines(path string) ![]string {
 	return error("unable to find file: ${path}")
 }
 
-fn test_lilly_resolve_matches_across_all_open_file_buffers() {
+fn test_lilly_resolve_matches_across_all_open_file_buffers_only_loaded_file_has_match() {
 	mock_fs := MockFS{
 		files: { "unopened-file-as-yet.txt": ["This file is pretending to be on disk and not open yet."] }
 	}
@@ -107,7 +108,10 @@ fn test_lilly_resolve_matches_across_all_open_file_buffers() {
 	}
 
 	mut m_line_reader := MockLineReader{
-		line_data: ["This file has been loaded by the user at the time of comment match search!"]
+		line_data: [
+			"// TODO(tauraamui) [26/02/2025]: become a real boy, I mean file!",
+			"This file has been loaded by the user at the time of comment match search!"
+		]
 	}
 
 	assert lilly.file_buffers.len == 0
@@ -115,8 +119,13 @@ fn test_lilly_resolve_matches_across_all_open_file_buffers() {
 
 	lilly.open_file_with_reader_at("loaded-test-file.txt", Pos{}, m_line_reader.read_lines) or { assert false }
 
+	assert m_line_reader.given_path == "loaded-test-file.txt"
 	assert lilly.file_buffers.len == 1
 	assert lilly.buffer_views.len == 1
+
+	assert lilly.resolve_todo_comments_matches() == [
+		buffer.Match{ pos: buffer.Pos{ x: 3, y: 0 }, contents: "TODO"}
+	]
 }
 
 fn test_lilly_resolve_matches_across_all_files_within_workspace() {
