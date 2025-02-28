@@ -69,3 +69,26 @@ fn test_todo_comment_modal_rendering_with_match_list_entries() {
 	]
 }
 
+fn test_todo_comment_modal_enter_returns_currently_selected_match_entry() {
+	mut drawn_text := []string{}
+	mut ref := &drawn_text
+
+	mut mock_drawer := TestDrawer{
+		draw_text_callback: fn [mut ref] (x int, y int, text string) { ref << text }
+	}
+
+	mut mock_modal := TodoCommentPickerModal.new([
+		buffer.Match{
+			file_path: "example-file.txt"
+			pos: buffer.Pos{ x: 11, y: 38 },
+			contents: "A fake l // TODO(tauraamui) [28/02/2025] random comment"
+		},
+		buffer.Match{
+			file_path: "test-file.txt"
+			pos: buffer.Pos{ x: 3, y: 112 },
+			contents: "// TODO(tauraamui) [11/01/2025] blah blah blah blah...!"
+		}
+	])
+}
+
+
