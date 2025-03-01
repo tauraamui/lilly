@@ -38,7 +38,14 @@ pub fn (mut tc_picker TodoCommentPickerModal) draw(mut ctx draw.Contextable) {
 
 	ctx.draw_text(1, y_offset, "=== ${debug_mode_str} TODO COMMENTS PICKER ${debug_mode_str} ===") // draw header
 	y_offset += 1
+	ctx.set_cursor_position(1, y_offset + tc_picker.current_sel_id - tc_picker.from)
 	y_offset += tc_picker.draw_scrollable_list(mut ctx, y_offset, tc_picker.matches)
+	ctx.set_bg_color(r: 153, g: 95, b: 146)
+	ctx.draw_rect(1, y_offset, ctx.window_width(), y_offset)
+	search_label := "SEARCH:"
+	ctx.draw_text(1, y_offset, search_label)
+	// ctx.draw_text(1 + utf8_str_visible_length(search_label) + 1, y_offset, tc_picker.search.query)
+	ctx.draw_text(1 + utf8_str_visible_length(search_label) + 1, y_offset, "")
 }
 
 fn (mut tc_picker TodoCommentPickerModal) resolve_to() int {
@@ -57,10 +64,15 @@ pub fn (mut tc_picker TodoCommentPickerModal) draw_scrollable_list(mut ctx draw.
 	to := tc_picker.resolve_to()
 	for i := tc_picker.from; i < to; i++ {
 		ctx.set_bg_color(r: 15, g: 15, b: 15)
+		if tc_picker.current_sel_id == i {
+			ctx.set_bg_color(r: 53, g: 53, b: 53)
+			ctx.draw_rect(1, y_offset + (i - tc_picker.from), ctx.window_width(),
+				y_offset + (i - tc_picker.from))
+		}
 		list_item_content := "${list[i].file_path}:${list[i].pos.y}:${list[i].pos.x} ${list[i].contents}"
 		ctx.draw_text(1, y_offset + (i - tc_picker.from), list_item_content)
 	}
-	return 100
+	return y_offset + (max_height - 2)
 }
 
 pub fn (mut tc_picker TodoCommentPickerModal) on_key_down(e draw.Event) Action {
@@ -68,12 +80,24 @@ pub fn (mut tc_picker TodoCommentPickerModal) on_key_down(e draw.Event) Action {
 		.escape {
 			return Action{ op: .close_op }
 		}
+		.down {
+			tc_picker.move_selection_down()
+		}
+		.up {
+			tc_picker.move_selection_up()
+		}
 		.enter {
 			return tc_picker.match_selected()
 		}
 		else {}
 	}
 	return Action{ op: .no_op }
+}
+
+fn (mut tc_picker TodoCommentPickerModal) move_selection_down() {
+}
+
+fn (mut tc_picker TodoCommentPickerModal) move_selection_up() {
 }
 
 fn (mut tc_picker TodoCommentPickerModal) match_selected() Action {
