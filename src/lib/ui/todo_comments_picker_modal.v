@@ -95,6 +95,17 @@ pub fn (mut tc_picker TodoCommentPickerModal) on_key_down(e draw.Event) Action {
 }
 
 fn (mut tc_picker TodoCommentPickerModal) move_selection_down() {
+	matches := tc_picker.matches
+	tc_picker.current_sel_id += 1
+	to := tc_picker.resolve_to()
+	if tc_picker.current_sel_id >= to {
+		if matches.len - to > 0 {
+			tc_picker.from += 1
+		}
+	}
+	if tc_picker.current_sel_id >= matches.len {
+		tc_picker.current_sel_id = matches.len - 1
+	}
 }
 
 fn (mut tc_picker TodoCommentPickerModal) move_selection_up() {
