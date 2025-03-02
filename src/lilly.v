@@ -223,6 +223,10 @@ fn (mut lilly Lilly) open_todo_comments_picker() {
 	lilly.todo_comments_picker_modal = todo_comments_picker
 }
 
+// FIX(tauraamui) [02/03/2025]: should ensure that matches are within a comment block, ideally with treesitter
+//                              but we don't have treesitter support yet, so unsure what to do for now but currently
+//                              ironically due to all of the unit tests for this functionality we're getting a lot of
+//                              false positive matches in the results list
 fn (mut lilly Lilly) resolve_todo_comments_matches() []buffer.Match {
 	mut matches := []buffer.Match{}
 	match_ch    := chan buffer.Match{}
