@@ -82,6 +82,42 @@ fn test_buffer_load_from_path_and_iterate_over_pattern_matches() {
 	assert iteration_count == 5
 }
 
+fn test_buffer_load_from_path_and_iterate_over_pattern_matches_excluding_matches_not_within_comment() {
+	line_reader := fn (path string) ![]string {
+		return [
+			"1. This is a first line",
+			"// TODO(tauraamui) [30/01/25]: this line has a comment to find",
+			"2. This is a second line",
+			"3. This line contains TODO but not in a comment",
+			"4. This is the fourth line"
+		]
+	}
+
+	mut buffer := Buffer.new("", false)
+	buffer.read_lines(line_reader)!
+
+	mut found_matches := []Match{}
+
+	mut iteration_count := 0
+	mut match_iter := buffer.match_iterator("TODO".runes())
+	for !match_iter.done() {
+		iteration_count += 1
+		found_match := match_iter.next() or { continue }
+		found_matches << found_match
+	}
+
+	assert found_matches.len == 2
+	assert found_matches[0] == Match{
+		pos: Pos{ x: 3, y: 1 }
+		contents: "TODO(tauraamui) [30/01/25]: this line has a comment to find"
+	}
+	assert found_matches[1] == Match{
+		pos: Pos{ x: 22, y: 3 }
+		contents: "TODO but not in a comment"
+	}
+	assert iteration_count == 6
+}
+
 fn test_buffer_load_from_path_with_gap_buffer_and_iterate_over_pattern_matches() {
 	line_reader := fn (path string) ![]string {
 		return ["1. This is a first line", "// TODO(tauraamui) [30/01/25]: this line has a comment to find", "2. This is a second line", "3. This is a third line"]
