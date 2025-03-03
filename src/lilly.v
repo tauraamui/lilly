@@ -22,6 +22,7 @@ import lib.clipboardv2
 import lib.workspace
 import lib.draw
 import lib.ui
+import lib.core
 
 @[heap]
 struct Lilly {
@@ -244,6 +245,7 @@ fn (mut lilly Lilly) resolve_todo_comments_matches() []buffer.Match {
 	unopened_file_paths := resolve_workspace_files().filter(!open_file_buffer_paths.contains(it))
 	line_reader := lilly.line_reader or { os.read_lines }
 	for file_path in unopened_file_paths {
+		if core.is_binary_file(file_path) { continue }
 		threads << go fn (line_reader fn (path string) ![]string, use_gap_buffer bool, file_path string, match_ch chan buffer.Match) {
 			mut buff := buffer.Buffer.new(file_path, use_gap_buffer)
 			buff.read_lines(line_reader) or { return }
