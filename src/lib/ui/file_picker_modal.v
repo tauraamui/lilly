@@ -3,6 +3,7 @@ module ui
 import os
 import strings
 import lib.draw
+import lib.core
 
 const max_height = 20
 
@@ -176,7 +177,7 @@ fn (mut f_picker FilePickerModal) move_selection_up() {
 fn (mut f_picker FilePickerModal) file_selected(skip_byte_check bool) Action {
 	file_paths := f_picker.file_paths
 	selected_path := file_paths[f_picker.current_sel_id]
-	if !skip_byte_check && is_binary_file(selected_path) { return Action{ op: .no_op } }
+	if !skip_byte_check && core.is_binary_file(selected_path) { return Action{ op: .no_op } }
 	return Action{ op: .open_file_op, file_path: selected_path }
 }
 
@@ -209,24 +210,5 @@ pub fn (mut f_picker FilePickerModal) close() {
 @[inline]
 fn score_value_by_query(query string, value string) f32 {
 	return f32(int(strings.dice_coefficient(query, value) * 1000)) / 1000
-}
-
-fn is_binary_file(path string) bool {
-    mut f := os.open(path) or { return false }
-    mut buf := []u8{len: 1024}
-    bytes_read := f.read_bytes_into(0, mut buf) or { return false }
-
-    // Check first N bytes for binary patterns
-    mut non_text_bytes := 0
-    for i := 0; i < bytes_read; i++ {
-        b := buf[i]
-        // Count bytes outside printable ASCII range
-        if (b < 32 && b != 9 && b != 10 && b != 13) || b > 126 {
-            non_text_bytes++
-        }
-    }
-
-    // If more than 30% non-text bytes, consider it binary
-    return (f64(non_text_bytes) / f64(bytes_read)) > 0.3
 }
 

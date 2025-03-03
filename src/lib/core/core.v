@@ -2,10 +2,10 @@ module core
 
 import os
 
-pub fn is_binary_file(path string) !bool {
-	mut f := os.open(path) or { return error("is_binary_file: unable to open ${path}: ${err}") }
+pub fn is_binary_file(path string) bool {
+	mut f := os.open(path) or { return true }
 	mut buf := []u8{ len: 1024 }
-	bytes_read := f.read_bytes_into(0, mut buf) or { return error("is_binary_file: failed to read bytes into memory: ${err}") }
+	bytes_read := f.read_bytes_into(0, mut buf) or { return true }
 
 	mut non_text_bytes := 0
 	for i in 0..bytes_read {
