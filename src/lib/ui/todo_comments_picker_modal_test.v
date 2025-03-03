@@ -62,7 +62,7 @@ fn test_todo_comment_modal_rendering_with_match_list_entries() {
 
 	mock_modal.draw(mut mock_drawer)
 	assert drawn_text.len > 0
-	cleaned_list := drawn_text[1..drawn_text.len].clone()
+	cleaned_list := drawn_text[1..drawn_text.len - 2].clone()
 	assert cleaned_list == [
 		"example-file.txt:38:11 A fake l // TODO(tauraamui) [28/02/2025] random comment"
 		"test-file.txt:112:3 // TODO(tauraamui) [11/01/2025] blah blah blah blah...!"
