@@ -109,6 +109,16 @@ fn (mut tc_picker TodoCommentPickerModal) move_selection_down() {
 }
 
 fn (mut tc_picker TodoCommentPickerModal) move_selection_up() {
+	tc_picker.current_sel_id -= 1
+	if tc_picker.current_sel_id < tc_picker.from {
+		tc_picker.from -= 1
+	}
+	if tc_picker.from < 0 {
+		tc_picker.from = 0
+	}
+	if tc_picker.current_sel_id < 0 {
+		tc_picker.current_sel_id = 0
+	}
 }
 
 fn (mut tc_picker TodoCommentPickerModal) match_selected() Action {
