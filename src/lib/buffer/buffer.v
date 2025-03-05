@@ -457,7 +457,10 @@ pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 		return none
 	}
 
-	// mut max_index := found_index + iter.pattern.len
+	if found_index > 0 {
+		for i := found_index; i >= 0; i -= 1 {
+		}
+	}
 
 	return Match{
 		file_path: iter.file_path
