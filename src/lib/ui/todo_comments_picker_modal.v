@@ -124,6 +124,6 @@ fn (mut tc_picker TodoCommentPickerModal) move_selection_up() {
 fn (mut tc_picker TodoCommentPickerModal) match_selected() Action {
 	matches := tc_picker.matches
 	selected_match := matches[tc_picker.current_sel_id]
-	return Action{}
+	return Action{ op: .open_file_op, file_path: "${selected_match.file_path}:${selected_match.pos.y}:${selected_match.pos.x}" }
 }
 

@@ -386,7 +386,11 @@ pub fn (mut lilly Lilly) todo_comments_picker_on_key_down(mut todo_comments_pick
 	match action.op {
 		.no_op { lilly.todo_comments_picker_modal = todo_comments_picker }
 		// NOTE(tauraamui) [16/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
-		.open_file_op {}
+		.open_file_op {
+			lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
+			lilly.close_todo_comments_picker()
+			return
+		}
 		.close_op { lilly.close_todo_comments_picker(); return }
 	}
 }
