@@ -22,10 +22,12 @@ import lib.clipboardv2
 import lib.workspace
 import lib.draw
 import lib.ui
+import lib.core
 
 @[heap]
 struct Lilly {
 	line_reader                       ?fn (file_path string) ![]string
+	is_binary_file                    ?fn (file_path string) bool
 mut:
 	log                               log.Log
 	clipboard                         clipboardv2.Clipboard
@@ -223,6 +225,10 @@ fn (mut lilly Lilly) open_todo_comments_picker() {
 	lilly.todo_comments_picker_modal = todo_comments_picker
 }
 
+// FIX(tauraamui) [02/03/2025]: should ensure that matches are within a comment block, ideally with treesitter
+//                              but we don't have treesitter support yet, so unsure what to do for now but currently
+//                              ironically due to all of the unit tests for this functionality we're getting a lot of
+//                              false positive matches in the results list
 fn (mut lilly Lilly) resolve_todo_comments_matches() []buffer.Match {
 	mut matches := []buffer.Match{}
 	match_ch    := chan buffer.Match{}
@@ -239,7 +245,9 @@ fn (mut lilly Lilly) resolve_todo_comments_matches() []buffer.Match {
 	resolve_workspace_files := lilly.resolve_workspace_files or { lilly.workspace.get_files }
 	unopened_file_paths := resolve_workspace_files().filter(!open_file_buffer_paths.contains(it))
 	line_reader := lilly.line_reader or { os.read_lines }
+	is_binary   := lilly.is_binary_file or { core.is_binary_file }
 	for file_path in unopened_file_paths {
+		if is_binary(file_path) { continue }
 		threads << go fn (line_reader fn (path string) ![]string, use_gap_buffer bool, file_path string, match_ch chan buffer.Match) {
 			mut buff := buffer.Buffer.new(file_path, use_gap_buffer)
 			buff.read_lines(line_reader) or { return }
@@ -378,7 +386,11 @@ pub fn (mut lilly Lilly) todo_comments_picker_on_key_down(mut todo_comments_pick
 	match action.op {
 		.no_op { lilly.todo_comments_picker_modal = todo_comments_picker }
 		// NOTE(tauraamui) [16/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
-		.open_file_op {}
+		.open_file_op {
+			lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
+			lilly.close_todo_comments_picker()
+			return
+		}
 		.close_op { lilly.close_todo_comments_picker(); return }
 	}
 }
