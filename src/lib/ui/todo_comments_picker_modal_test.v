@@ -47,16 +47,20 @@ fn test_todo_comment_modal_rendering_with_match_list_entries() {
 		draw_text_callback: fn [mut ref] (x int, y int, text string) { ref << text }
 	}
 
+	// NOTE(tauraamui) [07/03/2025]: despite the below example comments having the '-x' exclusion
+	//                               flag to exclude them from the match list, it doesn't prevent
+	//                               this render test working correctly as the match list is manuallly
+	//                               populated here
 	mut mock_modal := TodoCommentPickerModal.new([
 		buffer.Match{
 			file_path: "example-file.txt"
 			pos: buffer.Pos{ x: 11, y: 38 },
-			contents: "A fake l // TODO(tauraamui) [28/02/2025] random comment"
+			contents: "A fake l // -x TODO(tauraamui) [28/02/2025] random comment"
 		},
 		buffer.Match{
 			file_path: "test-file.txt"
 			pos: buffer.Pos{ x: 3, y: 112 },
-			contents: "// TODO(tauraamui) [11/01/2025] blah blah blah blah...!"
+			contents: "// -x TODO(tauraamui) [11/01/2025] blah blah blah blah...!"
 		}
 	])
 
@@ -64,8 +68,8 @@ fn test_todo_comment_modal_rendering_with_match_list_entries() {
 	assert drawn_text.len > 0
 	cleaned_list := drawn_text[1..drawn_text.len - 2].clone()
 	assert cleaned_list == [
-		"example-file.txt:38:11 A fake l // TODO(tauraamui) [28/02/2025] random comment"
-		"test-file.txt:112:3 // TODO(tauraamui) [11/01/2025] blah blah blah blah...!"
+		"example-file.txt:38:11 A fake l // -x TODO(tauraamui) [28/02/2025] random comment"
+		"test-file.txt:112:3 // -x TODO(tauraamui) [11/01/2025] blah blah blah blah...!"
 	]
 }
 
@@ -81,12 +85,12 @@ fn test_todo_comment_modal_enter_returns_currently_selected_match_entry() {
 		buffer.Match{
 			file_path: "example-file.txt"
 			pos: buffer.Pos{ x: 11, y: 38 },
-			contents: "A fake l // TODO(tauraamui) [28/02/2025] random comment"
+			contents: "A fake l // -x TODO(tauraamui) [28/02/2025] random comment"
 		},
 		buffer.Match{
 			file_path: "test-file.txt"
 			pos: buffer.Pos{ x: 3, y: 112 },
-			contents: "// TODO(tauraamui) [11/01/2025] blah blah blah blah...!"
+			contents: "// -x TODO(tauraamui) [11/01/2025] blah blah blah blah...!"
 		}
 	])
 }

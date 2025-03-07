@@ -442,7 +442,7 @@ mut:
 const forward_slash = "/".runes()[0]
 const star          = "*".runes()[0]
 
-// TODO(tauraamui) [07/03/2025]: need to implement some attribute or tag to exclude comments from the matcher
+// -x TODO(tauraamui) [07/03/2025]: need to implement some attribute or tag to exclude comments from the matcher
 pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 	if iter.idx >= iter.data_ref.len {
 		iter.done = true
@@ -467,27 +467,42 @@ pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 		contents: line_to_search[found_index..].string()
 	}
 
-	for i := found_index; i >= 0; i -= 1 {
+	if find_comment_prefix(line_to_search, found_index) {
+		return found_match
+	}
+
+	return none
+}
+
+fn find_comment_prefix(line_to_search []rune, start_index int) bool {
+	for i := start_index; i >= 0; i -= 1 {
 		match line_to_search[i] {
+			// any comment with -x before the keyword will be excluded
+			"x".runes()[0] {
+				if i - 1 >= 0 {
+					if line_to_search[i - 1] == "-".runes()[0] {
+						return false
+					}
+				}
+			}
 			forward_slash {
 				if i - 1 >= 0 {
 					if line_to_search[i - 1] == forward_slash {
-						return found_match
+						return true
 					}
 				}
 			}
 			star {
 				if i - 1 >= 0 {
 					if line_to_search[i - 1] == forward_slash {
-						return found_match
+						return true
 					}
 				}
 			}
 			else {}
 		}
 	}
-
-	return none
+	return false
 }
 
 pub fn (iter PatternMatchIteratorFromLinesList) done() bool {
