@@ -1810,6 +1810,7 @@ fn (mut view View) z() {
 	}
 }
 
+// TODO(tauraamui) [07/03/2025]: I have no idea how this code works, should probably ask Kelly to remind me
 fn (mut view View) center_text_around_cursor() {
 	orig_cursor_pos := view.cursor.pos.y
 	window_center_offset := int((view.to - view.from)/2)
