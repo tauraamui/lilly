@@ -427,6 +427,7 @@ pub struct Match {
 pub:
 	file_path string
 	pos       Pos
+pub mut:
 	contents  string
 }
 
@@ -438,6 +439,9 @@ mut:
 	idx int
 	done bool
 }
+
+const forward_slash = "/".runes()[0]
+const star          = "*".runes()[0]
 
 pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 	if iter.idx >= iter.data_ref.len {
@@ -457,20 +461,51 @@ pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 		return none
 	}
 
-	if found_index > 0 {
-		for i := found_index; i >= 0; i -= 1 {
-		}
-	}
-
-	return Match{
+	mut found_match := Match{
 		file_path: iter.file_path
 		pos: Pos{ x: found_index, y: iter.idx }
 		contents: line_to_search[found_index..].string()
 	}
+
+	for i := found_index; i >= 0; i -= 1 {
+		match line_to_search[i] {
+			forward_slash {
+				if i - 1 >= 0 {
+					if line_to_search[i - 1] == forward_slash {
+						found_match.contents = line_to_search[i - 1..].string()
+						return found_match
+					}
+				}
+			}
+			star {
+				if i - 1 >= 0 {
+					if line_to_search[i - 1] == forward_slash {
+						found_match.contents = line_to_search[i - 1..].string()
+						return found_match
+					}
+				}
+			}
+			else {}
+		}
+	}
+
+	return none
 }
 
 pub fn (iter PatternMatchIteratorFromLinesList) done() bool {
 	return iter.done
+}
+
+pub fn (buffer Buffer) match_iterator(pattern []rune) PatternMatchIterator {
+	// if buffer.use_gap_buffer {}
+	if buffer.use_gap_buffer {
+		return new_gap_buffer_pattern_match_iterator(pattern, buffer.c_buffer)
+	}
+	return PatternMatchIteratorFromLinesList{
+		file_path: buffer.file_path
+		data_ref: buffer.lines
+		pattern: pattern
+	}
 }
 
 pub interface LineIterator {
@@ -498,18 +533,6 @@ pub fn (buffer Buffer) line_iterator() LineIterator {
 	}
 	return LineIteratorFromLinesList{
 		data_ref: buffer.lines
-	}
-}
-
-pub fn (buffer Buffer) match_iterator(pattern []rune) PatternMatchIterator {
-	// if buffer.use_gap_buffer {}
-	if buffer.use_gap_buffer {
-		return new_gap_buffer_pattern_match_iterator(pattern, buffer.c_buffer)
-	}
-	return PatternMatchIteratorFromLinesList{
-		file_path: buffer.file_path
-		data_ref: buffer.lines
-		pattern: pattern
 	}
 }
 
