@@ -427,7 +427,6 @@ pub struct Match {
 pub:
 	file_path string
 	pos       Pos
-pub mut:
 	contents  string
 }
 
@@ -443,6 +442,7 @@ mut:
 const forward_slash = "/".runes()[0]
 const star          = "*".runes()[0]
 
+// TODO(tauraamui) [07/03/2025]: need to implement some attribute or tag to exclude comments from the matcher
 pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 	if iter.idx >= iter.data_ref.len {
 		iter.done = true
@@ -472,7 +472,6 @@ pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 			forward_slash {
 				if i - 1 >= 0 {
 					if line_to_search[i - 1] == forward_slash {
-						found_match.contents = line_to_search[i - 1..].string()
 						return found_match
 					}
 				}
@@ -480,7 +479,6 @@ pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 			star {
 				if i - 1 >= 0 {
 					if line_to_search[i - 1] == forward_slash {
-						found_match.contents = line_to_search[i - 1..].string()
 						return found_match
 					}
 				}
