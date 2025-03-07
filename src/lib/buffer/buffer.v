@@ -427,6 +427,7 @@ pub struct Match {
 pub:
 	file_path string
 	pos       Pos
+pub mut:
 	contents  string
 }
 
@@ -460,7 +461,7 @@ pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 		return none
 	}
 
-	found_match := Match{
+	mut found_match := Match{
 		file_path: iter.file_path
 		pos: Pos{ x: found_index, y: iter.idx }
 		contents: line_to_search[found_index..].string()
@@ -471,18 +472,18 @@ pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 			forward_slash {
 				if i - 1 >= 0 {
 					if line_to_search[i - 1] == forward_slash {
+						found_match.contents = line_to_search[i - 1..].string()
 						return found_match
 					}
 				}
-				return none
 			}
 			star {
 				if i - 1 >= 0 {
 					if line_to_search[i - 1] == forward_slash {
+						found_match.contents = line_to_search[i - 1..].string()
 						return found_match
 					}
 				}
-				return none
 			}
 			else {}
 		}
@@ -490,8 +491,6 @@ pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 
 	return none
 }
-/*
-*/
 
 pub fn (iter PatternMatchIteratorFromLinesList) done() bool {
 	return iter.done
