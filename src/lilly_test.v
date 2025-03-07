@@ -135,11 +135,11 @@ fn test_lilly_resolve_matches_across_all_open_file_buffers_only_loaded_file_has_
 
 	assert lilly.resolve_todo_comments_matches() == [
 		buffer.Match{
-			contents: "TODO(tauraamui) [26/02/2025]: become a real boy, I mean file!"
+			contents: "// TODO(tauraamui) [26/02/2025]: become a real boy, I mean file!"
 			file_path: "loaded-test-file.txt", pos: buffer.Pos{ x: 3, y: 0 }
 		},
 		buffer.Match{
-			contents: "TODO(tauraamui) [26/02/2025]: finish writing lin.."
+			contents: "// TODO(tauraamui) [26/02/2025]: finish writing lin.."
 			file_path: "unopened-file-as-yet.txt", pos: buffer.Pos{ x: 35, y: 1 }
 		}
 	]
