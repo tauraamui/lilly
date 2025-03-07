@@ -8,9 +8,9 @@ fn test_compute_lps_buffer_from_pattern() {
 }
 
 fn test_kmp_search() {
-	mut text := "// TODO(tauraamui) [29/01/25]: some comment contents".runes()
+	mut text := "// -x TODO(tauraamui) [29/01/25]: some comment contents".runes()
 	mut pattern := "TODO".runes()
-	assert kmp(text, pattern) == 3
+	assert kmp(text, pattern) == 6
 
 	text = "ABABDABACDABABCABAB".runes()
 	pattern = "ABACDABAB".runes()
@@ -18,12 +18,12 @@ fn test_kmp_search() {
 }
 
 fn test_kmp_rudimentary_attempt_select_full_comment() {
-	mut text := "// TODO(tauraamui) [29/01/25]: some comment contents".runes()
+	mut text := "// -x TODO(tauraamui) [29/01/25]: some comment contents".runes()
 	mut pattern := "TODO".runes()
 	start := kmp(text, pattern)
 	end   := kmp(text, "]:".runes()) + "]:".len
-	assert start == 3
-	assert end == 30
+	assert start == 6
+	assert end == 33
 	assert text[start..end].string() == "TODO(tauraamui) [29/01/25]:"
 }
 
