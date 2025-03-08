@@ -76,9 +76,10 @@ pub fn (mut tc_picker TodoCommentPickerModal) draw_scrollable_list(mut ctx draw.
 
 		mut x_offset := utf8_str_visible_length(list_item_file_path)
 		keyword := match_item.contents[..match_item.keyword_len]
-		ctx.set_bg_color(r: 200, g: 53, b: 53)
-		ctx.draw_text(1 + x_offset, iter_y_offset, keyword)
-		ctx.reset_bg_color()
+
+		ctx.bold()
+		draw.paint_text_on_background(mut ctx, 1 + x_offset, iter_y_offset, draw.Color{ 245, 42, 42 }, draw.Color{ 255, 255, 255 }, keyword)
+		ctx.reset()
 
 		x_offset += utf8_str_visible_length(keyword)
 		post_keyword := match_item.contents[match_item.keyword_len..]
