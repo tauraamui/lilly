@@ -55,14 +55,14 @@ fn test_todo_comment_modal_rendering_with_match_list_entries() {
 		buffer.Match{
 			file_path: "example-file.txt"
 			pos: buffer.Pos{ x: 11, y: 38 },
-			contents: "A fake l // -x TODO(tauraamui) [28/02/2025] random comment"
-			keyword_loc: 15
+			contents: "TODO(tauraamui) [28/02/2025] random comment"
 			keyword_len: 4
 		},
 		buffer.Match{
 			file_path: "test-file.txt"
 			pos: buffer.Pos{ x: 3, y: 112 },
-			contents: "// -x TODO(tauraamui) [11/01/2025] blah blah blah blah...!"
+			contents: "TODO(tauraamui) [11/01/2025] blah blah blah blah...!"
+			keyword_len: 4
 		}
 	])
 
@@ -70,8 +70,8 @@ fn test_todo_comment_modal_rendering_with_match_list_entries() {
 	assert drawn_text.len > 0
 	cleaned_list := drawn_text[1..drawn_text.len - 2].clone()
 	assert cleaned_list == [
-		"example-file.txt:38:11", " A fake l // -x TODO(tauraamui) [28/02/2025] random comment"
-		"test-file.txt:112:3", " // -x TODO(tauraamui) [11/01/2025] blah blah blah blah...!"
+		"example-file.txt:38:11 ", "TODO", "(tauraamui) [28/02/2025] random comment"
+		"test-file.txt:112:3 ", "TODO", "(tauraamui) [11/01/2025] blah blah blah blah...!"
 	]
 }
 
