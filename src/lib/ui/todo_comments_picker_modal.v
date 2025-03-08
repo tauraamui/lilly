@@ -63,13 +63,15 @@ pub fn (mut tc_picker TodoCommentPickerModal) draw_scrollable_list(mut ctx draw.
 	ctx.draw_rect(1, y_offset, ctx.window_width(), y_offset + max_height - 1)
 	to := tc_picker.resolve_to()
 	for i := tc_picker.from; i < to; i++ {
+		match_item := list[i]
 		ctx.set_bg_color(r: 15, g: 15, b: 15)
 		if tc_picker.current_sel_id == i {
 			ctx.set_bg_color(r: 53, g: 53, b: 53)
 			ctx.draw_rect(1, y_offset + (i - tc_picker.from), ctx.window_width(),
 				y_offset + (i - tc_picker.from))
 		}
-		list_item_content := "${list[i].file_path}:${list[i].pos.y}:${list[i].pos.x} ${list[i].contents}"
+
+		list_item_content := "${match_item.file_path}:${match_item.pos.y}:${match_item.pos.x} ${match_item.contents}"
 		ctx.draw_text(1, y_offset + (i - tc_picker.from), list_item_content)
 	}
 	return y_offset + (max_height - 2)
