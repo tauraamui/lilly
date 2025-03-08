@@ -426,8 +426,9 @@ mut:
 pub struct Match {
 pub:
 	file_path string
-	pos       Pos
-	contents  string
+	pos         Pos
+	keyword_len int
+	contents    string
 }
 
 struct PatternMatchIteratorFromLinesList {
@@ -465,6 +466,7 @@ pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 		file_path: iter.file_path
 		pos: Pos{ x: found_index, y: iter.idx }
 		contents: line_to_search[found_index..].string()
+		keyword_len: iter.pattern.len
 	}
 
 	if find_comment_prefix(line_to_search, found_index) {
