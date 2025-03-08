@@ -427,7 +427,6 @@ pub struct Match {
 pub:
 	file_path string
 	pos         Pos
-	keyword_loc int
 	keyword_len int
 	contents    string
 }
@@ -467,7 +466,6 @@ pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 		file_path: iter.file_path
 		pos: Pos{ x: found_index, y: iter.idx }
 		contents: line_to_search[found_index..].string()
-		keyword_loc: found_index
 		keyword_len: iter.pattern.len
 	}
 
