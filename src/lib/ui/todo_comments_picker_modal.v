@@ -63,16 +63,26 @@ pub fn (mut tc_picker TodoCommentPickerModal) draw_scrollable_list(mut ctx draw.
 	ctx.draw_rect(1, y_offset, ctx.window_width(), y_offset + max_height - 1)
 	to := tc_picker.resolve_to()
 	for i := tc_picker.from; i < to; i++ {
+		mut iter_y_offset := y_offset + (i - tc_picker.from)
 		match_item := list[i]
 		ctx.set_bg_color(r: 15, g: 15, b: 15)
 		if tc_picker.current_sel_id == i {
 			ctx.set_bg_color(r: 53, g: 53, b: 53)
-			ctx.draw_rect(1, y_offset + (i - tc_picker.from), ctx.window_width(),
-				y_offset + (i - tc_picker.from))
+			ctx.draw_rect(1, iter_y_offset, ctx.window_width(), iter_y_offset)
 		}
 
-		list_item_content := "${match_item.file_path}:${match_item.pos.y}:${match_item.pos.x} ${match_item.contents}"
-		ctx.draw_text(1, y_offset + (i - tc_picker.from), list_item_content)
+		list_item_file_path       := "${match_item.file_path}:${match_item.pos.y}:${match_item.pos.x} "
+		ctx.draw_text(1, iter_y_offset, list_item_file_path)
+
+		mut x_offset := utf8_str_visible_length(list_item_file_path)
+		keyword := match_item.contents[..match_item.keyword_len]
+		ctx.set_bg_color(r: 200, g: 53, b: 53)
+		ctx.draw_text(1 + x_offset, iter_y_offset, keyword)
+		ctx.reset_bg_color()
+
+		x_offset += utf8_str_visible_length(keyword)
+		post_keyword := match_item.contents[match_item.keyword_len..]
+		ctx.draw_text(1 + x_offset, iter_y_offset, post_keyword)
 	}
 	return y_offset + (max_height - 2)
 }

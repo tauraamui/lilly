@@ -56,6 +56,8 @@ fn test_todo_comment_modal_rendering_with_match_list_entries() {
 			file_path: "example-file.txt"
 			pos: buffer.Pos{ x: 11, y: 38 },
 			contents: "A fake l // -x TODO(tauraamui) [28/02/2025] random comment"
+			keyword_loc: 15
+			keyword_len: 4
 		},
 		buffer.Match{
 			file_path: "test-file.txt"
