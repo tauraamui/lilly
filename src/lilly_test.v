@@ -137,10 +137,14 @@ fn test_lilly_resolve_matches_across_all_open_file_buffers_only_loaded_file_has_
 		buffer.Match{
 			contents: "TODO(tauraamui) [26/02/2025]: become a real boy, I mean file!"
 			file_path: "loaded-test-file.txt", pos: buffer.Pos{ x: 3, y: 0 }
+			keyword_loc: 3
+			keyword_len: 4
 		},
 		buffer.Match{
 			contents: "TODO(tauraamui) [26/02/2025]: finish writing lin.."
 			file_path: "unopened-file-as-yet.txt", pos: buffer.Pos{ x: 35, y: 1 }
+			keyword_loc: 35
+			keyword_len: 4
 		}
 	]
 }

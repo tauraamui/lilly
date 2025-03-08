@@ -75,6 +75,8 @@ fn test_buffer_load_from_path_and_iterate_over_pattern_matches() {
 		assert found_match == Match{
 			pos: Pos{ x: 3, y: 1 }
 			contents: "TODO(tauraamui) [30/01/25]: this line has a comment to find"
+			keyword_loc: 3
+			keyword_len: 4
 		}
 	}
 
@@ -110,6 +112,8 @@ fn test_buffer_load_from_path_and_iterate_over_pattern_matches_excluding_matches
 	assert found_matches[0] == Match{
 		pos: Pos{ x: 3, y: 1 }
 		contents: "TODO(tauraamui) [30/01/25]: this line has a comment to find"
+		keyword_loc: 3
+		keyword_len: 4
 	}
 	assert iteration_count == 6
 }
@@ -142,6 +146,8 @@ fn test_buffer_load_from_path_and_iterate_over_pattern_matches_excluding_matches
 	assert found_matches[0] == Match{
 		pos: Pos{ x: 3, y: 2 }
 		contents: "TODO(tauraamui) [30/01/25]: comment without exclusion prefix 2. This is a second line"
+		keyword_loc: 3
+		keyword_len: 4
 	}
 	assert iteration_count == 6
 }
