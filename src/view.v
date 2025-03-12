@@ -15,6 +15,7 @@
 module main
 
 import os
+import term
 import term.ui as tui
 import log
 import datatypes
@@ -650,7 +651,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 
 		document_space_y := view.from + screen_space_y
 
-		mut linex := line.replace('\t', ' '.repeat(4))
+		mut linex := term.strip_ansi(line.replace('\t', ' '.repeat(4)))
 		mut max_width := view.width
 		visible_len := utf8_str_visible_length(linex)
 		if max_width > visible_len {
