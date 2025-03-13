@@ -165,6 +165,8 @@ fn has_colouring_directives(line string) bool {
 	return false
 }
 
+pub fn (mut splash SplashScreen) on_mouse_scroll(e draw.Event) {}
+
 pub fn (mut splash SplashScreen) on_key_down(e draw.Event, mut root Root) {
 	match e.utf8 {
 		splash.leader_key { splash.leader_state.leader_mode = true }
