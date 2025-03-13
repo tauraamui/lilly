@@ -530,6 +530,7 @@ interface Viewable {
 mut:
 	draw(mut draw.Contextable)
 	on_key_down(draw.Event, mut Root)
+	on_mouse_scroll(draw.Event)
 }
 
 @[inline]
