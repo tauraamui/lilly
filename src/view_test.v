@@ -23,6 +23,43 @@ import json
 import lib.draw
 import term.ui as tui
 import log
+import time
+
+struct TestDrawer {
+	draw_text_callback fn (x int, y int, text string) @[required]
+	window_height      int
+}
+
+fn (mut drawer TestDrawer) draw_text(x int, y int, text string) {
+	if drawer.draw_text_callback == unsafe { nil } { return }
+	drawer.draw_text_callback(x, y, text)
+}
+
+fn (mut drawer TestDrawer) write(text string) {
+	time.sleep(1 * time.millisecond)
+}
+
+fn (mut drawer TestDrawer) draw_rect(x int, y int, width int, height int) {
+	time.sleep(1 * time.millisecond)
+}
+
+fn (mut drawer TestDrawer) draw_point(x int, y int) {
+	time.sleep(1 * time.millisecond)
+}
+
+fn (mut drawer TestDrawer) render_debug() bool { return false }
+fn (mut drawer TestDrawer) set_color(c draw.Color) {}
+fn (mut drawer TestDrawer) set_bg_color(c draw.Color) {}
+fn (mut drawer TestDrawer) reset_color() {}
+fn (mut drawer TestDrawer) reset_bg_color() {}
+fn (mut drawer TestDrawer) rate_limit_draws() bool { return false }
+fn (mut drawer TestDrawer) window_width() int { return 500 }
+fn (mut drawer TestDrawer) window_height() int { return drawer.window_height }
+fn (mut drawer TestDrawer) set_cursor_position(x int, y int) {}
+fn (mut drawer TestDrawer) bold() {}
+fn (mut drawer TestDrawer) reset() {}
+fn (mut drawer TestDrawer) clear() {}
+fn (mut drawer TestDrawer) flush() {}
 
 const example_file = 'module history\n\nimport datatypes\nimport lib.diff { Op }\n\npub struct History {\nmut:\n\tundos datatypes.Stack[Op] // will actually be type diff.Op\n\tredos datatypes.Stack[Op]\n}'
 
@@ -3149,6 +3186,63 @@ fn test_search_line_correct_overwrite() {
 	assert fake_view.cmd_buf.cursor_x == 1
 	assert fake_view.search.to_find == '/'
 	assert fake_view.search.cursor_x == 1
+}
+
+fn test_scroll_view_down() {
+    mut fake_view := View{
+		log: log.Log{}
+        leader_state: ViewLeaderState{ mode: .normal }
+        height: 10 // Set a small height for testing
+		buffer: buffer.Buffer.new("", false)
+    }
+
+    // Create a document with more lines than the view height
+    fake_view.buffer.lines = [
+        'Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5',
+        'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10',
+        'Line 11', 'Line 12', 'Line 13', 'Line 14', 'Line 15'
+    ]
+
+	assert fake_view.from == 0
+
+	mut drawn_text := []string{}
+	mut ref := &drawn_text
+	mut mock_drawer := TestDrawer{
+		draw_text_callback: fn [mut ref] (x int, y int, text string) { ref << text }
+		window_height: fake_view.height
+	}
+	fake_view.draw(mut mock_drawer)
+
+	assert fake_view.to == 8
+
+	assert drawn_text.len > 0
+	mut cleaned_list := drawn_text[0..drawn_text.len - 13].clone()
+	assert cleaned_list == [
+		"1", "Line 1",
+		"2", "Line 2",
+		"3", "Line 3",
+		"4", "Line 4",
+		"5", "Line 5",
+		"6", "Line 6",
+		"7", "Line 7",
+		"8", "Line 8",
+		"9", "Line 9"
+	]
+
+	for _ in 0..20 {
+		fake_view.scroll_up()
+	}
+
+	drawn_text.clear()
+	fake_view.draw(mut mock_drawer)
+	cleaned_list = drawn_text[0..drawn_text.len - 13].clone()
+	assert cleaned_list == [
+		"14", "Line 14",
+		"15", "Line 15"
+	]
+
+	assert fake_view.from         == 13 // this is unexpected/wrong, I don't know how the viewport is even working atm
+	assert fake_view.cursor.pos.y == 14
 }
 
 fn test_center_text_around_cursor() {

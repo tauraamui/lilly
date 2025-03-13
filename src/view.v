@@ -15,6 +15,7 @@
 module main
 
 import os
+import term
 import term.ui as tui
 import log
 import datatypes
@@ -529,6 +530,7 @@ interface Viewable {
 mut:
 	draw(mut draw.Contextable)
 	on_key_down(draw.Event, mut Root)
+	on_mouse_scroll(draw.Event)
 }
 
 @[inline]
@@ -650,7 +652,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 
 		document_space_y := view.from + screen_space_y
 
-		mut linex := line.replace('\t', ' '.repeat(4))
+		mut linex := term.strip_ansi(line.replace('\t', ' '.repeat(4)))
 		mut max_width := view.width
 		visible_len := utf8_str_visible_length(linex)
 		if max_width > visible_len {
@@ -1372,6 +1374,10 @@ fn (mut view View) scroll_from_and_to() {
 		return
 	}
 
+	// FIX(tauraamui) [13/03/2025]: this is wrong, there's a heinous test checking the rendering
+	//                              document behaviour, that's indicating that somehow we're
+	//                              enabling from to become unpinned from the "bottom" of the document
+	//                              viewport...
 	if view.cursor.pos.y + 1 > view.to && view.to >= view.height - 2 { // TODO(tauraamui): I really need to define the magic numbers we're using any why
 		diff := view.cursor.pos.y + 1 - view.to
 		view.from += diff
@@ -1967,6 +1973,23 @@ fn (mut view View) up() {
 	view.cursor.pos.x = pos.x
 	view.cursor.pos.y = pos.y
 	view.scroll_from_and_to()
+}
+
+fn (mut view View) scroll_up() {
+	view.move_cursor_down(1)
+}
+
+fn (mut view View) scroll_down() {
+	view.move_cursor_up(1)
+}
+
+fn (mut view View) on_mouse_scroll(e draw.Event) {
+	if e.y <= 0 || e.y > view.height - 2 { return }
+	match e.direction {
+		.up   { view.scroll_up() }
+		.down { view.scroll_down() }
+		else {}
+	}
 }
 
 fn count_repeated_sequence(char_rune rune, line []rune) int {

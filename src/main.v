@@ -51,6 +51,10 @@ fn event(e draw.Event, mut app App) {
 			app.changed = true
 			app.lilly.on_key_down(e)
 		}
+		.mouse_scroll {
+			app.changed = true
+			app.lilly.on_mouse_scroll(e)
+		}
 		.resized {
 			app.changed = true
 		}

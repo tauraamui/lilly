@@ -39,3 +39,5 @@ fn (mut debug Debug) on_key_down(e draw.Event, mut r Root) {
 		r.quit() or {}
 	}
 }
+
+fn (mut debug Debug) on_mouse_scroll(e draw.Event) {}
