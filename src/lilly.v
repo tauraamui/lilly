@@ -322,6 +322,8 @@ pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
 }
 
 pub fn (mut lilly Lilly) on_mouse_scroll(e draw.Event) {
+	if e.direction == .unknown { return }
+	lilly.view.on_mouse_scroll(e)
 }
 
 pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
