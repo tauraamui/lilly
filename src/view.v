@@ -1975,8 +1975,14 @@ fn (mut view View) up() {
 	view.scroll_from_and_to()
 }
 
+// FIX(tauraamui) [14/03/2025]: this behaviour is close, but needs some bounds checking,
+//                              idk why but I'm hating having to adjust how the rendering
+//                              stuff works to support from offset scrolling behaviour
 fn (mut view View) scroll_up() {
-	view.move_cursor_down(1)
+	view.from += 1
+	view.cursor.pos.y = view.from
+	view.scroll_from_and_to()
+	// view.move_cursor_down(1)
 }
 
 fn (mut view View) scroll_down() {
