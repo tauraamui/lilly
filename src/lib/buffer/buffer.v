@@ -11,7 +11,7 @@ pub mut:
 	y int
 }
 
-@[noinit]
+@[heap]
 pub struct Buffer {
 pub:
 	uuid      UUID_t

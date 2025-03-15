@@ -3188,6 +3188,34 @@ fn test_search_line_correct_overwrite() {
 	assert fake_view.search.cursor_x == 1
 }
 
+fn test_view_draw_document() {
+    mut fake_view := View{
+		log: log.Log{}
+        leader_state: ViewLeaderState{ mode: .normal }
+        height: 15 // Set a small height for testing
+		buffer: buffer.Buffer.new("", false)
+    }
+
+    // Create a document with more lines than the view height
+    fake_view.buffer.lines = [
+        'Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5',
+        'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10',
+        'Line 11', 'Line 12', 'Line 13', 'Line 14', 'Line 15'
+    ]
+
+	assert fake_view.from == 0
+
+	mut drawn_text := []string{}
+	mut ref := &drawn_text
+	mut mock_drawer := TestDrawer{
+		draw_text_callback: fn [mut ref] (x int, y int, text string) { ref << text }
+		window_height: fake_view.height
+	}
+	fake_view.draw(mut mock_drawer)
+
+	assert fake_view.to == 13
+}
+
 fn test_scroll_view_down() {
     mut fake_view := View{
 		log: log.Log{}

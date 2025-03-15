@@ -139,6 +139,7 @@ mut:
 	branch                    string
 	config                    workspace.Config
 	leader_state              ViewLeaderState
+	buf_view                  ui.BufferView
 	buffer                    buffer.Buffer
 	leader_key                string = " "
 	cursor                    Cursor
@@ -509,6 +510,7 @@ fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes 
 		show_whitespace: false
 		clipboard:       _clipboard
 		buffer:          buff
+		buf_view:		ui.BufferView.new(&buff)
 	}
 	res.path = res.buffer.file_path
 	res.set_current_syntax_idx(os.file_ext(res.path))
@@ -594,6 +596,9 @@ fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
 }
 
 fn (mut view View) draw(mut ctx draw.Contextable) {
+	defer {
+	view.buf_view.draw(mut ctx, 1, 1, ctx.window_width(), ctx.window_height())
+	}
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
 	view.draw_document(mut ctx)
@@ -1980,7 +1985,7 @@ fn (mut view View) scroll_up() {
 }
 
 fn (mut view View) scroll_down() {
-	view.move_cursor_up(1)
+	view.up()
 }
 
 fn (mut view View) on_mouse_scroll(e draw.Event) {
