@@ -596,12 +596,10 @@ fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
 }
 
 fn (mut view View) draw(mut ctx draw.Contextable) {
-	defer {
-	view.buf_view.draw(mut ctx, 1, 1, ctx.window_width(), ctx.window_height())
-	}
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
 	view.draw_document(mut ctx)
+	// view.buf_view.draw(mut ctx, 0, 0, ctx.window_width(), ctx.window_height() - 2, 2335)
 
 	ui.draw_status_line(
 		mut ctx, ui.Status{
