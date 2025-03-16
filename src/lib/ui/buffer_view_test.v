@@ -64,16 +64,16 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num)
 
 	assert drawn_text == [
-		DrawnText{ x: 1, y: 1, data:  "0 This is line 0 in the document" },
-		DrawnText{ x: 1, y: 2, data:  "1 This is line 1 in the document" },
-		DrawnText{ x: 1, y: 3, data:  "2 This is line 2 in the document" },
-		DrawnText{ x: 1, y: 4, data:  "3 This is line 3 in the document" },
-		DrawnText{ x: 1, y: 5, data:  "4 This is line 4 in the document" },
-		DrawnText{ x: 1, y: 6, data:  "5 This is line 5 in the document" },
-		DrawnText{ x: 1, y: 7, data:  "6 This is line 6 in the document" },
-		DrawnText{ x: 1, y: 8, data:  "7 This is line 7 in the document" },
-		DrawnText{ x: 1, y: 9, data:  "8 This is line 8 in the document" },
-		DrawnText{ x: 1, y: 10, data: "9 This is line 9 in the document" }
+		DrawnText{ x: 1, y: 1, data:  "10 This is line 10 in the document" },
+		DrawnText{ x: 1, y: 2, data:  "11 This is line 11 in the document" },
+		DrawnText{ x: 1, y: 3, data:  "12 This is line 12 in the document" },
+		DrawnText{ x: 1, y: 4, data:  "13 This is line 13 in the document" },
+		DrawnText{ x: 1, y: 5, data:  "14 This is line 14 in the document" },
+		DrawnText{ x: 1, y: 6, data:  "15 This is line 15 in the document" },
+		DrawnText{ x: 1, y: 7, data:  "16 This is line 16 in the document" },
+		DrawnText{ x: 1, y: 8, data:  "17 This is line 17 in the document" },
+		DrawnText{ x: 1, y: 9, data:  "18 This is line 18 in the document" },
+		DrawnText{ x: 1, y: 10, data: "19 This is line 19 in the document" }
 	]
 }
 
