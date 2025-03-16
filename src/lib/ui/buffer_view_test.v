@@ -77,6 +77,41 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	]
 }
 
+fn test_buffer_view_draws_lines_0_to_max_height_min_x_is_6() {
+	mut drawn_text := []DrawnText{}
+	mut ref := &drawn_text
+	mut mock_ctx := MockContextable{
+		on_draw_cb: fn [mut ref] (x int, y int, text string) {
+			ref << DrawnText{ x: x, y: y, data: text }
+		}
+	}
+	mut buf      := buffer.Buffer.new("", false)
+	for i in 0..20 { buf.lines << "${i} This is line ${i} in the document" }
+	mut buf_view := BufferView.new(&buf)
+	buf_view.min_x = 6
+
+	x := 0
+	y := 0
+	width := 100
+	height := 10
+	from_line_num := 0
+
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num)
+
+	assert drawn_text == [
+		DrawnText{ x: 1, y: 1, data:  " is line 0 in the document" },
+		DrawnText{ x: 1, y: 2, data:  " is line 1 in the document" },
+		DrawnText{ x: 1, y: 3, data:  " is line 2 in the document" },
+		DrawnText{ x: 1, y: 4, data:  " is line 3 in the document" },
+		DrawnText{ x: 1, y: 5, data:  " is line 4 in the document" },
+		DrawnText{ x: 1, y: 6, data:  " is line 5 in the document" },
+		DrawnText{ x: 1, y: 7, data:  " is line 6 in the document" },
+		DrawnText{ x: 1, y: 8, data:  " is line 7 in the document" },
+		DrawnText{ x: 1, y: 9, data:  " is line 8 in the document" },
+		DrawnText{ x: 1, y: 10, data: " is line 9 in the document" }
+	]
+}
+
 
 struct MockContextable {
 mut:
