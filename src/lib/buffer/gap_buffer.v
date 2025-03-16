@@ -623,6 +623,30 @@ fn (gap_buffer GapBuffer) find_offset(pos Pos) ?int {
 
 pub const lf := `\n`
 
+// TODO(tauraamui) [16/03/2025]: paralellise this, one thread for pre-gap, one for post
+pub fn (gap_buffer GapBuffer) num_of_lines() int {
+	mut line_count := 0
+	pre_gap_data := gap_buffer.data[..gap_buffer.gap_start]
+
+	mut line := 0
+	for _, c in pre_gap_data {
+		if c == lf {
+			line_count += 1
+			continue
+		}
+	}
+
+	post_gap_data := gap_buffer.data[gap_buffer.gap_start + (gap_buffer.gap_end - gap_buffer.gap_start)..]
+	for _, c in post_gap_data {
+		if c == lf {
+			line_count += 1
+			continue
+		}
+	}
+
+	return line_count
+}
+
 struct LineIteratorFromGapBuffer {
 	data  string
 mut:

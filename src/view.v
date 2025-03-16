@@ -538,7 +538,7 @@ mut:
 @[inline]
 fn (mut view View) offset_x_and_width_by_len_of_longest_line_number_str(win_width int, win_height int) {
 	view.height = win_height
-	view.x = '${view.buffer.lines.len}'.len + 1
+	view.x = '${view.buffer.num_of_lines()}'.len + 1
 	view.width = win_width - view.x
 }
 

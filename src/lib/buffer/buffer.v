@@ -56,6 +56,11 @@ pub fn (mut buffer Buffer) load_contents_into_gap(contents string) {
 	buffer.c_buffer = GapBuffer.new(contents)
 }
 
+pub fn (buffer Buffer) num_of_lines() int {
+	if !buffer.use_gap_buffer { return buffer.lines.len }
+	return buffer.c_buffer.num_of_lines()
+}
+
 pub fn (mut buffer Buffer) move_cursor_to(pos Pos) {
 	buffer.c_buffer.move_cursor_to(pos)
 }
