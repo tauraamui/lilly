@@ -600,7 +600,8 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 
 	view.draw_document(mut ctx)
 	// draw_lines_from := 0
-	// view.buf_view.draw(mut ctx, 0, 0, ctx.window_width(), ctx.window_height() - 2, draw_lines_from)
+	// view.buf_view.draw(mut ctx, 0, 0, ctx.window_width() / 2, ctx.window_height() - 2, draw_lines_from)
+	// view.buf_view.draw(mut ctx, ctx.window_width() / 2, 0, ctx.window_width() / 2, ctx.window_height() - 2, 1000)
 
 	ui.draw_status_line(
 		mut ctx, ui.Status{
