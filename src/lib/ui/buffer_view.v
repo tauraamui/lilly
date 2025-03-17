@@ -28,10 +28,10 @@ pub fn (buf_view BufferView) draw(
 		if document_line_num < from_line_num { continue }
 
 		// draw line number
-		draw_line_number(mut ctx, screenspace_x_offset, y + screenspace_y_offset, document_line_num)
+		draw_line_number(mut ctx, x + screenspace_x_offset, y + screenspace_y_offset, document_line_num)
 
 		// draw the line of text, offset by the position of the buffer view
-		draw_text_line(mut ctx, screenspace_x_offset + 1, y + screenspace_y_offset, line, buf_view.min_x, width)
+		draw_text_line(mut ctx, x + screenspace_x_offset + 1, y + screenspace_y_offset, line, buf_view.min_x, width)
 
 		screenspace_y_offset += 1
 		// detect if number of lines drawn would exceed current height of view
