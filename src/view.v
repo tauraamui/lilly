@@ -139,6 +139,7 @@ mut:
 	branch                    string
 	config                    workspace.Config
 	leader_state              ViewLeaderState
+	buf_view                  ui.BufferView
 	buffer                    buffer.Buffer
 	leader_key                string = " "
 	cursor                    Cursor
@@ -509,6 +510,7 @@ fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes 
 		show_whitespace: false
 		clipboard:       _clipboard
 		buffer:          buff
+		buf_view:		ui.BufferView.new(&buff)
 	}
 	res.path = res.buffer.file_path
 	res.set_current_syntax_idx(os.file_ext(res.path))
@@ -536,7 +538,7 @@ mut:
 @[inline]
 fn (mut view View) offset_x_and_width_by_len_of_longest_line_number_str(win_width int, win_height int) {
 	view.height = win_height
-	view.x = '${view.buffer.lines.len}'.len + 1
+	view.x = '${view.buffer.num_of_lines()}'.len + 1
 	view.width = win_width - view.x
 }
 
@@ -597,6 +599,9 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
 	view.draw_document(mut ctx)
+	// draw_lines_from := 0
+	// view.buf_view.draw(mut ctx, 0, 0, ctx.window_width() / 2, ctx.window_height() - 2, draw_lines_from)
+	// view.buf_view.draw(mut ctx, ctx.window_width() / 2, 0, ctx.window_width() / 2, ctx.window_height() - 2, 1000)
 
 	ui.draw_status_line(
 		mut ctx, ui.Status{
@@ -1980,7 +1985,7 @@ fn (mut view View) scroll_up() {
 }
 
 fn (mut view View) scroll_down() {
-	view.move_cursor_up(1)
+	view.up()
 }
 
 fn (mut view View) on_mouse_scroll(e draw.Event) {

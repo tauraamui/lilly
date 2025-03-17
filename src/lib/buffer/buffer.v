@@ -11,7 +11,7 @@ pub mut:
 	y int
 }
 
-@[noinit]
+@[heap]
 pub struct Buffer {
 pub:
 	uuid      UUID_t
@@ -54,6 +54,11 @@ pub fn (mut buffer Buffer) read_lines(line_reader fn (path string) ![]string) ! 
 pub fn (mut buffer Buffer) load_contents_into_gap(contents string) {
 	if !buffer.use_gap_buffer { return }
 	buffer.c_buffer = GapBuffer.new(contents)
+}
+
+pub fn (buffer Buffer) num_of_lines() int {
+	if !buffer.use_gap_buffer { return buffer.lines.len }
+	return buffer.c_buffer.num_of_lines()
 }
 
 pub fn (mut buffer Buffer) move_cursor_to(pos Pos) {
