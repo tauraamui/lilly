@@ -142,7 +142,6 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_is_6() {
 	]
 }
 
-
 struct MockContextable {
 mut:
 	on_draw_cb fn (x int, y int, text string)
