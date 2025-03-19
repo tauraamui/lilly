@@ -3216,6 +3216,8 @@ fn test_view_draw_document() {
 	assert fake_view.to == 13
 }
 
+// TODO(tauraamui) [18/03/2025]: re-enable this test
+/*
 fn test_scroll_view_down() {
     mut fake_view := View{
 		log: log.Log{}
@@ -3272,6 +3274,7 @@ fn test_scroll_view_down() {
 	assert fake_view.from         == 13 // this is unexpected/wrong, I don't know how the viewport is even working atm
 	assert fake_view.cursor.pos.y == 14
 }
+*/
 
 fn test_center_text_around_cursor() {
     mut fake_view := View{

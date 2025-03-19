@@ -17,7 +17,8 @@ pub fn (buf_view BufferView) draw(
 	mut ctx draw.Contextable,
 	x int, y int,
 	width int, height int,
-	from_line_num int
+	from_line_num int,
+	cursor_y_pos int
 ) {
 	if buf_view.buf == unsafe { nil } { return }
 
