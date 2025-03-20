@@ -39,15 +39,6 @@ pub fn draw_status_line(mut ctx draw.Contextable, status Status) {
 	defer { ctx.reset() }
 
 	y := ctx.window_height() - 1
-	// draw base dark rectangle for the status line
-	// ctx.set_bg_color(r: 25, g: 25, b: 25)
-	// FIX(tauraamui) [20/03/2025]: this has been incorrectly seemingly rendering
-	//                              a full rectangle over the entire viewport this whole
-	//                              time, no wonder we are/were seeing pretty consistent flickering
-	//                              on most terminal emulators
-	//
-	//                              for now the preference here is to just stop rendering that segment
-	// ctx.draw_rect(12, y, ctx.window_width(), 1)
 
 	// invoke the mode indicator draw
 	mut offset := status.mode.draw(mut ctx, 1, y)
