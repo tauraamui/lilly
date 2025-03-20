@@ -676,7 +676,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 	}
 
 	for y, line in view.buffer.line_iterator() {
-		if y < view.from || y > view.to { continue }
+		if y < view.from || y >= view.to { continue }
 
 		screen_space_y := y - view.from
 
