@@ -628,7 +628,6 @@ pub fn (gap_buffer GapBuffer) num_of_lines() int {
 	mut line_count := 0
 	pre_gap_data := gap_buffer.data[..gap_buffer.gap_start]
 
-	mut line := 0
 	for _, c in pre_gap_data {
 		if c == lf {
 			line_count += 1
