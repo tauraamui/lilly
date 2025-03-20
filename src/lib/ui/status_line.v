@@ -70,9 +70,10 @@ pub fn draw_status_line(mut ctx draw.Contextable, status Status) {
 
 	// draw leaning end of base status line bar
 	draw.paint_shape_text(mut ctx, offset, y, draw.Color{25, 25, 25}, '${core.slant_left_flat_top}')
+	offset += 1
 
 	// render the cursor status as a right trailing segment
-	draw_cursor_position_segment(mut ctx, 1, y, status.cursor_x, status.cursor_y)
+	draw_cursor_position_segment(mut ctx, 1, y, offset, status.cursor_x, status.cursor_y)
 }
 
 fn draw_file_name_segment(mut ctx draw.Contextable, x int, y int, file_name string) int {
@@ -110,7 +111,7 @@ fn draw_git_branch_section(mut ctx draw.Contextable, x int, y int, git_branch st
 	return offset
 }
 
-fn draw_cursor_position_segment(mut ctx draw.Contextable, x int, y int, cursor_x int, cursor_y int) int {
+fn draw_cursor_position_segment(mut ctx draw.Contextable, x int, y int, last_segment_offset int, cursor_x int, cursor_y int) int {
 	cursor_info_label := '${cursor_y + 1}:${cursor_x + 1}'
 	draw.paint_shape_text(mut ctx, ctx.window_width() - 1, y, draw.Color{245, 42, 42}, '${core.block}${core.block}')
 	ctx.bold()
@@ -120,5 +121,8 @@ fn draw_cursor_position_segment(mut ctx draw.Contextable, x int, y int, cursor_x
 		'${core.slant_right_flat_top}${core.slant_left_flat_bottom}${core.block}')
 	draw.paint_shape_text(mut ctx, ctx.window_width() - 2 - cursor_info_label.len - 2, y, draw.Color{25, 25, 25},
 		'${core.slant_right_flat_top}')
+	ctx.set_bg_color(draw.Color{25, 25, 25})
+	ctx.draw_rect(last_segment_offset, y, (ctx.window_width() - 2 - cursor_info_label.len - 2) - last_segment_offset, 1)
+	ctx.reset_bg_color()
 	return 0
 }
