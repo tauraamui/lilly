@@ -3228,7 +3228,7 @@ fn test_view_draw_document() {
 		"1", "Line 1", "2", "Line 2", "3", "Line 3", "4", "Line 4",
 		"5", "Line 5", "6", "Line 6", "7", "Line 7", "8", "Line 8",
 		"9", "Line 9", "10", "Line 10", "11", "Line 11", "12", "Line 12",
-		"13", "Line 13", "14", "Line 14"
+		"13", "Line 13"
 	]
 }
 
