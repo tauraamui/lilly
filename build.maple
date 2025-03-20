@@ -52,7 +52,7 @@ task:generate-git-hash = {
 
 task:apply-license-header = {
     help = 'Appends the license header to each source code file'
-    run = 'addlicense -c "The Lilly Editor contributors" -y "2025" ./src/*.v'
+    run = 'addlicense -c "The Lilly Editor contributors" -y "2023" ./src/*.v'
 }
 
 task:install-license-tool = {
