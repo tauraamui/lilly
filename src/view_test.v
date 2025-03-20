@@ -3232,6 +3232,13 @@ fn test_view_draw_document() {
 	]
 }
 
+struct DrawnRect {
+	x int
+	y int
+	width int
+	height int
+}
+
 fn test_view_draw_document_with_method_using_buffer_view() {
 	mut buf := buffer.Buffer.new("", false)
     buf.lines = [
@@ -3251,10 +3258,14 @@ fn test_view_draw_document_with_method_using_buffer_view() {
 	assert fake_view.from == 0
 
 	mut drawn_text := []string{}
-	mut ref := &drawn_text
+	mut drawn_text_ref := &drawn_text
+
+	mut drawn_rects := []DrawnRect{}
+	mut drawn_rects_ref := &drawn_rects
+
 	mut mock_drawer := TestDrawer{
-		draw_text_callback: fn [mut ref] (x int, y int, text string) { ref << text }
-		draw_rect_callback: fn (x int, y int, width int, height int) { println("DRAWING RECT: X: ${x}, Y: ${y}, WIDTH: ${width}, HEIGHT: ${height}") }
+		draw_text_callback: fn [mut drawn_text_ref] (x int, y int, text string) { drawn_text_ref << text }
+		draw_rect_callback: fn [mut drawn_rects_ref] (x int, y int, width int, height int) { drawn_rects_ref << DrawnRect{ x, y, width, height } }
 		window_height: fake_view.height
 	}
 	fake_view.draw_x(mut mock_drawer)
@@ -3266,6 +3277,9 @@ fn test_view_draw_document_with_method_using_buffer_view() {
 		"5", "Line 5", "6", "Line 6", "7", "Line 7", "8", "Line 8",
 		"9", "Line 9", "10", "Line 10", "11", "Line 11", "12", "Line 12",
 		"13", "Line 13"
+	]
+	assert drawn_rects == [
+		DrawnRect{ x: 17, y: 14, width: 476, height: 1 } // this is the gap spread in the status line
 	]
 }
 
