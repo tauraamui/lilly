@@ -19,6 +19,7 @@ import lib.draw
 
 struct TestDrawer {
 	draw_text_callback fn (x int, y int, text string) @[required]
+	draw_rect_callback fn (x int, y int, width int, height int) @[required]
 }
 
 fn (mut drawer TestDrawer) draw_text(x int, y int, text string) {
@@ -31,7 +32,8 @@ fn (mut drawer TestDrawer) write(text string) {
 }
 
 fn (mut drawer TestDrawer) draw_rect(x int, y int, width int, height int) {
-	time.sleep(1 * time.millisecond)
+	if drawer.draw_rect_callback == unsafe { nil } { return }
+	drawer.draw_rect_callback(x, y, width, height)
 }
 
 fn (mut drawer TestDrawer) draw_point(x int, y int) {
@@ -106,12 +108,23 @@ fn test_direct_sort_with_compare_on_array() {
 	assert working_file_paths[0] == "./src/project/lib/some_utilities.v"
 }
 
+struct DrawnRect {
+	x      int
+	y      int
+	width  int
+	height int
+}
+
 fn test_on_search_term_adjust_list_order_changes() {
 	mut drawn_text := []string{}
-	mut ref := &drawn_text
+	mut drawn_text_ref := &drawn_text
+
+	mut drawn_rects := []DrawnRect{}
+	mut drawn_rects_ref := &drawn_rects
 
 	mut mock_drawer := TestDrawer{
-		draw_text_callback: fn [mut ref] (x int, y int, text string) { ref << text }
+		draw_text_callback: fn [mut drawn_text_ref] (x int, y int, text string) { drawn_text_ref << text }
+		draw_rect_callback: fn [mut drawn_rects_ref] (x int, y int, width int, height int) { drawn_rects_ref << DrawnRect{ x, y, width, height } }
 	}
 
 	mut mock_modal := FilePickerModal.new(
@@ -135,12 +148,18 @@ fn test_on_search_term_adjust_list_order_changes() {
 		"./src/project/lib/meta.v",
 		"./src/project/lib/database/connection.v"
 	]
+	assert drawn_rects == [
+		DrawnRect{ x: 1, y: 2, width: 500, height: 20 }, // this is the full background rect for the list
+		DrawnRect{ x: 1, y: 2, width: 500, height: 1 },  // this is the currently selected/heightlight line rect
+		DrawnRect{ x: 1, y: 22, width: 500, height: 1 }  // this is the rect/background line for the search bar
+	]
 
 	mock_modal.on_key_down(draw.Event{ ascii: u8("c"[0]) })
 	mock_modal.on_key_down(draw.Event{ ascii: u8("o"[0]) })
 	mock_modal.on_key_down(draw.Event{ ascii: u8("n"[0]) })
 
 	drawn_text.clear()
+	drawn_rects.clear()
 	mock_modal.draw(mut mock_drawer)
 	assert drawn_text.len > 0
 	cleaned_list = drawn_text[1..drawn_text.len - 2].clone()
@@ -149,6 +168,11 @@ fn test_on_search_term_adjust_list_order_changes() {
 		"./src/project/main.v",
 		"./src/project/lib/some_utilities.v",
 		"./src/project/lib/meta.v"
+	]
+	assert drawn_rects == [
+		DrawnRect{ x: 1, y: 2, width: 500, height: 20 }, // this is the full background rect for the list
+		DrawnRect{ x: 1, y: 2, width: 500, height: 1 },  // this is the currently selected/heightlight line rect
+		DrawnRect{ x: 1, y: 22, width: 500, height: 1 }  // this is the rect/background line for the search bar
 	]
 }
 
