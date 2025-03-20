@@ -94,7 +94,7 @@ pub fn (mut f_picker FilePickerModal) draw(mut ctx draw.Contextable) {
 fn (mut f_picker FilePickerModal) draw_scrollable_list(mut ctx draw.Contextable, y_offset int, list []string) int {
 	ctx.reset_bg_color()
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
-	ctx.draw_rect(1, y_offset, ctx.window_width(), max_height - 1)
+	ctx.draw_rect(1, y_offset, ctx.window_width(), max_height)
 	to := f_picker.resolve_to()
 	for i := f_picker.from; i < to; i++ {
 		ctx.set_bg_color(r: 15, g: 15, b: 15)
