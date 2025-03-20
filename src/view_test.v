@@ -3223,7 +3223,13 @@ fn test_view_draw_document() {
 	fake_view.draw(mut mock_drawer)
 
 	assert fake_view.to == 13
-	// assert drawn_text == []
+	drawn_text_with_status_line_removed := drawn_text[..drawn_text.len - 13]
+	assert drawn_text_with_status_line_removed == [
+		"1", "Line 1", "2", "Line 2", "3", "Line 3", "4", "Line 4",
+		"5", "Line 5", "6", "Line 6", "7", "Line 7", "8", "Line 8",
+		"9", "Line 9", "10", "Line 10", "11", "Line 11", "12", "Line 12",
+		"13", "Line 13", "14", "Line 14"
+	]
 }
 
 fn test_view_draw_document_with_method_using_buffer_view() {
@@ -3254,7 +3260,13 @@ fn test_view_draw_document_with_method_using_buffer_view() {
 	fake_view.draw_x(mut mock_drawer)
 
 	assert fake_view.to == 13
-	// assert drawn_text == []
+	drawn_text_with_status_line_removed := drawn_text[..drawn_text.len - 13]
+	assert drawn_text_with_status_line_removed == [
+		"1", "Line 1", "2", "Line 2", "3", "Line 3", "4", "Line 4",
+		"5", "Line 5", "6", "Line 6", "7", "Line 7", "8", "Line 8",
+		"9", "Line 9", "10", "Line 10", "11", "Line 11", "12", "Line 12",
+		"13", "Line 13"
+	]
 }
 
 // TODO(tauraamui) [18/03/2025]: re-enable this test
