@@ -17,9 +17,13 @@ pub fn (buf_view BufferView) draw(
 	mut ctx draw.Contextable,
 	x int, y int,
 	width int, height int,
-	from_line_num int
+	from_line_num int,
+	cursor_y_pos int
 ) {
 	if buf_view.buf == unsafe { nil } { return }
+
+	// NOTE(tauraamui) [20/03/2025]: this is just here to be invoked in the test for now
+	ctx.draw_rect(x, y, width, 1)
 
 	mut screenspace_x_offset := 1 + buf_view.buf.num_of_lines().str().runes().len
 	mut screenspace_y_offset := 1

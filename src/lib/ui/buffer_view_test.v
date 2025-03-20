@@ -27,7 +27,7 @@ fn test_buffer_view_draws_lines_0_to_max_height() {
 	height := 10
 	from_line_num := 0
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num)
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, 0)
 
 	assert drawn_text == [
 		DrawnText{ x: 2, y: 1, data:  "1" },
@@ -71,7 +71,7 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	height := 10
 	from_line_num := 10
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num)
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, 0)
 
 	assert drawn_text == [
 		DrawnText{ x: 1, y: 1, data:  "11" },
@@ -116,7 +116,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_is_6() {
 	height := 10
 	from_line_num := 0
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num)
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, 0)
 
 	assert drawn_text == [
 		DrawnText{ x: 2, y: 1, data: "1" }
@@ -141,7 +141,6 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_is_6() {
 		DrawnText{ x: 4, y: 10, data: " is line 9 in the document" }
 	]
 }
-
 
 struct MockContextable {
 mut:

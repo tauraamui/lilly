@@ -595,13 +595,44 @@ fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
 		view.calc_cursor_y_in_screen_space() + 1)
 }
 
+fn (mut view View) draw_x(mut ctx draw.Contextable) {
+	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
+
+	// draw_lines_from := 0
+	view.update_to() // NOTE(tauraamui) [18/03/2025]: yes, I shouldn't need to keep calling this
+					 // anymore, seeing as the buffer_view just works off of the relative "from" and
+					 // the given height it is told to work within, but if we don't call it, the
+					 // cursor won't move, so... *sniff sniff*, smells like toxic tech debt, yayyyy!
+	view.buf_view.draw(
+		mut ctx, 0, 0, ctx.window_width(), ctx.window_height() - 2, view.from, view.cursor.pos.y
+	)
+	// view.buf_view.draw(mut ctx, ctx.window_width() / 2, 0, ctx.window_width() / 2, ctx.window_height() - 2, 1000)
+
+	ui.draw_status_line(
+		mut ctx, ui.Status{
+			view.leader_state.mode,
+			view.cursor.pos.x, view.cursor.pos.y,
+			os.base(view.path),
+			ui.SearchSelection{
+				active:  view.leader_state.mode == .search
+				total:   view.search.total_finds
+				current: view.search.current_find.match_index
+			},
+			view.branch,
+			view.buffer.dirty
+		}
+	)
+
+	view.draw_bottom_bar_of_command_or_search(mut ctx)
+
+	view.draw_cursor_pointer(mut ctx)
+}
+
 fn (mut view View) draw(mut ctx draw.Contextable) {
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
+	view.update_to()
 	view.draw_document(mut ctx)
-	// draw_lines_from := 0
-	// view.buf_view.draw(mut ctx, 0, 0, ctx.window_width() / 2, ctx.window_height() - 2, draw_lines_from)
-	// view.buf_view.draw(mut ctx, ctx.window_width() / 2, 0, ctx.window_width() / 2, ctx.window_height() - 2, 1000)
 
 	ui.draw_status_line(
 		mut ctx, ui.Status{
@@ -1365,6 +1396,10 @@ fn (mut view View) move_cursor_down(amount int) {
 	view.scroll_from_and_to()
 }
 
+// TODO(tauraamui) [18/03/2025]: Ok, this method is shit, we shouldn't be caring about tracking the to pos,
+//                  we only actually care about from, because we know the current height of the
+//                  view at any given frame, this requirement to permit cursor movement is similarly
+//                  gay AF.
 fn (mut view View) scroll_from_and_to() {
 	if view.cursor.pos.y < view.from {
 		diff := view.from - view.cursor.pos.y
@@ -1973,6 +2008,7 @@ fn (mut view View) down() {
 	view.scroll_from_and_to()
 }
 
+// WARN(tauraamui) [18/03/2025]: DO NOT USE
 fn (mut view View) up() {
 	pos := view.buffer.up(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
 	view.cursor.pos.x = pos.x
@@ -1980,8 +2016,13 @@ fn (mut view View) up() {
 	view.scroll_from_and_to()
 }
 
+// WARN(tauraamui) [18/03/2025]: DO NOT USE! this is very experimental shit really just here
+//                               for me to help manually test/validate some of the scrolling
+//                               buffer_view behaviour and functionality
 fn (mut view View) scroll_up() {
-	view.move_cursor_down(1)
+	view.from += 1
+	view.move_cursor_down(3)
+	view.clamp_cursor_within_document_bounds()
 }
 
 fn (mut view View) scroll_down() {
