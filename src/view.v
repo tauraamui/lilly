@@ -595,7 +595,7 @@ fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
 		view.calc_cursor_y_in_screen_space() + 1)
 }
 
-fn (mut view View) draw(mut ctx draw.Contextable) {
+fn (mut view View) draw_x(mut ctx draw.Contextable) {
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
 	// draw_lines_from := 0
@@ -603,11 +603,36 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 					 // anymore, seeing as the buffer_view just works off of the relative "from" and
 					 // the given height it is told to work within, but if we don't call it, the
 					 // cursor won't move, so... *sniff sniff*, smells like toxic tech debt, yayyyy!
-	view.draw_document(mut ctx)
 	view.buf_view.draw(
 		mut ctx, 0, 0, ctx.window_width(), ctx.window_height() - 2, view.from, view.cursor.pos.y
 	)
 	// view.buf_view.draw(mut ctx, ctx.window_width() / 2, 0, ctx.window_width() / 2, ctx.window_height() - 2, 1000)
+
+	ui.draw_status_line(
+		mut ctx, ui.Status{
+			view.leader_state.mode,
+			view.cursor.pos.x, view.cursor.pos.y,
+			os.base(view.path),
+			ui.SearchSelection{
+				active:  view.leader_state.mode == .search
+				total:   view.search.total_finds
+				current: view.search.current_find.match_index
+			},
+			view.branch,
+			view.buffer.dirty
+		}
+	)
+
+	view.draw_bottom_bar_of_command_or_search(mut ctx)
+
+	view.draw_cursor_pointer(mut ctx)
+}
+
+fn (mut view View) draw(mut ctx draw.Contextable) {
+	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
+
+	view.update_to()
+	view.draw_document(mut ctx)
 
 	ui.draw_status_line(
 		mut ctx, ui.Status{

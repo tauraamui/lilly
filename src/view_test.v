@@ -21,12 +21,14 @@ import lib.chords
 import lib.buffer
 import json
 import lib.draw
+import lib.ui
 import term.ui as tui
 import log
 import time
 
 struct TestDrawer {
 	draw_text_callback fn (x int, y int, text string) @[required]
+	draw_rect_callback fn (x int, y int, width int, height int) @[required]
 	window_height      int
 }
 
@@ -40,7 +42,8 @@ fn (mut drawer TestDrawer) write(text string) {
 }
 
 fn (mut drawer TestDrawer) draw_rect(x int, y int, width int, height int) {
-	time.sleep(1 * time.millisecond)
+	if drawer.draw_rect_callback == unsafe { nil } { return }
+	drawer.draw_rect_callback(x, y, width, height)
 }
 
 fn (mut drawer TestDrawer) draw_point(x int, y int) {
@@ -741,6 +744,12 @@ fn test_draw_text_line_within_visual_selection_first_line_with_selection_end_on_
 	assert drawed_text.len >= 1
 	assert drawed_text[0] == 'This is a line to draw.'
 	assert drawed_text[1] == 'This is a second line.'
+}
+
+struct DrawnText {
+	x int
+	y int
+	data string
 }
 
 fn test_enter_from_start_of_line() {
@@ -3196,7 +3205,6 @@ fn test_view_draw_document() {
 		buffer: buffer.Buffer.new("", false)
     }
 
-    // Create a document with more lines than the view height
     fake_view.buffer.lines = [
         'Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5',
         'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10',
@@ -3209,11 +3217,44 @@ fn test_view_draw_document() {
 	mut ref := &drawn_text
 	mut mock_drawer := TestDrawer{
 		draw_text_callback: fn [mut ref] (x int, y int, text string) { ref << text }
+		draw_rect_callback: unsafe { nil }
 		window_height: fake_view.height
 	}
 	fake_view.draw(mut mock_drawer)
 
 	assert fake_view.to == 13
+	assert drawn_text == []
+}
+
+fn test_view_draw_document_with_method_using_buffer_view() {
+	mut buf := buffer.Buffer.new("", false)
+    buf.lines = [
+        'Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5',
+        'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10',
+        'Line 11', 'Line 12', 'Line 13', 'Line 14', 'Line 15'
+    ]
+
+    mut fake_view := View{
+		log: log.Log{}
+        leader_state: ViewLeaderState{ mode: .normal }
+        height: 15 // Set a small height for testing
+		buffer: buf
+    }
+	fake_view.buf_view = ui.BufferView.new(&fake_view.buffer)
+
+	assert fake_view.from == 0
+
+	mut drawn_text := []string{}
+	mut ref := &drawn_text
+	mut mock_drawer := TestDrawer{
+		draw_text_callback: fn [mut ref] (x int, y int, text string) { ref << text }
+		draw_rect_callback: fn (x int, y int, width int, height int) { println("DRAWING RECT: X: ${x}, Y: ${y}, WIDTH: ${width}, HEIGHT: ${height}") }
+		window_height: fake_view.height
+	}
+	fake_view.draw_x(mut mock_drawer)
+
+	assert fake_view.to == 13
+	assert drawn_text == []
 }
 
 // TODO(tauraamui) [18/03/2025]: re-enable this test
