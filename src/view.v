@@ -629,6 +629,7 @@ fn (mut view View) draw_x(mut ctx draw.Contextable) {
 }
 
 fn (mut view View) draw(mut ctx draw.Contextable) {
+	// view.draw_x(mut ctx)
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
 	view.update_to()
