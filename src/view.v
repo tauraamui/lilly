@@ -672,8 +672,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 		if cursor_screen_space_y > view.code_view_height() - 1 {
 			cursor_screen_space_y = view.code_view_height() - 1
 		}
-		ctx.draw_rect(view.x + 1, cursor_screen_space_y + 1, ctx.window_width(),
-			cursor_screen_space_y + 1)
+		ctx.draw_rect(view.x + 1, cursor_screen_space_y + 1, ctx.window_width() - (view.x + 1), 1)
 	}
 
 	for y, line in view.buffer.line_iterator() {

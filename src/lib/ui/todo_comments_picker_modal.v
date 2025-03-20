@@ -41,7 +41,7 @@ pub fn (mut tc_picker TodoCommentPickerModal) draw(mut ctx draw.Contextable) {
 	ctx.set_cursor_position(1, y_offset + tc_picker.current_sel_id - tc_picker.from)
 	y_offset += tc_picker.draw_scrollable_list(mut ctx, y_offset, tc_picker.matches)
 	ctx.set_bg_color(r: 153, g: 95, b: 146)
-	ctx.draw_rect(1, y_offset, ctx.window_width(), y_offset)
+	ctx.draw_rect(1, y_offset, ctx.window_width(), 1)
 	search_label := "SEARCH:"
 	ctx.draw_text(1, y_offset, search_label)
 	// ctx.draw_text(1 + utf8_str_visible_length(search_label) + 1, y_offset, tc_picker.search.query)
@@ -60,7 +60,7 @@ fn (mut tc_picker TodoCommentPickerModal) resolve_to() int {
 pub fn (mut tc_picker TodoCommentPickerModal) draw_scrollable_list(mut ctx draw.Contextable, y_offset int, list []buffer.Match) int {
 	ctx.reset_bg_color()
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
-	ctx.draw_rect(1, y_offset, ctx.window_width(), y_offset + max_height - 1)
+	ctx.draw_rect(1, y_offset, ctx.window_width(), max_height - 1)
 	to := tc_picker.resolve_to()
 	for i := tc_picker.from; i < to; i++ {
 		mut iter_y_offset := y_offset + (i - tc_picker.from)
@@ -68,7 +68,7 @@ pub fn (mut tc_picker TodoCommentPickerModal) draw_scrollable_list(mut ctx draw.
 		ctx.set_bg_color(r: 15, g: 15, b: 15)
 		if tc_picker.current_sel_id == i {
 			ctx.set_bg_color(r: 53, g: 53, b: 53)
-			ctx.draw_rect(1, iter_y_offset, ctx.window_width(), iter_y_offset)
+			ctx.draw_rect(1, iter_y_offset, ctx.window_width(), 1)
 		}
 
 		list_item_file_path       := "${match_item.file_path}:${match_item.pos.y}:${match_item.pos.x} "

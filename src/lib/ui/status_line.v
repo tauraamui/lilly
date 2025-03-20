@@ -39,15 +39,6 @@ pub fn draw_status_line(mut ctx draw.Contextable, status Status) {
 	defer { ctx.reset() }
 
 	y := ctx.window_height() - 1
-	// draw base dark rectangle for the status line
-	ctx.set_bg_color(r: 25, g: 25, b: 25)
-	// FIX(tauraamui) [20/03/2025]: this has been incorrectly seemingly rendering
-	//                              a full rectangle over the entire viewport this whole
-	//                              time, no wonder we are/were seeing pretty consistent flickering
-	//                              on most terminal emulators
-	//
-	//                              for now the preference here is to just stop rendering that segment
-	// ctx.draw_rect(12, y, ctx.window_width(), y)
 
 	// invoke the mode indicator draw
 	mut offset := status.mode.draw(mut ctx, 1, y)
@@ -70,9 +61,10 @@ pub fn draw_status_line(mut ctx draw.Contextable, status Status) {
 
 	// draw leaning end of base status line bar
 	draw.paint_shape_text(mut ctx, offset, y, draw.Color{25, 25, 25}, '${core.slant_left_flat_top}')
+	offset += 1
 
 	// render the cursor status as a right trailing segment
-	draw_cursor_position_segment(mut ctx, 1, y, status.cursor_x, status.cursor_y)
+	draw_cursor_position_segment(mut ctx, 1, y, offset, status.cursor_x, status.cursor_y)
 }
 
 fn draw_file_name_segment(mut ctx draw.Contextable, x int, y int, file_name string) int {
@@ -110,7 +102,7 @@ fn draw_git_branch_section(mut ctx draw.Contextable, x int, y int, git_branch st
 	return offset
 }
 
-fn draw_cursor_position_segment(mut ctx draw.Contextable, x int, y int, cursor_x int, cursor_y int) int {
+fn draw_cursor_position_segment(mut ctx draw.Contextable, x int, y int, last_segment_offset int, cursor_x int, cursor_y int) int {
 	cursor_info_label := '${cursor_y + 1}:${cursor_x + 1}'
 	draw.paint_shape_text(mut ctx, ctx.window_width() - 1, y, draw.Color{245, 42, 42}, '${core.block}${core.block}')
 	ctx.bold()
@@ -120,5 +112,8 @@ fn draw_cursor_position_segment(mut ctx draw.Contextable, x int, y int, cursor_x
 		'${core.slant_right_flat_top}${core.slant_left_flat_bottom}${core.block}')
 	draw.paint_shape_text(mut ctx, ctx.window_width() - 2 - cursor_info_label.len - 2, y, draw.Color{25, 25, 25},
 		'${core.slant_right_flat_top}')
+	ctx.set_bg_color(draw.Color{25, 25, 25})
+	ctx.draw_rect(last_segment_offset, y, (ctx.window_width() - 2 - cursor_info_label.len - 2) - last_segment_offset, 1)
+	ctx.reset_bg_color()
 	return 0
 }

@@ -71,7 +71,7 @@ pub fn (mut f_picker FilePickerModal) draw(mut ctx draw.Contextable) {
 	ctx.set_cursor_position(1, y_offset + f_picker.current_sel_id - f_picker.from)
 	y_offset += f_picker.draw_scrollable_list(mut ctx, y_offset, f_picker.file_paths)
 	ctx.set_bg_color(r: 153, g: 95, b: 146)
-	ctx.draw_rect(1, y_offset, ctx.window_width(), y_offset)
+	ctx.draw_rect(1, y_offset, ctx.window_width(), 1)
 	search_label := 'SEARCH:'
 	ctx.draw_text(1, y_offset, search_label)
 	ctx.draw_text(1 + utf8_str_visible_length(search_label) + 1, y_offset, f_picker.search.query)
@@ -80,23 +80,15 @@ pub fn (mut f_picker FilePickerModal) draw(mut ctx draw.Contextable) {
 fn (mut f_picker FilePickerModal) draw_scrollable_list(mut ctx draw.Contextable, y_offset int, list []string) int {
 	ctx.reset_bg_color()
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
-	ctx.draw_rect(1, y_offset, ctx.window_width(), y_offset + max_height - 1)
+	ctx.draw_rect(1, y_offset, ctx.window_width(), max_height - 1)
 	to := f_picker.resolve_to()
 	for i := f_picker.from; i < to; i++ {
 		ctx.set_bg_color(r: 15, g: 15, b: 15)
 		if f_picker.current_sel_id == i {
 			ctx.set_bg_color(r: 53, g: 53, b: 53)
-			ctx.draw_rect(1, y_offset + (i - f_picker.from), ctx.window_width(),
-				y_offset + (i - f_picker.from))
+			ctx.draw_rect(1, y_offset + (i - f_picker.from), ctx.window_width(), 1)
 		}
 		ctx.draw_text(1, y_offset + (i - f_picker.from), list[i])
-		/*
-		if ctx.render_debug() {
-			file_path_visable_len := utf8_str_visible_length(list[i])
-			ctx.set_bg_color(r: 200, g: 100, b: 100)
-			// ctx.draw_text(2 + file_path_visable_len, y_offset + (i - f_picker.from), "${score_value_by_query(f_picker.search.query, list[i])}")
-		}
-		*/
 	}
 	return y_offset + (max_height - 2)
 }

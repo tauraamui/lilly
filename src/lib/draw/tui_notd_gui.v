@@ -53,7 +53,7 @@ fn (mut ctx Context) write(c string) {
 }
 
 fn (mut ctx Context) draw_rect(x int, y int, width int, height int) {
-	ctx.ref.draw_rect(x, y, width, height)
+	ctx.ref.draw_rect(x, y, x + (width - 1), y + (height - 1))
 }
 
 fn (mut ctx Context) draw_point(x int, y int) {
