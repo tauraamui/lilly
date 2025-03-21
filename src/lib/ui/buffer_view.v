@@ -67,7 +67,10 @@ fn draw_line_number(mut ctx draw.Contextable, x int, y int, line_num int) {
 fn draw_text_line(mut ctx draw.Contextable, x int, y int, line string, min_x int, width int) {
 	if min_x >= line.runes().len { ctx.draw_text(x, y, ""); return }
 
-	line_past_min_x := line.runes()[min_x..].string()
+	mut line_past_min_x := line.runes()[min_x..].string()
+	if line_past_min_x.len > (width - x) {
+		line_past_min_x = line_past_min_x[..(width - x)]
+	}
 
 	ctx.draw_text(x, y, line_past_min_x)
 }
