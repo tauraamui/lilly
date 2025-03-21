@@ -97,6 +97,9 @@ pub fn (mut tc_picker TodoCommentPickerModal) draw_scrollable_list(mut ctx draw.
 
 		x_offset += utf8_str_visible_length(keyword)
 		post_keyword := match_item.contents[match_item.keyword_len..]
+		if tc_picker.current_sel_id == i {
+			ctx.set_bg_color(r: 53, g: 53, b: 53)
+		}
 		ctx.draw_text(1 + x_offset, iter_y_offset, post_keyword)
 	}
 	return y_offset + (max_height - 2)
