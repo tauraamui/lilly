@@ -181,25 +181,25 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_12() {
 
 	assert drawn_text == [
 		DrawnText{ x: 2, y: 1, data: "1" }
-		DrawnText{ x: 4, y: 1, data:  "0 This is line 0 in the document" },
+		DrawnText{ x: 4, y: 1, data:  "0 This i" },
 		DrawnText{ x: 2, y: 2, data: "2" }
-		DrawnText{ x: 4, y: 2, data:  "1 This is line 1 in the document" },
+		DrawnText{ x: 4, y: 2, data:  "1 This i" },
 		DrawnText{ x: 2, y: 3, data: "3" }
-		DrawnText{ x: 4, y: 3, data:  "2 This is line 2 in the document" },
+		DrawnText{ x: 4, y: 3, data:  "2 This i" },
 		DrawnText{ x: 2, y: 4, data: "4" }
-		DrawnText{ x: 4, y: 4, data:  "3 This is line 3 in the document" },
+		DrawnText{ x: 4, y: 4, data:  "3 This i" },
 		DrawnText{ x: 2, y: 5, data: "5" }
-		DrawnText{ x: 4, y: 5, data:  "4 This is line 4 in the document" },
+		DrawnText{ x: 4, y: 5, data:  "4 This i" },
 		DrawnText{ x: 2, y: 6, data: "6" }
-		DrawnText{ x: 4, y: 6, data:  "5 This is line 5 in the document" },
+		DrawnText{ x: 4, y: 6, data:  "5 This i" },
 		DrawnText{ x: 2, y: 7, data: "7" }
-		DrawnText{ x: 4, y: 7, data:  "6 This is line 6 in the document" },
+		DrawnText{ x: 4, y: 7, data:  "6 This i" },
 		DrawnText{ x: 2, y: 8, data: "8" }
-		DrawnText{ x: 4, y: 8, data:  "7 This is line 7 in the document" },
+		DrawnText{ x: 4, y: 8, data:  "7 This i" },
 		DrawnText{ x: 2, y: 9, data: "9" }
-		DrawnText{ x: 4, y: 9, data:  "8 This is line 8 in the document" },
+		DrawnText{ x: 4, y: 9, data:  "8 This i" },
 		DrawnText{ x: 1, y: 10, data: "10" }
-		DrawnText{ x: 4, y: 10, data: "9 This is line 9 in the document" }
+		DrawnText{ x: 4, y: 10, data: "9 This i" }
 	]
 }
 
