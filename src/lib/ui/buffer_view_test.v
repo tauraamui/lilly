@@ -158,7 +158,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_is_6() {
 	]
 }
 
-fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_8() {
+fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_12() {
 	mut drawn_text := []DrawnText{}
 	mut ref := &drawn_text
 	mut mock_ctx := MockContextable{
