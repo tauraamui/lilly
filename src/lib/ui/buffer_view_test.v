@@ -172,7 +172,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_8() {
 
 	x := 0
 	y := 0
-	width := 8
+	width := 12
 	height := 10
 	min_x := 0
 	from_line_num := 0
