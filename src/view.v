@@ -604,7 +604,7 @@ fn (mut view View) draw_x(mut ctx draw.Contextable) {
 					 // the given height it is told to work within, but if we don't call it, the
 					 // cursor won't move, so... *sniff sniff*, smells like toxic tech debt, yayyyy!
 	view.buf_view.draw(
-		mut ctx, 0, 0, ctx.window_width(), ctx.window_height() - 2, view.from, view.cursor.pos.y
+		mut ctx, 0, 0, ctx.window_width(), ctx.window_height() - 2, view.from, 0, view.cursor.pos.y
 	)
 	// view.buf_view.draw(mut ctx, ctx.window_width() / 2, 0, ctx.window_width() / 2, ctx.window_height() - 2, 1000)
 
@@ -629,10 +629,10 @@ fn (mut view View) draw_x(mut ctx draw.Contextable) {
 }
 
 fn (mut view View) draw(mut ctx draw.Contextable) {
-	// view.draw_x(mut ctx)
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
 	view.update_to()
+	// view.draw_x(mut ctx)
 	view.draw_document(mut ctx)
 
 	ui.draw_status_line(

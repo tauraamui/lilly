@@ -14,13 +14,12 @@
 
 module ui
 
+import term
 import lib.buffer
 import lib.draw
 
 pub struct BufferView {
 	buf   &buffer.Buffer = unsafe { nil }
-mut:
-	min_x int
 }
 
 pub fn BufferView.new(buf &buffer.Buffer) BufferView {
@@ -32,6 +31,7 @@ pub fn (buf_view BufferView) draw(
 	x int, y int,
 	width int, height int,
 	from_line_num int,
+	min_x int,
 	cursor_y_pos int
 ) {
 	if buf_view.buf == unsafe { nil } { return }
@@ -46,7 +46,9 @@ pub fn (buf_view BufferView) draw(
 		draw_line_number(mut ctx, x + screenspace_x_offset, y + screenspace_y_offset, document_line_num)
 
 		// draw the line of text, offset by the position of the buffer view
-		draw_text_line(mut ctx, x + screenspace_x_offset + 1, y + screenspace_y_offset, line, buf_view.min_x, width)
+		draw_text_line(
+			mut ctx, x + screenspace_x_offset + 1, y + screenspace_y_offset, line, min_x, width
+		)
 
 		screenspace_y_offset += 1
 		// detect if number of lines drawn would exceed current height of view
@@ -65,12 +67,10 @@ fn draw_line_number(mut ctx draw.Contextable, x int, y int, line_num int) {
 }
 
 fn draw_text_line(mut ctx draw.Contextable, x int, y int, line string, min_x int, width int) {
-	if min_x >= line.runes().len { ctx.draw_text(x, y, ""); return }
+	mut linex := term.strip_ansi(line.replace("\t", " ".repeat(4)))
+	if min_x >= linex.runes().len { ctx.draw_text(x, y, ""); return }
 
-	mut line_past_min_x := line.runes()[min_x..].string()
-	if line_past_min_x.len > (width - x) {
-		line_past_min_x = line_past_min_x[..(width - x)]
-	}
+	mut line_past_min_x := linex.runes()[min_x..].string()
 
 	ctx.draw_text(x, y, line_past_min_x)
 }

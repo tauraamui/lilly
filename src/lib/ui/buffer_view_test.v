@@ -39,9 +39,10 @@ fn test_buffer_view_draws_lines_0_to_max_height() {
 	y := 0
 	width := 100
 	height := 10
+	min_x := 0
 	from_line_num := 0
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, 0)
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0)
 
 	assert drawn_text == [
 		DrawnText{ x: 2, y: 1, data:  "1" },
@@ -83,9 +84,10 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	y := 0
 	width := 100
 	height := 10
+	min_x := 0
 	from_line_num := 10
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, 0)
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0)
 
 	assert drawn_text == [
 		DrawnText{ x: 1, y: 1, data:  "11" },
@@ -122,15 +124,15 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_is_6() {
 	mut buf      := buffer.Buffer.new("", false)
 	for i in 0..20 { buf.lines << "${i} This is line ${i} in the document" }
 	mut buf_view := BufferView.new(&buf)
-	buf_view.min_x = 6
 
 	x := 0
 	y := 0
 	width := 100
 	height := 10
+	min_x := 6
 	from_line_num := 0
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, 0)
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0)
 
 	assert drawn_text == [
 		DrawnText{ x: 2, y: 1, data: "1" }
@@ -153,6 +155,51 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_is_6() {
 		DrawnText{ x: 4, y: 9, data:  " is line 8 in the document" },
 		DrawnText{ x: 1, y: 10, data: "10" }
 		DrawnText{ x: 4, y: 10, data: " is line 9 in the document" }
+	]
+}
+
+fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_8() {
+	mut drawn_text := []DrawnText{}
+	mut ref := &drawn_text
+	mut mock_ctx := MockContextable{
+		on_draw_cb: fn [mut ref] (x int, y int, text string) {
+			ref << DrawnText{ x: x, y: y, data: text }
+		}
+	}
+	mut buf      := buffer.Buffer.new("", false)
+	for i in 0..20 { buf.lines << "${i} This is line ${i} in the document" }
+	mut buf_view := BufferView.new(&buf)
+
+	x := 0
+	y := 0
+	width := 8
+	height := 10
+	min_x := 0
+	from_line_num := 0
+
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0)
+
+	assert drawn_text == [
+		DrawnText{ x: 2, y: 1, data: "1" }
+		DrawnText{ x: 4, y: 1, data:  "0 This is line 0 in the document" },
+		DrawnText{ x: 2, y: 2, data: "2" }
+		DrawnText{ x: 4, y: 2, data:  "1 This is line 1 in the document" },
+		DrawnText{ x: 2, y: 3, data: "3" }
+		DrawnText{ x: 4, y: 3, data:  "2 This is line 2 in the document" },
+		DrawnText{ x: 2, y: 4, data: "4" }
+		DrawnText{ x: 4, y: 4, data:  "3 This is line 3 in the document" },
+		DrawnText{ x: 2, y: 5, data: "5" }
+		DrawnText{ x: 4, y: 5, data:  "4 This is line 4 in the document" },
+		DrawnText{ x: 2, y: 6, data: "6" }
+		DrawnText{ x: 4, y: 6, data:  "5 This is line 5 in the document" },
+		DrawnText{ x: 2, y: 7, data: "7" }
+		DrawnText{ x: 4, y: 7, data:  "6 This is line 6 in the document" },
+		DrawnText{ x: 2, y: 8, data: "8" }
+		DrawnText{ x: 4, y: 8, data:  "7 This is line 7 in the document" },
+		DrawnText{ x: 2, y: 9, data: "9" }
+		DrawnText{ x: 4, y: 9, data:  "8 This is line 8 in the document" },
+		DrawnText{ x: 1, y: 10, data: "10" }
+		DrawnText{ x: 4, y: 10, data: "9 This is line 9 in the document" }
 	]
 }
 
