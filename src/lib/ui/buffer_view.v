@@ -47,7 +47,7 @@ pub fn (buf_view BufferView) draw(
 
 		cursor_line := document_line_num == cursor_y_pos
 		if cursor_line {
-			ctx.set_bg_color(draw.Color{25, 25, 25})
+			ctx.set_bg_color(draw.Color{53, 53, 53})
 			ctx.draw_rect(x + screenspace_x_offset + 1, y + screenspace_y_offset, width - (x + screenspace_x_offset), 1)
 			ctx.reset_bg_color()
 		}
@@ -83,7 +83,7 @@ fn draw_text_line(mut ctx draw.Contextable, x int, y int, line string, min_x int
 	}
 
 	if is_cursor_line {
-		ctx.set_bg_color(draw.Color{25, 25, 25})
+		ctx.set_bg_color(draw.Color{53, 53, 53})
 		defer { ctx.reset_bg_color() }
 	}
 	ctx.draw_text(x, y, line_past_min_x)
