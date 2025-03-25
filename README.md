@@ -15,7 +15,8 @@
 
 ![Screenshot 2023-12-01 21 01 45](https://github.com/tauraamui/lilly/assets/3159648/e9023db2-0214-49e1-baad-9a75aa22d291)
 
-Our project is focused on the development of a text editor that serves as a practical alternative to Vim and Neovim. The primary aim is to provide users with essential features, eliminating the need to navigate a complex ecosystem of Lua plugins. This approach is intended to be welcoming to users of all experience levels.
+An editor designed as a batteries included experience, eliminating the need for plugins. So, basically Helix but for VIM
+motions. The end vision is a one to one replacement/equivalent functionality for all VIM features, macros, motions, and more.
 
 ## Milestone 1: A pre-alpha release
 
@@ -39,21 +40,6 @@ Our project is focused on the development of a text editor that serves as a prac
 	or build and run with `clockwork run`
 
 You can see what other tasks are available to run with `clockwork --tasks`
-
-# The Rationale
-### Inclusive Functionality
-We have set out to create an editor that encompasses the fundamental capabilities expected by users, rendering it a compelling choice as a Vim/Neovim alternative. Our emphasis is on streamlining the editing process without the necessity of configuring numerous plugins – our core features aim to fulfill these needs.
-
-### Simplified User Experience
-The intricacies of Lua plugins can be daunting for newcomers and even pose a management challenge for seasoned users. Our editor simplifies the user experience by removing the requirement for extensive plugin management. It offers an approachable and intuitive platform, eliminating the complexities that often accompany plugin management.
-
-### Performance Enhancement
-Our editor is optimized to offer improved performance, particularly when handling extensive files. It is engineered for speed and responsiveness, designed to enhance your editing efficiency.
-
-### VIM-Like Experience
-We've crafted the editor to deliver a VIM-like experience, preserving the functionalities that VIM users appreciate. The difference lies in the absence of reliance on a multifaceted ecosystem – our editor consolidates these features within a unified framework.
-
-Transition to our text editor to explore an alternative that is rooted in functionality, accessibility, and performance.
 
 ### Not convinced?
 
