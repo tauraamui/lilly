@@ -16,7 +16,7 @@
 ![Screenshot 2023-12-01 21 01 45](https://github.com/tauraamui/lilly/assets/3159648/e9023db2-0214-49e1-baad-9a75aa22d291)
 
 An editor designed as a batteries included experience, eliminating the need for plugins. So, basically Helix but for VIM
-motions.
+motions. The end vision is a one to one replacement/equivalent functionality for all VIM features, macros, motions, and more.
 
 ## Milestone 1: A pre-alpha release
 
