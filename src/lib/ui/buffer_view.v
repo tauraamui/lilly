@@ -86,6 +86,12 @@ fn draw_text_line(mut ctx draw.Contextable, x int, y int, line string, min_x int
 		ctx.set_bg_color(draw.Color{53, 53, 53})
 		defer { ctx.reset_bg_color() }
 	}
-	ctx.draw_text(x, y, line_past_min_x)
+	// ctx.draw_text(x, y, line_past_min_x)
+	draw_line_in_segments(mut ctx, x, y, line_past_min_x)
+}
+
+// NOTE(tauraamui) [25/03/2025]: this needs to be a query against treesitter grammar instance
+//                               or something similar at some point
+fn draw_line_in_segments(mut ctx draw.Contextable, x int, y int, line_of_text string) {
 }
 
