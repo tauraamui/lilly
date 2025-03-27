@@ -49,6 +49,7 @@ fn main() {
 
 	parser.parse_line(code_lines[4])
 	line_tokens = parser.get_line_tokens(4)
+	assert line_tokens == []
 	assert line_tokens.len == 1
 	assert line_tokens[0] == Token{
 		start: 0,

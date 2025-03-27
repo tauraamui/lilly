@@ -65,34 +65,26 @@ pub fn (mut parser Parser) parse_line(line string) {
 
 		if parser.state == .in_block_comment {
 			if i + 1 < runes.len && runes[i] == `*` && runes[i + 1] == `/` {
-				token_type = .comment_end
-				token_data = "*/".runes()
-				i += 2
+				if token_data.len > 0 {
+					parser.tokens << Token{
+						t_type: .comment
+						data: token_data
+						start: token_start - token_data.len
+					}
+					token_count += 1
+				}
+
 				parser.state = .default
-				if token_data.len > 0 {
-					token := Token{
-						t_type: token_type
-						data:   token_data
-						start:  token_start
-					}
-					parser.tokens << token
-					token_count += 1
+				parser.tokens << Token{
+					t_type: .comment_end
+					data: "*/".runes()
+					start: token_start
 				}
-				continue
+				token_count += 1
+				i += 2
 			} else {
-				token_type = .comment
-				token_data = runes[i..].clone()
-				i = runes.len // consume remainder of current line
-				if token_data.len > 0 {
-					token := Token{
-						t_type: token_type
-						data:   token_data
-						start:  token_start
-					}
-					parser.tokens << token
-					token_count += 1
-				}
-				continue
+				token_data << runes[i]
+				i += 1
 			}
 		} else {
 			match runes[i] {
