@@ -1,0 +1,21 @@
+Notes from trying to compile and run Lilly on Windows
+
+Requirements: git, tee
+
+1. Download V for windows from vlang.io
+2. Execute `v run install-clockwork.vsh`
+
+If you try and run Lilly on windows without using `.` it panics due to being able to understand the
+FQN paths on windows.
+
+When running the splash screen, for some reason the top line incorrectly positioned and wraps
+When in insert mode, it's unable to figure out that `CTRL+[` is actually equals, but this is only
+a problem when it is insert mode...
+
+When pressing any key, the last 8-9 lines randomly flicker on and off, even if no input is being
+processed, nor when the screen is actually changing per frame
+
+When the modal is open and covering lines, when pressing any key, that part of the view also starts to
+flicker randomly as well. This suggests that any part of the view flickers if rendering on top of something
+being already rendered is occurring.
+

@@ -14,13 +14,12 @@
 
 module ui
 
+import term
 import lib.buffer
 import lib.draw
 
 pub struct BufferView {
 	buf   &buffer.Buffer = unsafe { nil }
-mut:
-	min_x int
 }
 
 pub fn BufferView.new(buf &buffer.Buffer) BufferView {
@@ -32,6 +31,7 @@ pub fn (buf_view BufferView) draw(
 	x int, y int,
 	width int, height int,
 	from_line_num int,
+	min_x int,
 	cursor_y_pos int
 ) {
 	if buf_view.buf == unsafe { nil } { return }
@@ -45,8 +45,16 @@ pub fn (buf_view BufferView) draw(
 		// draw line number
 		draw_line_number(mut ctx, x + screenspace_x_offset, y + screenspace_y_offset, document_line_num)
 
+		cursor_line := document_line_num == cursor_y_pos
+		if cursor_line {
+			ctx.set_bg_color(draw.Color{53, 53, 53})
+			ctx.draw_rect(x + screenspace_x_offset + 1, y + screenspace_y_offset, width - (x + screenspace_x_offset), 1)
+			ctx.reset_bg_color()
+		}
 		// draw the line of text, offset by the position of the buffer view
-		draw_text_line(mut ctx, x + screenspace_x_offset + 1, y + screenspace_y_offset, line, buf_view.min_x, width)
+		draw_text_line(
+			mut ctx, x + screenspace_x_offset + 1, y + screenspace_y_offset, line, min_x, width, cursor_line
+		)
 
 		screenspace_y_offset += 1
 		// detect if number of lines drawn would exceed current height of view
@@ -64,11 +72,20 @@ fn draw_line_number(mut ctx draw.Contextable, x int, y int, line_num int) {
 	ctx.draw_text(x - line_num_str.runes().len, y, line_num_str)
 }
 
-fn draw_text_line(mut ctx draw.Contextable, x int, y int, line string, min_x int, width int) {
-	if min_x >= line.runes().len { ctx.draw_text(x, y, ""); return }
+fn draw_text_line(mut ctx draw.Contextable, x int, y int, line string, min_x int, width int, is_cursor_line bool) {
+	mut linex := term.strip_ansi(line.replace("\t", " ".repeat(4)))
+	if min_x >= linex.runes().len { ctx.draw_text(x, y, ""); return }
 
-	line_past_min_x := line.runes()[min_x..].string()
+	mut line_past_min_x := linex.runes()[min_x..].string()
 
+	if line_past_min_x.runes().len > width - x {
+		line_past_min_x = line_past_min_x.runes()[..(width - x)].string()
+	}
+
+	if is_cursor_line {
+		ctx.set_bg_color(draw.Color{53, 53, 53})
+		defer { ctx.reset_bg_color() }
+	}
 	ctx.draw_text(x, y, line_past_min_x)
 }
 
