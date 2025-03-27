@@ -69,10 +69,30 @@ pub fn (mut parser Parser) parse_line(line string) {
 				token_data = "*/".runes()
 				i += 2
 				parser.state = .default
+				if token_data.len > 0 {
+					token := Token{
+						t_type: token_type
+						data:   token_data
+						start:  token_start
+					}
+					parser.tokens << token
+					token_count += 1
+				}
+				continue
 			} else {
 				token_type = .comment
-				token_data << runes[i]
-				i += 1
+				token_data = runes[i..].clone()
+				i = runes.len // consume remainder of current line
+				if token_data.len > 0 {
+					token := Token{
+						t_type: token_type
+						data:   token_data
+						start:  token_start
+					}
+					parser.tokens << token
+					token_count += 1
+				}
+				continue
 			}
 		} else {
 			match runes[i] {

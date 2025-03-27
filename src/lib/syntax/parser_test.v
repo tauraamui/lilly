@@ -28,6 +28,7 @@ fn main() {
 
 	parser.parse_line(code_lines[2])
 	mut line_tokens := parser.get_line_tokens(2)
+	assert line_tokens.len == 7
 	assert line_tokens[0] == Token{
 		start: 0, t_type: .identifier, data: [`f`, `n`]
 	}
@@ -42,8 +43,26 @@ fn main() {
 
 	parser.parse_line(code_lines[3])
 	line_tokens = parser.get_line_tokens(3)
+	assert line_tokens.len == 2
 	assert line_tokens[0] == Token{ start: 0, t_type: .whitespace, data: [`\t`] }
 	assert line_tokens[1] == Token{ start: 1, t_type: .comment_start, data: [`/`, `*`] }
+
+	parser.parse_line(code_lines[4])
+	line_tokens = parser.get_line_tokens(4)
+	assert line_tokens.len == 1
+	assert line_tokens[0] == Token{
+		start: 0,
+		t_type: .comment,
+		data: [
+			`\t`, ` `, `*`, ` `, `B`, `l`, `o`, `c` `k`, ` `, `c`, `o`, `m`, `m`, `e`, `n`, `t`
+		]
+	}
+
+	parser.parse_line(code_lines[5])
+	line_tokens = parser.get_line_tokens(5)
+	assert line_tokens.len == 1
+	assert line_tokens[0] == Token{ start: 0, t_type: .comment, data: [] }
+	assert line_tokens[1] == Token{ start: 0, t_type: .comment, data: [] }
 
 	assert 1 == 9
 }
