@@ -61,8 +61,8 @@ fn main() {
 	parser.parse_line(code_lines[5])
 	line_tokens = parser.get_line_tokens(5)
 	assert line_tokens.len == 1
-	assert line_tokens[0] == Token{ start: 0, t_type: .comment, data: [] }
-	assert line_tokens[1] == Token{ start: 0, t_type: .comment, data: [] }
+	assert line_tokens[0] == Token{ start: 0, t_type: .comment, data: [`\t`, ` `] }
+	assert line_tokens[1] == Token{ start: 2, t_type: .comment_end, data: [`*`, `\\`] }
 
 	assert 1 == 9
 }
