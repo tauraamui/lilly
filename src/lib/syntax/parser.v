@@ -60,39 +60,35 @@ pub fn (mut parser Parser) parse_line(line string) {
 	runes                 := line.runes()
 
 	mut i := 0
+	mut token_data := []rune{}
+	mut token_type := TokenType.other
 	for i < runes.len {
-		if parser.state == .in_block_comment {
-			mut pending_token := parser.pending_token or { Token{ t_type: .comment, start: i } }
-			if i + 1 < runes.len && runes[i] == `*` && runes[i + 1] == `/` {
-				if pending_token.start < i {
-					parser.tokens << pending_token
-					token_count += 1
+		c_char := runes[i]
+
+		match c_char {
+			` `, `\t` {
+				if token_type != .whitespace {
+					if token_data.len > 0 {
+						parser.tokens << Token{
+							t_type: token_type
+							data: token_data
+							start: i - token_data.len
+						}
+						token_data.clear()
+						token_count += 1
+					}
 				}
-				parser.tokens << Token{
-					t_type: .comment_end
-					data: [runes[i], runes[i + 1]]
-					start: i
-				}
-				token_count += 1
-				parser.state = .default
-				i += 2
+				token_type = .whitespace
+				token_data << c_char
+				i += 1
 			}
-			pending_token.data << runes[i]
-			parser.pending_token = pending_token
-			continue
-		}
-		if i + 1 < runes.len && runes[i] == `/` && runes[i + 1] == `*` {
-			parser.tokens << Token{
-				t_type: .comment_start
-				data: [runes[i], runes[i + 1]]
-				start: i
+			else {
+				token_type = .other
+				i += 1
 			}
-			parser.state = .in_block_comment
-			i += 2
-			continue
 		}
-		i += 1
 	}
+
 	parser.line_info << LineInfo{
 		start_token_index: start_token_index
 		token_count:       token_count

@@ -16,6 +16,31 @@ fn main() {
 
 	code_lines := code.split("\n")
 
+	for i, code_line in code_lines {
+		parser.parse_line(code_line)
+		println("LINE ${i} tokens ${parser.get_line_tokens(i)}")
+	}
+
+	assert 1 == 3
+}
+
+/*
+fn test_parser_block_of_code_one() {
+	code := "
+// This is a comment
+fn main() {
+	/*
+	 * Block comment
+	 */
+	let x = 10
+	return x
+}
+"
+
+	mut parser := Parser{}
+
+	code_lines := code.split("\n")
+
 	parser.parse_line(code_lines[0])
 	assert parser.get_line_tokens(0) == []
 
@@ -67,4 +92,5 @@ fn main() {
 
 	assert 1 == 9
 }
+*/
 
