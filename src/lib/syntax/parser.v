@@ -26,6 +26,7 @@ enum TokenType {
 
 pub struct Token {
 	t_type TokenType
+mut:
 	data   []rune
 	start  int
 }
@@ -37,9 +38,10 @@ struct LineInfo {
 
 pub struct Parser {
 mut:
-	state     State
-	tokens    []Token
-	line_info []LineInfo
+	state         State
+	pending_token ?Token
+	tokens        []Token
+	line_info     []LineInfo
 }
 
 fn (parser Parser) get_line_tokens(line_num int) []Token {
@@ -53,6 +55,51 @@ fn (parser Parser) get_line_tokens(line_num int) []Token {
 }
 
 pub fn (mut parser Parser) parse_line(line string) {
+	mut start_token_index := parser.tokens.len
+	mut token_count       := 0
+	runes                 := line.runes()
+
+	mut i := 0
+	for i < runes.len {
+		if parser.state == .in_block_comment {
+			mut pending_token := parser.pending_token or { Token{ t_type: .comment, start: i } }
+			if i + 1 < runes.len && runes[i] == `*` && runes[i + 1] == `/` {
+				if pending_token.start < i {
+					parser.tokens << pending_token
+					token_count += 1
+				}
+				parser.tokens << Token{
+					t_type: .comment_end
+					data: [runes[i], runes[i + 1]]
+					start: i
+				}
+				token_count += 1
+				parser.state = .default
+				i += 2
+			}
+			pending_token.data << runes[i]
+			parser.pending_token = pending_token
+			continue
+		}
+		if i + 1 < runes.len && runes[i] == `/` && runes[i + 1] == `*` {
+			parser.tokens << Token{
+				t_type: .comment_start
+				data: [runes[i], runes[i + 1]]
+				start: i
+			}
+			parser.state = .in_block_comment
+			i += 2
+			continue
+		}
+		i += 1
+	}
+	parser.line_info << LineInfo{
+		start_token_index: start_token_index
+		token_count:       token_count
+	}
+}
+
+pub fn (mut parser Parser) parse_line_2(line string) {
 	mut start_token_index := parser.tokens.len
 	mut token_count       := 0
 	runes                 := line.runes()

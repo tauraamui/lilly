@@ -42,7 +42,7 @@ fn main() {
 	assert line_tokens[6] == Token{ start: 10, t_type: .block_start, data: [`{`] }
 
 	parser.parse_line(code_lines[3])
-	line_tokens = parser.get_line_tokens(3)
+	mut line_tokens := parser.get_line_tokens(3)
 	assert line_tokens.len == 2
 	assert line_tokens[0] == Token{ start: 0, t_type: .whitespace, data: [`\t`] }
 	assert line_tokens[1] == Token{ start: 1, t_type: .comment_start, data: [`/`, `*`] }
