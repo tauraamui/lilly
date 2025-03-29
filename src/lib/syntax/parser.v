@@ -62,19 +62,37 @@ pub fn (mut parser Parser) parse_line(line string) {
 	mut i := 0
 	mut token_data := []rune{}
 	mut token_type := TokenType.other
+	mut current_char_type := TokenType.other
+
 	for i < runes.len {
 		c_char := runes[i]
+		match c_char {
+			` `, `\t` { current_char_type = .whitespace }
+			else { current_char_type = .other }
+		}
+		if current_char_type != token_type {
+			parser.tokens << Token{
+				t_type: token_type
+				data: token_data
+				start: i - token_data.len
+			}
+			token_type = current_char_type
+			token_count += 1
+			token_data.clear()
+		}
+
 		token_data << c_char
 		i += 1
 	}
 
-	parser.tokens << Token{
-		t_type: .other
-		data: token_data
-		start: parser.tokens.len
+	if token_data.len > 0 {
+		parser.tokens << Token{
+			t_type: token_type
+			data: token_data
+			start: runes.len - token_data.len
+		}
+		token_count += 1
 	}
-
-	token_count += 1
 
 	parser.line_info << LineInfo{
 		start_token_index: start_token_index
