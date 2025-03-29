@@ -18,7 +18,8 @@ fn main() {
 
 	for i, code_line in code_lines {
 		parser.parse_line(code_line)
-		println("LINE ${i} tokens ${parser.get_line_tokens(i)}")
+		// println("LINE ${i} tokens ${parser.get_line_tokens(i)}")
+		println(parser.tokens)
 	}
 
 	assert 1 == 3
