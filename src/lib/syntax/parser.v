@@ -66,21 +66,6 @@ pub fn (mut parser Parser) parse_line(line string) {
 
 	for i < runes.len {
 		c_char := runes[i]
-		match c_char {
-			` `, `\t` { current_char_type = .whitespace }
-			else { current_char_type = .other }
-		}
-		if current_char_type != token_type {
-			parser.tokens << Token{
-				t_type: token_type
-				data: token_data
-				start: i - token_data.len
-			}
-			token_type = current_char_type
-			token_count += 1
-			token_data.clear()
-		}
-
 		token_data << c_char
 		i += 1
 	}
