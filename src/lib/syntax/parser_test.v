@@ -7,8 +7,8 @@ fn main() {
 	/*
 	 * Block comment
 	 */
-	let x = 10
-	return x
+	random_x_int := 10
+	return random_x_int
 }
 "
 
