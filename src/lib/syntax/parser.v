@@ -62,18 +62,28 @@ pub fn (mut parser Parser) parse_line(line string) {
 	mut i := 0
 	mut token_data := []rune{}
 	mut token_type := TokenType.other
+
 	mut current_char_type := TokenType.other
 
 	for i < runes.len {
+		mut last_char_type := current_char_type
 		c_char := runes[i]
-		last_char_type := current_char_type
 		current_char_type = match c_char {
 			` `, `\t` { .whitespace }
 			else { .other }
 		}
+		if i == 0 { last_char_type = current_char_type }
 
-		if last_char_type != current_char_type {
-			println("TRANSITION OCCURRED: [${i}] ${last_char_type} -> ${current_char_type}")
+		transition_occurred := last_char_type != current_char_type
+		if transition_occurred {
+			token := Token{
+				t_type: last_char_type
+				data: token_data.clone()
+				start: i - token_data.len
+			}
+			parser.tokens << token
+			token_count += 1
+			token_data.clear()
 		}
 
 		token_data << c_char
@@ -81,18 +91,20 @@ pub fn (mut parser Parser) parse_line(line string) {
 	}
 
 	if token_data.len > 0 {
-		parser.tokens << Token{
-			t_type: token_type
-			data: token_data
+		token := Token{
+			t_type: .other
+			data: token_data.clone()
 			start: runes.len - token_data.len
 		}
+		parser.tokens << token
 		token_count += 1
 	}
 
-	parser.line_info << LineInfo{
+	line_info := LineInfo{
 		start_token_index: start_token_index
-		token_count:       token_count
+		token_count: token_count
 	}
+	parser.line_info << line_info
 }
 
 pub fn (mut parser Parser) parse_line_2(line string) {
