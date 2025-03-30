@@ -29,6 +29,7 @@ pub struct Token {
 mut:
 	data   []rune
 	start  int
+	end    int
 }
 
 struct LineInfo {
@@ -57,10 +58,10 @@ fn (parser Parser) get_line_tokens(line_num int) []Token {
 pub fn (mut parser Parser) parse_line(line string) {
 	mut start_token_index := parser.tokens.len
 	mut token_count       := 0
+	mut rune_count        := 0
 	runes                 := line.runes()
 
 	mut i := 0
-	mut token_data := []rune{}
 	mut token_type := TokenType.other
 
 	mut current_char_type := TokenType.other
@@ -78,23 +79,23 @@ pub fn (mut parser Parser) parse_line(line string) {
 		if transition_occurred {
 			token := Token{
 				t_type: last_char_type
-				data: token_data.clone()
-				start: i - token_data.len
+				start: i - rune_count
+				end: i
 			}
 			parser.tokens << token
 			token_count += 1
-			token_data.clear()
+			rune_count = 0
 		}
 
-		token_data << c_char
+		rune_count += 1
 		i += 1
 	}
 
-	if token_data.len > 0 {
+	if rune_count > 0 {
 		token := Token{
 			t_type: .other
-			data: token_data.clone()
-			start: runes.len - token_data.len
+			start: runes.len - rune_count
+			end: runes.len
 		}
 		parser.tokens << token
 		token_count += 1
