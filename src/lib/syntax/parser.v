@@ -66,6 +66,16 @@ pub fn (mut parser Parser) parse_line(line string) {
 
 	for i < runes.len {
 		c_char := runes[i]
+		last_char_type := current_char_type
+		current_char_type = match c_char {
+			` `, `\t` { .whitespace }
+			else { .other }
+		}
+
+		if last_char_type != current_char_type {
+			println("TRANSITION OCCURRED: [${i}] ${last_char_type} -> ${current_char_type}")
+		}
+
 		token_data << c_char
 		i += 1
 	}
