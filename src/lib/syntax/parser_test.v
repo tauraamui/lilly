@@ -17,8 +17,16 @@ fn main() {
 	code_lines := code.split("\n")
 
 	for i, code_line in code_lines {
+		code_line_chars := code_line.runes()
 		parser.parse_line(code_line)
-		println("LINE ${i} tokens ${parser.get_line_tokens(i)}")
+		line_tokens := parser.get_line_tokens(i)
+		for j, token in line_tokens {
+			print("${code_line_chars[token.start..token.end].string()}")
+			if j + 1 == line_tokens.len {
+				println("")
+			}
+		}
+		// println("LINE ${i} tokens ${parser.get_line_tokens(i)}")
 		// println(parser.tokens)
 	}
 
