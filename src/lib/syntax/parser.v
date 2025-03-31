@@ -27,7 +27,6 @@ enum TokenType {
 pub struct Token {
 	t_type TokenType
 mut:
-	data   []rune
 	start  int
 	end    int
 }
@@ -55,7 +54,11 @@ fn (parser Parser) get_line_tokens(line_num int) []Token {
 	return parser.tokens[start_index..end_index]
 }
 
-pub fn (mut parser Parser) parse_line(line string) {
+pub fn (mut parser Parser) parse_lines(lines []string) {
+	for i, line in lines { parser.parse_line(i, line) }
+}
+
+pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 	mut start_token_index := parser.tokens.len
 	mut token_count       := 0
 	mut rune_count        := 0
@@ -106,5 +109,6 @@ pub fn (mut parser Parser) parse_line(line string) {
 		token_count: token_count
 	}
 	parser.line_info << line_info
+	return parser.get_line_tokens(index)
 }
 
