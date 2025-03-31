@@ -58,13 +58,28 @@ fn main() {
 
 	line_1_token_0 := line_1_tokens[0]
 	line_1_token_1 := line_1_tokens[1]
+	line_1_token_2 := line_1_tokens[2]
+	line_1_token_3 := line_1_tokens[3]
+	line_1_token_4 := line_1_tokens[4]
 
 	line_1_token_0_data := lines[1][line_1_token_0.start..line_1_token_0.end]
 	line_1_token_1_data := lines[1][line_1_token_1.start..line_1_token_1.end]
+	line_1_token_2_data := lines[1][line_1_token_2.start..line_1_token_2.end]
+	line_1_token_3_data := lines[1][line_1_token_3.start..line_1_token_3.end]
+	line_1_token_4_data := lines[1][line_1_token_4.start..line_1_token_4.end]
 
+	// NOTE(tauraamui) [31/03/2025]: for some reason we cannot assert directly against a
+	//                               string slice like this without v converting it into a string
+	//                               literal
 	assert line_1_token_0_data == "//"
 	assert line_1_token_0.t_type == .other
 	assert line_1_token_1_data == " "
 	assert line_1_token_1.t_type == .whitespace
+	assert line_1_token_2_data == "This"
+	assert line_1_token_2.t_type == .other
+	assert line_1_token_3_data == " "
+	assert line_1_token_3.t_type == .whitespace
+	assert line_1_token_4_data == "is"
+	assert line_1_token_4.t_type == .other
 }
 
