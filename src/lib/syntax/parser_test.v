@@ -57,6 +57,7 @@ fn main() {
 	assert_line_1_tokens(lines[1], parser.get_line_tokens(1))
 	assert_line_2_tokens(lines[2], parser.get_line_tokens(2))
 	assert_line_3_tokens(lines[3], parser.get_line_tokens(3))
+	assert_line_4_tokens(lines[4], parser.get_line_tokens(4))
 }
 
 fn assert_line_1_tokens(line_1 string, line_1_tokens []Token) {
@@ -136,5 +137,33 @@ fn assert_line_3_tokens(line_3 string, line_3_tokens []Token) {
 
 	assert "${line_3[line_3_token_1.start..line_3_token_1.end]}" == "/*"
 	assert line_3_token_1.t_type == .other
+}
+
+fn assert_line_4_tokens(line_4 string, line_4_tokens []Token) {
+	assert line_4_tokens.len == 6
+	line_4_token_0 := line_4_tokens[0]
+	line_4_token_1 := line_4_tokens[1]
+	line_4_token_2 := line_4_tokens[2]
+	line_4_token_3 := line_4_tokens[3]
+	line_4_token_4 := line_4_tokens[4]
+	line_4_token_5 := line_4_tokens[5]
+
+	assert "${line_4[line_4_token_0.start..line_4_token_0.end]}" == "\t "
+	assert line_4_token_0.t_type == .whitespace
+
+	assert "${line_4[line_4_token_1.start..line_4_token_1.end]}" == "*"
+	assert line_4_token_1.t_type == .other
+
+	assert "${line_4[line_4_token_2.start..line_4_token_2.end]}" == " "
+	assert line_4_token_2.t_type == .whitespace
+
+	assert "${line_4[line_4_token_3.start..line_4_token_3.end]}" == "Block"
+	assert line_4_token_3.t_type == .other
+
+	assert "${line_4[line_4_token_4.start..line_4_token_4.end]}" == " "
+	assert line_4_token_4.t_type == .whitespace
+
+	assert "${line_4[line_4_token_5.start..line_4_token_5.end]}" == "comment"
+	assert line_4_token_5.t_type == .other
 }
 
