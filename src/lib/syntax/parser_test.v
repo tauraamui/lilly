@@ -56,30 +56,49 @@ fn main() {
 	assert parser.get_line_tokens(0) == []
 	line_1_tokens := parser.get_line_tokens(1)
 
+	assert line_1_tokens.len == 9
 	line_1_token_0 := line_1_tokens[0]
 	line_1_token_1 := line_1_tokens[1]
 	line_1_token_2 := line_1_tokens[2]
 	line_1_token_3 := line_1_tokens[3]
 	line_1_token_4 := line_1_tokens[4]
-
-	line_1_token_0_data := lines[1][line_1_token_0.start..line_1_token_0.end]
-	line_1_token_1_data := lines[1][line_1_token_1.start..line_1_token_1.end]
-	line_1_token_2_data := lines[1][line_1_token_2.start..line_1_token_2.end]
-	line_1_token_3_data := lines[1][line_1_token_3.start..line_1_token_3.end]
-	line_1_token_4_data := lines[1][line_1_token_4.start..line_1_token_4.end]
+	line_1_token_5 := line_1_tokens[5]
+	line_1_token_6 := line_1_tokens[6]
+	line_1_token_7 := line_1_tokens[7]
+	line_1_token_8 := line_1_tokens[8]
 
 	// NOTE(tauraamui) [31/03/2025]: for some reason we cannot assert directly against a
 	//                               string slice like this without v converting it into a string
 	//                               literal
-	assert line_1_token_0_data == "//"
+	assert "${lines[1][line_1_token_0.start..line_1_token_0.end]}" == "//"
 	assert line_1_token_0.t_type == .other
-	assert line_1_token_1_data == " "
+
+	assert "${lines[1][line_1_token_1.start..line_1_token_1.end]}" == " "
 	assert line_1_token_1.t_type == .whitespace
-	assert line_1_token_2_data == "This"
+
+	assert "${lines[1][line_1_token_2.start..line_1_token_2.end]}" == "This"
 	assert line_1_token_2.t_type == .other
-	assert line_1_token_3_data == " "
+
+	assert "${lines[1][line_1_token_3.start..line_1_token_3.end]}" == " "
 	assert line_1_token_3.t_type == .whitespace
-	assert line_1_token_4_data == "is"
+
+	assert "${lines[1][line_1_token_4.start..line_1_token_4.end]}" == "is"
 	assert line_1_token_4.t_type == .other
+
+	assert "${lines[1][line_1_token_5.start..line_1_token_5.end]}" == " "
+	assert line_1_token_5.t_type == .whitespace
+
+	assert "${lines[1][line_1_token_6.start..line_1_token_6.end]}" == "a"
+	assert line_1_token_6.t_type == .other
+
+	assert "${lines[1][line_1_token_7.start..line_1_token_7.end]}" == " "
+	assert line_1_token_7.t_type == .whitespace
+
+	assert "${lines[1][line_1_token_8.start..line_1_token_8.end]}" == "comment"
+	assert line_1_token_8.t_type == .other
 }
+
+fn assert_line_1_tokens() {
+}
+
 
