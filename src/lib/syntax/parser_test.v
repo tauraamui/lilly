@@ -58,6 +58,7 @@ fn main() {
 	assert_line_2_tokens(lines[2], parser.get_line_tokens(2))
 	assert_line_3_tokens(lines[3], parser.get_line_tokens(3))
 	assert_line_4_tokens(lines[4], parser.get_line_tokens(4))
+	assert_line_5_tokens(lines[5], parser.get_line_tokens(5))
 }
 
 fn assert_line_1_tokens(line_1 string, line_1_tokens []Token) {
@@ -165,5 +166,17 @@ fn assert_line_4_tokens(line_4 string, line_4_tokens []Token) {
 
 	assert "${line_4[line_4_token_5.start..line_4_token_5.end]}" == "comment"
 	assert line_4_token_5.t_type == .other
+}
+
+fn assert_line_5_tokens(line_5 string, line_5_tokens []Token) {
+	assert line_5_tokens.len == 2
+	line_5_token_0 := line_5_tokens[0]
+	line_5_token_1 := line_5_tokens[1]
+
+	assert "${line_5[line_5_token_0.start..line_5_token_0.end]}" == "\t "
+	assert line_5_token_0.t_type == .whitespace
+
+	assert "${line_5[line_5_token_1.start..line_5_token_1.end]}" == "*/"
+	assert line_5_token_1.t_type == .other
 }
 
