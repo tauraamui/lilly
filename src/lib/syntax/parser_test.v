@@ -77,31 +77,31 @@ fn assert_line_1_tokens(line_1 string, line_1_tokens []Token) {
 	// NOTE(tauraamui) [31/03/2025]: for some reason we cannot assert directly against a
 	//                               string slice like this without v converting it into a string
 	//                               literal
-	assert "${line_1[line_1_token_0.start..line_1_token_0.end]}" == "//"
+	assert line_1[line_1_token_0.start..line_1_token_0.end] == "//"
 	assert line_1_token_0.t_type == .other
 
-	assert "${line_1[line_1_token_1.start..line_1_token_1.end]}" == " "
+	assert line_1[line_1_token_1.start..line_1_token_1.end] == " "
 	assert line_1_token_1.t_type == .whitespace
 
-	assert "${line_1[line_1_token_2.start..line_1_token_2.end]}" == "This"
+	assert line_1[line_1_token_2.start..line_1_token_2.end] == "This"
 	assert line_1_token_2.t_type == .other
 
-	assert "${line_1[line_1_token_3.start..line_1_token_3.end]}" == " "
+	assert line_1[line_1_token_3.start..line_1_token_3.end] == " "
 	assert line_1_token_3.t_type == .whitespace
 
-	assert "${line_1[line_1_token_4.start..line_1_token_4.end]}" == "is"
+	assert line_1[line_1_token_4.start..line_1_token_4.end] == "is"
 	assert line_1_token_4.t_type == .other
 
-	assert "${line_1[line_1_token_5.start..line_1_token_5.end]}" == " "
+	assert line_1[line_1_token_5.start..line_1_token_5.end] == " "
 	assert line_1_token_5.t_type == .whitespace
 
-	assert "${line_1[line_1_token_6.start..line_1_token_6.end]}" == "a"
+	assert line_1[line_1_token_6.start..line_1_token_6.end] == "a"
 	assert line_1_token_6.t_type == .other
 
-	assert "${line_1[line_1_token_7.start..line_1_token_7.end]}" == " "
+	assert line_1[line_1_token_7.start..line_1_token_7.end] == " "
 	assert line_1_token_7.t_type == .whitespace
 
-	assert "${line_1[line_1_token_8.start..line_1_token_8.end]}" == "comment"
+	assert line_1[line_1_token_8.start..line_1_token_8.end] == "comment"
 	assert line_1_token_8.t_type == .other
 }
 
@@ -113,19 +113,19 @@ fn assert_line_2_tokens(line_2 string, line_2_tokens []Token) {
 	line_2_token_3 := line_2_tokens[3]
 	line_2_token_4 := line_2_tokens[4]
 
-	assert "${line_2[line_2_token_0.start..line_2_token_0.end]}" == "fn"
+	assert line_2[line_2_token_0.start..line_2_token_0.end] == "fn"
 	assert line_2_token_0.t_type == .other
 
-	assert "${line_2[line_2_token_1.start..line_2_token_1.end]}" == " "
+	assert line_2[line_2_token_1.start..line_2_token_1.end] == " "
 	assert line_2_token_1.t_type == .whitespace
 
-	assert "${line_2[line_2_token_2.start..line_2_token_2.end]}" == "main()"
+	assert line_2[line_2_token_2.start..line_2_token_2.end] == "main()"
 	assert line_2_token_2.t_type == .other
 
-	assert "${line_2[line_2_token_3.start..line_2_token_3.end]}" == " "
+	assert line_2[line_2_token_3.start..line_2_token_3.end] == " "
 	assert line_2_token_3.t_type == .whitespace
 
-	assert "${line_2[line_2_token_4.start..line_2_token_4.end]}" == "{"
+	assert line_2[line_2_token_4.start..line_2_token_4.end] == "{"
 	assert line_2_token_4.t_type == .other
 }
 
@@ -134,10 +134,10 @@ fn assert_line_3_tokens(line_3 string, line_3_tokens []Token) {
 	line_3_token_0 := line_3_tokens[0]
 	line_3_token_1 := line_3_tokens[1]
 
-	assert "${line_3[line_3_token_0.start..line_3_token_0.end]}" == "\t"
+	assert line_3[line_3_token_0.start..line_3_token_0.end] == "\t"
 	assert line_3_token_0.t_type == .whitespace
 
-	assert "${line_3[line_3_token_1.start..line_3_token_1.end]}" == "/*"
+	assert line_3[line_3_token_1.start..line_3_token_1.end] == "/*"
 	assert line_3_token_1.t_type == .other
 }
 
@@ -150,22 +150,22 @@ fn assert_line_4_tokens(line_4 string, line_4_tokens []Token) {
 	line_4_token_4 := line_4_tokens[4]
 	line_4_token_5 := line_4_tokens[5]
 
-	assert "${line_4[line_4_token_0.start..line_4_token_0.end]}" == "\t "
+	assert line_4[line_4_token_0.start..line_4_token_0.end] == "\t "
 	assert line_4_token_0.t_type == .whitespace
 
-	assert "${line_4[line_4_token_1.start..line_4_token_1.end]}" == "*"
+	assert line_4[line_4_token_1.start..line_4_token_1.end] == "*"
 	assert line_4_token_1.t_type == .other
 
-	assert "${line_4[line_4_token_2.start..line_4_token_2.end]}" == " "
+	assert line_4[line_4_token_2.start..line_4_token_2.end] == " "
 	assert line_4_token_2.t_type == .whitespace
 
-	assert "${line_4[line_4_token_3.start..line_4_token_3.end]}" == "Block"
+	assert line_4[line_4_token_3.start..line_4_token_3.end] == "Block"
 	assert line_4_token_3.t_type == .other
 
-	assert "${line_4[line_4_token_4.start..line_4_token_4.end]}" == " "
+	assert line_4[line_4_token_4.start..line_4_token_4.end] == " "
 	assert line_4_token_4.t_type == .whitespace
 
-	assert "${line_4[line_4_token_5.start..line_4_token_5.end]}" == "comment"
+	assert line_4[line_4_token_5.start..line_4_token_5.end] == "comment"
 	assert line_4_token_5.t_type == .other
 }
 
@@ -174,10 +174,10 @@ fn assert_line_5_tokens(line_5 string, line_5_tokens []Token) {
 	line_5_token_0 := line_5_tokens[0]
 	line_5_token_1 := line_5_tokens[1]
 
-	assert "${line_5[line_5_token_0.start..line_5_token_0.end]}" == "\t "
+	assert line_5[line_5_token_0.start..line_5_token_0.end] == "\t "
 	assert line_5_token_0.t_type == .whitespace
 
-	assert "${line_5[line_5_token_1.start..line_5_token_1.end]}" == "*/"
+	assert line_5[line_5_token_1.start..line_5_token_1.end] == "*/"
 	assert line_5_token_1.t_type == .other
 }
 
@@ -190,22 +190,22 @@ fn assert_line_6_tokens(line_6 string, line_6_tokens []Token) {
 	line_6_token_4 := line_6_tokens[4]
 	line_6_token_5 := line_6_tokens[5]
 
-	assert "${line_6[line_6_token_0.start..line_6_token_0.end]}" == "\t"
+	assert line_6[line_6_token_0.start..line_6_token_0.end] == "\t"
 	assert line_6_token_0.t_type == .whitespace
 
-	assert "${line_6[line_6_token_1.start..line_6_token_1.end]}" == "random_x_int"
+	assert line_6[line_6_token_1.start..line_6_token_1.end] == "random_x_int"
 	assert line_6_token_1.t_type == .other
 
-	assert "${line_6[line_6_token_2.start..line_6_token_2.end]}" == " "
+	assert line_6[line_6_token_2.start..line_6_token_2.end] == " "
 	assert line_6_token_2.t_type == .whitespace
 
-	assert "${line_6[line_6_token_3.start..line_6_token_3.end]}" == ":="
+	assert line_6[line_6_token_3.start..line_6_token_3.end] == ":="
 	assert line_6_token_3.t_type == .other
 
-	assert "${line_6[line_6_token_4.start..line_6_token_4.end]}" == " "
+	assert line_6[line_6_token_4.start..line_6_token_4.end] == " "
 	assert line_6_token_4.t_type == .whitespace
 
-	assert "${line_6[line_6_token_5.start..line_6_token_5.end]}" == "10"
+	assert line_6[line_6_token_5.start..line_6_token_5.end] == "10"
 	assert line_6_token_5.t_type == .other
 }
 
