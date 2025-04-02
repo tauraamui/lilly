@@ -75,6 +75,7 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 		current_char_type = match c_char {
 			` `, `\t` { .whitespace }
 			`a` ... `z`, `A` ... `Z` { .identifier }
+			`0` ... `9` { .number }
 			else { .other }
 		}
 		if i == 0 { last_char_type = current_char_type }
