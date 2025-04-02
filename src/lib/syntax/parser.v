@@ -74,6 +74,7 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 		c_char := runes[i]
 		current_char_type = match c_char {
 			` `, `\t` { .whitespace }
+			`a` ... `z`, `A` ... `Z` { .identifier }
 			else { .other }
 		}
 		if i == 0 { last_char_type = current_char_type }
@@ -96,7 +97,7 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 
 	if rune_count > 0 {
 		token := Token{
-			t_type: .other
+			t_type: current_char_type
 			start: runes.len - rune_count
 			end: runes.len
 		}
