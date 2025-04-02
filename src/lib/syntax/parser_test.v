@@ -60,6 +60,7 @@ fn main() {
 	assert_line_4_tokens(lines[4], parser.get_line_tokens(4))
 	assert_line_5_tokens(lines[5], parser.get_line_tokens(5))
 	assert_line_6_tokens(lines[6], parser.get_line_tokens(6))
+	assert_line_7_tokens(lines[7], parser.get_line_tokens(7))
 }
 
 fn assert_line_1_tokens(line_1 string, line_1_tokens []Token) {
@@ -207,5 +208,17 @@ fn assert_line_6_tokens(line_6 string, line_6_tokens []Token) {
 
 	assert line_6[line_6_token_5.start..line_6_token_5.end] == "10"
 	assert line_6_token_5.t_type == .other
+}
+
+fn assert_line_7_tokens(line_7 string, line_7_tokens []Token) {
+	assert line_7_tokens.len == 4
+	line_7_token_0 := line_7_tokens[0]
+	line_7_token_1 := line_7_tokens[1]
+
+	assert line_7[line_7_token_0.start..line_7_token_0.end] == "\t"
+	assert line_7_token_0.t_type == .whitespace
+
+	assert line_7[line_7_token_1.start..line_7_token_1.end] == "return"
+	assert line_7_token_1.t_type == .other
 }
 
