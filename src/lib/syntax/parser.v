@@ -69,10 +69,15 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 
 	mut current_char_type := TokenType.other
 
+	mut pending_token := Token{
+		t_type: TokenType.other
+	}
 	for i < runes.len {
 		mut last_char_type := current_char_type
 		current_char_type = resolve_char_type(runes[i])
 		if i == 0 { last_char_type = current_char_type }
+
+		pending_token.start = i - rune_count
 
 		transition_occurred := last_char_type != current_char_type
 		if transition_occurred {
