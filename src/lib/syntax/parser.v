@@ -58,13 +58,28 @@ pub fn (mut parser Parser) parse_lines(lines []string) {
 	for i, line in lines { parser.parse_line(i, line) }
 }
 
+pub fn (mut parser Parser) parse_line_2(index int, line string) {
+	runes := line.runes()
+	mut pending_token := Token{
+		t_type: TokenType.other
+	}
+
+	mut i := 0
+	for i < runes.len {
+		i += for_each_rune(runes[i])
+	}
+}
+
+fn for_each_rune(c_char rune) int {
+	return 1
+}
+
 pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 	mut start_token_index := parser.tokens.len
 	mut token_count       := 0
 	mut rune_count        := 0
 	runes                 := line.runes()
 
-	mut i := 0
 	mut token_type := TokenType.other
 
 	mut current_char_type := TokenType.other
@@ -72,9 +87,9 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 	mut pending_token := Token{
 		t_type: TokenType.other
 	}
-	for i < runes.len {
+	for i, c_char in runes {
 		mut last_char_type := current_char_type
-		current_char_type = resolve_char_type(runes[i])
+		current_char_type = resolve_char_type(c_char)
 		if i == 0 { last_char_type = current_char_type }
 
 		pending_token.start = i - rune_count
@@ -92,7 +107,7 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 		}
 
 		rune_count += 1
-		i += 1
+		// i += 1
 	}
 
 	if rune_count > 0 {
