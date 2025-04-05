@@ -43,9 +43,6 @@ fn assert_line_1_tokens(line_1 string, line_1_tokens []Token) {
 	line_1_token_7 := line_1_tokens[7]
 	line_1_token_8 := line_1_tokens[8]
 
-	// NOTE(tauraamui) [31/03/2025]: for some reason we cannot assert directly against a
-	//                               string slice like this without v converting it into a string
-	//                               literal
 	assert line_1[line_1_token_0.start..line_1_token_0.end] == "//"
 	assert line_1_token_0.t_type == .other
 
@@ -208,8 +205,6 @@ fn assert_line_7_tokens(line_7 string, line_7_tokens []Token) {
 	line_7_token_5 := line_7_tokens[5]
 	line_7_token_6 := line_7_tokens[6]
 	line_7_token_7 := line_7_tokens[7]
-
-	// TODO(tauraamui) [02/04/2025]: add the remaining line token comp
 
 	assert line_7[line_7_token_0.start..line_7_token_0.end] == "\t"
 	assert line_7_token_0.t_type == .whitespace
