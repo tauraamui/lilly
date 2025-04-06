@@ -70,8 +70,8 @@ fn not_within_line_comment(index int, size int, l_char rune, c_char rune) ?Token
 	if last_char_type != current_char_type {
 		return Token{
 			t_type: last_char_type
-			start: index - size - 1
-			end: index - 1
+			start: index - size
+			end: index
 		}
 	}
 
@@ -102,6 +102,7 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 			l_char := if i == 0 { c_char } else { runes[i - 1] }
 			if token := not_within_line_comment(i, rune_count, l_char, c_char) {
 				parser.tokens << token
+				token_count += 1
 				rune_count = 0
 			}
 			rune_count += 1
