@@ -6,6 +6,7 @@ module syntax
 
 enum State {
 	default
+	within_line_comment
 	in_block_comment
 }
 
@@ -58,18 +59,6 @@ pub fn (mut parser Parser) parse_lines(lines []string) {
 	for i, line in lines { parser.parse_line(i, line) }
 }
 
-pub fn (mut parser Parser) parse_line_2(index int, line string) {
-	runes := line.runes()
-	mut pending_token := Token{
-		t_type: TokenType.other
-	}
-
-	mut i := 0
-	for i < runes.len {
-		i += for_each_rune(runes[i])
-	}
-}
-
 fn for_each_rune(c_char rune) int {
 	return 1
 }
@@ -88,25 +77,34 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 		t_type: TokenType.other
 	}
 	for i, c_char in runes {
-		mut last_char_type := current_char_type
-		current_char_type = resolve_char_type(c_char)
-		if i == 0 { last_char_type = current_char_type }
-
-		pending_token.start = i - rune_count
-
-		transition_occurred := last_char_type != current_char_type
-		if transition_occurred {
-			token := Token{
-				t_type: last_char_type
-				start: i - rune_count
-				end: i
+		if i + 1 < runes.len {
+			if c_char == `/` && runes[i + 1] == `/` {
+				parser.state = .within_line_comment
 			}
-			parser.tokens << token
-			token_count += 1
-			rune_count = 0
 		}
 
-		rune_count += 1
+		if parser.state != .within_line_comment {
+			mut last_char_type := current_char_type
+			current_char_type = resolve_char_type(c_char)
+			if i == 0 { last_char_type = current_char_type }
+
+			pending_token.start = i - rune_count
+
+			transition_occurred := last_char_type != current_char_type
+			if transition_occurred {
+				token := Token{
+					t_type: last_char_type
+					start: i - rune_count
+					end: i
+				}
+				parser.tokens << token
+				token_count += 1
+				rune_count = 0
+				continue
+			}
+			rune_count += 1
+		}
+
 		// i += 1
 	}
 
