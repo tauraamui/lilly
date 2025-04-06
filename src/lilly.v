@@ -351,6 +351,9 @@ pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
 	lilly.view.on_key_down(e, mut lilly)
 }
 
+// NOTE(tauraamui) [06/04/2025]: just tried reading the below comment again, lol wtf am I on about, I understand the premise
+//                               but holy shit what a word salad
+
 // TODO(tauraamui) [21/02/2025]: since these methods receive a concrete ref to the modal directly, rather than this logic
 //                               being directly within the optional type unwrap scope where we're really modifying the result
 //                               of the unwrap rather than the value/field on the struct that the optional was derived from, it might
