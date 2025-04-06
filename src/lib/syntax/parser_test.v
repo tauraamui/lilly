@@ -1,5 +1,39 @@
 module syntax
 
+// NOTE(tauraamui) [06/04/2025]:
+//	this test should really be defined to expect more contents to be resolved
+//	in token form, i.e, it should expect the comment symbols, and the comment contents
+//	itself to be returned as correctly typed tokens, but I like to add the new functionality
+//	and then update the test to reflect these changes afterwards
+//
+//	whilst not true tdd I personally find this extremely useful, as it prevents me from just
+//	trying to satisfy the pre-determined behaviour as defined by the test, which might be wrong
+//	in a subtle way that I might not have noticed until doing the implementation
+fn test_parser_half_line_non_comment_half_line_commented() {
+	code := "fn main() { // this main does stuff"
+
+	mut parser := Parser{}
+	lines := code.split("\n")
+	for i, line in lines {
+		parser.parse_line(i, line)
+	}
+
+	assert lines.len == 1
+	line_tokens := parser.get_line_tokens(0)
+
+	assert line_tokens.len == 6
+	assert extract_token_contents(lines[0], line_tokens[0]) == "fn"
+	assert extract_token_contents(lines[0], line_tokens[1]) == " "
+	assert extract_token_contents(lines[0], line_tokens[2]) == "main"
+	assert extract_token_contents(lines[0], line_tokens[3]) == "()"
+	assert extract_token_contents(lines[0], line_tokens[4]) == " "
+	assert extract_token_contents(lines[0], line_tokens[5]) == "{"
+}
+
+fn extract_token_contents(data string, token Token) string {
+	return data[token.start..token.end].str()
+}
+
 fn test_parser_block_of_code_one() {
 	code := "
 // This is a comment
