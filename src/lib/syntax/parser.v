@@ -100,11 +100,12 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 				parser.tokens << token
 				token_count += 1
 				rune_count = 0
-				continue
 			}
 			rune_count += 1
+			continue
 		}
 
+		rune_count = 0
 		// i += 1
 	}
 
