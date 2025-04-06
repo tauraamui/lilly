@@ -63,6 +63,21 @@ fn for_each_rune(c_char rune) int {
 	return 1
 }
 
+fn not_within_line_comment(index int, size int, l_char rune, c_char rune) ?Token {
+	last_char_type := resolve_char_type(l_char)
+	current_char_type := resolve_char_type(c_char)
+
+	if last_char_type != current_char_type {
+		return Token{
+			t_type: last_char_type
+			start: index - size - 1
+			end: index - 1
+		}
+	}
+
+	return none
+}
+
 pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 	mut start_token_index := parser.tokens.len
 	mut token_count       := 0
@@ -84,21 +99,9 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 		}
 
 		if parser.state != .within_line_comment {
-			mut last_char_type := current_char_type
-			current_char_type = resolve_char_type(c_char)
-			if i == 0 { last_char_type = current_char_type }
-
-			pending_token.start = i - rune_count
-
-			transition_occurred := last_char_type != current_char_type
-			if transition_occurred {
-				token := Token{
-					t_type: last_char_type
-					start: i - rune_count
-					end: i
-				}
+			l_char := if i == 0 { c_char } else { runes[i - 1] }
+			if token := not_within_line_comment(i, rune_count, l_char, c_char) {
 				parser.tokens << token
-				token_count += 1
 				rune_count = 0
 			}
 			rune_count += 1
