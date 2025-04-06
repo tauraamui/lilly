@@ -403,6 +403,8 @@ pub fn (mut lilly Lilly) todo_comments_picker_on_key_down(mut todo_comments_pick
 	}
 }
 
+// FIX(tauraamui) [06/04/2025]: dirty buffer tracking was broken at some point (sorry kelly!) when doing the partial migration
+//                              to using the gap buffer instead of the existing buffer implementation
 pub fn (mut lilly Lilly) quit() ! {
 	mut dirty_count := 0
 	for _, buff in lilly.file_buffers {
