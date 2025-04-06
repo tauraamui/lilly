@@ -225,6 +225,16 @@ fn (mut lilly Lilly) open_todo_comments_picker() {
 	lilly.todo_comments_picker_modal = todo_comments_picker
 }
 
+// NOTE(tauraamui) [06/04/2025]: actually treesitter support might be unnecessary...
+//                               for features which rely on language specific characteristics
+//                               such as "is this string within a comment or not" should really be
+//                               informed by something more sophisticated per language, so really
+//                               we just need to add LSP support, since they normally use TS or whatever
+//                               they want per language
+//                               for basic stuff like syntax highlighting we can for now get away with just
+//                               using a couple of handwritten parsers, since the new buffer arch requires
+//                               an iterator traversing the full doc contents anyways, this is good enough now
+
 // FIX(tauraamui) [02/03/2025]: should ensure that matches are within a comment block, ideally with treesitter
 //                              but we don't have treesitter support yet, so unsure what to do for now but currently
 //                              ironically due to all of the unit tests for this functionality we're getting a lot of
@@ -351,6 +361,9 @@ pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
 	lilly.view.on_key_down(e, mut lilly)
 }
 
+// NOTE(tauraamui) [06/04/2025]: just tried reading the below comment again, lol wtf am I on about, I understand the premise
+//                               but holy shit what a word salad
+
 // TODO(tauraamui) [21/02/2025]: since these methods receive a concrete ref to the modal directly, rather than this logic
 //                               being directly within the optional type unwrap scope where we're really modifying the result
 //                               of the unwrap rather than the value/field on the struct that the optional was derived from, it might
@@ -400,6 +413,8 @@ pub fn (mut lilly Lilly) todo_comments_picker_on_key_down(mut todo_comments_pick
 	}
 }
 
+// FIX(tauraamui) [06/04/2025]: dirty buffer tracking was broken at some point (sorry kelly!) when doing the partial migration
+//                              to using the gap buffer instead of the existing buffer implementation
 pub fn (mut lilly Lilly) quit() ! {
 	mut dirty_count := 0
 	for _, buff in lilly.file_buffers {
