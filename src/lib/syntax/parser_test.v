@@ -1,5 +1,103 @@
 module syntax
 
+fn test_simple_block_of_code_no_comments() {
+	code := "
+fn main() {
+	return 10
+}
+"
+
+	mut parser := Parser{}
+	lines := code.split("\n")
+	for i, line in lines {
+		parser.parse_line(i, line)
+	}
+
+	assert lines.len == 5
+	assert parser.get_line_tokens(0) == []
+
+	line_1_tokens := parser.get_line_tokens(1)
+	assert line_1_tokens.len == 6
+	assert extract_token_contents(lines[1], line_1_tokens[0]) == "fn"
+	assert line_1_tokens[0].t_type == .identifier
+	assert extract_token_contents(lines[1], line_1_tokens[1]) == " "
+	assert line_1_tokens[1].t_type == .whitespace
+	assert extract_token_contents(lines[1], line_1_tokens[2]) == "main"
+	assert line_1_tokens[2].t_type == .identifier
+	assert extract_token_contents(lines[1], line_1_tokens[3]) == "()"
+	assert line_1_tokens[3].t_type == .other
+	assert extract_token_contents(lines[1], line_1_tokens[4]) == " "
+	assert line_1_tokens[4].t_type == .whitespace
+	assert extract_token_contents(lines[1], line_1_tokens[5]) == "{"
+	assert line_1_tokens[5].t_type == .other
+
+	line_2_tokens := parser.get_line_tokens(2)
+	assert line_2_tokens.len == 4
+	assert extract_token_contents(lines[2], line_2_tokens[0]) == `\t`.str()
+	assert line_2_tokens[0].t_type == .whitespace
+	assert extract_token_contents(lines[2], line_2_tokens[1]) == "return"
+	assert line_2_tokens[1].t_type == .identifier
+	assert extract_token_contents(lines[2], line_2_tokens[2]) == " "
+	assert line_2_tokens[2].t_type == .whitespace
+	assert extract_token_contents(lines[2], line_2_tokens[3]) == "10"
+	assert line_2_tokens[3].t_type == .number
+}
+
+fn test_simple_block_of_code_with_inline_comment() {
+	code := "
+fn main() { // this is a main function wooo
+	return 10
+}
+"
+
+	mut parser := Parser{}
+	lines := code.split("\n")
+	for i, line in lines {
+		parser.parse_line(i, line)
+	}
+
+	assert lines.len == 5
+	assert parser.get_line_tokens(0) == []
+
+	line_1_tokens := parser.get_line_tokens(1)
+	assert line_1_tokens.len == 20
+	assert extract_token_contents(lines[1], line_1_tokens[0]) == "fn"
+	assert line_1_tokens[0].t_type == .identifier
+	assert extract_token_contents(lines[1], line_1_tokens[1]) == " "
+	assert line_1_tokens[1].t_type == .whitespace
+	assert extract_token_contents(lines[1], line_1_tokens[2]) == "main"
+	assert line_1_tokens[2].t_type == .identifier
+	assert extract_token_contents(lines[1], line_1_tokens[3]) == "()"
+	assert line_1_tokens[3].t_type == .other
+	assert extract_token_contents(lines[1], line_1_tokens[4]) == " "
+	assert line_1_tokens[4].t_type == .whitespace
+	assert extract_token_contents(lines[1], line_1_tokens[5]) == "{"
+	assert line_1_tokens[5].t_type == .other
+	assert extract_token_contents(lines[1], line_1_tokens[6]) == " "
+	assert line_1_tokens[6].t_type == .whitespace
+	assert extract_token_contents(lines[1], line_1_tokens[7]) == "//"
+	assert line_1_tokens[7].t_type == .other
+	assert extract_token_contents(lines[1], line_1_tokens[8]) == " "
+	assert line_1_tokens[8].t_type == .whitespace
+	assert extract_token_contents(lines[1], line_1_tokens[9]) == ""
+	assert line_1_tokens[9].t_type == .other
+
+	line_2_tokens := parser.get_line_tokens(2)
+	assert line_2_tokens.len == 4
+	assert extract_token_contents(lines[2], line_2_tokens[0]) == `\t`.str()
+	assert line_2_tokens[0].t_type == .other
+	assert extract_token_contents(lines[2], line_2_tokens[1]) == "return"
+	assert line_2_tokens[1].t_type == .other
+	assert extract_token_contents(lines[2], line_2_tokens[2]) == " "
+	assert line_2_tokens[2].t_type == .other
+	assert extract_token_contents(lines[2], line_2_tokens[3]) == "10"
+}
+
+
+fn extract_token_contents(data string, token Token) string {
+	return data[token.start..token.end].str()
+}
+
 fn test_parser_block_of_code_one() {
 	code := "
 // This is a comment
