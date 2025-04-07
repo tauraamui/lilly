@@ -44,7 +44,7 @@ mut:
 	line_info     []LineInfo
 }
 
-fn (parser Parser) get_line_tokens(line_num int) []Token {
+pub fn (parser Parser) get_line_tokens(line_num int) []Token {
 	if line_num < 0 || line_num >= parser.line_info.len {
 		return []Token{}
 	}

@@ -56,7 +56,7 @@ pub fn (buf_view BufferView) draw(
 		}
 		// draw the line of text, offset by the position of the buffer view
 		draw_text_line(
-			mut ctx, x + screenspace_x_offset + 1, y + screenspace_y_offset, syntax_parser.get_line_tokens(document_line_num), min_x, width, cursor_line
+			mut ctx, x + screenspace_x_offset + 1, y + screenspace_y_offset, line, syntax_parser.get_line_tokens(document_line_num), min_x, width, cursor_line
 		)
 
 		screenspace_y_offset += 1
@@ -75,7 +75,7 @@ fn draw_line_number(mut ctx draw.Contextable, x int, y int, line_num int) {
 	ctx.draw_text(x - line_num_str.runes().len, y, line_num_str)
 }
 
-fn draw_text_line(mut ctx draw.Contextable, x int, y int, line_tokens []syntax.Token, min_x int, width int, is_cursor_line bool) {
+fn draw_text_line(mut ctx draw.Contextable, x int, y int, line string, line_tokens []syntax.Token, min_x int, width int, is_cursor_line bool) {
 	mut linex := term.strip_ansi(line.replace("\t", " ".repeat(4)))
 	if min_x >= linex.runes().len { ctx.draw_text(x, y, ""); return }
 
