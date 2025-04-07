@@ -58,20 +58,21 @@ pub fn (mut parser Parser) parse_lines(lines []string) {
 	for i, line in lines { parser.parse_line(i, line) }
 }
 
+fn for_each_char() {
+}
+
 pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 	mut start_token_index := parser.tokens.len
 	mut token_count       := 0
 	mut rune_count        := 0
 	runes                 := line.runes()
 
-	mut i := 0
 	mut token_type := TokenType.other
 
 	mut current_char_type := TokenType.other
-
-	for i < runes.len {
+	for i, c_char in runes {
 		mut last_char_type := current_char_type
-		c_char := runes[i]
+		// c_char := runes[i]
 		current_char_type = match c_char {
 			` `, `\t` { .whitespace }
 			`a` ... `z`, `A` ... `Z` { .identifier }
@@ -93,7 +94,6 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 		}
 
 		rune_count += 1
-		i += 1
 	}
 
 	if rune_count > 0 {
