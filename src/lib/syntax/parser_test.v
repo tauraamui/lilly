@@ -79,18 +79,39 @@ fn main() { // this is a main function wooo
 	assert line_1_tokens[7].t_type == .other
 	assert extract_token_contents(lines[1], line_1_tokens[8]) == " "
 	assert line_1_tokens[8].t_type == .whitespace
-	assert extract_token_contents(lines[1], line_1_tokens[9]) == ""
-	assert line_1_tokens[9].t_type == .other
+	assert extract_token_contents(lines[1], line_1_tokens[9]) == "this"
+	assert line_1_tokens[9].t_type == .identifier
+	assert extract_token_contents(lines[1], line_1_tokens[10]) == " "
+	assert line_1_tokens[10].t_type == .whitespace
+	assert extract_token_contents(lines[1], line_1_tokens[11]) == "is"
+	assert line_1_tokens[11].t_type == .identifier
+	assert extract_token_contents(lines[1], line_1_tokens[12]) == " "
+	assert line_1_tokens[12].t_type == .whitespace
+	assert extract_token_contents(lines[1], line_1_tokens[13]) == "a"
+	assert line_1_tokens[13].t_type == .identifier
+	assert extract_token_contents(lines[1], line_1_tokens[14]) == " "
+	assert line_1_tokens[14].t_type == .whitespace
+	assert extract_token_contents(lines[1], line_1_tokens[15]) == "main"
+	assert line_1_tokens[15].t_type == .identifier
+	assert extract_token_contents(lines[1], line_1_tokens[16]) == " "
+	assert line_1_tokens[16].t_type == .whitespace
+	assert extract_token_contents(lines[1], line_1_tokens[17]) == "function"
+	assert line_1_tokens[17].t_type == .identifier
+	assert extract_token_contents(lines[1], line_1_tokens[18]) == " "
+	assert line_1_tokens[18].t_type == .whitespace
+	assert extract_token_contents(lines[1], line_1_tokens[19]) == "wooo"
+	assert line_1_tokens[19].t_type == .identifier
 
 	line_2_tokens := parser.get_line_tokens(2)
 	assert line_2_tokens.len == 4
 	assert extract_token_contents(lines[2], line_2_tokens[0]) == `\t`.str()
-	assert line_2_tokens[0].t_type == .other
+	assert line_2_tokens[0].t_type == .whitespace
 	assert extract_token_contents(lines[2], line_2_tokens[1]) == "return"
-	assert line_2_tokens[1].t_type == .other
+	assert line_2_tokens[1].t_type == .identifier
 	assert extract_token_contents(lines[2], line_2_tokens[2]) == " "
-	assert line_2_tokens[2].t_type == .other
+	assert line_2_tokens[2].t_type == .whitespace
 	assert extract_token_contents(lines[2], line_2_tokens[3]) == "10"
+	assert line_2_tokens[3].t_type == .number
 }
 
 
