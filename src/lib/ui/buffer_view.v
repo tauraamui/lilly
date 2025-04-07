@@ -17,6 +17,7 @@ module ui
 import term
 import lib.buffer
 import lib.draw
+import lib.syntax
 
 pub struct BufferView {
 	buf   &buffer.Buffer = unsafe { nil }
@@ -38,7 +39,9 @@ pub fn (buf_view BufferView) draw(
 
 	mut screenspace_x_offset := 1 + buf_view.buf.num_of_lines().str().runes().len
 	mut screenspace_y_offset := 1
+	mut syntax_parser := syntax.Parser{}
 	for document_line_num, line in buf_view.buf.line_iterator() {
+		syntax_parser.parse_line(document_line_num, line)
 		// if we haven't reached the line to render in the document yet, skip this
 		if document_line_num < from_line_num { continue }
 
@@ -53,7 +56,7 @@ pub fn (buf_view BufferView) draw(
 		}
 		// draw the line of text, offset by the position of the buffer view
 		draw_text_line(
-			mut ctx, x + screenspace_x_offset + 1, y + screenspace_y_offset, line, min_x, width, cursor_line
+			mut ctx, x + screenspace_x_offset + 1, y + screenspace_y_offset, syntax_parser.get_line_tokens(document_line_num), min_x, width, cursor_line
 		)
 
 		screenspace_y_offset += 1
@@ -72,7 +75,7 @@ fn draw_line_number(mut ctx draw.Contextable, x int, y int, line_num int) {
 	ctx.draw_text(x - line_num_str.runes().len, y, line_num_str)
 }
 
-fn draw_text_line(mut ctx draw.Contextable, x int, y int, line string, min_x int, width int, is_cursor_line bool) {
+fn draw_text_line(mut ctx draw.Contextable, x int, y int, line_tokens []syntax.Token, min_x int, width int, is_cursor_line bool) {
 	mut linex := term.strip_ansi(line.replace("\t", " ".repeat(4)))
 	if min_x >= linex.runes().len { ctx.draw_text(x, y, ""); return }
 
