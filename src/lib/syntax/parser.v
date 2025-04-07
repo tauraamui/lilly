@@ -68,7 +68,7 @@ fn resolve_char_type(c_char rune) TokenType {
 }
 
 fn for_each_char(
-	index int, l_char rune, c_char rune, mut rune_count &int, mut token_count &int, mut tokens []Token
+	index int, l_char rune, c_char rune, mut rune_count &int, mut token_count &int, mut tokens []Token, within_line_comment bool
 ) TokenType {
 	last_char_type := resolve_char_type(l_char)
 	current_char_type := resolve_char_type(c_char)
@@ -76,7 +76,7 @@ fn for_each_char(
 	transition_occurred := last_char_type != current_char_type
 	if transition_occurred {
 		token := Token{
-			t_type: last_char_type
+			t_type: if within_line_comment { .comment } else { last_char_type }
 			start: index - rune_count
 			end: index
 		}
@@ -90,20 +90,27 @@ fn for_each_char(
 }
 
 pub fn (mut parser Parser) parse_line(index int, line string) []Token {
-	mut start_token_index := parser.tokens.len
-	mut token_count       := 0
-	mut rune_count        := 0
-	runes                 := line.runes()
+	mut start_token_index   := parser.tokens.len
+	mut token_count         := 0
+	mut rune_count          := 0
+	runes                   := line.runes()
+	mut within_line_comment := false
 
 	mut token_type := TokenType.other
 	for i, c_char in runes {
-		l_char := if i - 1 < 0 { c_char } else { runes[i - 1] }
-		token_type = for_each_char(i, l_char, c_char, mut &rune_count, mut &token_count, mut parser.tokens)
+		mut l_char := c_char
+		if i > 0 {
+			l_char = runes[i - 1]
+			if within_line_comment == false {
+				within_line_comment = l_char == `/` && c_char == `/`
+			}
+		}
+		token_type = for_each_char(i, l_char, c_char, mut &rune_count, mut &token_count, mut parser.tokens, within_line_comment)
 	}
 
 	if rune_count > 0 {
 		token := Token{
-			t_type: token_type
+			t_type: if within_line_comment { .comment } else { token_type }
 			start: runes.len - rune_count
 			end: runes.len
 		}
