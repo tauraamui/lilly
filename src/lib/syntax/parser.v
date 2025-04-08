@@ -31,6 +31,14 @@ mut:
 	end    int
 }
 
+pub fn (t Token) start() int {
+	return t.start
+}
+
+pub fn (t Token) end() int {
+	return t.end
+}
+
 struct LineInfo {
 	start_token_index int
 	token_count       int

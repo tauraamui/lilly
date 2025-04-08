@@ -120,6 +120,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_2() {
 		DrawnRect{ x: 4, y: 1, width: 97, height: 1 }
 	]
 
+	assert drawn_text == []
 	assert drawn_text == [
 		DrawnText{ x: 2, y: 1, data:  "1" },
 		DrawnText{ x: 4, y: 1, data:  "0 This is line 0 in the document" },

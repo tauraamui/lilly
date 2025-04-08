@@ -131,6 +131,10 @@ fn draw_text_line(mut ctx draw.Contextable, x int, y int, line string, line_toke
 }
 
 fn draw_text_line_2(mut ctx draw.Contextable, x int, y int, line string, line_tokens []syntax.Token, min_x int, width int, is_cursor_line bool) {
+	for token in line_tokens {
+		print(line[token.start()..token.end()])
+	}
+	println("")
 	mut linex := term.strip_ansi(line.replace("\t", " ".repeat(4)))
 	if min_x >= linex.runes().len { ctx.draw_text(x, y, ""); return }
 
