@@ -131,23 +131,18 @@ fn draw_text_line(mut ctx draw.Contextable, x int, y int, line string, line_toke
 }
 
 fn draw_text_line_2(mut ctx draw.Contextable, x int, y int, line string, line_tokens []syntax.Token, min_x int, width int, is_cursor_line bool) {
-	for token in line_tokens {
-		print(line[token.start()..token.end()])
-	}
-	println("")
-	mut linex := term.strip_ansi(line.replace("\t", " ".repeat(4)))
-	if min_x >= linex.runes().len { ctx.draw_text(x, y, ""); return }
-
-	mut line_past_min_x := linex.runes()[min_x..].string()
-
-	if line_past_min_x.runes().len > width - x {
-		line_past_min_x = line_past_min_x.runes()[..(width - x)].string()
-	}
-
 	if is_cursor_line {
 		ctx.set_bg_color(draw.Color{53, 53, 53})
 		defer { ctx.reset_bg_color() }
 	}
-	ctx.draw_text(x, y, line_past_min_x)
+
+	mut x_offset := 1
+	for token in line_tokens {
+		segment  := term.strip_ansi(line[token.start()..token.end()].replace("\t", " ".repeat(4)))
+		fg_color := syntax.colors[token.t_type()]
+		ctx.set_color(fg_color)
+		ctx.draw_text(x + x_offset, y, segment)
+		x_offset += segment.runes().len
+	}
 }
 
