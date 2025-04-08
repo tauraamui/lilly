@@ -139,6 +139,7 @@ fn draw_text_line_2(mut ctx draw.Contextable, x int, y int, line string, line_to
 	mut x_offset := 1
 	for token in line_tokens {
 		segment  := term.strip_ansi(line[token.start()..token.end()].replace("\t", " ".repeat(4)))
+		// only select/change fg colour when not in a cursor line
 		fg_color := syntax.colors[token.t_type()]
 		ctx.set_color(fg_color)
 		ctx.draw_text(x + x_offset, y, segment)
