@@ -21,7 +21,7 @@ pub const colors := {
 	.comment_end:      draw.Color{200, 200, 235}
 	.block_start:      draw.Color{200, 200, 235}
 	.block_end:        draw.Color{200, 200, 235}
-	.number:           draw.Color{200, 200, 235}
+	.number:           draw.Color{220, 110, 110}
 	.whitespace:       draw.Color{200, 200, 235}
 	.other:            draw.Color{200, 200, 235}
 }

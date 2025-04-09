@@ -91,6 +91,9 @@ fn test_buffer_view_draws_lines_0_to_max_height_2() {
 	mut drawn_text := []DrawnText{}
 	mut drawn_text_ref := &drawn_text
 
+	mut set_fg_color := []draw.Color{}
+	mut set_fg_color_ref := &set_fg_color
+
 	mut drawn_rect := []DrawnRect{}
 	mut drawn_rect_ref := &drawn_rect
 
@@ -101,10 +104,13 @@ fn test_buffer_view_draws_lines_0_to_max_height_2() {
 		on_draw_rect_cb: fn [mut drawn_rect_ref] (x int, y int, width int, height int) {
 			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
 		}
+		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
+			set_fg_color_ref << c
+		}
 	}
 
 	mut buf := buffer.Buffer.new("", false)
-	for i in 0..20 { buf.lines << "${i} This is line ${i} in the document" }
+	for i in 0..5 { buf.lines << "This is line ${i} in the document" }
 	buf_view := BufferView.new(&buf)
 
 	x := 0
@@ -117,32 +123,26 @@ fn test_buffer_view_draws_lines_0_to_max_height_2() {
 	buf_view.draw_2(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0)
 
 	assert drawn_rect == [
-		DrawnRect{ x: 4, y: 1, width: 97, height: 1 }
+		DrawnRect{ x: 3, y: 1, width: 98, height: 1 }
 	]
 
-	assert drawn_text == []
-	assert drawn_text == [
-		DrawnText{ x: 2, y: 1, data:  "1" },
-		DrawnText{ x: 4, y: 1, data:  "0 This is line 0 in the document" },
-		DrawnText{ x: 2, y: 2, data:  "2" },
-		DrawnText{ x: 4, y: 2, data:  "1 This is line 1 in the document" },
-		DrawnText{ x: 2, y: 3, data:  "3" },
-		DrawnText{ x: 4, y: 3, data:  "2 This is line 2 in the document" },
-		DrawnText{ x: 2, y: 4, data:  "4" },
-		DrawnText{ x: 4, y: 4, data:  "3 This is line 3 in the document" },
-		DrawnText{ x: 2, y: 5, data:  "5" },
-		DrawnText{ x: 4, y: 5, data:  "4 This is line 4 in the document" },
-		DrawnText{ x: 2, y: 6, data:  "6" },
-		DrawnText{ x: 4, y: 6, data:  "5 This is line 5 in the document" },
-		DrawnText{ x: 2, y: 7, data:  "7" },
-		DrawnText{ x: 4, y: 7, data:  "6 This is line 6 in the document" },
-		DrawnText{ x: 2, y: 8, data:  "8" },
-		DrawnText{ x: 4, y: 8, data:  "7 This is line 7 in the document" },
-		DrawnText{ x: 2, y: 9, data:  "9" },
-		DrawnText{ x: 4, y: 9, data:  "8 This is line 8 in the document" },
-		DrawnText{ x: 1, y: 10, data:  "10" },
-		DrawnText{ x: 4, y: 10, data: "9 This is line 9 in the document" }
-	]
+	assert drawn_text.len == 70
+	assert set_fg_color.len == 70
+
+	assert drawn_text[1] == DrawnText{ x: 4, y: 1, data: "This" }
+	assert set_fg_color[1] == draw.Color{200, 200, 235}
+	assert drawn_text[2] == DrawnText{ x: 8, y: 1, data: " " }
+	assert set_fg_color[2] == draw.Color{200, 200, 235}
+	assert drawn_text[3] == DrawnText{ x: 9, y: 1, data: "is" }
+	assert set_fg_color[3] == draw.Color{200, 200, 235}
+	assert drawn_text[4] == DrawnText{ x: 11, y: 1, data: " " }
+	assert set_fg_color[4] == draw.Color{200, 200, 235}
+	assert drawn_text[5] == DrawnText{ x: 12, y: 1, data: "line" }
+	assert set_fg_color[5] == draw.Color{200, 200, 235}
+	assert drawn_text[6] == DrawnText{ x: 16, y: 1, data: " " }
+	assert set_fg_color[6] == draw.Color{200, 200, 235}
+	assert drawn_text[7] == DrawnText{ x: 16, y: 1, data: " " }
+	assert set_fg_color[7] == draw.Color{200, 200, 235}
 }
 
 
@@ -283,8 +283,9 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_12() {
 
 struct MockContextable {
 mut:
-	on_draw_cb      fn (x int, y int, text string)
-	on_draw_rect_cb fn (x int, y int, width int, height int)
+	on_draw_cb         fn (x int, y int, text string)
+	on_draw_rect_cb    fn (x int, y int, width int, height int)
+	on_set_fg_color_cb fn (c draw.Color)
 }
 
 fn (mockctx MockContextable) render_debug() bool { return false }
@@ -316,7 +317,10 @@ fn (mockctx MockContextable) draw_rect(x int, y int, width int, height int) {
 
 fn (mockctx MockContextable) draw_point(x int, y int) {}
 
-fn (mockctx MockContextable) set_color(c draw.Color) {}
+fn (mockctx MockContextable) set_color(c draw.Color) {
+	if mockctx.on_set_fg_color_cb == unsafe { nil } { return }
+	mockctx.on_set_fg_color_cb(c)
+}
 
 fn (mockctx MockContextable) set_bg_color(c draw.Color) {}
 
