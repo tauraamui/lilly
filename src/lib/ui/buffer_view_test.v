@@ -129,6 +129,8 @@ fn test_buffer_view_draws_lines_0_to_max_height_2() {
 	assert drawn_text.len == 42
 	assert set_fg_color.len == 42
 
+	assert drawn_text[0] == DrawnText{ x: 1, y: 1, data: "1" }
+	assert set_fg_color[0] == draw.Color{117, 118, 120}
 	assert drawn_text[1] == DrawnText{ x: 4, y: 1, data: "This" }
 	assert set_fg_color[1] == draw.Color{200, 200, 235}
 	assert drawn_text[2] == DrawnText{ x: 8, y: 1, data: " " }
@@ -155,6 +157,15 @@ fn test_buffer_view_draws_lines_0_to_max_height_2() {
 	assert set_fg_color[12] == draw.Color{200, 200, 235}
 	assert drawn_text[13] == DrawnText{ x: 26, y: 1, data: "document" }
 	assert set_fg_color[13] == draw.Color{200, 200, 235}
+
+	assert drawn_text[14] == DrawnText{ x: 1, y: 2, data: "2" }
+	assert set_fg_color[14] == draw.Color{117, 118, 120}
+	assert drawn_text[15] == DrawnText{ x: 4, y: 2, data: "This" }
+	assert set_fg_color[15] == draw.Color{200, 200, 235}
+	assert drawn_text[16] == DrawnText{ x: 8, y: 2, data: " " }
+	assert set_fg_color[16] == draw.Color{200, 200, 235}
+	assert drawn_text[17] == DrawnText{ x: 9, y: 2, data: "is" }
+	assert set_fg_color[17] == draw.Color{200, 200, 235}
 }
 
 fn test_buffer_view_draws_lines_10_to_max_height() {
