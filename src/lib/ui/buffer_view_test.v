@@ -166,6 +166,26 @@ fn test_buffer_view_draws_lines_0_to_max_height_2() {
 	assert set_fg_color[16] == draw.Color{200, 200, 235}
 	assert drawn_text[17] == DrawnText{ x: 9, y: 2, data: "is" }
 	assert set_fg_color[17] == draw.Color{200, 200, 235}
+	assert drawn_text[18] == DrawnText{ x: 11, y: 2, data: " " }
+	assert set_fg_color[18] == draw.Color{200, 200, 235}
+	assert drawn_text[19] == DrawnText{ x: 12, y: 2, data: "line" }
+	assert set_fg_color[19] == draw.Color{200, 200, 235}
+	assert drawn_text[20] == DrawnText{ x: 16, y: 2, data: " " }
+	assert set_fg_color[20] == draw.Color{200, 200, 235}
+	assert drawn_text[21] == DrawnText{ x: 17, y: 2, data: "1" }
+	assert set_fg_color[21] == draw.Color{220, 110, 110}
+	assert drawn_text[22] == DrawnText{ x: 18, y: 2, data: " " }
+	assert set_fg_color[22] == draw.Color{200, 200, 235}
+	assert drawn_text[23] == DrawnText{ x: 19, y: 2, data: "in" }
+	assert set_fg_color[23] == draw.Color{200, 200, 235}
+	assert drawn_text[24] == DrawnText{ x: 21, y: 2, data: " " }
+	assert set_fg_color[24] == draw.Color{200, 200, 235}
+	assert drawn_text[25] == DrawnText{ x: 22, y: 2, data: "the" }
+	assert set_fg_color[25] == draw.Color{200, 200, 235}
+	assert drawn_text[26] == DrawnText{ x: 25, y: 2, data: " " }
+	assert set_fg_color[26] == draw.Color{200, 200, 235}
+	assert drawn_text[27] == DrawnText{ x: 26, y: 2, data: "document" }
+	assert set_fg_color[27] == draw.Color{200, 200, 235}
 }
 
 fn test_buffer_view_draws_lines_10_to_max_height() {
