@@ -129,7 +129,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_2() {
 	assert drawn_text.len == 42
 	assert set_fg_color.len == 42
 
-	expected_drawn_data := [
+	line_one_expected_drawn_data := [
 		DrawnText{ x: 1, y: 1, data: "1" }, DrawnText{ x: 4, y: 1, data: "This" },
 		DrawnText{ x: 8, y: 1, data: " " }, DrawnText{ x: 9, y: 1, data: "is" },
 		DrawnText{ x: 11, y: 1, data: " " }, DrawnText{ x: 12, y: 1, data: "line" },
@@ -138,7 +138,18 @@ fn test_buffer_view_draws_lines_0_to_max_height_2() {
 		DrawnText{ x: 21, y: 1, data: " " }, DrawnText{ x: 22, y: 1, data: "the" },
 		DrawnText{ x: 25, y: 1, data: " " }, DrawnText{ x: 26, y: 1, data: "document" },
 	]
-	assert drawn_text[..14] == expected_drawn_data
+	assert drawn_text[..14] == line_one_expected_drawn_data
+
+	line_two_expected_drawn_data := [
+		DrawnText{ x: 1, y: 2, data: "2" }, DrawnText{ x: 4, y: 2, data: "This" },
+		DrawnText{ x: 8, y: 2, data: " " }, DrawnText{ x: 9, y: 2, data: "is" },
+		DrawnText{ x: 11, y: 2, data: " " }, DrawnText{ x: 12, y: 2, data: "line" },
+		DrawnText{ x: 16, y: 2, data: " " }, DrawnText{ x: 17, y: 2, data: "1" },
+		DrawnText{ x: 18, y: 2, data: " " }, DrawnText{ x: 19, y: 2, data: "in" },
+		DrawnText{ x: 21, y: 2, data: " " }, DrawnText{ x: 22, y: 2, data: "the" },
+		DrawnText{ x: 25, y: 2, data: " " }, DrawnText{ x: 26, y: 2, data: "document" },
+	]
+	assert drawn_text[14..28] == line_two_expected_drawn_data
 
 	assert drawn_text[0] == DrawnText{ x: 1, y: 1, data: "1" }
 	assert set_fg_color[0] == draw.Color{117, 118, 120}
