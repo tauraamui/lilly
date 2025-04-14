@@ -284,6 +284,17 @@ fn test_buffer_view_draws_lines_10_to_max_height_2() {
 		DrawnText{ x: 27, y: 3, data: " " }, DrawnText{ x: 28, y: 3, data: "document" },
 	]
 	assert drawn_text[28..42] == line_three_expected_drawn_data
+
+	line_four_expected_drawn_data := [
+		DrawnText{ x: 1, y: 4, data: "14" }, DrawnText{ x: 5, y: 4, data: "This" },
+		DrawnText{ x: 9, y: 4, data: " " }, DrawnText{ x: 10, y: 4, data: "is" },
+		DrawnText{ x: 12, y: 4, data: " " }, DrawnText{ x: 13, y: 4, data: "line" },
+		DrawnText{ x: 17, y: 4, data: " " }, DrawnText{ x: 18, y: 4, data: "13" },
+		DrawnText{ x: 20, y: 4, data: " " }, DrawnText{ x: 21, y: 4, data: "in" },
+		DrawnText{ x: 23, y: 4, data: " " }, DrawnText{ x: 24, y: 4, data: "the" },
+		DrawnText{ x: 27, y: 4, data: " " }, DrawnText{ x: 28, y: 4, data: "document" },
+	]
+	assert drawn_text[42..56] == line_four_expected_drawn_data
 }
 
 fn test_buffer_view_draws_lines_0_to_max_height_min_x_is_6() {
