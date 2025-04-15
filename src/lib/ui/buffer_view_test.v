@@ -533,31 +533,6 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_12_version_2()
 		DT{ x: 28, y: 3, data: "document" }
 	]
 	assert drawn_text[32..48] == line_three_expected_drawn_data
-
-	/*
-	assert drawn_text == [
-		DrawnText{ x: 2, y: 1, data: "1" }
-		DrawnText{ x: 4, y: 1, data:  "0 This i" },
-		DrawnText{ x: 2, y: 2, data: "2" }
-		DrawnText{ x: 4, y: 2, data:  "1 This i" },
-		DrawnText{ x: 2, y: 3, data: "3" }
-		DrawnText{ x: 4, y: 3, data:  "2 This i" },
-		DrawnText{ x: 2, y: 4, data: "4" }
-		DrawnText{ x: 4, y: 4, data:  "3 This i" },
-		DrawnText{ x: 2, y: 5, data: "5" }
-		DrawnText{ x: 4, y: 5, data:  "4 This i" },
-		DrawnText{ x: 2, y: 6, data: "6" }
-		DrawnText{ x: 4, y: 6, data:  "5 This i" },
-		DrawnText{ x: 2, y: 7, data: "7" }
-		DrawnText{ x: 4, y: 7, data:  "6 This i" },
-		DrawnText{ x: 2, y: 8, data: "8" }
-		DrawnText{ x: 4, y: 8, data:  "7 This i" },
-		DrawnText{ x: 2, y: 9, data: "9" }
-		DrawnText{ x: 4, y: 9, data:  "8 This i" },
-		DrawnText{ x: 1, y: 10, data: "10" }
-		DrawnText{ x: 4, y: 10, data: "9 This i" }
-	]
-	*/
 }
 
 
