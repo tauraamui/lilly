@@ -297,15 +297,26 @@ fn test_buffer_view_draws_lines_10_to_max_height_2() {
 	assert drawn_text[42..56] == line_four_expected_drawn_data
 
 	line_five_expected_drawn_data := [
-		DrawnText{ x: 1, y: 4, data: "15" }, DrawnText{ x: 5, y: 4, data: "This" },
-		DrawnText{ x: 9, y: 4, data: " " }, DrawnText{ x: 10, y: 4, data: "is" },
-		DrawnText{ x: 12, y: 4, data: " " }, DrawnText{ x: 13, y: 4, data: "line" },
-		DrawnText{ x: 17, y: 4, data: " " }, DrawnText{ x: 18, y: 4, data: "14" },
-		DrawnText{ x: 20, y: 4, data: " " }, DrawnText{ x: 21, y: 4, data: "in" },
-		DrawnText{ x: 23, y: 4, data: " " }, DrawnText{ x: 24, y: 4, data: "the" },
-		DrawnText{ x: 27, y: 4, data: " " }, DrawnText{ x: 28, y: 4, data: "document" },
+		DrawnText{ x: 1, y: 5, data: "15" }, DrawnText{ x: 5, y: 5, data: "This" },
+		DrawnText{ x: 9, y: 5, data: " " }, DrawnText{ x: 10, y: 5, data: "is" },
+		DrawnText{ x: 12, y: 5, data: " " }, DrawnText{ x: 13, y: 5, data: "line" },
+		DrawnText{ x: 17, y: 5, data: " " }, DrawnText{ x: 18, y: 5, data: "14" },
+		DrawnText{ x: 20, y: 5, data: " " }, DrawnText{ x: 21, y: 5, data: "in" },
+		DrawnText{ x: 23, y: 5, data: " " }, DrawnText{ x: 24, y: 5, data: "the" },
+		DrawnText{ x: 27, y: 5, data: " " }, DrawnText{ x: 28, y: 5, data: "document" },
 	]
 	assert drawn_text[56..70] == line_five_expected_drawn_data
+
+	line_six_expected_drawn_data := [
+		DrawnText{ x: 1, y: 6, data: "16" }, DrawnText{ x: 5, y: 6, data: "This" },
+		DrawnText{ x: 9, y: 6, data: " " }, DrawnText{ x: 10, y: 6, data: "is" },
+		DrawnText{ x: 12, y: 6, data: " " }, DrawnText{ x: 13, y: 6, data: "line" },
+		DrawnText{ x: 17, y: 6, data: " " }, DrawnText{ x: 18, y: 6, data: "15" },
+		DrawnText{ x: 20, y: 6, data: " " }, DrawnText{ x: 21, y: 6, data: "in" },
+		DrawnText{ x: 23, y: 6, data: " " }, DrawnText{ x: 24, y: 6, data: "the" },
+		DrawnText{ x: 27, y: 6, data: " " }, DrawnText{ x: 28, y: 6, data: "document" },
+	]
+	assert drawn_text[70..84] == line_six_expected_drawn_data
 }
 
 fn test_buffer_view_draws_lines_0_to_max_height_min_x_is_6() {
