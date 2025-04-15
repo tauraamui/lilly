@@ -453,6 +453,90 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_12() {
 	]
 }
 
+type DT = DrawnText
+
+fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_12_version_2() {
+	mut drawn_text := []DrawnText{}
+	mut drawn_text_ref := &drawn_text
+
+	mut set_fg_color := []draw.Color{}
+	mut set_fg_color_ref := &set_fg_color
+
+	mut drawn_rect := []DrawnRect{}
+	mut drawn_rect_ref := &drawn_rect
+
+	mut mock_ctx := MockContextable{
+		on_draw_cb: fn [mut drawn_text_ref] (x int, y int, text string) {
+			drawn_text_ref << DrawnText{ x: x, y: y, data: text }
+		}
+		on_draw_rect_cb: fn [mut drawn_rect_ref] (x int, y int, width int, height int) {
+			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
+		}
+		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
+			set_fg_color_ref << c
+		}
+	}
+
+	mut buf      := buffer.Buffer.new("", false)
+	for i in 0..3 { buf.lines << "${i} This is line ${i} in the document" }
+	mut buf_view := BufferView.new(&buf)
+
+	x := 0
+	y := 0
+	width := 12
+	height := 4
+	min_x := 0
+	from_line_num := 0
+
+	buf_view.draw_2(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0)
+
+	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
+	assert drawn_rect == [
+		DrawnRect{ x: 3, y: 1, width: 10, height: 1 }
+	]
+
+	assert drawn_text.len == 48
+	assert set_fg_color.len == 48
+
+	line_one_expected_drawn_data := [
+		DrawnText{ x: 1, y: 1, data: "1" }, DT{ x: 4, y: 1, data: "0" }, DT{ x: 5, y: 1, data: " " },
+		DT{ x: 6, y: 1, data: "This" }, DT{ x: 10, y: 1, data: " " },
+		DT{ x: 11, y: 1, data: "is" }, DT{ x: 13, y: 1, data: " " },
+		DT{ x: 14, y: 1, data: "line" }, DT{ x: 18, y: 1, data: " " },
+		DT{ x: 19, y: 1, data: "0" }, DT{ x: 20, y: 1, data: " " },
+		DT{ x: 21, y: 1, data: "in" }, DT{ x: 23, y: 1, data: " " },
+		DT{ x: 24, y: 1, data: "the" }, DT{ x: 27, y: 1, data: " " },
+		DT{ x: 28, y: 1, data: "document" }
+	]
+	assert drawn_text[..16] == line_one_expected_drawn_data
+
+	/*
+	assert drawn_text == [
+		DrawnText{ x: 2, y: 1, data: "1" }
+		DrawnText{ x: 4, y: 1, data:  "0 This i" },
+		DrawnText{ x: 2, y: 2, data: "2" }
+		DrawnText{ x: 4, y: 2, data:  "1 This i" },
+		DrawnText{ x: 2, y: 3, data: "3" }
+		DrawnText{ x: 4, y: 3, data:  "2 This i" },
+		DrawnText{ x: 2, y: 4, data: "4" }
+		DrawnText{ x: 4, y: 4, data:  "3 This i" },
+		DrawnText{ x: 2, y: 5, data: "5" }
+		DrawnText{ x: 4, y: 5, data:  "4 This i" },
+		DrawnText{ x: 2, y: 6, data: "6" }
+		DrawnText{ x: 4, y: 6, data:  "5 This i" },
+		DrawnText{ x: 2, y: 7, data: "7" }
+		DrawnText{ x: 4, y: 7, data:  "6 This i" },
+		DrawnText{ x: 2, y: 8, data: "8" }
+		DrawnText{ x: 4, y: 8, data:  "7 This i" },
+		DrawnText{ x: 2, y: 9, data: "9" }
+		DrawnText{ x: 4, y: 9, data:  "8 This i" },
+		DrawnText{ x: 1, y: 10, data: "10" }
+		DrawnText{ x: 4, y: 10, data: "9 This i" }
+	]
+	*/
+}
+
+
 struct MockContextable {
 mut:
 	on_draw_cb         fn (x int, y int, text string)
