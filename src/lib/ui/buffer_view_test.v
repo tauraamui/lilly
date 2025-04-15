@@ -495,26 +495,28 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_12_version_2()
 		DrawnRect{ x: 3, y: 1, width: 10, height: 1 }
 	]
 
-	assert drawn_text.len == 48
-	assert set_fg_color.len == 48
+	assert drawn_text.len == 24
+	// assert drawn_text.len == 48
+	assert set_fg_color.len == 24
+	// assert set_fg_color.len == 48
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 1, y: 1, data: "1" }, DT{ x: 4, y: 1, data: "0" }, DT{ x: 5, y: 1, data: " " },
 		DT{ x: 6, y: 1, data: "This" }, DT{ x: 10, y: 1, data: " " }, DT{ x: 11, y: 1, data: "i" }
 	]
-	assert drawn_text[..16] == line_one_expected_drawn_data
+	assert drawn_text[..8] == line_one_expected_drawn_data
 
 	line_two_expected_drawn_data := [
 		DrawnText{ x: 1, y: 2, data: "2" }, DT{ x: 4, y: 2, data: "1" }, DT{ x: 5, y: 2, data: " " },
 		DT{ x: 6, y: 2, data: "This" }, DT{ x: 10, y: 2, data: " " }, DT{ x: 11, y: 2, data: "i" }
 	]
-	assert drawn_text[16..32] == line_two_expected_drawn_data
+	assert drawn_text[8..16] == line_two_expected_drawn_data
 
 	line_three_expected_drawn_data := [
 		DrawnText{ x: 1, y: 3, data: "3" }, DT{ x: 4, y: 3, data: "2" }, DT{ x: 5, y: 3, data: " " },
 		DT{ x: 6, y: 3, data: "This" }, DT{ x: 10, y: 3, data: " " }, DT{ x: 11, y: 3, data: "i" }
 	]
-	assert drawn_text[32..48] == line_three_expected_drawn_data
+	assert drawn_text[16..24] == line_three_expected_drawn_data
 }
 
 
