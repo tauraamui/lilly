@@ -18,6 +18,7 @@ import term
 import lib.buffer
 import lib.draw
 import lib.syntax
+import lib.utf8
 
 pub struct BufferView {
 	buf   &buffer.Buffer = unsafe { nil }
@@ -143,7 +144,7 @@ fn draw_text_line_2(mut ctx draw.Contextable, x int, y int, line string, line_to
 		fg_color := syntax.colors[token.t_type()]
 		ctx.set_color(fg_color)
 		ctx.draw_text(x + x_offset, y, segment)
-		x_offset += utf8_str_visible_length(segment)
+		x_offset += utf8.str_visible_length(segment)
 		if x_offset > width { break }
 	}
 }
