@@ -1,72 +1,65 @@
 module utf8
 
-pub fn str_visible_length(s string) int {
-	mut l := 0
-	mut ul := 1
-	for i := 0; i < s.len; i += ul {
-		c := unsafe { s.str[i] }
-		ul = ((0xe5000000 >> ((unsafe { s.str[i] } >> 3) & 0x1e)) & 3) + 1
-		if i + ul > s.len { // incomplete UTF-8 sequence
-			return l
-		}
-		l++
-		// avoid the match if not needed
-		if ul == 1 {
-			continue
-		}
-		// recognize combining characters and wide characters
-		match ul {
-			2 {
-				r := u64((u16(c) << 8) | unsafe { s.str[i + 1] })
-				if r >= 0xcc80 && r < 0xcdb0 {
-					// diacritical marks
-					l--
-				}
-			}
-			3 {
-				r := u64((u32(c) << 16) | unsafe { (u32(s.str[i + 1]) << 8) | s.str[i + 2] })
-				// diacritical marks extended
-				// diacritical marks supplement
-				// diacritical marks for symbols
-				if (r >= 0xe1aab0 && r <= 0xe1ac7f)
-					|| (r >= 0xe1b780 && r <= 0xe1b87f)
-					|| (r >= 0xe28390 && r <= 0xe2847f)
-					|| (r >= 0xefb8a0 && r <= 0xefb8af) {
-					// diacritical marks
-					l--
-				}
-				// Hangru
-				// CJK Unified Ideographics
-				// Hangru
-				// CJK
-				else if (r >= 0xe18480 && r <= 0xe1859f)
-					|| (r >= 0xe2ba80 && r <= 0xe2bf95)
-					|| (r >= 0xe38080 && r <= 0xe4b77f)
-					|| (r >= 0xe4b880 && r <= 0xea807f)
-					|| (r >= 0xeaa5a0 && r <= 0xeaa79f)
-					|| (r >= 0xeab080 && r <= 0xed9eaf)
-					|| (r >= 0xefa480 && r <= 0xefac7f)
-					|| (r >= 0xefb8b8 && r <= 0xefb9af) {
-					// half marks
-					l++
-				}
-			}
-			4 {
-				r := u64((u32(c) << 24) | unsafe {
-					(u32(s.str[i + 1]) << 16) | (u32(s.str[i + 2]) << 8) | s.str[i + 3]
-				})
-				// Enclosed Ideographic Supplement
-				// Emoji
-				// CJK Unified Ideographs Extension B-G
-				if (r >= 0x0f9f8880 && r <= 0xf09f8a8f)
-					|| (r >= 0xf09f8c80 && r <= 0xf09f9c90)
-					|| (r >= 0xf09fa490 && r <= 0xf09fa7af)
-					|| (r >= 0xf0a08080 && r <= 0xf180807f) {
-					l++
-				}
-			}
-			else {}
-		}
+pub fn str_clamp_to_visible_length(s string, max_width int) string {
+	if max_width <= 0 {
+		return ""
 	}
-	return l
+
+	if utf8_str_visible_length(s) <= max_width {
+		return s
+	}
+
+	mut result := []rune{}
+	mut current_width := 0
+	mut i := 0
+
+	s_runes := s.runes()
+	for i < s_runes.len {
+		// determine utf-8 sequence length for current char
+		c_char := s_runes[i]
+		ul := ((0xe5000000 >> ((c_char >> 3) & 0x1e)) & 3) + 1
+		println("UTF-8 SEQ LEN: ${ul}")
+		i += 1
+	}
+
+	/*
+	for i < s.len {
+		c := s.runes()[i]
+		// Determine UTF-8 sequence length for current character
+		ul := ((0xe5000000 >> ((c >> 3) & 0x1e)) & 3) + 1
+
+		// Check for incomplete UTF-8 sequence
+		if i + ul > s.len {
+			break
+		}
+
+		// Calculate how this character would affect the visual width
+		prev_width := current_width
+
+		// Copy the current character to temporary slice to check its visual length
+		mut char_bytes := []rune{len: ul}
+		for j := 0; j < ul; j++ {
+			char_bytes[j] = s.runes()[i + j]
+			// char_bytes[j] = unsafe { s.str[i + j] }
+		}
+
+		temp_str := char_bytes.str()
+		char_width := utf8_str_visible_length(temp_str)
+
+		// If adding this character would exceed max_width, stop
+		if current_width + char_width > max_width {
+			break
+		}
+
+		// Add current character bytes to result
+		for j := 0; j < ul; j++ {
+			result << unsafe { s.str[i + j] }
+		}
+
+		current_width += char_width
+		i += ul
+	}
+	*/
+
+	return result.str()
 }
