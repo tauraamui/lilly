@@ -23,7 +23,14 @@ pub fn str_clamp_to_visible_length(s string, max_width int) string {
 		if i + ul > s_bytes.len {
 			break
 		}
-		i += 1
+
+		prev_width := current_width
+		// copy all bytes for current char into temporary slice to check visual len
+		temp := s_bytes[i..(i + ul)].byterune() or { break }
+		println([temp].string())
+		println(utf8_str_visible_length([temp].string()))
+
+		i += ul
 	}
 
 	/*
@@ -39,7 +46,6 @@ pub fn str_clamp_to_visible_length(s string, max_width int) string {
 
 		// Calculate how this character would affect the visual width
 		prev_width := current_width
-
 		// Copy the current character to temporary slice to check its visual length
 		mut char_bytes := []rune{len: ul}
 		for j := 0; j < ul; j++ {
