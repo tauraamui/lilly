@@ -18,6 +18,7 @@ import term
 import lib.buffer
 import lib.draw
 import lib.syntax
+import lib.utf8
 
 pub struct BufferView {
 	buf   &buffer.Buffer = unsafe { nil }
@@ -138,10 +139,13 @@ fn draw_text_line_2(mut ctx draw.Contextable, x int, y int, line string, line_to
 
 	mut x_offset := 1
 	for token in line_tokens {
-		segment  := term.strip_ansi(line[token.start()..token.end()].replace("\t", " ".repeat(4)))
+		mut segment  := term.strip_ansi(line[token.start()..token.end()].replace("\t", " ".repeat(4)))
 		// only select/change fg colour when not in a cursor line
 		fg_color := syntax.colors[token.t_type()]
 		ctx.set_color(fg_color)
+		if segment.runes().len > x_offset + width {
+			segment = utf8.str_clamp_to_visible_length(segment, width - x_offset)
+		}
 		ctx.draw_text(x + x_offset, y, segment)
 		x_offset += utf8_str_visible_length(segment)
 		if x_offset > width { break }

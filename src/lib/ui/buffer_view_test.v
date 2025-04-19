@@ -253,7 +253,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 	assert set_fg_color.len == 2
 
 	line_one_expected_drawn_data := [
-		DrawnText{ x: 1, y: 1, data: "1" }, DrawnText{ x: 5, y: 1, data: "Thisisthelineinthedocument" },
+		DrawnText{ x: 1, y: 1, data: "1" }, DrawnText{ x: 4, y: 1, data: "Thisisthelineinthed" },
 	]
 	assert drawn_text[..2] == line_one_expected_drawn_data
 }
