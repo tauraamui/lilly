@@ -1,5 +1,21 @@
 module syntax
 
+fn test_simple_single_line_with_no_whitespace() {
+	code := "Thisisline0inthedocument"
+
+	mut parser := Parser{}
+	lines := code.split("\n")
+	for i, line in lines {
+		parser.parse_line(i, line)
+	}
+
+	assert lines.len == 1
+	line_1_tokens := parser.get_line_tokens(0)
+	assert line_1_tokens.len == 1
+	assert extract_token_contents(lines[0], line_1_tokens[0]) == "Thisisline0inthedocument"
+	assert line_1_tokens[0].t_type == .identifier
+}
+
 fn test_simple_block_of_code_no_comments() {
 	code := "
 fn main() {
