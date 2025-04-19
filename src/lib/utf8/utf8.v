@@ -9,16 +9,20 @@ pub fn str_clamp_to_visible_length(s string, max_width int) string {
 		return s
 	}
 
-	mut result := []rune{}
+	mut result := []u8{}
 	mut current_width := 0
 	mut i := 0
 
-	s_runes := s.runes()
-	for i < s_runes.len {
+	s_bytes := s.bytes()
+	for i < s_bytes.len {
 		// determine utf-8 sequence length for current char
-		c_char := s_runes[i]
+		c_char := s_bytes[i]
 		ul := ((0xe5000000 >> ((c_char >> 3) & 0x1e)) & 3) + 1
 		println("UTF-8 SEQ LEN: ${ul}")
+
+		if i + ul > s_bytes.len {
+			break
+		}
 		i += 1
 	}
 
