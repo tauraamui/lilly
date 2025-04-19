@@ -137,6 +137,7 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 		token_type = for_each_char(i, l_char, c_char, mut &rune_count, mut &token_count, mut parser.tokens, within_line_comment)
 	}
 
+	println(rune_count)
 	if rune_count > 0 {
 		token := Token{
 			t_type: if within_line_comment { .comment } else { token_type }

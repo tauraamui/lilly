@@ -209,6 +209,56 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	]
 }
 
+fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width() {
+	mut drawn_text := []DrawnText{}
+	mut drawn_text_ref := &drawn_text
+
+	mut set_fg_color := []draw.Color{}
+	mut set_fg_color_ref := &set_fg_color
+
+	mut drawn_rect := []DrawnRect{}
+	mut drawn_rect_ref := &drawn_rect
+
+	mut mock_ctx := MockContextable{
+		on_draw_cb: fn [mut drawn_text_ref] (x int, y int, text string) {
+			drawn_text_ref << DrawnText{ x: x, y: y, data: text }
+		}
+		on_draw_rect_cb: fn [mut drawn_rect_ref] (x int, y int, width int, height int) {
+			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
+		}
+		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
+			set_fg_color_ref << c
+		}
+	}
+
+	mut buf := buffer.Buffer.new("", false)
+	buf.lines << "Thisisline0inthedocument"
+	buf_view := BufferView.new(&buf)
+
+	x := 0
+	y := 0
+	width := 20
+	height := 10
+	min_x := 0
+	from_line_num := 10
+
+	buf_view.draw_2(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0)
+
+	assert drawn_text.len == 140
+	assert set_fg_color.len == 140
+
+	line_one_expected_drawn_data := [
+		DrawnText{ x: 1, y: 1, data: "11" }, DrawnText{ x: 5, y: 1, data: "This" },
+		DrawnText{ x: 9, y: 1, data: " " }, DrawnText{ x: 10, y: 1, data: "is" },
+		DrawnText{ x: 12, y: 1, data: " " }, DrawnText{ x: 13, y: 1, data: "line" },
+		DrawnText{ x: 17, y: 1, data: " " }, DrawnText{ x: 18, y: 1, data: "10" },
+		DrawnText{ x: 20, y: 1, data: " " }, DrawnText{ x: 21, y: 1, data: "in" },
+		DrawnText{ x: 23, y: 1, data: " " }, DrawnText{ x: 24, y: 1, data: "the" },
+		DrawnText{ x: 27, y: 1, data: " " }, DrawnText{ x: 28, y: 1, data: "document" },
+	]
+	assert drawn_text[..14] == line_one_expected_drawn_data
+}
+
 fn test_buffer_view_draws_lines_10_to_max_height_2() {
 	mut drawn_text := []DrawnText{}
 	mut drawn_text_ref := &drawn_text
