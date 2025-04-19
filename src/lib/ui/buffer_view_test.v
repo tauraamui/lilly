@@ -232,7 +232,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 	}
 
 	mut buf := buffer.Buffer.new("", false)
-	buf.lines << "Thisisline0inthedocument"
+	buf.lines << "Thisisthelineinthedocument"
 	buf_view := BufferView.new(&buf)
 
 	x := 0
@@ -240,23 +240,22 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 	width := 20
 	height := 10
 	min_x := 0
-	from_line_num := 10
+	from_line_num := 0
 
 	buf_view.draw_2(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0)
 
-	assert drawn_text.len == 140
-	assert set_fg_color.len == 140
+	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
+	assert drawn_rect == [
+		DrawnRect{ x: 3, y: 1, width: 18, height: 1 }
+	]
+
+	assert drawn_text.len == 2
+	assert set_fg_color.len == 2
 
 	line_one_expected_drawn_data := [
-		DrawnText{ x: 1, y: 1, data: "11" }, DrawnText{ x: 5, y: 1, data: "This" },
-		DrawnText{ x: 9, y: 1, data: " " }, DrawnText{ x: 10, y: 1, data: "is" },
-		DrawnText{ x: 12, y: 1, data: " " }, DrawnText{ x: 13, y: 1, data: "line" },
-		DrawnText{ x: 17, y: 1, data: " " }, DrawnText{ x: 18, y: 1, data: "10" },
-		DrawnText{ x: 20, y: 1, data: " " }, DrawnText{ x: 21, y: 1, data: "in" },
-		DrawnText{ x: 23, y: 1, data: " " }, DrawnText{ x: 24, y: 1, data: "the" },
-		DrawnText{ x: 27, y: 1, data: " " }, DrawnText{ x: 28, y: 1, data: "document" },
+		DrawnText{ x: 1, y: 1, data: "1" }, DrawnText{ x: 5, y: 1, data: "Thisisthelineinthedocument" },
 	]
-	assert drawn_text[..14] == line_one_expected_drawn_data
+	assert drawn_text[..2] == line_one_expected_drawn_data
 }
 
 fn test_buffer_view_draws_lines_10_to_max_height_2() {
