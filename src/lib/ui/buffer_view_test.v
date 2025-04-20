@@ -552,19 +552,19 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_6() {
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 1, y: 1, data: "1" }, DT{ x: 3, y: 1, data: "he" },
-		DT{ x: 5, y: 1, data: " " }, DT{ x: 6, y: 1, data: "document" }
+		DT{ x: 5, y: 1, data: " " }, DT{ x: 6, y: 1, data: "doc" }
 	]
-	assert drawn_text[..12] == line_one_expected_drawn_data
+	assert drawn_text[..4] == line_one_expected_drawn_data
 
 	line_two_expected_drawn_data := [
 		DrawnText{ x: 1, y: 2, data: "2" }, DT{ x: 3, y: 2, data: "he" },
-		DT{ x: 5, y: 2, data: " " }, DT{ x: 6, y: 2, data: "document" }
+		DT{ x: 5, y: 2, data: " " }, DT{ x: 6, y: 2, data: "doc" }
 	]
 	assert drawn_text[4..8] == line_two_expected_drawn_data
 
 	line_three_expected_drawn_data := [
 		DrawnText{ x: 1, y: 3, data: "3" }, DT{ x: 3, y: 3, data: "he" },
-		DT{ x: 5, y: 3, data: " " }, DT{ x: 6, y: 3, data: "document" }
+		DT{ x: 5, y: 3, data: " " }, DT{ x: 6, y: 3, data: "doc" }
 	]
 	assert drawn_text[8..12] == line_three_expected_drawn_data
 }
