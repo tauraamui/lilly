@@ -151,7 +151,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 	assert set_fg_color.len == 1
 
 	line_one_expected_drawn_data := [
-		DrawnText{ x: 1, y: 1, data: "1" }, DrawnText{ x: 3, y: 1, data: "Thisisthelinei" },
+		DrawnText{ x: 1, y: 1, data: "1" }, DrawnText{ x: 3, y: 1, data: "Thisisthelineinth" },
 	]
 	assert drawn_text[..2] == line_one_expected_drawn_data
 }
@@ -352,26 +352,29 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_14() {
 		DrawnRect{ x: 3, y: 1, width: 12, height: 1 }
 	]
 
-	assert drawn_text.len == 18
+	assert drawn_text.len == 24
 	assert set_fg_color.len == 3
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 1, y: 1, data: "1" }, DT{ x: 3, y: 1, data: "0" }, DT{ x: 4, y: 1, data: " " },
-		DT{ x: 5, y: 1, data: "This" }, DT{ x: 9, y: 1, data: " " }, DT{ x: 10, y: 1, data: "i" }
+		DT{ x: 5, y: 1, data: "This" }, DT{ x: 9, y: 1, data: " " }, DT{ x: 10, y: 1, data: "is" },
+		DT{ x: 12, y: 1, data: " " }, DT{ x: 13, y: 1, data: "l" }
 	]
-	assert drawn_text[..6] == line_one_expected_drawn_data
+	assert drawn_text[..8] == line_one_expected_drawn_data
 
 	line_two_expected_drawn_data := [
 		DrawnText{ x: 1, y: 2, data: "2" }, DT{ x: 3, y: 2, data: "1" }, DT{ x: 4, y: 2, data: " " },
-		DT{ x: 5, y: 2, data: "This" }, DT{ x: 9, y: 2, data: " " }, DT{ x: 10, y: 2, data: "i" }
+		DT{ x: 5, y: 2, data: "This" }, DT{ x: 9, y: 2, data: " " }, DT{ x: 10, y: 2, data: "is" },
+		DT{ x: 12, y: 2, data: " " }, DT{ x: 13, y: 2, data: "l" }
 	]
-	assert drawn_text[6..12] == line_two_expected_drawn_data
+	assert drawn_text[8..16] == line_two_expected_drawn_data
 
 	line_three_expected_drawn_data := [
 		DrawnText{ x: 1, y: 3, data: "3" }, DT{ x: 3, y: 3, data: "2" }, DT{ x: 4, y: 3, data: " " },
-		DT{ x: 5, y: 3, data: "This" }, DT{ x: 9, y: 3, data: " " }, DT{ x: 10, y: 3, data: "i" }
+		DT{ x: 5, y: 3, data: "This" }, DT{ x: 9, y: 3, data: " " }, DT{ x: 10, y: 3, data: "is" },
+		DT{ x: 12, y: 3, data: " " }, DT{ x: 13, y: 3, data: "l" }
 	]
-	assert drawn_text[12..18] == line_three_expected_drawn_data
+	assert drawn_text[16..24] == line_three_expected_drawn_data
 }
 
 fn test_buffer_view_draws_lines_0_to_max_height_min_x_4_max_width_56() {
@@ -552,19 +555,19 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_6() {
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 1, y: 1, data: "1" }, DT{ x: 3, y: 1, data: "he" },
-		DT{ x: 5, y: 1, data: " " }, DT{ x: 6, y: 1, data: "doc" }
+		DT{ x: 5, y: 1, data: " " }, DT{ x: 6, y: 1, data: "docume" }
 	]
 	assert drawn_text[..4] == line_one_expected_drawn_data
 
 	line_two_expected_drawn_data := [
 		DrawnText{ x: 1, y: 2, data: "2" }, DT{ x: 3, y: 2, data: "he" },
-		DT{ x: 5, y: 2, data: " " }, DT{ x: 6, y: 2, data: "doc" }
+		DT{ x: 5, y: 2, data: " " }, DT{ x: 6, y: 2, data: "docume" }
 	]
 	assert drawn_text[4..8] == line_two_expected_drawn_data
 
 	line_three_expected_drawn_data := [
 		DrawnText{ x: 1, y: 3, data: "3" }, DT{ x: 3, y: 3, data: "he" },
-		DT{ x: 5, y: 3, data: " " }, DT{ x: 6, y: 3, data: "doc" }
+		DT{ x: 5, y: 3, data: " " }, DT{ x: 6, y: 3, data: "docume" }
 	]
 	assert drawn_text[8..12] == line_three_expected_drawn_data
 }
