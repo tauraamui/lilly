@@ -91,8 +91,15 @@ fn draw_text_line(mut ctx draw.Contextable, x int, y int, line string, line_toke
 	}
 
 	mut visual_x_offset := x
+	mut previous_type := syntax.TokenType.other
 	for token in line_tokens {
-		visual_x_offset += render_token(mut ctx, line, token, min_x, x, max_width, visual_x_offset, y)
+		token_bounds := resolve_token_bounds(token.start(), token.end(), min_x) or { continue }
+		token_type := token.t_type()
+		same_type := previous_type == token_type
+		visual_x_offset += render_token(mut ctx, line, token_bounds, token_type, same_type, min_x, x, max_width, visual_x_offset, y)
+		if token_type != .whitespace {
+			previous_type = token_type
+		}
 	}
 }
 
@@ -110,11 +117,13 @@ fn resolve_token_bounds(token_start int, token_end int, min_x int) ?TokenBounds 
 	return TokenBounds{ start: token_start, end: token_end }
 }
 
-fn render_token(mut ctx draw.Contextable, line string, token syntax.Token, min_x int, base_x int, max_width int, x_offset int, y int) int {
-	token_bounds := resolve_token_bounds(token.start(), token.end(), min_x) or { return 0 }
+fn render_token(mut ctx draw.Contextable, line string, token_bounds TokenBounds, token_type syntax.TokenType, same_type bool, min_x int, base_x int, max_width int, x_offset int, y int) int {
 	mut segment_to_render := line[token_bounds.start..token_bounds.end].replace("\t", " ".repeat(4))
 	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
 	if segment_to_render.runes().len == 0 { return 0 }
+	if same_type == false {
+		ctx.set_color(syntax.colors[token_type])
+	}
 	ctx.draw_text(x_offset, y, segment_to_render)
 	return utf8_str_visible_length(segment_to_render)
 }

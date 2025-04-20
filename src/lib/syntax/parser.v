@@ -16,7 +16,7 @@ pub const colors := {
 	.identifier:       draw.Color{200, 200, 235}
 	.operator:         draw.Color{200, 200, 235}
 	.string:           draw.Color{200, 200, 235}
-	.comment:          draw.Color{200, 200, 235}
+	.comment:          draw.Color{130, 130, 130}
 	.comment_start:    draw.Color{200, 200, 235}
 	.comment_end:      draw.Color{200, 200, 235}
 	.block_start:      draw.Color{200, 200, 235}
@@ -26,7 +26,7 @@ pub const colors := {
 	.other:            draw.Color{200, 200, 235}
 }
 
-enum TokenType {
+pub enum TokenType {
 	keyword
 	identifier
 	operator
