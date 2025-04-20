@@ -145,16 +145,17 @@ fn draw_text_line_2(mut ctx draw.Contextable, x int, y int, line string, line_to
 		defer { ctx.reset_bg_color() }
 	}
 
-	mut visual_x_offset := 0
+	mut visual_x_offset := x
 	for token in line_tokens {
-		visual_x_offset += render_token(mut ctx, line, token, min_x, max_width, visual_x_offset)
+		visual_x_offset += render_token(mut ctx, line, token, min_x, max_width, visual_x_offset, y)
 	}
 }
 
-fn render_token(mut ctx draw.Contextable, line string, token syntax.Token, min_x int, max_width int, x_offset int) int {
+fn render_token(mut ctx draw.Contextable, line string, token syntax.Token, min_x int, max_width int, x_offset int, y int) int {
 	token_start := token.start()
 	token_end   := token.end()
 	segment_to_render := line[token_start..token_end]
-	return 0
+	ctx.draw_text(x_offset, y, segment_to_render)
+	return utf8_str_visible_length(segment_to_render)
 }
 

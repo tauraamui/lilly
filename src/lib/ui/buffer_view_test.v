@@ -127,7 +127,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_2() {
 	]
 
 	assert drawn_text.len == 42
-	assert set_fg_color.len == 42
+	assert set_fg_color.len == 3
 
 	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	line_one_expected_drawn_data := [
@@ -250,7 +250,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 	]
 
 	assert drawn_text.len == 2
-	assert set_fg_color.len == 2
+	assert set_fg_color.len == 1
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 1, y: 1, data: "1" }, DrawnText{ x: 4, y: 1, data: "Thisisthelineinthed" },
@@ -299,7 +299,7 @@ fn test_buffer_view_draws_lines_10_to_max_height_2() {
 	]
 
 	assert drawn_text.len == 140
-	assert set_fg_color.len == 140
+	assert set_fg_color.len == 10
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 1, y: 1, data: "11" }, DrawnText{ x: 5, y: 1, data: "This" },
