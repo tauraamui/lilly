@@ -1,5 +1,7 @@
 module syntax
 
+import lib.draw
+
 // NOTE(tauraamui) [27/03/2025]: this is ... idk I just feel like trying to write something
 //                               that feels comfier than trying to embed TS's parser.c and
 //                               have a custom scanner thing
@@ -7,6 +9,21 @@ module syntax
 enum State {
 	default
 	in_block_comment
+}
+
+pub const colors := {
+	TokenType.keyword: draw.Color{87, 215, 217}
+	.identifier:       draw.Color{200, 200, 235}
+	.operator:         draw.Color{200, 200, 235}
+	.string:           draw.Color{200, 200, 235}
+	.comment:          draw.Color{200, 200, 235}
+	.comment_start:    draw.Color{200, 200, 235}
+	.comment_end:      draw.Color{200, 200, 235}
+	.block_start:      draw.Color{200, 200, 235}
+	.block_end:        draw.Color{200, 200, 235}
+	.number:           draw.Color{220, 110, 110}
+	.whitespace:       draw.Color{200, 200, 235}
+	.other:            draw.Color{200, 200, 235}
 }
 
 enum TokenType {
@@ -31,6 +48,18 @@ mut:
 	end    int
 }
 
+pub fn (t Token) start() int {
+	return t.start
+}
+
+pub fn (t Token) end() int {
+	return t.end
+}
+
+pub fn (t Token) t_type() TokenType {
+	return t.t_type
+}
+
 struct LineInfo {
 	start_token_index int
 	token_count       int
@@ -44,7 +73,7 @@ mut:
 	line_info     []LineInfo
 }
 
-fn (parser Parser) get_line_tokens(line_num int) []Token {
+pub fn (parser Parser) get_line_tokens(line_num int) []Token {
 	if line_num < 0 || line_num >= parser.line_info.len {
 		return []Token{}
 	}

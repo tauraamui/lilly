@@ -1,5 +1,39 @@
 module syntax
 
+fn test_simple_single_line_with_no_whitespace_but_delim_number() {
+	code := "Thisisline0inthedocument"
+
+	mut parser := Parser{}
+	lines := code.split("\n")
+	assert lines.len == 1
+
+	parser.parse_line(0, lines[0])
+
+	line_1_tokens := parser.get_line_tokens(0)
+	assert line_1_tokens.len == 3
+	assert extract_token_contents(lines[0], line_1_tokens[0]) == "Thisisline"
+	assert line_1_tokens[0].t_type == .identifier
+	assert extract_token_contents(lines[0], line_1_tokens[1]) == "0"
+	assert line_1_tokens[1].t_type == .number
+	assert extract_token_contents(lines[0], line_1_tokens[2]) == "inthedocument"
+	assert line_1_tokens[2].t_type == .identifier
+}
+
+fn test_simple_single_line_with_no_whitespace_no_numbers() {
+	code := "Thisisthelineinthedocument"
+
+	mut parser := Parser{}
+	lines := code.split("\n")
+	assert lines.len == 1
+
+	parser.parse_line(0, lines[0])
+
+	line_1_tokens := parser.get_line_tokens(0)
+	assert line_1_tokens.len == 1
+	assert extract_token_contents(lines[0], line_1_tokens[0]) == "Thisisthelineinthedocument"
+	assert line_1_tokens[0].t_type == .identifier
+}
+
 fn test_simple_block_of_code_no_comments() {
 	code := "
 fn main() {
