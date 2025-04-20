@@ -569,6 +569,27 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_12_version_2()
 	assert drawn_text[16..24] == line_three_expected_drawn_data
 }
 
+fn test_resolve_token_bounds_min_x_is_0() {
+	token_start := 0
+	token_end   := 13
+	min_x       := 0
+
+	assert resolve_token_bounds(token_start, token_end, min_x)! == TokenBounds{
+		start: token_start
+		end:   token_end
+	}
+}
+
+fn test_resolve_token_bounds_min_x_is_5() {
+	token_start := 0
+	token_end   := 13
+	min_x       := 5
+
+	assert resolve_token_bounds(token_start, token_end, min_x)! == TokenBounds{
+		start: 5
+		end:   token_end
+	}
+}
 
 struct MockContextable {
 mut:
