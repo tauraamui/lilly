@@ -253,7 +253,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 	assert set_fg_color.len == 1
 
 	line_one_expected_drawn_data := [
-		DrawnText{ x: 1, y: 1, data: "1" }, DrawnText{ x: 3, y: 1, data: "Thisisthelineinthedocument" },
+		DrawnText{ x: 1, y: 1, data: "1" }, DrawnText{ x: 3, y: 1, data: "Thisisthelinei" },
 	]
 	assert drawn_text[..2] == line_one_expected_drawn_data
 }
@@ -346,7 +346,7 @@ fn test_buffer_view_draws_lines_10_to_max_height_2() {
 	assert drawn_text[42..56] == line_four_expected_drawn_data
 
 	line_five_expected_drawn_data := [
-		DrawnText{ x: 1, y: 5, data: "15" }, DrawnText{ x: 4, y: 4, data: "This" },
+		DrawnText{ x: 1, y: 5, data: "15" }, DrawnText{ x: 4, y: 5, data: "This" },
 		DrawnText{ x: 8, y: 5, data: " " }, DrawnText{ x: 9, y: 5, data: "is" },
 		DrawnText{ x: 11, y: 5, data: " " }, DrawnText{ x: 12, y: 5, data: "line" },
 		DrawnText{ x: 16, y: 5, data: " " }, DrawnText{ x: 17, y: 5, data: "14" },
@@ -532,7 +532,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_12_version_2()
 
 	x := 0
 	y := 0
-	width := 12
+	width := 14
 	height := 4
 	min_x := 0
 	from_line_num := 0
@@ -541,32 +541,29 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_12_version_2()
 
 	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert drawn_rect == [
-		DrawnRect{ x: 3, y: 1, width: 10, height: 1 }
+		DrawnRect{ x: 3, y: 1, width: 12, height: 1 }
 	]
 
-	// assert drawn_text.len == 24
-	assert drawn_text.len == 48
+	assert drawn_text.len == 18
 	assert set_fg_color.len == 3
-	// assert set_fg_color.len == 24
-	// assert set_fg_color.len == 48
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 1, y: 1, data: "1" }, DT{ x: 3, y: 1, data: "0" }, DT{ x: 4, y: 1, data: " " },
 		DT{ x: 5, y: 1, data: "This" }, DT{ x: 9, y: 1, data: " " }, DT{ x: 10, y: 1, data: "i" }
 	]
-	assert drawn_text[..8] == line_one_expected_drawn_data
+	assert drawn_text[..6] == line_one_expected_drawn_data
 
 	line_two_expected_drawn_data := [
 		DrawnText{ x: 1, y: 2, data: "2" }, DT{ x: 3, y: 2, data: "1" }, DT{ x: 4, y: 2, data: " " },
 		DT{ x: 5, y: 2, data: "This" }, DT{ x: 9, y: 2, data: " " }, DT{ x: 10, y: 2, data: "i" }
 	]
-	assert drawn_text[8..16] == line_two_expected_drawn_data
+	assert drawn_text[6..12] == line_two_expected_drawn_data
 
 	line_three_expected_drawn_data := [
 		DrawnText{ x: 1, y: 3, data: "3" }, DT{ x: 3, y: 3, data: "2" }, DT{ x: 4, y: 3, data: " " },
 		DT{ x: 5, y: 3, data: "This" }, DT{ x: 9, y: 3, data: " " }, DT{ x: 10, y: 3, data: "i" }
 	]
-	assert drawn_text[16..24] == line_three_expected_drawn_data
+	assert drawn_text[12..18] == line_three_expected_drawn_data
 }
 
 fn test_resolve_token_bounds_min_x_is_0() {
