@@ -87,15 +87,22 @@ pub fn (buf_view BufferView) draw_2(
 		// draw line number
 		draw_line_number(mut ctx, x + screenspace_x_offset, y + screenspace_y_offset, document_line_num)
 
-		cursor_line := document_line_num == cursor_y_pos
-		if cursor_line {
+		is_cursor_line := document_line_num == cursor_y_pos
+		if is_cursor_line {
 			ctx.set_bg_color(draw.Color{53, 53, 53})
 			ctx.draw_rect(x + screenspace_x_offset + 1, y + screenspace_y_offset, width - (x + screenspace_x_offset), 1)
 			ctx.reset_bg_color()
 		}
 		// draw the line of text, offset by the position of the buffer view
 		draw_text_line_2(
-			mut ctx, x + screenspace_x_offset + 1, y + screenspace_y_offset, line, syntax_parser.get_line_tokens(document_line_num), min_x, width, cursor_line
+			mut ctx,
+			x + screenspace_x_offset + 1,
+			y + screenspace_y_offset,
+			line,
+			syntax_parser.get_line_tokens(document_line_num),
+			min_x,
+			width,
+			is_cursor_line
 		)
 
 		screenspace_y_offset += 1
@@ -132,6 +139,7 @@ fn draw_text_line(mut ctx draw.Contextable, x int, y int, line string, line_toke
 }
 
 fn draw_text_line_2(mut ctx draw.Contextable, x int, y int, line string, line_tokens []syntax.Token, min_x int, width int, is_cursor_line bool) {
+	max_width := width - x
 	if is_cursor_line {
 		ctx.set_bg_color(draw.Color{53, 53, 53})
 		defer { ctx.reset_bg_color() }
@@ -139,11 +147,11 @@ fn draw_text_line_2(mut ctx draw.Contextable, x int, y int, line string, line_to
 
 	mut visual_x_offset := 0
 	for token in line_tokens {
-		visual_x_offset += render_token(mut ctx, line, token, min_x, width, visual_x_offset)
+		visual_x_offset += render_token(mut ctx, line, token, min_x, max_width, visual_x_offset)
 	}
 }
 
-fn render_token(mut ctx draw.Contextable, line string, token syntax.Token, min_x int, width int, x_offset int) int {
+fn render_token(mut ctx draw.Contextable, line string, token syntax.Token, min_x int, max_width int, x_offset int) int {
 	token_start := token.start()
 	token_end   := token.end()
 	segment_to_render := line[token_start..token_end]
