@@ -131,35 +131,35 @@ fn test_buffer_view_draws_lines_0_to_max_height_2() {
 
 	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	line_one_expected_drawn_data := [
-		DrawnText{ x: 1, y: 1, data: "1" }, DrawnText{ x: 4, y: 1, data: "This" },
-		DrawnText{ x: 8, y: 1, data: " " }, DrawnText{ x: 9, y: 1, data: "is" },
-		DrawnText{ x: 11, y: 1, data: " " }, DrawnText{ x: 12, y: 1, data: "line" },
-		DrawnText{ x: 16, y: 1, data: " " }, DrawnText{ x: 17, y: 1, data: "0" },
-		DrawnText{ x: 18, y: 1, data: " " }, DrawnText{ x: 19, y: 1, data: "in" },
-		DrawnText{ x: 21, y: 1, data: " " }, DrawnText{ x: 22, y: 1, data: "the" },
-		DrawnText{ x: 25, y: 1, data: " " }, DrawnText{ x: 26, y: 1, data: "document" },
+		DrawnText{ x: 1, y: 1, data: "1" }, DrawnText{ x: 3, y: 1, data: "This" },
+		DrawnText{ x: 7, y: 1, data: " " }, DrawnText{ x: 8, y: 1, data: "is" },
+		DrawnText{ x: 10, y: 1, data: " " }, DrawnText{ x: 11, y: 1, data: "line" },
+		DrawnText{ x: 15, y: 1, data: " " }, DrawnText{ x: 16, y: 1, data: "0" },
+		DrawnText{ x: 17, y: 1, data: " " }, DrawnText{ x: 18, y: 1, data: "in" },
+		DrawnText{ x: 20, y: 1, data: " " }, DrawnText{ x: 21, y: 1, data: "the" },
+		DrawnText{ x: 24, y: 1, data: " " }, DrawnText{ x: 25, y: 1, data: "document" },
 	]
 	assert drawn_text[..14] == line_one_expected_drawn_data
 
 	line_two_expected_drawn_data := [
-		DrawnText{ x: 1, y: 2, data: "2" }, DrawnText{ x: 4, y: 2, data: "This" },
-		DrawnText{ x: 8, y: 2, data: " " }, DrawnText{ x: 9, y: 2, data: "is" },
-		DrawnText{ x: 11, y: 2, data: " " }, DrawnText{ x: 12, y: 2, data: "line" },
-		DrawnText{ x: 16, y: 2, data: " " }, DrawnText{ x: 17, y: 2, data: "1" },
-		DrawnText{ x: 18, y: 2, data: " " }, DrawnText{ x: 19, y: 2, data: "in" },
-		DrawnText{ x: 21, y: 2, data: " " }, DrawnText{ x: 22, y: 2, data: "the" },
-		DrawnText{ x: 25, y: 2, data: " " }, DrawnText{ x: 26, y: 2, data: "document" },
+		DrawnText{ x: 1, y: 2, data: "2" }, DrawnText{ x: 3, y: 2, data: "This" },
+		DrawnText{ x: 7, y: 2, data: " " }, DrawnText{ x: 8, y: 2, data: "is" },
+		DrawnText{ x: 10, y: 2, data: " " }, DrawnText{ x: 11, y: 2, data: "line" },
+		DrawnText{ x: 15, y: 2, data: " " }, DrawnText{ x: 16, y: 2, data: "1" },
+		DrawnText{ x: 17, y: 2, data: " " }, DrawnText{ x: 18, y: 2, data: "in" },
+		DrawnText{ x: 20, y: 2, data: " " }, DrawnText{ x: 21, y: 2, data: "the" },
+		DrawnText{ x: 24, y: 2, data: " " }, DrawnText{ x: 25, y: 2, data: "document" },
 	]
 	assert drawn_text[14..28] == line_two_expected_drawn_data
 
 	line_three_expected_drawn_data := [
-		DrawnText{ x: 1, y: 3, data: "3" }, DrawnText{ x: 4, y: 3, data: "This" },
-		DrawnText{ x: 8, y: 3, data: " " }, DrawnText{ x: 9, y: 3, data: "is" },
-		DrawnText{ x: 11, y: 3, data: " " }, DrawnText{ x: 12, y: 3, data: "line" },
-		DrawnText{ x: 16, y: 3, data: " " }, DrawnText{ x: 17, y: 3, data: "2" },
-		DrawnText{ x: 18, y: 3, data: " " }, DrawnText{ x: 19, y: 3, data: "in" },
-		DrawnText{ x: 21, y: 3, data: " " }, DrawnText{ x: 22, y: 3, data: "the" },
-		DrawnText{ x: 25, y: 3, data: " " }, DrawnText{ x: 26, y: 3, data: "document" },
+		DrawnText{ x: 1, y: 3, data: "3" }, DrawnText{ x: 3, y: 3, data: "This" },
+		DrawnText{ x: 7, y: 3, data: " " }, DrawnText{ x: 8, y: 3, data: "is" },
+		DrawnText{ x: 10, y: 3, data: " " }, DrawnText{ x: 11, y: 3, data: "line" },
+		DrawnText{ x: 15, y: 3, data: " " }, DrawnText{ x: 16, y: 3, data: "2" },
+		DrawnText{ x: 17, y: 3, data: " " }, DrawnText{ x: 18, y: 3, data: "in" },
+		DrawnText{ x: 20, y: 3, data: " " }, DrawnText{ x: 21, y: 3, data: "the" },
+		DrawnText{ x: 24, y: 3, data: " " }, DrawnText{ x: 25, y: 3, data: "document" },
 	]
 	assert drawn_text[28..42] == line_three_expected_drawn_data
 }
@@ -253,7 +253,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 	assert set_fg_color.len == 1
 
 	line_one_expected_drawn_data := [
-		DrawnText{ x: 1, y: 1, data: "1" }, DrawnText{ x: 4, y: 1, data: "Thisisthelineinthed" },
+		DrawnText{ x: 1, y: 1, data: "1" }, DrawnText{ x: 3, y: 1, data: "Thisisthelineinthedocument" },
 	]
 	assert drawn_text[..2] == line_one_expected_drawn_data
 }
@@ -302,112 +302,112 @@ fn test_buffer_view_draws_lines_10_to_max_height_2() {
 	assert set_fg_color.len == 10
 
 	line_one_expected_drawn_data := [
-		DrawnText{ x: 1, y: 1, data: "11" }, DrawnText{ x: 5, y: 1, data: "This" },
-		DrawnText{ x: 9, y: 1, data: " " }, DrawnText{ x: 10, y: 1, data: "is" },
-		DrawnText{ x: 12, y: 1, data: " " }, DrawnText{ x: 13, y: 1, data: "line" },
-		DrawnText{ x: 17, y: 1, data: " " }, DrawnText{ x: 18, y: 1, data: "10" },
-		DrawnText{ x: 20, y: 1, data: " " }, DrawnText{ x: 21, y: 1, data: "in" },
-		DrawnText{ x: 23, y: 1, data: " " }, DrawnText{ x: 24, y: 1, data: "the" },
-		DrawnText{ x: 27, y: 1, data: " " }, DrawnText{ x: 28, y: 1, data: "document" },
+		DrawnText{ x: 1, y: 1, data: "11" }, DrawnText{ x: 4, y: 1, data: "This" },
+		DrawnText{ x: 8, y: 1, data: " " }, DrawnText{ x: 9, y: 1, data: "is" },
+		DrawnText{ x: 11, y: 1, data: " " }, DrawnText{ x: 12, y: 1, data: "line" },
+		DrawnText{ x: 16, y: 1, data: " " }, DrawnText{ x: 17, y: 1, data: "10" },
+		DrawnText{ x: 19, y: 1, data: " " }, DrawnText{ x: 20, y: 1, data: "in" },
+		DrawnText{ x: 22, y: 1, data: " " }, DrawnText{ x: 23, y: 1, data: "the" },
+		DrawnText{ x: 26, y: 1, data: " " }, DrawnText{ x: 27, y: 1, data: "document" },
 	]
 	assert drawn_text[..14] == line_one_expected_drawn_data
 
 	line_two_expected_drawn_data := [
-		DrawnText{ x: 1, y: 2, data: "12" }, DrawnText{ x: 5, y: 2, data: "This" },
-		DrawnText{ x: 9, y: 2, data: " " }, DrawnText{ x: 10, y: 2, data: "is" },
-		DrawnText{ x: 12, y: 2, data: " " }, DrawnText{ x: 13, y: 2, data: "line" },
-		DrawnText{ x: 17, y: 2, data: " " }, DrawnText{ x: 18, y: 2, data: "11" },
-		DrawnText{ x: 20, y: 2, data: " " }, DrawnText{ x: 21, y: 2, data: "in" },
-		DrawnText{ x: 23, y: 2, data: " " }, DrawnText{ x: 24, y: 2, data: "the" },
-		DrawnText{ x: 27, y: 2, data: " " }, DrawnText{ x: 28, y: 2, data: "document" },
+		DrawnText{ x: 1, y: 2, data: "12" }, DrawnText{ x: 4, y: 2, data: "This" },
+		DrawnText{ x: 8, y: 2, data: " " }, DrawnText{ x: 9, y: 2, data: "is" },
+		DrawnText{ x: 11, y: 2, data: " " }, DrawnText{ x: 12, y: 2, data: "line" },
+		DrawnText{ x: 16, y: 2, data: " " }, DrawnText{ x: 17, y: 2, data: "11" },
+		DrawnText{ x: 19, y: 2, data: " " }, DrawnText{ x: 20, y: 2, data: "in" },
+		DrawnText{ x: 22, y: 2, data: " " }, DrawnText{ x: 23, y: 2, data: "the" },
+		DrawnText{ x: 26, y: 2, data: " " }, DrawnText{ x: 27, y: 2, data: "document" },
 	]
 	assert drawn_text[14..28] == line_two_expected_drawn_data
 
 	line_three_expected_drawn_data := [
-		DrawnText{ x: 1, y: 3, data: "13" }, DrawnText{ x: 5, y: 3, data: "This" },
-		DrawnText{ x: 9, y: 3, data: " " }, DrawnText{ x: 10, y: 3, data: "is" },
-		DrawnText{ x: 12, y: 3, data: " " }, DrawnText{ x: 13, y: 3, data: "line" },
-		DrawnText{ x: 17, y: 3, data: " " }, DrawnText{ x: 18, y: 3, data: "12" },
-		DrawnText{ x: 20, y: 3, data: " " }, DrawnText{ x: 21, y: 3, data: "in" },
-		DrawnText{ x: 23, y: 3, data: " " }, DrawnText{ x: 24, y: 3, data: "the" },
-		DrawnText{ x: 27, y: 3, data: " " }, DrawnText{ x: 28, y: 3, data: "document" },
+		DrawnText{ x: 1, y: 3, data: "13" }, DrawnText{ x: 4, y: 3, data: "This" },
+		DrawnText{ x: 8, y: 3, data: " " }, DrawnText{ x: 9, y: 3, data: "is" },
+		DrawnText{ x: 11, y: 3, data: " " }, DrawnText{ x: 12, y: 3, data: "line" },
+		DrawnText{ x: 16, y: 3, data: " " }, DrawnText{ x: 17, y: 3, data: "12" },
+		DrawnText{ x: 19, y: 3, data: " " }, DrawnText{ x: 20, y: 3, data: "in" },
+		DrawnText{ x: 22, y: 3, data: " " }, DrawnText{ x: 23, y: 3, data: "the" },
+		DrawnText{ x: 26, y: 3, data: " " }, DrawnText{ x: 27, y: 3, data: "document" },
 	]
 	assert drawn_text[28..42] == line_three_expected_drawn_data
 
 	line_four_expected_drawn_data := [
-		DrawnText{ x: 1, y: 4, data: "14" }, DrawnText{ x: 5, y: 4, data: "This" },
-		DrawnText{ x: 9, y: 4, data: " " }, DrawnText{ x: 10, y: 4, data: "is" },
-		DrawnText{ x: 12, y: 4, data: " " }, DrawnText{ x: 13, y: 4, data: "line" },
-		DrawnText{ x: 17, y: 4, data: " " }, DrawnText{ x: 18, y: 4, data: "13" },
-		DrawnText{ x: 20, y: 4, data: " " }, DrawnText{ x: 21, y: 4, data: "in" },
-		DrawnText{ x: 23, y: 4, data: " " }, DrawnText{ x: 24, y: 4, data: "the" },
-		DrawnText{ x: 27, y: 4, data: " " }, DrawnText{ x: 28, y: 4, data: "document" },
+		DrawnText{ x: 1, y: 4, data: "14" }, DrawnText{ x: 4, y: 4, data: "This" },
+		DrawnText{ x: 8, y: 4, data: " " }, DrawnText{ x: 9, y: 4, data: "is" },
+		DrawnText{ x: 11, y: 4, data: " " }, DrawnText{ x: 12, y: 4, data: "line" },
+		DrawnText{ x: 16, y: 4, data: " " }, DrawnText{ x: 17, y: 4, data: "13" },
+		DrawnText{ x: 19, y: 4, data: " " }, DrawnText{ x: 20, y: 4, data: "in" },
+		DrawnText{ x: 22, y: 4, data: " " }, DrawnText{ x: 23, y: 4, data: "the" },
+		DrawnText{ x: 26, y: 4, data: " " }, DrawnText{ x: 27, y: 4, data: "document" },
 	]
 	assert drawn_text[42..56] == line_four_expected_drawn_data
 
 	line_five_expected_drawn_data := [
-		DrawnText{ x: 1, y: 5, data: "15" }, DrawnText{ x: 5, y: 5, data: "This" },
-		DrawnText{ x: 9, y: 5, data: " " }, DrawnText{ x: 10, y: 5, data: "is" },
-		DrawnText{ x: 12, y: 5, data: " " }, DrawnText{ x: 13, y: 5, data: "line" },
-		DrawnText{ x: 17, y: 5, data: " " }, DrawnText{ x: 18, y: 5, data: "14" },
-		DrawnText{ x: 20, y: 5, data: " " }, DrawnText{ x: 21, y: 5, data: "in" },
-		DrawnText{ x: 23, y: 5, data: " " }, DrawnText{ x: 24, y: 5, data: "the" },
-		DrawnText{ x: 27, y: 5, data: " " }, DrawnText{ x: 28, y: 5, data: "document" },
+		DrawnText{ x: 1, y: 5, data: "15" }, DrawnText{ x: 4, y: 4, data: "This" },
+		DrawnText{ x: 8, y: 5, data: " " }, DrawnText{ x: 9, y: 5, data: "is" },
+		DrawnText{ x: 11, y: 5, data: " " }, DrawnText{ x: 12, y: 5, data: "line" },
+		DrawnText{ x: 16, y: 5, data: " " }, DrawnText{ x: 17, y: 5, data: "14" },
+		DrawnText{ x: 19, y: 5, data: " " }, DrawnText{ x: 20, y: 5, data: "in" },
+		DrawnText{ x: 22, y: 5, data: " " }, DrawnText{ x: 23, y: 5, data: "the" },
+		DrawnText{ x: 26, y: 5, data: " " }, DrawnText{ x: 27, y: 5, data: "document" },
 	]
 	assert drawn_text[56..70] == line_five_expected_drawn_data
 
 	line_six_expected_drawn_data := [
-		DrawnText{ x: 1, y: 6, data: "16" }, DrawnText{ x: 5, y: 6, data: "This" },
-		DrawnText{ x: 9, y: 6, data: " " }, DrawnText{ x: 10, y: 6, data: "is" },
-		DrawnText{ x: 12, y: 6, data: " " }, DrawnText{ x: 13, y: 6, data: "line" },
-		DrawnText{ x: 17, y: 6, data: " " }, DrawnText{ x: 18, y: 6, data: "15" },
-		DrawnText{ x: 20, y: 6, data: " " }, DrawnText{ x: 21, y: 6, data: "in" },
-		DrawnText{ x: 23, y: 6, data: " " }, DrawnText{ x: 24, y: 6, data: "the" },
-		DrawnText{ x: 27, y: 6, data: " " }, DrawnText{ x: 28, y: 6, data: "document" },
+		DrawnText{ x: 1, y: 6, data: "16" }, DrawnText{ x: 4, y: 6, data: "This" },
+		DrawnText{ x: 8, y: 6, data: " " }, DrawnText{ x: 9, y: 6, data: "is" },
+		DrawnText{ x: 11, y: 6, data: " " }, DrawnText{ x: 12, y: 6, data: "line" },
+		DrawnText{ x: 16, y: 6, data: " " }, DrawnText{ x: 17, y: 6, data: "15" },
+		DrawnText{ x: 19, y: 6, data: " " }, DrawnText{ x: 20, y: 6, data: "in" },
+		DrawnText{ x: 22, y: 6, data: " " }, DrawnText{ x: 23, y: 6, data: "the" },
+		DrawnText{ x: 26, y: 6, data: " " }, DrawnText{ x: 27, y: 6, data: "document" },
 	]
 	assert drawn_text[70..84] == line_six_expected_drawn_data
 
 	line_seven_expected_drawn_data := [
-		DrawnText{ x: 1, y: 7, data: "17" }, DrawnText{ x: 5, y: 7, data: "This" },
-		DrawnText{ x: 9, y: 7, data: " " }, DrawnText{ x: 10, y: 7, data: "is" },
-		DrawnText{ x: 12, y: 7, data: " " }, DrawnText{ x: 13, y: 7, data: "line" },
-		DrawnText{ x: 17, y: 7, data: " " }, DrawnText{ x: 18, y: 7, data: "16" },
-		DrawnText{ x: 20, y: 7, data: " " }, DrawnText{ x: 21, y: 7, data: "in" },
-		DrawnText{ x: 23, y: 7, data: " " }, DrawnText{ x: 24, y: 7, data: "the" },
-		DrawnText{ x: 27, y: 7, data: " " }, DrawnText{ x: 28, y: 7, data: "document" },
+		DrawnText{ x: 1, y: 7, data: "17" }, DrawnText{ x: 4, y: 7, data: "This" },
+		DrawnText{ x: 8, y: 7, data: " " }, DrawnText{ x: 9, y: 7, data: "is" },
+		DrawnText{ x: 11, y: 7, data: " " }, DrawnText{ x: 12, y: 7, data: "line" },
+		DrawnText{ x: 16, y: 7, data: " " }, DrawnText{ x: 17, y: 7, data: "16" },
+		DrawnText{ x: 19, y: 7, data: " " }, DrawnText{ x: 20, y: 7, data: "in" },
+		DrawnText{ x: 22, y: 7, data: " " }, DrawnText{ x: 23, y: 7, data: "the" },
+		DrawnText{ x: 26, y: 7, data: " " }, DrawnText{ x: 27, y: 7, data: "document" },
 	]
 	assert drawn_text[84..98] == line_seven_expected_drawn_data
 
 	line_eight_expected_drawn_data := [
-		DrawnText{ x: 1, y: 8, data: "18" }, DrawnText{ x: 5, y: 8, data: "This" },
-		DrawnText{ x: 9, y: 8, data: " " }, DrawnText{ x: 10, y: 8, data: "is" },
-		DrawnText{ x: 12, y: 8, data: " " }, DrawnText{ x: 13, y: 8, data: "line" },
-		DrawnText{ x: 17, y: 8, data: " " }, DrawnText{ x: 18, y: 8, data: "17" },
-		DrawnText{ x: 20, y: 8, data: " " }, DrawnText{ x: 21, y: 8, data: "in" },
-		DrawnText{ x: 23, y: 8, data: " " }, DrawnText{ x: 24, y: 8, data: "the" },
-		DrawnText{ x: 27, y: 8, data: " " }, DrawnText{ x: 28, y: 8, data: "document" },
+		DrawnText{ x: 1, y: 8, data: "18" }, DrawnText{ x: 4, y: 8, data: "This" },
+		DrawnText{ x: 8, y: 8, data: " " }, DrawnText{ x: 9, y: 8, data: "is" },
+		DrawnText{ x: 11, y: 8, data: " " }, DrawnText{ x: 12, y: 8, data: "line" },
+		DrawnText{ x: 16, y: 8, data: " " }, DrawnText{ x: 17, y: 8, data: "17" },
+		DrawnText{ x: 19, y: 8, data: " " }, DrawnText{ x: 20, y: 8, data: "in" },
+		DrawnText{ x: 22, y: 8, data: " " }, DrawnText{ x: 23, y: 8, data: "the" },
+		DrawnText{ x: 26, y: 8, data: " " }, DrawnText{ x: 27, y: 8, data: "document" },
 	]
 	assert drawn_text[98..112] == line_eight_expected_drawn_data
 
 	line_nine_expected_drawn_data := [
-		DrawnText{ x: 1, y: 9, data: "19" }, DrawnText{ x: 5, y: 9, data: "This" },
-		DrawnText{ x: 9, y: 9, data: " " }, DrawnText{ x: 10, y: 9, data: "is" },
-		DrawnText{ x: 12, y: 9, data: " " }, DrawnText{ x: 13, y: 9, data: "line" },
-		DrawnText{ x: 17, y: 9, data: " " }, DrawnText{ x: 18, y: 9, data: "18" },
-		DrawnText{ x: 20, y: 9, data: " " }, DrawnText{ x: 21, y: 9, data: "in" },
-		DrawnText{ x: 23, y: 9, data: " " }, DrawnText{ x: 24, y: 9, data: "the" },
-		DrawnText{ x: 27, y: 9, data: " " }, DrawnText{ x: 28, y: 9, data: "document" },
+		DrawnText{ x: 1, y: 9, data: "19" }, DrawnText{ x: 4, y: 9, data: "This" },
+		DrawnText{ x: 8, y: 9, data: " " }, DrawnText{ x: 9, y: 9, data: "is" },
+		DrawnText{ x: 11, y: 9, data: " " }, DrawnText{ x: 12, y: 9, data: "line" },
+		DrawnText{ x: 16, y: 9, data: " " }, DrawnText{ x: 17, y: 9, data: "18" },
+		DrawnText{ x: 19, y: 9, data: " " }, DrawnText{ x: 20, y: 9, data: "in" },
+		DrawnText{ x: 22, y: 9, data: " " }, DrawnText{ x: 23, y: 9, data: "the" },
+		DrawnText{ x: 26, y: 9, data: " " }, DrawnText{ x: 27, y: 9, data: "document" },
 	]
 	assert drawn_text[112..126] == line_nine_expected_drawn_data
 
 	line_ten_expected_drawn_data := [
-		DrawnText{ x: 1, y: 10, data: "20" }, DrawnText{ x: 5, y: 10, data: "This" },
-		DrawnText{ x: 9, y: 10, data: " " }, DrawnText{ x: 10, y: 10, data: "is" },
-		DrawnText{ x: 12, y: 10, data: " " }, DrawnText{ x: 13, y: 10, data: "line" },
-		DrawnText{ x: 17, y: 10, data: " " }, DrawnText{ x: 18, y: 10, data: "19" },
-		DrawnText{ x: 20, y: 10, data: " " }, DrawnText{ x: 21, y: 10, data: "in" },
-		DrawnText{ x: 23, y: 10, data: " " }, DrawnText{ x: 24, y: 10, data: "the" },
-		DrawnText{ x: 27, y: 10, data: " " }, DrawnText{ x: 28, y: 10, data: "document" },
+		DrawnText{ x: 1, y: 10, data: "20" }, DrawnText{ x: 4, y: 10, data: "This" },
+		DrawnText{ x: 8, y: 10, data: " " }, DrawnText{ x: 9, y: 10, data: "is" },
+		DrawnText{ x: 11, y: 10, data: " " }, DrawnText{ x: 12, y: 10, data: "line" },
+		DrawnText{ x: 16, y: 10, data: " " }, DrawnText{ x: 17, y: 10, data: "19" },
+		DrawnText{ x: 19, y: 10, data: " " }, DrawnText{ x: 20, y: 10, data: "in" },
+		DrawnText{ x: 22, y: 10, data: " " }, DrawnText{ x: 23, y: 10, data: "the" },
+		DrawnText{ x: 26, y: 10, data: " " }, DrawnText{ x: 27, y: 10, data: "document" },
 	]
 	assert drawn_text[126..140] == line_ten_expected_drawn_data
 }
@@ -544,26 +544,27 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_12_version_2()
 		DrawnRect{ x: 3, y: 1, width: 10, height: 1 }
 	]
 
-	assert drawn_text.len == 24
-	// assert drawn_text.len == 48
-	assert set_fg_color.len == 24
+	// assert drawn_text.len == 24
+	assert drawn_text.len == 48
+	assert set_fg_color.len == 3
+	// assert set_fg_color.len == 24
 	// assert set_fg_color.len == 48
 
 	line_one_expected_drawn_data := [
-		DrawnText{ x: 1, y: 1, data: "1" }, DT{ x: 4, y: 1, data: "0" }, DT{ x: 5, y: 1, data: " " },
-		DT{ x: 6, y: 1, data: "This" }, DT{ x: 10, y: 1, data: " " }, DT{ x: 11, y: 1, data: "i" }
+		DrawnText{ x: 1, y: 1, data: "1" }, DT{ x: 3, y: 1, data: "0" }, DT{ x: 4, y: 1, data: " " },
+		DT{ x: 5, y: 1, data: "This" }, DT{ x: 9, y: 1, data: " " }, DT{ x: 10, y: 1, data: "i" }
 	]
 	assert drawn_text[..8] == line_one_expected_drawn_data
 
 	line_two_expected_drawn_data := [
-		DrawnText{ x: 1, y: 2, data: "2" }, DT{ x: 4, y: 2, data: "1" }, DT{ x: 5, y: 2, data: " " },
-		DT{ x: 6, y: 2, data: "This" }, DT{ x: 10, y: 2, data: " " }, DT{ x: 11, y: 2, data: "i" }
+		DrawnText{ x: 1, y: 2, data: "2" }, DT{ x: 3, y: 2, data: "1" }, DT{ x: 4, y: 2, data: " " },
+		DT{ x: 5, y: 2, data: "This" }, DT{ x: 9, y: 2, data: " " }, DT{ x: 10, y: 2, data: "i" }
 	]
 	assert drawn_text[8..16] == line_two_expected_drawn_data
 
 	line_three_expected_drawn_data := [
-		DrawnText{ x: 1, y: 3, data: "3" }, DT{ x: 4, y: 3, data: "2" }, DT{ x: 5, y: 3, data: " " },
-		DT{ x: 6, y: 3, data: "This" }, DT{ x: 10, y: 3, data: " " }, DT{ x: 11, y: 3, data: "i" }
+		DrawnText{ x: 1, y: 3, data: "3" }, DT{ x: 3, y: 3, data: "2" }, DT{ x: 4, y: 3, data: " " },
+		DT{ x: 5, y: 3, data: "This" }, DT{ x: 9, y: 3, data: " " }, DT{ x: 10, y: 3, data: "i" }
 	]
 	assert drawn_text[16..24] == line_three_expected_drawn_data
 }

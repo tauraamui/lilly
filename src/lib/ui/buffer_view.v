@@ -151,11 +151,16 @@ fn draw_text_line_2(mut ctx draw.Contextable, x int, y int, line string, line_to
 	}
 }
 
+fn resolve_token_bounds(token_start int, token_end int, min_x int) (int, int, bool) {
+	if token_end < min_x { return 0, 0, false }
+	return token_start, token_end, true
+}
+
 fn render_token(mut ctx draw.Contextable, line string, token syntax.Token, min_x int, max_width int, x_offset int, y int) int {
-	token_start := token.start()
-	token_end   := token.end()
+	token_start, token_end, render := resolve_token_bounds(token.start(), token.end(), min_x)
+	if render == false { return 0 }
 	segment_to_render := line[token_start..token_end]
 	ctx.draw_text(x_offset, y, segment_to_render)
-	return utf8_str_visible_length(segment_to_render)
+	return segment_to_render.runes().len
 }
 
