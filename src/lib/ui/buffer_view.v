@@ -137,18 +137,16 @@ fn draw_text_line_2(mut ctx draw.Contextable, x int, y int, line string, line_to
 		defer { ctx.reset_bg_color() }
 	}
 
-	mut x_offset := 1
+	mut visual_x_offset := 0
 	for token in line_tokens {
-		mut segment  := term.strip_ansi(line[token.start()..token.end()].replace("\t", " ".repeat(4)))
-		// only select/change fg colour when not in a cursor line
-		fg_color := syntax.colors[token.t_type()]
-		ctx.set_color(fg_color)
-		if segment.runes().len > x_offset + width {
-			segment = utf8.str_clamp_to_visible_length(segment, width - x_offset)
-		}
-		ctx.draw_text(x + x_offset, y, segment)
-		x_offset += utf8_str_visible_length(segment)
-		if x_offset > width { break }
+		visual_x_offset += render_token(mut ctx, line, token, min_x, width, visual_x_offset)
 	}
+}
+
+fn render_token(mut ctx draw.Contextable, line string, token syntax.Token, min_x int, width int, x_offset int) int {
+	token_start := token.start()
+	token_end   := token.end()
+	segment_to_render := line[token_start..token_end]
+	return 0
 }
 
