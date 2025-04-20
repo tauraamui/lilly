@@ -73,7 +73,7 @@ fn frame(mut app App) {
 	//                               The next bout of work should be focused on addressing this,
 	//                               ideally we would only be re-rendering specific chars which
 	//                               have been changed. Need to think hard about how to implement this.
-	// app.ui.clear()
+	app.ui.clear()
 
 	app.lilly.draw(mut app.ui)
 
