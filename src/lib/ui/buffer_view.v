@@ -95,7 +95,8 @@ fn draw_text_line(mut ctx draw.Contextable, x int, y int, line string, line_toke
 	for token in line_tokens {
 		token_bounds := resolve_token_bounds(token.start(), token.end(), min_x) or { continue }
 		token_type := token.t_type()
-		visual_x_offset += render_token(mut ctx, line, token_bounds, token_type, previous_type == token_type, min_x, x, max_width, visual_x_offset, y)
+		same_type := (previous_type != .whitespace && token_type != .whitespace) && (previous_type == token_type)
+		visual_x_offset += render_token(mut ctx, line, token_bounds, token_type, same_type, min_x, x, max_width, visual_x_offset, y)
 		previous_type = token_type
 	}
 }
