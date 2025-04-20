@@ -445,7 +445,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_4_max_width_56() {
 	assert drawn_text[28..42] == line_three_expected_drawn_data
 }
 
-fn test_buffer_view_draws_lines_0_to_max_height_min_x_22_max_width_56() {
+fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_56() {
 	mut drawn_text := []DrawnText{}
 	mut drawn_text_ref := &drawn_text
 
@@ -507,6 +507,67 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_22_max_width_56() {
 	assert drawn_text[8..12] == line_three_expected_drawn_data
 }
 
+fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_6() {
+	mut drawn_text := []DrawnText{}
+	mut drawn_text_ref := &drawn_text
+
+	mut set_fg_color := []draw.Color{}
+	mut set_fg_color_ref := &set_fg_color
+
+	mut drawn_rect := []DrawnRect{}
+	mut drawn_rect_ref := &drawn_rect
+
+	mut mock_ctx := MockContextable{
+		on_draw_cb: fn [mut drawn_text_ref] (x int, y int, text string) {
+			drawn_text_ref << DrawnText{ x: x, y: y, data: text }
+		}
+		on_draw_rect_cb: fn [mut drawn_rect_ref] (x int, y int, width int, height int) {
+			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
+		}
+		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
+			set_fg_color_ref << c
+		}
+	}
+
+	mut buf      := buffer.Buffer.new("", false)
+	for i in 0..3 { buf.lines << "${i} This is line ${i} in the document" }
+	mut buf_view := BufferView.new(&buf)
+
+	x := 0
+	y := 0
+	width := 12
+	height := 4
+	min_x := 21
+	from_line_num := 0
+
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0)
+
+	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
+	assert drawn_rect == [
+		DrawnRect{ x: 3, y: 1, width: 10, height: 1 }
+	]
+
+	assert drawn_text.len == 12
+	assert set_fg_color.len == 3
+
+	line_one_expected_drawn_data := [
+		DrawnText{ x: 1, y: 1, data: "1" }, DT{ x: 3, y: 1, data: "he" },
+		DT{ x: 5, y: 1, data: " " }, DT{ x: 6, y: 1, data: "document" }
+	]
+	assert drawn_text[..12] == line_one_expected_drawn_data
+
+	line_two_expected_drawn_data := [
+		DrawnText{ x: 1, y: 2, data: "2" }, DT{ x: 3, y: 2, data: "he" },
+		DT{ x: 5, y: 2, data: " " }, DT{ x: 6, y: 2, data: "document" }
+	]
+	assert drawn_text[4..8] == line_two_expected_drawn_data
+
+	line_three_expected_drawn_data := [
+		DrawnText{ x: 1, y: 3, data: "3" }, DT{ x: 3, y: 3, data: "he" },
+		DT{ x: 5, y: 3, data: " " }, DT{ x: 6, y: 3, data: "document" }
+	]
+	assert drawn_text[8..12] == line_three_expected_drawn_data
+}
 
 fn test_resolve_token_bounds_min_x_is_0() {
 	token_start := 0
