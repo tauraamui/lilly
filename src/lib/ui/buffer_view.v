@@ -170,6 +170,6 @@ fn render_token(mut ctx draw.Contextable, line string, token syntax.Token, min_x
 	segment_to_render := utf8.str_clamp_to_visible_length(line[token_bounds.start..token_bounds.end], max_width - x_offset)
 	if segment_to_render.runes().len == 0 { return 0 }
 	ctx.draw_text(x_offset, y, segment_to_render)
-	return segment_to_render.runes().len
+	return utf8_str_visible_length(segment_to_render)
 }
 
