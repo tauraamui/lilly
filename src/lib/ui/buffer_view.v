@@ -157,7 +157,11 @@ struct TokenBounds {
 }
 
 fn resolve_token_bounds(token_start int, token_end int, min_x int) ?TokenBounds {
+	if token_end < token_start { return none }
 	if token_end < min_x { return none }
+	if token_end > min_x && token_start < min_x {
+		return TokenBounds{ start: min_x, end: token_end }
+	}
 	return TokenBounds{ start: token_start, end: token_end }
 }
 
