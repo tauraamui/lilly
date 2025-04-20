@@ -67,7 +67,13 @@ fn frame(mut app App) {
 		return
 	}
 	app.changed = false
-	app.ui.clear()
+
+	// NOTE(tauraamui) [20/04/2025]: The majority of the rendering perf. issues we're seeing are due
+	//                               to the unnecessary full clearing of the screen each frame.
+	//                               The next bout of work should be focused on addressing this,
+	//                               ideally we would only be re-rendering specific chars which
+	//                               have been changed. Need to think hard about how to implement this.
+	// app.ui.clear()
 
 	app.lilly.draw(mut app.ui)
 
