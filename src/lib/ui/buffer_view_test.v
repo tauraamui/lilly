@@ -70,7 +70,7 @@ fn test_buffer_view_draws_lines_0_to_max_height() {
 	]
 
 	assert drawn_text.len == 42
-	assert set_fg_color.len == 3
+	assert set_fg_color.len == 30
 
 	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	line_one_expected_drawn_data := [
@@ -148,7 +148,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 	]
 
 	assert drawn_text.len == 2
-	assert set_fg_color.len == 1
+	assert set_fg_color.len == 2
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 1, y: 1, data: "1" }, DrawnText{ x: 3, y: 1, data: "Thisisthelineinth" },
@@ -197,7 +197,7 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	]
 
 	assert drawn_text.len == 140
-	assert set_fg_color.len == 10
+	assert set_fg_color.len == 100
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 1, y: 1, data: "11" }, DrawnText{ x: 4, y: 1, data: "This" },
@@ -353,7 +353,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_14() {
 	]
 
 	assert drawn_text.len == 24
-	assert set_fg_color.len == 3
+	assert set_fg_color.len == 18
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 1, y: 1, data: "1" }, DT{ x: 3, y: 1, data: "0" }, DT{ x: 4, y: 1, data: " " },
@@ -418,7 +418,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_4_max_width_56() {
 	]
 
 	assert drawn_text.len == 42
-	assert set_fg_color.len == 3
+	assert set_fg_color.len == 30
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 1, y: 1, data: "1" }, DT{ x: 3, y: 1, data: "is" }, DT{ x: 5, y: 1, data: " " },
@@ -489,7 +489,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_56() {
 	]
 
 	assert drawn_text.len == 12
-	assert set_fg_color.len == 3
+	assert set_fg_color.len == 9
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 1, y: 1, data: "1" }, DT{ x: 3, y: 1, data: "he" },
@@ -551,7 +551,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_6() {
 	]
 
 	assert drawn_text.len == 12
-	assert set_fg_color.len == 3
+	assert set_fg_color.len == 9
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 1, y: 1, data: "1" }, DT{ x: 3, y: 1, data: "he" },
