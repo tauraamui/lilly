@@ -77,6 +77,7 @@ fn frame(mut app App) {
 
 	app.lilly.draw(mut app.ui)
 
+	app.ui.reset()
 	app.ui.flush()
 }
 
