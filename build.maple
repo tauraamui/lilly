@@ -18,6 +18,13 @@ task:run = {
     run = 'v -g run ./src .'
 }
 
+task:run-with-gap = {
+	category = "build"
+    help = 'Runs lilly without building full binary'
+    depends = [ 'generate-git-hash' ]
+    run = 'v -g run ./src -ugb .'
+}
+
 task:run-debug-log = {
 	category = "build"
     help = 'Run lilly with log level set to debug'
