@@ -118,7 +118,7 @@ fn resolve_token_bounds(token_start int, token_end int, min_x int) ?TokenBounds 
 }
 
 fn render_token(mut ctx draw.Contextable, line string, token_bounds TokenBounds, token_type syntax.TokenType, same_type bool, min_x int, base_x int, max_width int, x_offset int, y int) int {
-	mut segment_to_render := line[token_bounds.start..token_bounds.end].replace("\t", " ".repeat(4))
+	mut segment_to_render := line.runes()[token_bounds.start..token_bounds.end].string().replace("\t", " ".repeat(4))
 	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
 	if segment_to_render.runes().len == 0 { return 0 }
 	if same_type == false {
