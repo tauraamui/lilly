@@ -46,6 +46,12 @@ task:test = {
     run = 'v -g test ./src'
 }
 
+task:emoji-grid = {
+	category = "experiment"
+	help = 'Run experiment for generating document of emoji grid'
+	run = 'v run ./experiment/tui_render/cp_utf8_module.vsh && v run ./experiment/tui_render'
+}
+
 task:git-prune = {
 	category = "util"
 	help     = "Runs git prune to delete local copies of missing remote branches"
