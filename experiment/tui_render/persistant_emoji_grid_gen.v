@@ -1,6 +1,6 @@
 module main
 
 fn main() {
-	println(emojis)
+	println(emoji_shark_char)
 }
 

@@ -49,23 +49,32 @@ context.artifact(
 	run: fn (self build.Task) ! {
 		// cp("./src/lib/utf8/emoji_test_set.v", "./experiment/tui_render/emoji_test_set.v")!
 		src_emoji_set_path := "./src/lib/utf8/emoji_test_set.v"
-		mut emoji_set_file := open_file(src_emoji_set_path, "r") or { panic("failed to open ${src_emoji_set_path} for reading -> ${err}") }
-		defer { emoji_set_file.close() }
+		dst_emoji_set_path := "./experiment/tui_render/emoji_test_set.v"
 
-		mut buf_line_reader := io.new_buffered_reader(reader: emoji_set_file)
+		mut src_emoji_set_file := open_file(src_emoji_set_path, "r") or { panic("failed to open ${src_emoji_set_path} for reading -> ${err}") }
+		defer { src_emoji_set_file.close() }
+
+		mut dst_emoji_set_file := open_file(dst_emoji_set_path, "w") or { panic("failed to open ${dst_emoji_set_path} for appending -> ${err}") }
+		defer { dst_emoji_set_file.close() }
+
+		mut buf_line_reader := io.new_buffered_reader(reader: src_emoji_set_file)
 
 		mut line_num := 0
 		for {
 			cur_line_num := line_num
 			line_num += 1
 
-			if cur_line_num == 0 { continue }
-
 			source_file_line := buf_line_reader.read_line() or {
 				assert err is io.Eof
 				break
 			}
-			println(source_file_line)
+
+			if cur_line_num == 0 {
+				dst_emoji_set_file.writeln("module main")!
+				continue
+			}
+
+			dst_emoji_set_file.writeln(source_file_line)!
 		}
 	}
 )
