@@ -23,17 +23,21 @@ fn (mut grid EmojiGrid) update_bounds(width int, height int) {
 	grid.height = height
 }
 
-fn (mut grid EmojiGrid) draw(mut ctx draw.Contextable) {
-	if grid.run_once { return }
-	defer { grid.run_once = true }
-	grid.update_bounds(ctx.window_width(), ctx.window_height())
-	ctx.clear()
+fn (mut grid EmojiGrid) draw_chars(mut ctx draw.Contextable) {
 	for y in 0..grid.height {
 		for x in 0..grid.width {
 			char_to_render := if (x == 0 || x == grid.width - 1) || (y == 0 || y == grid.height - 1) { "X" } else { "A" }
 			ctx.draw_text(x + 1, y + 1, char_to_render)
 		}
 	}
+}
+
+fn (mut grid EmojiGrid) draw(mut ctx draw.Contextable) {
+	if grid.run_once { return }
+	defer { grid.run_once = true }
+	grid.update_bounds(ctx.window_width(), ctx.window_height())
+	ctx.clear()
+	grid.draw_chars(mut ctx)
 	ctx.flush()
 }
 
