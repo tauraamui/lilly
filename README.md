@@ -34,12 +34,12 @@ motions. The end vision is a one to one replacement/equivalent functionality for
 
 ## How to build (requires the V compiler https://vlang.io)
 
-1. Install the clockwork build tool by executing this command: `v run ./install-clockwork.vsh`
+1. Build lilly by executing `v run ./make.vsh build-prod`
+	or run with no binary build with `v run ./make.vsh run`
 
-2. Build lilly by executing: `clockwork build`
-	or build and run with `clockwork run`
+You can see what other tasks are available to run with `v run ./make.vsh --tasks`
 
-You can see what other tasks are available to run with `clockwork --tasks`
+(you can shorten this command to just `./make.vsh <task>` by making `make.vsh` executable)
 
 ### Not convinced?
 
