@@ -54,40 +54,5 @@ context.artifact(
 	name: "copy-emoji-grid-code",
 	run: |self| cp("./experiment/tui_render/emoji_grid.v", "./src/emoji_grid.v")!
 )
-context.artifact(
-	name: "copy-emoji-set",
-	help: "copies the emoji map set from lib into experiment dir",
-	run: fn (self build.Task) ! {
-		src_emoji_set_path := "./src/lib/utf8/emoji_test_set.v"
-		dst_emoji_set_path := "./experiment/tui_render/emoji_test_set.v"
-
-		mut src_emoji_set_file := open_file(src_emoji_set_path, "r") or { panic("failed to open ${src_emoji_set_path} for reading -> ${err}") }
-		defer { src_emoji_set_file.close() }
-
-		mut dst_emoji_set_file := open_file(dst_emoji_set_path, "w") or { panic("failed to open ${dst_emoji_set_path} for appending -> ${err}") }
-		defer { dst_emoji_set_file.close() }
-
-		mut buf_line_reader := io.new_buffered_reader(reader: src_emoji_set_file)
-
-		mut line_num := 0
-		for {
-			cur_line_num := line_num
-			line_num += 1
-
-			source_file_line := buf_line_reader.read_line() or {
-				assert err is io.Eof
-				break
-			}
-
-			if cur_line_num == 0 {
-				dst_emoji_set_file.writeln("module main")!
-				continue
-			}
-
-			dst_emoji_set_file.writeln(source_file_line)!
-		}
-	}
-)
-
 context.run()
 
