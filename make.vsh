@@ -1,6 +1,7 @@
 #!/usr/bin/env -S v run
 
 import build
+import io
 
 const app_name = "lilly"
 
@@ -9,7 +10,6 @@ mut context := build.context(
 )
 
 // BUILD TASKS
-
 context.task(name: "build", depends: ["generate-git-hash"], run: |self| system("v ./src -o lilly"))
 context.task(name: "build-prod", depends: ["generate-git-hash"], run: |self| system("v ./src -o ${app_name}"))
 context.task(name: "run", depends: ["generate-git-hash"], run: |self| system("v -g run ./src ."))
@@ -18,9 +18,11 @@ context.task(name: "run-debug-log", depends: ["generate-git-hash"], run: |self| 
 context.task(name: "run-gui", depends: ["generate-git-hash"], run: |self| system("v -g -d gui run ./src ."))
 
 // TEST TASKS
-
 context.task(name: "test", run: |self| system("v -g test ./src"))
 context.task(name: "verbose-test", run: |self| system("v -g -stats test ./src"))
+
+// EXPERIMENTS
+context.task(name: "emoji-grid", depends: ["copy-emoji-set"], run: |self| system("v -g run ./experiment/tui_render"))
 
 // UTIL TASKS
 context.task(name: "git-prune", run: |self| system("git remote prune origin"))
@@ -40,6 +42,32 @@ context.artifact(
 	name: "generate-git-hash",
 	help: "generate .githash to contain latest commit of current branch to embed in builds",
 	run: |self| system("git log -n 1 --pretty=format:\"%h\" | tee ./src/.githash")
+)
+context.artifact(
+	name: "copy-emoji-set",
+	help: "copies the emoji map set from lib into experiment dir",
+	run: fn (self build.Task) ! {
+		// cp("./src/lib/utf8/emoji_test_set.v", "./experiment/tui_render/emoji_test_set.v")!
+		src_emoji_set_path := "./src/lib/utf8/emoji_test_set.v"
+		mut emoji_set_file := open_file(src_emoji_set_path, "r") or { panic("failed to open ${src_emoji_set_path} for reading -> ${err}") }
+		defer { emoji_set_file.close() }
+
+		mut buf_line_reader := io.new_buffered_reader(reader: emoji_set_file)
+
+		mut line_num := 0
+		for {
+			cur_line_num := line_num
+			line_num += 1
+
+			if cur_line_num == 0 { continue }
+
+			source_file_line := buf_line_reader.read_line() or {
+				assert err is io.Eof
+				break
+			}
+			println(source_file_line)
+		}
+	}
 )
 
 context.run()
