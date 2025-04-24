@@ -20,6 +20,7 @@ context.task(name: "run-gui", depends: ["generate-git-hash"], run: |self| system
 // TEST TASKS
 
 context.task(name: "test", run: |self| system("v -g test ./src"))
+context.task(name: "verbose-test", run: |self| system("v -g -stats test ./src"))
 
 // UTIL TASKS
 context.task(name: "git-prune", run: |self| system("git remote prune origin"))

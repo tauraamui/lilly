@@ -18,11 +18,8 @@ jobs:
       - name: Checkout lilly
         uses: actions/checkout@v2
 
-      - name: Install clockwork
-        run: v run ./install-clockwork.vsh
-
       - name: Build lilly
-        run: clockwork build
+        run: v run ./make.vsh build
 
       - name: Run Tests
-        run: v -stats test ./src
+        run: v run ./make.vsh verbose-test
