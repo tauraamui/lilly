@@ -22,7 +22,14 @@ context.task(name: "test", run: |self| system("v -g test ./src"))
 context.task(name: "verbose-test", run: |self| system("v -g -stats test ./src"))
 
 // EXPERIMENTS
-context.task(name: "emoji-grid", depends: ["copy-emoji-set"], run: |self| system("v -g run ./experiment/tui_render"))
+context.task(
+	name: "emoji-grid",
+	depends: ["copy-emoji-grid-code"]
+	run: fn (self build.Task) ! {
+		system("v -g run ./src/emoji_grid.v")
+		rm("./src/emoji_grid.v")!
+	}
+)
 
 // UTIL TASKS
 context.task(name: "git-prune", run: |self| system("git remote prune origin"))
@@ -42,6 +49,10 @@ context.artifact(
 	name: "generate-git-hash",
 	help: "generate .githash to contain latest commit of current branch to embed in builds",
 	run: |self| system("git log -n 1 --pretty=format:\"%h\" | tee ./src/.githash")
+)
+context.artifact(
+	name: "copy-emoji-grid-code",
+	run: |self| cp("./experiment/tui_render/emoji_grid.v", "./src/emoji_grid.v")!
 )
 context.artifact(
 	name: "copy-emoji-set",
