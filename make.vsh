@@ -47,7 +47,6 @@ context.artifact(
 	name: "copy-emoji-set",
 	help: "copies the emoji map set from lib into experiment dir",
 	run: fn (self build.Task) ! {
-		// cp("./src/lib/utf8/emoji_test_set.v", "./experiment/tui_render/emoji_test_set.v")!
 		src_emoji_set_path := "./src/lib/utf8/emoji_test_set.v"
 		dst_emoji_set_path := "./experiment/tui_render/emoji_test_set.v"
 
