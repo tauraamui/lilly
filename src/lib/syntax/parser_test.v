@@ -1,5 +1,7 @@
 module syntax
 
+import lib.utf8
+
 fn test_simple_single_line_with_no_whitespace_but_delim_number() {
 	code := "Thisisline0inthedocument"
 
@@ -32,6 +34,25 @@ fn test_simple_single_line_with_no_whitespace_no_numbers() {
 	assert line_1_tokens.len == 1
 	assert extract_token_contents(lines[0], line_1_tokens[0]) == "Thisisthelineinthedocument"
 	assert line_1_tokens[0].t_type == .identifier
+}
+
+fn test_simple_single_line_with_no_whitespace_just_single_emoji() {
+	code := "${utf8.emoji_shark_char.repeat(4)} ${utf8.emoji_shark_char.repeat(4)}"
+
+	mut parser := Parser{}
+	lines := code.split("\n")
+	assert lines.len == 1
+
+	parser.parse_line(0, lines[0])
+
+	line_1_tokens := parser.get_line_tokens(0)
+	assert line_1_tokens.len == 3
+	assert extract_token_contents(lines[0], line_1_tokens[0]) == "${utf8.emoji_shark_char.repeat(4)}"
+	assert line_1_tokens[0].t_type == .other
+	assert extract_token_contents(lines[0], line_1_tokens[1]) == " "
+	assert line_1_tokens[1].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[2]) == "${utf8.emoji_shark_char.repeat(4)}"
+	assert line_1_tokens[2].t_type == .other
 }
 
 fn test_simple_block_of_code_no_comments() {
@@ -150,7 +171,7 @@ fn main() { // this is a main function wooo
 
 
 fn extract_token_contents(data string, token Token) string {
-	return data[token.start..token.end].str()
+	return data.runes()[token.start..token.end].string()
 }
 
 fn test_parser_block_of_code_one() {

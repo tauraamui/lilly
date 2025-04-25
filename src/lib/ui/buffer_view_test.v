@@ -16,6 +16,7 @@ module ui
 
 import lib.buffer
 import lib.draw
+import lib.utf8
 
 struct DrawnText {
 	x int
@@ -155,6 +156,56 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 	]
 	assert drawn_text[..2] == line_one_expected_drawn_data
 }
+
+fn test_buffer_view_draws_1_line_as_single_segment_single_emoji() {
+	mut drawn_text := []DrawnText{}
+	mut drawn_text_ref := &drawn_text
+
+	mut set_fg_color := []draw.Color{}
+	mut set_fg_color_ref := &set_fg_color
+
+	mut drawn_rect := []DrawnRect{}
+	mut drawn_rect_ref := &drawn_rect
+
+	mut mock_ctx := MockContextable{
+		on_draw_cb: fn [mut drawn_text_ref] (x int, y int, text string) {
+			drawn_text_ref << DrawnText{ x: x, y: y, data: text }
+		}
+		on_draw_rect_cb: fn [mut drawn_rect_ref] (x int, y int, width int, height int) {
+			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
+		}
+		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
+			set_fg_color_ref << c
+		}
+	}
+
+	mut buf := buffer.Buffer.new("", false)
+	buf.lines << utf8.emoji_shark_char
+	buf_view := BufferView.new(&buf)
+
+	x := 0
+	y := 0
+	width := 20
+	height := 10
+	min_x := 0
+	from_line_num := 0
+
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0)
+
+	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
+	assert drawn_rect == [
+		DrawnRect{ x: 3, y: 1, width: 18, height: 1 }
+	]
+
+	assert drawn_text.len == 2
+	assert set_fg_color.len == 1
+
+	line_one_expected_drawn_data := [
+		DrawnText{ x: 1, y: 1, data: "1" }, DrawnText{ x: 3, y: 1, data: "${utf8.emoji_shark_char}" },
+	]
+	assert drawn_text[..2] == line_one_expected_drawn_data
+}
+
 
 fn test_buffer_view_draws_lines_10_to_max_height() {
 	mut drawn_text := []DrawnText{}

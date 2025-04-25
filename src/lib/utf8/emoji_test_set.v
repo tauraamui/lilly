@@ -1,3 +1,18 @@
 module utf8
 
-const emoji_shark_char = "🦈"
+pub const emoji_shark_char = "🦈"
+
+pub const emojis = {
+	"shark": "🦈"
+	"whale": "🐳"
+	"dolphin": "🐬"
+	"octopus": "🐙"
+	"crab": "🦀"
+	"squid": "🦑"
+	"turtle": "🐢"
+	"fish": "🐟"
+	"tropical_fish": "🐠"
+	"blowfish": "🐡"
+	"seal": "🦭"
+	"diving_mask": "🤿"
+}
