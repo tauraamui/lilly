@@ -2,6 +2,7 @@ module main
 
 import lib.utf8
 import lib.draw
+import rand
 
 struct EmojiGrid {
 mut:
@@ -33,10 +34,12 @@ fn (mut grid EmojiGrid) draw_chars(mut ctx draw.Contextable) {
 }
 
 fn (mut grid EmojiGrid) draw_emojis(mut ctx draw.Contextable) {
-	shark_emoji := utf8.emojis["shark"]
+	emoji_names := utf8.emojis.keys()
 	for y in 0..grid.height {
+		// NOTE(tauraamui) [25/04/2025]: utf8 chars take up 2 grid cells not one
 		for x in 0..(grid.width / 2) {
-			ctx.draw_text((x * 2) + 1, y + 1, shark_emoji)
+			emoji := utf8.emojis[emoji_names[rand.int_in_range(0, emoji_names.len) or { 0 }]]
+			ctx.draw_text((x * 2) + 1, y + 1, emoji)
 		}
 	}
 }
