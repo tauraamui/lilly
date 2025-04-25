@@ -1,7 +1,6 @@
 #!/usr/bin/env -S v run
 
 import build
-import io
 
 const app_name = "lilly"
 

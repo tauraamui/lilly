@@ -23,7 +23,6 @@ pub fn str_clamp_to_visible_length(s string, max_width int) string {
 			break
 		}
 
-		prev_width := current_width
 		// copy all bytes for current char into temporary slice to check visual len
 		temp := s_bytes[i..(i + ul)].byterune() or { break }
 		visual_width := utf8_str_visible_length([temp].string())

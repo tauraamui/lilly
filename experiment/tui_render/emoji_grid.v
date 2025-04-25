@@ -34,11 +34,11 @@ fn (mut grid EmojiGrid) draw_chars(mut ctx draw.Contextable) {
 }
 
 fn (mut grid EmojiGrid) draw_emojis(mut ctx draw.Contextable) {
-	emoji_names := utf8.emojis.keys()
+	emoji_chars := utf8.emojis.values()
 	for y in 0..grid.height {
 		// NOTE(tauraamui) [25/04/2025]: utf8 chars take up 2 grid cells not one
 		for x in 0..(grid.width / 2) {
-			emoji := utf8.emojis[emoji_names[rand.int_in_range(0, emoji_names.len) or { 0 }]]
+			emoji := emoji_chars[rand.int_in_range(0, emoji_chars.len) or { 0 }]
 			ctx.draw_text((x * 2) + 1, y + 1, emoji)
 		}
 	}
