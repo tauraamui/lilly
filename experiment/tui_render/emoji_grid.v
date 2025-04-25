@@ -55,13 +55,17 @@ fn (mut grid EmojiGrid) draw(mut ctx draw.Contextable) {
 	ctx.flush()
 }
 
-fn (grid EmojiGrid) on_key_down(e draw.Event, mut root Root) {
+fn (grid EmojiGrid) on_key_down(e draw.Event, mut root Root2) {
 	match e.code {
 		.escape {
 			root.quit() or { panic("failed to quit via root: ${err}") }
 		}
 		else {}
 	}
+}
+
+interface Root2 {
+	quit() !
 }
 
 struct App {
