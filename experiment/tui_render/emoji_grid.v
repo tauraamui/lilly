@@ -32,12 +32,22 @@ fn (mut grid EmojiGrid) draw_chars(mut ctx draw.Contextable) {
 	}
 }
 
+fn (mut grid EmojiGrid) draw_emojis(mut ctx draw.Contextable) {
+	shark_emoji := utf8.emojis["shark"]
+	for y in 0..grid.height {
+		for x in 0..(grid.width / 2) {
+			ctx.draw_text((x * 2) + 1, y + 1, shark_emoji)
+		}
+	}
+}
+
 fn (mut grid EmojiGrid) draw(mut ctx draw.Contextable) {
 	if grid.run_once { return }
 	defer { grid.run_once = true }
 	grid.update_bounds(ctx.window_width(), ctx.window_height())
 	ctx.clear()
-	grid.draw_chars(mut ctx)
+	// grid.draw_chars(mut ctx)
+	grid.draw_emojis(mut ctx)
 	ctx.flush()
 }
 
