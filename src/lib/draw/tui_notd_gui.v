@@ -35,6 +35,7 @@ pub fn new_context(cfg Config) (&Contextable, Runner) {
 			frame_fn:             cfg.frame_fn
 			capture_events:       cfg.capture_events
 			use_alternate_buffer: cfg.use_alternate_buffer
+			frame_rate: 30
 		)
 	}
 	return ctx, unsafe { ctx.run }
