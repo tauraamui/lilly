@@ -47,7 +47,7 @@ fn (mut grid EmojiGrid) draw_emojis(mut ctx draw.Contextable) {
 
 fn (mut grid EmojiGrid) draw(mut ctx draw.Contextable) {
 	if grid.run_once { return }
-	// defer { grid.run_once = true }
+	defer { grid.run_once = true }
 	grid.update_bounds(ctx.window_width(), ctx.window_height())
 	ctx.clear()
 	// grid.draw_chars(mut ctx)
@@ -62,10 +62,6 @@ fn (grid EmojiGrid) on_key_down(e draw.Event, mut root Root) {
 		}
 		else {}
 	}
-}
-
-interface Root {
-	quit() !
 }
 
 struct App {
