@@ -70,6 +70,8 @@ mut:
 	window_height() int
 
 	set_cursor_position(x int, y int)
+	show_cursor()
+	hide_cursor()
 
 	bold()
 
