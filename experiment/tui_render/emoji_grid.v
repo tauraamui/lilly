@@ -38,8 +38,11 @@ fn (mut grid EmojiGrid) draw_emojis(mut ctx draw.Contextable) {
 	for y in 0..grid.height {
 		// NOTE(tauraamui) [25/04/2025]: utf8 chars take up 2 grid cells not one
 		for x in 0..(grid.width / 2) {
-			rand.seed([u32(x), y])
-			emoji := emoji_chars[rand.int_in_range(0, emoji_chars.len) or { 0 }]
+			mut index := rand.int_in_range(0, emoji_chars.len) or { 0 }
+			if (y - 4 <= 0 || y + 5 >= grid.height) || (x - 15 <= 0 || x + 15 >= (grid.width / 2)) {
+				index = 3
+			}
+			emoji := emoji_chars[index]
 			ctx.draw_text((x * 2) + 1, y + 1, emoji)
 		}
 	}
@@ -47,11 +50,13 @@ fn (mut grid EmojiGrid) draw_emojis(mut ctx draw.Contextable) {
 
 fn (mut grid EmojiGrid) draw(mut ctx draw.Contextable) {
 	if grid.run_once { return }
-	defer { grid.run_once = true }
+	// defer { grid.run_once = true }
 	grid.update_bounds(ctx.window_width(), ctx.window_height())
-	ctx.clear()
+	// ctx.clear()
 	// grid.draw_chars(mut ctx)
+	ctx.hide_cursor()
 	grid.draw_emojis(mut ctx)
+	ctx.show_cursor()
 	ctx.flush()
 }
 

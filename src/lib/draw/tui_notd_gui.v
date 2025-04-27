@@ -59,6 +59,14 @@ fn (mut ctx Context) set_cursor_position(x int, y int) {
 	ctx.ref.set_cursor_position(x, y)
 }
 
+fn (mut ctx Context) show_cursor() {
+	ctx.ref.show_cursor()
+}
+
+fn (mut ctx Context) hide_cursor() {
+	ctx.ref.hide_cursor()
+}
+
 fn (mut ctx Context) draw_text(x int, y int, text string) {
 	ctx.ref.draw_text(x, y, text)
 }
