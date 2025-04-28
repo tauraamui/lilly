@@ -2,10 +2,22 @@ module draw
 
 import term.ui as tui
 
+struct Grid {
+	data []Cell
+}
+
+struct Cell {
+	data     ?rune
+	fg_color Color
+	bg_color Color
+}
+
 struct ImmediateContext {
 	render_debug bool
 mut:
-	ref &tui.Context
+	ref            &tui.Context
+	previous_frame Grid
+	frame          Grid
 }
 
 type Runner = fn () !
