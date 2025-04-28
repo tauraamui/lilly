@@ -81,3 +81,4 @@ mut:
 	clear()
 	flush()
 }
+
