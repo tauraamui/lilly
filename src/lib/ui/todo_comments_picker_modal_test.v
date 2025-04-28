@@ -48,6 +48,8 @@ fn (mut drawer TestDrawer) rate_limit_draws() bool { return false }
 fn (mut drawer TestDrawer) window_width() int { return 500 }
 fn (mut drawer TestDrawer) window_height() int { return 500 }
 fn (mut drawer TestDrawer) set_cursor_position(x int, y int) {}
+fn (mut drawer TestDrawer) show_cursor() {}
+fn (mut drawer TestDrawer) hide_cursor() {}
 fn (mut drawer TestDrawer) bold() {}
 fn (mut drawer TestDrawer) reset() {}
 fn (mut drawer TestDrawer) clear() {}
