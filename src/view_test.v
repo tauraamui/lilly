@@ -59,6 +59,8 @@ fn (mut drawer TestDrawer) rate_limit_draws() bool { return false }
 fn (mut drawer TestDrawer) window_width() int { return 500 }
 fn (mut drawer TestDrawer) window_height() int { return drawer.window_height }
 fn (mut drawer TestDrawer) set_cursor_position(x int, y int) {}
+fn (mut drawer TestDrawer) show_cursor() {}
+fn (mut drawer TestDrawer) hide_cursor() {}
 fn (mut drawer TestDrawer) bold() {}
 fn (mut drawer TestDrawer) reset() {}
 fn (mut drawer TestDrawer) clear() {}
@@ -554,6 +556,10 @@ fn (mockctx MockContextable) window_height() int {
 }
 
 fn (mockctx MockContextable) set_cursor_position(x int, y int) {}
+
+fn (mockctx MockContextable) show_cursor() {}
+
+fn (mockctx MockContextable) hide_cursor() {}
 
 fn (mut mockctx MockContextable) draw_text(x int, y int, text string) {
 	mockctx.on_draw_cb(x, y, text)

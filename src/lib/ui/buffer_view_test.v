@@ -668,6 +668,10 @@ fn (mockctx MockContextable) window_height() int {
 
 fn (mockctx MockContextable) set_cursor_position(x int, y int) {}
 
+fn (mockctx MockContextable) show_cursor() {}
+
+fn (mockctx MockContextable) hide_cursor() {}
+
 fn (mut mockctx MockContextable) draw_text(x int, y int, text string) {
 	mockctx.on_draw_cb(x, y, text)
 }
