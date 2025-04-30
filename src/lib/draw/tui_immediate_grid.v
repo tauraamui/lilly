@@ -6,6 +6,9 @@ struct Grid {
 	data []Cell
 }
 
+fn (mut grid Grid) set_cell(x int, y int, c Cell) {
+}
+
 struct Cell {
 	data     ?rune
 	fg_color Color
@@ -66,6 +69,8 @@ fn (mut ctx ImmediateContext) hide_cursor() {
 }
 
 fn (mut ctx ImmediateContext) draw_text(x int, y int, text string) {
+	for c_char in text.runes() {
+	}
 	ctx.ref.draw_text(x, y, text)
 }
 
