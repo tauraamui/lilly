@@ -15,3 +15,22 @@ fn test_grid_setting_cell_oob() {
 	assert fail_msg == "x: 18, y: 0 is out of bounds"
 }
 
+fn test_grid_resize() {
+	mut g := Grid.new(12, 12)!
+	g.set(0, 0, Cell{ data: rune(`\n`) })!
+	assert g.get(0, 0)! == Cell{ data: rune(`\n`) }
+
+	mut fail_msg := ""
+	g.set(18, 16, Cell{ data: rune(`\n`) }) or { fail_msg = err.str() }
+	assert fail_msg == "x: 18, y: 16 is out of bounds"
+
+	fail_msg = ""
+	g.resize(24, 24) or { fail_msg = err.str() }
+	assert fail_msg == ""
+
+	g.set(18, 16, Cell{ data: rune(`a`) }) or { fail_msg = err.str() }
+	assert fail_msg == ""
+
+	assert g.get(18, 16)! == Cell{ data: rune(`a`) }
+}
+

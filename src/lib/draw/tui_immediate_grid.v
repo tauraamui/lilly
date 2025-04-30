@@ -31,6 +31,29 @@ fn (grid Grid) get(x int, y int) !Cell {
 	return grid.data[index]
 }
 
+fn (mut grid Grid) resize(width int, height int) ! {
+	if width <= 0 || height <= 0 { return error("width and height must be positive") }
+	if height == grid.height && width == grid.width {
+		return
+	}
+
+	mut new_data := []Cell{ len: width * height }
+	overlap_rows := int_min(grid.height, height)
+	overlap_cols := int_min(grid.width, width)
+
+	for i in 0..overlap_rows {
+		for j in 0..overlap_cols {
+			old_index := i * grid.width + j
+			new_index := i * width + j
+			new_data[new_index] = grid.data[old_index]
+		}
+	}
+
+	grid.width = width
+	grid.height = height
+	grid.data = new_data
+}
+
 struct Cell {
 	data     ?rune
 	fg_color Color
