@@ -3,10 +3,23 @@ module draw
 import term.ui as tui
 
 struct Grid {
-	data []Cell
+mut:
+	data      []Cell
+	prev_data []Cell
+	width     int
+	height    int
+}
+
+fn Grid.new(width int, height int) Grid {
+	return Grid{ width: width, height: height, data: []Cell{ len: width * height } }
 }
 
 fn (mut grid Grid) set_cell(x int, y int, c Cell) {
+	grid.data[(y * grid.width) + x] = c
+}
+
+fn (grid Grid) get_cell(x int, y int) Cell {
+	return grid.data[(y * grid.width) + x]
 }
 
 struct Cell {
@@ -18,9 +31,8 @@ struct Cell {
 struct ImmediateContext {
 	render_debug bool
 mut:
-	ref            &tui.Context
-	previous_frame Grid
-	frame          Grid
+	ref  &tui.Context
+	data Grid
 }
 
 type Runner = fn () !
