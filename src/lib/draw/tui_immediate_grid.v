@@ -10,16 +10,25 @@ mut:
 	height    int
 }
 
-fn Grid.new(width int, height int) Grid {
+fn Grid.new(width int, height int) !Grid {
+	if width <= 0 || height <= 0 { return error("width and height must be positive") }
 	return Grid{ width: width, height: height, data: []Cell{ len: width * height } }
 }
 
-fn (mut grid Grid) set_cell(x int, y int, c Cell) {
-	grid.data[(y * grid.width) + x] = c
+fn (mut grid Grid) set(x int, y int, c Cell) ! {
+	if x < 0 || x >= grid.width || y < 0 || y >= grid.height {
+		return error("x: ${x}, y: ${y} is out of bounds")
+	}
+	index := y * grid.width + x
+	grid.data[index] = c
 }
 
-fn (grid Grid) get_cell(x int, y int) Cell {
-	return grid.data[(y * grid.width) + x]
+fn (grid Grid) get(x int, y int) !Cell {
+	if x < 0 || x >= grid.width || y < 0 || y >= grid.height {
+		return error("x: ${x}, y: ${y} is out of bounds")
+	}
+	index := y * grid.width + x
+	return grid.data[index]
 }
 
 struct Cell {
