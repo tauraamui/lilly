@@ -113,9 +113,9 @@ fn (mut ctx ImmediateContext) hide_cursor() {
 }
 
 fn (mut ctx ImmediateContext) draw_text(x int, y int, text string) {
-	for c_char in text.runes() {
+	for i, c_char in text.runes() {
+		ctx.data.set(x + i, y, Cell{ data: c_char }) or { break }
 	}
-	ctx.ref.draw_text(x, y, text)
 }
 
 fn (mut ctx ImmediateContext) write(c string) {
