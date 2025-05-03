@@ -70,7 +70,7 @@ mut:
 type Runner = fn () !
 
 pub fn new_immediate_context(cfg Config) (&Contextable, Runner) {
-	ctx := ImmediateContext{
+	mut ctx := ImmediateContext{
 		render_debug: cfg.render_debug
 		ref: tui.init(
 			user_data: cfg.user_data
@@ -83,7 +83,12 @@ pub fn new_immediate_context(cfg Config) (&Contextable, Runner) {
 			frame_rate: 30
 		)
 	}
+	ctx.setup_grid() or { panic("unable to init grid -> ${err}") }
 	return ctx, unsafe { ctx.run }
+}
+
+fn (mut ctx ImmediateContext) setup_grid() ! {
+	ctx.data = Grid.new(ctx.window_width(), ctx.window_height())!
 }
 
 fn (mut ctx ImmediateContext) rate_limit_draws() bool {

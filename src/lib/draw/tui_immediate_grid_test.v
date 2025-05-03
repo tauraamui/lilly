@@ -49,4 +49,23 @@ fn test_grid_resize_shrinking_loses_data() {
 	assert g.get(21, 15)! == Cell{ data: none }
 }
 
+fn test_immediate_context_draw_text_sets_cells() {
+	mut ctx := ImmediateContext{
+		ref: unsafe { nil }
+	}
+	ctx.setup_grid()!
+
+	ctx.draw_text(10, 10, "This is a")
+	assert ctx.data.get(9, 10)!  == Cell{ data: none }
+	assert ctx.data.get(10, 10)! == Cell{ data: rune(`T`) }
+	assert ctx.data.get(11, 10)! == Cell{ data: rune(`h`) }
+	assert ctx.data.get(12, 10)! == Cell{ data: rune(`i`) }
+	assert ctx.data.get(13, 10)! == Cell{ data: rune(`s`) }
+	assert ctx.data.get(14, 10)! == Cell{ data: rune(` `) }
+	assert ctx.data.get(15, 10)! == Cell{ data: rune(`i`) }
+	assert ctx.data.get(16, 10)! == Cell{ data: rune(`s`) }
+	assert ctx.data.get(17, 10)! == Cell{ data: rune(` `) }
+	assert ctx.data.get(18, 10)! == Cell{ data: rune(`a`) }
+	assert ctx.data.get(19, 10)! == Cell{ data: none }
+}
 
