@@ -31,6 +31,23 @@ fn (grid Grid) get(x int, y int) !Cell {
 	return grid.data[index]
 }
 
+fn (grid Grid) get_rows(min int, max int) ![][]Cell {
+	if min < 0 || min >= grid.data.len || max < 0 || max >= grid.data.len || min > max {
+		return error("invalid row range")
+	}
+	rows_in_range := max - min + 1
+	mut result := [][]Cell{ len: rows_in_range }
+
+	for i in 0..rows_in_range {
+		current_row := min + i
+		start_index := current_row * grid.width
+		end_index := start_index + grid.width
+		result[i] = grid.data[start_index..end_index]
+	}
+
+	return result
+}
+
 fn (mut grid Grid) resize(width int, height int) ! {
 	if width <= 0 || height <= 0 { return error("width and height must be positive") }
 	if height == grid.height && width == grid.width {
@@ -58,6 +75,11 @@ struct Cell {
 	data     ?rune
 	fg_color Color
 	bg_color Color
+}
+
+fn (cell Cell) str() string {
+	r := cell.data or { return "none" }
+	return r.str()
 }
 
 struct ImmediateContext {
