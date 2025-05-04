@@ -1,5 +1,15 @@
 module draw
 
+fn test_cell_data_to_string() {
+	cell := Cell{ data: none }
+	assert cell.str() == "none"
+}
+
+fn test_cell_data_single_rune_to_string() {
+	cell := Cell{ data: rune(`x`) }
+	assert cell.str() == "x"
+}
+
 fn test_grid_setting_cell_reading_cell() {
 	mut g := Grid.new(12, 12)!
 	g.set(0, 0, Cell{ data: rune(`\n`) })!
@@ -56,6 +66,41 @@ fn test_immediate_context_draw_text_sets_cells() {
 	ctx.setup_grid()!
 
 	ctx.draw_text(10, 10, "This is a line of text")
+	assert ctx.data.get(9, 10)!  == Cell{ data: none }
+	assert ctx.data.get(10, 10)! == Cell{ data: rune(`T`) }
+	assert ctx.data.get(11, 10)! == Cell{ data: rune(`h`) }
+	assert ctx.data.get(12, 10)! == Cell{ data: rune(`i`) }
+	assert ctx.data.get(13, 10)! == Cell{ data: rune(`s`) }
+	assert ctx.data.get(14, 10)! == Cell{ data: rune(` `) }
+	assert ctx.data.get(15, 10)! == Cell{ data: rune(`i`) }
+	assert ctx.data.get(16, 10)! == Cell{ data: rune(`s`) }
+	assert ctx.data.get(17, 10)! == Cell{ data: rune(` `) }
+	assert ctx.data.get(18, 10)! == Cell{ data: rune(`a`) }
+	assert ctx.data.get(19, 10)! == Cell{ data: rune(` `) }
+	assert ctx.data.get(20, 10)! == Cell{ data: rune(`l`) }
+	assert ctx.data.get(21, 10)! == Cell{ data: rune(`i`) }
+	assert ctx.data.get(22, 10)! == Cell{ data: rune(`n`) }
+	assert ctx.data.get(23, 10)! == Cell{ data: rune(`e`) }
+	assert ctx.data.get(24, 10)! == Cell{ data: rune(` `) }
+	assert ctx.data.get(25, 10)! == Cell{ data: rune(`o`) }
+	assert ctx.data.get(26, 10)! == Cell{ data: rune(`f`) }
+	assert ctx.data.get(27, 10)! == Cell{ data: rune(` `) }
+	assert ctx.data.get(28, 10)! == Cell{ data: rune(`t`) }
+	assert ctx.data.get(29, 10)! == Cell{ data: rune(`e`) }
+	assert ctx.data.get(30, 10)! == Cell{ data: rune(`x`) }
+	assert ctx.data.get(31, 10)! == Cell{ data: rune(`t`) }
+	assert ctx.data.get(32, 10)! == Cell{ data: none }
+}
+
+fn test_immediate_context_draw_text_sets_cells_get_rows() {
+	mut ctx := ImmediateContext{
+		ref: unsafe { nil }
+	}
+	ctx.setup_grid()!
+
+	ctx.draw_text(10, 10, "This is a line of text")
+	cells := ctx.data.get_rows(10, 10)!
+	assert cells == []
 	assert ctx.data.get(9, 10)!  == Cell{ data: none }
 	assert ctx.data.get(10, 10)! == Cell{ data: rune(`T`) }
 	assert ctx.data.get(11, 10)! == Cell{ data: rune(`h`) }
