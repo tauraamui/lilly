@@ -2,6 +2,12 @@ module draw
 
 import term.ui as tui
 
+struct Pos {
+mut:
+	x int
+	y int
+}
+
 struct Grid {
 mut:
 	data      []Cell
@@ -85,8 +91,9 @@ fn (cell Cell) str() string {
 struct ImmediateContext {
 	render_debug bool
 mut:
-	ref  &tui.Context
-	data Grid
+	ref        &tui.Context
+	data       Grid
+	cursor_pos Pos
 }
 
 type Runner = fn () !
@@ -128,7 +135,8 @@ fn (mut ctx ImmediateContext) window_height() int {
 }
 
 fn (mut ctx ImmediateContext) set_cursor_position(x int, y int) {
-	ctx.ref.set_cursor_position(x, y)
+	ctx.cursor_pos = Pos{ x: x, y: y }
+	// ctx.ref.set_cursor_position(x, y)
 }
 
 fn (mut ctx ImmediateContext) show_cursor() {
