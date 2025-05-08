@@ -79,8 +79,8 @@ fn (mut grid Grid) resize(width int, height int) ! {
 
 struct Cell {
 	data     ?rune
-	fg_color Color
-	bg_color Color
+	fg_color ?Color
+	bg_color ?Color
 }
 
 fn (cell Cell) str() string {
@@ -95,6 +95,9 @@ mut:
 	data        Grid
 	cursor_pos  Pos
 	hide_cursor bool
+	bold        bool
+	fg_color    ?Color
+	bg_color    ?Color
 }
 
 type Runner = fn () !
@@ -156,7 +159,10 @@ fn (mut ctx ImmediateContext) draw_text(x int, y int, text string) {
 fn (mut ctx ImmediateContext) write(c string) {
 	cursor_pos := ctx.cursor_pos
 	for i, c_char in c.runes() {
-		ctx.data.set(cursor_pos.x + i, cursor_pos.y, Cell{ data: c_char }) or { break }
+		ctx.data.set(
+			cursor_pos.x + i, cursor_pos.y,
+			Cell{ data: c_char, fg_color: ctx.fg_color, bg_color: ctx.bg_color }
+		) or { break }
 	}
 }
 
@@ -169,27 +175,29 @@ fn (mut ctx ImmediateContext) draw_point(x int, y int) {
 }
 
 fn (mut ctx ImmediateContext) bold() {
-	ctx.ref.bold()
+	ctx.bold = true
 }
 
 fn (mut ctx ImmediateContext) set_color(c Color) {
-	ctx.ref.set_color(tui.Color{ r: c.r, g: c.g, b: c.b })
+	ctx.fg_color = c
 }
 
 fn (mut ctx ImmediateContext) set_bg_color(c Color) {
-	ctx.ref.set_bg_color(tui.Color{ r: c.r, g: c.g, b: c.b })
+	ctx.bg_color = c
 }
 
 fn (mut ctx ImmediateContext) reset_color() {
-	ctx.ref.reset_color()
+	ctx.fg_color = none
 }
 
 fn (mut ctx ImmediateContext) reset_bg_color() {
-	ctx.ref.reset_bg_color()
+	ctx.bg_color = none
 }
 
 fn (mut ctx ImmediateContext) reset() {
-	ctx.ref.reset()
+	ctx.bold     = false
+	ctx.fg_color = none
+	ctx.bg_color = none
 }
 
 fn (mut ctx ImmediateContext) run() ! {

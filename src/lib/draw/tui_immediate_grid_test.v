@@ -100,31 +100,38 @@ fn test_immediate_context_draw_text_sets_cells_get_rows() {
 
 	ctx.draw_text(10, 10, "This is a line of text")
 	cells := ctx.data.get_rows(10, 10)!
-	assert cells == []
-	assert ctx.data.get(9, 10)!  == Cell{ data: none }
-	assert ctx.data.get(10, 10)! == Cell{ data: rune(`T`) }
-	assert ctx.data.get(11, 10)! == Cell{ data: rune(`h`) }
-	assert ctx.data.get(12, 10)! == Cell{ data: rune(`i`) }
-	assert ctx.data.get(13, 10)! == Cell{ data: rune(`s`) }
-	assert ctx.data.get(14, 10)! == Cell{ data: rune(` `) }
-	assert ctx.data.get(15, 10)! == Cell{ data: rune(`i`) }
-	assert ctx.data.get(16, 10)! == Cell{ data: rune(`s`) }
-	assert ctx.data.get(17, 10)! == Cell{ data: rune(` `) }
-	assert ctx.data.get(18, 10)! == Cell{ data: rune(`a`) }
-	assert ctx.data.get(19, 10)! == Cell{ data: rune(` `) }
-	assert ctx.data.get(20, 10)! == Cell{ data: rune(`l`) }
-	assert ctx.data.get(21, 10)! == Cell{ data: rune(`i`) }
-	assert ctx.data.get(22, 10)! == Cell{ data: rune(`n`) }
-	assert ctx.data.get(23, 10)! == Cell{ data: rune(`e`) }
-	assert ctx.data.get(24, 10)! == Cell{ data: rune(` `) }
-	assert ctx.data.get(25, 10)! == Cell{ data: rune(`o`) }
-	assert ctx.data.get(26, 10)! == Cell{ data: rune(`f`) }
-	assert ctx.data.get(27, 10)! == Cell{ data: rune(` `) }
-	assert ctx.data.get(28, 10)! == Cell{ data: rune(`t`) }
-	assert ctx.data.get(29, 10)! == Cell{ data: rune(`e`) }
-	assert ctx.data.get(30, 10)! == Cell{ data: rune(`x`) }
-	assert ctx.data.get(31, 10)! == Cell{ data: rune(`t`) }
-	assert ctx.data.get(32, 10)! == Cell{ data: none }
+	assert cells[0][9] == Cell{ data: none }
+	assert cells[0][10..32] == [
+		Cell{ data: rune(`T`) }, Cell{ data: rune(`h`) }, Cell{ data: rune(`i`) }, Cell{ data: rune(`s`) },
+		Cell{ data: rune(` `) },
+		Cell{ data: rune(`i`) }, Cell{ data: rune(`s`) },
+		Cell{ data: rune(` `) },
+		Cell{ data: rune(`a`) },
+		Cell{ data: rune(` `) },
+		Cell{ data: rune(`l`) }, Cell{ data: rune(`i`) }, Cell{ data: rune(`n`) }, Cell{ data: rune(`e`) },
+		Cell{ data: rune(` `) },
+		Cell{ data: rune(`o`) }, Cell{ data: rune(`f`) },
+		Cell{ data: rune(` `) },
+		Cell{ data: rune(`t`) }, Cell{ data: rune(`e`) }, Cell{ data: rune(`x`) }, Cell{ data: rune(`t`) },
+	]
+	assert cells[0][33] == Cell{ data: none }
+}
+
+fn test_immediate_context_draw_text_with_fg_color_set_in_segments() {
+	mut ctx := ImmediateContext{
+		ref: unsafe { nil }
+	}
+	ctx.setup_grid()!
+
+	ctx.set_color(Color{ r: 100, g: 20, b: 190 })
+	ctx.draw_text(0, 0, "Some blue text")
+	ctx.set_color(Color{ r: 60, g: 133, b: 20 })
+	ctx.draw_text(14, 0, " random other text ")
+	ctx.reset_color()
+	ctx.draw_text(33, 0, "normal uncoloured text")
+
+	cells := ctx.data.get_rows(0, 0)!
+	assert cells[0][0] == Cell{ data: rune(`S`), fg_color: Color{ r: 100, g: 20, b: 190 } }
 }
 
 fn test_immediate_context_multiple_draw_text_sets_cells_overwrites() {
