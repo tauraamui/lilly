@@ -91,9 +91,10 @@ fn (cell Cell) str() string {
 struct ImmediateContext {
 	render_debug bool
 mut:
-	ref        &tui.Context
-	data       Grid
-	cursor_pos Pos
+	ref         &tui.Context
+	data        Grid
+	cursor_pos  Pos
+	hide_cursor bool
 }
 
 type Runner = fn () !
@@ -136,25 +137,27 @@ fn (mut ctx ImmediateContext) window_height() int {
 
 fn (mut ctx ImmediateContext) set_cursor_position(x int, y int) {
 	ctx.cursor_pos = Pos{ x: x, y: y }
-	// ctx.ref.set_cursor_position(x, y)
 }
 
 fn (mut ctx ImmediateContext) show_cursor() {
 	ctx.ref.show_cursor()
+	ctx.hide_cursor = false
 }
 
 fn (mut ctx ImmediateContext) hide_cursor() {
-	ctx.ref.hide_cursor()
+	ctx.hide_cursor = true
 }
 
 fn (mut ctx ImmediateContext) draw_text(x int, y int, text string) {
-	for i, c_char in text.runes() {
-		ctx.data.set(x + i, y, Cell{ data: c_char }) or { break }
-	}
+	ctx.set_cursor_position(x, y)
+	ctx.write(text)
 }
 
 fn (mut ctx ImmediateContext) write(c string) {
-	ctx.ref.write(c)
+	cursor_pos := ctx.cursor_pos
+	for i, c_char in c.runes() {
+		ctx.data.set(cursor_pos.x + i, cursor_pos.y, Cell{ data: c_char }) or { break }
+	}
 }
 
 fn (mut ctx ImmediateContext) draw_rect(x int, y int, width int, height int) {
