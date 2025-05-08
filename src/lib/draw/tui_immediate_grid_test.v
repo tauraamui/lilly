@@ -126,12 +126,43 @@ fn test_immediate_context_draw_text_with_fg_color_set_in_segments() {
 	ctx.set_color(Color{ r: 100, g: 20, b: 190 })
 	ctx.draw_text(0, 0, "Some blue text")
 	ctx.set_color(Color{ r: 60, g: 133, b: 20 })
-	ctx.draw_text(14, 0, " random other text ")
+	ctx.draw_text(14, 0, " random ")
 	ctx.reset_color()
-	ctx.draw_text(33, 0, "normal uncoloured text")
+	ctx.draw_text(22, 0, "normal uncoloured text")
 
 	cells := ctx.data.get_rows(0, 0)!
 	assert cells[0][0] == Cell{ data: rune(`S`), fg_color: Color{ r: 100, g: 20, b: 190 } }
+	assert cells[0][1] == Cell{ data: rune(`o`), fg_color: Color{ r: 100, g: 20, b: 190 } }
+	assert cells[0][2] == Cell{ data: rune(`m`), fg_color: Color{ r: 100, g: 20, b: 190 } }
+	assert cells[0][3] == Cell{ data: rune(`e`), fg_color: Color{ r: 100, g: 20, b: 190 } }
+	assert cells[0][4] == Cell{ data: rune(` `), fg_color: Color{ r: 100, g: 20, b: 190 } }
+
+	assert cells[0][5] == Cell{ data: rune(`b`), fg_color: Color{ r: 100, g: 20, b: 190 } }
+	assert cells[0][6] == Cell{ data: rune(`l`), fg_color: Color{ r: 100, g: 20, b: 190 } }
+	assert cells[0][7] == Cell{ data: rune(`u`), fg_color: Color{ r: 100, g: 20, b: 190 } }
+	assert cells[0][8] == Cell{ data: rune(`e`), fg_color: Color{ r: 100, g: 20, b: 190 } }
+	assert cells[0][9] == Cell{ data: rune(` `), fg_color: Color{ r: 100, g: 20, b: 190 } }
+
+	assert cells[0][10] == Cell{ data: rune(`t`), fg_color: Color{ r: 100, g: 20, b: 190 } }
+	assert cells[0][11] == Cell{ data: rune(`e`), fg_color: Color{ r: 100, g: 20, b: 190 } }
+	assert cells[0][12] == Cell{ data: rune(`x`), fg_color: Color{ r: 100, g: 20, b: 190 } }
+	assert cells[0][13] == Cell{ data: rune(`t`), fg_color: Color{ r: 100, g: 20, b: 190 } }
+	assert cells[0][14] == Cell{ data: rune(` `), fg_color: Color{ r: 60, g: 133, b: 20 } }
+
+	assert cells[0][15] == Cell{ data: rune(`r`), fg_color: Color{ r: 60, g: 133, b: 20 } }
+	assert cells[0][16] == Cell{ data: rune(`a`), fg_color: Color{ r: 60, g: 133, b: 20 } }
+	assert cells[0][17] == Cell{ data: rune(`n`), fg_color: Color{ r: 60, g: 133, b: 20 } }
+	assert cells[0][18] == Cell{ data: rune(`d`), fg_color: Color{ r: 60, g: 133, b: 20 } }
+	assert cells[0][19] == Cell{ data: rune(`o`), fg_color: Color{ r: 60, g: 133, b: 20 } }
+	assert cells[0][20] == Cell{ data: rune(`m`), fg_color: Color{ r: 60, g: 133, b: 20 } }
+	assert cells[0][21] == Cell{ data: rune(` `), fg_color: Color{ r: 60, g: 133, b: 20 } }
+
+	assert cells[0][22] == Cell{ data: rune(`n`), fg_color: none }
+	assert cells[0][23] == Cell{ data: rune(`o`), fg_color: none }
+	assert cells[0][24] == Cell{ data: rune(`r`), fg_color: none }
+	assert cells[0][25] == Cell{ data: rune(`m`), fg_color: none }
+	assert cells[0][26] == Cell{ data: rune(`a`), fg_color: none }
+	assert cells[0][27] == Cell{ data: rune(`l`), fg_color: none }
 }
 
 fn test_immediate_context_multiple_draw_text_sets_cells_overwrites() {
