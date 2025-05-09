@@ -1,3 +1,17 @@
+// Copyright 2025 The Lilly Edtior contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 module draw
 
 import term.ui as tui
@@ -139,6 +153,20 @@ fn (mut ctx ImmediateContext) window_height() int {
 	return 100
 }
 
+fn (mut ctx ImmediateContext) write(c string) {
+	cursor_pos := ctx.cursor_pos
+	for i, c_char in c.runes() {
+		ctx.data.set(
+			cursor_pos.x + i, cursor_pos.y,
+			Cell{ data: c_char, fg_color: ctx.fg_color, bg_color: ctx.bg_color }
+		) or { break }
+	}
+}
+
+fn (mut ctx ImmediateContext) bold() {
+	ctx.bold = true
+}
+
 fn (mut ctx ImmediateContext) set_cursor_position(x int, y int) {
 	ctx.cursor_pos = Pos{ x: x, y: y }
 }
@@ -150,34 +178,6 @@ fn (mut ctx ImmediateContext) show_cursor() {
 
 fn (mut ctx ImmediateContext) hide_cursor() {
 	ctx.hide_cursor = true
-}
-
-fn (mut ctx ImmediateContext) draw_text(x int, y int, text string) {
-	ctx.set_cursor_position(x, y)
-	ctx.write(text)
-}
-
-fn (mut ctx ImmediateContext) write(c string) {
-	cursor_pos := ctx.cursor_pos
-	for i, c_char in c.runes() {
-		ctx.data.set(
-			cursor_pos.x + i, cursor_pos.y,
-			Cell{ data: c_char, fg_color: ctx.fg_color, bg_color: ctx.bg_color }
-		) or { break }
-	}
-}
-
-fn (mut ctx ImmediateContext) draw_rect(x int, y int, width int, height int) {
-	ctx.ref.draw_rect(x, y, x + (width - 1), y + (height - 1))
-}
-
-fn (mut ctx ImmediateContext) draw_point(x int, y int) {
-	ctx.set_cursor_position(x, y)
-	ctx.write(' ')
-}
-
-fn (mut ctx ImmediateContext) bold() {
-	ctx.bold = true
 }
 
 fn (mut ctx ImmediateContext) set_color(c Color) {
@@ -202,12 +202,38 @@ fn (mut ctx ImmediateContext) reset() {
 	ctx.bg_color = none
 }
 
-fn (mut ctx ImmediateContext) run() ! {
-	return ctx.ref.run()
-}
-
 fn (mut ctx ImmediateContext) clear() {
 	ctx.ref.clear()
+}
+
+fn (mut ctx ImmediateContext) draw_point(x int, y int) {
+	ctx.set_cursor_position(x, y)
+	ctx.write(' ')
+}
+
+fn (mut ctx ImmediateContext) draw_text(x int, y int, text string) {
+	ctx.set_cursor_position(x, y)
+	ctx.write(text)
+}
+
+fn (mut ctx ImmediateContext) draw_line(x int, y int, x2 int, y2 int) {
+}
+
+fn (mut ctx ImmediateContext) draw_rect(x int, y int, width int, height int) {
+	x2 := x + (width - 1)
+	y2 := y + (height - 1)
+	if y == y2 || x == x2 {
+		ctx.draw_line(x, y, x2, y2)
+		return
+	}
+	min_y, max_y := if y < y2 { y, y2 } else { y2, y }
+	for y_pos in min_y .. max_y + 1 {
+		ctx.draw_line(x, y_pos, x2, y_pos)
+	}
+}
+
+fn (mut ctx ImmediateContext) run() ! {
+	return ctx.ref.run()
 }
 
 fn (mut ctx ImmediateContext) flush() {
