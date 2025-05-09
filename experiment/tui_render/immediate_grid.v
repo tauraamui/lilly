@@ -41,7 +41,9 @@ fn (mut grid CharGrid) draw_chars(mut ctx draw.Contextable) {
 			ctx.draw_text(x + 1, y + 1, char_to_render)
 		}
 	}
+	ctx.set_bg_color(draw.Color{ 110, 150, 200 })
 	ctx.draw_rect(15, 10, 15, 5)
+	ctx.reset_bg_color()
 	ctx.set_cursor_position(1, 1)
 }
 
