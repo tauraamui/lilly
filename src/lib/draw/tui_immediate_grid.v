@@ -36,7 +36,11 @@ mut:
 
 fn Grid.new(width int, height int) !Grid {
 	if width <= 0 || height <= 0 { return error("width and height must be positive") }
-	return Grid{ width: width, height: height, data: []Cell{ len: width * height } }
+	mut grid_data := []Cell{ len: width * height }
+	for i in 0..grid_data.len {
+		grid_data[i] = Cell{}
+	}
+	return Grid{ width: width, height: height, data: grid_data }
 }
 
 fn (mut grid Grid) set(x int, y int, c Cell) ! {
