@@ -29,8 +29,13 @@ fn (mut grid CharGrid) draw_chars(mut ctx draw.Contextable) {
 	for y in 0..grid.height {
 		for x in 0..grid.width {
 			mut index := rand.int_in_range(0, char_values.len) or { 0 }
+			r := rand.int_in_range(100, 255) or { 255 }
+			g := rand.int_in_range(100, 255) or { 255 }
+			b := rand.int_in_range(100, 255) or { 255 }
+			ctx.set_color(draw.Color{ u8(r), u8(g), u8(b) })
 			if (y - 4 <= 0 || y + 6 >= grid.height) || (x - 15 <= 0 || x + 15 >= grid.width) {
 				index = 3
+				ctx.reset_color()
 			}
 			char_to_render := char_values[index]
 			ctx.draw_text(x + 1, y + 1, char_to_render)
