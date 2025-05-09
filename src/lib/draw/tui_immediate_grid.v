@@ -111,7 +111,7 @@ struct Cell {
 
 fn (cell Cell) str() string {
 	r := cell.data or { return [` `].string() }
-	return r.str()
+	return [r].string()
 }
 
 struct ImmediateContext {
@@ -217,7 +217,11 @@ fn (mut ctx ImmediateContext) reset() {
 }
 
 fn (mut ctx ImmediateContext) clear() {
-	ctx.ref.clear()
+	mut new_data := []Cell{ len: ctx.ref.window_width * ctx.ref.window_height }
+	for i in 0..new_data.len {
+		new_data[i] = Cell{}
+	}
+	ctx.data.data = new_data
 }
 
 fn (mut ctx ImmediateContext) draw_point(x int, y int) {
@@ -327,8 +331,8 @@ fn (mut ctx ImmediateContext) run() ! {
 fn (mut ctx ImmediateContext) flush() {
 	ctx.data.resize(ctx.window_width(), ctx.window_height()) or { panic("flush failed to resize grid -> ${err}") }
 	ctx.ref.hide_cursor()
-	for y in 0..ctx.window_height() {
-		for x in 0..ctx.window_width() {
+	for y in 0..ctx.data.height {
+		for x in 0..ctx.data.width {
 			cell := ctx.data.get(x, y) or { Cell{} }
 			ctx.ref.set_cursor_position(x, y)
 
