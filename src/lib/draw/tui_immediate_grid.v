@@ -78,9 +78,10 @@ fn (mut grid Grid) resize(width int, height int) ! {
 }
 
 struct Cell {
-	data     ?rune
-	fg_color ?Color
-	bg_color ?Color
+	data         ?rune
+	visual_width int // account for runes which are unicode chars (multiple width chars)
+	fg_color     ?Color
+	bg_color     ?Color
 }
 
 fn (cell Cell) str() string {
