@@ -30,6 +30,15 @@ context.task(
 	}
 )
 
+context.task(
+	name: "immediate-grid",
+	depends: ["copy-immediate-grid-code"]
+	run: fn (self build.Task) ! {
+		system("v -g run ./src/immediate_grid.v")
+		rm("./src/immediate_grid.v")!
+	}
+)
+
 // UTIL TASKS
 context.task(name: "git-prune", run: |self| system("git remote prune origin"))
 context.task(
@@ -53,5 +62,10 @@ context.artifact(
 	name: "copy-emoji-grid-code",
 	run: |self| cp("./experiment/tui_render/emoji_grid.v", "./src/emoji_grid.v")!
 )
+context.artifact(
+	name: "copy-immediate-grid-code",
+	run: |self| cp("./experiment/tui_render/immediate_grid.v", "./src/immediate_grid.v")!
+)
+
 context.run()
 
