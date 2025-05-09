@@ -197,10 +197,21 @@ fn test_immediate_context_draw_rect_sets_grid_cells() {
 	}
 	ctx.setup_grid()!
 
-	ctx.draw_rect(0, 0, 10, 10)
+	ctx.draw_rect(3, 1, 5, 10)
 
-	cells := ctx.data.get_rows(0, 10)!
-	assert cells == []
+	rows := ctx.data.get_rows(0, 11)!
+	assert rows[0][2..9] == [Cell{ data: none }, Cell{ data: none }, Cell{ data: none }, Cell{ data: none }, Cell{ data: none }, Cell{ data: none }, Cell{ data: none }]
+	assert rows[1][2..9] == [Cell{ data: none }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: none }]
+	assert rows[2][2..9] == [Cell{ data: none }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: none }]
+	assert rows[3][2..9] == [Cell{ data: none }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: none }]
+	assert rows[4][2..9] == [Cell{ data: none }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: none }]
+	assert rows[5][2..9] == [Cell{ data: none }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: none }]
+	assert rows[6][2..9] == [Cell{ data: none }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: none }]
+	assert rows[7][2..9] == [Cell{ data: none }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: none }]
+	assert rows[8][2..9] == [Cell{ data: none }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: none }]
+	assert rows[9][2..9] == [Cell{ data: none }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: none }]
+	assert rows[10][2..9] == [Cell{ data: none }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: rune(` `) }, Cell{ data: none }]
+	assert rows[11][2..9] == [Cell{ data: none }, Cell{ data: none }, Cell{ data: none }, Cell{ data: none }, Cell{ data: none }, Cell{ data: none }, Cell{ data: none }]
 }
 
 fn test_immediate_context_multiple_draw_text_sets_cells_overwrites() {
