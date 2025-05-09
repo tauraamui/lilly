@@ -1,6 +1,24 @@
+// Copyright 2025 The Lilly Edtior contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// IMPORTANT AMENDMENT NOTICE: Some code within this file is under the MIT license.
+// All instances of these pieces of code are clearly marked and noted.
+
 module draw
 
 import term.ui as tui
+import strings
 
 struct Pos {
 mut:
@@ -18,7 +36,11 @@ mut:
 
 fn Grid.new(width int, height int) !Grid {
 	if width <= 0 || height <= 0 { return error("width and height must be positive") }
-	return Grid{ width: width, height: height, data: []Cell{ len: width * height } }
+	mut grid_data := []Cell{ len: width * height }
+	for i in 0..grid_data.len {
+		grid_data[i] = Cell{}
+	}
+	return Grid{ width: width, height: height, data: grid_data }
 }
 
 fn (mut grid Grid) set(x int, y int, c Cell) ! {
@@ -61,6 +83,9 @@ fn (mut grid Grid) resize(width int, height int) ! {
 	}
 
 	mut new_data := []Cell{ len: width * height }
+	for i in 0..new_data.len {
+		new_data[i] = Cell{}
+	}
 	overlap_rows := int_min(grid.height, height)
 	overlap_cols := int_min(grid.width, width)
 
@@ -78,9 +103,10 @@ fn (mut grid Grid) resize(width int, height int) ! {
 }
 
 struct Cell {
-	data     ?rune
-	fg_color Color
-	bg_color Color
+	data         ?rune
+	visual_width int // account for runes which are unicode chars (multiple width chars)
+	fg_color     ?Color
+	bg_color     ?Color
 }
 
 fn (cell Cell) str() string {
@@ -95,6 +121,9 @@ mut:
 	data        Grid
 	cursor_pos  Pos
 	hide_cursor bool
+	bold        bool
+	fg_color    ?Color
+	bg_color    ?Color
 }
 
 type Runner = fn () !
@@ -128,11 +157,27 @@ fn (mut ctx ImmediateContext) rate_limit_draws() bool {
 fn (mut ctx ImmediateContext) render_debug() bool { return ctx.render_debug }
 
 fn (mut ctx ImmediateContext) window_width() int {
-	return 100
+	if ctx.ref == unsafe { nil } { return 100 }
+	return ctx.ref.window_width
 }
 
 fn (mut ctx ImmediateContext) window_height() int {
-	return 100
+	if ctx.ref == unsafe { nil } { return 100 }
+	return ctx.ref.window_height
+}
+
+fn (mut ctx ImmediateContext) write(c string) {
+	cursor_pos := ctx.cursor_pos
+	for i, c_char in c.runes() {
+		ctx.data.set(
+			cursor_pos.x + i, cursor_pos.y,
+			Cell{ data: c_char, fg_color: ctx.fg_color, bg_color: ctx.bg_color }
+		) or { break }
+	}
+}
+
+fn (mut ctx ImmediateContext) bold() {
+	ctx.bold = true
 }
 
 fn (mut ctx ImmediateContext) set_cursor_position(x int, y int) {
@@ -140,7 +185,6 @@ fn (mut ctx ImmediateContext) set_cursor_position(x int, y int) {
 }
 
 fn (mut ctx ImmediateContext) show_cursor() {
-	ctx.ref.show_cursor()
 	ctx.hide_cursor = false
 }
 
@@ -148,59 +192,138 @@ fn (mut ctx ImmediateContext) hide_cursor() {
 	ctx.hide_cursor = true
 }
 
-fn (mut ctx ImmediateContext) draw_text(x int, y int, text string) {
-	ctx.set_cursor_position(x, y)
-	ctx.write(text)
-}
-
-fn (mut ctx ImmediateContext) write(c string) {
-	cursor_pos := ctx.cursor_pos
-	for i, c_char in c.runes() {
-		ctx.data.set(cursor_pos.x + i, cursor_pos.y, Cell{ data: c_char }) or { break }
-	}
-}
-
-fn (mut ctx ImmediateContext) draw_rect(x int, y int, width int, height int) {
-	ctx.ref.draw_rect(x, y, x + (width - 1), y + (height - 1))
-}
-
-fn (mut ctx ImmediateContext) draw_point(x int, y int) {
-	ctx.ref.draw_point(x, y)
-}
-
-fn (mut ctx ImmediateContext) bold() {
-	ctx.ref.bold()
-}
-
 fn (mut ctx ImmediateContext) set_color(c Color) {
-	ctx.ref.set_color(tui.Color{ r: c.r, g: c.g, b: c.b })
+	ctx.fg_color = c
 }
 
 fn (mut ctx ImmediateContext) set_bg_color(c Color) {
-	ctx.ref.set_bg_color(tui.Color{ r: c.r, g: c.g, b: c.b })
+	ctx.bg_color = c
 }
 
 fn (mut ctx ImmediateContext) reset_color() {
-	ctx.ref.reset_color()
+	ctx.fg_color = none
 }
 
 fn (mut ctx ImmediateContext) reset_bg_color() {
-	ctx.ref.reset_bg_color()
+	ctx.bg_color = none
 }
 
 fn (mut ctx ImmediateContext) reset() {
-	ctx.ref.reset()
-}
-
-fn (mut ctx ImmediateContext) run() ! {
-	return ctx.ref.run()
+	ctx.bold     = false
+	ctx.fg_color = none
+	ctx.bg_color = none
 }
 
 fn (mut ctx ImmediateContext) clear() {
 	ctx.ref.clear()
 }
 
+fn (mut ctx ImmediateContext) draw_point(x int, y int) {
+	ctx.set_cursor_position(x, y)
+	ctx.write(' ')
+}
+
+fn (mut ctx ImmediateContext) draw_text(x int, y int, text string) {
+	ctx.set_cursor_position(x, y)
+	ctx.write(text)
+}
+
+fn (mut ctx ImmediateContext) draw_line(x int, y int, x2 int, y2 int) {
+	// **** CODE BELOW is MIT LICENSED ****
+	// see https://github.com/vlang/v/blob/9dc69ef2aad8c8991fa740d10087ff36ffc58279/vlib/term/ui/ui.c.v#L139
+	// ===== BLOCK START =====
+	min_x, min_y := if x < x2 { x } else { x2 }, if y < y2 { y } else { y2 }
+	max_x, _ := if x > x2 { x } else { x2 }, if y > y2 { y } else { y2 }
+	if y == y2 {
+		// Horizontal line, performance improvement
+		ctx.set_cursor_position(min_x, min_y)
+		ctx.write(strings.repeat(` `, max_x + 1 - min_x))
+		return
+	}
+	// Draw the various points with Bresenham's line algorithm:
+	mut x0, x1 := x, x2
+	mut y0, y1 := y, y2
+	sx := if x0 < x1 { 1 } else { -1 }
+	sy := if y0 < y1 { 1 } else { -1 }
+	dx := if x0 < x1 { x1 - x0 } else { x0 - x1 }
+	dy := if y0 < y1 { y0 - y1 } else { y1 - y0 } // reversed
+	mut err := dx + dy
+	for {
+		// res << Segment{ x0, y0 }
+		ctx.draw_point(x0, y0)
+		if x0 == x1 && y0 == y1 {
+			break
+		}
+		e2 := 2 * err
+		if e2 >= dy {
+			err += dy
+			x0 += sx
+		}
+		if e2 <= dx {
+			err += dx
+			y0 += sy
+		}
+	}
+	// ===== BLOCK END =====
+}
+
+fn (mut ctx ImmediateContext) draw_dashed_line(x int, y int, x2 int, y2 int) {
+	// **** CODE BELOW is MIT LICENSED ****
+	// see https://github.com/vlang/v/blob/9dc69ef2aad8c8991fa740d10087ff36ffc58279/vlib/term/ui/ui.c.v#L175
+	// ===== BLOCK START =====
+	// Draw the various points with Bresenham's line algorithm:
+	mut x0, x1 := x, x2
+	mut y0, y1 := y, y2
+	sx := if x0 < x1 { 1 } else { -1 }
+	sy := if y0 < y1 { 1 } else { -1 }
+	dx := if x0 < x1 { x1 - x0 } else { x0 - x1 }
+	dy := if y0 < y1 { y0 - y1 } else { y1 - y0 } // reversed
+	mut err := dx + dy
+	mut i := 0
+	for {
+		if i % 2 == 0 {
+			ctx.draw_point(x0, y0)
+		}
+		if x0 == x1 && y0 == y1 {
+			break
+		}
+		e2 := 2 * err
+		if e2 >= dy {
+			err += dy
+			x0 += sx
+		}
+		if e2 <= dx {
+			err += dx
+			y0 += sy
+		}
+		i++
+	}
+	// ===== BLOCK END =====
+}
+
+fn (mut ctx ImmediateContext) draw_rect(x int, y int, width int, height int) {
+	x2 := x + (width - 1)
+	y2 := y + (height - 1)
+	// **** CODE BELOW is MIT LICENSED ****
+	// see https://github.com/vlang/v/blob/9dc69ef2aad8c8991fa740d10087ff36ffc58279/vlib/term/ui/ui.c.v#L206
+	// ===== BLOCK START =====
+	if y == y2 || x == x2 {
+		ctx.draw_line(x, y, x2, y2)
+		return
+	}
+	min_y, max_y := if y < y2 { y, y2 } else { y2, y }
+	for y_pos in min_y .. max_y + 1 {
+		ctx.draw_line(x, y_pos, x2, y_pos)
+	}
+	// ===== BLOCK END =====
+}
+
+fn (mut ctx ImmediateContext) run() ! {
+	return ctx.ref.run()
+}
+
 fn (mut ctx ImmediateContext) flush() {
+	ctx.data.resize(ctx.window_width(), ctx.window_height()) or { panic("flush failed to resize grid -> ${err}") }
 	ctx.ref.flush()
 }
 
