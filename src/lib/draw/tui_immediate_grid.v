@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// IMPORTANT AMENDMENT NOTICE: Some code within this file is under the MIT license.
+// All instances of these pieces of code are clearly marked and noted.
+
 module draw
 
 import term.ui as tui
+import strings
 
 struct Pos {
 mut:
@@ -172,7 +176,6 @@ fn (mut ctx ImmediateContext) set_cursor_position(x int, y int) {
 }
 
 fn (mut ctx ImmediateContext) show_cursor() {
-	ctx.ref.show_cursor()
 	ctx.hide_cursor = false
 }
 
@@ -217,11 +220,84 @@ fn (mut ctx ImmediateContext) draw_text(x int, y int, text string) {
 }
 
 fn (mut ctx ImmediateContext) draw_line(x int, y int, x2 int, y2 int) {
+	// **** CODE BELOW is MIT LICENSED ****
+	// see https://github.com/vlang/v/blob/9dc69ef2aad8c8991fa740d10087ff36ffc58279/vlib/term/ui/ui.c.v#L139
+	// ===== BLOCK START =====
+	min_x, min_y := if x < x2 { x } else { x2 }, if y < y2 { y } else { y2 }
+	max_x, _ := if x > x2 { x } else { x2 }, if y > y2 { y } else { y2 }
+	if y == y2 {
+		// Horizontal line, performance improvement
+		ctx.set_cursor_position(min_x, min_y)
+		ctx.write(strings.repeat(` `, max_x + 1 - min_x))
+		return
+	}
+	// Draw the various points with Bresenham's line algorithm:
+	mut x0, x1 := x, x2
+	mut y0, y1 := y, y2
+	sx := if x0 < x1 { 1 } else { -1 }
+	sy := if y0 < y1 { 1 } else { -1 }
+	dx := if x0 < x1 { x1 - x0 } else { x0 - x1 }
+	dy := if y0 < y1 { y0 - y1 } else { y1 - y0 } // reversed
+	mut err := dx + dy
+	for {
+		// res << Segment{ x0, y0 }
+		ctx.draw_point(x0, y0)
+		if x0 == x1 && y0 == y1 {
+			break
+		}
+		e2 := 2 * err
+		if e2 >= dy {
+			err += dy
+			x0 += sx
+		}
+		if e2 <= dx {
+			err += dx
+			y0 += sy
+		}
+	}
+	// ===== BLOCK END =====
+}
+
+fn (mut ctx ImmediateContext) draw_dashed_line(x int, y int, x2 int, y2 int) {
+	// **** CODE BELOW is MIT LICENSED ****
+	// see https://github.com/vlang/v/blob/9dc69ef2aad8c8991fa740d10087ff36ffc58279/vlib/term/ui/ui.c.v#L175
+	// ===== BLOCK START =====
+	// Draw the various points with Bresenham's line algorithm:
+	mut x0, x1 := x, x2
+	mut y0, y1 := y, y2
+	sx := if x0 < x1 { 1 } else { -1 }
+	sy := if y0 < y1 { 1 } else { -1 }
+	dx := if x0 < x1 { x1 - x0 } else { x0 - x1 }
+	dy := if y0 < y1 { y0 - y1 } else { y1 - y0 } // reversed
+	mut err := dx + dy
+	mut i := 0
+	for {
+		if i % 2 == 0 {
+			ctx.draw_point(x0, y0)
+		}
+		if x0 == x1 && y0 == y1 {
+			break
+		}
+		e2 := 2 * err
+		if e2 >= dy {
+			err += dy
+			x0 += sx
+		}
+		if e2 <= dx {
+			err += dx
+			y0 += sy
+		}
+		i++
+	}
+	// ===== BLOCK END =====
 }
 
 fn (mut ctx ImmediateContext) draw_rect(x int, y int, width int, height int) {
 	x2 := x + (width - 1)
 	y2 := y + (height - 1)
+	// **** CODE BELOW is MIT LICENSED ****
+	// see https://github.com/vlang/v/blob/9dc69ef2aad8c8991fa740d10087ff36ffc58279/vlib/term/ui/ui.c.v#L206
+	// ===== BLOCK START =====
 	if y == y2 || x == x2 {
 		ctx.draw_line(x, y, x2, y2)
 		return
@@ -230,6 +306,7 @@ fn (mut ctx ImmediateContext) draw_rect(x int, y int, width int, height int) {
 	for y_pos in min_y .. max_y + 1 {
 		ctx.draw_line(x, y_pos, x2, y_pos)
 	}
+	// ===== BLOCK END =====
 }
 
 fn (mut ctx ImmediateContext) run() ! {
