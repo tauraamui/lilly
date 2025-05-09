@@ -163,6 +163,18 @@ fn test_immediate_context_draw_text_with_fg_color_set_in_segments() {
 	assert cells[0][25] == Cell{ data: rune(`m`), fg_color: none }
 	assert cells[0][26] == Cell{ data: rune(`a`), fg_color: none }
 	assert cells[0][27] == Cell{ data: rune(`l`), fg_color: none }
+	assert cells[0][28] == Cell{ data: rune(` `), fg_color: none }
+
+	assert cells[0][29] == Cell{ data: rune(`u`), fg_color: none }
+	assert cells[0][30] == Cell{ data: rune(`n`), fg_color: none }
+	assert cells[0][31] == Cell{ data: rune(`c`), fg_color: none }
+	assert cells[0][32] == Cell{ data: rune(`o`), fg_color: none }
+	assert cells[0][33] == Cell{ data: rune(`l`), fg_color: none }
+	assert cells[0][34] == Cell{ data: rune(`o`), fg_color: none }
+	assert cells[0][35] == Cell{ data: rune(`u`), fg_color: none }
+	assert cells[0][36] == Cell{ data: rune(`r`), fg_color: none }
+	assert cells[0][37] == Cell{ data: rune(`e`), fg_color: none }
+	assert cells[0][38] == Cell{ data: rune(`d`), fg_color: none }
 }
 
 fn test_immediate_context_multiple_draw_text_sets_cells_overwrites() {

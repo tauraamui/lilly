@@ -172,7 +172,8 @@ fn (mut ctx ImmediateContext) draw_rect(x int, y int, width int, height int) {
 }
 
 fn (mut ctx ImmediateContext) draw_point(x int, y int) {
-	ctx.ref.draw_point(x, y)
+	ctx.set_cursor_position(x, y)
+	ctx.write(' ')
 }
 
 fn (mut ctx ImmediateContext) bold() {
