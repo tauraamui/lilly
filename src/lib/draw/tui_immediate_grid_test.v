@@ -191,6 +191,18 @@ fn test_immediate_context_draw_text_with_fg_color_set_in_segments() {
 	assert cells[0][38] == Cell{ data: rune(`d`), fg_color: none }
 }
 
+fn test_immediate_context_draw_rect_sets_grid_cells() {
+	mut ctx := ImmediateContext{
+		ref: unsafe { nil }
+	}
+	ctx.setup_grid()!
+
+	ctx.draw_rect(0, 0, 10, 10)
+
+	cells := ctx.data.get_rows(0, 10)!
+	assert cells == []
+}
+
 fn test_immediate_context_multiple_draw_text_sets_cells_overwrites() {
 	mut ctx := ImmediateContext{
 		ref: unsafe { nil }
@@ -258,5 +270,4 @@ fn test_immediate_context_multiple_draw_text_sets_cells_overwrites_only_cells_th
 	assert ctx.data.get(31, 10)! == Cell{ data: rune(`t`) }
 	assert ctx.data.get(32, 10)! == Cell{ data: none }
 }
-
 
