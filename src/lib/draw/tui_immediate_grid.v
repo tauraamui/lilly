@@ -110,7 +110,7 @@ struct Cell {
 }
 
 fn (cell Cell) str() string {
-	r := cell.data or { return "none" }
+	r := cell.data or { return [` `].string() }
 	return r.str()
 }
 
@@ -120,6 +120,7 @@ mut:
 	ref         &tui.Context
 	data        Grid
 	cursor_pos  Pos
+	cursor_pos_set bool
 	hide_cursor bool
 	bold        bool
 	fg_color    ?Color
@@ -147,7 +148,7 @@ pub fn new_immediate_context(cfg Config) (&Contextable, Runner) {
 }
 
 fn (mut ctx ImmediateContext) setup_grid() ! {
-	ctx.data = Grid.new(ctx.window_width(), ctx.window_height())!
+	ctx.data = Grid.new(1, 1)!
 }
 
 fn (mut ctx ImmediateContext) rate_limit_draws() bool {
@@ -182,6 +183,7 @@ fn (mut ctx ImmediateContext) bold() {
 
 fn (mut ctx ImmediateContext) set_cursor_position(x int, y int) {
 	ctx.cursor_pos = Pos{ x: x, y: y }
+	ctx.cursor_pos_set = true
 }
 
 fn (mut ctx ImmediateContext) show_cursor() {
@@ -324,6 +326,22 @@ fn (mut ctx ImmediateContext) run() ! {
 
 fn (mut ctx ImmediateContext) flush() {
 	ctx.data.resize(ctx.window_width(), ctx.window_height()) or { panic("flush failed to resize grid -> ${err}") }
+	ctx.ref.hide_cursor()
+	for y in 0..ctx.window_height() {
+		for x in 0..ctx.window_width() {
+			ctx.ref.set_cursor_position(x, y)
+			cell := ctx.data.get(x, y) or { Cell{} }
+			if x == ctx.cursor_pos.x && y == ctx.cursor_pos.y && ctx.hide_cursor == false {
+				ctx.ref.set_bg_color(tui.Color{ 255, 255, 255 })
+				ctx.ref.set_color(tui.Color{ 0, 0, 0 })
+				ctx.ref.write(cell.str())
+				ctx.ref.reset_bg_color()
+				ctx.ref.reset_color()
+				continue
+			}
+			ctx.ref.write(cell.str())
+		}
+	}
 	ctx.ref.flush()
 }
 
