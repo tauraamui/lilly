@@ -119,6 +119,7 @@ struct ImmediateContext {
 mut:
 	ref         &tui.Context
 	data        Grid
+	prev_data   ?Grid
 	cursor_pos  Pos
 	cursor_pos_set bool
 	hide_cursor bool
@@ -329,11 +330,17 @@ fn (mut ctx ImmediateContext) run() ! {
 }
 
 fn (mut ctx ImmediateContext) flush() {
+	defer { ctx.prev_data = ctx.data }
 	ctx.data.resize(ctx.window_width(), ctx.window_height()) or { panic("flush failed to resize grid -> ${err}") }
 	ctx.ref.hide_cursor()
 	for y in 0..ctx.data.height {
 		for x in 0..ctx.data.width {
 			cell := ctx.data.get(x, y) or { Cell{} }
+			if prev_grid := ctx.prev_data {
+				if prev_cell := prev_grid.get(x, y) {
+					if prev_cell == cell { continue }
+				}
+			}
 			ctx.ref.set_cursor_position(x, y)
 
 			is_cursor_cell := (x == ctx.cursor_pos.x && y == ctx.cursor_pos.y) && ctx.hide_cursor == false
