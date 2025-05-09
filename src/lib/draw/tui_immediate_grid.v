@@ -83,6 +83,9 @@ fn (mut grid Grid) resize(width int, height int) ! {
 	}
 
 	mut new_data := []Cell{ len: width * height }
+	for i in 0..new_data.len {
+		new_data[i] = Cell{}
+	}
 	overlap_rows := int_min(grid.height, height)
 	overlap_cols := int_min(grid.width, width)
 
@@ -154,11 +157,13 @@ fn (mut ctx ImmediateContext) rate_limit_draws() bool {
 fn (mut ctx ImmediateContext) render_debug() bool { return ctx.render_debug }
 
 fn (mut ctx ImmediateContext) window_width() int {
-	return 100
+	if ctx.ref == unsafe { nil } { return 100 }
+	return ctx.ref.window_width
 }
 
 fn (mut ctx ImmediateContext) window_height() int {
-	return 100
+	if ctx.ref == unsafe { nil } { return 100 }
+	return ctx.ref.window_height
 }
 
 fn (mut ctx ImmediateContext) write(c string) {
