@@ -323,6 +323,7 @@ fn (mut ctx ImmediateContext) run() ! {
 }
 
 fn (mut ctx ImmediateContext) flush() {
+	ctx.data.resize(ctx.window_width(), ctx.window_height()) or { panic("flush failed to resize grid -> ${err}") }
 	ctx.ref.flush()
 }
 
