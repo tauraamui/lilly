@@ -16,7 +16,7 @@ module draw
 
 fn test_cell_data_to_string() {
 	cell := Cell{ data: none }
-	assert cell.str() == "none"
+	assert cell.str() == " "
 }
 
 fn test_cell_data_single_rune_to_string() {

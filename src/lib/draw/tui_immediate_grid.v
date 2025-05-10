@@ -35,7 +35,7 @@ mut:
 }
 
 fn Grid.new(width int, height int) !Grid {
-	if width <= 0 || height <= 0 { return error("width and height must be positive") }
+	if width < 0 || height < 0 { return error("width and height must be positive") }
 	mut grid_data := []Cell{ len: width * height }
 	for i in 0..grid_data.len {
 		grid_data[i] = Cell{}
@@ -48,6 +48,7 @@ fn (mut grid Grid) set(x int, y int, c Cell) ! {
 		return error("x: ${x}, y: ${y} is out of bounds")
 	}
 	index := y * grid.width + x
+	if index > grid.data.len { return }
 	grid.data[index] = c
 }
 
@@ -93,6 +94,7 @@ fn (mut grid Grid) resize(width int, height int) ! {
 		for j in 0..overlap_cols {
 			old_index := i * grid.width + j
 			new_index := i * width + j
+			if old_index > grid.data.len { continue }
 			new_data[new_index] = grid.data[old_index]
 		}
 	}
@@ -111,7 +113,7 @@ struct Cell {
 
 fn (cell Cell) str() string {
 	r := cell.data or { return [` `].string() }
-	return r.str()
+	return [r].string()
 }
 
 struct ImmediateContext {
@@ -119,6 +121,7 @@ struct ImmediateContext {
 mut:
 	ref         &tui.Context
 	data        Grid
+	prev_data   ?Grid
 	cursor_pos  Pos
 	cursor_pos_set bool
 	hide_cursor bool
@@ -148,7 +151,7 @@ pub fn new_immediate_context(cfg Config) (&Contextable, Runner) {
 }
 
 fn (mut ctx ImmediateContext) setup_grid() ! {
-	ctx.data = Grid.new(1, 1)!
+	ctx.data = Grid.new(ctx.window_width(), ctx.window_height())!
 }
 
 fn (mut ctx ImmediateContext) rate_limit_draws() bool {
@@ -217,7 +220,11 @@ fn (mut ctx ImmediateContext) reset() {
 }
 
 fn (mut ctx ImmediateContext) clear() {
-	ctx.ref.clear()
+	mut new_data := []Cell{ len: ctx.window_width() * ctx.window_height() }
+	for i in 0..new_data.len {
+		new_data[i] = Cell{}
+	}
+	ctx.data.data = new_data
 }
 
 fn (mut ctx ImmediateContext) draw_point(x int, y int) {
@@ -325,26 +332,30 @@ fn (mut ctx ImmediateContext) run() ! {
 }
 
 fn (mut ctx ImmediateContext) flush() {
+	defer { ctx.prev_data = ctx.data }
+
 	ctx.data.resize(ctx.window_width(), ctx.window_height()) or { panic("flush failed to resize grid -> ${err}") }
 	ctx.ref.hide_cursor()
-	for y in 0..ctx.window_height() {
-		for x in 0..ctx.window_width() {
+	for y in 0..ctx.data.height {
+		for x in 0..ctx.data.width {
 			cell := ctx.data.get(x, y) or { Cell{} }
+			if prev_grid := ctx.prev_data {
+				if prev_cell := prev_grid.get(x, y) {
+					if prev_cell == cell { continue }
+				}
+			}
 			ctx.ref.set_cursor_position(x, y)
-
-			is_cursor_cell := (x == ctx.cursor_pos.x && y == ctx.cursor_pos.y) && ctx.hide_cursor == false
 			if c := cell.fg_color { ctx.ref.set_color(tui.Color{ c.r, c.g, c.b }) }
 			if c := cell.bg_color { ctx.ref.set_bg_color(tui.Color{ c.r, c.g, c.b }) }
-			if is_cursor_cell {
-				ctx.ref.set_color(tui.Color{ 0, 0, 0 })
-				ctx.ref.set_bg_color(tui.Color{ 255, 255, 255 })
-			}
-
 			ctx.ref.write(cell.str())
 
 			ctx.ref.reset_bg_color()
 			ctx.ref.reset_color()
 		}
+	}
+	ctx.ref.set_cursor_position(ctx.cursor_pos.x, ctx.cursor_pos.y)
+	if ctx.hide_cursor == false {
+		ctx.ref.show_cursor()
 	}
 	ctx.ref.flush()
 }
