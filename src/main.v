@@ -66,7 +66,7 @@ fn frame(mut app App) {
 	if app.ui.rate_limit_draws() && !app.changed {
 		return
 	}
-	app.changed = false
+	// app.changed = false
 
 	// NOTE(tauraamui) [20/04/2025]: The majority of the rendering perf. issues we're seeing are due
 	//                               to the unnecessary full clearing of the screen each frame.
@@ -284,6 +284,7 @@ fn main() {
 		changed: true
 	}
 
+	// ctx, run := draw.new_context(
 	ctx, run := draw.new_immediate_context(
 		render_debug:         opts.render_debug_mode
 		user_data:            app
