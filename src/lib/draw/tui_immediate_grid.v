@@ -35,7 +35,7 @@ mut:
 }
 
 fn Grid.new(width int, height int) !Grid {
-	if width <= 0 || height <= 0 { return error("width and height must be positive") }
+	if width < 0 || height < 0 { return error("width and height must be positive") }
 	mut grid_data := []Cell{ len: width * height }
 	for i in 0..grid_data.len {
 		grid_data[i] = Cell{}
@@ -48,6 +48,7 @@ fn (mut grid Grid) set(x int, y int, c Cell) ! {
 		return error("x: ${x}, y: ${y} is out of bounds")
 	}
 	index := y * grid.width + x
+	if index > grid.data.len { return }
 	grid.data[index] = c
 }
 
@@ -93,6 +94,7 @@ fn (mut grid Grid) resize(width int, height int) ! {
 		for j in 0..overlap_cols {
 			old_index := i * grid.width + j
 			new_index := i * width + j
+			if old_index > grid.data.len { continue }
 			new_data[new_index] = grid.data[old_index]
 		}
 	}
