@@ -236,7 +236,6 @@ fn (mut ctx ImmediateContext) reset() {
 	ctx.bold     = false
 	ctx.fg_color = none
 	ctx.bg_color = none
-	ctx.cursor_style = .block
 }
 
 fn (mut ctx ImmediateContext) clear() {
