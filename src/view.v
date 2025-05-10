@@ -584,12 +584,12 @@ fn (mut view View) draw_bottom_bar_of_command_or_search(mut ctx draw.Contextable
 @[inline]
 fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
 	if view.leader_state.mode == .insert {
-		set_cursor_to_vertical_bar(mut ctx)
+		ctx.set_cursor_to_vertical_bar()
 	} else {
-		set_cursor_to_block(mut ctx)
+		ctx.set_cursor_to_block()
 	}
 	if view.leader_state.d_count == 1 || view.leader_state.z_count == 1 || view.leader_state.mode == .replace || view.leader_state.g_count == 1 || view.leader_state.f_count == 1 || view.leader_state.mode == .replacing {
-		set_cursor_to_underline(mut ctx)
+		ctx.set_cursor_to_underline()
 	}
 	ctx.set_cursor_position(view.x + 1 + view.calc_cursor_x_offset(),
 		view.calc_cursor_y_in_screen_space() + 1)
@@ -1191,6 +1191,7 @@ fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cp
 // 4 - Underline (steady)
 // 5 - Bar (blinking)
 // 6 - Bar (steady)
+/*
 fn set_cursor_to_block(mut ctx draw.Contextable) {
 	ctx.write('\x1b[0 q')
 }
@@ -1202,6 +1203,7 @@ fn set_cursor_to_underline(mut ctx draw.Contextable) {
 fn set_cursor_to_vertical_bar(mut ctx draw.Contextable) {
 	ctx.write('\x1b[6 q')
 }
+*/
 
 fn (mut view View) exec(op chords.Op) {
 	match op.kind {

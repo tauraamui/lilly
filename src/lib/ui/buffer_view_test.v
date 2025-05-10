@@ -668,6 +668,12 @@ fn (mockctx MockContextable) window_height() int {
 
 fn (mockctx MockContextable) set_cursor_position(x int, y int) {}
 
+fn (mockctx MockContextable) set_cursor_to_block() {}
+
+fn (mockctx MockContextable) set_cursor_to_underline() {}
+
+fn (mockctx MockContextable) set_cursor_to_vertical_bar() {}
+
 fn (mockctx MockContextable) show_cursor() {}
 
 fn (mockctx MockContextable) hide_cursor() {}

@@ -59,6 +59,18 @@ fn (mut ctx Context) set_cursor_position(x int, y int) {
 	ctx.ref.set_cursor_position(x, y)
 }
 
+fn (mut ctx Context) set_cursor_to_block() {
+	ctx.ref.write('\x1b[0 q')
+}
+
+fn (mut ctx Context) set_cursor_to_underline() {
+	ctx.ref.write('\x1b[4 q')
+}
+
+fn (mut ctx Context) set_cursor_to_vertical_bar() {
+	ctx.ref.write('\x1b[6 q')
+}
+
 fn (mut ctx Context) show_cursor() {
 	ctx.ref.show_cursor()
 }

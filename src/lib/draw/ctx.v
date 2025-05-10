@@ -70,6 +70,9 @@ mut:
 	window_height() int
 
 	set_cursor_position(x int, y int)
+	set_cursor_to_block()
+	set_cursor_to_underline()
+	set_cursor_to_vertical_bar()
 	show_cursor()
 	hide_cursor()
 
