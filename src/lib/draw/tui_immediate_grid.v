@@ -351,7 +351,9 @@ fn (mut ctx ImmediateContext) flush() {
 		}
 	}
 	ctx.ref.set_cursor_position(ctx.cursor_pos.x, ctx.cursor_pos.y)
-	ctx.ref.show_cursor()
+	if ctx.hide_cursor == false {
+		ctx.ref.show_cursor()
+	}
 	ctx.ref.flush()
 }
 
