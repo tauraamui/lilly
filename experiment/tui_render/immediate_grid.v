@@ -48,6 +48,7 @@ fn (mut grid CharGrid) draw_chars(mut ctx draw.Contextable) {
 }
 
 fn (mut grid CharGrid) draw(mut ctx draw.Contextable) {
+	ctx.hide_cursor()
 	ctx.clear()
 	// if grid.run_once { return }
 	// defer { grid.run_once = true }
