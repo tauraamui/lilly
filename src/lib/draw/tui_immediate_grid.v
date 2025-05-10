@@ -342,21 +342,16 @@ fn (mut ctx ImmediateContext) flush() {
 				}
 			}
 			ctx.ref.set_cursor_position(x, y)
-
-			is_cursor_cell := (x == ctx.cursor_pos.x && y == ctx.cursor_pos.y) && ctx.hide_cursor == false
 			if c := cell.fg_color { ctx.ref.set_color(tui.Color{ c.r, c.g, c.b }) }
 			if c := cell.bg_color { ctx.ref.set_bg_color(tui.Color{ c.r, c.g, c.b }) }
-			if is_cursor_cell {
-				ctx.ref.set_color(tui.Color{ 0, 0, 0 })
-				ctx.ref.set_bg_color(tui.Color{ 255, 255, 255 })
-			}
-
 			ctx.ref.write(cell.str())
 
 			ctx.ref.reset_bg_color()
 			ctx.ref.reset_color()
 		}
 	}
+	ctx.ref.set_cursor_position(ctx.cursor_pos.x, ctx.cursor_pos.y)
+	ctx.ref.show_cursor()
 	ctx.ref.flush()
 }
 
