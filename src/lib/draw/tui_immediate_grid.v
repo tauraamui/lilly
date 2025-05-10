@@ -149,7 +149,7 @@ pub fn new_immediate_context(cfg Config) (&Contextable, Runner) {
 }
 
 fn (mut ctx ImmediateContext) setup_grid() ! {
-	ctx.data = Grid.new(1, 1)!
+	ctx.data = Grid.new(ctx.window_width(), ctx.window_height())!
 }
 
 fn (mut ctx ImmediateContext) rate_limit_draws() bool {
@@ -218,7 +218,7 @@ fn (mut ctx ImmediateContext) reset() {
 }
 
 fn (mut ctx ImmediateContext) clear() {
-	mut new_data := []Cell{ len: ctx.ref.window_width * ctx.ref.window_height }
+	mut new_data := []Cell{ len: ctx.window_width() * ctx.window_height() }
 	for i in 0..new_data.len {
 		new_data[i] = Cell{}
 	}
@@ -331,6 +331,7 @@ fn (mut ctx ImmediateContext) run() ! {
 
 fn (mut ctx ImmediateContext) flush() {
 	defer { ctx.prev_data = ctx.data }
+
 	ctx.data.resize(ctx.window_width(), ctx.window_height()) or { panic("flush failed to resize grid -> ${err}") }
 	ctx.ref.hide_cursor()
 	for y in 0..ctx.data.height {
