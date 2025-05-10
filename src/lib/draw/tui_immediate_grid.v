@@ -116,18 +116,25 @@ fn (cell Cell) str() string {
 	return [r].string()
 }
 
+enum CursorStyle as u8 {
+	block
+	underline
+	vertical_bar
+}
+
 struct ImmediateContext {
 	render_debug bool
 mut:
-	ref         &tui.Context
-	data        Grid
-	prev_data   ?Grid
-	cursor_pos  Pos
+	ref            &tui.Context
+	data           Grid
+	prev_data      ?Grid
+	cursor_pos     Pos
 	cursor_pos_set bool
-	hide_cursor bool
-	bold        bool
-	fg_color    ?Color
-	bg_color    ?Color
+	cursor_style   CursorStyle
+	hide_cursor    bool
+	bold           bool
+	fg_color       ?Color
+	bg_color       ?Color
 }
 
 type Runner = fn () !
@@ -189,6 +196,18 @@ fn (mut ctx ImmediateContext) set_cursor_position(x int, y int) {
 	ctx.cursor_pos_set = true
 }
 
+fn (mut ctx ImmediateContext) set_cursor_to_block() {
+	ctx.cursor_style = .block
+}
+
+fn (mut ctx ImmediateContext) set_cursor_to_underline() {
+	ctx.cursor_style = .underline
+}
+
+fn (mut ctx ImmediateContext) set_cursor_to_vertical_bar() {
+	ctx.cursor_style = .vertical_bar
+}
+
 fn (mut ctx ImmediateContext) show_cursor() {
 	ctx.hide_cursor = false
 }
@@ -217,6 +236,7 @@ fn (mut ctx ImmediateContext) reset() {
 	ctx.bold     = false
 	ctx.fg_color = none
 	ctx.bg_color = none
+	ctx.cursor_style = .block
 }
 
 fn (mut ctx ImmediateContext) clear() {
@@ -356,6 +376,13 @@ fn (mut ctx ImmediateContext) flush() {
 	ctx.ref.set_cursor_position(ctx.cursor_pos.x, ctx.cursor_pos.y)
 	if ctx.hide_cursor == false {
 		ctx.ref.show_cursor()
+		match ctx.cursor_style {
+			.underline { ctx.ref.write('\x1b[4 q') }
+			.vertical_bar { ctx.ref.write('\x1b[6 q') }
+			else {
+				ctx.ref.write('\x1b[0 q')
+			}
+		}
 	}
 	ctx.ref.flush()
 }
