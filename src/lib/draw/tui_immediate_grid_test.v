@@ -74,7 +74,7 @@ fn test_grid_resize_shrinking_loses_data() {
 }
 
 fn test_immediate_context_draw_text_sets_cells() {
-	mut ctx := ImmediateContext{
+	mut ctx := Context{
 		ref: unsafe { nil }
 	}
 	ctx.setup_grid()!
@@ -107,7 +107,7 @@ fn test_immediate_context_draw_text_sets_cells() {
 }
 
 fn test_immediate_context_draw_text_sets_cells_get_rows() {
-	mut ctx := ImmediateContext{
+	mut ctx := Context{
 		ref: unsafe { nil }
 	}
 	ctx.setup_grid()!
@@ -132,7 +132,7 @@ fn test_immediate_context_draw_text_sets_cells_get_rows() {
 }
 
 fn test_immediate_context_draw_text_with_fg_color_set_in_segments() {
-	mut ctx := ImmediateContext{
+	mut ctx := Context{
 		ref: unsafe { nil }
 	}
 	ctx.setup_grid()!
@@ -192,7 +192,7 @@ fn test_immediate_context_draw_text_with_fg_color_set_in_segments() {
 }
 
 fn test_immediate_context_draw_rect_sets_grid_cells() {
-	mut ctx := ImmediateContext{
+	mut ctx := Context{
 		ref: unsafe { nil }
 	}
 	ctx.setup_grid()!
@@ -215,7 +215,7 @@ fn test_immediate_context_draw_rect_sets_grid_cells() {
 }
 
 fn test_immediate_context_multiple_draw_text_sets_cells_overwrites() {
-	mut ctx := ImmediateContext{
+	mut ctx := Context{
 		ref: unsafe { nil }
 	}
 	ctx.setup_grid()!
@@ -249,7 +249,7 @@ fn test_immediate_context_multiple_draw_text_sets_cells_overwrites() {
 }
 
 fn test_immediate_context_multiple_draw_text_sets_cells_overwrites_only_cells_that_overlap() {
-	mut ctx := ImmediateContext{
+	mut ctx := Context{
 		ref: unsafe { nil }
 	}
 	ctx.setup_grid()!
