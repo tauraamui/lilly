@@ -38,7 +38,7 @@ pub:
 pub fn draw_status_line(mut ctx draw.Contextable, status Status) {
 	defer { ctx.reset() }
 
-	y := ctx.window_height() - 1
+	y := ctx.window_height() - 2
 
 	// invoke the mode indicator draw
 	mut offset := status.mode.draw(mut ctx, 0, y)

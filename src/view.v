@@ -351,14 +351,14 @@ fn (mut cmd_buf CmdBuffer) draw(mut ctx draw.Contextable, draw_cursor bool) {
 	if cmd_buf.code != .blank {
 		color := cmd_buf.code.color()
 		ctx.set_color(r: color.r, g: color.g, b: color.b)
-		ctx.draw_text(1, ctx.window_height(), cmd_buf.err_msg)
+		ctx.draw_text(0, ctx.window_height() - 1, cmd_buf.err_msg)
 		ctx.reset_color()
 		return
 	}
-	ctx.draw_text(1, ctx.window_height(), cmd_buf.line)
+	ctx.draw_text(0, ctx.window_height() - 1, cmd_buf.line)
 	if draw_cursor {
 		ctx.set_bg_color(r: 230, g: 230, b: 230)
-		ctx.draw_point(cmd_buf.cursor_x + 1, ctx.window_height())
+		ctx.draw_point(cmd_buf.cursor_x, ctx.window_height() - 1)
 	}
 }
 
@@ -578,7 +578,7 @@ fn (mut view View) draw_bottom_bar_of_command_or_search(mut ctx draw.Contextable
 		view.search.draw(mut ctx, view.leader_state.mode == .search)
 	}
 	repeat_amount := view.chord.pending_repeat_amount()
-	ctx.draw_text(ctx.window_width() - repeat_amount.len, ctx.window_height(), repeat_amount)
+	ctx.draw_text(ctx.window_width() - repeat_amount.len, ctx.window_height() - 1, repeat_amount)
 }
 
 @[inline]
