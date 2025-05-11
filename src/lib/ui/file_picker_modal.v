@@ -77,32 +77,32 @@ pub fn (mut f_picker FilePickerModal) draw(mut ctx draw.Contextable) {
 	defer { ctx.reset_bg_color() }
 	ctx.set_color(r: 245, g: 245, b: 245)
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
-	mut y_offset := 1
+	mut y_offset := 0
 	debug_mode_str := if ctx.render_debug() { " *** RENDER DEBUG MODE ***" } else { "" }
 	special_mode_str := if f_picker.special_mode { " - SPECIAL MODE" } else { "" }
-	ctx.draw_text(1, y_offset, "=== ${debug_mode_str} ${f_picker.title}${special_mode_str} ${debug_mode_str} ===")
+	ctx.draw_text(0, y_offset, "=== ${debug_mode_str} ${f_picker.title}${special_mode_str} ${debug_mode_str} ===")
 	y_offset += 1
 	ctx.set_cursor_position(1, y_offset + f_picker.current_sel_id - f_picker.from)
 	y_offset += f_picker.draw_scrollable_list(mut ctx, y_offset, f_picker.file_paths)
 	ctx.set_bg_color(r: 153, g: 95, b: 146)
-	ctx.draw_rect(1, y_offset, ctx.window_width(), 1)
+	ctx.draw_rect(0, y_offset, ctx.window_width(), 1)
 	search_label := 'SEARCH:'
-	ctx.draw_text(1, y_offset, search_label)
-	ctx.draw_text(1 + utf8_str_visible_length(search_label) + 1, y_offset, f_picker.search.query)
+	ctx.draw_text(0, y_offset, search_label)
+	ctx.draw_text(utf8_str_visible_length(search_label) + 1, y_offset, f_picker.search.query)
 }
 
 fn (mut f_picker FilePickerModal) draw_scrollable_list(mut ctx draw.Contextable, y_offset int, list []string) int {
 	ctx.reset_bg_color()
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
-	ctx.draw_rect(1, y_offset, ctx.window_width(), max_height)
+	ctx.draw_rect(0, y_offset, ctx.window_width(), max_height)
 	to := f_picker.resolve_to()
 	for i := f_picker.from; i < to; i++ {
 		ctx.set_bg_color(r: 15, g: 15, b: 15)
 		if f_picker.current_sel_id == i {
 			ctx.set_bg_color(r: 53, g: 53, b: 53)
-			ctx.draw_rect(1, y_offset + (i - f_picker.from), ctx.window_width(), 1)
+			ctx.draw_rect(0, y_offset + (i - f_picker.from), ctx.window_width(), 1)
 		}
-		ctx.draw_text(1, y_offset + (i - f_picker.from), list[i])
+		ctx.draw_text(0, y_offset + (i - f_picker.from), list[i])
 	}
 	return y_offset + (max_height - 2)
 }
