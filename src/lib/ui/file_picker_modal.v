@@ -82,7 +82,7 @@ pub fn (mut f_picker FilePickerModal) draw(mut ctx draw.Contextable) {
 	special_mode_str := if f_picker.special_mode { " - SPECIAL MODE" } else { "" }
 	ctx.draw_text(0, y_offset, "=== ${debug_mode_str} ${f_picker.title}${special_mode_str} ${debug_mode_str} ===")
 	y_offset += 1
-	ctx.set_cursor_position(1, y_offset + f_picker.current_sel_id - f_picker.from)
+	ctx.set_cursor_position(0, y_offset + f_picker.current_sel_id - f_picker.from)
 	y_offset += f_picker.draw_scrollable_list(mut ctx, y_offset, f_picker.file_paths)
 	ctx.set_bg_color(r: 153, g: 95, b: 146)
 	ctx.draw_rect(0, y_offset, ctx.window_width(), 1)
