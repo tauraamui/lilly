@@ -3,6 +3,7 @@ module main
 import lib.utf8
 import lib.draw
 import rand
+import strings
 
 struct CharGrid {
 mut:
@@ -13,8 +14,8 @@ mut:
 
 fn CharGrid.new() CharGrid {
 	return CharGrid{
-		width: 10
-		height: 10
+		width: 100
+		height: 100
 	}
 }
 
@@ -37,8 +38,9 @@ fn (mut grid CharGrid) draw_chars(mut ctx draw.Contextable) {
 				index = 3
 				ctx.reset_color()
 			}
-			char_to_render := char_values[index]
-			ctx.draw_text(x + 1, y + 1, char_to_render)
+			mut char_to_render := char_values[index]
+			if x == 0 { char_to_render = "${y}" }
+			ctx.draw_text(x, y, char_to_render)
 		}
 	}
 	ctx.set_bg_color(draw.Color{ 110, 150, 200 })

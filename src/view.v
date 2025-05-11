@@ -351,14 +351,14 @@ fn (mut cmd_buf CmdBuffer) draw(mut ctx draw.Contextable, draw_cursor bool) {
 	if cmd_buf.code != .blank {
 		color := cmd_buf.code.color()
 		ctx.set_color(r: color.r, g: color.g, b: color.b)
-		ctx.draw_text(1, ctx.window_height(), cmd_buf.err_msg)
+		ctx.draw_text(0, ctx.window_height() - 1, cmd_buf.err_msg)
 		ctx.reset_color()
 		return
 	}
-	ctx.draw_text(1, ctx.window_height(), cmd_buf.line)
+	ctx.draw_text(0, ctx.window_height() - 1, cmd_buf.line)
 	if draw_cursor {
 		ctx.set_bg_color(r: 230, g: 230, b: 230)
-		ctx.draw_point(cmd_buf.cursor_x + 1, ctx.window_height())
+		ctx.draw_point(cmd_buf.cursor_x, ctx.window_height() - 1)
 	}
 }
 
@@ -578,7 +578,7 @@ fn (mut view View) draw_bottom_bar_of_command_or_search(mut ctx draw.Contextable
 		view.search.draw(mut ctx, view.leader_state.mode == .search)
 	}
 	repeat_amount := view.chord.pending_repeat_amount()
-	ctx.draw_text(ctx.window_width() - repeat_amount.len, ctx.window_height(), repeat_amount)
+	ctx.draw_text(ctx.window_width() - repeat_amount.len, ctx.window_height() - 1, repeat_amount)
 }
 
 @[inline]
@@ -673,7 +673,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 		if cursor_screen_space_y > view.code_view_height() - 1 {
 			cursor_screen_space_y = view.code_view_height() - 1
 		}
-		ctx.draw_rect(view.x + 1, cursor_screen_space_y + 1, ctx.window_width() - (view.x + 1), 1)
+		ctx.draw_rect(view.x, cursor_screen_space_y, ctx.window_width() - view.x, 1)
 	}
 
 	for y, line in view.buffer.line_iterator() {
@@ -810,7 +810,7 @@ fn draw_text_line_visual_selection_between_start_and_end(mut ctx draw.Contextabl
 		g: selection_highlight_color.g
 		b: selection_highlight_color.b
 	)
-	ctx.draw_text(screen_space_x + 1, screen_space_y + 1, line_runes.string())
+	ctx.draw_text(screen_space_x, screen_space_y, line_runes.string())
 	ctx.reset_bg_color()
 }
 
@@ -836,7 +836,7 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 		g: selection_highlight_color.g
 		b: selection_highlight_color.b
 	)
-	ctx.draw_text(screen_space_x + 1 + pre_selection.len, screen_space_y + 1, within_selection.string())
+	ctx.draw_text(screen_space_x + pre_selection.len, screen_space_y, within_selection.string())
 	ctx.reset_bg_color()
 
 	ctx.set_bg_color(r: 53, g: 53, b: 53)
@@ -874,7 +874,7 @@ fn draw_text_line_visual_selection_starts_on_same_but_ends_after(mut ctx draw.Co
 			g: selection_highlight_color.g
 			b: selection_highlight_color.b
 		)
-		ctx.draw_text(screen_space_x + x_offset + 1, screen_space_y + 1, sel.string())
+		ctx.draw_text(screen_space_x + x_offset, screen_space_y, sel.string())
 		ctx.reset_bg_color()
 		x_offset += sel.len
 	}
@@ -906,7 +906,7 @@ fn draw_text_line_visual_selection_starts_before_but_ends_on_line(mut ctx draw.C
 			g: selection_highlight_color.g
 			b: selection_highlight_color.b
 		)
-		ctx.draw_text(screen_space_x + x_offset + 1, screen_space_y + 1, pre_end.string())
+		ctx.draw_text(screen_space_x + x_offset, screen_space_y, pre_end.string())
 		ctx.reset_bg_color()
 		x_offset += pre_end.len
 	}
@@ -929,7 +929,7 @@ fn draw_text_line_as_segments(mut ctx draw.Contextable,
 		false)
 
 	if segments.len == 0 {
-		ctx.draw_text(screen_space_x + 1, screen_space_y + 1, line)
+		ctx.draw_text(screen_space_x, screen_space_y, line)
 		return
 	}
 
@@ -938,18 +938,18 @@ fn draw_text_line_as_segments(mut ctx draw.Contextable,
 		// render text before next segment
 		if segment.start > pos {
 			s := line.runes()[pos..segment.start].string()
-			ctx.draw_text(screen_space_x + 1 + pos, screen_space_y + 1, s)
+			ctx.draw_text(screen_space_x + pos, screen_space_y, s)
 		}
 
 		color := segment.fg_color
 		s := line.runes()[segment.start..segment.end].string()
 		ctx.set_color(r: color.r, g: color.g, b: color.b)
-		ctx.draw_text(screen_space_x + 1 + segment.start, screen_space_y + 1, s)
+		ctx.draw_text(screen_space_x + segment.start, screen_space_y, s)
 		ctx.reset_color()
 		pos = segment.end
 		if i == segments.len - 1 && segment.end < line.len {
 			final := line.runes()[segment.end..line.runes().len].string()
-			ctx.draw_text(screen_space_x + 1 + pos, screen_space_y + 1, final)
+			ctx.draw_text(screen_space_x + pos, screen_space_y, final)
 		}
 	}
 }
@@ -1125,7 +1125,7 @@ fn (mut view View) draw_text_line_number(mut ctx draw.Contextable, y int) {
 			line_num_str = '${y - cursor_screenspace_y}'
 		}
 	}
-	ctx.draw_text(view.x - line_num_str.runes().len, y + 1, line_num_str)
+	ctx.draw_text(view.x - line_num_str.runes().len - 1, y, line_num_str)
 	ctx.reset_color()
 }
 
@@ -1139,18 +1139,18 @@ fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cp
 			match c {
 				`\t` {
 					ctx.set_color(r: 120, g: 120, b: 120)
-					ctx.draw_text(view.x + xx + 1, i + 1, '->->')
+					ctx.draw_text(view.x + xx, i, '->->')
 					ctx.reset_color()
 					xx += 4
 				}
 				` ` {
 					ctx.set_color(r: 120, g: 120, b: 120)
-					ctx.draw_text(view.x + xx + 1, i + 1, '·')
+					ctx.draw_text(view.x, i, '·')
 					ctx.reset_color()
 					xx += 1
 				}
 				else {
-					ctx.draw_text(view.x + xx + 1, i + 1, c.ascii_str())
+					ctx.draw_text(view.x + xx, i, c.ascii_str())
 					xx += 1
 				}
 			}
@@ -1165,18 +1165,18 @@ fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cp
 			match c {
 				`\t` {
 					ctx.set_color(r: 120, g: 120, b: 120)
-					ctx.draw_text(view.x + xx + 1, i + 1, '->->')
+					ctx.draw_text(view.x + xx, i, '->->')
 					ctx.reset_color()
 					xx += 4
 				}
 				` ` {
 					ctx.set_color(r: 120, g: 120, b: 120)
-					ctx.draw_text(view.x + xx + 1, i + 1, '·')
+					ctx.draw_text(view.x + xx, i, '·')
 					ctx.reset_color()
 					xx += 1
 				}
 				else {
-					ctx.draw_text(view.x + xx + 1, i + 1, c.ascii_str())
+					ctx.draw_text(view.x + xx, i, c.ascii_str())
 					xx += 1
 				}
 			}
