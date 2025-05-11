@@ -363,7 +363,7 @@ fn (mut ctx ImmediateContext) flush() {
 					if prev_cell == cell { continue }
 				}
 			}
-			ctx.ref.set_cursor_position(x, y)
+			ctx.ref.set_cursor_position(x + 1, y + 1)
 			if c := cell.fg_color { ctx.ref.set_color(tui.Color{ c.r, c.g, c.b }) }
 			if c := cell.bg_color { ctx.ref.set_bg_color(tui.Color{ c.r, c.g, c.b }) }
 			ctx.ref.write(cell.str())
