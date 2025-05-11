@@ -208,9 +208,9 @@ fn (mut search Search) get_line_matches(line_num int) []Match {
 }
 
 fn (mut search Search) draw(mut ctx draw.Contextable, draw_cursor bool) {
-	ctx.draw_text(1, ctx.window_height(), search.to_find)
+	ctx.draw_text(0, ctx.window_height() - 1, search.to_find)
 	ctx.set_bg_color(r: 230, g: 230, b: 230)
-	ctx.draw_point(search.cursor_x + 1, ctx.window_height())
+	ctx.draw_point(search.cursor_x, ctx.window_height() - 1)
 	ctx.reset_bg_color()
 }
 
