@@ -113,7 +113,7 @@ struct Cell {
 	visual_width int // account for runes which are unicode chars (multiple width chars)
 	fg_color     ?Color
 	bg_color     ?Color
-	style        Style
+	style        ?Style
 }
 
 fn (cell Cell) str() string {
@@ -188,7 +188,7 @@ fn (mut ctx Context) write(c string) {
 	for i, c_char in c.runes() {
 		ctx.data.set(
 			cursor_pos.x + i, cursor_pos.y,
-			Cell{ data: c_char, fg_color: ctx.fg_color, bg_color: ctx.bg_color }
+			Cell{ data: c_char, fg_color: ctx.fg_color, bg_color: ctx.bg_color, style: ctx.style }
 		) or { break }
 	}
 }
