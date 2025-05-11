@@ -104,11 +104,16 @@ fn (mut grid Grid) resize(width int, height int) ! {
 	grid.data = new_data
 }
 
+pub enum Style as u8 {
+	strikethrough
+}
+
 struct Cell {
 	data         ?rune
 	visual_width int // account for runes which are unicode chars (multiple width chars)
 	fg_color     ?Color
 	bg_color     ?Color
+	style        Style
 }
 
 fn (cell Cell) str() string {
@@ -132,6 +137,7 @@ mut:
 	cursor_pos_set bool
 	cursor_style   CursorStyle
 	hide_cursor    bool
+	style          ?Style
 	bold           bool
 	fg_color       ?Color
 	bg_color       ?Color
@@ -189,6 +195,14 @@ fn (mut ctx Context) write(c string) {
 
 fn (mut ctx Context) bold() {
 	ctx.bold = true
+}
+
+fn (mut ctx Context) set_style(s Style) {
+	ctx.style = s
+}
+
+fn (mut ctx Context) clear_style() {
+	ctx.style = none
 }
 
 fn (mut ctx Context) set_cursor_position(x int, y int) {

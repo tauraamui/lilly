@@ -55,6 +55,8 @@ fn (mut drawer TestDrawer) set_cursor_to_vertical_bar() {}
 fn (mut drawer TestDrawer) show_cursor() {}
 fn (mut drawer TestDrawer) hide_cursor() {}
 fn (mut drawer TestDrawer) bold() {}
+fn (mut drawer TestDrawer) set_style(s draw.Style) {}
+fn (mut drawer TestDrawer) clear_style() {}
 fn (mut drawer TestDrawer) reset() {}
 fn (mut drawer TestDrawer) clear() {}
 fn (mut drawer TestDrawer) flush() {}

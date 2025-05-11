@@ -99,6 +99,10 @@ fn (mut ctx ImmediateContext) bold() {
 	ctx.ref.bold()
 }
 
+fn (mut ctx ImmediateContext) set_style(s Style) {}
+
+fn (mut ctx ImmediateContext) clear_style() {}
+
 fn (mut ctx ImmediateContext) set_color(c Color) {
 	ctx.ref.set_color(tui.Color{ r: c.r, g: c.g, b: c.b })
 }

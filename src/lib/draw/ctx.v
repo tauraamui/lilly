@@ -77,6 +77,8 @@ mut:
 	hide_cursor()
 
 	bold()
+	set_style(s Style)
+	clear_style()
 
 	reset()
 

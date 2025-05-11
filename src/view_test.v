@@ -64,6 +64,8 @@ fn (mut drawer TestDrawer) set_cursor_to_underline() {}
 fn (mut drawer TestDrawer) set_cursor_to_vertical_bar() {}
 fn (mut drawer TestDrawer) show_cursor() {}
 fn (mut drawer TestDrawer) hide_cursor() {}
+fn (mut drawer TestDrawer) set_style(s draw.Style) {}
+fn (mut drawer TestDrawer) clear_style() {}
 fn (mut drawer TestDrawer) bold() {}
 fn (mut drawer TestDrawer) reset() {}
 fn (mut drawer TestDrawer) clear() {}
@@ -589,6 +591,10 @@ fn (mockctx MockContextable) revert_bg_color() {}
 fn (mockctx MockContextable) reset_color() {}
 
 fn (mockctx MockContextable) reset_bg_color() {}
+
+fn (mockctx MockContextable) set_style(s draw.Style) {}
+
+fn (mockctx MockContextable) clear_style() {}
 
 fn (mockctx MockContextable) bold() {}
 
