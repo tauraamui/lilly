@@ -664,6 +664,7 @@ fn (mut view View) update_to() {
 }
 
 fn (mut view View) draw_document(mut ctx draw.Contextable) {
+	view.x -= 1
 	view.update_to()
 	ctx.set_bg_color(r: 53, g: 53, b: 53)
 
