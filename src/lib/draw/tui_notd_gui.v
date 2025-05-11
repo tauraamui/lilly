@@ -48,7 +48,7 @@ fn (mut grid Grid) set(x int, y int, c Cell) ! {
 		return error("x: ${x}, y: ${y} is out of bounds")
 	}
 	index := y * grid.width + x
-	if index > grid.data.len { return }
+	if index >= grid.data.len { return }
 	grid.data[index] = c
 }
 
