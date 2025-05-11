@@ -104,11 +104,32 @@ fn (mut grid Grid) resize(width int, height int) ! {
 	grid.data = new_data
 }
 
+pub enum Style as u8 {
+	strikethrough
+}
+
+fn (style Style) open() string {
+	return match style {
+		.strikethrough {
+			'\x1b[9m'
+		}
+	}
+}
+
+fn (style Style) close() string {
+	return match style {
+		.strikethrough {
+			'\x1b[29m'
+		}
+	}
+}
+
 struct Cell {
 	data         ?rune
 	visual_width int // account for runes which are unicode chars (multiple width chars)
 	fg_color     ?Color
 	bg_color     ?Color
+	style        ?Style
 }
 
 fn (cell Cell) str() string {
@@ -132,6 +153,7 @@ mut:
 	cursor_pos_set bool
 	cursor_style   CursorStyle
 	hide_cursor    bool
+	style          ?Style
 	bold           bool
 	fg_color       ?Color
 	bg_color       ?Color
@@ -182,13 +204,21 @@ fn (mut ctx Context) write(c string) {
 	for i, c_char in c.runes() {
 		ctx.data.set(
 			cursor_pos.x + i, cursor_pos.y,
-			Cell{ data: c_char, fg_color: ctx.fg_color, bg_color: ctx.bg_color }
+			Cell{ data: c_char, fg_color: ctx.fg_color, bg_color: ctx.bg_color, style: ctx.style }
 		) or { break }
 	}
 }
 
 fn (mut ctx Context) bold() {
 	ctx.bold = true
+}
+
+fn (mut ctx Context) set_style(s Style) {
+	ctx.style = s
+}
+
+fn (mut ctx Context) clear_style() {
+	ctx.style = none
 }
 
 fn (mut ctx Context) set_cursor_position(x int, y int) {
@@ -355,19 +385,26 @@ fn (mut ctx Context) flush() {
 
 	ctx.data.resize(ctx.window_width(), ctx.window_height()) or { panic("flush failed to resize grid -> ${err}") }
 	ctx.ref.hide_cursor()
+	mut style := ?Style(none)
 	for y in 0..ctx.data.height {
 		for x in 0..ctx.data.width {
 			cell := ctx.data.get(x, y) or { Cell{} }
+
+			if prev_style := style { ctx.ref.write(prev_style.close()) }
+			if cell_style := cell.style { ctx.ref.write(cell_style.open()) }
+			style = cell.style
+
 			if prev_grid := ctx.prev_data {
 				if prev_cell := prev_grid.get(x, y) {
 					if prev_cell == cell { continue }
 				}
 			}
+
 			ctx.ref.set_cursor_position(x + 1, y + 1)
 			if c := cell.fg_color { ctx.ref.set_color(tui.Color{ c.r, c.g, c.b }) }
 			if c := cell.bg_color { ctx.ref.set_bg_color(tui.Color{ c.r, c.g, c.b }) }
-			ctx.ref.write(cell.str())
 
+			ctx.ref.write(cell.str())
 			ctx.ref.reset_bg_color()
 			ctx.ref.reset_color()
 		}

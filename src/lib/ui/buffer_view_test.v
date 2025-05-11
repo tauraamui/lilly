@@ -706,6 +706,10 @@ fn (mockctx MockContextable) reset_bg_color() {}
 
 fn (mockctx MockContextable) bold() {}
 
+fn (mockctx MockContextable) set_style(s draw.Style) {}
+
+fn (mockctx MockContextable) clear_style() {}
+
 fn (mockctx MockContextable) reset() {}
 
 fn (mockctx MockContextable) run() ! {}

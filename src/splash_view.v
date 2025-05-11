@@ -15,7 +15,6 @@
 module main
 
 import math
-import term { strikethrough }
 import lib.draw
 import lib.utf8
 
@@ -135,9 +134,11 @@ pub fn (splash SplashScreen) draw(mut ctx draw.Contextable) {
 	}
 
 	for dh in disabled_command_help {
+		ctx.set_style(.strikethrough)
 		ctx.draw_text(offset_x + (ctx.window_width() / 2) - (dh.len / 2), int(math.floor(offset_y)),
-			strikethrough(dh))
+			dh)
 		offset_y += 2
+		ctx.clear_style()
 	}
 
 	exit_label_str := 'Exit/Quit                      ESC'
