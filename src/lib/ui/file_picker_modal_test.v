@@ -154,9 +154,9 @@ fn test_on_search_term_adjust_list_order_changes() {
 		"./src/project/lib/database/connection.v"
 	]
 	assert drawn_rects == [
-		DrawnRect{ x: 1, y: 2, width: 500, height: 20 }, // this is the full background rect for the list
-		DrawnRect{ x: 1, y: 2, width: 500, height: 1 },  // this is the currently selected/heightlight line rect
-		DrawnRect{ x: 1, y: 22, width: 500, height: 1 }  // this is the rect/background line for the search bar
+		DrawnRect{ x: 0, y: 1, width: 500, height: 20 }, // this is the full background rect for the list
+		DrawnRect{ x: 0, y: 1, width: 500, height: 1 },  // this is the currently selected/heightlight line rect
+		DrawnRect{ x: 0, y: 20, width: 500, height: 1 }  // this is the rect/background line for the search bar
 	]
 
 	mock_modal.on_key_down(draw.Event{ ascii: u8("c"[0]) })
@@ -175,9 +175,9 @@ fn test_on_search_term_adjust_list_order_changes() {
 		"./src/project/lib/meta.v"
 	]
 	assert drawn_rects == [
-		DrawnRect{ x: 1, y: 2, width: 500, height: 20 }, // this is the full background rect for the list
-		DrawnRect{ x: 1, y: 2, width: 500, height: 1 },  // this is the currently selected/heightlight line rect
-		DrawnRect{ x: 1, y: 22, width: 500, height: 1 }  // this is the rect/background line for the search bar
+		DrawnRect{ x: 0, y: 1, width: 500, height: 20 }, // this is the full background rect for the list
+		DrawnRect{ x: 0, y: 1, width: 500, height: 1 },  // this is the currently selected/heightlight line rect
+		DrawnRect{ x: 0, y: 20, width: 500, height: 1 }  // this is the rect/background line for the search bar
 	]
 }
 

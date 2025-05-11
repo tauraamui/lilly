@@ -272,8 +272,7 @@ fn main() {
 		changed: true
 	}
 
-	// ctx, run := draw.new_context(
-	ctx, run := draw.new_immediate_context(
+	ctx, run := draw.new_context(
 		render_debug:         opts.render_debug_mode
 		user_data:            app
 		event_fn:             event
