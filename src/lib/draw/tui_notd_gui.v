@@ -94,7 +94,7 @@ fn (mut grid Grid) resize(width int, height int) ! {
 		for j in 0..overlap_cols {
 			old_index := i * grid.width + j
 			new_index := i * width + j
-			if old_index > grid.data.len { continue }
+			if old_index >= grid.data.len { continue }
 			new_data[new_index] = grid.data[old_index]
 		}
 	}
