@@ -63,20 +63,8 @@ fn event(e draw.Event, mut app App) {
 }
 
 fn frame(mut app App) {
-	if app.ui.rate_limit_draws() && !app.changed {
-		return
-	}
-	app.changed = false
-
-	// NOTE(tauraamui) [20/04/2025]: The majority of the rendering perf. issues we're seeing are due
-	//                               to the unnecessary full clearing of the screen each frame.
-	//                               The next bout of work should be focused on addressing this,
-	//                               ideally we would only be re-rendering specific chars which
-	//                               have been changed. Need to think hard about how to implement this.
 	app.ui.clear()
-
 	app.lilly.draw(mut app.ui)
-
 	app.ui.reset()
 	app.ui.flush()
 }
@@ -284,8 +272,8 @@ fn main() {
 		changed: true
 	}
 
-	ctx, run := draw.new_context(
-	// ctx, run := draw.new_immediate_context(
+	// ctx, run := draw.new_context(
+	ctx, run := draw.new_immediate_context(
 		render_debug:         opts.render_debug_mode
 		user_data:            app
 		event_fn:             event
