@@ -28,7 +28,7 @@ fn (mut grid EmojiGrid) draw_chars(mut ctx draw.Contextable) {
 	for y in 0..grid.height {
 		for x in 0..grid.width {
 			char_to_render := if (x == 0 || x == grid.width - 1) || (y == 0 || y == grid.height - 1) { "X" } else { "A" }
-			ctx.draw_text(x + 1, y + 1, char_to_render)
+			ctx.draw_text(x, y, char_to_render)
 		}
 	}
 }
@@ -43,20 +43,16 @@ fn (mut grid EmojiGrid) draw_emojis(mut ctx draw.Contextable) {
 				index = 3
 			}
 			emoji := emoji_chars[index]
-			ctx.draw_text((x * 2) + 1, y + 1, emoji)
+			ctx.draw_text((x * 2), y, emoji)
 		}
 	}
 }
 
 fn (mut grid EmojiGrid) draw(mut ctx draw.Contextable) {
-	if grid.run_once { return }
-	// defer { grid.run_once = true }
-	grid.update_bounds(ctx.window_width(), ctx.window_height())
-	// ctx.clear()
-	// grid.draw_chars(mut ctx)
 	ctx.hide_cursor()
+	grid.update_bounds(ctx.window_width(), ctx.window_height())
+	ctx.clear()
 	grid.draw_emojis(mut ctx)
-	ctx.show_cursor()
 	ctx.flush()
 }
 
