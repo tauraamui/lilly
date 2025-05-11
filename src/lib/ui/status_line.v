@@ -41,7 +41,7 @@ pub fn draw_status_line(mut ctx draw.Contextable, status Status) {
 	y := ctx.window_height() - 1
 
 	// invoke the mode indicator draw
-	mut offset := status.mode.draw(mut ctx, 1, y)
+	mut offset := status.mode.draw(mut ctx, 0, y)
 
 	// if filename provided, render its segment next
 	if status.file_name.len > 0 {
@@ -64,7 +64,7 @@ pub fn draw_status_line(mut ctx draw.Contextable, status Status) {
 	offset += 1
 
 	// render the cursor status as a right trailing segment
-	draw_cursor_position_segment(mut ctx, 1, y, offset, status.cursor_x, status.cursor_y)
+	draw_cursor_position_segment(mut ctx, 0, y, offset, status.cursor_x, status.cursor_y)
 }
 
 fn draw_file_name_segment(mut ctx draw.Contextable, x int, y int, file_name string) int {
