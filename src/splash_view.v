@@ -79,9 +79,9 @@ pub fn new_splash(commit_hash string, leader_key string) Viewable {
 }
 
 pub fn (splash SplashScreen) draw(mut ctx draw.Contextable) {
-	offset_x := 1
-	mut offset_y := 1 + f64(ctx.window_height()) * 0.1
-	assert offset_y > 1
+	offset_x := 0
+	mut offset_y := 0 + f64(ctx.window_height()) * 0.1
+	assert offset_y >= 1
 	ctx.set_color(r: 245, g: 191, b: 243)
 	for i, l in splash.logo.data {
 		start_x := offset_x + (ctx.window_width() / 2) - (l.runes().len / 2)
@@ -109,7 +109,7 @@ pub fn (splash SplashScreen) draw(mut ctx draw.Contextable) {
 	offset_y += splash.logo.data.len
 	offset_y += (ctx.window_height() - offset_y) * 0.05
 
-	version_label := 'lilly - dev version ${utf8.emoji_shark_char} (#${splash.commit_hash}) leader = ${resolve_whitespace_to_name(splash.leader_key)}'
+	version_label := 'lilly - dev version (#${splash.commit_hash}) leader = ${resolve_whitespace_to_name(splash.leader_key)}'
 	// version_label := "lilly - dev version (#${gitcommit_hash})"
 	ctx.draw_text(offset_x + (ctx.window_width() / 2) - (version_label.len / 2), int(math.floor(offset_y)),
 		version_label)
