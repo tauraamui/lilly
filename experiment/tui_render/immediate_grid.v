@@ -89,7 +89,7 @@ fn main() {
 		grid: &grid
 	}
 
-	ctx, run := draw.new_immediate_context(
+	ctx, run := draw.new_context(
 		user_data: app
 		event_fn: event
 		frame_fn: frame
