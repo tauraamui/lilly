@@ -38,8 +38,8 @@ pub fn (buf_view BufferView) draw(
 ) {
 	if buf_view.buf == unsafe { nil } { return }
 
-	mut screenspace_x_offset := 1 + buf_view.buf.num_of_lines().str().runes().len
-	mut screenspace_y_offset := 1
+	mut screenspace_x_offset := buf_view.buf.num_of_lines().str().runes().len
+	mut screenspace_y_offset := 0
 	mut syntax_parser := syntax.Parser{}
 	for document_line_num, line in buf_view.buf.line_iterator() {
 		syntax_parser.parse_line(document_line_num, line)
