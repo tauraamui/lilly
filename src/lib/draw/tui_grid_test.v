@@ -141,6 +141,35 @@ fn test_context_write_to_native_context() {
 	assert drawn_text[..drawn_text.len - 1] == ["T", "h", "i", "s", " ", "i", "s", " ", "a", " ", "s", "e", "n", "t", "e", "n", "c", "e", " ", " "]
 }
 
+fn test_context_write_to_native_context_with_double_width_char() {
+	mut cursor_hidden := false
+	mut cursor_hidden_ref := &cursor_hidden
+
+	mut drawn_text := []string{}
+	mut drawn_text_ref := &drawn_text
+
+	mut native := MockNativeContext{
+		window_width: 20,
+		window_height: 1,
+		on_hide_cursor_cb: fn [mut cursor_hidden_ref] () {
+			unsafe { *cursor_hidden_ref = true }
+		}
+		on_write_cb: fn [mut drawn_text_ref] (c string) {
+			drawn_text_ref << c
+		}
+	}
+	mut ctx := Context{
+		ref: native
+	}
+	ctx.setup_grid()!
+
+	ctx.draw_text(0, 0, "This is a ${utf8.emoji_shark_char} in my sentence")
+	ctx.flush()
+
+	assert cursor_hidden
+	assert drawn_text[..drawn_text.len - 1] == ["T", "h", "i", "s", " ", "i", "s", " ", "a", " ", "${utf8.emoji_shark_char}", " ", "i", "n", " ", "m", "y", " ", "s", "e"]
+}
+
 fn test_context_draw_text_sets_cells() {
 	mut ctx := Context{
 		ref: unsafe { nil }
