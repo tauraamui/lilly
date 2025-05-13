@@ -108,7 +108,7 @@ pub fn (splash SplashScreen) draw(mut ctx draw.Contextable) {
 	offset_y += splash.logo.data.len
 	offset_y += (ctx.window_height() - offset_y) * 0.05
 
-	version_label := 'lilly - dev version (#${splash.commit_hash}) leader = ${resolve_whitespace_to_name(splash.leader_key)}'
+	version_label := 'lilly - dev version ${utf8.emoji_shark_char} (#${splash.commit_hash}) leader = ${resolve_whitespace_to_name(splash.leader_key)}'
 	// version_label := "lilly - dev version (#${gitcommit_hash})"
 	ctx.draw_text(offset_x + (ctx.window_width() / 2) - (version_label.len / 2), int(math.floor(offset_y)),
 		version_label)
