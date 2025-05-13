@@ -146,7 +146,7 @@ enum CursorStyle as u8 {
 struct Context {
 	render_debug bool
 mut:
-	ref            &tui.Context
+	ref            NativeContext
 	data           Grid
 	prev_data      ?Grid
 	cursor_pos     Pos
@@ -157,6 +157,26 @@ mut:
 	bold           bool
 	fg_color       ?Color
 	bg_color       ?Color
+}
+
+interface NativeContext {
+	window_width int
+	window_height int
+mut:
+	set_cursor_position(x int, y int)
+	show_cursor()
+	hide_cursor()
+
+	set_color(c tui.Color)
+	set_bg_color(c tui.Color)
+	reset_color()
+	reset_bg_color()
+
+	write(c string)
+
+	flush()
+
+	run() !
 }
 
 type Runner = fn () !
@@ -190,12 +210,12 @@ fn (mut ctx Context) rate_limit_draws() bool {
 fn (mut ctx Context) render_debug() bool { return ctx.render_debug }
 
 fn (mut ctx Context) window_width() int {
-	if ctx.ref == unsafe { nil } { return 100 }
+	if ctx.ref.window_width <= 0 { return 100 }
 	return ctx.ref.window_width
 }
 
 fn (mut ctx Context) window_height() int {
-	if ctx.ref == unsafe { nil } { return 100 }
+	if ctx.ref.window_width <= 0 { return 100 }
 	return ctx.ref.window_height
 }
 
