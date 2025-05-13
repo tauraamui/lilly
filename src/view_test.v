@@ -3297,10 +3297,10 @@ fn test_view_draw_document_with_method_using_buffer_view() {
 		"1", "Line", " ", "1", "2", "Line", " ", "2", "3", "Line", " ", "3", "4", "Line", " ", "4",
 		"5", "Line", " ", "5", "6", "Line", " ", "6", "7", "Line", " ", "7", "8", "Line", " ", "8",
 		"9", "Line", " ", "9", "10", "Line", " ", "10", "11", "Line", " ", "11", "12", "Line", " ", "12",
-		"13", "Line", " ", "13"
+		"13", "Line", " ", "13", "14", "Line", " ", "14"
 	]
 	assert drawn_rects == [
-		DrawnRect{ x: 4, y: 1, width: 497, height: 1 }   // this is the cursor highlight rect line
+		DrawnRect{ x: 3, y: 0, width: 498, height: 1 }   // this is the cursor highlight rect line
 		DrawnRect{ x: 16, y: 13, width: 477, height: 1 } // this is the gap spread in the status line
 	]
 }
