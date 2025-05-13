@@ -80,11 +80,15 @@ struct MockNativeContext {
 	window_width  int
 	window_height int
 mut:
-	on_hide_cursor_cb fn ()
-	on_write_cb       fn (s string)
+	on_set_cursor_position_cb fn (x int, y int)
+	on_hide_cursor_cb         fn ()
+	on_write_cb               fn (s string)
 }
 
-fn (mocknctx MockNativeContext) set_cursor_position(x int, y int) {}
+fn (mocknctx MockNativeContext) set_cursor_position(x int, y int) {
+	if mocknctx.on_set_cursor_position_cb == unsafe { nil } { return }
+	mocknctx.on_set_cursor_position_cb(x, y)
+}
 
 fn (mocknctx MockNativeContext) show_cursor() {}
 
@@ -141,21 +145,36 @@ fn test_context_write_to_native_context() {
 	assert drawn_text[..drawn_text.len - 1] == ["T", "h", "i", "s", " ", "i", "s", " ", "a", " ", "s", "e", "n", "t", "e", "n", "c", "e", " ", " "]
 }
 
+struct DrawnTextWithCursorPos {
+	x int
+	y int
+	c string
+}
+
+type DTWCP = DrawnTextWithCursorPos
+
 fn test_context_write_to_native_context_with_double_width_char() {
+	mut cursor_pos := Pos{ x: 0, y: 0 }
+	mut cursor_pos_ref := &cursor_pos
+
 	mut cursor_hidden := false
 	mut cursor_hidden_ref := &cursor_hidden
 
-	mut drawn_text := []string{}
+	mut drawn_text := []DrawnTextWithCursorPos{}
 	mut drawn_text_ref := &drawn_text
 
 	mut native := MockNativeContext{
 		window_width: 20,
 		window_height: 1,
+		on_set_cursor_position_cb: fn [mut cursor_pos_ref] (x int, y int) {
+			cursor_pos_ref.x = x
+			cursor_pos_ref.y = y
+		}
 		on_hide_cursor_cb: fn [mut cursor_hidden_ref] () {
 			unsafe { *cursor_hidden_ref = true }
 		}
-		on_write_cb: fn [mut drawn_text_ref] (c string) {
-			drawn_text_ref << c
+		on_write_cb: fn [mut cursor_pos_ref, mut drawn_text_ref] (c string) {
+			drawn_text_ref << DrawnTextWithCursorPos{ x: cursor_pos_ref.x, y: cursor_pos_ref.y, c: c }
 		}
 	}
 	mut ctx := Context{
@@ -167,7 +186,28 @@ fn test_context_write_to_native_context_with_double_width_char() {
 	ctx.flush()
 
 	assert cursor_hidden
-	assert drawn_text[..drawn_text.len - 1] == ["T", "h", "i", "s", " ", "i", "s", " ", "a", " ", "${utf8.emoji_shark_char}", " ", "i", "n", " ", "m", "y", " ", "s", "e"]
+	assert drawn_text[..drawn_text.len - 1] == [
+		DrawnTextWithCursorPos{ x: 1, y: 1, c: "T" },
+		DTWCP{ x: 2, y: 1, c: "h" },
+		DTWCP{ x: 3, y: 1, c: "i" },
+		DTWCP{ x: 4, y: 1, c: "s" },
+		DTWCP{ x: 5, y: 1, c: " " },
+		DTWCP{ x: 6, y: 1, c: "i" },
+		DTWCP{ x: 7, y: 1, c: "s" },
+		DTWCP{ x: 8, y: 1, c: " " },
+		DTWCP{ x: 9, y: 1, c: "a" },
+		DTWCP{ x: 10, y: 1, c: " " },
+		DTWCP{ x: 11, y: 1, c: "${utf8.emoji_shark_char}" }
+		DTWCP{ x: 12, y: 1, c: " " },
+		DTWCP{ x: 13, y: 1, c: "i" },
+		DTWCP{ x: 14, y: 1, c: "n" },
+		DTWCP{ x: 15, y: 1, c: " " },
+		DTWCP{ x: 16, y: 1, c: "m" },
+		DTWCP{ x: 17, y: 1, c: "y" },
+		DTWCP{ x: 18, y: 1, c: " " },
+		DTWCP{ x: 19, y: 1, c: "s" },
+		DTWCP{ x: 20, y: 1, c: "e" },
+	]
 }
 
 fn test_context_draw_text_sets_cells() {
