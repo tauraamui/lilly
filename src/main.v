@@ -18,6 +18,7 @@ import os
 import log
 import lib.clipboardv2
 import lib.draw
+import term.ui as tui
 import lib.workspace
 import os.cmdline
 import strings
@@ -273,6 +274,7 @@ fn main() {
 	}
 
 	ctx, run := draw.new_context(
+		default_bg_color:     tui.Color{ r: 59, g: 34, b: 76 } // TODO(tauraamui) [14/05/2025]: move config loading to before this
 		render_debug:         opts.render_debug_mode
 		user_data:            app
 		event_fn:             event

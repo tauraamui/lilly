@@ -145,6 +145,7 @@ enum CursorStyle as u8 {
 
 struct Context {
 	render_debug bool
+	default_bg_color ?tui.Color
 mut:
 	ref            NativeContext
 	data           Grid
@@ -184,6 +185,7 @@ type Runner = fn () !
 pub fn new_context(cfg Config) (&Contextable, Runner) {
 	mut ctx := Context{
 		render_debug: cfg.render_debug
+		default_bg_color: cfg.default_bg_color
 		ref: tui.init(
 			user_data: cfg.user_data
 			event_fn:  fn [cfg] (e &tui.Event, app voidptr) {
@@ -422,7 +424,13 @@ fn (mut ctx Context) flush() {
 
 			ctx.ref.set_cursor_position(x + 1, y + 1)
 			if c := cell.fg_color { ctx.ref.set_color(tui.Color{ c.r, c.g, c.b }) }
-			if c := cell.bg_color { ctx.ref.set_bg_color(tui.Color{ c.r, c.g, c.b }) }
+			if c := cell.bg_color {
+				ctx.ref.set_bg_color(tui.Color{ c.r, c.g, c.b })
+			} else {
+				if default_bg_color := ctx.default_bg_color {
+					ctx.ref.set_bg_color(default_bg_color)
+				}
+			}
 
 			ctx.ref.write(cell.str())
 			ctx.ref.reset_bg_color()
