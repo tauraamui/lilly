@@ -14,6 +14,9 @@
 
 module draw
 
+import term.ui as tui
+import lib.utf8
+
 fn test_cell_data_to_string() {
 	cell := Cell{ data: none }
 	assert cell.str() == " "
@@ -73,7 +76,141 @@ fn test_grid_resize_shrinking_loses_data() {
 	assert g.get(21, 15)! == Cell{ data: none }
 }
 
-fn test_immediate_context_draw_text_sets_cells() {
+struct MockNativeContext {
+	window_width  int
+	window_height int
+mut:
+	on_set_cursor_position_cb fn (x int, y int)
+	on_hide_cursor_cb         fn ()
+	on_write_cb               fn (s string)
+}
+
+fn (mocknctx MockNativeContext) set_cursor_position(x int, y int) {
+	if mocknctx.on_set_cursor_position_cb == unsafe { nil } { return }
+	mocknctx.on_set_cursor_position_cb(x, y)
+}
+
+fn (mocknctx MockNativeContext) show_cursor() {}
+
+fn (mocknctx MockNativeContext) hide_cursor() {
+	if mocknctx.on_hide_cursor_cb == unsafe { nil } { return }
+	mocknctx.on_hide_cursor_cb()
+}
+
+fn (mocknctx MockNativeContext) set_color(c tui.Color) {}
+
+fn (mocknctx MockNativeContext) set_bg_color(c tui.Color) {}
+
+fn (mocknctx MockNativeContext) reset_color() {}
+
+fn (mocknctx MockNativeContext) reset_bg_color() {}
+
+fn (mocknctx MockNativeContext) write(c string) {
+	if mocknctx.on_write_cb == unsafe { nil } { return }
+	mocknctx.on_write_cb(c)
+}
+
+fn (mocknctx MockNativeContext) flush() {}
+
+fn (mocknctx MockNativeContext) run() ! {
+	return error("unable to run mock native context")
+}
+
+fn test_context_write_to_native_context() {
+	mut cursor_hidden := false
+	mut cursor_hidden_ref := &cursor_hidden
+
+	mut drawn_text := []string{}
+	mut drawn_text_ref := &drawn_text
+
+	mut native := MockNativeContext{
+		window_width: 20,
+		window_height: 1,
+		on_hide_cursor_cb: fn [mut cursor_hidden_ref] () {
+			unsafe { *cursor_hidden_ref = true }
+		}
+		on_write_cb: fn [mut drawn_text_ref] (c string) {
+			drawn_text_ref << c
+		}
+	}
+	mut ctx := Context{
+		ref: native
+	}
+	ctx.setup_grid()!
+
+	ctx.draw_text(0, 0, "This is a sentence")
+	ctx.flush()
+
+	assert cursor_hidden
+	assert drawn_text[..drawn_text.len - 1] == ["T", "h", "i", "s", " ", "i", "s", " ", "a", " ", "s", "e", "n", "t", "e", "n", "c", "e", " ", " "]
+}
+
+struct DrawnTextWithCursorPos {
+	x int
+	y int
+	c string
+}
+
+type DTWCP = DrawnTextWithCursorPos
+
+fn test_context_write_to_native_context_with_double_width_char() {
+	mut cursor_pos := Pos{ x: 0, y: 0 }
+	mut cursor_pos_ref := &cursor_pos
+
+	mut cursor_hidden := false
+	mut cursor_hidden_ref := &cursor_hidden
+
+	mut drawn_text := []DrawnTextWithCursorPos{}
+	mut drawn_text_ref := &drawn_text
+
+	mut native := MockNativeContext{
+		window_width: 20,
+		window_height: 1,
+		on_set_cursor_position_cb: fn [mut cursor_pos_ref] (x int, y int) {
+			cursor_pos_ref.x = x
+			cursor_pos_ref.y = y
+		}
+		on_hide_cursor_cb: fn [mut cursor_hidden_ref] () {
+			unsafe { *cursor_hidden_ref = true }
+		}
+		on_write_cb: fn [mut cursor_pos_ref, mut drawn_text_ref] (c string) {
+			drawn_text_ref << DrawnTextWithCursorPos{ x: cursor_pos_ref.x, y: cursor_pos_ref.y, c: c }
+		}
+	}
+	mut ctx := Context{
+		ref: native
+	}
+	ctx.setup_grid()!
+
+	ctx.draw_text(0, 0, "This is a ${utf8.emoji_shark_char} in my sentence")
+	ctx.flush()
+
+	assert cursor_hidden
+	assert drawn_text[..drawn_text.len - 1] == [
+		DrawnTextWithCursorPos{ x: 1, y: 1, c: "T" },
+		DTWCP{ x: 2, y: 1, c: "h" },
+		DTWCP{ x: 3, y: 1, c: "i" },
+		DTWCP{ x: 4, y: 1, c: "s" },
+		DTWCP{ x: 5, y: 1, c: " " },
+		DTWCP{ x: 6, y: 1, c: "i" },
+		DTWCP{ x: 7, y: 1, c: "s" },
+		DTWCP{ x: 8, y: 1, c: " " },
+		DTWCP{ x: 9, y: 1, c: "a" },
+		DTWCP{ x: 10, y: 1, c: " " },
+		DTWCP{ x: 11, y: 1, c: "${utf8.emoji_shark_char}" }
+		DTWCP{ x: 12, y: 1, c: " " },
+		DTWCP{ x: 13, y: 1, c: "i" },
+		DTWCP{ x: 14, y: 1, c: "n" },
+		DTWCP{ x: 15, y: 1, c: " " },
+		DTWCP{ x: 16, y: 1, c: "m" },
+		DTWCP{ x: 17, y: 1, c: "y" },
+		DTWCP{ x: 18, y: 1, c: " " },
+		DTWCP{ x: 19, y: 1, c: "s" },
+		DTWCP{ x: 20, y: 1, c: "e" },
+	]
+}
+
+fn test_context_draw_text_sets_cells() {
 	mut ctx := Context{
 		ref: unsafe { nil }
 	}
@@ -106,7 +243,7 @@ fn test_immediate_context_draw_text_sets_cells() {
 	assert ctx.data.get(32, 10)! == Cell{ data: none }
 }
 
-fn test_immediate_context_draw_text_sets_cells_get_rows() {
+fn test_context_draw_text_sets_cells_get_rows() {
 	mut ctx := Context{
 		ref: unsafe { nil }
 	}
@@ -131,7 +268,7 @@ fn test_immediate_context_draw_text_sets_cells_get_rows() {
 	assert cells[0][33] == Cell{ data: none }
 }
 
-fn test_immediate_context_draw_text_with_fg_color_set_in_segments() {
+fn test_context_draw_text_with_fg_color_set_in_segments() {
 	mut ctx := Context{
 		ref: unsafe { nil }
 	}
@@ -191,7 +328,7 @@ fn test_immediate_context_draw_text_with_fg_color_set_in_segments() {
 	assert cells[0][38] == Cell{ data: rune(`d`), fg_color: none }
 }
 
-fn test_immediate_context_draw_rect_sets_grid_cells() {
+fn test_context_draw_rect_sets_grid_cells() {
 	mut ctx := Context{
 		ref: unsafe { nil }
 	}
@@ -214,7 +351,7 @@ fn test_immediate_context_draw_rect_sets_grid_cells() {
 	assert rows[11][2..9] == [Cell{ data: none }, Cell{ data: none }, Cell{ data: none }, Cell{ data: none }, Cell{ data: none }, Cell{ data: none }, Cell{ data: none }]
 }
 
-fn test_immediate_context_multiple_draw_text_sets_cells_overwrites() {
+fn test_context_multiple_draw_text_sets_cells_overwrites() {
 	mut ctx := Context{
 		ref: unsafe { nil }
 	}
@@ -248,7 +385,7 @@ fn test_immediate_context_multiple_draw_text_sets_cells_overwrites() {
 	assert ctx.data.get(32, 10)! == Cell{ data: none }
 }
 
-fn test_immediate_context_multiple_draw_text_sets_cells_overwrites_only_cells_that_overlap() {
+fn test_context_multiple_draw_text_sets_cells_overwrites_only_cells_that_overlap() {
 	mut ctx := Context{
 		ref: unsafe { nil }
 	}

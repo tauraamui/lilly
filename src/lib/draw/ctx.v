@@ -23,6 +23,7 @@ pub struct Event {
 pub struct Config {
 pub:
 	render_debug bool
+	default_bg_color ?tui.Color
 	user_data    voidptr
 	frame_fn     fn (voidptr)        @[required]
 	event_fn     fn (Event, voidptr) @[required]
