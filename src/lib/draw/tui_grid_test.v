@@ -145,6 +145,28 @@ fn test_context_write_to_native_context() {
 	assert drawn_text[..drawn_text.len - 1] == ["T", "h", "i", "s", " ", "i", "s", " ", "a", " ", "s", "e", "n", "t", "e", "n", "c", "e", " ", " "]
 }
 
+fn test_context_write_to_native_context_resize_does_not_break_clearing() {
+	mut cursor_hidden := false
+	mut cursor_hidden_ref := &cursor_hidden
+
+	mut native := MockNativeContext{
+		window_width: 10,
+		window_height: 10,
+		on_hide_cursor_cb: fn [mut cursor_hidden_ref] () {
+			unsafe { *cursor_hidden_ref = true }
+		}
+	}
+	mut ctx := Context{
+		ref: native
+	}
+	ctx.setup_grid()!
+
+	ctx.draw_text(0, 0, "This is a sentence")
+	ctx.flush()
+
+	assert cursor_hidden
+}
+
 struct DrawnTextWithCursorPos {
 	x int
 	y int
