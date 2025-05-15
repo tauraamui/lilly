@@ -103,7 +103,8 @@ fn test_open_workspace_files_and_config() {
 	}
 
 	mut mock_log := MockLogger{}
-	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker,
+	cfg := resolve_config(mut mock_log, mock_fs.config_dir, mock_fs.read_file)
+	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker, cfg,
 		mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err}') }
 
 	assert wrkspace.files == [
@@ -144,7 +145,8 @@ fn test_open_workspace_files_but_fallsback_to_embedded_config() {
 	}
 
 	mut mock_log := MockLogger{}
-	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker,
+	cfg := resolve_config(mut mock_log, mock_fs.config_dir, mock_fs.read_file)
+	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker, cfg,
 		mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err}') }
 
 	assert wrkspace.files == [
@@ -188,7 +190,8 @@ fn test_open_workspace_resolves_git_branch() {
 	}
 
 	mut mock_log := MockLogger{}
-	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker,
+	cfg := resolve_config(mut mock_log, mock_fs.config_dir, mock_fs.read_file)
+	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker, cfg,
 		mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err}') }
 
 	assert wrkspace.git_branch == '\uE0A0 feat/git-branch-status-line'
