@@ -56,6 +56,7 @@ mut:
 
 pub fn open_lilly(
 	mut _log log.Log,
+	cfg workspace.Config,
 	mut _clipboard clipboardv2.Clipboard,
 	commit_hash string, file_path string,
 	workspace_root_dir string, use_gap_buffer bool,
@@ -67,7 +68,7 @@ pub fn open_lilly(
 		line_reader:    os.read_lines
 	}
 	lilly.workspace = workspace.open_workspace(mut _log, workspace_root_dir, os.is_dir,
-		os.walk, os.config_dir, os.read_file, os.execute) or {
+		os.walk, cfg, os.config_dir, os.read_file, os.execute) or {
 		return error("unable to open workspace '${workspace_root_dir}' -> ${err}")
 	}
 	lilly.resolve_workspace_files = lilly.workspace.get_files
