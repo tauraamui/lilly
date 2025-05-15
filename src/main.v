@@ -268,13 +268,15 @@ fn main() {
 		}
 	}
 
+	cfg := workspace.resolve_config(mut l, os.config_dir, os.read_file)
+
 	mut app := &App{
 		log:     &l
 		changed: true
 	}
 
 	ctx, run := draw.new_context(
-		default_bg_color:     tui.Color{ r: 59, g: 34, b: 76 } // TODO(tauraamui) [14/05/2025]: move config loading to before this
+		default_bg_color:     cfg.background_color
 		render_debug:         opts.render_debug_mode
 		user_data:            app
 		event_fn:             event
@@ -290,7 +292,7 @@ fn main() {
 		'', ''
 	}
 	mut clip := clipboardv2.new()
-	app.lilly = open_lilly(mut l, mut clip, gitcommit_hash, file_path, workspace_path, opts.use_gap_buffer) or {
+	app.lilly = open_lilly(mut l, cfg, mut clip, gitcommit_hash, file_path, workspace_path, opts.use_gap_buffer) or {
 		print_and_exit('${err}')
 		unsafe { nil }
 	}

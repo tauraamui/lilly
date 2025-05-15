@@ -41,23 +41,25 @@ pub mut:
 	leader_key                string
 	relative_line_numbers     bool
 	selection_highlight_color tui.Color
+	background_color          ?tui.Color
 	insert_tabs_not_spaces    bool
 }
 
 pub fn open_workspace(mut _log Logger,
 	root_path string,
-	is_dir fn (path string) bool,
+	is_dir     fn (path string) bool,
 	dir_walker fn (path string, f fn (string)),
+	config     Config,
 	config_dir fn () !string,
-	read_file fn (path string) !string,
-	execute fn (cmd string) os.Result
+	read_file  fn (path string) !string,
+	execute    fn (cmd string) os.Result
 ) !Workspace {
 	path := root_path
 	if !is_dir(path) {
 		return error('${path} is not a directory')
 	}
 	mut wrkspace := Workspace{
-		config: resolve_config(mut _log, config_dir, read_file)
+		config: config
 	}
 
 	wrkspace.resolve_files(path, is_dir, dir_walker)
@@ -119,7 +121,7 @@ pub fn (workspace Workspace) syntaxes() []Syntax {
 	return workspace.syntaxes
 }
 
-fn resolve_config(mut _log Logger, config_dir fn () !string, read_file fn (path string) !string) Config {
+pub fn resolve_config(mut _log Logger, config_dir fn () !string, read_file fn (path string) !string) Config {
 	loaded_config := attempt_to_load_from_disk(config_dir, read_file) or {
 		_log.error('failed to resolve config: ${err}')
 		return fallback_to_bundled_default_config()
