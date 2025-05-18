@@ -2,6 +2,13 @@
 #import <string.h>
 #import <stdlib.h>
 
+static NSString *const ClipboardContentType = @"com.lilly.ClipboardContent";
+
+typedef struct {
+	char *data;
+	unsigned char t_type;
+} ClipboardContent;
+
 static NSString *getPasteboardTextInternal(void) {
 	NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
 	NSString *text = [pasteboard stringForType:NSPasteboardTypeString];
@@ -13,6 +20,35 @@ static void setPasteboardTextInternal(NSString *text) {
 		NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
 		[pasteboard clearContents];
 		[pasteboard setString:text forType:NSPasteboardTypeString];
+	}
+}
+
+void clipboard_set_content(const char* data, unsigned char contentType) {
+	@autoreleasepool {
+		if (!data) {
+			return;
+		}
+		NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
+		[pasteboard clearContents];
+
+		NSMutableDictionary *contentDict = [NSMutableDictionary dictionary];
+
+		NSString *textString = [NSString stringWithUTF8String:data];
+		if (textString) {
+			[contentDict setObject:textString forKey:@"data"];
+		}
+
+		[contentDict setObject:@(contentType) forKey:@"type"];
+
+		NSError *error = nil;
+		NSData *archivedData = [NSKeyedArchiver archivedDataWithRootObject:contentDict requiringSecureCoding:NO error:&error];
+
+		if (archivedData && !error) {
+			[pasteboard setData:archivedData forType:ClipboardContentType];
+			if (textString) {
+				[pasteboard setString:textString forType:NSPasteboardTypeString];
+			}
+		}
 	}
 }
 
