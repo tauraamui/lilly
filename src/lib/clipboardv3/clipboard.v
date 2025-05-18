@@ -9,6 +9,7 @@ pub enum ContentType as u8 {
 }
 
 pub struct ClipboardContent {
+mut:
 	data   string
 	t_type ContentType
 }

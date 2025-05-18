@@ -4,11 +4,6 @@
 
 static NSString *const ClipboardContentType = @"com.lilly.ClipboardContent";
 
-typedef struct {
-	char *data;
-	unsigned char t_type;
-} ClipboardContent;
-
 static NSString *getPasteboardTextInternal(void) {
 	NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
 	NSString *text = [pasteboard stringForType:NSPasteboardTypeString];
@@ -21,6 +16,46 @@ static void setPasteboardTextInternal(NSString *text) {
 		[pasteboard clearContents];
 		[pasteboard setString:text forType:NSPasteboardTypeString];
 	}
+}
+
+src__lib__clipboardv3__CClipboardContent* clipboard_get_content(void) {
+	src__lib__clipboardv3__CClipboardContent* clipboard_content = NULL;
+	@autoreleasepool {
+		NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
+
+		NSData *archivedData = [pasteboard dataForType:ClipboardContentType];
+		if (archivedData) {
+			NSError *error = nil;
+			NSDictionary *contentDict = [NSKeyedUnarchiver unarchivedObjectOfClasses:[NSSet setWithObjects:[NSDictionary class], [NSString class], [NSNumber class], nil] fromData:archivedData error:&error];
+
+			if (contentDict && !error && [contentDict isKindOfClass:[NSDictionary class]]) {
+				NSString *text = contentDict[@"data"];
+				NSNumber *t_type = contentDict[@"type"];
+
+				if (text && t_type) {
+					clipboard_content = malloc(sizeof(src__lib__clipboardv3__CClipboardContent));
+					if (clipboard_content) {
+						clipboard_content->data = NULL;
+						const char *utf8String = [text UTF8String];
+						if (utf8String) {
+							clipboard_content->data = malloc(strlen(utf8String) + 1);
+							if (clipboard_content->data) {
+								strcpy(clipboard_content->data, utf8String);
+								clipboard_content->t_type = [t_type unsignedCharValue];
+							} else {
+								free(clipboard_content);
+								clipboard_content = NULL;
+							}
+						} else {
+							free(clipboard_content);
+							clipboard_content = NULL;
+						}
+					}
+				}
+			}
+		}
+	}
+	return clipboard_content;
 }
 
 void clipboard_set_content(const char* data, unsigned char contentType) {

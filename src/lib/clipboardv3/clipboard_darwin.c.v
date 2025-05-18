@@ -8,7 +8,12 @@ module clipboardv3
 fn C.clipboard_get_text() &char
 fn C.clipboard_set_text(text &char)
 fn C.clipboard_set_content(data &char, t_type u8)
-fn C.clipboard_get_content() &C.ClipboardContent
+fn C.clipboard_get_content() &CClipboardContent
+
+struct CClipboardContent {
+	data &char
+	t_type u8
+}
 
 struct DarwinClipboard{}
 
@@ -16,23 +21,29 @@ fn new_darwin_clipboard() Clipboard {
 	return DarwinClipboard{}
 }
 
-/*
 fn (c DarwinClipboard) get_content() ?ClipboardContent {
-	content_c_str := C.clipboard_get_text()
-	if content_c_str == 0 {
+	c_content_ptr := C.clipboard_get_content()
+	if c_content_ptr == unsafe { nil } {
 		return none
 	}
-	content_str := unsafe { cstring_to_vstring(content_c_str) }
 
-	return ClipboardContent{
-		data: content_str
-		t_type: .inline
+	c_content := unsafe { &c_content_ptr }
+
+	mut clipboard_content := ClipboardContent{
+		data: ""
+		t_type: .none
 	}
-}
-*/
 
-fn (c DarwinClipboard) get_content() ?ClipboardContent {
-	return none
+	if c_content.data != 0 {
+		clipboard_content.data = unsafe { cstring_to_vstring(c_content.data) }
+		unsafe { C.free(c_content.data) }
+	}
+
+	clipboard_content.t_type = unsafe { ContentType(c_content.t_type) }
+
+	unsafe { C.free(c_content_ptr) }
+
+	return clipboard_content
 }
 
 fn (c DarwinClipboard) set_content(content ClipboardContent) {
