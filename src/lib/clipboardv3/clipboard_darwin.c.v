@@ -31,7 +31,7 @@ fn (c DarwinClipboard) get_content() ?ClipboardContent {
 
 	mut clipboard_content := ClipboardContent{
 		data: ""
-		t_type: .none
+		type: .none
 	}
 
 	if c_content.data != 0 {
@@ -39,7 +39,7 @@ fn (c DarwinClipboard) get_content() ?ClipboardContent {
 		unsafe { C.free(c_content.data) }
 	}
 
-	clipboard_content.t_type = unsafe { ContentType(c_content.t_type) }
+	clipboard_content.type = unsafe { ContentType(c_content.t_type) }
 
 	unsafe { C.free(c_content_ptr) }
 
@@ -47,7 +47,7 @@ fn (c DarwinClipboard) get_content() ?ClipboardContent {
 }
 
 fn (c DarwinClipboard) set_content(content ClipboardContent) {
-	C.clipboard_set_content(content.data.str, u8(content.t_type))
+	C.clipboard_set_content(content.data.str, u8(content.type))
 }
 
 
