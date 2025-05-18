@@ -50,12 +50,39 @@ src__lib__clipboardv3__CClipboardContent* clipboard_get_content(void) {
 							free(clipboard_content);
 							clipboard_content = NULL;
 						}
+					} else {
+						clipboard_content = NULL;
 					}
 				}
 			}
+			return clipboard_content;
 		}
+
+		NSString *plainText = getPasteboardTextInternal();
+		if (plainText) {
+			clipboard_content = malloc(sizeof(src__lib__clipboardv3__CClipboardContent));
+			if (clipboard_content) {
+				clipboard_content->data = NULL;
+				const char *utf8String = [plainText UTF8String];
+				if (utf8String) {
+					clipboard_content->data = malloc(strlen(utf8String) + 1);
+					if (clipboard_content->data) {
+						strcpy(clipboard_content->data, utf8String);
+						clipboard_content->t_type = 0;
+					} else {
+						free(clipboard_content);
+						clipboard_content = NULL;
+					}
+				} else {
+					free(clipboard_content);
+					clipboard_content = NULL;
+				}
+			} else {
+				clipboard_content = NULL;
+			}
+		}
+		return clipboard_content;
 	}
-	return clipboard_content;
 }
 
 void clipboard_set_content(const char* data, unsigned char contentType) {
@@ -87,7 +114,7 @@ void clipboard_set_content(const char* data, unsigned char contentType) {
 	}
 }
 
-char* clipboard_get_text(void) {
+char* clipboard_get_plaintext(void) {
 	char* text = NULL;
 	@autoreleasepool {
 		NSString *clipboard_text = getPasteboardTextInternal();
@@ -104,7 +131,7 @@ char* clipboard_get_text(void) {
 	return text;
 }
 
-void clipboard_set_text(const char* text) {
+void clipboard_set_plaintext(const char* text) {
 	@autoreleasepool {
 		if (text) {
 			NSString *utf8_text = [NSString stringWithUTF8String:text];
