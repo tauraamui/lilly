@@ -5,8 +5,8 @@ module clipboardv3
 
 #include "@VMODROOT/src/lib/clipboardv3/clipboard_darwin.m"
 
-fn C.clipboard_get_text() &char
-fn C.clipboard_set_text(text &char)
+fn C.clipboard_get_plaintext() &char
+fn C.clipboard_set_plaintext(text &char)
 fn C.clipboard_set_content(data &char, t_type u8)
 fn C.clipboard_get_content() &CClipboardContent
 
