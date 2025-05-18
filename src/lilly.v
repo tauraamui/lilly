@@ -18,7 +18,7 @@ import os
 import log
 import strconv
 import lib.buffer
-import lib.clipboardv2
+import lib.clipboardv3
 import lib.workspace
 import lib.draw
 import lib.ui
@@ -30,7 +30,7 @@ struct Lilly {
 	is_binary_file                    ?fn (file_path string) bool
 mut:
 	log                               log.Log
-	clipboard                         clipboardv2.Clipboard
+	clipboard                         clipboardv3.Clipboard
 	view                              Viewable
 	debug_view                        bool
 	use_gap_buffer                    bool
@@ -57,7 +57,7 @@ mut:
 pub fn open_lilly(
 	mut _log log.Log,
 	cfg workspace.Config,
-	mut _clipboard clipboardv2.Clipboard,
+	mut _clipboard clipboardv3.Clipboard,
 	commit_hash string, file_path string,
 	workspace_root_dir string, use_gap_buffer bool,
 ) !&Lilly {

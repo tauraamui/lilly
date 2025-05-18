@@ -13,8 +13,7 @@
 // limitations under the License.
 
 module main
-import lib.clipboardv2
-import lib.workspace
+import lib.clipboardv3
 import lib.buffer
 
 @[heap]
@@ -30,7 +29,7 @@ fn (mut m_line_reader MockLineReader) read_lines(path string) ![]string {
 }
 
 fn test_lilly_open_file_loads_into_file_buffer_and_buffer_view_maps() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut lilly := Lilly{
 		clipboard: mut clip
 	}
@@ -54,7 +53,7 @@ fn test_lilly_open_file_loads_into_file_buffer_and_buffer_view_maps() {
 }
 
 fn test_lilly_open_file_loads_into_file_buffer_and_buffer_view_maps_if_done_twice_does_not_create_extra_instances() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut lilly := Lilly{
 		clipboard: mut clip
 	}
@@ -234,7 +233,7 @@ fn test_lilly_resolve_inactive_file_buffer_paths() {
 fn test_quit_with_dirty_buffers() {
     mut lilly := Lilly{
         log: log.Log{}
-        clipboard: clipboardv2.new()
+        clipboard: clipboardv3.new()
         use_gap_buffer: true
         inactive_buffer_finder_modal: unsafe { nil }
     }
@@ -260,7 +259,7 @@ fn test_quit_with_dirty_buffers() {
 fn test_quit_with_clean_buffers() {
     mut lilly := Lilly{
         log: log.Log{}
-        clipboard: clipboardv2.new()
+        clipboard: clipboardv3.new()
         use_gap_buffer: true
     }
 

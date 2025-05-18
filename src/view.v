@@ -21,7 +21,7 @@ import log
 import datatypes
 import strconv
 import regex
-import lib.clipboardv2
+import lib.clipboardv3
 import lib.buffer
 import lib.workspace
 import lib.chords
@@ -157,7 +157,7 @@ mut:
 	syntaxes                  []workspace.Syntax
 	current_syntax_idx        int
 	is_multiline_comment      bool
-	clipboard                 clipboardv2.Clipboard
+	clipboard                 clipboardv3.Clipboard
 }
 
 struct FindCursor {
@@ -498,7 +498,7 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 	cmd_buf.code = .blank
 }
 
-fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes []workspace.Syntax, _clipboard clipboardv2.Clipboard, mut buff buffer.Buffer) Viewable {
+fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes []workspace.Syntax, _clipboard clipboardv3.Clipboard, mut buff buffer.Buffer) Viewable {
 	mut res := View{
 		log:             _log
 		branch:          branch
@@ -1759,7 +1759,7 @@ fn (mut view View) d() {
 			view.leader_state.d_count += 1
 			if view.leader_state.d_count >= 2 {
 				index := if view.cursor.pos.y == view.buffer.lines.len { view.cursor.pos.y - 1 } else { view.cursor.pos.y }
-				view.clipboard.set_content(clipboardv2.ClipboardContent{
+				view.clipboard.set_content(clipboardv3.ClipboardContent{
 					type: .block,
 					data: view.buffer.lines[index]
 				})
@@ -1771,7 +1771,7 @@ fn (mut view View) d() {
 		.visual_line {
 			start_index := view.cursor.selection_start().y
 			mut end_index := view.cursor.selection_end().y
-			view.clipboard.set_content(clipboardv2.ClipboardContent{
+			view.clipboard.set_content(clipboardv3.ClipboardContent{
 				type: .block,
 				data: view.buffer.lines[start_index..end_index + 1].join("\n")
 			})
@@ -1789,24 +1789,25 @@ fn (mut view View) p() {
 		.normal { true }
 		else { false }
 	}
-	content := view.clipboard.get_content()
-	match content.type {
-		.none { return }
-		.inline {
-			content_data_array := content.data.split("\n")
-			if content_data_array.len == 1 {
-				pre_cursor := view.buffer.lines[view.cursor.pos.y][..view.cursor.pos.x + 1]
-				post_cursor := view.buffer.lines[view.cursor.pos.y][view.cursor.pos.x + 1..]
-				view.buffer.lines[view.cursor.pos.y] = pre_cursor + content_data_array[0] + post_cursor
-				view.cursor.pos.x += content_data_array[0].runes().len
-				return
+	if content := view.clipboard.get_content() {
+		match content.type {
+			.none { return }
+			.inline {
+				content_data_array := content.data.split("\n")
+				if content_data_array.len == 1 {
+					pre_cursor := view.buffer.lines[view.cursor.pos.y][..view.cursor.pos.x + 1]
+					post_cursor := view.buffer.lines[view.cursor.pos.y][view.cursor.pos.x + 1..]
+					view.buffer.lines[view.cursor.pos.y] = pre_cursor + content_data_array[0] + post_cursor
+					view.cursor.pos.x += content_data_array[0].runes().len
+					return
+				}
 			}
-		}
-		.block {
-			if insert_below {
-				view.buffer.lines.insert(view.cursor.pos.y + 1, content.data.split("\n"))
-				view.j()
-				view.hat()
+			.block {
+				if insert_below {
+					view.buffer.lines.insert(view.cursor.pos.y + 1, content.data.split("\n"))
+					view.j()
+					view.hat()
+				}
 			}
 		}
 	}
@@ -1836,7 +1837,7 @@ fn (mut view View) d() {
 	}
 	if view.leader_state.d_count == 2 {
 		index := if view.cursor.pos.y == view.buffer.lines.len { view.cursor.pos.y - 1 } else { view.cursor.pos.y }
-		view.clipboard.set_content(clipboardv2.ClipboardContent{
+		view.clipboard.set_content(clipboardv3.ClipboardContent{
 			type: .block,
 			data: view.buffer.lines[index]
 		})
@@ -1931,7 +1932,7 @@ fn (mut view View) y() {
 			start := view.cursor.selection_start()
 			end   := view.cursor.selection_end()
 			if start.y == end.y {
-				view.clipboard.set_content(clipboardv2.ClipboardContent{
+				view.clipboard.set_content(clipboardv3.ClipboardContent{
 					type: .inline,
 					data: view.buffer.lines[start.y][start.x..end.x + 1]
 				})
@@ -1945,7 +1946,7 @@ fn (mut view View) y() {
 				copied_line_contents << view.buffer.lines[start.y + i]
 			}
 			copied_line_contents << view.buffer.lines[end.y][..view.cursor.pos.x + 1]
-			view.clipboard.set_content(clipboardv2.ClipboardContent{
+			view.clipboard.set_content(clipboardv3.ClipboardContent{
 				type: .inline,
 				data: copied_line_contents.join("\n")
 			})
@@ -1953,7 +1954,7 @@ fn (mut view View) y() {
 		.visual_line {
 			start_index   := view.cursor.selection_start().y
 			mut end_index := view.cursor.selection_end().y
-			view.clipboard.set_content(clipboardv2.ClipboardContent{
+			view.clipboard.set_content(clipboardv3.ClipboardContent{
 				type: .block,
 				data: view.buffer.lines[start_index..end_index + 1].join("\n")
 			})

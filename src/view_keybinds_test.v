@@ -14,7 +14,7 @@
 
 module main
 
-import lib.clipboardv2
+import lib.clipboardv3
 import lib.draw
 import lib.buffer
 import term.ui as tui
@@ -56,7 +56,7 @@ fn (mut root MockRoot) quit() ! { return }
 fn (mut root MockRoot) force_quit() {}
 
 fn test_view_keybind_key_event_of_value_leader_key_changes_mode_to_leader() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -86,7 +86,7 @@ fn test_view_keybind_key_event_of_value_leader_key_changes_mode_to_leader() {
 }
 
 fn test_view_keybind_leader_then_ff_suffix_opens_file_finder() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -121,7 +121,7 @@ fn test_view_keybind_leader_then_ff_suffix_opens_file_finder() {
 }
 
 fn test_view_keybind_leader_then_xff_suffix_opens_file_finder_in_special_mode() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -160,7 +160,7 @@ fn test_view_keybind_leader_then_xff_suffix_opens_file_finder_in_special_mode() 
 }
 
 fn test_view_keybind_leader_then_fb_suffix_opens_inactive_buffer_finder() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -195,7 +195,7 @@ fn test_view_keybind_leader_then_fb_suffix_opens_inactive_buffer_finder() {
 }
 
 fn test_view_keybind_leader_then_ftc_suffix_opens_todo_comments_finder() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -482,7 +482,7 @@ fn test_sets_of_key_events_for_views_on_key_down_adjusting_cursor_position() {
 		if case.disabled {
 			continue
 		}
-		mut clip := clipboardv2.new()
+		mut clip := clipboardv3.new()
 		mut lilly := Lilly{
 			clipboard:         mut clip
 		}
@@ -509,7 +509,7 @@ fn test_w_moves_cursor_to_next_line_with_plain_comments() {
 		'// Licensed under the Apache License, Version 2.0 (the "License")',
 	]
 
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut lilly := Lilly{
 		clipboard:         mut clip
 	}

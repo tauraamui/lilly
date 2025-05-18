@@ -16,7 +16,7 @@ module main
 
 import os
 import log
-import lib.clipboardv2
+import lib.clipboardv3
 import lib.draw
 import term.ui as tui
 import lib.workspace
@@ -293,7 +293,7 @@ fn main() {
 		print_and_exit('${err}')
 		'', ''
 	}
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	app.lilly = open_lilly(mut l, cfg, mut clip, gitcommit_hash, file_path, workspace_path, opts.use_gap_buffer) or {
 		print_and_exit('${err}')
 		unsafe { nil }

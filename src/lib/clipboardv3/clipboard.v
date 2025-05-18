@@ -7,20 +7,21 @@ pub enum ContentType as u8 {
 }
 
 pub struct ClipboardContent {
-mut:
+pub mut:
 	data   string
-	t_type ContentType
+	type ContentType
 }
 
 pub interface Clipboard {
 	get_content() ?ClipboardContent
+mut:
 	set_content(content ClipboardContent)
 }
 
-pub fn new() ?Clipboard {
+pub fn new() Clipboard {
 	$if darwin {
 		return new_darwin_clipboard()
 	}
-	return none
+	return new_fallback_clipboard()
 }
 

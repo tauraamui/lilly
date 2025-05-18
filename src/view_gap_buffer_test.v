@@ -15,7 +15,7 @@
 module main
 
 import log
-import lib.clipboardv2
+import lib.clipboardv3
 import lib.buffer
 import lib.workspace
 
@@ -25,7 +25,7 @@ import lib.workspace
 //                  irrelevant
 
 fn test_insert_text() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -46,7 +46,7 @@ fn test_insert_text() {
 }
 
 fn test_insert_tab() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -71,7 +71,7 @@ fn test_insert_tab() {
 }
 
 fn test_shift_o_inserts_empty_line_above_current() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -98,7 +98,7 @@ fn test_shift_o_inserts_empty_line_above_current() {
 }
 
 fn test_shift_o_inserts_empty_line_above_current_first_line_of_document() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -125,7 +125,7 @@ fn test_shift_o_inserts_empty_line_above_current_first_line_of_document() {
 }
 
 fn test_o_inserts_empty_line_below_current() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -152,7 +152,7 @@ fn test_o_inserts_empty_line_below_current() {
 }
 
 fn test_o_inserts_empty_line_below_current_last_line_of_document() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -179,7 +179,7 @@ fn test_o_inserts_empty_line_below_current_last_line_of_document() {
 }
 
 fn test_x_removes_characters_on_single_line_document() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -205,7 +205,7 @@ fn test_x_removes_characters_on_single_line_document() {
 }
 
 fn test_x_removes_from_cursor_then_move_cursor_left_one() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -229,7 +229,7 @@ fn test_x_removes_from_cursor_then_move_cursor_left_one() {
 }
 
 fn test_x_removes_from_cursor_on_line_with_single_char_then_move_cursor_right_one() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -256,7 +256,7 @@ fn test_x_removes_from_cursor_on_line_with_single_char_then_move_cursor_right_on
 }
 
 fn test_x_removes_from_cursor_then_move_cursor_right_one() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -284,7 +284,7 @@ fn test_x_removes_from_cursor_then_move_cursor_right_one() {
 }
 
 fn test_x_removes_from_cursor_to_end_of_line_and_beyond() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -326,7 +326,7 @@ fn test_x_removes_from_cursor_to_end_of_line_and_beyond() {
 }
 
 fn test_x_does_not_remove_characters_on_multi_line_document_if_at_line_end() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -351,7 +351,7 @@ fn test_x_does_not_remove_characters_on_multi_line_document_if_at_line_end() {
 }
 
 fn test_x_removes_characters_up_to_end_of_line() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -376,7 +376,7 @@ fn test_x_removes_characters_up_to_end_of_line() {
 }
 
 fn test_w_moves_to_start_of_next_word() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -397,7 +397,7 @@ fn test_w_moves_to_start_of_next_word() {
 }
 
 fn test_w_moves_to_start_of_next_line_if_on_empty_line() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -421,7 +421,7 @@ fn test_w_moves_to_start_of_next_line_if_on_empty_line() {
 }
 
 fn test_w_moves_from_blank_line_to_next() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -457,7 +457,7 @@ fn test_w_moves_from_blank_line_to_next() {
 }
 
 fn test_w_moves_from_end_line_to_blank_next_line() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -481,7 +481,7 @@ fn test_w_moves_from_end_line_to_blank_next_line() {
 }
 
 fn test_w_moves_from_end_of_word_to_start_of_next() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -505,7 +505,7 @@ fn test_w_moves_from_end_of_word_to_start_of_next() {
 }
 
 fn test_w_moves_to_start_of_next_word_across_a_newline() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -532,7 +532,7 @@ fn test_w_moves_to_start_of_next_word_across_a_newline() {
 }
 
 fn test_w_moves_to_start_of_next_word_up_to_document_end() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -552,7 +552,7 @@ fn test_w_moves_to_start_of_next_word_up_to_document_end() {
 }
 
 fn test_w_moves_to_start_of_next_word_from_whitespace() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -572,7 +572,7 @@ fn test_w_moves_to_start_of_next_word_from_whitespace() {
 }
 
 fn test_e_moves_to_end_of_next_word() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -601,7 +601,7 @@ fn test_e_moves_to_end_of_next_word() {
 }
 
 fn test_e_moves_from_blank_line_to_next() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -637,7 +637,7 @@ fn test_e_moves_from_blank_line_to_next() {
 }
 
 fn test_b_moves_to_start_of_current_word() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -661,7 +661,7 @@ fn test_b_moves_to_start_of_current_word() {
 }
 
 fn test_b_moves_to_end_of_previous_line_if_on_empty_line() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -682,7 +682,7 @@ fn test_b_moves_to_end_of_previous_line_if_on_empty_line() {
 
 /*
 fn test_b_moves_from_blank_line_to_next() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -707,7 +707,7 @@ fn test_b_moves_from_blank_line_to_next() {
 */
 
 fn test_enter_inserts_newline_at_cursor_in_middle_of_line() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -734,7 +734,7 @@ fn test_enter_inserts_newline_at_cursor_in_middle_of_line() {
 }
 
 fn test_enter_inserts_newline_at_cursor_in_line_multiple_times() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -765,7 +765,7 @@ fn test_enter_inserts_newline_at_cursor_in_line_multiple_times() {
 }
 
 fn test_enter_inserts_newline_at_cursor_at_start_of_line() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -792,7 +792,7 @@ fn test_enter_inserts_newline_at_cursor_at_start_of_line() {
 }
 
 fn test_enter_inserts_newline_at_cursor_at_end_of_line() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -819,7 +819,7 @@ fn test_enter_inserts_newline_at_cursor_at_end_of_line() {
 }
 
 fn test_backspace_deletes_character_at_cursor_in_middle_of_line() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -855,7 +855,7 @@ fn test_backspace_deletes_character_at_cursor_in_middle_of_line() {
 }
 
 fn test_backspace_does_nothing_if_at_start_of_the_line() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -881,7 +881,7 @@ fn test_backspace_does_nothing_if_at_start_of_the_line() {
 }
 
 fn test_backspace_removing_newlines() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -923,7 +923,7 @@ fn test_backspace_removing_newlines() {
 }
 
 fn test_left_arrow_at_start_of_sentence() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -944,7 +944,7 @@ fn test_left_arrow_at_start_of_sentence() {
 }
 
 fn test_left_arrow_at_end_of_sentence() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -965,7 +965,7 @@ fn test_left_arrow_at_end_of_sentence() {
 }
 
 fn test_right_arrow_at_start_of_sentence() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -986,7 +986,7 @@ fn test_right_arrow_at_start_of_sentence() {
 }
 
 fn test_right_arrow_at_end_of_sentence() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -1007,7 +1007,7 @@ fn test_right_arrow_at_end_of_sentence() {
 }
 
 fn test_h_at_start_of_sentence() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -1028,7 +1028,7 @@ fn test_h_at_start_of_sentence() {
 }
 
 fn test_h_at_end_of_sentence() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -1049,7 +1049,7 @@ fn test_h_at_end_of_sentence() {
 }
 
 fn test_l_at_start_of_sentence() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -1070,7 +1070,7 @@ fn test_l_at_start_of_sentence() {
 }
 
 fn test_l_at_end_of_sentence() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -1091,7 +1091,7 @@ fn test_l_at_end_of_sentence() {
 }
 
 fn test_j_at_start_of_sentence() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -1112,7 +1112,7 @@ fn test_j_at_start_of_sentence() {
 }
 
 fn test_j_in_middle_of_sentence_retain_x_pos_second_line_is_long_enough() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -1133,7 +1133,7 @@ fn test_j_in_middle_of_sentence_retain_x_pos_second_line_is_long_enough() {
 }
 
 fn test_j_in_middle_of_sentence_does_not_retain_x_pos_second_line_is_too_short() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -1154,7 +1154,7 @@ fn test_j_in_middle_of_sentence_does_not_retain_x_pos_second_line_is_too_short()
 }
 
 fn test_k_at_start_of_sentence() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -1175,7 +1175,7 @@ fn test_k_at_start_of_sentence() {
 }
 
 fn test_k_in_middle_of_sentence_retain_x_pos_second_line_is_long_enough() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -1196,7 +1196,7 @@ fn test_k_in_middle_of_sentence_retain_x_pos_second_line_is_long_enough() {
 }
 
 fn test_k_in_middle_of_sentence_does_not_retain_x_pos_second_line_is_too_short() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -1217,7 +1217,7 @@ fn test_k_in_middle_of_sentence_does_not_retain_x_pos_second_line_is_too_short()
 }
 
 fn test_jump_cursor_up_to_next_blank_line() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -1243,7 +1243,7 @@ fn test_jump_cursor_up_to_next_blank_line() {
 }
 
 fn test_jump_cursor_down_to_next_blank_line() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -1269,7 +1269,7 @@ fn test_jump_cursor_down_to_next_blank_line() {
 }
 
 fn test_tab_inserts_a_tab_not_spaces() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -1294,7 +1294,7 @@ fn test_tab_inserts_a_tab_not_spaces() {
 }
 
 fn test_tab_inserts_spaces_not_a_tab() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
@@ -1320,7 +1320,7 @@ fn test_tab_inserts_spaces_not_a_tab() {
 }
 
 fn test_find_end_of_line() {
-	mut clip := clipboardv2.new()
+	mut clip := clipboardv3.new()
 	mut fake_view := View{
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
