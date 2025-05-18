@@ -1,5 +1,7 @@
 module clipboardv3
 
+const block_prefix = "~~BLOCK~~"
+
 pub enum ContentType as u8 {
 	@none
 	inline
