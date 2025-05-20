@@ -31,7 +31,8 @@ fn (c DarwinClipboard) get_content() ?ClipboardContent {
 
 	mut clipboard_content := ClipboardContent{
 		data: ""
-		type: .none
+		type: .block // NOTE(tauraamui) [20/05/2025]: default insert mode should be block really
+		             //                               cos it means its most likely coming from a non-lilly source
 	}
 
 	if c_content.data != 0 {
@@ -40,6 +41,7 @@ fn (c DarwinClipboard) get_content() ?ClipboardContent {
 	}
 
 	clipboard_content.type = unsafe { ContentType(c_content.t_type) }
+	if clipboard_content.type == .none { clipboard_content.type = .block }
 
 	unsafe { C.free(c_content_ptr) }
 
