@@ -20,6 +20,8 @@ type Atom   = u64
 
 fn C.XOpenDisplay(name &u8) &C.Display
 
+fn C.XCloseDisplay(d &C.Display)
+
 fn C.XCreateSimpleWindow(
 	d &C.Display, root Window,
 	x int, y int, width u32 height u32,
@@ -29,8 +31,23 @@ fn C.XCreateSimpleWindow(
 
 fn C.RootWindow(display &C.Display, screen_number int) Window
 
+fn C.DefaultScreen(display &C.Display) int
+
+fn C.BlackPixel(display &C.Display, screen_number int) u32
+
+fn C.WhitePixel(display &C.Display, screen_number int) u32
+
 fn main() {
 	display := C.XOpenDisplay(C.NULL)
+	defer { C.XCloseDisplay(display) }
+
+	window := C.XCreateSimpleWindow(
+		display, C.RootWindow(display, C.DefaultScreen(display)),
+		10, 10, 200, 200, 1,
+		C.BlackPixel(display, C.DefaultScreen(display)), C.WhitePixel(display, C.DefaultScreen(display))
+	)
+
 	println(display)
+	println(window)
 }
 
