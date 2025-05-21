@@ -1,6 +1,6 @@
 module clipboardv3
 
-import clipboard.x11
+import lib.clipboardv3.x11
 
 struct LinuxClipboard{
 mut:
