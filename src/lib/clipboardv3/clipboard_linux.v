@@ -13,7 +13,7 @@ fn new_linux_clipboard() Clipboard {
 	}
 }
 
-fn (c LinuxClipboard) get_content() ?ClipboardContent {
+fn (mut c LinuxClipboard) get_content() ?ClipboardContent {
 	return ClipboardContent{
 		data: c.x11_clipboard.get_text()
 		type: .block

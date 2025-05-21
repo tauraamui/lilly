@@ -245,7 +245,6 @@ pub fn (mut cb Clipboard) set_text(text string) bool {
 	cb.text = text
 	cb.is_owner = true
 	cb.take_ownership()
-	C.XFlush(cb.display)
 	cb.mutex.unlock()
 	// sleep a little bit
 	time.sleep(1 * time.millisecond)
@@ -255,13 +254,16 @@ pub fn (mut cb Clipboard) set_text(text string) bool {
 // get_text returns the current entry as a `string` from the clipboard.
 pub fn (mut cb Clipboard) get_text() string {
 	if cb.window == Window(0) {
-		return ''
+		return 'window is 0?'
 	}
+	/*
 	if cb.is_owner {
 		return cb.text
 	}
+	*/
 	cb.got_text = false
 
+	cb.take_ownership()
 	// Request a list of possible conversions, if we're pasting.
 	C.XConvertSelection(cb.display, cb.selection, cb.get_atom(.targets), cb.selection,
 		cb.window, C.CurrentTime)

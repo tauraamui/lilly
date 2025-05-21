@@ -13,8 +13,8 @@ pub mut:
 }
 
 pub interface Clipboard {
-	get_content() ?ClipboardContent
 mut:
+	get_content() ?ClipboardContent
 	set_content(content ClipboardContent)
 }
 
