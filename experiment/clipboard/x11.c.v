@@ -44,6 +44,8 @@ fn C.XCloseDisplay(d &C.Display)
 
 fn C.XNextEvent(display &C.Display, event &C.XEvent)
 
+fn C.XSetSelectionOwner(display &C.Display, atom Atom, window Window, time int)
+
 fn C.XCreateSimpleWindow(
 	d &C.Display, root Window,
 	x int, y int, width u32 height u32,
@@ -68,6 +70,8 @@ fn C.XGetWindowProperty(
 ) int
 
 fn C.RootWindow(display &C.Display, screen_number int) Window
+
+fn C.XDeleteProperty(display &C.Display, window Window, property Atom) int
 
 fn C.DefaultScreen(display &C.Display) int
 
@@ -122,6 +126,21 @@ fn main() {
 		if target == utf8_string || target == xa_string {
 			println("CURRENT CLIPBOARD CONTENT: ${cstring_to_vstring(data)}")
 			C.XFree(data)
+		}
+
+		C.XDeleteProperty(event.xselection.display, event.xselection.requestor, event.xselection.property)
+	}
+
+	text_to_insert_to_clipboard := &char("an example string to copy".str)
+
+	C.XSetSelectionOwner(display, clipboard, window, C.CurrentTime)
+	C.XConvertSelection(display, clipboard_manager, save_targets, C.None, window, C.CurrentTime)
+
+	mut running := true
+	for running {
+		C.XNextEvent(display, &event)
+		if event.type == C.SelectionRequest {
+			running = false
 		}
 	}
 }
