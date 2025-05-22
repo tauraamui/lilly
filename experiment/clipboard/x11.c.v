@@ -62,6 +62,17 @@ fn C.XGetWindowProperty(
 	bytes_after_return &u64, prop_return &&u8
 ) int
 
+fn C.XChangeProperty(
+	display &C.Display,
+	window Window,
+	property Atom,
+	typ Atom,
+	format int,
+	mode int,
+	data voidptr,
+	nelements int
+) int
+
 fn C.RootWindow(display &C.Display, screen_number int) Window
 
 fn C.XDeleteProperty(display &C.Display, window Window, property Atom) int
@@ -187,7 +198,30 @@ fn main() {
 
 			if request.target == targets {
 				target_atoms := [targets, multiple, utf8_string, xa_string]
-				println(target_atoms)
+				C.XChangeProperty(
+					display,
+					request.requestor, request.property,
+					Atom(4), Atom(32), C.PropModeReplace,
+					target_atoms.data, target_atoms.len
+				)
+
+				reply.xselection.property = request.property
+			}
+
+			if request.target == multiple {
+				target_atoms := &u8(unsafe { nil })
+
+				actual_type   := Atom(0)
+				actual_format := 0
+				count         := u64(0)
+				bytes_after   := u64(0)
+
+				C.XGetWindowProperty(
+					display, request.requestor, request.property,
+					0, C.LONG_MAX, 0, atom_pair,
+					&actual_type, &actual_format,
+					&count, &bytes_after, &target_atoms
+				)
 			}
 		}
 	}
