@@ -16,13 +16,6 @@ fn (d &C.Display) str() string {
 }
 
 @[typedef]
-union C.XEvent {
-mut:
-	type int
-	xselection C.XSelectionEvent
-}
-
-@[typedef]
 pub struct C.XSelectionEvent {
 mut:
 	type      int
@@ -81,6 +74,53 @@ fn C.WhitePixel(display &C.Display, screen_number int) u32
 
 fn C.XFree(data voidptr)
 
+@[typedef]
+pub struct C.XSelectionRequestEvent {
+mut:
+	display   &C.Display = unsafe { nil }
+	owner     Window
+	requestor Window
+	selection Atom
+	target    Atom
+	property  Atom
+	time      int
+}
+
+@[typedef]
+pub struct C.XSelectionEvent {
+mut:
+	type      int
+	display   &C.Display = unsafe { nil }
+	requestor Window
+	selection Atom
+	target    Atom
+	property  Atom
+	time      int
+}
+
+@[typedef]
+pub struct C.XSelectionClearEvent {
+mut:
+	window    Window
+	selection Atom
+}
+
+@[typedef]
+pub struct C.XDestroyWindowEvent {
+mut:
+	window Window
+}
+
+@[typedef]
+union C.XEvent {
+mut:
+	type              int
+	xdestroywindow    C.XDestroyWindowEvent
+	xselectionclear   C.XSelectionClearEvent
+	xselectionrequest C.XSelectionRequestEvent
+	xselection        C.XSelectionEvent
+}
+
 fn main() {
 	display := C.XOpenDisplay(C.NULL)
 	defer { C.XCloseDisplay(display) }
@@ -109,7 +149,8 @@ fn main() {
 	event := C.XEvent{}
 	C.XNextEvent(display, &event)
 
-	if event.type == C.SelectionNotify && event.xselection.selection == clipboard && event.xselection.property != 0 {
+	xa_string := Atom(31)
+	if unsafe { event.type == C.SelectionNotify && event.xselection.selection == clipboard && event.xselection.property != 0 } {
 		format := 0
 		n      := u64(0)
 		size   := u64(0)
@@ -122,7 +163,6 @@ fn main() {
 			&target, &format, &size, &n, &data
 		)
 
-		xa_string := Atom(31)
 		if target == utf8_string || target == xa_string {
 			println("CURRENT CLIPBOARD CONTENT: ${cstring_to_vstring(data)}")
 			C.XFree(data)
@@ -139,8 +179,16 @@ fn main() {
 	mut running := true
 	for running {
 		C.XNextEvent(display, &event)
-		if event.type == C.SelectionRequest {
-			running = false
+		if unsafe { event.type == C.SelectionRequest } {
+			request := unsafe { &event.xselectionrequest }
+
+			mut reply   := C.XEvent{ type: C.SelectionNotify }
+			reply.xselection = C.XSelectionEvent{ property: Atom(0) }
+
+			if request.target == targets {
+				target_atoms := [targets, multiple, utf8_string, xa_string]
+				println(target_atoms)
+			}
 		}
 	}
 }
