@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <unistd.h>
 
 #include <X11/Xatom.h>
 
@@ -54,7 +55,7 @@ int main(void) {
 	}
 
 	// output - set new clipboard content
-	char text[] = "new string";  // removed \0 - strlen won't work correctly with it
+	char text[] = "new string";
 	size_t text_len = strlen(text);
 
 	XSetSelectionOwner((Display*) display, CLIPBOARD, (Window) window, CurrentTime);
@@ -67,30 +68,74 @@ int main(void) {
 	}
 
 	printf("Set clipboard to: %s\n", text);
-	printf("Clipboard is now available. Press Ctrl+C to exit...\n");
+	printf("Clipboard is now available. Press any key to exit and transfer to clipboard manager...\n");
 
-	// Try to save to clipboard manager
-	XConvertSelection((Display*) display, CLIPBOARD_MANAGER, SAVE_TARGETS, None, (Window) window, CurrentTime);
-		
 	Bool running = True;
+	Bool exit_requested = False;
+	Bool clipboard_manager_notified = False;
+	Bool waiting_for_manager = False;
+
 	while (running) {
-		XNextEvent(display, &event);
+		// Check if we have pending events
+		if (XPending(display) > 0) {
+			XNextEvent(display, &event);
+		} else if (exit_requested && !waiting_for_manager) {
+			// No more events and exit was requested, try to notify clipboard manager
+			Window clipboard_manager_window = XGetSelectionOwner(display, CLIPBOARD_MANAGER);
+			
+			if (clipboard_manager_window != None) {
+				printf("Transferring clipboard to manager...\n");
+				
+				// Send SAVE_TARGETS request to clipboard manager
+				XConvertSelection(display, CLIPBOARD_MANAGER, SAVE_TARGETS, None, window, CurrentTime);
+				XFlush(display);
+				waiting_for_manager = True;
+				
+				// Set a timeout - don't wait forever for clipboard manager
+				alarm(2);
+			} else {
+				printf("No clipboard manager found - clipboard will be lost\n");
+				running = False;
+			}
+		} else if (!XPending(display)) {
+			// No events pending, sleep briefly to avoid busy waiting
+			usleep(10000); // 10ms
+			continue;
+		}
+
+		if (XPending(display) > 0) {
+			XNextEvent(display, &event);
+		} else {
+			continue;
+		}
 		
 		if (event.type == SelectionClear) {
-			// Another application has taken ownership of the selection
-			printf("Lost clipboard ownership\n");
+			printf("Lost clipboard ownership to another application\n");
 			running = False;
+		}
+		else if (event.type == SelectionNotify) {
+			// Response from clipboard manager
+			if (event.xselection.selection == CLIPBOARD_MANAGER) {
+				if (event.xselection.property != None) {
+					printf("Clipboard manager acknowledged transfer\n");
+				} else {
+					printf("Clipboard manager failed to save clipboard\n");
+				}
+				running = False;
+			}
 		}
 		else if (event.type == SelectionRequest) {
 			const XSelectionRequestEvent* request = &event.xselectionrequest;
 
 			XEvent reply = { SelectionNotify };
-			reply.xselection.property = request->property;  // Default to success
+			reply.xselection.property = request->property;
 			reply.xselection.display = request->display;
 			reply.xselection.requestor = request->requestor;
 			reply.xselection.selection = request->selection;
 			reply.xselection.target = request->target;
 			reply.xselection.time = request->time;
+
+			Bool handled = True;
 
 			if (request->target == TARGETS) {
 				// Return list of supported formats
@@ -102,7 +147,7 @@ int main(void) {
 				XChangeProperty(display,
 					request->requestor,
 					request->property,
-					XA_ATOM,  // Fixed: should be XA_ATOM, not 4
+					XA_ATOM,
 					32,
 					PropModeReplace,
 					(unsigned char*) targets,
@@ -128,48 +173,63 @@ int main(void) {
 
 				XGetWindowProperty(display, request->requestor, request->property, 0, LONG_MAX, False, ATOM_PAIR, &actualType, &actualFormat, &count, &bytesAfter, (unsigned char **) &targets);
 
-				unsigned long i;
-				for (i = 0; i < count; i += 2) {
-					if (targets[i] == UTF8_STRING || targets[i] == XA_STRING) {
-						XChangeProperty((Display*) display,
-							request->requestor,
-							targets[i + 1],
-							targets[i],
-							8,
-							PropModeReplace,
-							(unsigned char*) text,
-							text_len);
-					} else {
-						targets[i + 1] = None;
+				if (targets && count > 0) {
+					unsigned long i;
+					for (i = 0; i < count; i += 2) {
+						if (targets[i] == UTF8_STRING || targets[i] == XA_STRING) {
+							XChangeProperty((Display*) display,
+								request->requestor,
+								targets[i + 1],
+								targets[i],
+								8,
+								PropModeReplace,
+								(unsigned char*) text,
+								text_len);
+						} else {
+							targets[i + 1] = None;
+						}
 					}
+
+					XChangeProperty((Display*) display,
+						request->requestor,
+						request->property,
+						ATOM_PAIR,
+						32,
+						PropModeReplace,
+						(unsigned char*) targets,
+						count);
+
+					XFree(targets);
 				}
-
-				XChangeProperty((Display*) display,
-					request->requestor,
-					request->property,
-					ATOM_PAIR,
-					32,
-					PropModeReplace,
-					(unsigned char*) targets,
-					count);
-
-				XFree(targets);
 			}
 			else {
 				// Unsupported target
 				reply.xselection.property = None;
+				handled = False;
 			}
 
 			XSendEvent((Display*) display, request->requestor, False, 0, &reply);
 			XFlush(display);
+
+			if (handled) {
+				printf("Served clipboard request for target: %s\n", 
+					   request->target == UTF8_STRING ? "UTF8_STRING" :
+					   request->target == XA_STRING ? "XA_STRING" :
+					   request->target == TARGETS ? "TARGETS" :
+					   request->target == MULTIPLE ? "MULTIPLE" : "UNKNOWN");
+			}
 		}
 		else if (event.type == KeyPress) {
-			// Allow exit with any key press
-			running = False;
+			// Request exit - will trigger clipboard manager transfer
+			if (!exit_requested) {
+				exit_requested = True;
+				printf("Exit requested, attempting to transfer to clipboard manager...\n");
+			}
 		}
 	}
 
 	printf("Exiting...\n");
+	alarm(0); // Cancel any pending alarm
     XCloseDisplay(display);
     return 0;
 }
