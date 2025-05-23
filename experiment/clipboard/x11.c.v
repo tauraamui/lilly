@@ -75,6 +75,8 @@ fn C.XChangeProperty(
 	nelements int
 ) int
 
+fn C.XSendEvent(display &C.Display, requestor Window, propegate int, mask i64, event &C.XEvent)
+
 fn C.RootWindow(display &C.Display, screen_number int) Window
 
 fn C.XDeleteProperty(display &C.Display, window Window, property Atom) int
@@ -226,7 +228,6 @@ fn main() {
 				)
 
 				for i := 0; i < count; i += 2 {
-					mut found := false
 					if target_atoms[i] == utf8_string || target_atoms[i] == xa_string {
 						C.XChangeProperty(
 							display,
@@ -241,7 +242,31 @@ fn main() {
 					}
 					target_atoms[i + 1] = C.None
 				}
+
+				C.XChangeProperty(
+					display,
+					request.requestor,
+					request.property,
+					atom_pair,
+					Atom(32),
+					C.PropModeReplace,
+					target_atoms.data,
+					count
+				)
+				C.XFlush(display)
+				C.XFree(voidptr(&target_atoms))
+
+				reply.xselection.property = request.property
 			}
+
+			reply.xselection.display = request.display
+			reply.xselection.requestor = request.requestor
+			reply.xselection.selection = request.selection
+			reply.xselection.target = request.target
+			reply.xselection.time = request.time
+
+			C.XSendEvent(display, request.requestor, 0, 0, voidptr(&reply))
+			C.XFlush(display)
 		}
 	}
 }
