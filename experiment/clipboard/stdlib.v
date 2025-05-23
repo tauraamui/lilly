@@ -1,8 +1,7 @@
-import clipboard
+import src.lib.clipboardv3.x11
 
 fn main() {
-	mut s_clip := clipboard.new()
-	defer { s_clip.destroy() }
-	s_clip.copy("Some example text for stdlib clipboard copy!")
+	mut s_clip := x11.new_clipboard()
+	s_clip.set_text("Some example text for stdlib clipboard copy!")
 }
 
