@@ -280,6 +280,27 @@ pub fn (mut cb Clipboard) get_text() string {
 	return cb.text
 }
 
+pub fn (mut cb Clipboard) transfer_to_clipboard_manager() bool {
+    clipboard_manager := C.XInternAtom(cb.display, "CLIPBOARD_MANAGER", 1)
+    save_targets := C.XInternAtom(cb.display, "SAVE_TARGETS", 0)
+
+    if clipboard_manager == 0 {
+        return false // No clipboard manager available
+    }
+
+    C.XConvertSelection(cb.display, clipboard_manager, save_targets,
+                       C.None, cb.window, C.CurrentTime)
+    // Wait for confirmation...
+    return true
+}
+
+pub fn (mut cb Clipboard) shutdown_with_persistence() {
+    if cb.is_owner && cb.transfer_to_clipboard_manager() {
+        // Wait for handoff completion
+    }
+    cb.free()
+}
+
 // transmit_selection is crucial to handling all the different data types.
 // If we ever support other mimetypes they should be handled here.
 fn (mut cb Clipboard) transmit_selection(xse &C.XSelectionEvent) bool {
