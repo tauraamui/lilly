@@ -35,6 +35,8 @@ fn C.XOpenDisplay(name &u8) &C.Display
 
 fn C.XCloseDisplay(d &C.Display)
 
+fn C.XFlush(display &C.Display)
+
 fn C.XNextEvent(display &C.Display, event &C.XEvent)
 
 fn C.XSetSelectionOwner(display &C.Display, atom Atom, window Window, time int)
@@ -182,7 +184,7 @@ fn main() {
 		C.XDeleteProperty(event.xselection.display, event.xselection.requestor, event.xselection.property)
 	}
 
-	text_to_insert_to_clipboard := &char("an example string to copy".str)
+	text_to_insert_to_clipboard := "an example string to copy"
 
 	C.XSetSelectionOwner(display, clipboard, window, C.CurrentTime)
 	C.XConvertSelection(display, clipboard_manager, save_targets, C.None, window, C.CurrentTime)
@@ -202,14 +204,14 @@ fn main() {
 					display,
 					request.requestor, request.property,
 					Atom(4), Atom(32), C.PropModeReplace,
-					target_atoms.data, target_atoms.len
+					target_atoms.data, target_atoms.len / int(sizeof(target_atoms[0]))
 				)
 
 				reply.xselection.property = request.property
 			}
 
 			if request.target == multiple {
-				target_atoms := &u8(unsafe { nil })
+				mut target_atoms := []Atom{}
 
 				actual_type   := Atom(0)
 				actual_format := 0
@@ -220,8 +222,25 @@ fn main() {
 					display, request.requestor, request.property,
 					0, C.LONG_MAX, 0, atom_pair,
 					&actual_type, &actual_format,
-					&count, &bytes_after, &target_atoms
+					&count, &bytes_after, target_atoms.data
 				)
+
+				for i := 0; i < count; i += 2 {
+					mut found := false
+					if target_atoms[i] == utf8_string || target_atoms[i] == xa_string {
+						C.XChangeProperty(
+							display,
+							request.requestor, target_atoms[i + 1],
+							target_atoms[i], Atom(8), C.PropModeReplace,
+							text_to_insert_to_clipboard.str,
+							text_to_insert_to_clipboard.len
+						)
+						C.XFlush(display)
+						running = false
+						continue
+					}
+					target_atoms[i + 1] = C.None
+				}
 			}
 		}
 	}
