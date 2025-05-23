@@ -121,7 +121,7 @@ mut:
 	xselection        C.XSelectionEvent
 }
 
-const atom_names = ['TARGETS', 'CLIPBOARD', 'PRIMARY', 'SECONDARY', 'TEXT', 'UTF8_STRING',
+const atom_names = ['TARGETS', 'CLIPBOARD', 'CLIPBOARD_MANAGER', 'SAVE_TARGETS', 'PRIMARY', 'SECONDARY', 'TEXT', 'UTF8_STRING',
 	'text/plain', 'text/html']
 
 // UNSUPPORTED TYPES: MULTIPLE, INCR, TIMESTAMP, image/bmp, image/jpeg, image/tiff, image/png
@@ -130,16 +130,18 @@ const atom_names = ['TARGETS', 'CLIPBOARD', 'PRIMARY', 'SECONDARY', 'TEXT', 'UTF
 // in the future, maybe we can extend this
 // to support other mime types
 enum AtomType {
-	xa_atom     = 0 // value 4
-	xa_string   = 1 // value 31
-	targets     = 2
-	clipboard   = 3
-	primary     = 4
-	secondary   = 5
-	text        = 6
-	utf8_string = 7
-	text_plain  = 8
-	text_html   = 9
+	xa_atom           = 0 // value 4
+	xa_string         = 1 // value 31
+	targets           = 2
+	clipboard         = 3
+	clipboard_manager = 4
+	save_targets      = 5
+	primary           = 6
+	secondary         = 7
+	text              = 8
+	utf8_string       = 9
+	text_plain        = 10
+	text_html         = 11
 }
 
 @[heap]
@@ -281,14 +283,7 @@ pub fn (mut cb Clipboard) get_text() string {
 }
 
 pub fn (mut cb Clipboard) transfer_to_clipboard_manager() bool {
-    clipboard_manager := C.XInternAtom(cb.display, "CLIPBOARD_MANAGER", 1)
-    save_targets := C.XInternAtom(cb.display, "SAVE_TARGETS", 0)
-
-    if clipboard_manager == 0 {
-        return false // No clipboard manager available
-    }
-
-    C.XConvertSelection(cb.display, clipboard_manager, save_targets,
+    C.XConvertSelection(cb.display, cb.get_atom(.clipboard_manager), cb.get_atom(.save_targets),
                        C.None, cb.window, C.CurrentTime)
     // Wait for confirmation...
     return true
@@ -296,6 +291,7 @@ pub fn (mut cb Clipboard) transfer_to_clipboard_manager() bool {
 
 pub fn (mut cb Clipboard) shutdown_with_persistence() {
     if cb.is_owner && cb.transfer_to_clipboard_manager() {
+    	time.sleep(1 * time.second)
         // Wait for handoff completion
     }
     cb.free()
