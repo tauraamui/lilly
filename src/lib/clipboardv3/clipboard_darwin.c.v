@@ -21,7 +21,7 @@ fn new_darwin_clipboard() Clipboard {
 	return DarwinClipboard{}
 }
 
-fn (c DarwinClipboard) get_content() ?ClipboardContent {
+fn (mut c DarwinClipboard) get_content() ?ClipboardContent {
 	c_content_ptr := C.clipboard_get_content()
 	if c_content_ptr == unsafe { nil } {
 		return none
@@ -48,7 +48,7 @@ fn (c DarwinClipboard) get_content() ?ClipboardContent {
 	return clipboard_content
 }
 
-fn (c DarwinClipboard) set_content(content ClipboardContent) {
+fn (mut c DarwinClipboard) set_content(content ClipboardContent) {
 	C.clipboard_set_content(content.data.str, u8(content.type))
 }
 

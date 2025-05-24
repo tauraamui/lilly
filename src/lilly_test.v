@@ -105,7 +105,9 @@ fn test_lilly_resolve_matches_across_all_open_file_buffers_only_loaded_file_has_
 		] }
 	}
 
+	mut clip := clipboardv3.new()
 	mut lilly := Lilly{
+		clipboard: clip
 		line_reader: mock_fs.read_lines
 		is_binary_file: fn (p string) bool { return false }
 		resolve_workspace_files: fn () []string {
@@ -200,7 +202,10 @@ fn test_lilly_extract_pos_from_path() {
 }
 
 fn test_lilly_resolve_inactive_file_buffer_paths() {
-	mut lilly := Lilly{}
+	mut clip := clipboardv3.new()
+	mut lilly := Lilly{
+		clipboard: clip
+	}
 
 	mut m_line_reader := MockLineReader{
 		line_data: ["This is a fake document that doesn't exist on disk anywhere"]
