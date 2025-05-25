@@ -15,6 +15,7 @@
 module syntax
 
 import lib.draw
+import lib.workspace
 
 // NOTE(tauraamui) [27/03/2025]: this is ... idk I just feel like trying to write something
 //                               that feels comfier than trying to embed TS's parser.c and
@@ -80,11 +81,23 @@ struct LineInfo {
 }
 
 pub struct Parser {
+	l_syntax      []workspace.Syntax
 mut:
 	state         State
 	pending_token ?Token
 	tokens        []Token
 	line_info     []LineInfo
+}
+
+pub fn Parser.new(syn []workspace.Syntax) Parser {
+	return Parser{ l_syntax: syn }
+}
+
+pub fn (mut parser Parser) reset() {
+	parser.state = .default
+	parser.pending_token = none
+	parser.tokens.clear()
+	parser.line_info.clear()
 }
 
 pub fn (parser Parser) get_line_tokens(line_num int) []Token {

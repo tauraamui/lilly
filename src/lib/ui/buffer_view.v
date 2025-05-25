@@ -23,16 +23,19 @@ import lib.utf8
 pub struct BufferView {
 	buf      &buffer.Buffer = unsafe { nil }
 	syntaxes []workspace.Syntax
+mut:
+	parser   syntax.Parser
 }
 
 pub fn BufferView.new(buf &buffer.Buffer, syntaxes []workspace.Syntax) BufferView {
 	return BufferView{
 		buf: buf
 		syntaxes: syntaxes
+		parser: syntax.Parser.new(syntaxes)
 	}
 }
 
-pub fn (buf_view BufferView) draw(
+pub fn (mut buf_view BufferView) draw(
 	mut ctx draw.Contextable,
 	x int, y int,
 	width int, height int,
@@ -45,7 +48,8 @@ pub fn (buf_view BufferView) draw(
 	mut screenspace_x_offset := buf_view.buf.num_of_lines().str().runes().len
 	mut screenspace_y_offset := 0
 
-	mut syntax_parser := syntax.Parser{}
+	buf_view.parser.reset()
+	mut syntax_parser := buf_view.parser
 
 	for document_line_num, line in buf_view.buf.line_iterator() {
 		syntax_parser.parse_line(document_line_num, line)
