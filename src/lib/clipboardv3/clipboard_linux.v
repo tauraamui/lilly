@@ -9,28 +9,50 @@ fn new_linux_clipboard() Clipboard {
 }
 
 fn (c LinuxClipboard) get_content() ?ClipboardContent {
-	mut cmd := os.new_process("xclip")
-	defer { cmd.close() }
-	cmd.set_args(["-selection", "clipboard", "-out"])
-	cmd.set_redirect_stdio()
-	cmd.run()
+	mut out := []string{}
+	mut er := []string{}
 
-	mut data := ""
-	mut read_from_stdout := false
-	if cmd.is_pending(.stdout) {
-		read_from_stdout = true
-		data = cmd.stdout_read()
+	mut p := os.new_process('/usr/bin/xclip')
+	cmd.set_args(["-selection", "clipboard", "-out"])
+	p.set_redirect_stdio()
+	p.run()
+
+	for p.is_alive() {
+		if data := p.pipe_read(.stderr) {
+			er << data
+		}
+		if data := p.pipe_read(.stdout) {
+			out << data
+		}
+		time.sleep(2 * time.millisecond)
 	}
-	cmd.wait()
-	if read_from_stdout == false {
-		return none
+
+	out << p.stdout_slurp()
+	er << p.stderr_slurp()
+	p.close()
+	p.wait()
+
+	if p.code > 0 {
+		panic("xclip out failed: ${er}")
 	}
+
 	return ClipboardContent{
-		data: data,
+		data: out.join(''),
 		type: .block
 	}
 }
 
 fn (c LinuxClipboard) set_content(content ClipboardContent) {
+	mut p := os.new_process('/usr/bin/xclip')
+	p.set_args(["-selection", "clipboard", "-in"])
+	p.set_redirect_stdio()
+	p.run()
+
+	p.stdin_write("set clipboard to me")
+	os.fd_close(p.stdio_fd[0])
+
+	p.close()
+	p.wait()
+	println("ERR: ${p.err}, CODE: ${p.code}")
 }
 

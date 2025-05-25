@@ -6,7 +6,7 @@ fn set_content() {
 	p.set_redirect_stdio()
 	p.run()
 
-	p.stdin_write("text to copy")
+	p.stdin_write("set clipboard to me")
 	os.fd_close(p.stdio_fd[0])
 
 	p.close()
