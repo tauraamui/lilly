@@ -14,18 +14,22 @@
 
 module ui
 
-import term
 import lib.buffer
 import lib.draw
+import lib.workspace
 import lib.syntax
 import lib.utf8
 
 pub struct BufferView {
-	buf   &buffer.Buffer = unsafe { nil }
+	buf      &buffer.Buffer = unsafe { nil }
+	syntaxes []workspace.Syntax
 }
 
-pub fn BufferView.new(buf &buffer.Buffer) BufferView {
-	return BufferView{ buf: buf }
+pub fn BufferView.new(buf &buffer.Buffer, syntaxes []workspace.Syntax) BufferView {
+	return BufferView{
+		buf: buf
+		syntaxes: syntaxes
+	}
 }
 
 pub fn (buf_view BufferView) draw(
@@ -40,7 +44,9 @@ pub fn (buf_view BufferView) draw(
 
 	mut screenspace_x_offset := buf_view.buf.num_of_lines().str().runes().len
 	mut screenspace_y_offset := 0
+
 	mut syntax_parser := syntax.Parser{}
+
 	for document_line_num, line in buf_view.buf.line_iterator() {
 		syntax_parser.parse_line(document_line_num, line)
 		// if we haven't reached the line to render in the document yet, skip this

@@ -3274,7 +3274,7 @@ fn test_view_draw_document_with_method_using_buffer_view() {
         height: 15 // Set a small height for testing
 		buffer: buf
     }
-	fake_view.buf_view = ui.BufferView.new(&fake_view.buffer)
+	fake_view.buf_view = ui.BufferView.new(&fake_view.buffer, [])
 
 	assert fake_view.from == 0
 

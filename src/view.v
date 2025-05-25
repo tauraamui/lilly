@@ -510,7 +510,7 @@ fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes 
 		show_whitespace: false
 		clipboard:       _clipboard
 		buffer:          buff
-		buf_view:		ui.BufferView.new(&buff)
+		buf_view:		ui.BufferView.new(&buff, syntaxes)
 	}
 	res.path = res.buffer.file_path
 	res.set_current_syntax_idx(os.file_ext(res.path))
