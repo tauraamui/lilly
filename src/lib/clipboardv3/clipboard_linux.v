@@ -1,11 +1,17 @@
 module clipboardv3
 
 import os
+import time
 
-struct LinuxClipboard{}
+struct LinuxClipboard{
+mut:
+	last_type ContentType
+}
 
 fn new_linux_clipboard() Clipboard {
-	return LinuxClipboard{}
+	return LinuxClipboard{
+		last_type: .block
+	}
 }
 
 fn (c LinuxClipboard) get_content() ?ClipboardContent {
@@ -13,7 +19,7 @@ fn (c LinuxClipboard) get_content() ?ClipboardContent {
 	mut er := []string{}
 
 	mut p := os.new_process('/usr/bin/xclip')
-	cmd.set_args(["-selection", "clipboard", "-out"])
+	p.set_args(["-selection", "clipboard", "-out"])
 	p.set_redirect_stdio()
 	p.run()
 
@@ -32,27 +38,34 @@ fn (c LinuxClipboard) get_content() ?ClipboardContent {
 	p.close()
 	p.wait()
 
-	if p.code > 0 {
-		panic("xclip out failed: ${er}")
-	}
-
 	return ClipboardContent{
 		data: out.join(''),
-		type: .block
+		type: c.last_type
 	}
 }
 
-fn (c LinuxClipboard) set_content(content ClipboardContent) {
+fn (mut c LinuxClipboard) set_content(content ClipboardContent) {
 	mut p := os.new_process('/usr/bin/xclip')
 	p.set_args(["-selection", "clipboard", "-in"])
 	p.set_redirect_stdio()
 	p.run()
 
-	p.stdin_write("set clipboard to me")
+	content_to_set := content.data
+	p.stdin_write(content_to_set)
 	os.fd_close(p.stdio_fd[0])
 
 	p.close()
 	p.wait()
-	println("ERR: ${p.err}, CODE: ${p.code}")
+
+	start := time.now()
+	for {
+		if (time.now() - start).milliseconds() >= 100 { break }
+		current_clip_content := c.get_content() or { continue }
+		if content_to_set == current_clip_content.data {
+			break
+		}
+	}
+	// time.sleep(50 * time.millisecond)
+	c.last_type = content.type
 }
 
