@@ -9,7 +9,7 @@ fn new_fallback_clipboard() Clipboard {
 	return FallbackClipboard{}
 }
 
-fn (clipboard FallbackClipboard) get_content() ?ClipboardContent {
+fn (mut clipboard FallbackClipboard) get_content() ?ClipboardContent {
 	return clipboard.content
 }
 

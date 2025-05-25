@@ -13,14 +13,18 @@ pub mut:
 }
 
 pub interface Clipboard {
-	get_content() ?ClipboardContent
 mut:
+	get_content() ?ClipboardContent
 	set_content(content ClipboardContent)
 }
 
 pub fn new() Clipboard {
 	$if darwin {
 		return new_darwin_clipboard()
+	}
+
+	$if linux {
+		return new_linux_clipboard()
 	}
 	return new_fallback_clipboard()
 }

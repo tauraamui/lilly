@@ -16,10 +16,14 @@ fn test_clipboard_native_implementation_sets_type_to_block() ! {
 	} == ClipboardContent{ data: "This is copied text!", type: .block }
 }
 
-@[if os.darwin ?]
+@[if darwin ?]
 fn test_clipboard_native_implementation_returns_no_content_type_from_plaintext_data() {
-	C.clipboard_set_plaintext("A plain text sentence with no meta data!".str)
-	clipboard := new()
-	assert clipboard.get_content()! == ClipboardContent{ data: "A plain text sentence with no meta data!", type: .block }
+	$if darwin {
+		C.clipboard_set_plaintext("A plain text sentence with no meta data!".str)
+		mut clipboard := new()
+		assert clipboard.get_content()! == ClipboardContent{ data: "A plain text sentence with no meta data!", type: .block }
+	} $else {
+		assert true == true
+	}
 }
 

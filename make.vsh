@@ -22,6 +22,13 @@ context.task(name: "verbose-test", run: |self| system("v -g -stats test ./src"))
 
 // EXPERIMENTS
 context.task(
+	name: "linux-clipboard",
+	run: fn (self build.Task) ! {
+		system("v -g run ./experiment/clipboard/x11.c.v")
+	}
+)
+
+context.task(
 	name: "emoji-grid",
 	depends: ["copy-emoji-grid-code"]
 	run: fn (self build.Task) ! {
