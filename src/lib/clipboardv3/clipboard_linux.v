@@ -65,7 +65,6 @@ fn (mut c LinuxClipboard) set_content(content ClipboardContent) {
 			break
 		}
 	}
-	// time.sleep(50 * time.millisecond)
 	c.last_type = content.type
 }
 
