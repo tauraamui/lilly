@@ -1,21 +1,4 @@
-// Copyright 2025 The Lilly Editor contributors
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-module workspace
-
-import os
-import json
+module syntax
 
 const builtin_v_syntax = $embed_file('../../syntax/v.syntax').to_string()
 const builtin_go_syntax = $embed_file('../../syntax/go.syntax').to_string()
@@ -35,7 +18,7 @@ pub:
 	builtins   []string
 }
 
-fn (mut workspace Workspace) load_builtin_syntaxes() {
+pub fn load_builtin_syntaxes() []Syntax {
 	v_syntax := json.decode(Syntax, builtin_v_syntax) or {
 		panic('builtin V syntax file failed to decode: ${err}')
 	}
@@ -61,17 +44,10 @@ fn (mut workspace Workspace) load_builtin_syntaxes() {
 		panic('builting Perl syntax file failed to decode: ${err}')
 	}
 
-	workspace.syntaxes << v_syntax
-	workspace.syntaxes << go_syntax
-	workspace.syntaxes << c_syntax
-	workspace.syntaxes << rust_syntax
-	workspace.syntaxes << js_syntax
-	workspace.syntaxes << ts_syntax
-	workspace.syntaxes << python_syntax
-	workspace.syntaxes << perl_syntax
+	return [v_syntax, go_syntax, c_syntax, rust_syntax, js_syntax, ts_syntax, python_syntax, perl_syntax]
 }
 
-fn (mut workspace Workspace) load_syntaxes_from_disk(config_dir fn () !string, dir_walker fn (path string, f fn (string)), read_file fn (path string) !string) ! {
+fn load_syntaxes_from_disk(config_dir fn () !string, dir_walker fn (path string, f fn (string)), read_file fn (path string) !string) ! {
 	config_root_dir := config_dir() or {
 		return error('unable to resolve local config root directory')
 	}
@@ -138,3 +114,4 @@ fn (mut workspace Workspace) load_syntaxes_from_disk(config_dir fn () !string, d
 		syns << syn
 	})
 }
+

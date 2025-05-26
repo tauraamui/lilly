@@ -17,15 +17,6 @@ module syntax
 import lib.draw
 import lib.workspace
 
-const builtin_v_syntax = $embed_file('../../syntax/v.syntax').to_string()
-const builtin_go_syntax = $embed_file('../../syntax/go.syntax').to_string()
-const builtin_c_syntax = $embed_file('../../syntax/c.syntax').to_string()
-const builtin_rust_syntax = $embed_file('../../syntax/rust.syntax').to_string()
-const builtin_js_syntax = $embed_file('../../syntax/javascript.syntax').to_string()
-const builtin_ts_syntax = $embed_file('../../syntax/typescript.syntax').to_string()
-const builtin_python_syntax = $embed_file('../../syntax/python.syntax').to_string()
-const builtin_perl_syntax = $embed_file('../../syntax/perl.syntax').to_string()
-
 enum State {
 	default
 	in_block_comment
