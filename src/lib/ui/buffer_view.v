@@ -16,19 +16,18 @@ module ui
 
 import lib.buffer
 import lib.draw
-import lib.workspace
 import lib.syntax
 import lib.utf8
 
 pub struct BufferView {
 	buf       &buffer.Buffer = unsafe { nil }
-	syntaxes  []workspace.Syntax
+	syntaxes  []syntax.Syntax
 	syntax_id int
 mut:
 	parser   syntax.Parser
 }
 
-pub fn BufferView.new(buf &buffer.Buffer, syntaxes []workspace.Syntax, syntax_id int) BufferView {
+pub fn BufferView.new(buf &buffer.Buffer, syntaxes []syntax.Syntax, syntax_id int) BufferView {
 	return BufferView{
 		buf: buf
 		syntaxes: syntaxes

@@ -17,6 +17,7 @@ module main
 import arrays
 import lib.clipboardv3
 import lib.workspace
+import lib.syntax
 import lib.chords
 import lib.buffer
 import json
@@ -509,8 +510,8 @@ fn test_v_toggles_visual_mode_move_selection_down_to_second_line_ensure_start_po
 	// assert fake_view.cursor.selection_end() == Pos{1, 1}
 }
 
-fn resolve_test_syntax() workspace.Syntax {
-	return json.decode(workspace.Syntax, '{
+fn resolve_test_syntax() syntax.Syntax {
+	return json.decode(syntax.Syntax, '{
         "name": "test",
         "keywords": ["for", "func", "print", "bool"],
         "literals": ["nil", "true", "false"]

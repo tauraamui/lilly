@@ -1,5 +1,8 @@
 module syntax
 
+import os
+import json
+
 const builtin_v_syntax = $embed_file('../../syntax/v.syntax').to_string()
 const builtin_go_syntax = $embed_file('../../syntax/go.syntax').to_string()
 const builtin_c_syntax = $embed_file('../../syntax/c.syntax').to_string()
@@ -49,12 +52,17 @@ pub fn load_builtin_syntaxes() []Syntax {
 	return [v_syntax, go_syntax, c_syntax, rust_syntax, js_syntax, ts_syntax, python_syntax, perl_syntax]
 }
 
-fn load_syntaxes_from_disk(config_dir fn () !string, dir_walker fn (path string, f fn (string)), read_file fn (path string) !string) ![]Syntax {
+fn load_syntaxes_from_disk(
+	syntax_config_dir fn () !string,
+	dir_walker fn (path string, f fn (string)),
+	read_file fn (path string) !string
+) ![]Syntax {
 	config_root_dir := config_dir() or {
 		return error('unable to resolve local config root directory')
 	}
 	syntax_dir_full_path := os.join_path(config_root_dir, lilly_config_root_dir_name,
 		lilly_syntaxes_dir_name)
+	syntax_dir_full_path := syntax_config_dir() or { return }
 	// mut syns := &workspace.syntaxes
 	mut syns := []Syntax{}
 	dir_walker(syntax_dir_full_path, fn [mut syns, read_file] (file_path string) {
