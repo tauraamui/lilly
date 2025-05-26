@@ -499,32 +499,38 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 }
 
 fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes []workspace.Syntax, _clipboard clipboardv3.Clipboard, mut buff buffer.Buffer) Viewable {
+	file_path := buff.file_path
+	syn_id := resolve_syntax_id(syntaxes, os.file_ext(file_path))
 	mut res := View{
 		log:             _log
 		branch:          branch
 		syntaxes:        syntaxes
-		file_path:       buff.file_path
+		current_syntax_idx: syn_id
+		file_path:       file_path
 		config:          config
 		leader_key:      config.leader_key
 		leader_state:     ViewLeaderState{ mode: .normal }
 		show_whitespace: false
 		clipboard:       _clipboard
 		buffer:          buff
-		buf_view:		ui.BufferView.new(&buff, syntaxes)
+		buf_view:		ui.BufferView.new(&buff, syntaxes, syn_id)
 	}
 	res.path = res.buffer.file_path
-	res.set_current_syntax_idx(os.file_ext(res.path))
 	res.cursor.selection_start_pos = Pos{-1, -1}
 	return res
 }
 
-fn (mut view View) set_current_syntax_idx(ext string) {
-	for i, syntax in view.syntaxes {
+fn resolve_syntax_id(syns []workspace.Syntax, ext string) int {
+	for i, syntax in syns {
 		if ext in syntax.extensions {
-			view.current_syntax_idx = i
-			break
+			return i
 		}
 	}
+	return 0
+}
+
+fn (mut view View) set_current_syntax_idx(ext string) {
+	view.current_syntax_idx = resolve_syntax_id(view.syntaxes, ext)
 }
 
 interface Viewable {

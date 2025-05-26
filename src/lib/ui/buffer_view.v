@@ -21,16 +21,18 @@ import lib.syntax
 import lib.utf8
 
 pub struct BufferView {
-	buf      &buffer.Buffer = unsafe { nil }
-	syntaxes []workspace.Syntax
+	buf       &buffer.Buffer = unsafe { nil }
+	syntaxes  []workspace.Syntax
+	syntax_id int
 mut:
 	parser   syntax.Parser
 }
 
-pub fn BufferView.new(buf &buffer.Buffer, syntaxes []workspace.Syntax) BufferView {
+pub fn BufferView.new(buf &buffer.Buffer, syntaxes []workspace.Syntax, syntax_id int) BufferView {
 	return BufferView{
 		buf: buf
 		syntaxes: syntaxes
+		syntax_id: syntax_id
 		parser: syntax.Parser.new(syntaxes)
 	}
 }
