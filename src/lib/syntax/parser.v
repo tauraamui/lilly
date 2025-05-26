@@ -15,7 +15,6 @@
 module syntax
 
 import lib.draw
-import lib.workspace
 
 enum State {
 	default
@@ -77,7 +76,7 @@ struct LineInfo {
 }
 
 pub struct Parser {
-	l_syntax      []workspace.Syntax
+	l_syntax      []Syntax
 mut:
 	state         State
 	pending_token ?Token
@@ -85,7 +84,7 @@ mut:
 	line_info     []LineInfo
 }
 
-pub fn Parser.new(syn []workspace.Syntax) Parser {
+pub fn Parser.new(syn []Syntax) Parser {
 	return Parser{ l_syntax: syn }
 }
 
