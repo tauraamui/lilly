@@ -67,11 +67,6 @@ pub fn open_workspace(mut _log Logger,
 	wrkspace.resolve_git_branch_name(execute)
 	wrkspace.syntaxes = syntaxlib.load_builtin_syntaxes()
 	syntax_dir_full_path := os.join_path(config_dir() or { "" }, lilly_config_root_dir_name, lilly_syntaxes_dir_name)
-	wrkspace.syntaxes << syntaxlib.load_syntaxes_from_disk(
-	fn [syntax_dir_full_path] () !string { return syntax_dir_full_path }, dir_walker, read_file) or {
-		// log error but return workspace anyway?
-		[]syntaxlib.Syntax{}
-	}
 	return wrkspace
 }
 
