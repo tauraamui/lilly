@@ -12,8 +12,6 @@ const builtin_ts_syntax = $embed_file('../../syntax/typescript.syntax').to_strin
 const builtin_python_syntax = $embed_file('../../syntax/python.syntax').to_string()
 const builtin_perl_syntax = $embed_file('../../syntax/perl.syntax').to_string()
 
-const lilly_syntaxes_dir_name = 'syntaxes'
-
 pub struct Syntax {
 pub:
 	name       string
@@ -57,12 +55,10 @@ fn load_syntaxes_from_disk(
 	dir_walker fn (path string, f fn (string)),
 	read_file fn (path string) !string
 ) ![]Syntax {
-	config_root_dir := config_dir() or {
+	config_root_dir := syntax_config_dir() or {
 		return error('unable to resolve local config root directory')
 	}
-	syntax_dir_full_path := os.join_path(config_root_dir, lilly_config_root_dir_name,
-		lilly_syntaxes_dir_name)
-	syntax_dir_full_path := syntax_config_dir() or { return }
+	syntax_dir_full_path := syntax_config_dir() or { return err }
 	// mut syns := &workspace.syntaxes
 	mut syns := []Syntax{}
 	dir_walker(syntax_dir_full_path, fn [mut syns, read_file] (file_path string) {
