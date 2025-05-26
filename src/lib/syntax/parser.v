@@ -26,11 +26,6 @@ const builtin_ts_syntax = $embed_file('../../syntax/typescript.syntax').to_strin
 const builtin_python_syntax = $embed_file('../../syntax/python.syntax').to_string()
 const builtin_perl_syntax = $embed_file('../../syntax/perl.syntax').to_string()
 
-
-// NOTE(tauraamui) [27/03/2025]: this is ... idk I just feel like trying to write something
-//                               that feels comfier than trying to embed TS's parser.c and
-//                               have a custom scanner thing
-
 enum State {
 	default
 	in_block_comment
