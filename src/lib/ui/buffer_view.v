@@ -150,6 +150,7 @@ fn render_token(
 	mut segment_to_render := line.runes()[token_bounds.start..token_bounds.end].string().replace("\t", " ".repeat(4))
 	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
 	if segment_to_render.runes().len == 0 { return 0 }
+	// FIX(tauraamui) [27/05/2025]: need to adjust how and when this flag is set
 	if same_type == false {
 		resolved_token_type := match true {
 			segment_to_render in syntax_def.literals { syntax.TokenType.literal }
