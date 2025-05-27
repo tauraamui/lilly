@@ -45,6 +45,7 @@ pub fn (mut buf_view BufferView) draw(
 	cursor_y_pos int
 ) {
 	if buf_view.buf == unsafe { nil } { return }
+	syntax_def := buf_view.syntaxes[buf_view.syntax_id] or { syntax.Syntax{} }
 
 	mut screenspace_x_offset := buf_view.buf.num_of_lines().str().runes().len
 	mut screenspace_y_offset := 0
@@ -73,6 +74,7 @@ pub fn (mut buf_view BufferView) draw(
 			y + screenspace_y_offset,
 			line,
 			syntax_parser.get_line_tokens(document_line_num),
+			syntax_def,
 			min_x,
 			width,
 			is_cursor_line
@@ -99,6 +101,7 @@ fn draw_text_line(
 	x int, y int,
 	line string,
 	line_tokens []syntax.Token,
+	syntax_def syntax.Syntax,
 	min_x int, width int,
 	is_cursor_line bool
 ) {
@@ -114,7 +117,7 @@ fn draw_text_line(
 		token_bounds := resolve_token_bounds(token.start(), token.end(), min_x) or { continue }
 		token_type := token.t_type()
 		same_type := previous_type == token_type
-		visual_x_offset += render_token(mut ctx, line, token_bounds, token_type, same_type, min_x, x, max_width, visual_x_offset, y)
+		visual_x_offset += render_token(mut ctx, line, token_bounds, token_type, syntax_def, same_type, min_x, x, max_width, visual_x_offset, y)
 		if token_type != .whitespace {
 			previous_type = token_type
 		}
@@ -139,6 +142,7 @@ fn render_token(
 	mut ctx draw.Contextable,
 	line string, token_bounds TokenBounds,
 	token_type syntax.TokenType,
+	syntax_def syntax.Syntax,
 	same_type bool, min_x int,
 	base_x int, max_width int,
 	x_offset int, y int
