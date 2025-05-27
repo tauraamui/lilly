@@ -12,6 +12,21 @@ const builtin_ts_syntax = $embed_file('../../syntax/typescript.syntax').to_strin
 const builtin_python_syntax = $embed_file('../../syntax/python.syntax').to_string()
 const builtin_perl_syntax = $embed_file('../../syntax/perl.syntax').to_string()
 
+pub const colors := {
+	TokenType.keyword: draw.Color{87, 215, 217}
+	.identifier:       draw.Color{200, 200, 235}
+	.operator:         draw.Color{200, 200, 235}
+	.string:           draw.Color{87, 215, 217}
+	.comment:          draw.Color{130, 130, 130}
+	.comment_start:    draw.Color{200, 200, 235}
+	.comment_end:      draw.Color{200, 200, 235}
+	.block_start:      draw.Color{200, 200, 235}
+	.block_end:        draw.Color{200, 200, 235}
+	.number:           draw.Color{220, 110, 110}
+	.whitespace:       draw.Color{200, 200, 235}
+	.other:            draw.Color{200, 200, 235}
+}
+
 pub struct Syntax {
 pub:
 	name       string
