@@ -49,6 +49,15 @@ Not a problem, Neovim/VIM are fantastic existing projects and are freely availab
 
 ### misc + extra information
 
+### radical.xyz remote
+
+The Lilly project is also host on the decentralised Radical peer-to-peer git host network "Radical".
+If you would like to contribute using that instead of Github then please clone with:
+`rad clone rad:zENt7TUiNcnJSf9H371PZ66XdgxE` and then submit a patch in the usual git way but using the rad toolchain (see https://radicle.xyz/guides/user#working-with-patches)
+
+Feel free to also raise issues here, I will hopefully remember to check the inbox frequently.
+
+
 ### memleak checks
 
 On macOS we get this output from running:
