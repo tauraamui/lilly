@@ -2,6 +2,7 @@ module syntax
 
 import os
 import json
+import lib.draw
 
 const builtin_v_syntax = $embed_file('../../syntax/v.syntax').to_string()
 const builtin_go_syntax = $embed_file('../../syntax/go.syntax').to_string()
@@ -24,6 +25,7 @@ pub const colors := {
 	.block_end:        draw.Color{200, 200, 235}
 	.number:           draw.Color{220, 110, 110}
 	.whitespace:       draw.Color{200, 200, 235}
+	.literal:          draw.Color{ 90, 90, 200 }
 	.other:            draw.Color{200, 200, 235}
 }
 
@@ -70,11 +72,7 @@ fn load_syntaxes_from_disk(
 	dir_walker fn (path string, f fn (string)),
 	read_file fn (path string) !string
 ) ![]Syntax {
-	config_root_dir := syntax_config_dir() or {
-		return error('unable to resolve local config root directory')
-	}
 	syntax_dir_full_path := syntax_config_dir() or { return err }
-	// mut syns := &workspace.syntaxes
 	mut syns := []Syntax{}
 	dir_walker(syntax_dir_full_path, fn [mut syns, read_file] (file_path string) {
 		if !file_path.ends_with('.syntax') {

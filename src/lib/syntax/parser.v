@@ -33,6 +33,7 @@ pub enum TokenType {
 	block_end
 	number
 	whitespace
+	literal
 	other
 }
 

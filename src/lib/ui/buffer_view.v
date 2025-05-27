@@ -153,6 +153,9 @@ fn render_token(
 	if same_type == false {
 		ctx.set_color(syntax.colors[token_type])
 	}
+	if segment_to_render in syntax_def.literals {
+		ctx.set_color(syntax.colors[.literal])
+	}
 	ctx.draw_text(x_offset, y, segment_to_render)
 	return utf8_str_visible_length(segment_to_render)
 }
