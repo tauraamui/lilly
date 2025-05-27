@@ -47,6 +47,29 @@ context.task(
 )
 
 // UTIL TASKS
+context.task(
+	name: "8bit-ascii-colours",
+	run: fn (self build.Task) ! {
+		print("\n   +  ")
+		for i := 0; i < 36; i++ {
+			print("${i:2} ")
+		}
+
+		print("\n\n ${0:3}  ")
+		for i := 0; i < 16; i++ {
+			print("\033[48;5;${i}m  \033[m ")
+		}
+
+		for i := 0; i < 7; i++ {
+			real_i := (i * 36) + 16
+			print("\n\n ${real_i:3}  ")
+			for j := 0; j < 36; j++ {
+				print("\033[48;5;${real_i + j}m  \033[m ")
+			}
+		}
+		println("")
+	}
+)
 context.task(name: "git-prune", run: |self| system("git remote prune origin"))
 // NOTE(tauraamui) [27/05/2025]: unsure whether this util should really live here
 //                               since it's only really for me as it's unlikely
