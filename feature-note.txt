@@ -1,0 +1,6 @@
+For this feature, we already acquire a list of contiguous tokens in the form of "identifiers",
+for the new buffer view document renderer. In order to treat keywords particularly and highlight
+them their own descrete colour we simply need to match if an identifier is found in the specific
+language's syntax codex.
+
+

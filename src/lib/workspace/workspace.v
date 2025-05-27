@@ -17,6 +17,7 @@ module workspace
 import os
 import json
 import term.ui as tui
+import lib.syntax as syntaxlib
 
 const builtin_lilly_config_file_content = $embed_file('../../config/lilly.conf').to_string()
 pub const lilly_config_root_dir_name = 'lilly'
@@ -27,7 +28,7 @@ pub:
 	config Config
 mut:
 	files      []string
-	syntaxes   []Syntax
+	syntaxes   []syntaxlib.Syntax
 	git_branch string
 }
 
@@ -64,10 +65,7 @@ pub fn open_workspace(mut _log Logger,
 
 	wrkspace.resolve_files(path, is_dir, dir_walker)
 	wrkspace.resolve_git_branch_name(execute)
-	wrkspace.load_builtin_syntaxes()
-	wrkspace.load_syntaxes_from_disk(config_dir, dir_walker, read_file) or {
-		return error('unable to load syntaxes')
-	}
+	wrkspace.syntaxes = syntaxlib.load_builtin_syntaxes()
 	return wrkspace
 }
 
@@ -117,7 +115,7 @@ pub fn (workspace Workspace) get_files() []string {
 	return workspace.files
 }
 
-pub fn (workspace Workspace) syntaxes() []Syntax {
+pub fn (workspace Workspace) syntaxes() []syntaxlib.Syntax {
 	return workspace.syntaxes
 }
 

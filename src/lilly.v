@@ -20,6 +20,7 @@ import strconv
 import lib.buffer
 import lib.clipboardv3
 import lib.workspace
+import lib.syntax
 import lib.draw
 import lib.ui
 import lib.core
@@ -41,7 +42,7 @@ mut:
 	todo_comments_picker_modal        ?ui.TodoCommentPickerModal
 	workspace                         workspace.Workspace
 	resolve_workspace_files           ?fn () []string
-	syntaxes                          []workspace.Syntax
+	syntaxes                          []syntax.Syntax
 }
 
 interface Root {

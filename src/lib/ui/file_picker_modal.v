@@ -14,7 +14,6 @@
 
 module ui
 
-import os
 import strings
 import lib.draw
 import lib.core

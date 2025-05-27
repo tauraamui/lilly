@@ -24,6 +24,7 @@ import regex
 import lib.clipboardv3
 import lib.buffer
 import lib.workspace
+import lib.syntax as syntaxlib
 import lib.chords
 import lib.draw
 import lib.core
@@ -154,7 +155,7 @@ mut:
 	show_whitespace           bool
 	left_bracket_press_count  int
 	right_bracket_press_count int
-	syntaxes                  []workspace.Syntax
+	syntaxes                  []syntaxlib.Syntax
 	current_syntax_idx        int
 	is_multiline_comment      bool
 	clipboard                 clipboardv3.Clipboard
@@ -498,33 +499,39 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 	cmd_buf.code = .blank
 }
 
-fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes []workspace.Syntax, _clipboard clipboardv3.Clipboard, mut buff buffer.Buffer) Viewable {
+fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes []syntaxlib.Syntax, _clipboard clipboardv3.Clipboard, mut buff buffer.Buffer) Viewable {
+	file_path := buff.file_path
+	syn_id := resolve_syntax_id(syntaxes, os.file_ext(file_path))
 	mut res := View{
 		log:             _log
 		branch:          branch
 		syntaxes:        syntaxes
-		file_path:       buff.file_path
+		current_syntax_idx: syn_id
+		file_path:       file_path
 		config:          config
 		leader_key:      config.leader_key
 		leader_state:     ViewLeaderState{ mode: .normal }
 		show_whitespace: false
 		clipboard:       _clipboard
 		buffer:          buff
-		buf_view:		ui.BufferView.new(&buff)
+		buf_view:		ui.BufferView.new(&buff, syntaxes, syn_id)
 	}
 	res.path = res.buffer.file_path
-	res.set_current_syntax_idx(os.file_ext(res.path))
 	res.cursor.selection_start_pos = Pos{-1, -1}
 	return res
 }
 
-fn (mut view View) set_current_syntax_idx(ext string) {
-	for i, syntax in view.syntaxes {
+fn resolve_syntax_id(syns []syntaxlib.Syntax, ext string) int {
+	for i, syntax in syns {
 		if ext in syntax.extensions {
-			view.current_syntax_idx = i
-			break
+			return i
 		}
 	}
+	return 0
+}
+
+fn (mut view View) set_current_syntax_idx(ext string) {
+	view.current_syntax_idx = resolve_syntax_id(view.syntaxes, ext)
 }
 
 interface Viewable {
@@ -701,14 +708,14 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 			g: view.config.selection_highlight_color.g
 			b: view.config.selection_highlight_color.b
 		}
-		draw_text_line(mut ctx, view.syntaxes[view.current_syntax_idx] or { workspace.Syntax{} },
+		draw_text_line(mut ctx, view.syntaxes[view.current_syntax_idx] or { syntaxlib.Syntax{} },
 			view.cursor, view.leader_state.mode, sel_highlight_color, view.x, screen_space_y, document_space_y,
 			cursor_screen_space_y, linex, line)
 	}
 }
 
 fn draw_text_line(mut ctx draw.Contextable,
-	syntax workspace.Syntax,
+	syntax syntaxlib.Syntax,
 	cursor Cursor,
 	current_mode core.Mode,
 	selection_highlight_color draw.Color,
@@ -755,7 +762,7 @@ fn draw_text_line(mut ctx draw.Contextable,
 }
 
 fn draw_text_line_within_visual_selection(mut ctx draw.Contextable,
-	syntax workspace.Syntax,
+	syntax syntaxlib.Syntax,
 	cursor Cursor,
 	selection_highlight_color draw.Color,
 	screen_space_x int, screen_space_y int, document_space_y int,
@@ -798,7 +805,7 @@ fn draw_text_line_within_visual_selection(mut ctx draw.Contextable,
 }
 
 fn draw_text_line_visual_selection_between_start_and_end(mut ctx draw.Contextable,
-	syntax workspace.Syntax,
+	syntax syntaxlib.Syntax,
 	selection_highlight_color draw.Color,
 	selection_start Pos, selection_end Pos,
 	screen_space_x int, screen_space_y int, document_space_y int,
@@ -815,7 +822,7 @@ fn draw_text_line_visual_selection_between_start_and_end(mut ctx draw.Contextabl
 }
 
 fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Contextable,
-	syntax workspace.Syntax,
+	syntax syntaxlib.Syntax,
 	selection_highlight_color draw.Color,
 	selection_start Pos, selection_end Pos,
 	screen_space_x int, screen_space_y int, document_space_y int,
@@ -845,7 +852,7 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 }
 
 fn draw_text_line_visual_selection_starts_on_same_but_ends_after(mut ctx draw.Contextable,
-	syntax workspace.Syntax,
+	syntax syntaxlib.Syntax,
 	selection_highlight_color draw.Color,
 	selection_start Pos, selection_end Pos,
 	screen_space_x int, screen_space_y int, document_space_y int,
@@ -881,7 +888,7 @@ fn draw_text_line_visual_selection_starts_on_same_but_ends_after(mut ctx draw.Co
 }
 
 fn draw_text_line_visual_selection_starts_before_but_ends_on_line(mut ctx draw.Contextable,
-	syntax workspace.Syntax,
+	syntax syntaxlib.Syntax,
 	selection_highlight_color draw.Color,
 	selection_start Pos, selection_end Pos,
 	screen_space_x int, screen_space_y int, document_space_y int,
@@ -920,7 +927,7 @@ fn draw_text_line_visual_selection_starts_before_but_ends_on_line(mut ctx draw.C
 }
 
 fn draw_text_line_as_segments(mut ctx draw.Contextable,
-	syntax workspace.Syntax,
+	syntax syntaxlib.Syntax,
 	screen_space_x int, screen_space_y int,
 	document_space_y int,
 	line string
@@ -1026,7 +1033,7 @@ fn LineSegment.new_comment(start int, line_y int, document_space_y int, end int)
 	}
 }
 
-fn resolve_line_segments(syntax workspace.Syntax, line string, line_y int, document_space_y int, is_multiline_comment bool) ([]LineSegment, bool) {
+fn resolve_line_segments(syntax syntaxlib.Syntax, line string, line_y int, document_space_y int, is_multiline_comment bool) ([]LineSegment, bool) {
 	mut segments := []LineSegment{}
 	mut is_multiline_commentx := is_multiline_comment
 	line_runes := line.runes()

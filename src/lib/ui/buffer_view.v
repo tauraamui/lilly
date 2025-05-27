@@ -14,21 +14,29 @@
 
 module ui
 
-import term
 import lib.buffer
 import lib.draw
 import lib.syntax
 import lib.utf8
 
 pub struct BufferView {
-	buf   &buffer.Buffer = unsafe { nil }
+	buf       &buffer.Buffer = unsafe { nil }
+	syntaxes  []syntax.Syntax
+	syntax_id int
+mut:
+	parser   syntax.Parser
 }
 
-pub fn BufferView.new(buf &buffer.Buffer) BufferView {
-	return BufferView{ buf: buf }
+pub fn BufferView.new(buf &buffer.Buffer, syntaxes []syntax.Syntax, syntax_id int) BufferView {
+	return BufferView{
+		buf: buf
+		syntaxes: syntaxes
+		syntax_id: syntax_id
+		parser: syntax.Parser.new(syntaxes)
+	}
 }
 
-pub fn (buf_view BufferView) draw(
+pub fn (mut buf_view BufferView) draw(
 	mut ctx draw.Contextable,
 	x int, y int,
 	width int, height int,
@@ -37,10 +45,14 @@ pub fn (buf_view BufferView) draw(
 	cursor_y_pos int
 ) {
 	if buf_view.buf == unsafe { nil } { return }
+	syntax_def := buf_view.syntaxes[buf_view.syntax_id] or { syntax.Syntax{} }
 
 	mut screenspace_x_offset := buf_view.buf.num_of_lines().str().runes().len
 	mut screenspace_y_offset := 0
-	mut syntax_parser := syntax.Parser{}
+
+	buf_view.parser.reset()
+	mut syntax_parser := buf_view.parser
+
 	for document_line_num, line in buf_view.buf.line_iterator() {
 		syntax_parser.parse_line(document_line_num, line)
 		// if we haven't reached the line to render in the document yet, skip this
@@ -62,6 +74,7 @@ pub fn (buf_view BufferView) draw(
 			y + screenspace_y_offset,
 			line,
 			syntax_parser.get_line_tokens(document_line_num),
+			syntax_def,
 			min_x,
 			width,
 			is_cursor_line
@@ -83,7 +96,15 @@ fn draw_line_number(mut ctx draw.Contextable, x int, y int, line_num int) {
 	ctx.draw_text(x - line_num_str.runes().len, y, line_num_str)
 }
 
-fn draw_text_line(mut ctx draw.Contextable, x int, y int, line string, line_tokens []syntax.Token, min_x int, width int, is_cursor_line bool) {
+fn draw_text_line(
+	mut ctx draw.Contextable,
+	x int, y int,
+	line string,
+	line_tokens []syntax.Token,
+	syntax_def syntax.Syntax,
+	min_x int, width int,
+	is_cursor_line bool
+) {
 	max_width := width - x
 	if is_cursor_line {
 		ctx.set_bg_color(draw.Color{53, 53, 53})
@@ -96,7 +117,7 @@ fn draw_text_line(mut ctx draw.Contextable, x int, y int, line string, line_toke
 		token_bounds := resolve_token_bounds(token.start(), token.end(), min_x) or { continue }
 		token_type := token.t_type()
 		same_type := previous_type == token_type
-		visual_x_offset += render_token(mut ctx, line, token_bounds, token_type, same_type, min_x, x, max_width, visual_x_offset, y)
+		visual_x_offset += render_token(mut ctx, line, token_bounds, token_type, syntax_def, same_type, min_x, x, max_width, visual_x_offset, y)
 		if token_type != .whitespace {
 			previous_type = token_type
 		}
@@ -117,12 +138,27 @@ fn resolve_token_bounds(token_start int, token_end int, min_x int) ?TokenBounds 
 	return TokenBounds{ start: token_start, end: token_end }
 }
 
-fn render_token(mut ctx draw.Contextable, line string, token_bounds TokenBounds, token_type syntax.TokenType, same_type bool, min_x int, base_x int, max_width int, x_offset int, y int) int {
+fn render_token(
+	mut ctx draw.Contextable,
+	line string, token_bounds TokenBounds,
+	token_type syntax.TokenType,
+	syntax_def syntax.Syntax,
+	same_type bool, min_x int,
+	base_x int, max_width int,
+	x_offset int, y int
+) int {
 	mut segment_to_render := line.runes()[token_bounds.start..token_bounds.end].string().replace("\t", " ".repeat(4))
 	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
 	if segment_to_render.runes().len == 0 { return 0 }
+	// FIX(tauraamui) [27/05/2025]: need to adjust how and when this flag is set
 	if same_type == false {
-		ctx.set_color(syntax.colors[token_type])
+		resolved_token_type := match true {
+			segment_to_render in syntax_def.literals { syntax.TokenType.literal }
+			segment_to_render in syntax_def.keywords { syntax.TokenType.keyword }
+			segment_to_render in syntax_def.builtins { syntax.TokenType.builtin }
+			else { token_type }
+		}
+		ctx.set_color(syntax.colors[resolved_token_type])
 	}
 	ctx.draw_text(x_offset, y, segment_to_render)
 	return utf8_str_visible_length(segment_to_render)

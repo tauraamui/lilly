@@ -1,21 +1,8 @@
-// Copyright 2025 The Lilly Editor contributors
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-module workspace
+module syntax
 
 import os
 import json
+import lib.draw
 
 const builtin_v_syntax = $embed_file('../../syntax/v.syntax').to_string()
 const builtin_go_syntax = $embed_file('../../syntax/go.syntax').to_string()
@@ -26,6 +13,23 @@ const builtin_ts_syntax = $embed_file('../../syntax/typescript.syntax').to_strin
 const builtin_python_syntax = $embed_file('../../syntax/python.syntax').to_string()
 const builtin_perl_syntax = $embed_file('../../syntax/perl.syntax').to_string()
 
+pub const colors := {
+	TokenType.identifier: draw.Color{200, 200, 235}
+	.operator:            draw.Color{200, 200, 235}
+	.string:              draw.Color{87, 215, 217}
+	.comment:             draw.Color{130, 130, 130}
+	.comment_start:       draw.Color{200, 200, 235}
+	.comment_end:         draw.Color{200, 200, 235}
+	.block_start:         draw.Color{200, 200, 235}
+	.block_end:           draw.Color{200, 200, 235}
+	.number:              draw.Color{220, 110, 110}
+	.whitespace:          draw.Color{200, 200, 235}
+	.keyword:             draw.Color{ 255, 126, 192 }
+	.literal:             draw.Color{ 87, 215, 217 }
+	.builtin:             draw.Color{ 130, 144, 250 }
+	.other:               draw.Color{200, 200, 235}
+}
+
 pub struct Syntax {
 pub:
 	name       string
@@ -35,7 +39,7 @@ pub:
 	builtins   []string
 }
 
-fn (mut workspace Workspace) load_builtin_syntaxes() {
+pub fn load_builtin_syntaxes() []Syntax {
 	v_syntax := json.decode(Syntax, builtin_v_syntax) or {
 		panic('builtin V syntax file failed to decode: ${err}')
 	}
@@ -61,23 +65,16 @@ fn (mut workspace Workspace) load_builtin_syntaxes() {
 		panic('builting Perl syntax file failed to decode: ${err}')
 	}
 
-	workspace.syntaxes << v_syntax
-	workspace.syntaxes << go_syntax
-	workspace.syntaxes << c_syntax
-	workspace.syntaxes << rust_syntax
-	workspace.syntaxes << js_syntax
-	workspace.syntaxes << ts_syntax
-	workspace.syntaxes << python_syntax
-	workspace.syntaxes << perl_syntax
+	return [v_syntax, go_syntax, c_syntax, rust_syntax, js_syntax, ts_syntax, python_syntax, perl_syntax]
 }
 
-fn (mut workspace Workspace) load_syntaxes_from_disk(config_dir fn () !string, dir_walker fn (path string, f fn (string)), read_file fn (path string) !string) ! {
-	config_root_dir := config_dir() or {
-		return error('unable to resolve local config root directory')
-	}
-	syntax_dir_full_path := os.join_path(config_root_dir, lilly_config_root_dir_name,
-		lilly_syntaxes_dir_name)
-	mut syns := &workspace.syntaxes
+fn load_syntaxes_from_disk(
+	syntax_config_dir fn () !string,
+	dir_walker fn (path string, f fn (string)),
+	read_file fn (path string) !string
+) ![]Syntax {
+	syntax_dir_full_path := syntax_config_dir() or { return err }
+	mut syns := []Syntax{}
 	dir_walker(syntax_dir_full_path, fn [mut syns, read_file] (file_path string) {
 		if !file_path.ends_with('.syntax') {
 			return
@@ -137,4 +134,6 @@ fn (mut workspace Workspace) load_syntaxes_from_disk(config_dir fn () !string, d
 		}
 		syns << syn
 	})
+	return syns
 }
+
