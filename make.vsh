@@ -48,6 +48,10 @@ context.task(
 
 // UTIL TASKS
 context.task(name: "git-prune", run: |self| system("git remote prune origin"))
+// NOTE(tauraamui) [27/05/2025]: unsure whether this util should really live here
+//                               since it's only really for me as it's unlikely
+//                               anyone else will be using radical but oh well?'
+context.task(name: "rad-push", run: |self| system("git push rad master"))
 context.task(
 	name: "apply-license-header",
 	help: "executes addlicense tool to insert license headers into files without one",
