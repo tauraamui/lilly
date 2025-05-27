@@ -22,7 +22,6 @@ enum State {
 }
 
 pub enum TokenType {
-	keyword
 	identifier
 	operator
 	string
@@ -33,7 +32,9 @@ pub enum TokenType {
 	block_end
 	number
 	whitespace
+	keyword
 	literal
+	builtin
 	other
 }
 

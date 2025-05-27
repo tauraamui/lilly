@@ -151,10 +151,13 @@ fn render_token(
 	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
 	if segment_to_render.runes().len == 0 { return 0 }
 	if same_type == false {
-		ctx.set_color(syntax.colors[token_type])
-	}
-	if segment_to_render in syntax_def.literals {
-		ctx.set_color(syntax.colors[.literal])
+		resolved_token_type := match true {
+			segment_to_render in syntax_def.literals { syntax.TokenType.literal }
+			segment_to_render in syntax_def.keywords { syntax.TokenType.keyword }
+			segment_to_render in syntax_def.builtins { syntax.TokenType.builtin }
+			else { token_type }
+		}
+		ctx.set_color(syntax.colors[resolved_token_type])
 	}
 	ctx.draw_text(x_offset, y, segment_to_render)
 	return utf8_str_visible_length(segment_to_render)
