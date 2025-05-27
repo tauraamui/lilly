@@ -35,9 +35,9 @@ motions. The end vision is a one to one replacement/equivalent functionality for
 ## How to build (requires the V compiler https://vlang.io)
 
 #### Build lilly by executing
-	`v run ./make.vsh build-prod`
+	v run ./make.vsh build-prod
 #### or run with no binary build with
-	`v run ./make.vsh run`
+	v run ./make.vsh run
 
 You can see what other tasks are available to run with `v run ./make.vsh --tasks`
 
@@ -48,6 +48,15 @@ You can see what other tasks are available to run with `v run ./make.vsh --tasks
 Not a problem, Neovim/VIM are fantastic existing projects and are freely available for you to use today.
 
 ### misc + extra information
+
+### radical.xyz remote
+
+The Lilly project is also hosted by (approx minimum 20 seeds) on the decentralised Radical peer-to-peer git host network "Radical".
+If you would like to contribute using that instead of Github then please clone with:
+`rad clone rad:zENt7TUiNcnJSf9H371PZ66XdgxE` and then submit a patch in the usual git way but using the rad toolchain (see https://radicle.xyz/guides/user#working-with-patches)
+
+Feel free to also raise issues here, I will hopefully remember to check the inbox frequently.
+
 
 ### memleak checks
 
