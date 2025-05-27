@@ -985,7 +985,7 @@ fn LineSegment.new_key(start int, line_y int, document_space_y int, end int) Lin
 		y:                line_y
 		document_space_y: document_space_y
 		typ:              .a_key
-		fg_color:         draw.Color{255, 126, 182}
+		fg_color:         syntaxlib.colors[.keyword]
 	}
 }
 
@@ -996,18 +996,18 @@ fn LineSegment.new_literal(start int, line_y int, document_space_y int, end int)
 		y:                line_y
 		document_space_y: document_space_y
 		typ:              .a_lit
-		fg_color:         draw.Color{87, 215, 217}
+		fg_color:         syntaxlib.colors[.literal]
 	}
 }
 
 fn LineSegment.new_builtin(start int, line_y int, document_space_y int, end int) LineSegment {
 	return LineSegment{
-		start: start
-		end: end
-		y: line_y
+		start:            start
+		end:              end
+		y:                line_y
 		document_space_y: document_space_y
-		typ: .a_builtin
-		fg_color: draw.Color{130, 144, 250}
+		typ:              .a_builtin
+		fg_color:         syntaxlib.colors[.builtin]
 	}
 }
 
@@ -1018,7 +1018,7 @@ fn LineSegment.new_string(start int, line_y int, document_space_y int, end int) 
 		y:                line_y
 		document_space_y: document_space_y
 		typ:              .a_string
-		fg_color:         draw.Color{87, 215, 217}
+		fg_color:         syntaxlib.colors[.comment]
 	}
 }
 
@@ -1029,7 +1029,7 @@ fn LineSegment.new_comment(start int, line_y int, document_space_y int, end int)
 		y:                line_y
 		document_space_y: document_space_y
 		typ:              .a_comment
-		fg_color:         draw.Color{130, 130, 130}
+		fg_color:         syntaxlib.colors[.comment]
 	}
 }
 
