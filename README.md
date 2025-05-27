@@ -51,7 +51,7 @@ Not a problem, Neovim/VIM are fantastic existing projects and are freely availab
 
 ### radical.xyz remote
 
-The Lilly project is also host on the decentralised Radical peer-to-peer git host network "Radical".
+The Lilly project is also hosted by (approx minimum 20 seeds) on the decentralised Radical peer-to-peer git host network "Radical".
 If you would like to contribute using that instead of Github then please clone with:
 `rad clone rad:zENt7TUiNcnJSf9H371PZ66XdgxE` and then submit a patch in the usual git way but using the rad toolchain (see https://radicle.xyz/guides/user#working-with-patches)
 
