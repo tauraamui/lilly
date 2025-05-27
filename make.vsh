@@ -1,6 +1,7 @@
 #!/usr/bin/env -S v run
 
 import build
+import strconv
 
 const app_name = "lilly"
 
@@ -48,7 +49,7 @@ context.task(
 
 // UTIL TASKS
 context.task(
-	name: "8bit-ascii-colours",
+	name: "8bit-asci-colours",
 	run: fn (self build.Task) ! {
 		print("\n   +  ")
 		for i := 0; i < 36; i++ {
@@ -68,6 +69,30 @@ context.task(
 			}
 		}
 		println("")
+	}
+)
+context.task(
+	name: "ansi-to-rgb",
+	run: fn (self build.Task) ! {
+		ansi_num_to_convert := input("ANSI colour to convert to RGB: ")
+		c := strconv.atoi(ansi_num_to_convert) or { panic("invalid num: ${err}") }
+
+		if !(c >= 16 && c <= 231) {
+			println("${c} -> is outside the 6x6x6 colour cube (16-231.)")
+			return
+		}
+
+		c_prime := c - 16
+		r := c_prime / 36
+		g := (c_prime % 36) / 6
+		b := c_prime % 6
+
+		levels := [int(0), 95, 135, 175, 215, 255]
+		rr := levels[r]
+		gg := levels[g]
+		bb := levels[b]
+
+		println("${c} -> RGB(${rr}, ${gg}, ${bb})")
 	}
 )
 context.task(name: "git-prune", run: |self| system("git remote prune origin"))
