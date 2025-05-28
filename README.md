@@ -35,12 +35,12 @@ motions. The end vision is a one to one replacement/equivalent functionality for
 ## How to build (requires the V compiler https://vlang.io)
 
 #### Build lilly by executing
-	v run ./make.vsh build-prod
+	./make.vsh build-prod
 
 #### or run with no binary build with
-	v run ./make.vsh run
+	./make.vsh run
 
-You can see what other tasks are available to run with `v run ./make.vsh --tasks`
+You can see what other tasks are available to run with `./make.vsh --tasks`
 
 (you can compile make.vsh into a binary to make executing tasks as fast as possible, use `v -prod -skip-running build.vsh`)
 
