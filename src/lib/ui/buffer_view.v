@@ -153,6 +153,7 @@ fn render_token(
 	if segment_to_render.runes().len == 0 { return 0 }
 	// FIX(tauraamui) [27/05/2025]: need to adjust how and when this flag is set
 	resolved_token_type := match true {
+		token_type        == .comment { token_type }
 		segment_to_render in syntax_def.literals { syntax.TokenType.literal }
 		segment_to_render in syntax_def.keywords { syntax.TokenType.keyword }
 		segment_to_render in syntax_def.builtins { syntax.TokenType.builtin }
