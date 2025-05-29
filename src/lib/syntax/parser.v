@@ -113,13 +113,13 @@ fn for_each_char(
 	mut rune_count &int,
 	mut token_count &int,
 	mut tokens []Token,
-	within_line_comment bool
+	parser_state State
 ) TokenType {
 	last_char_type := resolve_char_type(l_char)
 	current_char_type := resolve_char_type(c_char)
 
 	token_type := match true {
-		within_line_comment { TokenType.comment }
+		parser_state == .in_comment { TokenType.comment }
 		else { last_char_type }
 	}
 
@@ -145,6 +145,7 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 	mut rune_count          := 0
 	runes                   := line.runes()
 	mut within_line_comment := false
+	if parser.state == .in_comment { parser.state = .default } // single line comments terminate at the end of the line
 
 	mut token_type := TokenType.other
 	for i, c_char in runes {
@@ -177,7 +178,7 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 			within_line_comment = l_char == `/` && c_char == `/`
 		}
 
-		token_type = for_each_char(i, l_char, c_char, mut &rune_count, mut &token_count, mut parser.tokens, within_line_comment)
+		token_type = for_each_char(i, l_char, c_char, mut &rune_count, mut &token_count, mut parser.tokens, parser.state)
 	}
 
 	if rune_count > 0 {
