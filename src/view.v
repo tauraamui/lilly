@@ -1018,7 +1018,7 @@ fn LineSegment.new_string(start int, line_y int, document_space_y int, end int) 
 		y:                line_y
 		document_space_y: document_space_y
 		typ:              .a_string
-		fg_color:         syntaxlib.colors[.comment]
+		fg_color:         syntaxlib.colors[.string]
 	}
 }
 
