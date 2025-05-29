@@ -324,7 +324,7 @@ fn assert_line_4_tokens(line_4 string, line_4_tokens []Token) {
 	assert line_4_token_4.t_type == .whitespace
 
 	assert line_4[line_4_token_5.start..line_4_token_5.end] == "comment"
-	assert line_4_token_5.t_type == .identifier
+	assert line_4_token_5.t_type == .comment
 }
 
 fn assert_line_5_tokens(line_5 string, line_5_tokens []Token) {
