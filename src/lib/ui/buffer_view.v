@@ -113,10 +113,18 @@ fn draw_text_line(
 
 	mut visual_x_offset := x
 	mut previous_type := syntax.TokenType.other
-	for token in line_tokens {
+	for i, token in line_tokens {
+		mut next_token := ?syntax.Token(none)
+		if i + 1 < line_tokens.len - 1 { next_token = line_tokens[i + 1] }
 		cur_token_bounds := resolve_token_bounds(token.start(), token.end(), min_x) or { continue }
 		cur_token_type := token.t_type()
-		visual_x_offset += render_token(mut ctx, line, cur_token_bounds, cur_token_type, previous_type, syntax_def, min_x, x, max_width, visual_x_offset, y)
+		visual_x_offset += render_token(
+			mut ctx, line,
+			cur_token_bounds, cur_token_type,
+			previous_type, next_token, syntax_def,
+			min_x, x, max_width,
+			visual_x_offset, y
+		)
 		if cur_token_type != .whitespace {
 			previous_type = cur_token_type
 		}
@@ -142,8 +150,8 @@ fn render_token(
 	line string, cur_token_bounds TokenBounds,
 	cur_token_type syntax.TokenType,
 	previous_type syntax.TokenType,
+	next_token ?syntax.Token,
 	syntax_def syntax.Syntax,
-	// same_type bool, min_x int,
 	min_x int, base_x int,
 	max_width int, x_offset int, y int
 ) int {
