@@ -25,6 +25,7 @@ context.task(name: "verbose-test", run: |self| system("v -g -stats test ./src"))
 // EXPERIMENTS
 context.task(
 	name: "linux-clipboard",
+	help: "runs experiment to test linux C code clipboard integration"
 	run: fn (self build.Task) ! {
 		system("v -g run ./experiment/clipboard/x11.c.v")
 	}
@@ -32,6 +33,7 @@ context.task(
 
 context.task(
 	name: "emoji-grid",
+	help: "runs experiment to test emoji grid rendering"
 	depends: ["copy-emoji-grid-code"]
 	run: fn (self build.Task) ! {
 		system("v -g run ./src/emoji_grid.v")
@@ -41,6 +43,7 @@ context.task(
 
 context.task(
 	name: "immediate-grid",
+	help: "runs experiment to test immediate grid rendering"
 	depends: ["copy-immediate-grid-code"]
 	run: fn (self build.Task) ! {
 		system("v -g run ./src/immediate_grid.v")
@@ -51,6 +54,7 @@ context.task(
 // UTIL TASKS
 context.task(
 	name: "ansi-colour-codes",
+	help: "displays ansi colour code chart"
 	run: fn (self build.Task) ! {
 		print("\n   +  ")
 		for i := 0; i < 36; i++ {
@@ -74,6 +78,7 @@ context.task(
 )
 context.task(
 	name: "ansi-to-rgb",
+	help: "prompts for single ansi colour code and outputs the RGB components"
 	run: fn (self build.Task) ! {
 		ansi_num_to_convert := input("ANSI colour to convert to RGB: ")
 		c := strconv.atoi(ansi_num_to_convert) or { panic("invalid num: ${err}") }
@@ -99,6 +104,7 @@ context.task(
 
 context.task(
 	name: "rgb-to-ansi",
+	help: "prompts three times for rgb values and produces single ansi colour code"
 	run: fn (self build.Task) ! {
 		find_nearest_level := fn (levels []int, value int) int {
 			mut nearest_index := 0
