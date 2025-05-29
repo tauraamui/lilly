@@ -114,11 +114,11 @@ fn draw_text_line(
 	mut visual_x_offset := x
 	mut previous_type := syntax.TokenType.other
 	for token in line_tokens {
-		token_bounds := resolve_token_bounds(token.start(), token.end(), min_x) or { continue }
-		token_type := token.t_type()
-		visual_x_offset += render_token(mut ctx, line, token_bounds, token_type, previous_type, syntax_def, min_x, x, max_width, visual_x_offset, y)
-		if token_type != .whitespace {
-			previous_type = token_type
+		cur_token_bounds := resolve_token_bounds(token.start(), token.end(), min_x) or { continue }
+		cur_token_type := token.t_type()
+		visual_x_offset += render_token(mut ctx, line, cur_token_bounds, cur_token_type, previous_type, syntax_def, min_x, x, max_width, visual_x_offset, y)
+		if cur_token_type != .whitespace {
+			previous_type = cur_token_type
 		}
 	}
 }
@@ -139,25 +139,25 @@ fn resolve_token_bounds(token_start int, token_end int, min_x int) ?TokenBounds 
 
 fn render_token(
 	mut ctx draw.Contextable,
-	line string, token_bounds TokenBounds,
-	token_type syntax.TokenType,
+	line string, cur_token_bounds TokenBounds,
+	cur_token_type syntax.TokenType,
 	previous_type syntax.TokenType,
 	syntax_def syntax.Syntax,
 	// same_type bool, min_x int,
 	min_x int, base_x int,
 	max_width int, x_offset int, y int
 ) int {
-	mut segment_to_render := line.runes()[token_bounds.start..token_bounds.end].string().replace("\t", " ".repeat(4))
+	mut segment_to_render := line.runes()[cur_token_bounds.start..cur_token_bounds.end].string().replace("\t", " ".repeat(4))
 	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
 	if segment_to_render.runes().len == 0 { return 0 }
 	// FIX(tauraamui) [27/05/2025]: need to adjust how and when this flag is set
 	// note: I'm now unsure what flag I am on about, likely will remove this note
 	resolved_token_type := match true {
-		token_type        == .comment { token_type }
+		cur_token_type        == .comment { cur_token_type }
 		segment_to_render in syntax_def.literals { syntax.TokenType.literal }
 		segment_to_render in syntax_def.keywords { syntax.TokenType.keyword }
 		segment_to_render in syntax_def.builtins { syntax.TokenType.builtin }
-		else { token_type }
+		else { cur_token_type }
 	}
 	if previous_type != resolved_token_type {
 		ctx.set_color(syntax.colors[resolved_token_type])
