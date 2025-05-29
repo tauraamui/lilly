@@ -18,7 +18,9 @@ import lib.draw
 
 enum State {
 	default
+	in_comment
 	in_block_comment
+	in_string
 }
 
 pub enum TokenType {
@@ -106,15 +108,25 @@ fn resolve_char_type(c_char rune) TokenType {
 }
 
 fn for_each_char(
-	index int, l_char rune, c_char rune, mut rune_count &int, mut token_count &int, mut tokens []Token, within_line_comment bool
+	index int,
+	l_char rune, c_char rune,
+	mut rune_count &int,
+	mut token_count &int,
+	mut tokens []Token,
+	within_line_comment bool
 ) TokenType {
 	last_char_type := resolve_char_type(l_char)
 	current_char_type := resolve_char_type(c_char)
 
+	token_type := match true {
+		within_line_comment { TokenType.comment }
+		else { last_char_type }
+	}
+
 	transition_occurred := last_char_type != current_char_type
 	if transition_occurred {
 		token := Token{
-			t_type: if within_line_comment { .comment } else { last_char_type }
+			t_type: token_type
 			start: index - rune_count
 			end: index
 		}
