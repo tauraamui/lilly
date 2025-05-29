@@ -11,12 +11,13 @@ mut context := build.context(
 )
 
 // BUILD TASKS
-context.task(name: "build", depends: ["generate-git-hash"], run: |self| system("v ./src -o lilly"))
-context.task(name: "build-prod", depends: ["generate-git-hash"], run: |self| system("v ./src -o ${app_name}"))
-context.task(name: "run", depends: ["generate-git-hash"], run: |self| system("v -g run ./src ."))
-context.task(name: "run-with-gap", depends: ["generate-git-hash"], run: |self| system("v -g run ./src -ugb ."))
-context.task(name: "run-debug-log", depends: ["generate-git-hash"], run: |self| system("v -g run ./src --log-level debug ."))
-context.task(name: "run-gui", depends: ["generate-git-hash"], run: |self| system("v -g -d gui run ./src ."))
+context.task(name: "build", depends: ["_generate-git-hash"], run: |self| system("v ./src -o lilly"))
+context.task(name: "build-prod", depends: ["_generate-git-hash"], run: |self| system("v ./src -o ${app_name}"))
+context.task(name: "run", depends: ["_generate-git-hash"], run: |self| system("v -g run ./src ."))
+context.task(name: "run-with-gap", depends: ["_generate-git-hash"], run: |self| system("v -g run ./src -ugb ."))
+context.task(name: "run-debug-log", depends: ["_generate-git-hash"], run: |self| system("v -g run ./src --log-level debug ."))
+context.task(name: "run-gui", depends: ["_generate-git-hash"], run: |self| system("v -g -d gui run ./src ."))
+context.task(name: "compile-make", run: |self| system("v -prod -skip-running make.vsh"))
 
 // TEST TASKS
 context.task(name: "test", run: |self| system("v -g test ./src"))
@@ -25,6 +26,7 @@ context.task(name: "verbose-test", run: |self| system("v -g -stats test ./src"))
 // EXPERIMENTS
 context.task(
 	name: "linux-clipboard",
+	help: "runs experiment to test linux C code clipboard integration"
 	run: fn (self build.Task) ! {
 		system("v -g run ./experiment/clipboard/x11.c.v")
 	}
@@ -32,7 +34,8 @@ context.task(
 
 context.task(
 	name: "emoji-grid",
-	depends: ["copy-emoji-grid-code"]
+	help: "runs experiment to test emoji grid rendering"
+	depends: ["_copy-emoji-grid-code"]
 	run: fn (self build.Task) ! {
 		system("v -g run ./src/emoji_grid.v")
 		rm("./src/emoji_grid.v")!
@@ -41,7 +44,8 @@ context.task(
 
 context.task(
 	name: "immediate-grid",
-	depends: ["copy-immediate-grid-code"]
+	help: "runs experiment to test immediate grid rendering"
+	depends: ["_copy-immediate-grid-code"]
 	run: fn (self build.Task) ! {
 		system("v -g run ./src/immediate_grid.v")
 		rm("./src/immediate_grid.v")!
@@ -51,6 +55,7 @@ context.task(
 // UTIL TASKS
 context.task(
 	name: "ansi-colour-codes",
+	help: "displays ansi colour code chart"
 	run: fn (self build.Task) ! {
 		print("\n   +  ")
 		for i := 0; i < 36; i++ {
@@ -74,6 +79,7 @@ context.task(
 )
 context.task(
 	name: "ansi-to-rgb",
+	help: "prompts for single ansi colour code and outputs the RGB components"
 	run: fn (self build.Task) ! {
 		ansi_num_to_convert := input("ANSI colour to convert to RGB: ")
 		c := strconv.atoi(ansi_num_to_convert) or { panic("invalid num: ${err}") }
@@ -99,6 +105,7 @@ context.task(
 
 context.task(
 	name: "rgb-to-ansi",
+	help: "prompts three times for rgb values and produces single ansi colour code"
 	run: fn (self build.Task) ! {
 		find_nearest_level := fn (levels []int, value int) int {
 			mut nearest_index := 0
@@ -146,16 +153,18 @@ context.task(
 
 // ARTIFACTS
 context.artifact(
-	name: "generate-git-hash",
+	name: "_generate-git-hash",
 	help: "generate .githash to contain latest commit of current branch to embed in builds",
 	run: |self| system("git log -n 1 --pretty=format:\"%h\" | tee ./src/.githash")
 )
 context.artifact(
-	name: "copy-emoji-grid-code",
+	name: "_copy-emoji-grid-code",
+	help: "internal tool, do not run this directly"
 	run: |self| cp("./experiment/tui_render/emoji_grid.v", "./src/emoji_grid.v")!
 )
 context.artifact(
-	name: "copy-immediate-grid-code",
+	name: "_copy-immediate-grid-code",
+	help: "internal tool, do not run this directly"
 	run: |self| cp("./experiment/tui_render/immediate_grid.v", "./src/immediate_grid.v")!
 )
 
