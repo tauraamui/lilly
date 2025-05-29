@@ -296,7 +296,7 @@ fn assert_line_3_tokens(line_3 string, line_3_tokens []Token) {
 	assert line_3_token_0.t_type == .whitespace
 
 	assert line_3[line_3_token_1.start..line_3_token_1.end] == "/*"
-	assert line_3_token_1.t_type == .other
+	assert line_3_token_1.t_type == .comment
 }
 
 fn assert_line_4_tokens(line_4 string, line_4_tokens []Token) {
