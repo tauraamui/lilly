@@ -169,12 +169,7 @@ fn render_token(
 		else { cur_token_type }
 	}
 
-	if prev_token := previous_token {
-		if prev_token.t_type() != resolved_token_type {
-			ctx.set_color(syntax.colors[resolved_token_type])
-		}
-	} else { ctx.set_color(syntax.colors[resolved_token_type]) }
-
+	ctx.set_color(syntax.colors[resolved_token_type])
 	ctx.draw_text(x_offset, y, segment_to_render)
 	return utf8_str_visible_length(segment_to_render)
 }
