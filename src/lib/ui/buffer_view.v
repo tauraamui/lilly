@@ -152,6 +152,7 @@ fn render_token(
 	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
 	if segment_to_render.runes().len == 0 { return 0 }
 	// FIX(tauraamui) [27/05/2025]: need to adjust how and when this flag is set
+	// note: I'm now unsure what flag I am on about, likely will remove this note
 	resolved_token_type := match true {
 		token_type        == .comment { token_type }
 		segment_to_render in syntax_def.literals { syntax.TokenType.literal }
