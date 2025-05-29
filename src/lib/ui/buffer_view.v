@@ -116,7 +116,6 @@ fn draw_text_line(
 	for token in line_tokens {
 		token_bounds := resolve_token_bounds(token.start(), token.end(), min_x) or { continue }
 		token_type := token.t_type()
-		same_type := previous_type == token_type
 		visual_x_offset += render_token(mut ctx, line, token_bounds, token_type, previous_type, syntax_def, min_x, x, max_width, visual_x_offset, y)
 		if token_type != .whitespace {
 			previous_type = token_type

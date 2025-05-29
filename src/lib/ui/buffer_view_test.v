@@ -157,6 +157,57 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 	assert drawn_text[..2] == line_one_expected_drawn_data
 }
 
+fn test_buffer_view_draws_1_line_as_multiple_segments_highlighted_as_expected() {
+	mut drawn_text := []DrawnText{}
+	mut drawn_text_ref := &drawn_text
+
+	mut set_fg_color := []draw.Color{}
+	mut set_fg_color_ref := &set_fg_color
+
+	mut drawn_rect := []DrawnRect{}
+	mut drawn_rect_ref := &drawn_rect
+
+	mut mock_ctx := MockContextable{
+		on_draw_cb: fn [mut drawn_text_ref] (x int, y int, text string) {
+			drawn_text_ref << DrawnText{ x: x, y: y, data: text }
+		}
+		on_draw_rect_cb: fn [mut drawn_rect_ref] (x int, y int, width int, height int) {
+			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
+		}
+		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
+			set_fg_color_ref << c
+		}
+	}
+
+	mut buf := buffer.Buffer.new("", false)
+	buf.lines << "fn name_of_function()"
+	mut buf_view := BufferView.new(&buf, [], 0)
+
+	x := 0
+	y := 0
+	width := 40
+	height := 10
+	min_x := 0
+	from_line_num := 0
+
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0)
+
+	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
+	assert drawn_rect == [
+		DrawnRect{ x: 2, y: 0, width: 39, height: 1 }
+	]
+
+	assert drawn_text.len == 9
+	assert set_fg_color.len == 8
+
+	line_one_expected_drawn_data := [
+		DrawnText{ x: 0, y: 0, data: "1" }, DrawnText{ x: 2, y: 0, data: "fn" },
+		DrawnText{ x: 4, y: 0, data: " " }, DrawnText{ x: 5, y: 0, data: "name_of_function" },
+		DrawnText{ x: 20, y: 0, data: "(" }, DrawnText{ x: 21, y: 0, data: ")" },
+	]
+	assert drawn_text == line_one_expected_drawn_data
+}
+
 fn test_buffer_view_draws_1_line_as_single_segment_single_emoji() {
 	mut drawn_text := []DrawnText{}
 	mut drawn_text_ref := &drawn_text
