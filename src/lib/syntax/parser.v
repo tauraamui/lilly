@@ -151,10 +151,32 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 		mut l_char := c_char
 		if i > 0 {
 			l_char = runes[i - 1]
-			if within_line_comment == false {
-				within_line_comment = l_char == `/` && c_char == `/`
-			}
 		}
+
+		parser.state = match parser.state {
+			.default {
+				match true {
+					l_char == `/` && c_char == `/` { .in_comment }
+					l_char == `/` && c_char == `*` { .in_block_comment }
+					c_char == `"` || c_char == `'` { .in_string }
+					else { parser.state }
+				}
+			}
+			.in_string {
+				if c_char == `"` || c_char == `'` { State.default } else { parser.state } // NOTE(tauraamui) [29/05/2025]: should differentiate between match start and end chars
+			}
+			.in_block_comment {
+				match true {
+					l_char == `*` && c_char == `/` { State.default }
+					else { parser.state }
+				}
+			}
+			else { parser.state }
+		}
+		if within_line_comment == false {
+			within_line_comment = l_char == `/` && c_char == `/`
+		}
+
 		token_type = for_each_char(i, l_char, c_char, mut &rune_count, mut &token_count, mut parser.tokens, within_line_comment)
 	}
 
