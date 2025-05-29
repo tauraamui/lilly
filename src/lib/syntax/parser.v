@@ -118,9 +118,14 @@ fn for_each_char(
 	last_char_type := resolve_char_type(l_char)
 	current_char_type := resolve_char_type(c_char)
 
-	token_type := match true {
-		parser_state == .in_comment { TokenType.comment }
-		else { last_char_type }
+	mut token_type := last_char_type
+	if last_char_type != .whitespace {
+		token_type = match parser_state {
+			.in_comment       { TokenType.comment }
+			.in_block_comment { TokenType.comment }
+			.in_string        { TokenType.string }
+			.default          { last_char_type }
+		}
 	}
 
 	transition_occurred := last_char_type != current_char_type
