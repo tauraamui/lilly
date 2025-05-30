@@ -514,8 +514,8 @@ fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes 
 		show_whitespace: false
 		clipboard:       _clipboard
 		buffer:          buff
-		buf_view:		ui.BufferView.new(&buff, syntaxes, syn_id)
 	}
+	res.buf_view = ui.BufferView.new(&res.buffer, syntaxes, syn_id)
 	res.path = res.buffer.file_path
 	res.cursor.selection_start_pos = Pos{-1, -1}
 	return res
@@ -1754,6 +1754,17 @@ fn (mut view View) dollar() {
 	view.cursor.pos.x = line.runes().len - 1
 }
 
+// inspiration for moving d into buffer
+/*
+fn (mut view View) backspace() {
+	pos := view.buffer.backspace(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
+	view.scroll_from_and_to()
+	return
+}
+*/
+
 fn (mut view View) d() {
 	match view.leader_state.mode {
 		.normal {
@@ -1770,8 +1781,11 @@ fn (mut view View) d() {
 					type: .block,
 					data: view.buffer.lines[index]
 				})
-				view.delete_line(index)
-				view.clamp_cursor_within_document_bounds()
+				// view.delete_line(index)
+				view.buffer.delete_line(index)
+				pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
+				view.cursor.pos.x = pos.x
+				view.cursor.pos.y = pos.y
 				view.leader_state.reset()
 			}
 		}
@@ -1782,9 +1796,11 @@ fn (mut view View) d() {
 				type: .block,
 				data: view.buffer.lines[start_index..end_index + 1].join("\n")
 			})
-			view.delete_line_range(start_index, end_index)
+			view.buffer.delete_line_range(start_index, end_index)
 			view.cursor.pos.y = start_index
-			view.clamp_cursor_within_document_bounds()
+			pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
+			view.cursor.pos.x = pos.x
+			view.cursor.pos.y = pos.y
 			view.leader_state.reset()
 		}
 		else {}
