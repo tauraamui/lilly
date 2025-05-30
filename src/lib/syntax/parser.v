@@ -164,21 +164,20 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 					l_char == `/` && c_char == `/` { .in_comment }
 					l_char == `/` && c_char == `*` { .in_block_comment }
 					c_char == `"` || c_char == `'` { .in_string }
-					else { parser.state }
+					else { State.default }
 				}
 			}
 			.in_string {
-				if c_char == `"` || c_char == `'` { State.default } else { parser.state } // NOTE(tauraamui) [29/05/2025]: should differentiate between match start and end chars
+				if c_char == `"` || c_char == `'` { State.default } else { State.in_string } // NOTE(tauraamui) [29/05/2025]: should differentiate between match start and end chars
 			}
 			.in_block_comment {
 				match true {
 					l_char == `*` && c_char == `/` { State.default }
-					else { parser.state }
+					else { State.in_block_comment }
 				}
 			}
 			else { parser.state }
 		}
-
 		token_type = for_each_char(i, l_char, c_char, mut &rune_count, mut &token_count, mut parser.tokens, parser.state)
 	}
 
