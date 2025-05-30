@@ -27,7 +27,7 @@ pub const colors := {
 	.keyword:             draw.Color{ 255, 95,  175 }
 	.literal:             draw.Color{ 0,  215, 255 }
 	.builtin:             draw.Color{ 130, 144, 250 }
-	.other:               draw.Color{ 255, 0,   0 }
+	.other:               draw.Color{ 200, 200, 235 }
 }
 
 pub struct Syntax {

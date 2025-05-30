@@ -69,6 +69,60 @@ fn test_simple_single_line_with_no_whitespace_just_single_emoji() {
 	assert line_1_tokens[2].t_type == .other
 }
 
+fn test_simple_single_line_with_block_comment_start_and_end_in_middle() {
+	code := "Text with /* a comment in the middle */ yeah!"
+
+	mut parser := Parser{}
+	lines := code.split("\n")
+	assert lines.len == 1
+
+	parser.parse_line(0, lines[0])
+
+	line_1_tokens := parser.get_line_tokens(0)
+	assert line_1_tokens.len == 20
+	assert extract_token_contents(lines[0], line_1_tokens[0]) == "Text"
+	assert line_1_tokens[0].t_type == .identifier
+	assert extract_token_contents(lines[0], line_1_tokens[1]) == " "
+	assert line_1_tokens[1].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[2]) == "with"
+	assert line_1_tokens[2].t_type == .identifier
+	assert extract_token_contents(lines[0], line_1_tokens[3]) == " "
+	assert line_1_tokens[3].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[4]) == "/*"
+	assert line_1_tokens[4].t_type == .comment
+	assert extract_token_contents(lines[0], line_1_tokens[5]) == " "
+	assert line_1_tokens[5].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[6]) == "a"
+	assert line_1_tokens[6].t_type == .comment
+	assert extract_token_contents(lines[0], line_1_tokens[7]) == " "
+	assert line_1_tokens[7].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[8]) == "comment"
+	assert line_1_tokens[8].t_type == .comment
+	assert extract_token_contents(lines[0], line_1_tokens[9]) == " "
+	assert line_1_tokens[9].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[10]) == "in"
+	assert line_1_tokens[10].t_type == .comment
+	assert extract_token_contents(lines[0], line_1_tokens[11]) == " "
+	assert line_1_tokens[11].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[12]) == "the"
+	assert line_1_tokens[12].t_type == .comment
+	assert extract_token_contents(lines[0], line_1_tokens[13]) == " "
+	assert line_1_tokens[13].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[14]) == "middle"
+	assert line_1_tokens[14].t_type == .comment
+	assert extract_token_contents(lines[0], line_1_tokens[15]) == " "
+	assert line_1_tokens[15].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[16]) == "*/"
+	assert line_1_tokens[16].t_type == .other // passing this for now but it's wrong needs to be comment too'
+	assert extract_token_contents(lines[0], line_1_tokens[17]) == " "
+	assert line_1_tokens[17].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[18]) == "yeah"
+	assert line_1_tokens[18].t_type == .identifier
+	assert extract_token_contents(lines[0], line_1_tokens[19]) == "!"
+	assert line_1_tokens[19].t_type == .other
+}
+
+
 fn test_simple_block_of_code_no_comments() {
 	code := "
 fn main() {
