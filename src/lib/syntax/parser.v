@@ -115,29 +115,31 @@ fn for_each_char(
 	mut tokens []Token,
 	parser_state State
 ) TokenType {
-	last_char_type := resolve_char_type(l_char)
 	current_char_type := resolve_char_type(c_char)
+	if l_char != rune(0) {
+		last_char_type := resolve_char_type(l_char)
 
-	mut token_type := last_char_type
-	if last_char_type != .whitespace {
-		token_type = match parser_state {
-			.in_comment       { TokenType.comment }
-			.in_block_comment { TokenType.comment }
-			.in_string        { TokenType.string }
-			.default          { last_char_type }
+		mut token_type := last_char_type
+		if last_char_type != .whitespace {
+			token_type = match parser_state {
+				.in_comment       { TokenType.comment }
+				.in_block_comment { TokenType.comment }
+				.in_string        { TokenType.string }
+				.default          { last_char_type }
+			}
 		}
-	}
 
-	transition_occurred := last_char_type != current_char_type
-	if transition_occurred {
-		token := Token{
-			t_type: token_type
-			start: index - rune_count
-			end: index
+		transition_occurred := last_char_type != current_char_type
+		if transition_occurred {
+			token := Token{
+				t_type: token_type
+				start: index - rune_count
+				end: index
+			}
+			tokens << token
+			token_count += 1
+			rune_count = 0
 		}
-		tokens << token
-		token_count += 1
-		rune_count = 0
 	}
 
 	rune_count += 1
@@ -153,7 +155,7 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 
 	mut token_type := TokenType.other
 	for i, c_char in runes {
-		mut l_char := c_char
+		mut l_char := rune(0)
 		if i > 0 {
 			l_char = runes[i - 1]
 		}
@@ -164,21 +166,20 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 					l_char == `/` && c_char == `/` { .in_comment }
 					l_char == `/` && c_char == `*` { .in_block_comment }
 					c_char == `"` || c_char == `'` { .in_string }
-					else { parser.state }
+					else { State.default }
 				}
 			}
 			.in_string {
-				if c_char == `"` || c_char == `'` { State.default } else { parser.state } // NOTE(tauraamui) [29/05/2025]: should differentiate between match start and end chars
+				if c_char == `"` || c_char == `'` { State.default } else { State.in_string } // NOTE(tauraamui) [29/05/2025]: should differentiate between match start and end chars
 			}
 			.in_block_comment {
 				match true {
 					l_char == `*` && c_char == `/` { State.default }
-					else { parser.state }
+					else { State.in_block_comment }
 				}
 			}
 			else { parser.state }
 		}
-
 		token_type = for_each_char(i, l_char, c_char, mut &rune_count, mut &token_count, mut parser.tokens, parser.state)
 	}
 
