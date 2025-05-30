@@ -173,6 +173,22 @@ pub fn (mut buffer Buffer) enter(pos Pos) ?Pos {
 	return cursor
 }
 
+pub fn (mut buffer Buffer) delete_line(index int) {
+	buffer.delete_line_range(index, index)
+}
+
+pub fn (mut buffer Buffer) delete_line_range(start int, end int) {
+	if start == end {
+		buffer.lines.delete(start)
+		return
+	}
+	before := buffer.lines[..start]
+	after  := buffer.lines[end + 1..]
+
+	buffer.lines = before
+	buffer.lines << after
+}
+
 fn resolve_whitespace_prefix_from_line_str(line string) string {
 	mut prefix_ends := 0
 	for i, c in line {
@@ -402,7 +418,7 @@ pub fn (mut buffer Buffer) replace_char(pos Pos, code u8, str string) {
 	buffer.lines[cursor.y] = "${start.string()}${str}${end.string()}"
 }
 
-fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
+pub fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
 	mut cursor := pos
 	if pos.y < 0 {
 		cursor.y = 0
@@ -413,7 +429,7 @@ fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
 	return cursor
 }
 
-fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
+pub fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
 	// mut clamped := buffer.clamp_cursor_within_document_bounds(pos)
 	mut clamped := pos
 	if clamped.x < 0 { clamped.x = 0 }
