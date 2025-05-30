@@ -18,7 +18,9 @@ import lib.draw
 
 enum State {
 	default
+	in_comment
 	in_block_comment
+	in_string
 }
 
 pub enum TokenType {
@@ -106,15 +108,30 @@ fn resolve_char_type(c_char rune) TokenType {
 }
 
 fn for_each_char(
-	index int, l_char rune, c_char rune, mut rune_count &int, mut token_count &int, mut tokens []Token, within_line_comment bool
+	index int,
+	l_char rune, c_char rune,
+	mut rune_count &int,
+	mut token_count &int,
+	mut tokens []Token,
+	parser_state State
 ) TokenType {
 	last_char_type := resolve_char_type(l_char)
 	current_char_type := resolve_char_type(c_char)
 
+	mut token_type := last_char_type
+	if last_char_type != .whitespace {
+		token_type = match parser_state {
+			.in_comment       { TokenType.comment }
+			.in_block_comment { TokenType.comment }
+			.in_string        { TokenType.string }
+			.default          { last_char_type }
+		}
+	}
+
 	transition_occurred := last_char_type != current_char_type
 	if transition_occurred {
 		token := Token{
-			t_type: if within_line_comment { .comment } else { last_char_type }
+			t_type: token_type
 			start: index - rune_count
 			end: index
 		}
@@ -132,23 +149,48 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 	mut token_count         := 0
 	mut rune_count          := 0
 	runes                   := line.runes()
-	mut within_line_comment := false
+	if parser.state == .in_comment { parser.state = .default } // single line comments terminate at the end of the line
 
 	mut token_type := TokenType.other
 	for i, c_char in runes {
 		mut l_char := c_char
 		if i > 0 {
 			l_char = runes[i - 1]
-			if within_line_comment == false {
-				within_line_comment = l_char == `/` && c_char == `/`
-			}
 		}
-		token_type = for_each_char(i, l_char, c_char, mut &rune_count, mut &token_count, mut parser.tokens, within_line_comment)
+
+		parser.state = match parser.state {
+			.default {
+				match true {
+					l_char == `/` && c_char == `/` { .in_comment }
+					l_char == `/` && c_char == `*` { .in_block_comment }
+					c_char == `"` || c_char == `'` { .in_string }
+					else { parser.state }
+				}
+			}
+			.in_string {
+				if c_char == `"` || c_char == `'` { State.default } else { parser.state } // NOTE(tauraamui) [29/05/2025]: should differentiate between match start and end chars
+			}
+			.in_block_comment {
+				match true {
+					l_char == `*` && c_char == `/` { State.default }
+					else { parser.state }
+				}
+			}
+			else { parser.state }
+		}
+
+		token_type = for_each_char(i, l_char, c_char, mut &rune_count, mut &token_count, mut parser.tokens, parser.state)
 	}
 
+	token_type = match parser.state {
+		.in_comment       { TokenType.comment }
+		.in_block_comment { TokenType.comment }
+		.in_string        { TokenType.string }
+		else              { token_type }
+	}
 	if rune_count > 0 {
 		token := Token{
-			t_type: if within_line_comment { .comment } else { token_type }
+			t_type: token_type
 			start: runes.len - rune_count
 			end: runes.len
 		}

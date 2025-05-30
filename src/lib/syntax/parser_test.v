@@ -147,27 +147,27 @@ fn main() { // this is a main function wooo
 	assert extract_token_contents(lines[1], line_1_tokens[7]) == "//"
 	assert line_1_tokens[7].t_type == .comment
 	assert extract_token_contents(lines[1], line_1_tokens[8]) == " "
-	assert line_1_tokens[8].t_type == .comment
+	assert line_1_tokens[8].t_type == .whitespace
 	assert extract_token_contents(lines[1], line_1_tokens[9]) == "this"
 	assert line_1_tokens[9].t_type == .comment
 	assert extract_token_contents(lines[1], line_1_tokens[10]) == " "
-	assert line_1_tokens[10].t_type == .comment
+	assert line_1_tokens[10].t_type == .whitespace
 	assert extract_token_contents(lines[1], line_1_tokens[11]) == "is"
 	assert line_1_tokens[11].t_type == .comment
 	assert extract_token_contents(lines[1], line_1_tokens[12]) == " "
-	assert line_1_tokens[12].t_type == .comment
+	assert line_1_tokens[12].t_type == .whitespace
 	assert extract_token_contents(lines[1], line_1_tokens[13]) == "a"
 	assert line_1_tokens[13].t_type == .comment
 	assert extract_token_contents(lines[1], line_1_tokens[14]) == " "
-	assert line_1_tokens[14].t_type == .comment
+	assert line_1_tokens[14].t_type == .whitespace
 	assert extract_token_contents(lines[1], line_1_tokens[15]) == "main"
 	assert line_1_tokens[15].t_type == .comment
 	assert extract_token_contents(lines[1], line_1_tokens[16]) == " "
-	assert line_1_tokens[16].t_type == .comment
+	assert line_1_tokens[16].t_type == .whitespace
 	assert extract_token_contents(lines[1], line_1_tokens[17]) == "function"
 	assert line_1_tokens[17].t_type == .comment
 	assert extract_token_contents(lines[1], line_1_tokens[18]) == " "
-	assert line_1_tokens[18].t_type == .comment
+	assert line_1_tokens[18].t_type == .whitespace
 	assert extract_token_contents(lines[1], line_1_tokens[19]) == "wooo"
 	assert line_1_tokens[19].t_type == .comment
 
@@ -235,25 +235,25 @@ fn assert_line_1_tokens(line_1 string, line_1_tokens []Token) {
 	assert line_1_token_0.t_type == .comment
 
 	assert line_1[line_1_token_1.start..line_1_token_1.end] == " "
-	assert line_1_token_1.t_type == .comment
+	assert line_1_token_1.t_type == .whitespace
 
 	assert line_1[line_1_token_2.start..line_1_token_2.end] == "This"
 	assert line_1_token_2.t_type == .comment
 
 	assert line_1[line_1_token_3.start..line_1_token_3.end] == " "
-	assert line_1_token_3.t_type == .comment
+	assert line_1_token_3.t_type == .whitespace
 
 	assert line_1[line_1_token_4.start..line_1_token_4.end] == "is"
 	assert line_1_token_4.t_type == .comment
 
 	assert line_1[line_1_token_5.start..line_1_token_5.end] == " "
-	assert line_1_token_5.t_type == .comment
+	assert line_1_token_5.t_type == .whitespace
 
 	assert line_1[line_1_token_6.start..line_1_token_6.end] == "a"
 	assert line_1_token_6.t_type == .comment
 
 	assert line_1[line_1_token_7.start..line_1_token_7.end] == " "
-	assert line_1_token_7.t_type == .comment
+	assert line_1_token_7.t_type == .whitespace
 
 	assert line_1[line_1_token_8.start..line_1_token_8.end] == "comment"
 	assert line_1_token_8.t_type == .comment
@@ -296,7 +296,7 @@ fn assert_line_3_tokens(line_3 string, line_3_tokens []Token) {
 	assert line_3_token_0.t_type == .whitespace
 
 	assert line_3[line_3_token_1.start..line_3_token_1.end] == "/*"
-	assert line_3_token_1.t_type == .other
+	assert line_3_token_1.t_type == .comment
 }
 
 fn assert_line_4_tokens(line_4 string, line_4_tokens []Token) {
@@ -312,19 +312,19 @@ fn assert_line_4_tokens(line_4 string, line_4_tokens []Token) {
 	assert line_4_token_0.t_type == .whitespace
 
 	assert line_4[line_4_token_1.start..line_4_token_1.end] == "*"
-	assert line_4_token_1.t_type == .other
+	assert line_4_token_1.t_type == .comment
 
 	assert line_4[line_4_token_2.start..line_4_token_2.end] == " "
 	assert line_4_token_2.t_type == .whitespace
 
 	assert line_4[line_4_token_3.start..line_4_token_3.end] == "Block"
-	assert line_4_token_3.t_type == .identifier
+	assert line_4_token_3.t_type == .comment
 
 	assert line_4[line_4_token_4.start..line_4_token_4.end] == " "
 	assert line_4_token_4.t_type == .whitespace
 
 	assert line_4[line_4_token_5.start..line_4_token_5.end] == "comment"
-	assert line_4_token_5.t_type == .identifier
+	assert line_4_token_5.t_type == .comment
 }
 
 fn assert_line_5_tokens(line_5 string, line_5_tokens []Token) {
