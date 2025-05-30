@@ -514,8 +514,8 @@ fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes 
 		show_whitespace: false
 		clipboard:       _clipboard
 		buffer:          buff
-		buf_view:		ui.BufferView.new(&buff, syntaxes, syn_id)
 	}
+	res.buf_view = ui.BufferView.new(&res.buffer, syntaxes, syn_id)
 	res.path = res.buffer.file_path
 	res.cursor.selection_start_pos = Pos{-1, -1}
 	return res
