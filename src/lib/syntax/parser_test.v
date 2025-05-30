@@ -336,6 +336,37 @@ fn main() {
 	assert line_3_tokens.len == 6
 	assert extract_token_contents(lines[3], line_3_tokens[0]) == "fn"
 	assert line_3_tokens[0].t_type == .comment
+	assert extract_token_contents(lines[3], line_3_tokens[1]) == " "
+	assert line_3_tokens[1].t_type == .whitespace
+	assert extract_token_contents(lines[3], line_3_tokens[2]) == "main"
+	assert line_3_tokens[2].t_type == .comment
+	assert extract_token_contents(lines[3], line_3_tokens[3]) == "()"
+	assert line_3_tokens[3].t_type == .comment
+	assert extract_token_contents(lines[3], line_3_tokens[4]) == " "
+	assert line_3_tokens[4].t_type == .whitespace
+	assert extract_token_contents(lines[3], line_3_tokens[5]) == "{"
+	assert line_3_tokens[5].t_type == .comment
+
+	line_4_tokens := parser.get_line_tokens(4)
+	assert line_4_tokens.len == 4
+	assert extract_token_contents(lines[4], line_4_tokens[0]) == `\t`.str()
+	assert line_4_tokens[0].t_type == .whitespace
+	assert extract_token_contents(lines[4], line_4_tokens[1]) == "return"
+	assert line_4_tokens[1].t_type == .comment
+	assert extract_token_contents(lines[4], line_4_tokens[2]) == " "
+	assert line_4_tokens[2].t_type == .whitespace
+	assert extract_token_contents(lines[4], line_4_tokens[3]) == "10"
+	assert line_4_tokens[3].t_type == .comment
+
+	line_5_tokens := parser.get_line_tokens(5)
+	assert line_5_tokens.len == 1
+	assert extract_token_contents(lines[5], line_5_tokens[0]) == "*/"
+	assert line_5_tokens[0].t_type == .comment
+
+	line_6_tokens := parser.get_line_tokens(6)
+	assert line_6_tokens.len == 1
+	assert extract_token_contents(lines[6], line_6_tokens[0]) == "}"
+	assert line_6_tokens[0].t_type == .other
 }
 
 fn extract_token_contents(data string, token Token) string {
