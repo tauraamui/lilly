@@ -115,29 +115,31 @@ fn for_each_char(
 	mut tokens []Token,
 	parser_state State
 ) TokenType {
-	last_char_type := resolve_char_type(l_char)
 	current_char_type := resolve_char_type(c_char)
+	if l_char != rune(0) {
+		last_char_type := resolve_char_type(l_char)
 
-	mut token_type := last_char_type
-	if last_char_type != .whitespace {
-		token_type = match parser_state {
-			.in_comment       { TokenType.comment }
-			.in_block_comment { TokenType.comment }
-			.in_string        { TokenType.string }
-			.default          { last_char_type }
+		mut token_type := last_char_type
+		if last_char_type != .whitespace {
+			token_type = match parser_state {
+				.in_comment       { TokenType.comment }
+				.in_block_comment { TokenType.comment }
+				.in_string        { TokenType.string }
+				.default          { last_char_type }
+			}
 		}
-	}
 
-	transition_occurred := last_char_type != current_char_type
-	if transition_occurred {
-		token := Token{
-			t_type: token_type
-			start: index - rune_count
-			end: index
+		transition_occurred := last_char_type != current_char_type
+		if transition_occurred {
+			token := Token{
+				t_type: token_type
+				start: index - rune_count
+				end: index
+			}
+			tokens << token
+			token_count += 1
+			rune_count = 0
 		}
-		tokens << token
-		token_count += 1
-		rune_count = 0
 	}
 
 	rune_count += 1
@@ -153,7 +155,7 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 
 	mut token_type := TokenType.other
 	for i, c_char in runes {
-		mut l_char := c_char
+		mut l_char := rune(0)
 		if i > 0 {
 			l_char = runes[i - 1]
 		}
