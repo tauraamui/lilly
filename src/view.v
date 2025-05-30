@@ -1950,6 +1950,7 @@ fn (mut view View) shift_a() {
 }
 
 fn (mut view View) y() {
+	defer { view.leader_state.reset() }
 	match view.leader_state.mode {
 		.visual {
 			start := view.cursor.selection_start()
@@ -1983,7 +1984,6 @@ fn (mut view View) y() {
 			})
 			view.cursor.pos.y = start_index
 			view.clamp_cursor_within_document_bounds()
-			view.leader_state.reset()
 		}
 		else {}
 	}
