@@ -33,6 +33,10 @@ mut:
 }
 
 pub fn new() Clipboard {
+	$if test {
+		return new_fallback_clipboard()
+	}
+
 	$if darwin {
 		return new_darwin_clipboard()
 	}
