@@ -20,8 +20,8 @@ context.task(name: "run-gui", depends: ["_generate-git-hash"], run: |self| syste
 context.task(name: "compile-make", run: |self| system("v -prod -skip-running make.vsh"))
 
 // TEST TASKS
-context.task(name: "test", run: |self| system("v -g test ./src"))
-context.task(name: "verbose-test", run: |self| system("v -g -stats test ./src"))
+context.task(name: "test", run: |self| exit(system("v -g test ./src")))
+context.task(name: "verbose-test", run: |self| exit(system("v -g -stats test ./src")))
 
 // EXPERIMENTS
 context.task(
