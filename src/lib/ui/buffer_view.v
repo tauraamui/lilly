@@ -101,6 +101,8 @@ fn draw_line_number(
 	ctx.set_color(line_num_fg_color)
 
 	// line_num_str := "${document_line_num + 1}"
+	// NOTE(tauraamui) [04/06/2025]: there's a fair amount of repeatition in this match
+	//                               but I think it's probably fine
 	line_num_str := match relative_line_nums {
 		true {
 			match document_line_num == cursor_y_pos {
