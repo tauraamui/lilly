@@ -100,7 +100,6 @@ fn draw_line_number(
 	defer { ctx.reset_color() }
 	ctx.set_color(line_num_fg_color)
 
-	// line_num_str := "${document_line_num + 1}"
 	// NOTE(tauraamui) [04/06/2025]: there's a fair amount of repeatition in this match
 	//                               but I think it's probably fine
 	line_num_str := match relative_line_nums {
@@ -124,26 +123,6 @@ fn draw_line_number(
 
 	ctx.draw_text(x - line_num_str.runes().len, y, line_num_str)
 }
-
-/*
-fn (mut view View) draw_text_line_number(mut ctx draw.Contextable, y int) {
-	cursor_screenspace_y := view.cursor.pos.y - view.from
-	ctx.set_color(r: 117, g: 118, b: 120)
-
-	mut line_num_str := '${view.from + y + 1}'
-	if view.config.relative_line_numbers {
-		if y < cursor_screenspace_y {
-			line_num_str = '${cursor_screenspace_y - y}'
-		} else if cursor_screenspace_y == y {
-			line_num_str = '${view.from + y + 1}'
-		} else if y > cursor_screenspace_y {
-			line_num_str = '${y - cursor_screenspace_y}'
-		}
-	}
-	ctx.draw_text(view.x - line_num_str.runes().len - 1, y, line_num_str)
-	ctx.reset_color()
-}
-*/
 
 fn draw_text_line(
 	mut ctx draw.Contextable,
