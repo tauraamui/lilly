@@ -61,9 +61,8 @@ pub fn (mut buf_view BufferView) draw(
 
 		// draw line number
 		draw_line_number(
-			mut ctx, x, y,
-			screenspace_x_offset, screenspace_y_offset,
-			document_line_num, cursor_y_pos, relative_line_nums
+			mut ctx, x + screenspace_x_offset, y + screenspace_y_offset,
+			document_line_num, cursor_y_pos, from_line_num, relative_line_nums
 		)
 
 		is_cursor_line := document_line_num == cursor_y_pos
@@ -96,8 +95,7 @@ const line_num_fg_color = draw.Color{ r: 117, g: 118, b: 120 }
 fn draw_line_number(
 	mut ctx draw.Contextable,
 	x int, y int,
-	screenspace_x_offset int, screenspace_y_offset int,
-	document_line_num int, cursor_y_pos int, relative_line_nums bool
+	document_line_num int, cursor_y_pos int, from int, relative_line_nums bool
 ) {
 	defer { ctx.reset_color() }
 	ctx.set_color(line_num_fg_color)
@@ -107,7 +105,14 @@ fn draw_line_number(
 		true {
 			match document_line_num == cursor_y_pos {
 				true { "${document_line_num + 1}" }
-				else { "x" }
+				else {
+					cursor_screenspace_y := cursor_y_pos - from
+					match true {
+						y < cursor_screenspace_y { "${cursor_screenspace_y - y}" }
+						y > cursor_screenspace_y { "${y - cursor_screenspace_y}" }
+						else { "${document_line_num + 1}" }
+					}
+				}
 			}
 		}
 		else {
@@ -115,9 +120,7 @@ fn draw_line_number(
 		}
 	}
 
-	xx := x + screenspace_x_offset
-	yy := y + screenspace_y_offset
-	ctx.draw_text(xx - line_num_str.runes().len, yy, line_num_str)
+	ctx.draw_text(x - line_num_str.runes().len, y, line_num_str)
 }
 
 /*
