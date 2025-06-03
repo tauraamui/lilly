@@ -42,7 +42,8 @@ pub fn (mut buf_view BufferView) draw(
 	width int, height int,
 	from_line_num int,
 	min_x int,
-	cursor_y_pos int
+	cursor_y_pos int,
+	relative_line_nums bool
 ) {
 	if buf_view.buf == unsafe { nil } { return }
 	syntax_def := buf_view.syntaxes[buf_view.syntax_id] or { syntax.Syntax{} }
@@ -59,7 +60,7 @@ pub fn (mut buf_view BufferView) draw(
 		if document_line_num < from_line_num { continue }
 
 		// draw line number
-		draw_line_number(mut ctx, x + screenspace_x_offset, y + screenspace_y_offset, document_line_num)
+		draw_line_number(mut ctx, x + screenspace_x_offset, y + screenspace_y_offset, document_line_num, cursor_y_pos, relative_line_nums)
 
 		is_cursor_line := document_line_num == cursor_y_pos
 		if is_cursor_line {
@@ -88,13 +89,46 @@ pub fn (mut buf_view BufferView) draw(
 
 const line_num_fg_color = draw.Color{ r: 117, g: 118, b: 120 }
 
-fn draw_line_number(mut ctx draw.Contextable, x int, y int, line_num int) {
+fn draw_line_number(
+	mut ctx draw.Contextable, x int, y int, line_num int, cursor_y_pos int, relative_line_nums bool
+) {
 	defer { ctx.reset_color() }
 	ctx.set_color(line_num_fg_color)
 
-	mut line_num_str := "${line_num + 1}"
+	// mut line_num_str := "${line_num + 1}"
+	line_num_str := match relative_line_nums {
+		true {
+			match true {
+				y < cursor_y_pos { "${cursor_y_pos - y}" }
+				y > cursor_y_pos { "${y - cursor_y_pos}" }
+				else { "${line_num + 1}" }
+			}
+		}
+		else { "${line_num + 1}" }
+	}
+	// line_num_str := if relative_line_nums { "${line_num + 1}" }
 	ctx.draw_text(x - line_num_str.runes().len, y, line_num_str)
 }
+
+/*
+fn (mut view View) draw_text_line_number(mut ctx draw.Contextable, y int) {
+	cursor_screenspace_y := view.cursor.pos.y - view.from
+	ctx.set_color(r: 117, g: 118, b: 120)
+
+	mut line_num_str := '${view.from + y + 1}'
+	if view.config.relative_line_numbers {
+		if y < cursor_screenspace_y {
+			line_num_str = '${cursor_screenspace_y - y}'
+		} else if cursor_screenspace_y == y {
+			line_num_str = '${view.from + y + 1}'
+		} else if y > cursor_screenspace_y {
+			line_num_str = '${y - cursor_screenspace_y}'
+		}
+	}
+	ctx.draw_text(view.x - line_num_str.runes().len - 1, y, line_num_str)
+	ctx.reset_color()
+}
+*/
 
 fn draw_text_line(
 	mut ctx draw.Contextable,

@@ -503,17 +503,17 @@ fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes 
 	file_path := buff.file_path
 	syn_id := resolve_syntax_id(syntaxes, os.file_ext(file_path))
 	mut res := View{
-		log:             _log
-		branch:          branch
-		syntaxes:        syntaxes
+		log:                _log
+		branch:             branch
+		syntaxes:           syntaxes
 		current_syntax_idx: syn_id
-		file_path:       file_path
-		config:          config
-		leader_key:      config.leader_key
-		leader_state:     ViewLeaderState{ mode: .normal }
-		show_whitespace: false
-		clipboard:       _clipboard
-		buffer:          buff
+		file_path:          file_path
+		config:             config
+		leader_key:         config.leader_key
+		leader_state:       ViewLeaderState{ mode: .normal }
+		show_whitespace:    false
+		clipboard:          _clipboard
+		buffer:             buff
 	}
 	res.buf_view = ui.BufferView.new(&res.buffer, syntaxes, syn_id)
 	res.path = res.buffer.file_path
@@ -605,15 +605,16 @@ fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
 fn (mut view View) draw_x(mut ctx draw.Contextable) {
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
-	// draw_lines_from := 0
 	view.update_to() // NOTE(tauraamui) [18/03/2025]: yes, I shouldn't need to keep calling this
 					 // anymore, seeing as the buffer_view just works off of the relative "from" and
 					 // the given height it is told to work within, but if we don't call it, the
 					 // cursor won't move, so... *sniff sniff*, smells like toxic tech debt, yayyyy!
 	view.buf_view.draw(
-		mut ctx, 0, 0, ctx.window_width(), ctx.window_height() - 2, view.from, 0, view.cursor.pos.y
+		mut ctx, 0, 0,
+		ctx.window_width(), ctx.window_height() - 2,
+		view.from, 0, view.cursor.pos.y,
+		view.config.relative_line_numbers
 	)
-	// view.buf_view.draw(mut ctx, ctx.window_width() / 2, 0, ctx.window_width() / 2, ctx.window_height() - 2, 1000)
 
 	ui.draw_status_line(
 		mut ctx, ui.Status{
@@ -639,8 +640,8 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
 	view.update_to()
-	// view.draw_x(mut ctx)
-	view.draw_document(mut ctx)
+	view.draw_x(mut ctx)
+	// view.draw_document(mut ctx)
 
 	ui.draw_status_line(
 		mut ctx, ui.Status{
