@@ -42,7 +42,8 @@ pub fn (mut buf_view BufferView) draw(
 	width int, height int,
 	from_line_num int,
 	min_x int,
-	cursor_y_pos int
+	cursor_y_pos int,
+	relative_line_nums bool
 ) {
 	if buf_view.buf == unsafe { nil } { return }
 	syntax_def := buf_view.syntaxes[buf_view.syntax_id] or { syntax.Syntax{} }
@@ -59,7 +60,10 @@ pub fn (mut buf_view BufferView) draw(
 		if document_line_num < from_line_num { continue }
 
 		// draw line number
-		draw_line_number(mut ctx, x + screenspace_x_offset, y + screenspace_y_offset, document_line_num)
+		draw_line_number(
+			mut ctx, x + screenspace_x_offset, y + screenspace_y_offset,
+			document_line_num, cursor_y_pos, from_line_num, relative_line_nums
+		)
 
 		is_cursor_line := document_line_num == cursor_y_pos
 		if is_cursor_line {
@@ -88,11 +92,35 @@ pub fn (mut buf_view BufferView) draw(
 
 const line_num_fg_color = draw.Color{ r: 117, g: 118, b: 120 }
 
-fn draw_line_number(mut ctx draw.Contextable, x int, y int, line_num int) {
+fn draw_line_number(
+	mut ctx draw.Contextable,
+	x int, y int,
+	document_line_num int, cursor_y_pos int, from int, relative_line_nums bool
+) {
 	defer { ctx.reset_color() }
 	ctx.set_color(line_num_fg_color)
 
-	mut line_num_str := "${line_num + 1}"
+	// NOTE(tauraamui) [04/06/2025]: there's a fair amount of repeatition in this match
+	//                               but I think it's probably fine
+	line_num_str := match relative_line_nums {
+		true {
+			match document_line_num == cursor_y_pos {
+				true { "${document_line_num + 1}" }
+				else {
+					cursor_screenspace_y := cursor_y_pos - from
+					match true {
+						y < cursor_screenspace_y { "${cursor_screenspace_y - y}" }
+						y > cursor_screenspace_y { "${y - cursor_screenspace_y}" }
+						else { "${document_line_num + 1}" }
+					}
+				}
+			}
+		}
+		else {
+			"${document_line_num + 1}"
+		}
+	}
+
 	ctx.draw_text(x - line_num_str.runes().len, y, line_num_str)
 }
 
