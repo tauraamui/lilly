@@ -278,7 +278,7 @@ fn main() {
 	}
 
 	ctx, run := draw.new_context(
-		default_bg_color:     if bg_color := cfg.background_color { bg_color } else { default_bg_color }
+		default_bg_color:     cfg.background_color
 		render_debug:         opts.render_debug_mode
 		user_data:            app
 		event_fn:             event
