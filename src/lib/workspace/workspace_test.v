@@ -206,12 +206,13 @@ fn test_open_workspace_files_but_fallsback_to_embedded_config() {
 	assert wrkspace.config == Config{
 		leader_key:                ' '
 		relative_line_numbers:     true
+		insert_tabs_not_spaces: true
 		selection_highlight_color: tui.Color{
 			r: 96
 			g: 138
 			b: 143
 		}
-		insert_tabs_not_spaces: true
+		background_color: ?tui.Color{ r: 59, g: 34, b: 76 }
 	}
 }
 
@@ -253,11 +254,12 @@ fn test_open_workspace_resolves_git_branch() {
 	assert wrkspace.config == Config{
 		leader_key:                ' '
 		relative_line_numbers:     true
+		insert_tabs_not_spaces: true
 		selection_highlight_color: tui.Color{
 			r: 96
 			g: 138
 			b: 143
 		}
-		insert_tabs_not_spaces: true
+		background_color: ?tui.Color{ r: 59, g: 34, b: 76 }
 	}
 }
