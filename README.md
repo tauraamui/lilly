@@ -42,7 +42,7 @@ motions. The end vision is a one to one replacement/equivalent functionality for
 
 You can see what other tasks are available to run with `./make.vsh --tasks`
 
-(you can compile make.vsh into a binary to make executing tasks as fast as possible, use `v -prod -skip-running make.vsh`)
+(you can compile make.vsh into a binary to make executing tasks as fast as possible, use `./make.vsh compile-make` or `v -prod -skip-running make.vsh`)
 
 ### Not convinced?
 
