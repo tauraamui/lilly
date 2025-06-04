@@ -99,10 +99,12 @@ pub fn (mut parser Parser) parse_lines(lines []string) {
 }
 
 fn resolve_char_type(c_char rune) TokenType {
+	// Default classification
 	return match c_char {
 		` `, `\t` { .whitespace }
-		`a` ... `z`, `A` ... `Z` { .identifier }
-		`0` ... `9` { .number }
+		`a`...`z`, `A`...`Z` { .identifier }
+		`0`...`9` { .number }
+		`"`, `'` { .string }  // quotes should be string tokens
 		else { .other }
 	}
 }
@@ -160,6 +162,9 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 			l_char = runes[i - 1]
 		}
 
+		// store the previous state before updating
+		previous_state := parser.state
+
 		parser.state = match parser.state {
 			.default {
 				match true {
@@ -170,7 +175,7 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 				}
 			}
 			.in_string {
-				if c_char == `"` || c_char == `'` { State.default } else { State.in_string } // NOTE(tauraamui) [29/05/2025]: should differentiate between match start and end chars
+				if c_char == `"` || c_char == `'` { State.default } else { State.in_string }
 			}
 			.in_block_comment {
 				match true {
@@ -180,7 +185,9 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 			}
 			else { parser.state }
 		}
-		token_type = for_each_char(i, l_char, c_char, mut &rune_count, mut &token_count, mut parser.tokens, parser.state)
+
+		// use previous_state for classifying the previous character
+		token_type = for_each_char(i, l_char, c_char, mut &rune_count, mut &token_count, mut parser.tokens, previous_state)
 	}
 
 	token_type = match parser.state {
@@ -189,6 +196,7 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 		.in_string        { TokenType.string }
 		else              { token_type }
 	}
+
 	if rune_count > 0 {
 		token := Token{
 			t_type: token_type

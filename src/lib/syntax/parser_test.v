@@ -50,6 +50,115 @@ fn test_simple_single_line_with_no_whitespace_no_numbers() {
 	assert line_1_tokens[0].t_type == .identifier
 }
 
+fn test_simple_single_line_with_println_statement_with_string_content() {
+	code := 'println("This is text being printed")'
+
+	mut parser := Parser{}
+	lines := code.split("\n")
+	assert lines.len == 1
+
+	parser.parse_line(0, lines[0])
+
+	line_1_tokens := parser.get_line_tokens(0)
+	assert line_1_tokens.len == 14
+	assert extract_token_contents(lines[0], line_1_tokens[0]) == "println"
+	assert line_1_tokens[0].t_type == .identifier
+	assert extract_token_contents(lines[0], line_1_tokens[1]) == "("
+	assert line_1_tokens[1].t_type == .other
+	assert extract_token_contents(lines[0], line_1_tokens[2]) == '"'
+	assert line_1_tokens[2].t_type == .string
+	assert extract_token_contents(lines[0], line_1_tokens[3]) == "This"
+	assert line_1_tokens[3].t_type == .string
+	assert extract_token_contents(lines[0], line_1_tokens[4]) == " "
+	assert line_1_tokens[4].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[5]) == "is"
+	assert line_1_tokens[5].t_type == .string
+	assert extract_token_contents(lines[0], line_1_tokens[6]) == " "
+	assert line_1_tokens[6].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[7]) == "text"
+	assert line_1_tokens[7].t_type == .string
+	assert extract_token_contents(lines[0], line_1_tokens[8]) == " "
+	assert line_1_tokens[8].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[9]) == "being"
+	assert line_1_tokens[9].t_type == .string
+	assert extract_token_contents(lines[0], line_1_tokens[10]) == " "
+	assert line_1_tokens[10].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[11]) == "printed"
+	assert line_1_tokens[11].t_type == .string
+	assert extract_token_contents(lines[0], line_1_tokens[12]) == '"'
+	assert line_1_tokens[12].t_type == .string
+	assert extract_token_contents(lines[0], line_1_tokens[13]) == ")"
+	assert line_1_tokens[13].t_type == .other
+}
+
+
+fn test_simple_single_line_with_string_in_the_middle() {
+	code := 'This is a line of text "with quotes in the middle" of it'
+
+	mut parser := Parser{}
+	lines := code.split("\n")
+	assert lines.len == 1
+
+	parser.parse_line(0, lines[0])
+
+	line_1_tokens := parser.get_line_tokens(0)
+	assert line_1_tokens.len == 27
+	assert extract_token_contents(lines[0], line_1_tokens[0]) == "This"
+	assert line_1_tokens[0].t_type == .identifier
+	assert extract_token_contents(lines[0], line_1_tokens[1]) == " "
+	assert line_1_tokens[1].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[2]) == "is"
+	assert line_1_tokens[2].t_type == .identifier
+	assert extract_token_contents(lines[0], line_1_tokens[3]) == " "
+	assert line_1_tokens[3].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[4]) == "a"
+	assert line_1_tokens[4].t_type == .identifier
+	assert extract_token_contents(lines[0], line_1_tokens[5]) == " "
+	assert line_1_tokens[5].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[6]) == "line"
+	assert line_1_tokens[6].t_type == .identifier
+	assert extract_token_contents(lines[0], line_1_tokens[7]) == " "
+	assert line_1_tokens[7].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[8]) == "of"
+	assert line_1_tokens[8].t_type == .identifier
+	assert extract_token_contents(lines[0], line_1_tokens[9]) == " "
+	assert line_1_tokens[9].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[10]) == "text"
+	assert line_1_tokens[10].t_type == .identifier
+	assert extract_token_contents(lines[0], line_1_tokens[11]) == " "
+	assert line_1_tokens[11].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[12]) == '"'
+	assert line_1_tokens[12].t_type == .string
+	assert extract_token_contents(lines[0], line_1_tokens[13]) == "with"
+	assert line_1_tokens[13].t_type == .string
+	assert extract_token_contents(lines[0], line_1_tokens[14]) == " "
+	assert line_1_tokens[14].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[15]) == "quotes"
+	assert line_1_tokens[15].t_type == .string
+	assert extract_token_contents(lines[0], line_1_tokens[16]) == " "
+	assert line_1_tokens[16].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[17]) == "in"
+	assert line_1_tokens[17].t_type == .string
+	assert extract_token_contents(lines[0], line_1_tokens[18]) == " "
+	assert line_1_tokens[18].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[19]) == "the"
+	assert line_1_tokens[19].t_type == .string
+	assert extract_token_contents(lines[0], line_1_tokens[20]) == " "
+	assert line_1_tokens[20].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[21]) == "middle"
+	assert line_1_tokens[21].t_type == .string
+	assert extract_token_contents(lines[0], line_1_tokens[22]) == '"'
+	assert line_1_tokens[22].t_type == .string
+	assert extract_token_contents(lines[0], line_1_tokens[23]) == " "
+	assert line_1_tokens[23].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[24]) == "of"
+	assert line_1_tokens[24].t_type == .identifier
+	assert extract_token_contents(lines[0], line_1_tokens[25]) == " "
+	assert line_1_tokens[25].t_type == .whitespace
+	assert extract_token_contents(lines[0], line_1_tokens[26]) == "it"
+	assert line_1_tokens[26].t_type == .identifier
+}
+
 fn test_simple_single_line_with_no_whitespace_just_single_emoji() {
 	code := "${utf8.emoji_shark_char.repeat(4)} ${utf8.emoji_shark_char.repeat(4)}"
 
