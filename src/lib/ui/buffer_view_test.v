@@ -635,6 +635,20 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled_c
 	assert drawn_text[98] == DrawnText{ x: 1, y: 7, data: "4" }
 	assert drawn_text[112] == DrawnText{ x: 1, y: 8, data: "5" }
 	assert drawn_text[126] == DrawnText{ x: 1, y: 9, data: "6" }
+
+	drawn_text.clear()
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 18, true) // toggle relative line numbers on
+
+	assert drawn_text[0] == DrawnText{ x: 1, y: 0, data: "8" }
+	assert drawn_text[14] == DrawnText{ x: 1, y: 1, data: "7" }
+	assert drawn_text[28] == DrawnText{ x: 1, y: 2, data: "6" }
+	assert drawn_text[42] == DrawnText{ x: 1, y: 3, data: "5" }
+	assert drawn_text[56] == DrawnText{ x: 1, y: 4, data: "4" }
+	assert drawn_text[70] == DrawnText{ x: 1, y: 5, data: "3" }
+	assert drawn_text[84] == DrawnText{ x: 1, y: 6, data: "2" }
+	assert drawn_text[98] == DrawnText{ x: 1, y: 7, data: "1" }
+	assert drawn_text[112] == DrawnText{ x: 0, y: 8, data: "19" }
+	assert drawn_text[126] == DrawnText{ x: 1, y: 9, data: "1" }
 }
 
 type DT = DrawnText
