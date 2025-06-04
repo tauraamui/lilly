@@ -48,10 +48,7 @@ pub mut:
 }
 
 pub fn (config Config) selection_highlight_color() tui.Color {
-	if sel_highlight_color := config.selection_highlight_color {
-		return sel_highlight_color
-	}
-	return tui.Color{ r: 96, g: 138, b: 143 }
+	return config.selection_highlight_color or { tui.Color{ r: 96, g: 138, b: 143 } }
 }
 
 pub fn open_workspace(mut _log Logger,
