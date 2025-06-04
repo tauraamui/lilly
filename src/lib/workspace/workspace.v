@@ -19,7 +19,7 @@ import json
 import term.ui as tui
 import lib.syntax as syntaxlib
 
-const builtin_lilly_config_file_content = $embed_file('../../config/lilly.conf').to_string()
+const builtin_lilly_config_file_content = $embed_file('../../config/default_lilly.conf').to_string()
 pub const lilly_config_root_dir_name = 'lilly'
 const lilly_syntaxes_dir_name = 'syntaxes'
 
@@ -41,9 +41,9 @@ pub struct Config {
 pub mut:
 	leader_key                string
 	relative_line_numbers     bool
-	selection_highlight_color tui.Color
-	background_color          ?tui.Color
 	insert_tabs_not_spaces    bool
+	selection_highlight_color ?tui.Color
+	background_color          ?tui.Color
 }
 
 pub fn open_workspace(mut _log Logger,
