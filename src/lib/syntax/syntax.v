@@ -22,7 +22,7 @@ pub const colors := {
 	.comment_end:         draw.Color{ 200, 200, 235 }
 	.block_start:         draw.Color{ 200, 200, 235 }
 	.block_end:           draw.Color{ 200, 200, 235 }
-	.number:              draw.Color{ 220, 110, 110 }
+	.number:              draw.Color{ 215, 135, 215 }
 	.whitespace:          draw.Color{ 200, 200, 235 }
 	.keyword:             draw.Color{ 255, 95,  175 }
 	.literal:             draw.Color{ 0,  215, 255 }
