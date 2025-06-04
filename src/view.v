@@ -704,10 +704,11 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 		}
 
 		linex = linex.runes()[..max_width].string()
+		cfg_sel_highlight_color := view.config.selection_highlight_color()
 		sel_highlight_color := draw.Color{
-			r: view.config.selection_highlight_color.r
-			g: view.config.selection_highlight_color.g
-			b: view.config.selection_highlight_color.b
+			r: cfg_sel_highlight_color.r
+			g: cfg_sel_highlight_color.g
+			b: cfg_sel_highlight_color.b
 		}
 		draw_text_line(mut ctx, view.syntaxes[view.current_syntax_idx] or { syntaxlib.Syntax{} },
 			view.cursor, view.leader_state.mode, sel_highlight_color, view.x, screen_space_y, document_space_y,
