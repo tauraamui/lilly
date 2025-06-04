@@ -125,6 +125,53 @@ fn test_open_workspace_files_and_config() {
 	}
 }
 
+fn test_workspace_config_resolves_no_background_if_missing() {
+	mock_fs := MockFS{
+		pwd:  '/dev/fake-project'
+		dirs: {
+			'/home/test-user/.config/lilly': []
+			'/dev/fake-project':             ['.git', 'src', 'research-notes']
+		}
+		files: {
+			'/home/test-user/.config/lilly':        ['lilly.conf']
+			'/dev/fake-project/.git/8494859384953': ['something.patch']
+			'/dev/fake-project/src':                ['main.v', 'some_other_code.v']
+			'/dev/fake-project/research-notes':     ['brainstorm.pdf', 'article-links.txt']
+		}
+		file_contents: {
+			'/home/test-user/.config/lilly/lilly.conf': '{ "relative_line_numbers": true, "insert_tabs_not_spaces": false, "selection_highlight_color": { "r": 96, "g": 138, "b": 143 } }'
+		}
+	}
+
+	mock_os := MockOS{
+	  branch: "git-branch-status-line"
+		exit_code: 0
+	}
+
+	mut mock_log := MockLogger{}
+	cfg := resolve_config(mut mock_log, mock_fs.config_dir, mock_fs.read_file)
+	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker, cfg,
+		mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err}') }
+
+	assert wrkspace.files == [
+		'/dev/fake-project/src/main.v',
+		'/dev/fake-project/src/some_other_code.v',
+		'/dev/fake-project/research-notes/brainstorm.pdf',
+		'/dev/fake-project/research-notes/article-links.txt',
+	]
+
+	assert wrkspace.config == Config{
+		relative_line_numbers:     true
+		selection_highlight_color: tui.Color{
+			r: 96
+			g: 138
+			b: 143
+		}
+		insert_tabs_not_spaces: false
+	}
+}
+
+
 fn test_open_workspace_files_but_fallsback_to_embedded_config() {
 	mock_fs := MockFS{
 		pwd:  '/dev/fake-project'
