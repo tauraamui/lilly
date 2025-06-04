@@ -414,6 +414,215 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	assert drawn_text[126..140] == line_ten_expected_drawn_data
 }
 
+fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled() {
+	mut drawn_text := []DrawnText{}
+	mut drawn_text_ref := &drawn_text
+
+	mut set_fg_color := []draw.Color{}
+	mut set_fg_color_ref := &set_fg_color
+
+	mut drawn_rect := []DrawnRect{}
+	mut drawn_rect_ref := &drawn_rect
+
+	mut mock_ctx := MockContextable{
+		on_draw_cb: fn [mut drawn_text_ref] (x int, y int, text string) {
+			drawn_text_ref << DrawnText{ x: x, y: y, data: text }
+		}
+		on_draw_rect_cb: fn [mut drawn_rect_ref] (x int, y int, width int, height int) {
+			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
+		}
+		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
+			set_fg_color_ref << c
+		}
+	}
+
+	mut buf := buffer.Buffer.new("", false)
+	for i in 0..20 { buf.lines << "This is line ${i} in the document" }
+	mut buf_view := BufferView.new(&buf, [], 0)
+
+	x := 0
+	y := 0
+	width := 100
+	height := 10
+	min_x := 0
+	from_line_num := 10
+
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 15, true) // toggle relative line numbers on
+
+	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
+	assert drawn_rect == [
+		DrawnRect{ x: 3, y: 5, width: 98, height: 1 }
+	]
+
+	assert drawn_text.len == 140
+	assert set_fg_color.len == 140
+
+	line_one_expected_drawn_data := [
+		DrawnText{ x: 1, y: 0, data: "5" }, DrawnText{ x: 3, y: 0, data: "This" },
+		DrawnText{ x: 7, y: 0, data: " " }, DrawnText{ x: 8, y: 0, data: "is" },
+		DrawnText{ x: 10, y: 0, data: " " }, DrawnText{ x: 11, y: 0, data: "line" },
+		DrawnText{ x: 15, y: 0, data: " " }, DrawnText{ x: 16, y: 0, data: "10" },
+		DrawnText{ x: 18, y: 0, data: " " }, DrawnText{ x: 19, y: 0, data: "in" },
+		DrawnText{ x: 21, y: 0, data: " " }, DrawnText{ x: 22, y: 0, data: "the" },
+		DrawnText{ x: 25, y: 0, data: " " }, DrawnText{ x: 26, y: 0, data: "document" },
+	]
+	assert drawn_text[..14] == line_one_expected_drawn_data
+
+	line_two_expected_drawn_data := [
+		DrawnText{ x: 1, y: 1, data: "4" }, DrawnText{ x: 3, y: 1, data: "This" },
+		DrawnText{ x: 7, y: 1, data: " " }, DrawnText{ x: 8, y: 1, data: "is" },
+		DrawnText{ x: 10, y: 1, data: " " }, DrawnText{ x: 11, y: 1, data: "line" },
+		DrawnText{ x: 15, y: 1, data: " " }, DrawnText{ x: 16, y: 1, data: "11" },
+		DrawnText{ x: 18, y: 1, data: " " }, DrawnText{ x: 19, y: 1, data: "in" },
+		DrawnText{ x: 21, y: 1, data: " " }, DrawnText{ x: 22, y: 1, data: "the" },
+		DrawnText{ x: 25, y: 1, data: " " }, DrawnText{ x: 26, y: 1, data: "document" },
+	]
+	assert drawn_text[14..28] == line_two_expected_drawn_data
+
+	line_three_expected_drawn_data := [
+		DrawnText{ x: 1, y: 2, data: "3" }, DrawnText{ x: 3, y: 2, data: "This" },
+		DrawnText{ x: 7, y: 2, data: " " }, DrawnText{ x: 8, y: 2, data: "is" },
+		DrawnText{ x: 10, y: 2, data: " " }, DrawnText{ x: 11, y: 2, data: "line" },
+		DrawnText{ x: 15, y: 2, data: " " }, DrawnText{ x: 16, y: 2, data: "12" },
+		DrawnText{ x: 18, y: 2, data: " " }, DrawnText{ x: 19, y: 2, data: "in" },
+		DrawnText{ x: 21, y: 2, data: " " }, DrawnText{ x: 22, y: 2, data: "the" },
+		DrawnText{ x: 25, y: 2, data: " " }, DrawnText{ x: 26, y: 2, data: "document" },
+	]
+	assert drawn_text[28..42] == line_three_expected_drawn_data
+
+	line_four_expected_drawn_data := [
+		DrawnText{ x: 1, y: 3, data: "2" }, DrawnText{ x: 3, y: 3, data: "This" },
+		DrawnText{ x: 7, y: 3, data: " " }, DrawnText{ x: 8, y: 3, data: "is" },
+		DrawnText{ x: 10, y: 3, data: " " }, DrawnText{ x: 11, y: 3, data: "line" },
+		DrawnText{ x: 15, y: 3, data: " " }, DrawnText{ x: 16, y: 3, data: "13" },
+		DrawnText{ x: 18, y: 3, data: " " }, DrawnText{ x: 19, y: 3, data: "in" },
+		DrawnText{ x: 21, y: 3, data: " " }, DrawnText{ x: 22, y: 3, data: "the" },
+		DrawnText{ x: 25, y: 3, data: " " }, DrawnText{ x: 26, y: 3, data: "document" },
+	]
+	assert drawn_text[42..56] == line_four_expected_drawn_data
+
+	line_five_expected_drawn_data := [
+		DrawnText{ x: 1, y: 4, data: "1" }, DrawnText{ x: 3, y: 4, data: "This" },
+		DrawnText{ x: 7, y: 4, data: " " }, DrawnText{ x: 8, y: 4, data: "is" },
+		DrawnText{ x: 10, y: 4, data: " " }, DrawnText{ x: 11, y: 4, data: "line" },
+		DrawnText{ x: 15, y: 4, data: " " }, DrawnText{ x: 16, y: 4, data: "14" },
+		DrawnText{ x: 18, y: 4, data: " " }, DrawnText{ x: 19, y: 4, data: "in" },
+		DrawnText{ x: 21, y: 4, data: " " }, DrawnText{ x: 22, y: 4, data: "the" },
+		DrawnText{ x: 25, y: 4, data: " " }, DrawnText{ x: 26, y: 4, data: "document" },
+	]
+	assert drawn_text[56..70] == line_five_expected_drawn_data
+
+	line_six_expected_drawn_data := [
+		DrawnText{ x: 0, y: 5, data: "16" }, DrawnText{ x: 3, y: 5, data: "This" },
+		DrawnText{ x: 7, y: 5, data: " " }, DrawnText{ x: 8, y: 5, data: "is" },
+		DrawnText{ x: 10, y: 5, data: " " }, DrawnText{ x: 11, y: 5, data: "line" },
+		DrawnText{ x: 15, y: 5, data: " " }, DrawnText{ x: 16, y: 5, data: "15" },
+		DrawnText{ x: 18, y: 5, data: " " }, DrawnText{ x: 19, y: 5, data: "in" },
+		DrawnText{ x: 21, y: 5, data: " " }, DrawnText{ x: 22, y: 5, data: "the" },
+		DrawnText{ x: 25, y: 5, data: " " }, DrawnText{ x: 26, y: 5, data: "document" },
+	]
+	assert drawn_text[70..84] == line_six_expected_drawn_data
+
+	line_seven_expected_drawn_data := [
+		DrawnText{ x: 1, y: 6, data: "1" }, DrawnText{ x: 3, y: 6, data: "This" },
+		DrawnText{ x: 7, y: 6, data: " " }, DrawnText{ x: 8, y: 6, data: "is" },
+		DrawnText{ x: 10, y: 6, data: " " }, DrawnText{ x: 11, y: 6, data: "line" },
+		DrawnText{ x: 15, y: 6, data: " " }, DrawnText{ x: 16, y: 6, data: "16" },
+		DrawnText{ x: 18, y: 6, data: " " }, DrawnText{ x: 19, y: 6, data: "in" },
+		DrawnText{ x: 21, y: 6, data: " " }, DrawnText{ x: 22, y: 6, data: "the" },
+		DrawnText{ x: 25, y: 6, data: " " }, DrawnText{ x: 26, y: 6, data: "document" },
+	]
+	assert drawn_text[84..98] == line_seven_expected_drawn_data
+
+	line_eight_expected_drawn_data := [
+		DrawnText{ x: 1, y: 7, data: "2" }, DrawnText{ x: 3, y: 7, data: "This" },
+		DrawnText{ x: 7, y: 7, data: " " }, DrawnText{ x: 8, y: 7, data: "is" },
+		DrawnText{ x: 10, y: 7, data: " " }, DrawnText{ x: 11, y: 7, data: "line" },
+		DrawnText{ x: 15, y: 7, data: " " }, DrawnText{ x: 16, y: 7, data: "17" },
+		DrawnText{ x: 18, y: 7, data: " " }, DrawnText{ x: 19, y: 7, data: "in" },
+		DrawnText{ x: 21, y: 7, data: " " }, DrawnText{ x: 22, y: 7, data: "the" },
+		DrawnText{ x: 25, y: 7, data: " " }, DrawnText{ x: 26, y: 7, data: "document" },
+	]
+	assert drawn_text[98..112] == line_eight_expected_drawn_data
+
+	line_nine_expected_drawn_data := [
+		DrawnText{ x: 1, y: 8, data: "3" }, DrawnText{ x: 3, y: 8, data: "This" },
+		DrawnText{ x: 7, y: 8, data: " " }, DrawnText{ x: 8, y: 8, data: "is" },
+		DrawnText{ x: 10, y: 8, data: " " }, DrawnText{ x: 11, y: 8, data: "line" },
+		DrawnText{ x: 15, y: 8, data: " " }, DrawnText{ x: 16, y: 8, data: "18" },
+		DrawnText{ x: 18, y: 8, data: " " }, DrawnText{ x: 19, y: 8, data: "in" },
+		DrawnText{ x: 21, y: 8, data: " " }, DrawnText{ x: 22, y: 8, data: "the" },
+		DrawnText{ x: 25, y: 8, data: " " }, DrawnText{ x: 26, y: 8, data: "document" },
+	]
+	assert drawn_text[112..126] == line_nine_expected_drawn_data
+
+	line_ten_expected_drawn_data := [
+		DrawnText{ x: 1, y: 9, data: "4" }, DrawnText{ x: 3, y: 9, data: "This" },
+		DrawnText{ x: 7, y: 9, data: " " }, DrawnText{ x: 8, y: 9, data: "is" },
+		DrawnText{ x: 10, y: 9, data: " " }, DrawnText{ x: 11, y: 9, data: "line" },
+		DrawnText{ x: 15, y: 9, data: " " }, DrawnText{ x: 16, y: 9, data: "19" },
+		DrawnText{ x: 18, y: 9, data: " " }, DrawnText{ x: 19, y: 9, data: "in" },
+		DrawnText{ x: 21, y: 9, data: " " }, DrawnText{ x: 22, y: 9, data: "the" },
+		DrawnText{ x: 25, y: 9, data: " " }, DrawnText{ x: 26, y: 9, data: "document" },
+	]
+	assert drawn_text[126..140] == line_ten_expected_drawn_data
+}
+
+fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled_cursorline_movement_updates_relative_nums() {
+	mut drawn_text := []DrawnText{}
+	mut drawn_text_ref := &drawn_text
+
+	mut set_fg_color := []draw.Color{}
+	mut set_fg_color_ref := &set_fg_color
+
+	mut drawn_rect := []DrawnRect{}
+	mut drawn_rect_ref := &drawn_rect
+
+	mut mock_ctx := MockContextable{
+		on_draw_cb: fn [mut drawn_text_ref] (x int, y int, text string) {
+			drawn_text_ref << DrawnText{ x: x, y: y, data: text }
+		}
+		on_draw_rect_cb: fn [mut drawn_rect_ref] (x int, y int, width int, height int) {
+			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
+		}
+		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
+			set_fg_color_ref << c
+		}
+	}
+
+	mut buf := buffer.Buffer.new("", false)
+	for i in 0..20 { buf.lines << "This is line ${i} in the document" }
+	mut buf_view := BufferView.new(&buf, [], 0)
+
+	x := 0
+	y := 0
+	width := 100
+	height := 10
+	min_x := 0
+	from_line_num := 10
+
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 15, true) // toggle relative line numbers on
+
+	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
+	assert drawn_rect == [
+		DrawnRect{ x: 3, y: 5, width: 98, height: 1 }
+	]
+
+	assert drawn_text.len == 140
+	assert set_fg_color.len == 140
+
+	assert drawn_text[0] == DrawnText{ x: 1, y: 0, data: "5" }
+	assert drawn_text[14] == DrawnText{ x: 1, y: 1, data: "4" }
+	assert drawn_text[28] == DrawnText{ x: 1, y: 2, data: "3" }
+	assert drawn_text[42] == DrawnText{ x: 1, y: 3, data: "2" }
+	assert drawn_text[56] == DrawnText{ x: 1, y: 4, data: "1" }
+	assert drawn_text[70] == DrawnText{ x: 0, y: 5, data: "16" }
+	assert drawn_text[84] == DrawnText{ x: 1, y: 6, data: "1" }
+	assert drawn_text[98] == DrawnText{ x: 1, y: 7, data: "2" }
+	assert drawn_text[112] == DrawnText{ x: 1, y: 8, data: "3" }
+	assert drawn_text[126] == DrawnText{ x: 1, y: 9, data: "4" }
+}
+
 type DT = DrawnText
 
 fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_14() {
