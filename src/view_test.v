@@ -3290,6 +3290,7 @@ fn test_view_draw_document_with_method_using_buffer_view() {
 		draw_rect_callback: fn [mut drawn_rects_ref] (x int, y int, width int, height int) { drawn_rects_ref << DrawnRect{ x, y, width, height } }
 		window_height: fake_view.height
 	}
+	fake_view.update_to()
 	fake_view.draw_x(mut mock_drawer)
 
 	assert fake_view.to == 13
