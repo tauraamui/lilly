@@ -2184,7 +2184,7 @@ fn test_calc_w_move_end_of_line_jumps_down_to_next_line_which_is_blank() {
 fn test_calc_w_move_amount_simple_sentence_line() {
 	// manually set the documents contents
 	fake_line := 'this is a line to test with'
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 0
 	}
 
@@ -2202,7 +2202,7 @@ fn test_calc_w_move_amount_simple_sentence_line() {
 fn test_calc_w_move_amount_beyond_repeated_sequence_of_special_char() {
 	// manually set the documents contents
 	fake_line := '(((#####)))'
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 0
 	}
 	assert fake_line[fake_cursor_pos.x].ascii_str() == '('
@@ -2224,7 +2224,7 @@ fn test_calc_w_move_amount_beyond_repeated_sequence_of_special_char() {
 fn test_calc_w_move_amount_to_special_char_before_next_word_past_space() {
 	// manually set the documents contents
 	fake_line := 'fn function_name() int'
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 0
 	}
 	assert fake_line[fake_cursor_pos.x].ascii_str() == 'f'
@@ -2343,7 +2343,7 @@ fn test_calc_w_move_cursor_to_next_line_with_plain_comments() {
 		return e
 	})
 
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 28
 	}
 
@@ -2384,7 +2384,7 @@ fn test_count_repeated_sequence_multiple_combined() {
 fn test_calc_w_move_amount_indented_code_line() {
 	// manually set the document contents
 	fake_line := '		for i := 0; i < 100; i++ {'
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 0
 	}
 
@@ -2468,7 +2468,7 @@ fn test_calc_e_move_amount_to_end_of_repeated_sequence_of_special_char() {
 fn test_calc_e_move_amount_to_end_of_repeated_sequence_of_special_char_with_whitespace_inbetween() {
 	// manually set the documents contents
 	fake_line := '(((    )))'
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 0
 	}
 	assert fake_line[fake_cursor_pos.x].ascii_str() == '('
@@ -2490,7 +2490,7 @@ fn test_calc_e_move_amount_normal_sentence() {
 	// manually set the document contents
 	fake_line := 'This can read like a regularly structured sentence.'
 
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 0
 	}
 	assert fake_line[fake_cursor_pos.x].ascii_str() == 'T'
