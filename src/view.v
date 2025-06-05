@@ -605,10 +605,6 @@ fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
 fn (mut view View) draw_x(mut ctx draw.Contextable) {
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
-	view.update_to() // NOTE(tauraamui) [18/03/2025]: yes, I shouldn't need to keep calling this
-					 // anymore, seeing as the buffer_view just works off of the relative "from" and
-					 // the given height it is told to work within, but if we don't call it, the
-					 // cursor won't move, so... *sniff sniff*, smells like toxic tech debt, yayyyy!
 	view.buf_view.draw(
 		mut ctx, 0, 0,
 		ctx.window_width(), ctx.window_height() - 2,
@@ -640,8 +636,11 @@ fn (mut view View) draw_x(mut ctx draw.Contextable) {
 fn (mut view View) draw(mut ctx draw.Contextable) {
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
-	view.update_to()
-	// view.draw_x(mut ctx)
+	view.update_to() // NOTE(tauraamui) [18/03/2025]: yes, I shouldn't need to keep calling this
+					 // anymore, seeing as the buffer_view just works off of the relative "from" and
+					 // the given height it is told to work within, but if we don't call it, the
+					 // cursor won't move, so... *sniff sniff*, smells like toxic tech debt, yayyyy!
+	view.draw_x(mut ctx)
 	view.draw_document(mut ctx)
 
 	ui.draw_status_line(
