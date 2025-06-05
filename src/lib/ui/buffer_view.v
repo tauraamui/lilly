@@ -191,6 +191,7 @@ fn render_token(
 	cur_token_type := current_token.t_type()
 	resolved_token_type := match true {
 		cur_token_type        == .comment { cur_token_type }
+		cur_token_type        == .string  { cur_token_type }
 		segment_to_render in syntax_def.literals { syntax.TokenType.literal }
 		segment_to_render in syntax_def.keywords { syntax.TokenType.keyword }
 		segment_to_render in syntax_def.builtins { syntax.TokenType.builtin }
