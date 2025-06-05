@@ -2243,7 +2243,7 @@ fn test_calc_w_move_amount_to_special_char_before_next_word_past_space() {
 fn test_calc_w_move_amount_code_line() {
 	// manually set the documents contents
 	fake_line := 'fn (mut view View) w() int {'
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 0
 	}
 
@@ -2307,7 +2307,7 @@ fn test_calc_w_move_cursor_remains_on_same_line_when_encountering_floating_under
 
 	fake_lines_str := arrays.join_to_string(fake_lines, '\n', fn (e string) string { return e })
 
-	mut fake_cursor_pos := Pos{ x: 1 }
+	mut fake_cursor_pos := ui.CursorPos{ x: 1 }
 
 	mut amount := calc_w_move_amount(fake_cursor_pos, fake_lines_str, false)
 
