@@ -14,7 +14,6 @@
 
 module syntax
 
-import os
 import json
 import lib.draw
 

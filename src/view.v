@@ -30,6 +30,7 @@ import lib.draw
 import lib.core
 import lib.ui
 
+/*
 struct Cursor {
 mut:
 	pos                 Pos
@@ -94,6 +95,7 @@ mut:
 	x int
 	y int
 }
+*/
 
 const auto_pairs = {
 	'}': '{'
@@ -143,7 +145,7 @@ mut:
 	buf_view                  ui.BufferView
 	buffer                    buffer.Buffer
 	leader_key                string = " "
-	cursor                    Cursor
+	cursor                    ui.BufferCursor
 	cmd_buf                   CmdBuffer
 	search                    Search
 	chord                     chords.Chord
@@ -641,6 +643,7 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 					 // the given height it is told to work within, but if we don't call it, the
 					 // cursor won't move, so... *sniff sniff*, smells like toxic tech debt, yayyyy!
 	view.draw_x(mut ctx)
+	/*
 	view.draw_document(mut ctx)
 
 	ui.draw_status_line(
@@ -661,6 +664,7 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 	view.draw_bottom_bar_of_command_or_search(mut ctx)
 
 	view.draw_cursor_pointer(mut ctx)
+	*/
 }
 
 fn (mut view View) update_to() {
