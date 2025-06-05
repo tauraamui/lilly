@@ -18,6 +18,7 @@ import lib.buffer
 import lib.draw
 import lib.syntax
 import lib.utf8
+import lib.core
 
 pub struct BufferView {
 	buf       &buffer.Buffer = unsafe { nil }
@@ -43,7 +44,8 @@ pub fn (mut buf_view BufferView) draw(
 	from_line_num int,
 	min_x int,
 	cursor_y_pos int,
-	relative_line_nums bool
+	relative_line_nums bool,
+	current_mode core.Mode
 ) {
 	if buf_view.buf == unsafe { nil } { return }
 	syntax_def := buf_view.syntaxes[buf_view.syntax_id] or { syntax.Syntax{} }
@@ -74,6 +76,7 @@ pub fn (mut buf_view BufferView) draw(
 		// draw the line of text, offset by the position of the buffer view
 		draw_text_line(
 			mut ctx,
+			current_mode,
 			x + screenspace_x_offset + 1,
 			y + screenspace_y_offset,
 			line,
@@ -126,6 +129,7 @@ fn draw_line_number(
 
 fn draw_text_line(
 	mut ctx draw.Contextable,
+	current_mode core.Mode,
 	x int, y int,
 	line string,
 	line_tokens []syntax.Token,

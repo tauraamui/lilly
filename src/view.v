@@ -613,7 +613,8 @@ fn (mut view View) draw_x(mut ctx draw.Contextable) {
 		mut ctx, 0, 0,
 		ctx.window_width(), ctx.window_height() - 2,
 		view.from, 0, view.cursor.pos.y,
-		view.config.relative_line_numbers
+		view.config.relative_line_numbers,
+		view.leader_state.mode
 	)
 
 	ui.draw_status_line(
