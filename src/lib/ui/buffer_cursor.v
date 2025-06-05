@@ -1,18 +1,18 @@
 module ui
 
 pub struct CursorPos {
-mut:
+pub mut:
 	x int
 	y int
 }
 
-struct BufferCursor {
-mut:
+pub struct BufferCursor {
+pub mut:
 	pos                 CursorPos
 	selection_start_pos CursorPos
 }
 
-fn (cursor BufferCursor) line_is_within_selection(line_y int) bool {
+pub fn (cursor BufferCursor) line_is_within_selection(line_y int) bool {
 	start := if cursor.selection_start_pos.y < cursor.pos.y {
 		cursor.selection_start_pos.y
 	} else {
@@ -27,7 +27,7 @@ fn (cursor BufferCursor) line_is_within_selection(line_y int) bool {
 	return line_y >= start && line_y <= end
 }
 
-fn (cursor BufferCursor) selection_start() Pos {
+pub fn (cursor BufferCursor) selection_start() CursorPos {
 	if cursor.selection_start_pos.y == cursor.pos.y {
 		if cursor.selection_start_pos.x == cursor.pos.x {
 			return cursor.selection_start_pos
@@ -44,7 +44,7 @@ fn (cursor BufferCursor) selection_start() Pos {
 	}
 }
 
-fn (cursor BufferCursor) selection_end() Pos {
+pub fn (cursor BufferCursor) selection_end() CursorPos {
 	if cursor.pos.y == cursor.selection_start_pos.y {
 		if cursor.pos.x == cursor.selection_start_pos.x {
 			return cursor.pos
@@ -61,7 +61,7 @@ fn (cursor BufferCursor) selection_end() Pos {
 	}
 }
 
-fn (cursor BufferCursor) selection_active() bool {
+pub fn (cursor BufferCursor) selection_active() bool {
 	return cursor.selection_start_pos.x >= 0 && cursor.selection_start_pos.y >= 0
 }
 

@@ -112,11 +112,11 @@ fn (mut lilly Lilly) open_file(path string) ! {
 	return lilly.open_file_at(extracted_path, extracted_pos)
 }
 
-fn (mut lilly Lilly) open_file_at(path string, pos Pos) ! {
+fn (mut lilly Lilly) open_file_at(path string, pos ui.CursorPos) ! {
 	return lilly.open_file_with_reader_at(path, pos, lilly.line_reader or { os.read_lines })
 }
 
-fn (mut lilly Lilly) open_file_with_reader_at(path string, pos Pos, line_reader fn (path string) ![]string) ! {
+fn (mut lilly Lilly) open_file_with_reader_at(path string, pos ui.CursorPos, line_reader fn (path string) ![]string) ! {
 	if mut existing_file_buff := lilly.file_buffers[path] {
 		if existing_view := lilly.buffer_views[existing_file_buff.uuid] {
 			lilly.view = existing_view
@@ -139,8 +139,8 @@ fn (mut lilly Lilly) open_file_with_reader_at(path string, pos Pos, line_reader 
 
 const colon = ":".runes()[0]
 
-fn extract_pos_from_path(file_path string) (string, Pos) {
-	mut pos := Pos{ x: -1, y: -1}
+fn extract_pos_from_path(file_path string) (string, ui.CursorPos) {
+	mut pos := ui.CursorPos{ x: -1, y: -1}
 
 	mut from_index := file_path.len
 	mut last_colon_index := 0

@@ -519,7 +519,7 @@ fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes 
 	}
 	res.buf_view = ui.BufferView.new(&res.buffer, syntaxes, syn_id)
 	res.path = res.buffer.file_path
-	res.cursor.selection_start_pos = Pos{-1, -1}
+	res.cursor.selection_start_pos = ui.CursorPos{-1, -1}
 	return res
 }
 
@@ -722,7 +722,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 
 fn draw_text_line(mut ctx draw.Contextable,
 	syntax syntaxlib.Syntax,
-	cursor Cursor,
+	cursor ui.BufferCursor,
 	current_mode core.Mode,
 	selection_highlight_color draw.Color,
 	screen_space_x int, screen_space_y int, document_space_y int,
@@ -769,7 +769,7 @@ fn draw_text_line(mut ctx draw.Contextable,
 
 fn draw_text_line_within_visual_selection(mut ctx draw.Contextable,
 	syntax syntaxlib.Syntax,
-	cursor Cursor,
+	cursor ui.BufferCursor,
 	selection_highlight_color draw.Color,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
@@ -813,7 +813,7 @@ fn draw_text_line_within_visual_selection(mut ctx draw.Contextable,
 fn draw_text_line_visual_selection_between_start_and_end(mut ctx draw.Contextable,
 	syntax syntaxlib.Syntax,
 	selection_highlight_color draw.Color,
-	selection_start Pos, selection_end Pos,
+	selection_start ui.CursorPos, selection_end ui.CursorPos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
 	line_runes []rune,
@@ -830,7 +830,7 @@ fn draw_text_line_visual_selection_between_start_and_end(mut ctx draw.Contextabl
 fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Contextable,
 	syntax syntaxlib.Syntax,
 	selection_highlight_color draw.Color,
-	selection_start Pos, selection_end Pos,
+	selection_start ui.CursorPos, selection_end ui.CursorPos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
 	line_runes []rune,
@@ -860,7 +860,7 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 fn draw_text_line_visual_selection_starts_on_same_but_ends_after(mut ctx draw.Contextable,
 	syntax syntaxlib.Syntax,
 	selection_highlight_color draw.Color,
-	selection_start Pos, selection_end Pos,
+	selection_start ui.CursorPos, selection_end ui.CursorPos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
 	line_runes []rune,
@@ -896,7 +896,7 @@ fn draw_text_line_visual_selection_starts_on_same_but_ends_after(mut ctx draw.Co
 fn draw_text_line_visual_selection_starts_before_but_ends_on_line(mut ctx draw.Contextable,
 	syntax syntaxlib.Syntax,
 	selection_highlight_color draw.Color,
-	selection_start Pos, selection_end Pos,
+	selection_start ui.CursorPos, selection_end ui.CursorPos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
 	line_runes []rune,
@@ -1360,7 +1360,7 @@ fn (mut view View) insert_text(s string) {
 fn (mut view View) escape() {
 	// TODO(tauraamui) -> completely re-write this method
 	defer {
-		view.cursor.selection_start_pos = Pos{-1, -1}
+		view.cursor.selection_start_pos = ui.CursorPos{-1, -1}
 		view.clamp_cursor_within_document_bounds()
 		view.scroll_from_and_to()
 	}
@@ -2082,7 +2082,7 @@ fn count_repeated_sequence(char_rune rune, line []rune) int {
 	return 0
 }
 
-fn calc_w_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
+fn calc_w_move_amount(cursor_pos ui.CursorPos, line string, recursive_call bool) int {
 	if line.len == 0 {
 		return 0
 	}
@@ -2103,7 +2103,7 @@ fn calc_w_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 				continue
 			}
 			if is_whitespace(c) {
-				return calc_w_move_amount(Pos{ x: cursor_pos.x + i +
+				return calc_w_move_amount(ui.CursorPos{ x: cursor_pos.x + i +
 					1, y: cursor_pos.y }, line, true) + i + 1
 			}
 			return i + 1
@@ -2127,7 +2127,7 @@ fn calc_w_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 		}
 		for i, c in line_chars[cursor_pos.x + 1..] {
 			if is_non_alpha(c) {
-				return calc_w_move_amount(Pos{ x: cursor_pos.x + i +
+				return calc_w_move_amount(ui.CursorPos{ x: cursor_pos.x + i +
 					1, y: cursor_pos.y }, line, true) + i + 1
 			}
 		}
@@ -2155,7 +2155,7 @@ fn is_special(r rune) ?rune {
 	return none
 }
 
-fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
+fn calc_e_move_amount(cursor_pos ui.CursorPos, line string, recursive_call bool) !int {
 	if line.len == 0 {
 		return 0
 	}
@@ -2175,7 +2175,7 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
 		}
 		// basically this means we've hit a single floating special
 
-		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or {
+		return calc_e_move_amount(ui.CursorPos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or {
 			return err
 		} + 1
 	}
@@ -2191,7 +2191,7 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
 				break
 			}
 		}
-		return calc_e_move_amount(Pos{ x: cursor_pos.x + end_of_whitespace_set, y: cursor_pos.y }, line, true) or {
+		return calc_e_move_amount(ui.CursorPos{ x: cursor_pos.x + end_of_whitespace_set, y: cursor_pos.y }, line, true) or {
 			return err
 		} + end_of_whitespace_set
 	}
@@ -2219,7 +2219,7 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
 			}
 			else {}
 		}
-		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or {
+		return calc_e_move_amount(ui.CursorPos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or {
 			return err
 		} + 1
 	}
@@ -2249,7 +2249,7 @@ fn find_position_within_word(cursor_pos_x int, line_chars []rune) PositionWithin
 }
 
 // status_green            = Color { 145, 237, 145 }
-fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
+fn calc_b_move_amount(cursor_pos ui.CursorPos, line string, recursive_call bool) int {
 	if line.len == 0 {
 		return 0
 	}
@@ -2271,7 +2271,7 @@ fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 				}
 				if i == 0 {
 					return
-						calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) +
+						calc_b_move_amount(ui.CursorPos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) +
 						1
 				}
 				return i
@@ -2279,7 +2279,7 @@ fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 			// find out if on single special char
 			if i == 0 && !recursive_call {
 				return
-					calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) + 1
+					calc_b_move_amount(ui.CursorPos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) + 1
 			}
 			return i
 		}
@@ -2294,7 +2294,7 @@ fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 		for i, c in line_chars[..cursor_pos.x].reverse() {
 			max_i = i
 			if !is_whitespace(c) {
-				return calc_b_move_amount(Pos{ x: cursor_pos.x - (i +
+				return calc_b_move_amount(ui.CursorPos{ x: cursor_pos.x - (i +
 					1), y: cursor_pos.y }, line, true) + i + 1
 			}
 		}
@@ -2315,7 +2315,7 @@ fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 						return 0
 					}
 					return
-						calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) +
+						calc_b_move_amount(ui.CursorPos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) +
 						1
 				}
 				return i
