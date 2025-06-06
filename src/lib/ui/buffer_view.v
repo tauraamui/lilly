@@ -43,10 +43,11 @@ pub fn (mut buf_view BufferView) draw(
 	width int, height int,
 	from_line_num int,
 	min_x int,
-	cursor_y_pos int,
 	relative_line_nums bool,
-	current_mode core.Mode
+	current_mode core.Mode,
+	cursor BufferCursor
 ) {
+	cursor_y_pos := cursor.pos.y
 	if buf_view.buf == unsafe { nil } { return }
 	syntax_def := buf_view.syntaxes[buf_view.syntax_id] or { syntax.Syntax{} }
 
