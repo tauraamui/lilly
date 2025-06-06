@@ -642,8 +642,7 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 					 // anymore, seeing as the buffer_view just works off of the relative "from" and
 					 // the given height it is told to work within, but if we don't call it, the
 					 // cursor won't move, so... *sniff sniff*, smells like toxic tech debt, yayyyy!
-	view.draw_x(mut ctx)
-	/*
+	// view.draw_x(mut ctx)
 	view.draw_document(mut ctx)
 
 	ui.draw_status_line(
@@ -664,7 +663,6 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 	view.draw_bottom_bar_of_command_or_search(mut ctx)
 
 	view.draw_cursor_pointer(mut ctx)
-	*/
 }
 
 fn (mut view View) update_to() {
