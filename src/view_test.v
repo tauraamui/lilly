@@ -75,12 +75,12 @@ fn (mut drawer TestDrawer) flush() {}
 const example_file = 'module history\n\nimport datatypes\nimport lib.diff { Op }\n\npub struct History {\nmut:\n\tundos datatypes.Stack[Op] // will actually be type diff.Op\n\tredos datatypes.Stack[Op]\n}'
 
 fn test_line_is_within_selection() {
-	mut cursor := Cursor{
-		pos:                 Pos{
+	mut cursor := ui.BufferCursor{
+		pos: ui.CursorPos{
 			x: 0
 			y: 5
 		}
-		selection_start_pos: Pos{
+		selection_start_pos: ui.CursorPos{
 			x: 4
 			y: 2
 		}
@@ -91,33 +91,33 @@ fn test_line_is_within_selection() {
 }
 
 fn test_selection_start_smallest_wins_check_1() {
-	mut cursor := Cursor{
-		pos:                 Pos{
+	mut cursor := ui.BufferCursor{
+		pos: ui.CursorPos{
 			x: 0
 			y: 2
 		}
-		selection_start_pos: Pos{
+		selection_start_pos: ui.CursorPos{
 			x: 4
 			y: 5
 		}
 	}
 
-	assert cursor.selection_start() == Pos{0, 2}
+	assert cursor.selection_start() == ui.CursorPos{0, 2}
 }
 
 fn test_selection_start_smallest_wins_check_2() {
-	mut cursor := Cursor{
-		pos:                 Pos{
+	mut cursor := ui.BufferCursor{
+		pos: ui.CursorPos{
 			x: 0
 			y: 11
 		}
-		selection_start_pos: Pos{
+		selection_start_pos: ui.CursorPos{
 			x: 4
 			y: 3
 		}
 	}
 
-	assert cursor.selection_start() == Pos{4, 3}
+	assert cursor.selection_start() == ui.CursorPos{4, 3}
 }
 
 fn test_dd_deletes_current_line_at_start_of_doc() {
@@ -431,19 +431,19 @@ fn test_resolve_whitespace_prefix_on_line_with_no_text() {
 }
 
 fn test_cursor_selection_start_and_end_methods_basic_situation() {
-	mut cursor := Cursor{
-		pos:                 Pos{
+	mut cursor := ui.BufferCursor{
+		pos: ui.CursorPos{
 			x: 0
 			y: 0
 		} // make position be at "beginning"
-		selection_start_pos: Pos{
+		selection_start_pos: ui.CursorPos{
 			x: 20
 			y: 0
 		} // make selection "end" at the "end"
 	}
 
-	assert cursor.selection_start() == Pos{0, 0}
-	assert cursor.selection_end() == Pos{20, 0}
+	assert cursor.selection_start() == ui.CursorPos{0, 0}
+	assert cursor.selection_end() == ui.CursorPos{20, 0}
 }
 
 fn test_v_toggles_visual_mode_and_starts_selection() {
@@ -467,13 +467,13 @@ fn test_v_toggles_visual_mode_and_starts_selection() {
 	assert fake_view.leader_state.mode == .visual
 	assert fake_view.cursor.selection_active()
 	selection_start := fake_view.cursor.selection_start()
-	assert selection_start == Pos{6, 0}
+	assert selection_start == ui.CursorPos{6, 0}
 	assert fake_view.cursor.pos == selection_start
 
 	fake_view.dollar()
 
-	assert fake_view.cursor.selection_start() == Pos{6, 0}
-	assert fake_view.cursor.selection_end() == Pos{12, 0}
+	assert fake_view.cursor.selection_start() == ui.CursorPos{6, 0}
+	assert fake_view.cursor.selection_end() == ui.CursorPos{12, 0}
 }
 
 fn test_v_toggles_visual_mode_move_selection_down_to_second_line_ensure_start_position_is_same() {
@@ -497,12 +497,12 @@ fn test_v_toggles_visual_mode_move_selection_down_to_second_line_ensure_start_po
 	assert fake_view.leader_state.mode == .visual
 	assert fake_view.cursor.selection_active()
 	selection_start := fake_view.cursor.selection_start()
-	assert selection_start == Pos{6, 0}
+	assert selection_start == ui.CursorPos{6, 0}
 	assert fake_view.cursor.pos == selection_start
 
 	fake_view.j()
 
-	assert fake_view.cursor.selection_start() == Pos{6, 0}
+	assert fake_view.cursor.selection_start() == ui.CursorPos{6, 0}
 	// NOTE(tauraamui) [14/01/25] I don't understand why this is correct
 	//                            according to past me, but all of the
 	//                            selection stuff will be re-written soon
@@ -539,7 +539,7 @@ fn test_shift_v_toggles_visual_line_mode_and_starts_selection() {
 
 	assert fake_view.leader_state.mode == .visual_line
 	assert fake_view.cursor.selection_active()
-	assert fake_view.cursor.selection_start() == Pos{6, 0}
+	assert fake_view.cursor.selection_start() == ui.CursorPos{6, 0}
 }
 
 struct MockContextable {
@@ -609,7 +609,7 @@ fn (mockctx MockContextable) flush() {}
 
 struct DrawnTextRec {
 	content string
-	pos     Pos
+	pos     ui.CursorPos
 }
 
 fn test_draw_text_line_visual_selection_start_end_on_same_line() {
