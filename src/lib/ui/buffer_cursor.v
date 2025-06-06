@@ -16,6 +16,12 @@ pub mut:
 
 pub fn (cursor BufferCursor) y_within_selection(line_y int) bool {
 	if sel_pos := cursor.sel_start_pos {
+		// NOTE(tauraamui) [06/06/2025]: need to write a style guide for this project one day
+		//                               as I seem to have invented a bunch of custom practices
+		//                               for writing V code which I know is at odds with the standard
+		//                               but anyway, even though technically this could be an if statement
+		//                               I am finding I always much much prefer making it a match if it is
+		//                               being used as an assignment result
 		start := match true { sel_pos.y < cursor.pos.y { sel_pos.y } else { cursor.pos.y } }
 		end   := match true { cursor.pos.y > sel_pos.y { cursor.pos.y } else { sel_pos.y } }
 		return line_y >= start && line_y <= end
