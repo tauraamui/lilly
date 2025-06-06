@@ -620,12 +620,12 @@ fn test_draw_text_line_visual_selection_start_end_on_same_line() {
 		on_draw_cb: fn [mut drawn_text_ref] (x int, y int, text string) {
 			drawn_text_ref << DrawnTextRec{
 				content: text,
-				pos:     Pos{ x: x, y: y }
+				pos:     ui.CursorPos{ x: x, y: y }
 			}
 		}
 	}
 
-	mut m_cursor := Cursor{ pos: Pos{ x: 71, y: 0 }, selection_start_pos: Pos{ x: 44, y: 0 } }
+	mut m_cursor := ui.BufferCursor{ pos: ui.CursorPos{ x: 71, y: 0 }, selection_start_pos: ui.CursorPos{ x: 44, y: 0 } }
 	document_line := 'This part of the text is before the selection but this part is within it, and this part is after it'
 	draw_text_line_within_visual_selection(
 		mut m_ctx, resolve_test_syntax(),
@@ -645,12 +645,12 @@ fn test_draw_text_line_within_visual_selection_start_end_on_same_line_with_tab_p
 		}
 	}
 
-	mut cursor := Cursor{
-		pos:                 Pos{
+	mut cursor := ui.BufferCursor{
+		pos: ui.CursorPos{
 			x: 16
 			y: 0
 		}
-		selection_start_pos: Pos{
+		selection_start_pos: ui.CursorPos{
 			x: 4
 			y: 0
 		}
@@ -676,12 +676,12 @@ fn test_draw_text_line_within_visual_selection_start_end_on_same_line() {
 			drawed_text_ref << text
 		}
 	}
-	cursor := Cursor{
-		pos:                 Pos{
+	cursor := ui.BufferCursor{
+		pos: ui.CursorPos{
 			x: 16
 			y: 0
 		}
-		selection_start_pos: Pos{
+		selection_start_pos: ui.CursorPos{
 			x: 4
 			y: 0
 		}
@@ -708,12 +708,12 @@ fn test_draw_text_line_within_visual_selection_start_pre_line_end_post_line() {
 			drawed_text_ref << text
 		}
 	}
-	cursor := Cursor{
-		pos:                 Pos{
+	cursor := ui.BufferCursor{
+		pos: ui.CursorPos{
 			x: 16
 			y: 2
 		}
-		selection_start_pos: Pos{
+		selection_start_pos: ui.CursorPos{
 			x: 4
 			y: 0
 		}
@@ -738,12 +738,12 @@ fn test_draw_text_line_within_visual_selection_first_line_with_selection_end_on_
 			drawed_text_ref << text
 		}
 	}
-	cursor := Cursor{
-		pos:                 Pos{
+	cursor := ui.BufferCursor{
+		pos: ui.CursorPos{
 			x: 0
 			y: 1
 		}
-		selection_start_pos: Pos{
+		selection_start_pos: ui.CursorPos{
 			x: 0
 			y: 0
 		}
@@ -2411,7 +2411,7 @@ fn test_calc_e_move_cursor_to_next_line_with_plain_comments() {
 		return e
 	})
 
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 28
 	}
 
@@ -2444,7 +2444,7 @@ fn test_calc_e_move_cursor_to_next_line_with_plain_comments() {
 fn test_calc_e_move_amount_to_end_of_repeated_sequence_of_special_char() {
 	// manually set the documents contents
 	fake_line := '(((#####)))'
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 0
 	}
 	assert fake_line[fake_cursor_pos.x].ascii_str() == '('
@@ -2528,7 +2528,7 @@ fn test_calc_e_move_amount_code_line() {
 	// manually set the document contents
 	fake_line := 'status_green            = Color { 145, 237, 145 }'
 
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 0
 	}
 
@@ -2576,7 +2576,7 @@ fn test_calc_e_move_amount_code_line() {
 fn test_calc_e_move_amount_code_line_two() {
 	// manually set the document contents
 	fake_line := 'fn name_of_function() {'
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 0
 	}
 
@@ -2604,7 +2604,7 @@ fn test_calc_e_move_amount_code_line_two() {
 fn test_calc_e_move_amount_word_with_leading_whitespace() {
 	// manually set the document contents
 	fake_line := '    this'
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 0
 	}
 
@@ -2617,7 +2617,7 @@ fn test_calc_e_move_amount_two_words_with_leading_whitespace() {
 	// manually set the document contents
 	fake_line := '    this sentence'
 
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 0
 	}
 
@@ -2637,7 +2637,7 @@ fn test_calc_e_move_amount_two_words_with_leading_whitespace() {
 fn test_calc_e_move_amount_multiple_words_with_leading_whitespace() {
 	fake_line := '    this sentence is a test for this test'
 
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 0
 	}
 
@@ -2669,7 +2669,7 @@ fn test_calc_e_move_amount_multiple_words_with_leading_whitespace() {
 fn test_calc_b_move_amount_to_end_of_repeated_sequence_of_special_char() {
 	// manually set the documents contents
 	fake_line := '(((#####)))'
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 10
 	}
 	assert fake_line[fake_cursor_pos.x].ascii_str() == ')'
@@ -2696,7 +2696,7 @@ fn test_calc_b_move_amount_to_end_of_repeated_sequence_of_special_char() {
 fn test_calc_b_move_amount_from_mid_first_word_to_line_start() {
 	fake_line := '        status_green'
 
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 10
 	}
 	assert fake_line[fake_cursor_pos.x].ascii_str() == 'a'
@@ -2716,7 +2716,7 @@ fn test_calc_b_move_amount_from_mid_first_word_to_line_start() {
 fn test_calc_b_move_amount_from_special_to_line_start() {
 	fake_line := 'status_green            = Color  { 145, 237, 145 }'
 
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 24
 	}
 	assert fake_line[fake_cursor_pos.x].ascii_str() == '='
@@ -2730,7 +2730,7 @@ fn test_calc_b_move_amount_from_special_to_line_start() {
 fn test_calc_b_move_amount_general() {
 	fake_line := 'status_green            = Color  { 145, 237, 145 }'
 
-	mut fake_cursor_pos := Pos{
+	mut fake_cursor_pos := ui.CursorPos{
 		x: 43
 	}
 	assert fake_line[fake_cursor_pos.x].ascii_str() == ','
