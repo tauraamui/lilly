@@ -9,7 +9,7 @@ pub mut:
 pub struct BufferCursor {
 pub mut:
 	pos                 CursorPos
-	selection_start_pos CursorPos
+	selection_start_pos ?CursorPos
 }
 
 pub fn (cursor BufferCursor) line_is_within_selection(line_y int) bool {
@@ -62,6 +62,13 @@ pub fn (cursor BufferCursor) selection_end() CursorPos {
 }
 
 pub fn (cursor BufferCursor) selection_active() bool {
-	return cursor.selection_start_pos.x >= 0 && cursor.selection_start_pos.y >= 0
+	if selection_start := cursor.selection_start_pos {
+		return selection_start.x >= 0 && selection_start.y >= 0
+	}
+	return false
+}
+
+pub fn (mut cursor BufferCursor) clear_selection() {
+	cursor.selection_start_pos = ?CursorPos(none)
 }
 
