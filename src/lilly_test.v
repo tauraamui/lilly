@@ -15,6 +15,7 @@
 module main
 import lib.clipboardv3
 import lib.buffer
+import lib.ui
 
 @[heap]
 struct MockLineReader {
@@ -41,7 +42,7 @@ fn test_lilly_open_file_loads_into_file_buffer_and_buffer_view_maps() {
 	assert lilly.file_buffers.len == 0
 	assert lilly.buffer_views.len == 0
 
-	lilly.open_file_with_reader_at("test-file.txt", Pos{}, m_line_reader.read_lines) or { assert false }
+	lilly.open_file_with_reader_at("test-file.txt", ui.CursorPos{}, m_line_reader.read_lines) or { assert false }
 
 	assert m_line_reader.given_path == "test-file.txt"
 	assert lilly.file_buffers.len == 1
@@ -65,7 +66,7 @@ fn test_lilly_open_file_loads_into_file_buffer_and_buffer_view_maps_if_done_twic
 	assert lilly.file_buffers.len == 0
 	assert lilly.buffer_views.len == 0
 
-	lilly.open_file_with_reader_at("test-file.txt", Pos{}, m_line_reader.read_lines) or { assert false }
+	lilly.open_file_with_reader_at("test-file.txt", ui.CursorPos{}, m_line_reader.read_lines) or { assert false }
 
 	assert m_line_reader.given_path == "test-file.txt"
 	assert lilly.file_buffers.len == 1
@@ -76,7 +77,7 @@ fn test_lilly_open_file_loads_into_file_buffer_and_buffer_view_maps_if_done_twic
 	mut buff_view := lilly.buffer_views[file_buff.uuid]  or { assert false, "failed to find view instance for buffer of uuid: ${file_buff.uuid}" }
 	assert lilly.view == buff_view
 
-	lilly.open_file_with_reader_at("test-file.txt", Pos{}, m_line_reader.read_lines) or { assert false }
+	lilly.open_file_with_reader_at("test-file.txt", ui.CursorPos{}, m_line_reader.read_lines) or { assert false }
 	assert lilly.file_buffers.len == 1
 	assert lilly.buffer_views.len == 1
 	assert lilly.view.file_path == "test-file.txt"
@@ -128,7 +129,7 @@ fn test_lilly_resolve_matches_across_all_open_file_buffers_only_loaded_file_has_
 	assert lilly.file_buffers.len == 0
 	assert lilly.buffer_views.len == 0
 
-	lilly.open_file_with_reader_at("loaded-test-file.txt", Pos{}, m_line_reader.read_lines) or { assert false }
+	lilly.open_file_with_reader_at("loaded-test-file.txt", ui.CursorPos{}, m_line_reader.read_lines) or { assert false }
 
 	assert m_line_reader.given_path == "loaded-test-file.txt"
 	assert lilly.file_buffers.len == 1
@@ -154,51 +155,51 @@ fn test_lilly_resolve_matches_across_all_files_within_workspace() {
 fn test_lilly_extract_pos_from_path() {
 	mut extracted_path, mut extracted_pos := extract_pos_from_path("fake_file.v")
 	assert extracted_path == "fake_file.v"
-	assert extracted_pos  == Pos{ x: 0, y: 0 }
+	assert extracted_pos  == ui.CursorPos{ x: 0, y: 0 }
 
 	extracted_path, extracted_pos = extract_pos_from_path("fake_file.v:4")
 	assert extracted_path == "fake_file.v"
-	assert extracted_pos == Pos{ x: 0, y: 4 }
+	assert extracted_pos == ui.CursorPos{ x: 0, y: 4 }
 
 	extracted_path, extracted_pos = extract_pos_from_path("x::::::::.v:55:101")
 	assert extracted_path == "x::::::::.v"
-	assert extracted_pos == Pos{ x: 101, y: 55 }
+	assert extracted_pos == ui.CursorPos{ x: 101, y: 55 }
 
 	extracted_path, extracted_pos = extract_pos_from_path("fake_file.v:30:10")
 	assert extracted_path == "fake_file.v"
-	assert extracted_pos == Pos{ x: 10, y: 30 }
+	assert extracted_pos == ui.CursorPos{ x: 10, y: 30 }
 
 	extracted_path, extracted_pos = extract_pos_from_path("fake_file.v::10")
 	assert extracted_path == "fake_file.v"
-	assert extracted_pos == Pos{ x: 10, y: 0 }
+	assert extracted_pos == ui.CursorPos{ x: 10, y: 0 }
 
 	extracted_path, extracted_pos = extract_pos_from_path("fake_file.v:")
 	assert extracted_path == "fake_file.v"
-	assert extracted_pos == Pos{ x: 0, y: 0 } // this should just immediately considered an invalid format
+	assert extracted_pos == ui.CursorPos{ x: 0, y: 0 } // this should just immediately considered an invalid format
 
 	extracted_path, extracted_pos = extract_pos_from_path("112:95")
 	assert extracted_path == "112"
-	assert extracted_pos == Pos{ x: 0, y: 95 }
+	assert extracted_pos == ui.CursorPos{ x: 0, y: 95 }
 
 	extracted_path, extracted_pos = extract_pos_from_path("fake_file.v:::")
 	assert extracted_path == "fake_file.v:"
-	assert extracted_pos == Pos{ x: 0, y: 0 } // this should just immediately considered an invalid format
+	assert extracted_pos == ui.CursorPos{ x: 0, y: 0 } // this should just immediately considered an invalid format
 
 	extracted_path, extracted_pos = extract_pos_from_path("fake_file.v::::")
 	assert extracted_path == "fake_file.v::"
-	assert extracted_pos == Pos{ x: 0, y: 0 } // this should just immediately considered an invalid format
+	assert extracted_pos == ui.CursorPos{ x: 0, y: 0 } // this should just immediately considered an invalid format
 
 	extracted_path, extracted_pos = extract_pos_from_path(":")
 	assert extracted_path == ":"
-	assert extracted_pos == Pos{ x: 0, y: 0 } // this should just immediately considered an invalid format
+	assert extracted_pos == ui.CursorPos{ x: 0, y: 0 } // this should just immediately considered an invalid format
 
 	extracted_path, extracted_pos = extract_pos_from_path("::")
 	assert extracted_path == "::"
-	assert extracted_pos == Pos{ x: 0, y: 0 } // this should just immediately considered an invalid format
+	assert extracted_pos == ui.CursorPos{ x: 0, y: 0 } // this should just immediately considered an invalid format
 
 	extracted_path, extracted_pos = extract_pos_from_path(":::")
 	assert extracted_path == ":"
-	assert extracted_pos == Pos{ x: 0, y: 0 } // this should just immediately considered an invalid format
+	assert extracted_pos == ui.CursorPos{ x: 0, y: 0 } // this should just immediately considered an invalid format
 }
 
 fn test_lilly_resolve_inactive_file_buffer_paths() {
@@ -214,7 +215,7 @@ fn test_lilly_resolve_inactive_file_buffer_paths() {
 	assert lilly.file_buffers.len == 0
 	assert lilly.buffer_views.len == 0
 
-	lilly.open_file_with_reader_at("test-file.txt", Pos{}, m_line_reader.read_lines) or { assert false }
+	lilly.open_file_with_reader_at("test-file.txt", ui.CursorPos{}, m_line_reader.read_lines) or { assert false }
 
 	assert lilly.file_buffers.len == 1
 	assert lilly.buffer_views.len == 1
@@ -225,7 +226,7 @@ fn test_lilly_resolve_inactive_file_buffer_paths() {
 		line_data: ["This is another fake document that doesn't exist on disk anywhere"]
 	}
 
-	lilly.open_file_with_reader_at("different-test-file.txt", Pos{}, m_line_reader.read_lines) or { assert false }
+	lilly.open_file_with_reader_at("different-test-file.txt", ui.CursorPos{}, m_line_reader.read_lines) or { assert false }
 
 	assert lilly.view.file_path == "different-test-file.txt"
 

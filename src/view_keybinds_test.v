@@ -17,6 +17,7 @@ module main
 import lib.clipboardv3
 import lib.draw
 import lib.buffer
+import lib.ui
 import term.ui as tui
 import log
 
@@ -227,8 +228,8 @@ struct MovementKeyEventTestCase {
 	name                string
 	code                tui.KeyCode
 	document_contents   []string
-	starting_cursor_pos Pos
-	expected_cursor_pos Pos
+	starting_cursor_pos ui.CursorPos
+	expected_cursor_pos ui.CursorPos
 }
 
 const basic_three_lines_doc = [
@@ -257,11 +258,11 @@ const movement_key_cases = [
 		name:                'key code h'
 		code:                tui.KeyCode.h
 		document_contents:   basic_three_lines_doc
-		starting_cursor_pos: Pos{
+		starting_cursor_pos: ui.CursorPos{
 			x: 3
 			y: 0
 		}
-		expected_cursor_pos: Pos{
+		expected_cursor_pos: ui.CursorPos{
 			x: 2
 			y: 0
 		}
@@ -270,11 +271,11 @@ const movement_key_cases = [
 		name:                'key code l'
 		code:                tui.KeyCode.l
 		document_contents:   basic_three_lines_doc
-		starting_cursor_pos: Pos{
+		starting_cursor_pos: ui.CursorPos{
 			x: 3
 			y: 0
 		}
-		expected_cursor_pos: Pos{
+		expected_cursor_pos: ui.CursorPos{
 			x: 4
 			y: 0
 		}
@@ -283,11 +284,11 @@ const movement_key_cases = [
 		name:                'key code j'
 		code:                tui.KeyCode.j
 		document_contents:   basic_three_lines_doc
-		starting_cursor_pos: Pos{
+		starting_cursor_pos: ui.CursorPos{
 			x: 0
 			y: 0
 		}
-		expected_cursor_pos: Pos{
+		expected_cursor_pos: ui.CursorPos{
 			x: 0
 			y: 1
 		}
@@ -296,11 +297,11 @@ const movement_key_cases = [
 		name:                'key code k'
 		code:                tui.KeyCode.k
 		document_contents:   basic_three_lines_doc
-		starting_cursor_pos: Pos{
+		starting_cursor_pos: ui.CursorPos{
 			x: 0
 			y: 1
 		}
-		expected_cursor_pos: Pos{
+		expected_cursor_pos: ui.CursorPos{
 			x: 0
 			y: 0
 		}
@@ -309,11 +310,11 @@ const movement_key_cases = [
 		name:                'key code e'
 		code:                tui.KeyCode.e
 		document_contents:   basic_three_lines_doc
-		starting_cursor_pos: Pos{
+		starting_cursor_pos: ui.CursorPos{
 			x: 1
 			y: 1
 		}
-		expected_cursor_pos: Pos{
+		expected_cursor_pos: ui.CursorPos{
 			x: 8
 			y: 1
 		}
@@ -322,11 +323,11 @@ const movement_key_cases = [
 		name:                'key code e move to end of word on line after empty line'
 		code:                tui.KeyCode.e
 		document_contents:   lines_with_empty_between
-		starting_cursor_pos: Pos{
+		starting_cursor_pos: ui.CursorPos{
 			x: 0
 			y: 1
 		}
-		expected_cursor_pos: Pos{
+		expected_cursor_pos: ui.CursorPos{
 			x: 3
 			y: 2
 		}
@@ -335,11 +336,11 @@ const movement_key_cases = [
 		name:                'key code w'
 		code:                tui.KeyCode.w
 		document_contents:   basic_three_lines_doc
-		starting_cursor_pos: Pos{
+		starting_cursor_pos: ui.CursorPos{
 			x: 1
 			y: 1
 		}
-		expected_cursor_pos: Pos{
+		expected_cursor_pos: ui.CursorPos{
 			x: 3
 			y: 1
 		}
@@ -348,11 +349,11 @@ const movement_key_cases = [
 		name:                'key code w move to end of code line which terminates with floating single special'
 		code:                tui.KeyCode.w
 		document_contents:   gapped_blocks_of_content_doc
-		starting_cursor_pos: Pos{
+		starting_cursor_pos: ui.CursorPos{
 			x: 7
 			y: 7
 		}
-		expected_cursor_pos: Pos{
+		expected_cursor_pos: ui.CursorPos{
 			x: 21
 			y: 7
 		}
@@ -361,11 +362,11 @@ const movement_key_cases = [
 		name:                'key code w end of line to next line'
 		code:                tui.KeyCode.w
 		document_contents:   basic_three_lines_doc
-		starting_cursor_pos: Pos{
+		starting_cursor_pos: ui.CursorPos{
 			x: 12
 			y: 0
 		}
-		expected_cursor_pos: Pos{
+		expected_cursor_pos: ui.CursorPos{
 			x: 0
 			y: 1
 		}
@@ -375,11 +376,11 @@ const movement_key_cases = [
 		name:                'key code b'
 		code:                tui.KeyCode.b
 		document_contents:   basic_three_lines_doc
-		starting_cursor_pos: Pos{
+		starting_cursor_pos: ui.CursorPos{
 			x: 8
 			y: 1
 		}
-		expected_cursor_pos: Pos{
+		expected_cursor_pos: ui.CursorPos{
 			x: 3
 			y: 1
 		}
@@ -388,11 +389,11 @@ const movement_key_cases = [
 		name:                'key code left'
 		code:                tui.KeyCode.left
 		document_contents:   basic_three_lines_doc
-		starting_cursor_pos: Pos{
+		starting_cursor_pos: ui.CursorPos{
 			x: 3
 			y: 0
 		}
-		expected_cursor_pos: Pos{
+		expected_cursor_pos: ui.CursorPos{
 			x: 2
 			y: 0
 		}
@@ -401,11 +402,11 @@ const movement_key_cases = [
 		name:                'key code right'
 		code:                tui.KeyCode.right
 		document_contents:   basic_three_lines_doc
-		starting_cursor_pos: Pos{
+		starting_cursor_pos: ui.CursorPos{
 			x: 3
 			y: 0
 		}
-		expected_cursor_pos: Pos{
+		expected_cursor_pos: ui.CursorPos{
 			x: 4
 			y: 0
 		}
@@ -414,11 +415,11 @@ const movement_key_cases = [
 		name:                'key code down'
 		code:                tui.KeyCode.down
 		document_contents:   basic_three_lines_doc
-		starting_cursor_pos: Pos{
+		starting_cursor_pos: ui.CursorPos{
 			x: 0
 			y: 0
 		}
-		expected_cursor_pos: Pos{
+		expected_cursor_pos: ui.CursorPos{
 			x: 0
 			y: 1
 		}
@@ -427,11 +428,11 @@ const movement_key_cases = [
 		name:                'key code up'
 		code:                tui.KeyCode.up
 		document_contents:   basic_three_lines_doc
-		starting_cursor_pos: Pos{
+		starting_cursor_pos: ui.CursorPos{
 			x: 0
 			y: 1
 		}
-		expected_cursor_pos: Pos{
+		expected_cursor_pos: ui.CursorPos{
 			x: 0
 			y: 0
 		}
@@ -440,11 +441,11 @@ const movement_key_cases = [
 		name:                'key code caret/hat'
 		code:                tui.KeyCode.caret
 		document_contents:   basic_three_lines_doc
-		starting_cursor_pos: Pos{
+		starting_cursor_pos: ui.CursorPos{
 			x: 11
 			y: 0
 		}
-		expected_cursor_pos: Pos{
+		expected_cursor_pos: ui.CursorPos{
 			x: 0
 			y: 0
 		}
@@ -453,11 +454,11 @@ const movement_key_cases = [
 		name:                'key code dollar'
 		code:                tui.KeyCode.dollar
 		document_contents:   basic_three_lines_doc
-		starting_cursor_pos: Pos{
+		starting_cursor_pos: ui.CursorPos{
 			x: 0
 			y: 0
 		}
-		expected_cursor_pos: Pos{
+		expected_cursor_pos: ui.CursorPos{
 			x: 12
 			y: 0
 		}
@@ -466,11 +467,11 @@ const movement_key_cases = [
 		name:                'key code left curly bracket'
 		code:                tui.KeyCode.left_curly_bracket
 		document_contents:   gapped_blocks_of_content_doc
-		starting_cursor_pos: Pos{
+		starting_cursor_pos: ui.CursorPos{
 			x: 0
 			y: 12
 		}
-		expected_cursor_pos: Pos{
+		expected_cursor_pos: ui.CursorPos{
 			x: 0
 			y: 3
 		}
@@ -520,7 +521,7 @@ fn test_w_moves_cursor_to_next_line_with_plain_comments() {
 		buffer: buffer.Buffer.new("", false)
 	}
 	fake_view.buffer.lines = fake_lines
-	fake_view.cursor.pos = Pos{
+	fake_view.cursor.pos = ui.CursorPos{
 		x: 35
 	}
 	kevent := draw.Event{

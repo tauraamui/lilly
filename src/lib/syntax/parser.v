@@ -14,8 +14,6 @@
 
 module syntax
 
-import lib.draw
-
 enum State {
 	default
 	in_comment

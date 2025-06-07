@@ -18,6 +18,7 @@ import lib.buffer
 import lib.draw
 import lib.syntax
 import lib.utf8
+import lib.core
 
 pub struct BufferView {
 	buf       &buffer.Buffer = unsafe { nil }
@@ -42,9 +43,11 @@ pub fn (mut buf_view BufferView) draw(
 	width int, height int,
 	from_line_num int,
 	min_x int,
-	cursor_y_pos int,
-	relative_line_nums bool
+	relative_line_nums bool,
+	current_mode core.Mode,
+	cursor BufferCursor
 ) {
+	cursor_y_pos := cursor.pos.y
 	if buf_view.buf == unsafe { nil } { return }
 	syntax_def := buf_view.syntaxes[buf_view.syntax_id] or { syntax.Syntax{} }
 
@@ -66,7 +69,7 @@ pub fn (mut buf_view BufferView) draw(
 		)
 
 		is_cursor_line := document_line_num == cursor_y_pos
-		if is_cursor_line {
+		if current_mode != .visual_line && is_cursor_line {
 			ctx.set_bg_color(draw.Color{53, 53, 53})
 			ctx.draw_rect(x + screenspace_x_offset + 1, y + screenspace_y_offset, width - (x + screenspace_x_offset), 1)
 			ctx.reset_bg_color()
@@ -74,6 +77,7 @@ pub fn (mut buf_view BufferView) draw(
 		// draw the line of text, offset by the position of the buffer view
 		draw_text_line(
 			mut ctx,
+			current_mode,
 			x + screenspace_x_offset + 1,
 			y + screenspace_y_offset,
 			line,
@@ -81,7 +85,8 @@ pub fn (mut buf_view BufferView) draw(
 			syntax_def,
 			min_x,
 			width,
-			is_cursor_line
+			is_cursor_line,
+			cursor
 		)
 
 		screenspace_y_offset += 1
@@ -126,15 +131,17 @@ fn draw_line_number(
 
 fn draw_text_line(
 	mut ctx draw.Contextable,
+	current_mode core.Mode,
 	x int, y int,
 	line string,
 	line_tokens []syntax.Token,
 	syntax_def syntax.Syntax,
 	min_x int, width int,
-	is_cursor_line bool
+	is_cursor_line bool,
+	cursor BufferCursor
 ) {
 	max_width := width - x
-	if is_cursor_line {
+	if current_mode != .visual_line && is_cursor_line { // no point in setting the bg in this case
 		ctx.set_bg_color(draw.Color{53, 53, 53})
 		defer { ctx.reset_bg_color() }
 	}

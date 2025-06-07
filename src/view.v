@@ -30,71 +30,6 @@ import lib.draw
 import lib.core
 import lib.ui
 
-struct Cursor {
-mut:
-	pos                 Pos
-	selection_start_pos Pos
-}
-
-fn (cursor Cursor) line_is_within_selection(line_y int) bool {
-	start := if cursor.selection_start_pos.y < cursor.pos.y {
-		cursor.selection_start_pos.y
-	} else {
-		cursor.pos.y
-	}
-	end := if cursor.pos.y > cursor.selection_start_pos.y {
-		cursor.pos.y
-	} else {
-		cursor.selection_start_pos.y
-	}
-
-	return line_y >= start && line_y <= end
-}
-
-fn (cursor Cursor) selection_start() Pos {
-	if cursor.selection_start_pos.y == cursor.pos.y {
-		if cursor.selection_start_pos.x == cursor.pos.x {
-			return cursor.selection_start_pos
-		}
-		if cursor.selection_start_pos.x < cursor.pos.x {
-			return cursor.selection_start_pos
-		}
-		return cursor.pos
-	}
-	if cursor.selection_start_pos.y < cursor.pos.y {
-		return cursor.selection_start_pos
-	} else {
-		return cursor.pos
-	}
-}
-
-fn (cursor Cursor) selection_end() Pos {
-	if cursor.pos.y == cursor.selection_start_pos.y {
-		if cursor.pos.x == cursor.selection_start_pos.x {
-			return cursor.pos
-		}
-		if cursor.pos.x > cursor.selection_start_pos.x {
-			return cursor.pos
-		}
-		return cursor.selection_start_pos
-	}
-	if cursor.pos.y > cursor.selection_start_pos.y {
-		return cursor.pos
-	} else {
-		return cursor.selection_start_pos
-	}
-}
-
-fn (cursor Cursor) selection_active() bool {
-	return cursor.selection_start_pos.x >= 0 && cursor.selection_start_pos.y >= 0
-}
-
-struct Pos {
-mut:
-	x int
-	y int
-}
-
 const auto_pairs = {
 	'}': '{'
 	']': '['
@@ -143,7 +78,7 @@ mut:
 	buf_view                  ui.BufferView
 	buffer                    buffer.Buffer
 	leader_key                string = " "
-	cursor                    Cursor
+	cursor                    ui.BufferCursor
 	cmd_buf                   CmdBuffer
 	search                    Search
 	chord                     chords.Chord
@@ -517,7 +452,7 @@ fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes 
 	}
 	res.buf_view = ui.BufferView.new(&res.buffer, syntaxes, syn_id)
 	res.path = res.buffer.file_path
-	res.cursor.selection_start_pos = Pos{-1, -1}
+	res.cursor.clear_selection()
 	return res
 }
 
@@ -605,15 +540,13 @@ fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
 fn (mut view View) draw_x(mut ctx draw.Contextable) {
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
-	view.update_to() // NOTE(tauraamui) [18/03/2025]: yes, I shouldn't need to keep calling this
-					 // anymore, seeing as the buffer_view just works off of the relative "from" and
-					 // the given height it is told to work within, but if we don't call it, the
-					 // cursor won't move, so... *sniff sniff*, smells like toxic tech debt, yayyyy!
 	view.buf_view.draw(
 		mut ctx, 0, 0,
 		ctx.window_width(), ctx.window_height() - 2,
-		view.from, 0, view.cursor.pos.y,
-		view.config.relative_line_numbers
+		view.from, 0,
+		view.config.relative_line_numbers,
+		view.leader_state.mode,
+		view.cursor
 	)
 
 	ui.draw_status_line(
@@ -639,7 +572,10 @@ fn (mut view View) draw_x(mut ctx draw.Contextable) {
 fn (mut view View) draw(mut ctx draw.Contextable) {
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
-	view.update_to()
+	view.update_to() // NOTE(tauraamui) [18/03/2025]: yes, I shouldn't need to keep calling this
+					 // anymore, seeing as the buffer_view just works off of the relative "from" and
+					 // the given height it is told to work within, but if we don't call it, the
+					 // cursor won't move, so... *sniff sniff*, smells like toxic tech debt, yayyyy!
 	// view.draw_x(mut ctx)
 	view.draw_document(mut ctx)
 
@@ -718,7 +654,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 
 fn draw_text_line(mut ctx draw.Contextable,
 	syntax syntaxlib.Syntax,
-	cursor Cursor,
+	cursor ui.BufferCursor,
 	current_mode core.Mode,
 	selection_highlight_color draw.Color,
 	screen_space_x int, screen_space_y int, document_space_y int,
@@ -727,7 +663,7 @@ fn draw_text_line(mut ctx draw.Contextable,
 	original_line string) {
 	match current_mode {
 		.visual_line {
-			within_selection := cursor.line_is_within_selection(document_space_y)
+			within_selection := cursor.y_within_selection(document_space_y)
 			if within_selection {
 				ctx.set_bg_color(
 					r: selection_highlight_color.r
@@ -741,7 +677,7 @@ fn draw_text_line(mut ctx draw.Contextable,
 			return
 		}
 		.visual {
-			if cursor.line_is_within_selection(document_space_y) {
+			if cursor.y_within_selection(document_space_y) {
 				draw_text_line_within_visual_selection(mut ctx, syntax, cursor, selection_highlight_color,
 					screen_space_x, screen_space_y, document_space_y, cursor_screen_space_y,
 					line, original_line)
@@ -765,7 +701,7 @@ fn draw_text_line(mut ctx draw.Contextable,
 
 fn draw_text_line_within_visual_selection(mut ctx draw.Contextable,
 	syntax syntaxlib.Syntax,
-	cursor Cursor,
+	cursor ui.BufferCursor,
 	selection_highlight_color draw.Color,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
@@ -777,8 +713,8 @@ fn draw_text_line_within_visual_selection(mut ctx draw.Contextable,
 	}
 	// NOTE(tauraamui): don't think this can happen from upstream but safe to check
 
-	selection_start := cursor.selection_start()
-	selection_end := cursor.selection_end()
+	selection_start := if sel_start := cursor.sel_start() { sel_start } else { return }
+	selection_end := if sel_end := cursor.sel_end() { sel_end } else { return }
 
 	if document_space_y == selection_start.y && document_space_y == selection_end.y {
 		draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx, syntax,
@@ -809,7 +745,7 @@ fn draw_text_line_within_visual_selection(mut ctx draw.Contextable,
 fn draw_text_line_visual_selection_between_start_and_end(mut ctx draw.Contextable,
 	syntax syntaxlib.Syntax,
 	selection_highlight_color draw.Color,
-	selection_start Pos, selection_end Pos,
+	selection_start ui.CursorPos, selection_end ui.CursorPos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
 	line_runes []rune,
@@ -826,7 +762,7 @@ fn draw_text_line_visual_selection_between_start_and_end(mut ctx draw.Contextabl
 fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Contextable,
 	syntax syntaxlib.Syntax,
 	selection_highlight_color draw.Color,
-	selection_start Pos, selection_end Pos,
+	selection_start ui.CursorPos, selection_end ui.CursorPos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
 	line_runes []rune,
@@ -856,7 +792,7 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 fn draw_text_line_visual_selection_starts_on_same_but_ends_after(mut ctx draw.Contextable,
 	syntax syntaxlib.Syntax,
 	selection_highlight_color draw.Color,
-	selection_start Pos, selection_end Pos,
+	selection_start ui.CursorPos, selection_end ui.CursorPos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
 	line_runes []rune,
@@ -892,7 +828,7 @@ fn draw_text_line_visual_selection_starts_on_same_but_ends_after(mut ctx draw.Co
 fn draw_text_line_visual_selection_starts_before_but_ends_on_line(mut ctx draw.Contextable,
 	syntax syntaxlib.Syntax,
 	selection_highlight_color draw.Color,
-	selection_start Pos, selection_end Pos,
+	selection_start ui.CursorPos, selection_end ui.CursorPos,
 	screen_space_x int, screen_space_y int, document_space_y int,
 	cursor_screen_space_y int,
 	line_runes []rune,
@@ -1293,8 +1229,8 @@ fn (mut view View) insert_tab() {
 //                             thought through before this stuff is migrated to the
 //                             buffer wrapper type data structure.
 fn (mut view View) visual_indent() {
-	mut start := view.cursor.selection_start().y
-	mut end := view.cursor.selection_end().y
+	mut start := if sel_start := view.cursor.sel_start() { sel_start.y } else { return }
+	mut end := if sel_end := view.cursor.sel_end() { sel_end.y } else { return }
 
 	prefix := if view.config.insert_tabs_not_spaces { '\t' } else { ' '.repeat(4) }
 
@@ -1304,8 +1240,8 @@ fn (mut view View) visual_indent() {
 }
 
 fn (mut view View) visual_unindent() {
-	mut start := view.cursor.selection_start().y
-	mut end := view.cursor.selection_end().y
+	mut start := if sel_start := view.cursor.sel_start() { sel_start.y } else { return }
+	mut end := if sel_end := view.cursor.sel_end() { sel_end.y } else { return }
 
 	prefix := if view.config.insert_tabs_not_spaces { '\t' } else { ' '.repeat(4) }
 
@@ -1356,7 +1292,7 @@ fn (mut view View) insert_text(s string) {
 fn (mut view View) escape() {
 	// TODO(tauraamui) -> completely re-write this method
 	defer {
-		view.cursor.selection_start_pos = Pos{-1, -1}
+		view.cursor.clear_selection()
 		view.clamp_cursor_within_document_bounds()
 		view.scroll_from_and_to()
 	}
@@ -1598,12 +1534,12 @@ fn (mut view View) i() {
 
 fn (mut view View) v() {
 	view.leader_state.mode = .visual
-	view.cursor.selection_start_pos = view.cursor.pos
+	view.cursor.set_selection(view.cursor.pos)
 }
 
 fn (mut view View) shift_v() {
 	view.leader_state.mode = .visual_line
-	view.cursor.selection_start_pos = view.cursor.pos
+	view.cursor.set_selection(view.cursor.pos)
 }
 
 fn (mut view View) r() {
@@ -1632,8 +1568,10 @@ fn (mut view View) visual_d(overwrite_y_lines bool) {}
 
 fn (mut view View) visual_line_d(overwrite_y_lines bool) {
 	defer { view.clamp_cursor_within_document_bounds() }
-	mut start := view.cursor.selection_start().y
-	mut end := view.cursor.selection_end().y
+	assert view.cursor.sel_active()
+
+	mut start := if sel_start := view.cursor.sel_start() { sel_start.y } else { return }
+	mut end := if sel_end := view.cursor.sel_end() { sel_end.y } else { return }
 
 	// view.copy_lines_into_clipboard(start, end)
 	before := view.buffer.lines[..start]
@@ -1792,8 +1730,9 @@ fn (mut view View) d() {
 			}
 		}
 		.visual_line {
-			start_index := view.cursor.selection_start().y
-			mut end_index := view.cursor.selection_end().y
+			assert view.cursor.sel_active()
+			start_index := if sel_start := view.cursor.sel_start() { sel_start.y } else { return }
+			mut end_index := if sel_end := view.cursor.sel_end() { sel_end.y } else { return }
 			view.clipboard.set_content(clipboardv3.ClipboardContent{
 				type: .block,
 				data: view.buffer.lines[start_index..end_index + 1].join("\n")
@@ -1953,10 +1892,12 @@ fn (mut view View) shift_a() {
 
 fn (mut view View) y() {
 	defer { view.leader_state.reset() }
+	assert view.cursor.sel_active() // if the selection pos isn't set the rest of this makes little sense
 	match view.leader_state.mode {
 		.visual {
-			start := view.cursor.selection_start()
-			end   := view.cursor.selection_end()
+			// NOTE(tauraamui) [08/06/2025]: this logic is pretty much all wrong
+			start := if sel_start := view.cursor.sel_start() { sel_start } else { ui.CursorPos{ -1, -1 } }
+			end := if sel_end := view.cursor.sel_end() { sel_end } else { ui.CursorPos{ -1, -1 } }
 			if start.y == end.y {
 				view.clipboard.set_content(clipboardv3.ClipboardContent{
 					type: .inline,
@@ -1978,8 +1919,8 @@ fn (mut view View) y() {
 			})
 		}
 		.visual_line {
-			start_index   := view.cursor.selection_start().y
-			mut end_index := view.cursor.selection_end().y
+			start_index   := if sel_start := view.cursor.sel_start() { sel_start.y } else { 0 }
+			mut end_index := if sel_end := view.cursor.sel_end() { sel_end.y } else { 0 }
 			view.clipboard.set_content(clipboardv3.ClipboardContent{
 				type: .block,
 				data: view.buffer.lines[start_index..end_index + 1].join("\n")
@@ -2078,7 +2019,7 @@ fn count_repeated_sequence(char_rune rune, line []rune) int {
 	return 0
 }
 
-fn calc_w_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
+fn calc_w_move_amount(cursor_pos ui.CursorPos, line string, recursive_call bool) int {
 	if line.len == 0 {
 		return 0
 	}
@@ -2099,7 +2040,7 @@ fn calc_w_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 				continue
 			}
 			if is_whitespace(c) {
-				return calc_w_move_amount(Pos{ x: cursor_pos.x + i +
+				return calc_w_move_amount(ui.CursorPos{ x: cursor_pos.x + i +
 					1, y: cursor_pos.y }, line, true) + i + 1
 			}
 			return i + 1
@@ -2123,7 +2064,7 @@ fn calc_w_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 		}
 		for i, c in line_chars[cursor_pos.x + 1..] {
 			if is_non_alpha(c) {
-				return calc_w_move_amount(Pos{ x: cursor_pos.x + i +
+				return calc_w_move_amount(ui.CursorPos{ x: cursor_pos.x + i +
 					1, y: cursor_pos.y }, line, true) + i + 1
 			}
 		}
@@ -2151,7 +2092,7 @@ fn is_special(r rune) ?rune {
 	return none
 }
 
-fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
+fn calc_e_move_amount(cursor_pos ui.CursorPos, line string, recursive_call bool) !int {
 	if line.len == 0 {
 		return 0
 	}
@@ -2171,7 +2112,7 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
 		}
 		// basically this means we've hit a single floating special
 
-		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or {
+		return calc_e_move_amount(ui.CursorPos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or {
 			return err
 		} + 1
 	}
@@ -2187,7 +2128,7 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
 				break
 			}
 		}
-		return calc_e_move_amount(Pos{ x: cursor_pos.x + end_of_whitespace_set, y: cursor_pos.y }, line, true) or {
+		return calc_e_move_amount(ui.CursorPos{ x: cursor_pos.x + end_of_whitespace_set, y: cursor_pos.y }, line, true) or {
 			return err
 		} + end_of_whitespace_set
 	}
@@ -2215,7 +2156,7 @@ fn calc_e_move_amount(cursor_pos Pos, line string, recursive_call bool) !int {
 			}
 			else {}
 		}
-		return calc_e_move_amount(Pos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or {
+		return calc_e_move_amount(ui.CursorPos{ x: cursor_pos.x + 1, y: cursor_pos.y }, line, true) or {
 			return err
 		} + 1
 	}
@@ -2245,7 +2186,7 @@ fn find_position_within_word(cursor_pos_x int, line_chars []rune) PositionWithin
 }
 
 // status_green            = Color { 145, 237, 145 }
-fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
+fn calc_b_move_amount(cursor_pos ui.CursorPos, line string, recursive_call bool) int {
 	if line.len == 0 {
 		return 0
 	}
@@ -2267,7 +2208,7 @@ fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 				}
 				if i == 0 {
 					return
-						calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) +
+						calc_b_move_amount(ui.CursorPos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) +
 						1
 				}
 				return i
@@ -2275,7 +2216,7 @@ fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 			// find out if on single special char
 			if i == 0 && !recursive_call {
 				return
-					calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) + 1
+					calc_b_move_amount(ui.CursorPos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) + 1
 			}
 			return i
 		}
@@ -2290,7 +2231,7 @@ fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 		for i, c in line_chars[..cursor_pos.x].reverse() {
 			max_i = i
 			if !is_whitespace(c) {
-				return calc_b_move_amount(Pos{ x: cursor_pos.x - (i +
+				return calc_b_move_amount(ui.CursorPos{ x: cursor_pos.x - (i +
 					1), y: cursor_pos.y }, line, true) + i + 1
 			}
 		}
@@ -2311,7 +2252,7 @@ fn calc_b_move_amount(cursor_pos Pos, line string, recursive_call bool) int {
 						return 0
 					}
 					return
-						calc_b_move_amount(Pos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) +
+						calc_b_move_amount(ui.CursorPos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) +
 						1
 				}
 				return i

@@ -64,7 +64,11 @@ fn test_buffer_view_draws_lines_0_to_max_height() {
 	min_x := 0
 	from_line_num := 0
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0, false)
+	buf_view.draw(
+		mut mock_ctx, x, y,
+		width, height, from_line_num,
+		min_x, false, .normal, BufferCursor{}
+	)
 
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 99, height: 1 }
@@ -141,7 +145,11 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 	min_x := 0
 	from_line_num := 0
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0, false)
+	buf_view.draw(
+		mut mock_ctx, x, y,
+		width, height, from_line_num,
+		min_x, false, .normal, BufferCursor{}
+	)
 
 	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert drawn_rect == [
@@ -190,7 +198,11 @@ fn test_buffer_view_draws_1_line_as_multiple_segments_highlighted_as_expected() 
 	min_x := 0
 	from_line_num := 0
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0, false)
+	buf_view.draw(
+		mut mock_ctx, x, y,
+		width, height, from_line_num,
+		min_x, false, .normal, BufferCursor{}
+	)
 
 	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert drawn_rect == [
@@ -243,7 +255,11 @@ fn test_buffer_view_draws_1_line_as_single_segment_single_emoji() {
 	min_x := 0
 	from_line_num := 0
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0, false)
+	buf_view.draw(
+		mut mock_ctx, x, y,
+		width, height, from_line_num,
+		min_x, false, .normal, BufferCursor{}
+	)
 
 	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert drawn_rect == [
@@ -293,7 +309,11 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	min_x := 0
 	from_line_num := 10
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 12, false)
+	buf_view.draw(
+		mut mock_ctx, x, y,
+		width, height, from_line_num,
+		min_x, false, .normal, BufferCursor{ pos: CursorPos{ y: 12 } }
+	)
 
 	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert drawn_rect == [
@@ -447,7 +467,11 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled()
 	min_x := 0
 	from_line_num := 10
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 15, true) // toggle relative line numbers on
+	buf_view.draw(
+		mut mock_ctx, x, y,
+		width, height, from_line_num,
+		min_x, true, .normal, BufferCursor{ pos: CursorPos{ y: 15 } }
+	) // toggle relative line numbers on
 
 	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert drawn_rect == [
@@ -601,7 +625,11 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled_c
 	min_x := 0
 	from_line_num := 10
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 15, true) // toggle relative line numbers on
+	buf_view.draw(
+		mut mock_ctx, x, y,
+		width, height, from_line_num,
+		min_x, true, .normal, BufferCursor{ pos: CursorPos{ y: 15 } }
+	) // toggle relative line numbers on
 
 	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert drawn_rect == [
@@ -623,7 +651,11 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled_c
 	assert drawn_text[126] == DrawnText{ x: 1, y: 9, data: "4" }
 
 	drawn_text.clear()
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 13, true) // toggle relative line numbers on
+	buf_view.draw(
+		mut mock_ctx, x, y,
+		width, height, from_line_num,
+		min_x, true, .normal, BufferCursor{ pos: CursorPos{ y: 13 } }
+	) // toggle relative line numbers on
 
 	assert drawn_text[0] == DrawnText{ x: 1, y: 0, data: "3" }
 	assert drawn_text[14] == DrawnText{ x: 1, y: 1, data: "2" }
@@ -637,7 +669,12 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled_c
 	assert drawn_text[126] == DrawnText{ x: 1, y: 9, data: "6" }
 
 	drawn_text.clear()
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 18, true) // toggle relative line numbers on
+	buf_view.draw(
+		mut mock_ctx, x, y,
+		width, height, from_line_num,
+		min_x, true, .normal,
+		BufferCursor{ pos: CursorPos{ y: 18 } }
+	) // toggle relative line numbers on
 
 	assert drawn_text[0] == DrawnText{ x: 1, y: 0, data: "8" }
 	assert drawn_text[14] == DrawnText{ x: 1, y: 1, data: "7" }
@@ -686,7 +723,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_14() {
 	min_x := 0
 	from_line_num := 0
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0, false)
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{})
 
 	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert drawn_rect == [
@@ -751,7 +788,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_4_max_width_56() {
 	min_x := 4
 	from_line_num := 0
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0, false)
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{})
 
 	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert drawn_rect == [
@@ -822,7 +859,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_56() {
 	min_x := 21
 	from_line_num := 0
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0, false)
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{})
 
 	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert drawn_rect == [
@@ -884,7 +921,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_6() {
 	min_x := 21
 	from_line_num := 0
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, 0, false)
+	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{})
 
 	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert drawn_rect == [
