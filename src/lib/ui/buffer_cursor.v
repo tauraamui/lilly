@@ -30,11 +30,10 @@ pub fn (cursor BufferCursor) y_within_selection(line_y int) bool {
 }
 
 pub fn (cursor BufferCursor) sel_start() ?CursorPos {
-	start := match true {
-		cursor.sel_start_pos == none { none }
-		else { CursorPos{} }
-	}
-	return start
+	start_pos := cursor.sel_start_pos or { return none }
+	if start_pos.y > cursor.pos.y { return cursor.pos }
+	if start_pos.x > cursor.pos.x { return cursor.pos }
+	return start_pos
 }
 
 pub fn (cursor BufferCursor) line_is_within_selection(line_y int) bool {
@@ -90,8 +89,12 @@ pub fn (cursor BufferCursor) selection_end() CursorPos {
 	}
 }
 
+pub fn (cursor BufferCursor) sel_active() bool {
+	return cursor.sel_start_pos != none
+}
+
 pub fn (cursor BufferCursor) selection_active() bool {
-	return false
+	return cursor.selection_start_pos.x >= 0 && cursor.selection_start_pos.y >= 0
 }
 
 pub fn (mut cursor BufferCursor) set_selection(sel CursorPos) {
