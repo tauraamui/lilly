@@ -25,6 +25,17 @@ fn test_cursor_check_start_pos_is_none_if_none() {
 	assert cursor.sel_start() == none
 }
 
+fn test_selection_start_smallest_wins() {
+	mut cursor := ui.BufferCursor{ pos: CursorPos{ x: 0, y: 11 }, sel_start_pos: CursorPos{ x: 4, y: 3 } }
+	assert cursor.sel_start()? == CursorPos{4, 3}
+}
+
+fn test_selection_start_smallest_wins_using_method_to_set_selection() {
+	mut cursor := ui.BufferCursor{ pos: CursorPos{ x: 0, y: 11 } }
+	cursor.set_selection(CursorPos{ x: 4, y: 3 })
+	assert cursor.sel_start()? == CursorPos{4, 3}
+}
+
 @[assert_continues]
 fn test_cursor_check_start_pos_is_cursor_pos_if_start_is_after() {
 	// start y is more than cursor y
