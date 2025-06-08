@@ -161,9 +161,7 @@ fn draw_text_line(
 			min_x, x, max_width,
 			visual_x_offset, y
 		)
-		if cur_token_type != .whitespace {
-			previous_token = current_token
-		}
+		previous_token = current_token
 	}
 }
 
