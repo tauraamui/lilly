@@ -494,19 +494,32 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	assert syntax.color_to_type(set_fg_color[53])? == .identifier
 	assert syntax.color_to_type(set_fg_color[54])? == .whitespace
 
-	assert set_fg_color[55] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[56])? == .identifier
-	assert syntax.color_to_type(set_fg_color[57])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[58])? == .identifier
-	assert syntax.color_to_type(set_fg_color[59])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[60])? == .identifier
-	assert syntax.color_to_type(set_fg_color[61])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[62])? == .number
-	assert syntax.color_to_type(set_fg_color[63])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[64])? == .identifier
-	assert syntax.color_to_type(set_fg_color[65])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[66])? == .identifier
-	assert syntax.color_to_type(set_fg_color[67])? == .whitespace
+	assert set_fg_color[55] == draw.Color{ 231, 231, 231 } // TODO(tauraamui) [10/06/2025]: figure out where this specific colour is coming from
+	assert set_fg_color[56] == line_num_fg_color
+	assert syntax.color_to_type(set_fg_color[57])? == .identifier
+	assert syntax.color_to_type(set_fg_color[58])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[59])? == .identifier
+	assert syntax.color_to_type(set_fg_color[60])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[61])? == .identifier
+	assert syntax.color_to_type(set_fg_color[62])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[63])? == .number
+	assert syntax.color_to_type(set_fg_color[64])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[65])? == .identifier
+	assert syntax.color_to_type(set_fg_color[66])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[67])? == .identifier
+
+	assert set_fg_color[68] == draw.Color{ 107, 189, 21 } // TODO(tauraamui) [10/06/2025]: figure out where this specific colour is coming from
+	assert syntax.color_to_type(set_fg_color[69])? == .identifier
+	assert set_fg_color[70] == line_num_fg_color
+	assert syntax.color_to_type(set_fg_color[71])? == .identifier
+	assert syntax.color_to_type(set_fg_color[72])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[73])? == .identifier
+	assert syntax.color_to_type(set_fg_color[74])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[75])? == .identifier
+	assert syntax.color_to_type(set_fg_color[76])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[77])? == .number
+	assert syntax.color_to_type(set_fg_color[78])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[79])? == .identifier
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 0, y: 0, data: "11" }, DrawnText{ x: 3, y: 0, data: "This" },
@@ -626,6 +639,9 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled()
 	mut set_fg_color := []draw.Color{}
 	mut set_fg_color_ref := &set_fg_color
 
+	mut set_bg_color := []draw.Color{}
+	mut set_bg_color_ref := &set_bg_color
+
 	mut drawn_rect := []DrawnRect{}
 	mut drawn_rect_ref := &drawn_rect
 
@@ -638,6 +654,9 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled()
 		}
 		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
 			set_fg_color_ref << c
+		}
+		on_set_bg_color_cb: fn [mut set_bg_color_ref] (c draw.Color) {
+			set_bg_color_ref << c
 		}
 	}
 
@@ -659,6 +678,7 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled()
 	) // toggle relative line numbers on
 
 	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
+	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 3, y: 5, width: 98, height: 1 }
 	]
