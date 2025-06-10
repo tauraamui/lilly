@@ -26,7 +26,9 @@ const builtin_ts_syntax = $embed_file('../../syntax/typescript.syntax').to_strin
 const builtin_python_syntax = $embed_file('../../syntax/python.syntax').to_string()
 const builtin_perl_syntax = $embed_file('../../syntax/perl.syntax').to_string()
 
-pub const colors := {
+pub const colors := $if test { test_colors } $else { non_test_colors }
+
+const non_test_colors := {
 	TokenType.identifier: draw.Color{ 200, 200, 235 }
 	.operator:            draw.Color{ 200, 200, 235 }
 	.string:              draw.Color{ 87,  215, 217 }
@@ -41,6 +43,26 @@ pub const colors := {
 	.literal:             draw.Color{ 0,   215, 255 }
 	.builtin:             draw.Color{ 130, 144, 250 }
 	.other:               draw.Color{ 200, 200, 235 }
+}
+
+// NOTE(tauraamui) [10/06/2025]: these colors don't need to be valid at all they're only
+//                               here to ensure that colour lookups in tests provide
+//                               unique results
+const test_colors := {
+	TokenType.identifier: draw.Color{ 999, 999, 999 }
+	.operator:            draw.Color{ 987, 987, 987 }
+	.string:              draw.Color{ 950, 950, 950 }
+	.comment:             draw.Color{ 943, 943, 943 }
+	.comment_start:       draw.Color{ 932, 932, 932 }
+	.comment_end:         draw.Color{ 920, 920, 920 }
+	.block_start:         draw.Color{ 919, 919, 919 }
+	.block_end:           draw.Color{ 915, 915, 915 }
+	.number:              draw.Color{ 909, 909, 909 }
+	.whitespace:          draw.Color{ 875, 445, 789 }
+	.keyword:             draw.Color{ 585, 321, 555 }
+	.literal:             draw.Color{ 289, 287, 285 }
+	.builtin:             draw.Color{ 543, 598, 555 }
+	.other:               draw.Color{ 874, 333, 401 }
 }
 
 pub fn color_to_type(color draw.Color) ?TokenType {
