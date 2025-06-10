@@ -534,6 +534,19 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	assert syntax.color_to_type(set_fg_color[90])? == .whitespace
 	assert syntax.color_to_type(set_fg_color[91])? == .number
 
+	assert set_fg_color[92] == draw.Color{ 107, 189, 21 } // TODO(tauraamui) [10/06/2025]: figure out where this specific colour is coming from
+	assert syntax.color_to_type(set_fg_color[93])? == .identifier
+	assert syntax.color_to_type(set_fg_color[94])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[95])? == .identifier
+	assert set_fg_color[96] == draw.Color{ 107, 189, 21 } // TODO(tauraamui) [10/06/2025]: figure out where this specific colour is coming from
+	assert syntax.color_to_type(set_fg_color[97])? == .identifier
+	assert set_fg_color[98] == line_num_fg_color
+	assert syntax.color_to_type(set_fg_color[99])? == .identifier
+	assert syntax.color_to_type(set_fg_color[100])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[101])? == .identifier
+	assert syntax.color_to_type(set_fg_color[102])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[103])? == .identifier
+
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 0, y: 0, data: "11" }, DrawnText{ x: 3, y: 0, data: "This" },
 		DrawnText{ x: 7, y: 0, data: " " }, DrawnText{ x: 8, y: 0, data: "is" },
