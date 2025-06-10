@@ -480,6 +480,34 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	assert syntax.color_to_type(set_fg_color[40])? == .whitespace
 	assert syntax.color_to_type(set_fg_color[41])? == .identifier
 
+	assert set_fg_color[42] == line_num_fg_color
+	assert syntax.color_to_type(set_fg_color[43])? == .identifier
+	assert syntax.color_to_type(set_fg_color[44])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[45])? == .identifier
+	assert syntax.color_to_type(set_fg_color[46])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[47])? == .identifier
+	assert syntax.color_to_type(set_fg_color[48])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[49])? == .number
+	assert syntax.color_to_type(set_fg_color[50])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[51])? == .identifier
+	assert syntax.color_to_type(set_fg_color[52])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[53])? == .identifier
+	assert syntax.color_to_type(set_fg_color[54])? == .whitespace
+
+	assert set_fg_color[55] == line_num_fg_color
+	assert syntax.color_to_type(set_fg_color[56])? == .identifier
+	assert syntax.color_to_type(set_fg_color[57])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[58])? == .identifier
+	assert syntax.color_to_type(set_fg_color[59])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[60])? == .identifier
+	assert syntax.color_to_type(set_fg_color[61])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[62])? == .number
+	assert syntax.color_to_type(set_fg_color[63])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[64])? == .identifier
+	assert syntax.color_to_type(set_fg_color[65])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[66])? == .identifier
+	assert syntax.color_to_type(set_fg_color[67])? == .whitespace
+
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 0, y: 0, data: "11" }, DrawnText{ x: 3, y: 0, data: "This" },
 		DrawnText{ x: 7, y: 0, data: " " }, DrawnText{ x: 8, y: 0, data: "is" },
