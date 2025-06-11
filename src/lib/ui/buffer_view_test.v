@@ -493,8 +493,8 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	assert syntax.color_to_type(set_fg_color[52])? == .whitespace
 	assert syntax.color_to_type(set_fg_color[53])? == .identifier
 	assert syntax.color_to_type(set_fg_color[54])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[55])? == .identifier
 
-	assert set_fg_color[55] == draw.Color{ 231, 231, 231 } // TODO(tauraamui) [10/06/2025]: figure out where this specific colour is coming from
 	assert set_fg_color[56] == line_num_fg_color
 	assert syntax.color_to_type(set_fg_color[57])? == .identifier
 	assert syntax.color_to_type(set_fg_color[58])? == .whitespace
@@ -507,9 +507,9 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	assert syntax.color_to_type(set_fg_color[65])? == .identifier
 	assert syntax.color_to_type(set_fg_color[66])? == .whitespace
 	assert syntax.color_to_type(set_fg_color[67])? == .identifier
-
-	assert set_fg_color[68] == draw.Color{ 107, 189, 21 } // TODO(tauraamui) [10/06/2025]: figure out where this specific colour is coming from
+	assert syntax.color_to_type(set_fg_color[68])? == .whitespace
 	assert syntax.color_to_type(set_fg_color[69])? == .identifier
+
 	assert set_fg_color[70] == line_num_fg_color
 	assert syntax.color_to_type(set_fg_color[71])? == .identifier
 	assert syntax.color_to_type(set_fg_color[72])? == .whitespace
@@ -520,11 +520,11 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	assert syntax.color_to_type(set_fg_color[77])? == .number
 	assert syntax.color_to_type(set_fg_color[78])? == .whitespace
 	assert syntax.color_to_type(set_fg_color[79])? == .identifier
-
-	assert set_fg_color[80] == draw.Color{ 107, 189, 21 } // TODO(tauraamui) [10/06/2025]: figure out where this specific colour is coming from
+	assert syntax.color_to_type(set_fg_color[80])? == .whitespace
 	assert syntax.color_to_type(set_fg_color[81])? == .identifier
 	assert syntax.color_to_type(set_fg_color[82])? == .whitespace
 	assert syntax.color_to_type(set_fg_color[83])? == .identifier
+
 	assert set_fg_color[84] == line_num_fg_color
 	assert syntax.color_to_type(set_fg_color[85])? == .identifier
 	assert syntax.color_to_type(set_fg_color[86])? == .whitespace
@@ -533,19 +533,58 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	assert syntax.color_to_type(set_fg_color[89])? == .identifier
 	assert syntax.color_to_type(set_fg_color[90])? == .whitespace
 	assert syntax.color_to_type(set_fg_color[91])? == .number
-
-	assert set_fg_color[92] == draw.Color{ 107, 189, 21 } // TODO(tauraamui) [10/06/2025]: figure out where this specific colour is coming from
+	assert syntax.color_to_type(set_fg_color[92])? == .whitespace
 	assert syntax.color_to_type(set_fg_color[93])? == .identifier
 	assert syntax.color_to_type(set_fg_color[94])? == .whitespace
 	assert syntax.color_to_type(set_fg_color[95])? == .identifier
-	assert set_fg_color[96] == draw.Color{ 107, 189, 21 } // TODO(tauraamui) [10/06/2025]: figure out where this specific colour is coming from
+	assert syntax.color_to_type(set_fg_color[96])? == .whitespace
 	assert syntax.color_to_type(set_fg_color[97])? == .identifier
+
 	assert set_fg_color[98] == line_num_fg_color
 	assert syntax.color_to_type(set_fg_color[99])? == .identifier
 	assert syntax.color_to_type(set_fg_color[100])? == .whitespace
 	assert syntax.color_to_type(set_fg_color[101])? == .identifier
 	assert syntax.color_to_type(set_fg_color[102])? == .whitespace
 	assert syntax.color_to_type(set_fg_color[103])? == .identifier
+	assert syntax.color_to_type(set_fg_color[104])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[105])? == .number
+	assert syntax.color_to_type(set_fg_color[106])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[107])? == .identifier
+	assert syntax.color_to_type(set_fg_color[108])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[109])? == .identifier
+	assert syntax.color_to_type(set_fg_color[110])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[111])? == .identifier
+
+	assert set_fg_color[112] == line_num_fg_color
+	assert syntax.color_to_type(set_fg_color[113])? == .identifier
+	assert syntax.color_to_type(set_fg_color[114])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[115])? == .identifier
+	assert syntax.color_to_type(set_fg_color[116])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[117])? == .identifier
+	assert syntax.color_to_type(set_fg_color[118])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[119])? == .number
+	assert syntax.color_to_type(set_fg_color[120])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[121])? == .identifier
+	assert syntax.color_to_type(set_fg_color[122])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[123])? == .identifier
+	assert syntax.color_to_type(set_fg_color[124])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[125])? == .identifier
+
+	assert set_fg_color[126] == line_num_fg_color
+	assert syntax.color_to_type(set_fg_color[127])? == .identifier
+	assert syntax.color_to_type(set_fg_color[127])? == .identifier
+	assert syntax.color_to_type(set_fg_color[128])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[129])? == .identifier
+	assert syntax.color_to_type(set_fg_color[130])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[131])? == .identifier
+	assert syntax.color_to_type(set_fg_color[132])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[133])? == .number
+	assert syntax.color_to_type(set_fg_color[134])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[135])? == .identifier
+	assert syntax.color_to_type(set_fg_color[136])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[137])? == .identifier
+	assert syntax.color_to_type(set_fg_color[138])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[139])? == .identifier
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 0, y: 0, data: "11" }, DrawnText{ x: 3, y: 0, data: "This" },
