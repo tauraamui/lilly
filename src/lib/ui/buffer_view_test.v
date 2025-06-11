@@ -1585,6 +1585,9 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_6() {
 	mut set_fg_color := []draw.Color{}
 	mut set_fg_color_ref := &set_fg_color
 
+	mut set_bg_color := []draw.Color{}
+	mut set_bg_color_ref := &set_bg_color
+
 	mut drawn_rect := []DrawnRect{}
 	mut drawn_rect_ref := &drawn_rect
 
@@ -1597,6 +1600,9 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_6() {
 		}
 		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
 			set_fg_color_ref << c
+		}
+		on_set_bg_color_cb: fn [mut set_bg_color_ref] (c draw.Color) {
+			set_bg_color_ref << c
 		}
 	}
 
@@ -1614,12 +1620,29 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_6() {
 	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{})
 
 	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
+	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 11, height: 1 }
 	]
 
 	assert drawn_text.len == 12
 	assert set_fg_color.len == 12
+
+	// this is the line at the side being rendered
+	assert set_fg_color[0] == line_num_fg_color
+	assert syntax.color_to_type(set_fg_color[1])? == .identifier
+	assert syntax.color_to_type(set_fg_color[2])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[3])? == .identifier
+
+	assert set_fg_color[4] == line_num_fg_color
+	assert syntax.color_to_type(set_fg_color[5])? == .identifier
+	assert syntax.color_to_type(set_fg_color[6])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[7])? == .identifier
+
+	assert set_fg_color[8] == line_num_fg_color
+	assert syntax.color_to_type(set_fg_color[9])? == .identifier
+	assert syntax.color_to_type(set_fg_color[10])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[11])? == .identifier
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 0, y: 0, data: "1" }, DT{ x: 2, y: 0, data: "he" },
