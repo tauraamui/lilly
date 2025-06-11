@@ -1,9 +1,18 @@
 module ui
 
+import lib.core
+
 pub struct CursorPos {
 pub mut:
 	x int
 	y int
+}
+
+pub struct SelectionSpan {
+pub:
+	min_x int
+	max_x int
+	full bool
 }
 
 pub struct BufferCursor {
@@ -13,6 +22,7 @@ pub mut:
 	pos                 CursorPos
 }
 
+// TODO(tauraamui) [11/06/2025]: make this private
 pub fn (cursor BufferCursor) y_within_selection(line_y int) bool {
 	if sel_pos := cursor.sel_start_pos {
 		// NOTE(tauraamui) [06/06/2025]: need to write a style guide for this project one day
@@ -26,6 +36,10 @@ pub fn (cursor BufferCursor) y_within_selection(line_y int) bool {
 		return line_y >= start && line_y <= end
 	}
 	return false
+}
+
+pub fn (cursor BufferCursor) resolve_line_selection_span(mode core.Mode, line_y int) SelectionSpan {
+	return SelectionSpan{ full: mode == .visual_line && cursor.y_within_selection(line_y) }
 }
 
 pub fn (cursor BufferCursor) sel_start() ?CursorPos {
