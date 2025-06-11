@@ -146,7 +146,6 @@ fn test_buffer_view_draws_lines_0_to_max_height() {
 	assert syntax.color_to_type(set_fg_color[54])? == .whitespace
 	assert syntax.color_to_type(set_fg_color[55])? == .identifier
 
-	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 0, y: 0, data: "1" }, DrawnText{ x: 2, y: 0, data: "This" },
 		DrawnText{ x: 6, y: 0, data: " " }, DrawnText{ x: 7, y: 0, data: "is" },
@@ -226,7 +225,6 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 		min_x, false, .normal, BufferCursor{}
 	)
 
-	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 19, height: 1 }
@@ -289,7 +287,6 @@ fn test_buffer_view_draws_1_line_as_multiple_segments_highlighted_as_expected() 
 		min_x, false, .normal, BufferCursor{}
 	)
 
-	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 39, height: 1 }
@@ -363,7 +360,6 @@ fn test_buffer_view_draws_1_line_as_single_segment_single_emoji() {
 		min_x, false, .normal, BufferCursor{}
 	)
 
-	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 19, height: 1 }
@@ -427,7 +423,6 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 		min_x, false, .normal, BufferCursor{ pos: CursorPos{ y: 12 } }
 	)
 
-	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 3, y: 2, width: 98, height: 1 }
@@ -742,7 +737,6 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled()
 		min_x, true, .normal, BufferCursor{ pos: CursorPos{ y: 15 } }
 	) // toggle relative line numbers on
 
-	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 3, y: 5, width: 98, height: 1 }
@@ -1057,7 +1051,6 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled_c
 		min_x, true, .normal, BufferCursor{ pos: CursorPos{ y: 15 } }
 	) // toggle relative line numbers on
 
-	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 3, y: 5, width: 98, height: 1 }
@@ -1308,7 +1301,6 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_14() {
 
 	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{})
 
-	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 13, height: 1 }
@@ -1410,7 +1402,6 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_4_max_width_56() {
 
 	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{})
 
-	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 55, height: 1 }
@@ -1534,7 +1525,6 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_56() {
 
 	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{})
 
-	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 55, height: 1 }
@@ -1619,7 +1609,6 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_6() {
 
 	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{})
 
-	// TODO(tauraamui) [14/04/2025]: need to assert against style draws as well
 	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 11, height: 1 }
