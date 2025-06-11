@@ -161,9 +161,7 @@ fn draw_text_line(
 			min_x, x, max_width,
 			visual_x_offset, y
 		)
-		if cur_token_type != .whitespace {
-			previous_token = current_token
-		}
+		previous_token = current_token
 	}
 }
 
@@ -195,10 +193,14 @@ fn render_token(
 	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
 	if segment_to_render.runes().len == 0 { return 0 }
 
+	prev_token_type := if prev_token := previous_token { prev_token.t_type() } else { .whitespace }
+	next_token_type := if n_token := next_token { n_token.t_type() } else { .whitespace }
+
 	cur_token_type := current_token.t_type()
 	resolved_token_type := match true {
 		cur_token_type               == .comment { cur_token_type }
 		cur_token_type               == .string  { cur_token_type }
+		(prev_token_type != .whitespace) || (next_token_type != .whitespace) { cur_token_type }
 		segment_to_render in syntax_def.literals { syntax.TokenType.literal }
 		segment_to_render in syntax_def.keywords { syntax.TokenType.keyword }
 		segment_to_render in syntax_def.builtins { syntax.TokenType.builtin }
