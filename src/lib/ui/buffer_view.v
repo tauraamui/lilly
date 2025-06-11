@@ -165,7 +165,7 @@ fn draw_text_line(
 			current_token, next_token, syntax_def,
 			x, max_width,
 			visual_x_offset, y,
-			cursor.resolve_line_selection_span(current_mode, document_line_num),
+			cursor.resolve_line_selection_span(current_mode, line.runes().len, document_line_num),
 			selection_highlight_color
 		)
 		previous_token = current_token
