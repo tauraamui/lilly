@@ -1450,6 +1450,21 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_4_max_width_56() {
 	assert syntax.color_to_type(set_fg_color[26])? == .whitespace
 	assert syntax.color_to_type(set_fg_color[27])? == .identifier
 
+	assert set_fg_color[28] == line_num_fg_color
+	assert syntax.color_to_type(set_fg_color[29])? == .identifier
+	assert syntax.color_to_type(set_fg_color[30])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[31])? == .identifier
+	assert syntax.color_to_type(set_fg_color[32])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[33])? == .identifier
+	assert syntax.color_to_type(set_fg_color[34])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[35])? == .number
+	assert syntax.color_to_type(set_fg_color[36])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[37])? == .identifier
+	assert syntax.color_to_type(set_fg_color[38])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[39])? == .identifier
+	assert syntax.color_to_type(set_fg_color[40])? == .whitespace
+	assert syntax.color_to_type(set_fg_color[41])? == .identifier
+
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 0, y: 0, data: "1" }, DT{ x: 2, y: 0, data: "is" }, DT{ x: 4, y: 0, data: " " },
 		DT{ x: 5, y: 0, data: "is" }, DT{ x: 7, y: 0, data: " " }, DT{ x: 8, y: 0, data: "line" },
