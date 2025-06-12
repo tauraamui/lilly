@@ -1686,7 +1686,7 @@ mut:
 }
 
 fn (mockctx MockContextable) theme() themelib.Theme {
-	return themelib.Theme.new("petal")
+	return themelib.Theme.new("test")
 }
 
 fn (mockctx MockContextable) render_debug() bool { return false }

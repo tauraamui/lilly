@@ -3,9 +3,7 @@ module theme
 import term.ui as tui
 import lib.syntax as syntaxlib
 
-const colors := $if test { test_colors } $else { non_test_colors }
-
-const non_test_colors := {
+const petal_pallete := {
 	syntaxlib.TokenType.identifier: tui.Color{ 200, 200, 235 }
 	.operator:            tui.Color{ 200, 200, 235 }
 	.string:              tui.Color{ 87,  215, 217 }
@@ -25,7 +23,7 @@ const non_test_colors := {
 // NOTE(tauraamui) [10/06/2025]: these colors don't need to be valid at all they're only
 //                               here to ensure that colour lookups in tests provide
 //                               unique results
-const test_colors := {
+const test_pallete := {
 	syntaxlib.TokenType.identifier: tui.Color{ 999, 999, 999 }
 	.operator:            tui.Color{ 987, 987, 987 }
 	.string:              tui.Color{ 950, 950, 950 }
@@ -43,9 +41,9 @@ const test_colors := {
 }
 
 pub fn color_to_type(color tui.Color) ?syntaxlib.TokenType {
-	index := colors.values().index(color)
+	index := test_pallete.values().index(color)
 	if index < 0 { return none }
-	return colors.keys()[index]
+	return test_pallete.keys()[index]
 }
 
 pub type Pallete = map[syntaxlib.TokenType]tui.Color
@@ -58,10 +56,13 @@ pub:
 }
 
 pub fn Theme.new(name string) Theme {
+	$if test {
+		return Theme{ pallete: test_pallete, cursor_line_color: tui.Color{ 53, 53, 53 }, background_color: tui.Color{ 59, 34, 76 } }
+	}
 	return match name {
 		"petal" {
 			Theme{
-				pallete: colors,
+				pallete: petal_pallete,
 				cursor_line_color: tui.Color{ 53, 53, 53 },
 				background_color: tui.Color{ 59, 34, 76 }
 			}
