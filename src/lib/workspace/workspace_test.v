@@ -93,7 +93,7 @@ fn test_open_workspace_files_and_config() {
 			'/dev/fake-project/research-notes':     ['brainstorm.pdf', 'article-links.txt']
 		}
 		file_contents: {
-			'/home/test-user/.config/lilly/lilly.conf': '{ "relative_line_numbers": true, "insert_tabs_not_spaces": false, "selection_highlight_color": { "r": 96, "g": 138, "b": 143 } }'
+			'/home/test-user/.config/lilly/lilly.conf': '{ "leader_key": ";", "relative_line_numbers": true, "insert_tabs_not_spaces": false, "selection_highlight_color": { "r": 96, "g": 138, "b": 143 } }'
 		}
 	}
 
@@ -115,6 +115,7 @@ fn test_open_workspace_files_and_config() {
 	]
 
 	assert wrkspace.config == Config{
+		leader_key: ";"
 		relative_line_numbers:     true
 		selection_highlight_color: tui.Color{
 			r: 96
