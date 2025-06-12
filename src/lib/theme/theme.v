@@ -3,7 +3,7 @@ module theme
 import term.ui as tui
 import lib.syntax as syntaxlib
 
-pub const colors := $if test { test_colors } $else { non_test_colors }
+const colors := $if test { test_colors } $else { non_test_colors }
 
 const non_test_colors := {
 	syntaxlib.TokenType.identifier: tui.Color{ 200, 200, 235 }
