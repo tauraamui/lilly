@@ -20,6 +20,23 @@ const petal_pallete := {
 	.other:               tui.Color{ 200, 200, 235 }
 }
 
+const acme_pallete := {
+	syntaxlib.TokenType.identifier: tui.Color{ 15, 12, 0 }
+	.operator:            tui.Color{ 15, 12, 0 }
+	.string:              tui.Color{ 146, 100, 25 }
+	.comment:             tui.Color{ 22, 78, 15 }
+	.comment_start:       tui.Color{ 22, 78, 15 }
+	.comment_end:         tui.Color{ 22, 78, 15 }
+	.block_start:         tui.Color{ 15, 12, 0 }
+	.block_end:           tui.Color{ 15, 12, 0 }
+	.number:              tui.Color{ 15, 12, 0 }
+	.whitespace:          tui.Color{ 15, 12, 0 }
+	.keyword:             tui.Color{ 15, 12, 0 }
+	.literal:             tui.Color{ 15, 12, 0 }
+	.builtin:             tui.Color{ 15, 12, 0 }
+	.other:               tui.Color{ 15, 12, 0 }
+}
+
 // NOTE(tauraamui) [10/06/2025]: these colors don't need to be valid at all they're only
 //                               here to ensure that colour lookups in tests provide
 //                               unique results
@@ -65,6 +82,13 @@ pub fn Theme.new(name string) !Theme {
 				pallete: petal_pallete,
 				cursor_line_color: tui.Color{ 53, 53, 53 },
 				background_color: tui.Color{ 59, 34, 76 }
+			}
+		}
+		"acme" {
+			Theme{
+				pallete: acme_pallete,
+				cursor_line_color: tui.Color{ 174, 255, 254 },
+				background_color: tui.Color{ 254, 255, 215 }
 			}
 		}
 		else { error("unable to find theme '${name}'") }
