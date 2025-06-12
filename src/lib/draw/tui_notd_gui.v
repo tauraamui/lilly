@@ -18,6 +18,7 @@
 module draw
 
 import term.ui as tui
+import lib.theme as themelib
 import strings
 
 struct Pos {
