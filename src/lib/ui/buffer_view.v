@@ -73,7 +73,8 @@ pub fn (mut buf_view BufferView) draw(
 
 		is_cursor_line := document_line_num == cursor_y_pos
 		if current_mode != .visual_line && is_cursor_line {
-			ctx.set_bg_color(draw.Color{53, 53, 53})
+			cursor_line_color := ctx.theme().cursor_line_color
+			ctx.set_bg_color(draw.Color{ r: cursor_line_color.r, g: cursor_line_color.g, b: cursor_line_color.b })
 			ctx.draw_rect(x + screenspace_x_offset + 1, y + screenspace_y_offset, width - (x + screenspace_x_offset), 1)
 			ctx.reset_bg_color()
 		}
@@ -149,7 +150,8 @@ fn draw_text_line(
 ) {
 	max_width := width - x
 	if current_mode != .visual_line && is_cursor_line { // no point in setting the bg in this case
-		ctx.set_bg_color(draw.Color{53, 53, 53})
+		cursor_line_color := ctx.theme().cursor_line_color
+		ctx.set_bg_color(draw.Color{ r: cursor_line_color.r, g: cursor_line_color.g, b: cursor_line_color.b })
 		defer { ctx.reset_bg_color() }
 	}
 
@@ -160,7 +162,6 @@ fn draw_text_line(
 		mut next_token := ?syntax.Token(none)
 		if i + 1 < line_tokens.len - 1 { next_token = line_tokens[i + 1] }
 		cur_token_bounds := resolve_token_bounds(current_token.start(), current_token.end(), min_x) or { continue }
-		cur_token_type := current_token.t_type()
 		visual_x_offset += render_token(
 			mut ctx, line,
 			cur_token_bounds, previous_token,
@@ -218,7 +219,7 @@ fn render_token(
 		else { cur_token_type }
 	}
 
-	tui_color := theme.colors[resolved_token_type]
+	tui_color := ctx.theme().pallete[resolved_token_type]
 	ctx.set_color(draw.Color{ tui_color.r, tui_color.g, tui_color.b })
 	if selected_span.full {
 		ctx.set_bg_color(selection_highlight_color)

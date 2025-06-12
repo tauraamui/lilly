@@ -18,6 +18,7 @@ import arrays
 import lib.clipboardv3
 import lib.workspace
 import lib.syntax
+import lib.theme as themelib
 import lib.chords
 import lib.buffer
 import json
@@ -31,6 +32,10 @@ struct TestDrawer {
 	draw_text_callback fn (x int, y int, text string) @[required]
 	draw_rect_callback fn (x int, y int, width int, height int) @[required]
 	window_height      int
+}
+
+fn (drawer TestDrawer) theme() themelib.Theme {
+	return themelib.Theme.new("test") or { panic("error occurred loading theme: ${err}") }
 }
 
 fn (mut drawer TestDrawer) draw_text(x int, y int, text string) {
@@ -533,6 +538,11 @@ struct MockContextable {
 mut:
 	on_draw_cb fn (x int, y int, text string)
 }
+
+fn (mockctx MockContextable) theme() themelib.Theme {
+	return themelib.Theme.new("test") or { panic("error occurred loading theme: ${err}") }
+}
+
 
 fn (mockctx MockContextable) render_debug() bool { return false }
 

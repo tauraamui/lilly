@@ -147,6 +147,7 @@ enum CursorStyle as u8 {
 struct Context {
 	render_debug bool
 	default_bg_color ?tui.Color
+	theme          themelib.Theme
 mut:
 	ref            NativeContext
 	data           Grid
@@ -187,6 +188,7 @@ pub fn new_context(cfg Config) (&Contextable, Runner) {
 	mut ctx := Context{
 		render_debug: cfg.render_debug
 		default_bg_color: cfg.default_bg_color
+		theme: cfg.theme
 		ref: tui.init(
 			user_data: cfg.user_data
 			event_fn:  fn [cfg] (e &tui.Event, app voidptr) {
@@ -200,6 +202,10 @@ pub fn new_context(cfg Config) (&Contextable, Runner) {
 	}
 	ctx.setup_grid() or { panic("unable to init grid -> ${err}") }
 	return ctx, unsafe { ctx.run }
+}
+
+fn (ctx Context) theme() themelib.Theme {
+	return ctx.theme
 }
 
 fn (mut ctx Context) setup_grid() ! {
@@ -428,9 +434,12 @@ fn (mut ctx Context) flush() {
 			if c := cell.bg_color {
 				ctx.ref.set_bg_color(tui.Color{ c.r, c.g, c.b })
 			} else {
+				/*
 				if default_bg_color := ctx.default_bg_color {
 					ctx.ref.set_bg_color(default_bg_color)
 				}
+				*/
+				ctx.ref.set_bg_color(ctx.theme().background_color)
 			}
 
 			ctx.ref.write(cell.str())

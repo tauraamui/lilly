@@ -16,10 +16,15 @@ module ui
 
 import time
 import lib.draw
+import lib.theme as themelib
 
 struct TestDrawer {
 	draw_text_callback fn (x int, y int, text string) @[required]
 	draw_rect_callback fn (x int, y int, width int, height int) @[required]
+}
+
+fn (drawer TestDrawer) theme() themelib.Theme {
+	return themelib.Theme.new("test") or { panic("error occurred loading theme: ${err}") }
 }
 
 fn (mut drawer TestDrawer) draw_text(x int, y int, text string) {

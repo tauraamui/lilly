@@ -1685,6 +1685,10 @@ mut:
 	on_set_bg_color_cb fn (c draw.Color)
 }
 
+fn (mockctx MockContextable) theme() themelib.Theme {
+	return themelib.Theme.new("test") or { panic("error occurred loading theme: ${err}") }
+}
+
 fn (mockctx MockContextable) render_debug() bool { return false }
 
 fn (mockctx MockContextable) rate_limit_draws() bool {

@@ -66,6 +66,7 @@ pub interface Renderer {
 
 pub interface Contextable {
 	Renderer
+	theme() themelib.Theme
 mut:
 	render_debug() bool
 	rate_limit_draws() bool
