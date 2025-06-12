@@ -18,6 +18,7 @@ import os
 import log
 import lib.clipboardv3
 import lib.draw
+import lib.theme
 import term.ui as tui
 import lib.workspace
 import os.cmdline
@@ -279,6 +280,7 @@ fn main() {
 
 	ctx, run := draw.new_context(
 		default_bg_color:     cfg.background_color
+		theme:                theme.Theme.new("petal")
 		render_debug:         opts.render_debug_mode
 		user_data:            app
 		event_fn:             event

@@ -218,7 +218,7 @@ fn render_token(
 		else { cur_token_type }
 	}
 
-	tui_color := theme.colors[resolved_token_type]
+	tui_color := ctx.theme().pallete[resolved_token_type]
 	ctx.set_color(draw.Color{ tui_color.r, tui_color.g, tui_color.b })
 	if selected_span.full {
 		ctx.set_bg_color(selection_highlight_color)
