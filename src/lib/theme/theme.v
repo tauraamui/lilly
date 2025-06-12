@@ -52,13 +52,19 @@ pub type Pallete = map[syntaxlib.TokenType]tui.Color
 
 pub struct Theme {
 pub:
-	pallete          Pallete
-	background_color tui.Color
+	pallete           Pallete
+	cursor_line_color tui.Color
+	background_color  tui.Color
 }
 
 pub fn Theme.new(name string) Theme {
 	return match name {
-		"petal" { Theme{ pallete: colors } }
+		"petal" { Theme{
+				pallete: colors,
+				cursor_line_color: tui.Color{ 53, 53, 53 },
+				background_color: tui.Color{ 59, 34, 76 }
+			}
+		}
 		else { Theme{} }
 	}
 }
