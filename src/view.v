@@ -25,6 +25,7 @@ import lib.clipboardv3
 import lib.buffer
 import lib.workspace
 import lib.syntax as syntaxlib
+import lib.theme as themelib
 import lib.chords
 import lib.draw
 import lib.core
@@ -919,57 +920,62 @@ struct LineSegment {
 }
 
 fn LineSegment.new_key(start int, line_y int, document_space_y int, end int) LineSegment {
+	keyword_color := themelib.colors[.keyword]
 	return LineSegment{
 		start:            start
 		end:              end
 		y:                line_y
 		document_space_y: document_space_y
 		typ:              .a_key
-		fg_color:         syntaxlib.colors[.keyword]
+		fg_color:         draw.Color{ keyword_color.r, keyword_color.g, keyword_color.b }
 	}
 }
 
 fn LineSegment.new_literal(start int, line_y int, document_space_y int, end int) LineSegment {
+	literal_color := themelib.colors[.literal]
 	return LineSegment{
 		start:            start
 		end:              end
 		y:                line_y
 		document_space_y: document_space_y
 		typ:              .a_lit
-		fg_color:         syntaxlib.colors[.literal]
+		fg_color:         draw.Color{ literal_color.r, literal_color.g, literal_color.b }
 	}
 }
 
 fn LineSegment.new_builtin(start int, line_y int, document_space_y int, end int) LineSegment {
+	builtin_color := themelib.colors[.builtin]
 	return LineSegment{
 		start:            start
 		end:              end
 		y:                line_y
 		document_space_y: document_space_y
 		typ:              .a_builtin
-		fg_color:         syntaxlib.colors[.builtin]
+		fg_color:         draw.Color{ builtin_color.r, builtin_color.g, builtin_color.b }
 	}
 }
 
 fn LineSegment.new_string(start int, line_y int, document_space_y int, end int) LineSegment {
+	string_color := themelib.colors[.string]
 	return LineSegment{
 		start:            start
 		end:              end
 		y:                line_y
 		document_space_y: document_space_y
 		typ:              .a_string
-		fg_color:         syntaxlib.colors[.string]
+		fg_color:         draw.Color{ string_color.r, string_color.g, string_color.b }
 	}
 }
 
 fn LineSegment.new_comment(start int, line_y int, document_space_y int, end int) LineSegment {
+	comment_color := themelib.colors[.comment]
 	return LineSegment{
 		start:            start
 		end:              end
 		y:                line_y
 		document_space_y: document_space_y
 		typ:              .a_comment
-		fg_color:         syntaxlib.colors[.comment]
+		fg_color:         draw.Color{ comment_color.r, comment_color.g, comment_color.b }
 	}
 }
 

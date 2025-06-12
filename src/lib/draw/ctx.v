@@ -15,6 +15,7 @@
 module draw
 
 import term.ui as tui
+import lib.theme as themelib
 
 pub struct Event {
 	tui.Event
@@ -24,9 +25,10 @@ pub struct Config {
 pub:
 	render_debug bool
 	default_bg_color ?tui.Color
-	user_data    voidptr
-	frame_fn     fn (voidptr)        @[required]
-	event_fn     fn (Event, voidptr) @[required]
+	theme            themelib.Theme
+	user_data        voidptr
+	frame_fn         fn (voidptr)        @[required]
+	event_fn         fn (Event, voidptr) @[required]
 
 	capture_events       bool
 	use_alternate_buffer bool = true

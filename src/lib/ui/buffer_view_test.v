@@ -18,6 +18,8 @@ import lib.buffer
 import lib.draw
 import lib.utf8
 import lib.syntax
+import lib.theme as themelib
+import term.ui as tui
 
 struct DrawnText {
 	x int
@@ -36,10 +38,10 @@ fn test_buffer_view_draws_lines_0_to_max_height() {
 	mut drawn_text := []DrawnText{}
 	mut drawn_text_ref := &drawn_text
 
-	mut set_fg_color := []draw.Color{}
+	mut set_fg_color := []tui.Color{}
 	mut set_fg_color_ref := &set_fg_color
 
-	mut set_bg_color := []draw.Color{}
+	mut set_bg_color := []tui.Color{}
 	mut set_bg_color_ref := &set_bg_color
 
 	mut drawn_rect := []DrawnRect{}
@@ -53,10 +55,10 @@ fn test_buffer_view_draws_lines_0_to_max_height() {
 			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
 		}
 		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
-			set_fg_color_ref << c
+			set_fg_color_ref << tui.Color{ c.r, c.g, c.b }
 		}
 		on_set_bg_color_cb: fn [mut set_bg_color_ref] (c draw.Color) {
-			set_bg_color_ref << c
+			set_bg_color_ref << tui.Color{ c.r, c.g, c.b }
 		}
 	}
 
@@ -77,7 +79,7 @@ fn test_buffer_view_draws_lines_0_to_max_height() {
 		min_x, false, .normal, BufferCursor{}, draw.Color{ 111, 0, 0 }
 	)
 
-	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
+	assert set_bg_color == [tui.Color{ 53, 53, 53 }, tui.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 99, height: 1 }
 	]
@@ -87,64 +89,64 @@ fn test_buffer_view_draws_lines_0_to_max_height() {
 
 	// this is the line at the side being rendered
 	assert set_fg_color[0] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[1])? == .identifier
-	assert syntax.color_to_type(set_fg_color[2])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[3])? == .identifier
-	assert syntax.color_to_type(set_fg_color[4])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[5])? == .identifier
-	assert syntax.color_to_type(set_fg_color[6])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[7])? == .number
-	assert syntax.color_to_type(set_fg_color[8])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[9])? == .identifier
-	assert syntax.color_to_type(set_fg_color[10])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[11])? == .identifier
-	assert syntax.color_to_type(set_fg_color[12])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[13])? == .identifier
+	assert themelib.color_to_type(set_fg_color[1])? == .identifier
+	assert themelib.color_to_type(set_fg_color[2])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[3])? == .identifier
+	assert themelib.color_to_type(set_fg_color[4])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[5])? == .identifier
+	assert themelib.color_to_type(set_fg_color[6])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[7])? == .number
+	assert themelib.color_to_type(set_fg_color[8])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[9])? == .identifier
+	assert themelib.color_to_type(set_fg_color[10])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[11])? == .identifier
+	assert themelib.color_to_type(set_fg_color[12])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[13])? == .identifier
 
 	assert set_fg_color[14] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[15])? == .identifier
-	assert syntax.color_to_type(set_fg_color[16])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[17])? == .identifier
-	assert syntax.color_to_type(set_fg_color[18])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[19])? == .identifier
-	assert syntax.color_to_type(set_fg_color[20])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[21])? == .number
-	assert syntax.color_to_type(set_fg_color[22])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[23])? == .identifier
-	assert syntax.color_to_type(set_fg_color[24])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[25])? == .identifier
-	assert syntax.color_to_type(set_fg_color[26])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[27])? == .identifier
+	assert themelib.color_to_type(set_fg_color[15])? == .identifier
+	assert themelib.color_to_type(set_fg_color[16])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[17])? == .identifier
+	assert themelib.color_to_type(set_fg_color[18])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[19])? == .identifier
+	assert themelib.color_to_type(set_fg_color[20])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[21])? == .number
+	assert themelib.color_to_type(set_fg_color[22])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[23])? == .identifier
+	assert themelib.color_to_type(set_fg_color[24])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[25])? == .identifier
+	assert themelib.color_to_type(set_fg_color[26])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[27])? == .identifier
 
 	assert set_fg_color[28] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[29])? == .identifier
-	assert syntax.color_to_type(set_fg_color[30])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[31])? == .identifier
-	assert syntax.color_to_type(set_fg_color[32])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[33])? == .identifier
-	assert syntax.color_to_type(set_fg_color[34])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[35])? == .number
-	assert syntax.color_to_type(set_fg_color[36])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[37])? == .identifier
-	assert syntax.color_to_type(set_fg_color[38])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[39])? == .identifier
-	assert syntax.color_to_type(set_fg_color[40])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[41])? == .identifier
+	assert themelib.color_to_type(set_fg_color[29])? == .identifier
+	assert themelib.color_to_type(set_fg_color[30])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[31])? == .identifier
+	assert themelib.color_to_type(set_fg_color[32])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[33])? == .identifier
+	assert themelib.color_to_type(set_fg_color[34])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[35])? == .number
+	assert themelib.color_to_type(set_fg_color[36])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[37])? == .identifier
+	assert themelib.color_to_type(set_fg_color[38])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[39])? == .identifier
+	assert themelib.color_to_type(set_fg_color[40])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[41])? == .identifier
 
 	assert set_fg_color[42] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[43])? == .identifier
-	assert syntax.color_to_type(set_fg_color[44])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[45])? == .identifier
-	assert syntax.color_to_type(set_fg_color[46])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[47])? == .identifier
-	assert syntax.color_to_type(set_fg_color[48])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[49])? == .number
-	assert syntax.color_to_type(set_fg_color[50])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[51])? == .identifier
-	assert syntax.color_to_type(set_fg_color[52])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[53])? == .identifier
-	assert syntax.color_to_type(set_fg_color[54])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[55])? == .identifier
+	assert themelib.color_to_type(set_fg_color[43])? == .identifier
+	assert themelib.color_to_type(set_fg_color[44])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[45])? == .identifier
+	assert themelib.color_to_type(set_fg_color[46])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[47])? == .identifier
+	assert themelib.color_to_type(set_fg_color[48])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[49])? == .number
+	assert themelib.color_to_type(set_fg_color[50])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[51])? == .identifier
+	assert themelib.color_to_type(set_fg_color[52])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[53])? == .identifier
+	assert themelib.color_to_type(set_fg_color[54])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[55])? == .identifier
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 0, y: 0, data: "1" }, DrawnText{ x: 2, y: 0, data: "This" },
@@ -184,10 +186,10 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 	mut drawn_text := []DrawnText{}
 	mut drawn_text_ref := &drawn_text
 
-	mut set_fg_color := []draw.Color{}
+	mut set_fg_color := []tui.Color{}
 	mut set_fg_color_ref := &set_fg_color
 
-	mut set_bg_color := []draw.Color{}
+	mut set_bg_color := []tui.Color{}
 	mut set_bg_color_ref := &set_bg_color
 
 	mut drawn_rect := []DrawnRect{}
@@ -201,10 +203,10 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
 		}
 		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
-			set_fg_color_ref << c
+			set_fg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 		on_set_bg_color_cb: fn [mut set_bg_color_ref] (c draw.Color) {
-			set_bg_color_ref << c
+			set_bg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 	}
 
@@ -225,7 +227,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 		min_x, false, .normal, BufferCursor{}, draw.Color{ 111, 0, 0 }
 	)
 
-	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
+	assert set_bg_color == [tui.Color{ 53, 53, 53 }, tui.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 19, height: 1 }
 	]
@@ -234,7 +236,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 	assert set_fg_color.len == 2
 
 	assert set_fg_color[0] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[1])? == .identifier
+	assert themelib.color_to_type(set_fg_color[1])? == .identifier
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 0, y: 0, data: "1" }, DrawnText{ x: 2, y: 0, data: "Thisisthelineinthe" },
@@ -246,10 +248,10 @@ fn test_buffer_view_draws_1_line_as_multiple_segments_highlighted_as_expected() 
 	mut drawn_text := []DrawnText{}
 	mut drawn_text_ref := &drawn_text
 
-	mut set_fg_color := []draw.Color{}
+	mut set_fg_color := []tui.Color{}
 	mut set_fg_color_ref := &set_fg_color
 
-	mut set_bg_color := []draw.Color{}
+	mut set_bg_color := []tui.Color{}
 	mut set_bg_color_ref := &set_bg_color
 
 	mut drawn_rect := []DrawnRect{}
@@ -263,10 +265,10 @@ fn test_buffer_view_draws_1_line_as_multiple_segments_highlighted_as_expected() 
 			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
 		}
 		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
-			set_fg_color_ref << c
+			set_fg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 		on_set_bg_color_cb: fn [mut set_bg_color_ref] (c draw.Color) {
-			set_bg_color_ref << c
+			set_bg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 	}
 
@@ -287,7 +289,7 @@ fn test_buffer_view_draws_1_line_as_multiple_segments_highlighted_as_expected() 
 		min_x, false, .normal, BufferCursor{}, draw.Color{ 111, 0, 0 }
 	)
 
-	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
+	assert set_bg_color == [tui.Color{ 53, 53, 53 }, tui.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 39, height: 1 }
 	]
@@ -296,14 +298,14 @@ fn test_buffer_view_draws_1_line_as_multiple_segments_highlighted_as_expected() 
 	assert set_fg_color.len == 9
 
 	assert set_fg_color[0] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[1])? == .identifier
-	assert syntax.color_to_type(set_fg_color[2])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[3])? == .identifier
-	assert syntax.color_to_type(set_fg_color[4])? == .other
-	assert syntax.color_to_type(set_fg_color[5])? == .identifier
-	assert syntax.color_to_type(set_fg_color[6])? == .other
-	assert syntax.color_to_type(set_fg_color[7])? == .identifier
-	assert syntax.color_to_type(set_fg_color[8])? == .other
+	assert themelib.color_to_type(set_fg_color[1])? == .identifier
+	assert themelib.color_to_type(set_fg_color[2])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[3])? == .identifier
+	assert themelib.color_to_type(set_fg_color[4])? == .other
+	assert themelib.color_to_type(set_fg_color[5])? == .identifier
+	assert themelib.color_to_type(set_fg_color[6])? == .other
+	assert themelib.color_to_type(set_fg_color[7])? == .identifier
+	assert themelib.color_to_type(set_fg_color[8])? == .other
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 0, y: 0, data: "1" }, DrawnText{ x: 2, y: 0, data: "fn" },
@@ -319,10 +321,10 @@ fn test_buffer_view_draws_1_line_as_single_segment_single_emoji() {
 	mut drawn_text := []DrawnText{}
 	mut drawn_text_ref := &drawn_text
 
-	mut set_fg_color := []draw.Color{}
+	mut set_fg_color := []tui.Color{}
 	mut set_fg_color_ref := &set_fg_color
 
-	mut set_bg_color := []draw.Color{}
+	mut set_bg_color := []tui.Color{}
 	mut set_bg_color_ref := &set_bg_color
 
 	mut drawn_rect := []DrawnRect{}
@@ -336,10 +338,10 @@ fn test_buffer_view_draws_1_line_as_single_segment_single_emoji() {
 			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
 		}
 		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
-			set_fg_color_ref << c
+			set_fg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 		on_set_bg_color_cb: fn [mut set_bg_color_ref] (c draw.Color) {
-			set_bg_color_ref << c
+			set_bg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 	}
 
@@ -360,7 +362,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_single_emoji() {
 		min_x, false, .normal, BufferCursor{}, draw.Color{ 111, 0, 0 }
 	)
 
-	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
+	assert set_bg_color == [tui.Color{ 53, 53, 53 }, tui.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 19, height: 1 }
 	]
@@ -369,7 +371,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_single_emoji() {
 	assert set_fg_color.len == 2
 
 	assert set_fg_color[0] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[1])? == .other
+	assert themelib.color_to_type(set_fg_color[1])? == .other
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 0, y: 0, data: "1" }, DrawnText{ x: 2, y: 0, data: "${utf8.emoji_shark_char}" },
@@ -382,10 +384,10 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	mut drawn_text := []DrawnText{}
 	mut drawn_text_ref := &drawn_text
 
-	mut set_fg_color := []draw.Color{}
+	mut set_fg_color := []tui.Color{}
 	mut set_fg_color_ref := &set_fg_color
 
-	mut set_bg_color := []draw.Color{}
+	mut set_bg_color := []tui.Color{}
 	mut set_bg_color_ref := &set_bg_color
 
 	mut drawn_rect := []DrawnRect{}
@@ -399,10 +401,10 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
 		}
 		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
-			set_fg_color_ref << c
+			set_fg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 		on_set_bg_color_cb: fn [mut set_bg_color_ref] (c draw.Color) {
-			set_bg_color_ref << c
+			set_bg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 	}
 
@@ -423,7 +425,7 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 		min_x, false, .normal, BufferCursor{ pos: CursorPos{ y: 12 } }, draw.Color{ 111, 0, 0 }
 	)
 
-	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
+	assert set_bg_color == [tui.Color{ 53, 53, 53 }, tui.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 3, y: 2, width: 98, height: 1 }
 	]
@@ -432,154 +434,154 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	assert set_fg_color.len == 140
 
 	assert set_fg_color[0] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[1])? == .identifier
-	assert syntax.color_to_type(set_fg_color[2])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[3])? == .identifier
-	assert syntax.color_to_type(set_fg_color[4])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[5])? == .identifier
-	assert syntax.color_to_type(set_fg_color[6])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[7])? == .number
-	assert syntax.color_to_type(set_fg_color[8])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[9])? == .identifier
-	assert syntax.color_to_type(set_fg_color[10])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[11])? == .identifier
-	assert syntax.color_to_type(set_fg_color[12])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[13])? == .identifier
+	assert themelib.color_to_type(set_fg_color[1])? == .identifier
+	assert themelib.color_to_type(set_fg_color[2])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[3])? == .identifier
+	assert themelib.color_to_type(set_fg_color[4])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[5])? == .identifier
+	assert themelib.color_to_type(set_fg_color[6])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[7])? == .number
+	assert themelib.color_to_type(set_fg_color[8])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[9])? == .identifier
+	assert themelib.color_to_type(set_fg_color[10])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[11])? == .identifier
+	assert themelib.color_to_type(set_fg_color[12])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[13])? == .identifier
 
 	assert set_fg_color[14] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[15])? == .identifier
-	assert syntax.color_to_type(set_fg_color[16])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[17])? == .identifier
-	assert syntax.color_to_type(set_fg_color[18])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[19])? == .identifier
-	assert syntax.color_to_type(set_fg_color[20])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[21])? == .number
-	assert syntax.color_to_type(set_fg_color[22])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[23])? == .identifier
-	assert syntax.color_to_type(set_fg_color[24])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[25])? == .identifier
-	assert syntax.color_to_type(set_fg_color[26])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[27])? == .identifier
+	assert themelib.color_to_type(set_fg_color[15])? == .identifier
+	assert themelib.color_to_type(set_fg_color[16])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[17])? == .identifier
+	assert themelib.color_to_type(set_fg_color[18])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[19])? == .identifier
+	assert themelib.color_to_type(set_fg_color[20])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[21])? == .number
+	assert themelib.color_to_type(set_fg_color[22])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[23])? == .identifier
+	assert themelib.color_to_type(set_fg_color[24])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[25])? == .identifier
+	assert themelib.color_to_type(set_fg_color[26])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[27])? == .identifier
 
 	assert set_fg_color[28] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[29])? == .identifier
-	assert syntax.color_to_type(set_fg_color[30])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[31])? == .identifier
-	assert syntax.color_to_type(set_fg_color[33])? == .identifier
-	assert syntax.color_to_type(set_fg_color[34])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[35])? == .number
-	assert syntax.color_to_type(set_fg_color[36])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[37])? == .identifier
-	assert syntax.color_to_type(set_fg_color[38])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[39])? == .identifier
-	assert syntax.color_to_type(set_fg_color[40])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[41])? == .identifier
+	assert themelib.color_to_type(set_fg_color[29])? == .identifier
+	assert themelib.color_to_type(set_fg_color[30])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[31])? == .identifier
+	assert themelib.color_to_type(set_fg_color[33])? == .identifier
+	assert themelib.color_to_type(set_fg_color[34])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[35])? == .number
+	assert themelib.color_to_type(set_fg_color[36])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[37])? == .identifier
+	assert themelib.color_to_type(set_fg_color[38])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[39])? == .identifier
+	assert themelib.color_to_type(set_fg_color[40])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[41])? == .identifier
 
 	assert set_fg_color[42] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[43])? == .identifier
-	assert syntax.color_to_type(set_fg_color[44])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[45])? == .identifier
-	assert syntax.color_to_type(set_fg_color[46])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[47])? == .identifier
-	assert syntax.color_to_type(set_fg_color[48])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[49])? == .number
-	assert syntax.color_to_type(set_fg_color[50])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[51])? == .identifier
-	assert syntax.color_to_type(set_fg_color[52])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[53])? == .identifier
-	assert syntax.color_to_type(set_fg_color[54])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[55])? == .identifier
+	assert themelib.color_to_type(set_fg_color[43])? == .identifier
+	assert themelib.color_to_type(set_fg_color[44])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[45])? == .identifier
+	assert themelib.color_to_type(set_fg_color[46])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[47])? == .identifier
+	assert themelib.color_to_type(set_fg_color[48])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[49])? == .number
+	assert themelib.color_to_type(set_fg_color[50])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[51])? == .identifier
+	assert themelib.color_to_type(set_fg_color[52])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[53])? == .identifier
+	assert themelib.color_to_type(set_fg_color[54])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[55])? == .identifier
 
 	assert set_fg_color[56] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[57])? == .identifier
-	assert syntax.color_to_type(set_fg_color[58])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[59])? == .identifier
-	assert syntax.color_to_type(set_fg_color[60])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[61])? == .identifier
-	assert syntax.color_to_type(set_fg_color[62])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[63])? == .number
-	assert syntax.color_to_type(set_fg_color[64])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[65])? == .identifier
-	assert syntax.color_to_type(set_fg_color[66])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[67])? == .identifier
-	assert syntax.color_to_type(set_fg_color[68])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[69])? == .identifier
+	assert themelib.color_to_type(set_fg_color[57])? == .identifier
+	assert themelib.color_to_type(set_fg_color[58])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[59])? == .identifier
+	assert themelib.color_to_type(set_fg_color[60])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[61])? == .identifier
+	assert themelib.color_to_type(set_fg_color[62])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[63])? == .number
+	assert themelib.color_to_type(set_fg_color[64])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[65])? == .identifier
+	assert themelib.color_to_type(set_fg_color[66])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[67])? == .identifier
+	assert themelib.color_to_type(set_fg_color[68])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[69])? == .identifier
 
 	assert set_fg_color[70] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[71])? == .identifier
-	assert syntax.color_to_type(set_fg_color[72])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[73])? == .identifier
-	assert syntax.color_to_type(set_fg_color[74])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[75])? == .identifier
-	assert syntax.color_to_type(set_fg_color[76])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[77])? == .number
-	assert syntax.color_to_type(set_fg_color[78])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[79])? == .identifier
-	assert syntax.color_to_type(set_fg_color[80])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[81])? == .identifier
-	assert syntax.color_to_type(set_fg_color[82])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[83])? == .identifier
+	assert themelib.color_to_type(set_fg_color[71])? == .identifier
+	assert themelib.color_to_type(set_fg_color[72])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[73])? == .identifier
+	assert themelib.color_to_type(set_fg_color[74])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[75])? == .identifier
+	assert themelib.color_to_type(set_fg_color[76])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[77])? == .number
+	assert themelib.color_to_type(set_fg_color[78])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[79])? == .identifier
+	assert themelib.color_to_type(set_fg_color[80])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[81])? == .identifier
+	assert themelib.color_to_type(set_fg_color[82])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[83])? == .identifier
 
 	assert set_fg_color[84] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[85])? == .identifier
-	assert syntax.color_to_type(set_fg_color[86])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[87])? == .identifier
-	assert syntax.color_to_type(set_fg_color[88])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[89])? == .identifier
-	assert syntax.color_to_type(set_fg_color[90])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[91])? == .number
-	assert syntax.color_to_type(set_fg_color[92])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[93])? == .identifier
-	assert syntax.color_to_type(set_fg_color[94])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[95])? == .identifier
-	assert syntax.color_to_type(set_fg_color[96])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[97])? == .identifier
+	assert themelib.color_to_type(set_fg_color[85])? == .identifier
+	assert themelib.color_to_type(set_fg_color[86])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[87])? == .identifier
+	assert themelib.color_to_type(set_fg_color[88])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[89])? == .identifier
+	assert themelib.color_to_type(set_fg_color[90])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[91])? == .number
+	assert themelib.color_to_type(set_fg_color[92])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[93])? == .identifier
+	assert themelib.color_to_type(set_fg_color[94])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[95])? == .identifier
+	assert themelib.color_to_type(set_fg_color[96])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[97])? == .identifier
 
 	assert set_fg_color[98] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[99])? == .identifier
-	assert syntax.color_to_type(set_fg_color[100])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[101])? == .identifier
-	assert syntax.color_to_type(set_fg_color[102])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[103])? == .identifier
-	assert syntax.color_to_type(set_fg_color[104])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[105])? == .number
-	assert syntax.color_to_type(set_fg_color[106])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[107])? == .identifier
-	assert syntax.color_to_type(set_fg_color[108])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[109])? == .identifier
-	assert syntax.color_to_type(set_fg_color[110])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[111])? == .identifier
+	assert themelib.color_to_type(set_fg_color[99])? == .identifier
+	assert themelib.color_to_type(set_fg_color[100])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[101])? == .identifier
+	assert themelib.color_to_type(set_fg_color[102])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[103])? == .identifier
+	assert themelib.color_to_type(set_fg_color[104])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[105])? == .number
+	assert themelib.color_to_type(set_fg_color[106])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[107])? == .identifier
+	assert themelib.color_to_type(set_fg_color[108])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[109])? == .identifier
+	assert themelib.color_to_type(set_fg_color[110])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[111])? == .identifier
 
 	assert set_fg_color[112] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[113])? == .identifier
-	assert syntax.color_to_type(set_fg_color[114])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[115])? == .identifier
-	assert syntax.color_to_type(set_fg_color[116])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[117])? == .identifier
-	assert syntax.color_to_type(set_fg_color[118])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[119])? == .number
-	assert syntax.color_to_type(set_fg_color[120])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[121])? == .identifier
-	assert syntax.color_to_type(set_fg_color[122])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[123])? == .identifier
-	assert syntax.color_to_type(set_fg_color[124])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[125])? == .identifier
+	assert themelib.color_to_type(set_fg_color[113])? == .identifier
+	assert themelib.color_to_type(set_fg_color[114])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[115])? == .identifier
+	assert themelib.color_to_type(set_fg_color[116])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[117])? == .identifier
+	assert themelib.color_to_type(set_fg_color[118])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[119])? == .number
+	assert themelib.color_to_type(set_fg_color[120])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[121])? == .identifier
+	assert themelib.color_to_type(set_fg_color[122])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[123])? == .identifier
+	assert themelib.color_to_type(set_fg_color[124])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[125])? == .identifier
 
 	assert set_fg_color[126] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[127])? == .identifier
-	assert syntax.color_to_type(set_fg_color[127])? == .identifier
-	assert syntax.color_to_type(set_fg_color[128])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[129])? == .identifier
-	assert syntax.color_to_type(set_fg_color[130])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[131])? == .identifier
-	assert syntax.color_to_type(set_fg_color[132])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[133])? == .number
-	assert syntax.color_to_type(set_fg_color[134])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[135])? == .identifier
-	assert syntax.color_to_type(set_fg_color[136])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[137])? == .identifier
-	assert syntax.color_to_type(set_fg_color[138])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[139])? == .identifier
+	assert themelib.color_to_type(set_fg_color[127])? == .identifier
+	assert themelib.color_to_type(set_fg_color[127])? == .identifier
+	assert themelib.color_to_type(set_fg_color[128])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[129])? == .identifier
+	assert themelib.color_to_type(set_fg_color[130])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[131])? == .identifier
+	assert themelib.color_to_type(set_fg_color[132])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[133])? == .number
+	assert themelib.color_to_type(set_fg_color[134])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[135])? == .identifier
+	assert themelib.color_to_type(set_fg_color[136])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[137])? == .identifier
+	assert themelib.color_to_type(set_fg_color[138])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[139])? == .identifier
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 0, y: 0, data: "11" }, DrawnText{ x: 3, y: 0, data: "This" },
@@ -696,10 +698,10 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled()
 	mut drawn_text := []DrawnText{}
 	mut drawn_text_ref := &drawn_text
 
-	mut set_fg_color := []draw.Color{}
+	mut set_fg_color := []tui.Color{}
 	mut set_fg_color_ref := &set_fg_color
 
-	mut set_bg_color := []draw.Color{}
+	mut set_bg_color := []tui.Color{}
 	mut set_bg_color_ref := &set_bg_color
 
 	mut drawn_rect := []DrawnRect{}
@@ -713,10 +715,10 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled()
 			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
 		}
 		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
-			set_fg_color_ref << c
+			set_fg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 		on_set_bg_color_cb: fn [mut set_bg_color_ref] (c draw.Color) {
-			set_bg_color_ref << c
+			set_bg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 	}
 
@@ -737,7 +739,7 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled()
 		min_x, true, .normal, BufferCursor{ pos: CursorPos{ y: 15 } }, draw.Color{ 111, 0, 0 }
 	) // toggle relative line numbers on
 
-	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
+	assert set_bg_color == [tui.Color{ 53, 53, 53 }, tui.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 3, y: 5, width: 98, height: 1 }
 	]
@@ -746,154 +748,154 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled()
 	assert set_fg_color.len == 140
 
 	assert set_fg_color[0] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[1])? == .identifier
-	assert syntax.color_to_type(set_fg_color[2])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[3])? == .identifier
-	assert syntax.color_to_type(set_fg_color[4])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[5])? == .identifier
-	assert syntax.color_to_type(set_fg_color[6])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[7])? == .number
-	assert syntax.color_to_type(set_fg_color[8])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[9])? == .identifier
-	assert syntax.color_to_type(set_fg_color[10])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[11])? == .identifier
-	assert syntax.color_to_type(set_fg_color[12])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[13])? == .identifier
+	assert themelib.color_to_type(set_fg_color[1])? == .identifier
+	assert themelib.color_to_type(set_fg_color[2])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[3])? == .identifier
+	assert themelib.color_to_type(set_fg_color[4])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[5])? == .identifier
+	assert themelib.color_to_type(set_fg_color[6])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[7])? == .number
+	assert themelib.color_to_type(set_fg_color[8])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[9])? == .identifier
+	assert themelib.color_to_type(set_fg_color[10])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[11])? == .identifier
+	assert themelib.color_to_type(set_fg_color[12])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[13])? == .identifier
 
 	assert set_fg_color[14] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[15])? == .identifier
-	assert syntax.color_to_type(set_fg_color[16])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[17])? == .identifier
-	assert syntax.color_to_type(set_fg_color[18])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[19])? == .identifier
-	assert syntax.color_to_type(set_fg_color[20])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[21])? == .number
-	assert syntax.color_to_type(set_fg_color[22])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[23])? == .identifier
-	assert syntax.color_to_type(set_fg_color[24])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[25])? == .identifier
-	assert syntax.color_to_type(set_fg_color[26])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[27])? == .identifier
+	assert themelib.color_to_type(set_fg_color[15])? == .identifier
+	assert themelib.color_to_type(set_fg_color[16])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[17])? == .identifier
+	assert themelib.color_to_type(set_fg_color[18])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[19])? == .identifier
+	assert themelib.color_to_type(set_fg_color[20])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[21])? == .number
+	assert themelib.color_to_type(set_fg_color[22])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[23])? == .identifier
+	assert themelib.color_to_type(set_fg_color[24])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[25])? == .identifier
+	assert themelib.color_to_type(set_fg_color[26])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[27])? == .identifier
 
 	assert set_fg_color[28] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[29])? == .identifier
-	assert syntax.color_to_type(set_fg_color[30])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[31])? == .identifier
-	assert syntax.color_to_type(set_fg_color[33])? == .identifier
-	assert syntax.color_to_type(set_fg_color[34])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[35])? == .number
-	assert syntax.color_to_type(set_fg_color[36])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[37])? == .identifier
-	assert syntax.color_to_type(set_fg_color[38])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[39])? == .identifier
-	assert syntax.color_to_type(set_fg_color[40])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[41])? == .identifier
+	assert themelib.color_to_type(set_fg_color[29])? == .identifier
+	assert themelib.color_to_type(set_fg_color[30])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[31])? == .identifier
+	assert themelib.color_to_type(set_fg_color[33])? == .identifier
+	assert themelib.color_to_type(set_fg_color[34])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[35])? == .number
+	assert themelib.color_to_type(set_fg_color[36])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[37])? == .identifier
+	assert themelib.color_to_type(set_fg_color[38])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[39])? == .identifier
+	assert themelib.color_to_type(set_fg_color[40])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[41])? == .identifier
 
 	assert set_fg_color[42] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[43])? == .identifier
-	assert syntax.color_to_type(set_fg_color[44])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[45])? == .identifier
-	assert syntax.color_to_type(set_fg_color[46])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[47])? == .identifier
-	assert syntax.color_to_type(set_fg_color[48])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[49])? == .number
-	assert syntax.color_to_type(set_fg_color[50])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[51])? == .identifier
-	assert syntax.color_to_type(set_fg_color[52])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[53])? == .identifier
-	assert syntax.color_to_type(set_fg_color[54])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[55])? == .identifier
+	assert themelib.color_to_type(set_fg_color[43])? == .identifier
+	assert themelib.color_to_type(set_fg_color[44])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[45])? == .identifier
+	assert themelib.color_to_type(set_fg_color[46])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[47])? == .identifier
+	assert themelib.color_to_type(set_fg_color[48])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[49])? == .number
+	assert themelib.color_to_type(set_fg_color[50])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[51])? == .identifier
+	assert themelib.color_to_type(set_fg_color[52])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[53])? == .identifier
+	assert themelib.color_to_type(set_fg_color[54])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[55])? == .identifier
 
 	assert set_fg_color[56] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[57])? == .identifier
-	assert syntax.color_to_type(set_fg_color[58])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[59])? == .identifier
-	assert syntax.color_to_type(set_fg_color[60])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[61])? == .identifier
-	assert syntax.color_to_type(set_fg_color[62])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[63])? == .number
-	assert syntax.color_to_type(set_fg_color[64])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[65])? == .identifier
-	assert syntax.color_to_type(set_fg_color[66])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[67])? == .identifier
-	assert syntax.color_to_type(set_fg_color[68])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[69])? == .identifier
+	assert themelib.color_to_type(set_fg_color[57])? == .identifier
+	assert themelib.color_to_type(set_fg_color[58])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[59])? == .identifier
+	assert themelib.color_to_type(set_fg_color[60])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[61])? == .identifier
+	assert themelib.color_to_type(set_fg_color[62])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[63])? == .number
+	assert themelib.color_to_type(set_fg_color[64])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[65])? == .identifier
+	assert themelib.color_to_type(set_fg_color[66])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[67])? == .identifier
+	assert themelib.color_to_type(set_fg_color[68])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[69])? == .identifier
 
 	assert set_fg_color[70] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[71])? == .identifier
-	assert syntax.color_to_type(set_fg_color[72])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[73])? == .identifier
-	assert syntax.color_to_type(set_fg_color[74])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[75])? == .identifier
-	assert syntax.color_to_type(set_fg_color[76])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[77])? == .number
-	assert syntax.color_to_type(set_fg_color[78])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[79])? == .identifier
-	assert syntax.color_to_type(set_fg_color[80])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[81])? == .identifier
-	assert syntax.color_to_type(set_fg_color[82])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[83])? == .identifier
+	assert themelib.color_to_type(set_fg_color[71])? == .identifier
+	assert themelib.color_to_type(set_fg_color[72])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[73])? == .identifier
+	assert themelib.color_to_type(set_fg_color[74])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[75])? == .identifier
+	assert themelib.color_to_type(set_fg_color[76])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[77])? == .number
+	assert themelib.color_to_type(set_fg_color[78])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[79])? == .identifier
+	assert themelib.color_to_type(set_fg_color[80])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[81])? == .identifier
+	assert themelib.color_to_type(set_fg_color[82])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[83])? == .identifier
 
 	assert set_fg_color[84] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[85])? == .identifier
-	assert syntax.color_to_type(set_fg_color[86])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[87])? == .identifier
-	assert syntax.color_to_type(set_fg_color[88])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[89])? == .identifier
-	assert syntax.color_to_type(set_fg_color[90])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[91])? == .number
-	assert syntax.color_to_type(set_fg_color[92])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[93])? == .identifier
-	assert syntax.color_to_type(set_fg_color[94])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[95])? == .identifier
-	assert syntax.color_to_type(set_fg_color[96])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[97])? == .identifier
+	assert themelib.color_to_type(set_fg_color[85])? == .identifier
+	assert themelib.color_to_type(set_fg_color[86])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[87])? == .identifier
+	assert themelib.color_to_type(set_fg_color[88])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[89])? == .identifier
+	assert themelib.color_to_type(set_fg_color[90])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[91])? == .number
+	assert themelib.color_to_type(set_fg_color[92])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[93])? == .identifier
+	assert themelib.color_to_type(set_fg_color[94])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[95])? == .identifier
+	assert themelib.color_to_type(set_fg_color[96])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[97])? == .identifier
 
 	assert set_fg_color[98] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[99])? == .identifier
-	assert syntax.color_to_type(set_fg_color[100])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[101])? == .identifier
-	assert syntax.color_to_type(set_fg_color[102])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[103])? == .identifier
-	assert syntax.color_to_type(set_fg_color[104])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[105])? == .number
-	assert syntax.color_to_type(set_fg_color[106])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[107])? == .identifier
-	assert syntax.color_to_type(set_fg_color[108])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[109])? == .identifier
-	assert syntax.color_to_type(set_fg_color[110])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[111])? == .identifier
+	assert themelib.color_to_type(set_fg_color[99])? == .identifier
+	assert themelib.color_to_type(set_fg_color[100])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[101])? == .identifier
+	assert themelib.color_to_type(set_fg_color[102])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[103])? == .identifier
+	assert themelib.color_to_type(set_fg_color[104])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[105])? == .number
+	assert themelib.color_to_type(set_fg_color[106])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[107])? == .identifier
+	assert themelib.color_to_type(set_fg_color[108])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[109])? == .identifier
+	assert themelib.color_to_type(set_fg_color[110])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[111])? == .identifier
 
 	assert set_fg_color[112] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[113])? == .identifier
-	assert syntax.color_to_type(set_fg_color[114])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[115])? == .identifier
-	assert syntax.color_to_type(set_fg_color[116])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[117])? == .identifier
-	assert syntax.color_to_type(set_fg_color[118])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[119])? == .number
-	assert syntax.color_to_type(set_fg_color[120])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[121])? == .identifier
-	assert syntax.color_to_type(set_fg_color[122])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[123])? == .identifier
-	assert syntax.color_to_type(set_fg_color[124])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[125])? == .identifier
+	assert themelib.color_to_type(set_fg_color[113])? == .identifier
+	assert themelib.color_to_type(set_fg_color[114])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[115])? == .identifier
+	assert themelib.color_to_type(set_fg_color[116])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[117])? == .identifier
+	assert themelib.color_to_type(set_fg_color[118])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[119])? == .number
+	assert themelib.color_to_type(set_fg_color[120])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[121])? == .identifier
+	assert themelib.color_to_type(set_fg_color[122])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[123])? == .identifier
+	assert themelib.color_to_type(set_fg_color[124])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[125])? == .identifier
 
 	assert set_fg_color[126] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[127])? == .identifier
-	assert syntax.color_to_type(set_fg_color[127])? == .identifier
-	assert syntax.color_to_type(set_fg_color[128])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[129])? == .identifier
-	assert syntax.color_to_type(set_fg_color[130])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[131])? == .identifier
-	assert syntax.color_to_type(set_fg_color[132])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[133])? == .number
-	assert syntax.color_to_type(set_fg_color[134])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[135])? == .identifier
-	assert syntax.color_to_type(set_fg_color[136])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[137])? == .identifier
-	assert syntax.color_to_type(set_fg_color[138])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[139])? == .identifier
+	assert themelib.color_to_type(set_fg_color[127])? == .identifier
+	assert themelib.color_to_type(set_fg_color[127])? == .identifier
+	assert themelib.color_to_type(set_fg_color[128])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[129])? == .identifier
+	assert themelib.color_to_type(set_fg_color[130])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[131])? == .identifier
+	assert themelib.color_to_type(set_fg_color[132])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[133])? == .number
+	assert themelib.color_to_type(set_fg_color[134])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[135])? == .identifier
+	assert themelib.color_to_type(set_fg_color[136])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[137])? == .identifier
+	assert themelib.color_to_type(set_fg_color[138])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[139])? == .identifier
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 1, y: 0, data: "5" }, DrawnText{ x: 3, y: 0, data: "This" },
@@ -1010,10 +1012,10 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled_c
 	mut drawn_text := []DrawnText{}
 	mut drawn_text_ref := &drawn_text
 
-	mut set_fg_color := []draw.Color{}
+	mut set_fg_color := []tui.Color{}
 	mut set_fg_color_ref := &set_fg_color
 
-	mut set_bg_color := []draw.Color{}
+	mut set_bg_color := []tui.Color{}
 	mut set_bg_color_ref := &set_bg_color
 
 	mut drawn_rect := []DrawnRect{}
@@ -1027,10 +1029,10 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled_c
 			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
 		}
 		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
-			set_fg_color_ref << c
+			set_fg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 		on_set_bg_color_cb: fn [mut set_bg_color_ref] (c draw.Color) {
-			set_bg_color_ref << c
+			set_bg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 	}
 
@@ -1051,7 +1053,7 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled_c
 		min_x, true, .normal, BufferCursor{ pos: CursorPos{ y: 15 } }, draw.Color{ 111, 0, 0 }
 	) // toggle relative line numbers on
 
-	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
+	assert set_bg_color == [tui.Color{ 53, 53, 53 }, tui.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 3, y: 5, width: 98, height: 1 }
 	]
@@ -1060,154 +1062,154 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled_c
 	assert set_fg_color.len == 140
 
 	assert set_fg_color[0] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[1])? == .identifier
-	assert syntax.color_to_type(set_fg_color[2])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[3])? == .identifier
-	assert syntax.color_to_type(set_fg_color[4])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[5])? == .identifier
-	assert syntax.color_to_type(set_fg_color[6])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[7])? == .number
-	assert syntax.color_to_type(set_fg_color[8])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[9])? == .identifier
-	assert syntax.color_to_type(set_fg_color[10])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[11])? == .identifier
-	assert syntax.color_to_type(set_fg_color[12])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[13])? == .identifier
+	assert themelib.color_to_type(set_fg_color[1])? == .identifier
+	assert themelib.color_to_type(set_fg_color[2])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[3])? == .identifier
+	assert themelib.color_to_type(set_fg_color[4])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[5])? == .identifier
+	assert themelib.color_to_type(set_fg_color[6])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[7])? == .number
+	assert themelib.color_to_type(set_fg_color[8])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[9])? == .identifier
+	assert themelib.color_to_type(set_fg_color[10])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[11])? == .identifier
+	assert themelib.color_to_type(set_fg_color[12])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[13])? == .identifier
 
 	assert set_fg_color[14] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[15])? == .identifier
-	assert syntax.color_to_type(set_fg_color[16])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[17])? == .identifier
-	assert syntax.color_to_type(set_fg_color[18])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[19])? == .identifier
-	assert syntax.color_to_type(set_fg_color[20])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[21])? == .number
-	assert syntax.color_to_type(set_fg_color[22])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[23])? == .identifier
-	assert syntax.color_to_type(set_fg_color[24])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[25])? == .identifier
-	assert syntax.color_to_type(set_fg_color[26])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[27])? == .identifier
+	assert themelib.color_to_type(set_fg_color[15])? == .identifier
+	assert themelib.color_to_type(set_fg_color[16])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[17])? == .identifier
+	assert themelib.color_to_type(set_fg_color[18])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[19])? == .identifier
+	assert themelib.color_to_type(set_fg_color[20])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[21])? == .number
+	assert themelib.color_to_type(set_fg_color[22])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[23])? == .identifier
+	assert themelib.color_to_type(set_fg_color[24])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[25])? == .identifier
+	assert themelib.color_to_type(set_fg_color[26])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[27])? == .identifier
 
 	assert set_fg_color[28] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[29])? == .identifier
-	assert syntax.color_to_type(set_fg_color[30])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[31])? == .identifier
-	assert syntax.color_to_type(set_fg_color[33])? == .identifier
-	assert syntax.color_to_type(set_fg_color[34])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[35])? == .number
-	assert syntax.color_to_type(set_fg_color[36])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[37])? == .identifier
-	assert syntax.color_to_type(set_fg_color[38])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[39])? == .identifier
-	assert syntax.color_to_type(set_fg_color[40])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[41])? == .identifier
+	assert themelib.color_to_type(set_fg_color[29])? == .identifier
+	assert themelib.color_to_type(set_fg_color[30])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[31])? == .identifier
+	assert themelib.color_to_type(set_fg_color[33])? == .identifier
+	assert themelib.color_to_type(set_fg_color[34])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[35])? == .number
+	assert themelib.color_to_type(set_fg_color[36])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[37])? == .identifier
+	assert themelib.color_to_type(set_fg_color[38])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[39])? == .identifier
+	assert themelib.color_to_type(set_fg_color[40])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[41])? == .identifier
 
 	assert set_fg_color[42] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[43])? == .identifier
-	assert syntax.color_to_type(set_fg_color[44])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[45])? == .identifier
-	assert syntax.color_to_type(set_fg_color[46])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[47])? == .identifier
-	assert syntax.color_to_type(set_fg_color[48])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[49])? == .number
-	assert syntax.color_to_type(set_fg_color[50])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[51])? == .identifier
-	assert syntax.color_to_type(set_fg_color[52])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[53])? == .identifier
-	assert syntax.color_to_type(set_fg_color[54])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[55])? == .identifier
+	assert themelib.color_to_type(set_fg_color[43])? == .identifier
+	assert themelib.color_to_type(set_fg_color[44])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[45])? == .identifier
+	assert themelib.color_to_type(set_fg_color[46])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[47])? == .identifier
+	assert themelib.color_to_type(set_fg_color[48])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[49])? == .number
+	assert themelib.color_to_type(set_fg_color[50])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[51])? == .identifier
+	assert themelib.color_to_type(set_fg_color[52])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[53])? == .identifier
+	assert themelib.color_to_type(set_fg_color[54])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[55])? == .identifier
 
 	assert set_fg_color[56] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[57])? == .identifier
-	assert syntax.color_to_type(set_fg_color[58])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[59])? == .identifier
-	assert syntax.color_to_type(set_fg_color[60])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[61])? == .identifier
-	assert syntax.color_to_type(set_fg_color[62])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[63])? == .number
-	assert syntax.color_to_type(set_fg_color[64])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[65])? == .identifier
-	assert syntax.color_to_type(set_fg_color[66])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[67])? == .identifier
-	assert syntax.color_to_type(set_fg_color[68])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[69])? == .identifier
+	assert themelib.color_to_type(set_fg_color[57])? == .identifier
+	assert themelib.color_to_type(set_fg_color[58])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[59])? == .identifier
+	assert themelib.color_to_type(set_fg_color[60])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[61])? == .identifier
+	assert themelib.color_to_type(set_fg_color[62])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[63])? == .number
+	assert themelib.color_to_type(set_fg_color[64])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[65])? == .identifier
+	assert themelib.color_to_type(set_fg_color[66])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[67])? == .identifier
+	assert themelib.color_to_type(set_fg_color[68])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[69])? == .identifier
 
 	assert set_fg_color[70] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[71])? == .identifier
-	assert syntax.color_to_type(set_fg_color[72])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[73])? == .identifier
-	assert syntax.color_to_type(set_fg_color[74])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[75])? == .identifier
-	assert syntax.color_to_type(set_fg_color[76])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[77])? == .number
-	assert syntax.color_to_type(set_fg_color[78])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[79])? == .identifier
-	assert syntax.color_to_type(set_fg_color[80])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[81])? == .identifier
-	assert syntax.color_to_type(set_fg_color[82])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[83])? == .identifier
+	assert themelib.color_to_type(set_fg_color[71])? == .identifier
+	assert themelib.color_to_type(set_fg_color[72])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[73])? == .identifier
+	assert themelib.color_to_type(set_fg_color[74])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[75])? == .identifier
+	assert themelib.color_to_type(set_fg_color[76])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[77])? == .number
+	assert themelib.color_to_type(set_fg_color[78])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[79])? == .identifier
+	assert themelib.color_to_type(set_fg_color[80])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[81])? == .identifier
+	assert themelib.color_to_type(set_fg_color[82])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[83])? == .identifier
 
 	assert set_fg_color[84] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[85])? == .identifier
-	assert syntax.color_to_type(set_fg_color[86])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[87])? == .identifier
-	assert syntax.color_to_type(set_fg_color[88])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[89])? == .identifier
-	assert syntax.color_to_type(set_fg_color[90])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[91])? == .number
-	assert syntax.color_to_type(set_fg_color[92])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[93])? == .identifier
-	assert syntax.color_to_type(set_fg_color[94])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[95])? == .identifier
-	assert syntax.color_to_type(set_fg_color[96])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[97])? == .identifier
+	assert themelib.color_to_type(set_fg_color[85])? == .identifier
+	assert themelib.color_to_type(set_fg_color[86])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[87])? == .identifier
+	assert themelib.color_to_type(set_fg_color[88])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[89])? == .identifier
+	assert themelib.color_to_type(set_fg_color[90])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[91])? == .number
+	assert themelib.color_to_type(set_fg_color[92])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[93])? == .identifier
+	assert themelib.color_to_type(set_fg_color[94])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[95])? == .identifier
+	assert themelib.color_to_type(set_fg_color[96])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[97])? == .identifier
 
 	assert set_fg_color[98] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[99])? == .identifier
-	assert syntax.color_to_type(set_fg_color[100])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[101])? == .identifier
-	assert syntax.color_to_type(set_fg_color[102])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[103])? == .identifier
-	assert syntax.color_to_type(set_fg_color[104])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[105])? == .number
-	assert syntax.color_to_type(set_fg_color[106])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[107])? == .identifier
-	assert syntax.color_to_type(set_fg_color[108])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[109])? == .identifier
-	assert syntax.color_to_type(set_fg_color[110])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[111])? == .identifier
+	assert themelib.color_to_type(set_fg_color[99])? == .identifier
+	assert themelib.color_to_type(set_fg_color[100])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[101])? == .identifier
+	assert themelib.color_to_type(set_fg_color[102])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[103])? == .identifier
+	assert themelib.color_to_type(set_fg_color[104])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[105])? == .number
+	assert themelib.color_to_type(set_fg_color[106])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[107])? == .identifier
+	assert themelib.color_to_type(set_fg_color[108])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[109])? == .identifier
+	assert themelib.color_to_type(set_fg_color[110])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[111])? == .identifier
 
 	assert set_fg_color[112] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[113])? == .identifier
-	assert syntax.color_to_type(set_fg_color[114])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[115])? == .identifier
-	assert syntax.color_to_type(set_fg_color[116])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[117])? == .identifier
-	assert syntax.color_to_type(set_fg_color[118])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[119])? == .number
-	assert syntax.color_to_type(set_fg_color[120])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[121])? == .identifier
-	assert syntax.color_to_type(set_fg_color[122])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[123])? == .identifier
-	assert syntax.color_to_type(set_fg_color[124])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[125])? == .identifier
+	assert themelib.color_to_type(set_fg_color[113])? == .identifier
+	assert themelib.color_to_type(set_fg_color[114])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[115])? == .identifier
+	assert themelib.color_to_type(set_fg_color[116])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[117])? == .identifier
+	assert themelib.color_to_type(set_fg_color[118])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[119])? == .number
+	assert themelib.color_to_type(set_fg_color[120])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[121])? == .identifier
+	assert themelib.color_to_type(set_fg_color[122])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[123])? == .identifier
+	assert themelib.color_to_type(set_fg_color[124])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[125])? == .identifier
 
 	assert set_fg_color[126] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[127])? == .identifier
-	assert syntax.color_to_type(set_fg_color[127])? == .identifier
-	assert syntax.color_to_type(set_fg_color[128])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[129])? == .identifier
-	assert syntax.color_to_type(set_fg_color[130])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[131])? == .identifier
-	assert syntax.color_to_type(set_fg_color[132])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[133])? == .number
-	assert syntax.color_to_type(set_fg_color[134])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[135])? == .identifier
-	assert syntax.color_to_type(set_fg_color[136])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[137])? == .identifier
-	assert syntax.color_to_type(set_fg_color[138])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[139])? == .identifier
+	assert themelib.color_to_type(set_fg_color[127])? == .identifier
+	assert themelib.color_to_type(set_fg_color[127])? == .identifier
+	assert themelib.color_to_type(set_fg_color[128])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[129])? == .identifier
+	assert themelib.color_to_type(set_fg_color[130])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[131])? == .identifier
+	assert themelib.color_to_type(set_fg_color[132])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[133])? == .number
+	assert themelib.color_to_type(set_fg_color[134])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[135])? == .identifier
+	assert themelib.color_to_type(set_fg_color[136])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[137])? == .identifier
+	assert themelib.color_to_type(set_fg_color[138])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[139])? == .identifier
 
 	assert drawn_text[0] == DrawnText{ x: 1, y: 0, data: "5" }
 	assert drawn_text[14] == DrawnText{ x: 1, y: 1, data: "4" }
@@ -1265,10 +1267,10 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_14() {
 	mut drawn_text := []DrawnText{}
 	mut drawn_text_ref := &drawn_text
 
-	mut set_fg_color := []draw.Color{}
+	mut set_fg_color := []tui.Color{}
 	mut set_fg_color_ref := &set_fg_color
 
-	mut set_bg_color := []draw.Color{}
+	mut set_bg_color := []tui.Color{}
 	mut set_bg_color_ref := &set_bg_color
 
 	mut drawn_rect := []DrawnRect{}
@@ -1282,10 +1284,10 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_14() {
 			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
 		}
 		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
-			set_fg_color_ref << c
+			set_fg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 		on_set_bg_color_cb: fn [mut set_bg_color_ref] (c draw.Color) {
-			set_bg_color_ref << c
+			set_bg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 	}
 
@@ -1302,7 +1304,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_14() {
 
 	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{}, draw.Color{ 111, 0, 0 })
 
-	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
+	assert set_bg_color == [tui.Color{ 53, 53, 53 }, tui.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 13, height: 1 }
 	]
@@ -1312,33 +1314,33 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_14() {
 
 	// this is the line at the side being rendered
 	assert set_fg_color[0] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[1])? == .number
-	assert syntax.color_to_type(set_fg_color[2])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[3])? == .identifier
-	assert syntax.color_to_type(set_fg_color[4])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[5])? == .identifier
-	assert syntax.color_to_type(set_fg_color[6])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[7])? == .identifier
+	assert themelib.color_to_type(set_fg_color[1])? == .number
+	assert themelib.color_to_type(set_fg_color[2])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[3])? == .identifier
+	assert themelib.color_to_type(set_fg_color[4])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[5])? == .identifier
+	assert themelib.color_to_type(set_fg_color[6])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[7])? == .identifier
 
 	// this is the line at the side being rendered
 	assert set_fg_color[8] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[9])? == .number
-	assert syntax.color_to_type(set_fg_color[10])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[11])? == .identifier
-	assert syntax.color_to_type(set_fg_color[12])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[13])? == .identifier
-	assert syntax.color_to_type(set_fg_color[14])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[15])? == .identifier
+	assert themelib.color_to_type(set_fg_color[9])? == .number
+	assert themelib.color_to_type(set_fg_color[10])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[11])? == .identifier
+	assert themelib.color_to_type(set_fg_color[12])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[13])? == .identifier
+	assert themelib.color_to_type(set_fg_color[14])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[15])? == .identifier
 
 	// this is the line at the side being rendered
 	assert set_fg_color[16] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[17])? == .number
-	assert syntax.color_to_type(set_fg_color[18])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[19])? == .identifier
-	assert syntax.color_to_type(set_fg_color[20])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[21])? == .identifier
-	assert syntax.color_to_type(set_fg_color[22])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[23])? == .identifier
+	assert themelib.color_to_type(set_fg_color[17])? == .number
+	assert themelib.color_to_type(set_fg_color[18])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[19])? == .identifier
+	assert themelib.color_to_type(set_fg_color[20])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[21])? == .identifier
+	assert themelib.color_to_type(set_fg_color[22])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[23])? == .identifier
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 0, y: 0, data: "1" }, DT{ x: 2, y: 0, data: "0" }, DT{ x: 3, y: 0, data: " " },
@@ -1366,10 +1368,10 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_4_max_width_56() {
 	mut drawn_text := []DrawnText{}
 	mut drawn_text_ref := &drawn_text
 
-	mut set_fg_color := []draw.Color{}
+	mut set_fg_color := []tui.Color{}
 	mut set_fg_color_ref := &set_fg_color
 
-	mut set_bg_color := []draw.Color{}
+	mut set_bg_color := []tui.Color{}
 	mut set_bg_color_ref := &set_bg_color
 
 	mut drawn_rect := []DrawnRect{}
@@ -1383,10 +1385,10 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_4_max_width_56() {
 			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
 		}
 		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
-			set_fg_color_ref << c
+			set_fg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 		on_set_bg_color_cb: fn [mut set_bg_color_ref] (c draw.Color) {
-			set_bg_color_ref << c
+			set_bg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 	}
 
@@ -1403,7 +1405,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_4_max_width_56() {
 
 	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{}, draw.Color{ 111, 0, 0 })
 
-	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
+	assert set_bg_color == [tui.Color{ 53, 53, 53 }, tui.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 55, height: 1 }
 	]
@@ -1413,49 +1415,49 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_4_max_width_56() {
 
 	// this is the line at the side being rendered
 	assert set_fg_color[0] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[1])? == .identifier
-	assert syntax.color_to_type(set_fg_color[2])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[3])? == .identifier
-	assert syntax.color_to_type(set_fg_color[4])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[5])? == .identifier
-	assert syntax.color_to_type(set_fg_color[6])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[7])? == .number
-	assert syntax.color_to_type(set_fg_color[8])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[9])? == .identifier
-	assert syntax.color_to_type(set_fg_color[10])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[11])? == .identifier
-	assert syntax.color_to_type(set_fg_color[12])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[13])? == .identifier
+	assert themelib.color_to_type(set_fg_color[1])? == .identifier
+	assert themelib.color_to_type(set_fg_color[2])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[3])? == .identifier
+	assert themelib.color_to_type(set_fg_color[4])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[5])? == .identifier
+	assert themelib.color_to_type(set_fg_color[6])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[7])? == .number
+	assert themelib.color_to_type(set_fg_color[8])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[9])? == .identifier
+	assert themelib.color_to_type(set_fg_color[10])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[11])? == .identifier
+	assert themelib.color_to_type(set_fg_color[12])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[13])? == .identifier
 
 	assert set_fg_color[14] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[15])? == .identifier
-	assert syntax.color_to_type(set_fg_color[16])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[17])? == .identifier
-	assert syntax.color_to_type(set_fg_color[18])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[19])? == .identifier
-	assert syntax.color_to_type(set_fg_color[20])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[21])? == .number
-	assert syntax.color_to_type(set_fg_color[22])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[23])? == .identifier
-	assert syntax.color_to_type(set_fg_color[24])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[25])? == .identifier
-	assert syntax.color_to_type(set_fg_color[26])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[27])? == .identifier
+	assert themelib.color_to_type(set_fg_color[15])? == .identifier
+	assert themelib.color_to_type(set_fg_color[16])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[17])? == .identifier
+	assert themelib.color_to_type(set_fg_color[18])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[19])? == .identifier
+	assert themelib.color_to_type(set_fg_color[20])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[21])? == .number
+	assert themelib.color_to_type(set_fg_color[22])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[23])? == .identifier
+	assert themelib.color_to_type(set_fg_color[24])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[25])? == .identifier
+	assert themelib.color_to_type(set_fg_color[26])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[27])? == .identifier
 
 	assert set_fg_color[28] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[29])? == .identifier
-	assert syntax.color_to_type(set_fg_color[30])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[31])? == .identifier
-	assert syntax.color_to_type(set_fg_color[32])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[33])? == .identifier
-	assert syntax.color_to_type(set_fg_color[34])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[35])? == .number
-	assert syntax.color_to_type(set_fg_color[36])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[37])? == .identifier
-	assert syntax.color_to_type(set_fg_color[38])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[39])? == .identifier
-	assert syntax.color_to_type(set_fg_color[40])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[41])? == .identifier
+	assert themelib.color_to_type(set_fg_color[29])? == .identifier
+	assert themelib.color_to_type(set_fg_color[30])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[31])? == .identifier
+	assert themelib.color_to_type(set_fg_color[32])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[33])? == .identifier
+	assert themelib.color_to_type(set_fg_color[34])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[35])? == .number
+	assert themelib.color_to_type(set_fg_color[36])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[37])? == .identifier
+	assert themelib.color_to_type(set_fg_color[38])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[39])? == .identifier
+	assert themelib.color_to_type(set_fg_color[40])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[41])? == .identifier
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 0, y: 0, data: "1" }, DT{ x: 2, y: 0, data: "is" }, DT{ x: 4, y: 0, data: " " },
@@ -1489,10 +1491,10 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_56() {
 	mut drawn_text := []DrawnText{}
 	mut drawn_text_ref := &drawn_text
 
-	mut set_fg_color := []draw.Color{}
+	mut set_fg_color := []tui.Color{}
 	mut set_fg_color_ref := &set_fg_color
 
-	mut set_bg_color := []draw.Color{}
+	mut set_bg_color := []tui.Color{}
 	mut set_bg_color_ref := &set_bg_color
 
 	mut drawn_rect := []DrawnRect{}
@@ -1506,10 +1508,10 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_56() {
 			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
 		}
 		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
-			set_fg_color_ref << c
+			set_fg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 		on_set_bg_color_cb: fn [mut set_bg_color_ref] (c draw.Color) {
-			set_bg_color_ref << c
+			set_bg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 	}
 
@@ -1526,7 +1528,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_56() {
 
 	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{}, draw.Color{ 111, 0, 0 })
 
-	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
+	assert set_bg_color == [tui.Color{ 53, 53, 53 }, tui.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 55, height: 1 }
 	]
@@ -1536,19 +1538,19 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_56() {
 
 	// this is the line at the side being rendered
 	assert set_fg_color[0] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[1])? == .identifier
-	assert syntax.color_to_type(set_fg_color[2])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[3])? == .identifier
+	assert themelib.color_to_type(set_fg_color[1])? == .identifier
+	assert themelib.color_to_type(set_fg_color[2])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[3])? == .identifier
 
 	assert set_fg_color[4] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[5])? == .identifier
-	assert syntax.color_to_type(set_fg_color[6])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[7])? == .identifier
+	assert themelib.color_to_type(set_fg_color[5])? == .identifier
+	assert themelib.color_to_type(set_fg_color[6])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[7])? == .identifier
 
 	assert set_fg_color[8] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[9])? == .identifier
-	assert syntax.color_to_type(set_fg_color[10])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[11])? == .identifier
+	assert themelib.color_to_type(set_fg_color[9])? == .identifier
+	assert themelib.color_to_type(set_fg_color[10])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[11])? == .identifier
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 0, y: 0, data: "1" }, DT{ x: 2, y: 0, data: "he" },
@@ -1573,10 +1575,10 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_6() {
 	mut drawn_text := []DrawnText{}
 	mut drawn_text_ref := &drawn_text
 
-	mut set_fg_color := []draw.Color{}
+	mut set_fg_color := []tui.Color{}
 	mut set_fg_color_ref := &set_fg_color
 
-	mut set_bg_color := []draw.Color{}
+	mut set_bg_color := []tui.Color{}
 	mut set_bg_color_ref := &set_bg_color
 
 	mut drawn_rect := []DrawnRect{}
@@ -1590,10 +1592,10 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_6() {
 			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
 		}
 		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
-			set_fg_color_ref << c
+			set_fg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 		on_set_bg_color_cb: fn [mut set_bg_color_ref] (c draw.Color) {
-			set_bg_color_ref << c
+			set_bg_color_ref << tui.Color{ r: c.r, g: c.g, b: c.b }
 		}
 	}
 
@@ -1610,7 +1612,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_6() {
 
 	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{}, draw.Color{ 111, 0, 0 })
 
-	assert set_bg_color == [draw.Color{ 53, 53, 53 }, draw.Color{ 53, 53, 53 }]
+	assert set_bg_color == [tui.Color{ 53, 53, 53 }, tui.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 11, height: 1 }
 	]
@@ -1620,19 +1622,19 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_6() {
 
 	// this is the line at the side being rendered
 	assert set_fg_color[0] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[1])? == .identifier
-	assert syntax.color_to_type(set_fg_color[2])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[3])? == .identifier
+	assert themelib.color_to_type(set_fg_color[1])? == .identifier
+	assert themelib.color_to_type(set_fg_color[2])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[3])? == .identifier
 
 	assert set_fg_color[4] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[5])? == .identifier
-	assert syntax.color_to_type(set_fg_color[6])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[7])? == .identifier
+	assert themelib.color_to_type(set_fg_color[5])? == .identifier
+	assert themelib.color_to_type(set_fg_color[6])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[7])? == .identifier
 
 	assert set_fg_color[8] == line_num_fg_color
-	assert syntax.color_to_type(set_fg_color[9])? == .identifier
-	assert syntax.color_to_type(set_fg_color[10])? == .whitespace
-	assert syntax.color_to_type(set_fg_color[11])? == .identifier
+	assert themelib.color_to_type(set_fg_color[9])? == .identifier
+	assert themelib.color_to_type(set_fg_color[10])? == .whitespace
+	assert themelib.color_to_type(set_fg_color[11])? == .identifier
 
 	line_one_expected_drawn_data := [
 		DrawnText{ x: 0, y: 0, data: "1" }, DT{ x: 2, y: 0, data: "he" },

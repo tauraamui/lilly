@@ -16,7 +16,9 @@ module ui
 
 import lib.buffer
 import lib.draw
+import term.ui as tui
 import lib.syntax
+import lib.theme
 import lib.utf8
 import lib.core
 
@@ -98,7 +100,7 @@ pub fn (mut buf_view BufferView) draw(
 	}
 }
 
-const line_num_fg_color = draw.Color{ r: 117, g: 118, b: 120 }
+const line_num_fg_color = tui.Color{ r: 117, g: 118, b: 120 }
 
 fn draw_line_number(
 	mut ctx draw.Contextable,
@@ -106,7 +108,7 @@ fn draw_line_number(
 	document_line_num int, cursor_y_pos int, from int, relative_line_nums bool
 ) {
 	defer { ctx.reset_color() }
-	ctx.set_color(line_num_fg_color)
+	ctx.set_color(draw.Color{ line_num_fg_color.r, line_num_fg_color.g, line_num_fg_color.b })
 
 	// NOTE(tauraamui) [04/06/2025]: there's a fair amount of repeatition in this match
 	//                               but I think it's probably fine
@@ -216,7 +218,8 @@ fn render_token(
 		else { cur_token_type }
 	}
 
-	ctx.set_color(syntax.colors[resolved_token_type])
+	tui_color := theme.colors[resolved_token_type]
+	ctx.set_color(draw.Color{ tui_color.r, tui_color.g, tui_color.b })
 	if selected_span.full {
 		ctx.set_bg_color(selection_highlight_color)
 		defer { ctx.reset_bg_color() }
