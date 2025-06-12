@@ -45,7 +45,8 @@ pub fn (mut buf_view BufferView) draw(
 	min_x int,
 	relative_line_nums bool,
 	current_mode core.Mode,
-	cursor BufferCursor
+	cursor BufferCursor,
+	selection_highlight_color draw.Color
 ) {
 	cursor_y_pos := cursor.pos.y
 	if buf_view.buf == unsafe { nil } { return }
@@ -80,13 +81,15 @@ pub fn (mut buf_view BufferView) draw(
 			current_mode,
 			x + screenspace_x_offset + 1,
 			y + screenspace_y_offset,
+			document_line_num,
 			line,
 			syntax_parser.get_line_tokens(document_line_num),
 			syntax_def,
 			min_x,
 			width,
 			is_cursor_line,
-			cursor
+			cursor,
+			selection_highlight_color
 		)
 
 		screenspace_y_offset += 1
@@ -133,12 +136,14 @@ fn draw_text_line(
 	mut ctx draw.Contextable,
 	current_mode core.Mode,
 	x int, y int,
+	document_line_num int,
 	line string,
 	line_tokens []syntax.Token,
 	syntax_def syntax.Syntax,
 	min_x int, width int,
 	is_cursor_line bool,
-	cursor BufferCursor
+	cursor BufferCursor,
+	selection_highlight_color draw.Color
 ) {
 	max_width := width - x
 	if current_mode != .visual_line && is_cursor_line { // no point in setting the bg in this case
@@ -158,8 +163,10 @@ fn draw_text_line(
 			mut ctx, line,
 			cur_token_bounds, previous_token,
 			current_token, next_token, syntax_def,
-			min_x, x, max_width,
-			visual_x_offset, y
+			x, max_width,
+			visual_x_offset, y,
+			cursor.resolve_line_selection_span(current_mode, line.runes().len, document_line_num),
+			selection_highlight_color
 		)
 		previous_token = current_token
 	}
@@ -186,8 +193,10 @@ fn render_token(
 	current_token syntax.Token,
 	next_token ?syntax.Token,
 	syntax_def syntax.Syntax,
-	min_x int, base_x int,
-	max_width int, x_offset int, y int
+	base_x int, max_width int,
+	x_offset int, y int,
+	selected_span SelectionSpan,
+	selection_highlight_color draw.Color
 ) int {
 	mut segment_to_render := line.runes()[cur_token_bounds.start..cur_token_bounds.end].string().replace("\t", " ".repeat(4))
 	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
@@ -208,6 +217,11 @@ fn render_token(
 	}
 
 	ctx.set_color(syntax.colors[resolved_token_type])
+	if selected_span.full {
+		ctx.set_bg_color(selection_highlight_color)
+		defer { ctx.reset_bg_color() }
+		ctx.reset_color()
+	}
 	ctx.draw_text(x_offset, y, segment_to_render)
 	return utf8_str_visible_length(segment_to_render)
 }

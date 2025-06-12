@@ -540,13 +540,15 @@ fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
 fn (mut view View) draw_x(mut ctx draw.Contextable) {
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
+	selection_highlight_color := view.config.selection_highlight_color()
 	view.buf_view.draw(
 		mut ctx, 0, 0,
 		ctx.window_width(), ctx.window_height() - 2,
 		view.from, 0,
 		view.config.relative_line_numbers,
 		view.leader_state.mode,
-		view.cursor
+		view.cursor,
+		draw.Color{ r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b }
 	)
 
 	ui.draw_status_line(
