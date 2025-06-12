@@ -15,6 +15,7 @@
 module draw
 
 import term.ui as tui
+import lib.theme as themelib
 
 struct ImmediateContext {
 	render_debug bool
@@ -39,6 +40,10 @@ pub fn new_immediate_context(cfg Config) (&Contextable, Runner) {
 		)
 	}
 	return ctx, unsafe { ctx.run }
+}
+
+fn (ctx ImmediateContext) theme() themelib.Theme {
+	return themelib.Theme.new("petal")
 }
 
 fn (mut ctx ImmediateContext) rate_limit_draws() bool {
