@@ -1686,7 +1686,7 @@ mut:
 }
 
 fn (mockctx MockContextable) theme() themelib.Theme {
-	return themelib.Theme.new("test")
+	return themelib.Theme.new("test") or { panic("error occurred loading theme: ${err}") }
 }
 
 fn (mockctx MockContextable) render_debug() bool { return false }

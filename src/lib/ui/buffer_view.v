@@ -162,7 +162,6 @@ fn draw_text_line(
 		mut next_token := ?syntax.Token(none)
 		if i + 1 < line_tokens.len - 1 { next_token = line_tokens[i + 1] }
 		cur_token_bounds := resolve_token_bounds(current_token.start(), current_token.end(), min_x) or { continue }
-		cur_token_type := current_token.t_type()
 		visual_x_offset += render_token(
 			mut ctx, line,
 			cur_token_bounds, previous_token,

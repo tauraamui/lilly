@@ -43,7 +43,7 @@ pub fn new_immediate_context(cfg Config) (&Contextable, Runner) {
 }
 
 fn (ctx ImmediateContext) theme() themelib.Theme {
-	return themelib.Theme.new("petal")
+	return themelib.Theme.new("test") or { panic("error occured trying to resolve theme: ${err}") }
 }
 
 fn (mut ctx ImmediateContext) rate_limit_draws() bool {

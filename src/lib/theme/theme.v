@@ -55,7 +55,7 @@ pub:
 	background_color  tui.Color
 }
 
-pub fn Theme.new(name string) Theme {
+pub fn Theme.new(name string) !Theme {
 	$if test {
 		return Theme{ pallete: test_pallete, cursor_line_color: tui.Color{ 53, 53, 53 }, background_color: tui.Color{ 59, 34, 76 } }
 	}
@@ -67,7 +67,7 @@ pub fn Theme.new(name string) Theme {
 				background_color: tui.Color{ 59, 34, 76 }
 			}
 		}
-		else { Theme{} }
+		else { error("unable to find theme '${name}'") }
 	}
 }
 
