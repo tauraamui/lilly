@@ -59,7 +59,8 @@ pub:
 
 pub fn Theme.new(name string) Theme {
 	return match name {
-		"petal" { Theme{
+		"petal" {
+			Theme{
 				pallete: colors,
 				cursor_line_color: tui.Color{ 53, 53, 53 },
 				background_color: tui.Color{ 59, 34, 76 }
