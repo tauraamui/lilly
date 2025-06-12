@@ -31,7 +31,7 @@ const acme_pallete := {
 	.block_end:           tui.Color{ 15, 12, 0 }
 	.number:              tui.Color{ 15, 12, 0 }
 	.whitespace:          tui.Color{ 15, 12, 0 }
-	.keyword:             tui.Color{ 15, 12, 0 }
+	.keyword:             tui.Color{ 0, 175, 215 }
 	.literal:             tui.Color{ 15, 12, 0 }
 	.builtin:             tui.Color{ 15, 12, 0 }
 	.other:               tui.Color{ 15, 12, 0 }
