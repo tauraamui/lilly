@@ -73,7 +73,8 @@ pub fn (mut buf_view BufferView) draw(
 
 		is_cursor_line := document_line_num == cursor_y_pos
 		if current_mode != .visual_line && is_cursor_line {
-			ctx.set_bg_color(draw.Color{53, 53, 53})
+			cursor_line_color := ctx.theme().cursor_line_color
+			ctx.set_bg_color(draw.Color{ r: cursor_line_color.r, g: cursor_line_color.g, b: cursor_line_color.b })
 			ctx.draw_rect(x + screenspace_x_offset + 1, y + screenspace_y_offset, width - (x + screenspace_x_offset), 1)
 			ctx.reset_bg_color()
 		}
@@ -149,7 +150,8 @@ fn draw_text_line(
 ) {
 	max_width := width - x
 	if current_mode != .visual_line && is_cursor_line { // no point in setting the bg in this case
-		ctx.set_bg_color(draw.Color{53, 53, 53})
+		cursor_line_color := ctx.theme().cursor_line_color
+		ctx.set_bg_color(draw.Color{ r: cursor_line_color.r, g: cursor_line_color.g, b: cursor_line_color.b })
 		defer { ctx.reset_bg_color() }
 	}
 

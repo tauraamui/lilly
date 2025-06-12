@@ -612,7 +612,9 @@ fn (mut view View) update_to() {
 
 fn (mut view View) draw_document(mut ctx draw.Contextable) {
 	view.update_to()
-	ctx.set_bg_color(r: 53, g: 53, b: 53)
+
+	cursor_line_color := ctx.theme().cursor_line_color
+	ctx.set_bg_color(draw.Color{ r: cursor_line_color.r, g: cursor_line_color.g, b: cursor_line_color.b })
 
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
 	// draw cursor line
@@ -692,7 +694,8 @@ fn draw_text_line(mut ctx draw.Contextable,
 		}
 		else {
 			if screen_space_y == cursor_screen_space_y {
-				ctx.set_bg_color(r: 53, g: 53, b: 53)
+				cursor_line_color := ctx.theme().cursor_line_color
+				ctx.set_bg_color(draw.Color{ r: cursor_line_color.r, g: cursor_line_color.g, b: cursor_line_color.b })
 			}
 			draw_text_line_as_segments(mut ctx, syntax, screen_space_x, screen_space_y,
 				document_space_y, line)
@@ -771,7 +774,8 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 	line_runes []rune,
 	original_line_runes []rune
 ) {
-	ctx.set_bg_color(r: 53, g: 53, b: 53)
+	cursor_line_color := ctx.theme().cursor_line_color
+	ctx.set_bg_color(draw.Color{ r: cursor_line_color.r, g: cursor_line_color.g, b: cursor_line_color.b })
 	defer { ctx.reset_bg_color() }
 	pre_tab_count := original_line_runes[..selection_start.x].string().count('\t')
 	pre_selection := line_runes[..selection_start.x + (pre_tab_count * 3)]
@@ -787,7 +791,7 @@ fn draw_text_line_visual_selection_starts_and_ends_on_same_line(mut ctx draw.Con
 	ctx.draw_text(screen_space_x + pre_selection.len, screen_space_y, within_selection.string())
 	ctx.reset_bg_color()
 
-	ctx.set_bg_color(r: 53, g: 53, b: 53)
+	ctx.set_bg_color(draw.Color{ r: cursor_line_color.r, g: cursor_line_color.g, b: cursor_line_color.b })
 	post_selection := line_runes[selection_end.x + ((pre_tab_count + sel_tab_count) * 3)..]
 	draw_text_line_as_segments(mut ctx, syntax, screen_space_x + pre_selection.len + within_selection.len, screen_space_y, document_space_y, post_selection.string())
 }
@@ -809,7 +813,8 @@ fn draw_text_line_visual_selection_starts_on_same_but_ends_after(mut ctx draw.Co
 
 	if pre_sel.len != 0 {
 		if screen_space_y == cursor_screen_space_y {
-			ctx.set_bg_color(r: 53, g: 53, b: 53)
+			cursor_line_color := ctx.theme().cursor_line_color
+			ctx.set_bg_color(draw.Color{ r: cursor_line_color.r, g: cursor_line_color.g, b: cursor_line_color.b })
 		}
 		draw_text_line_as_segments(mut ctx, syntax, screen_space_x + x_offset, screen_space_y,
 			document_space_y, pre_sel.string())
@@ -860,7 +865,8 @@ fn draw_text_line_visual_selection_starts_before_but_ends_on_line(mut ctx draw.C
 	}
 
 	if screen_space_y == cursor_screen_space_y {
-		ctx.set_bg_color(r: 53, g: 53, b: 53)
+		cursor_line_color := ctx.theme().cursor_line_color
+		ctx.set_bg_color(draw.Color{ r: cursor_line_color.r, g: cursor_line_color.g, b: cursor_line_color.b })
 	}
 	draw_text_line_as_segments(mut ctx, syntax, screen_space_x + x_offset, screen_space_y,
 		document_space_y, post_end.string())
