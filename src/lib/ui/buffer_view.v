@@ -162,15 +162,22 @@ fn draw_text_line(
 		mut next_token := ?syntax.Token(none)
 		if i + 1 < line_tokens.len - 1 { next_token = line_tokens[i + 1] }
 		cur_token_bounds := resolve_token_bounds(current_token.start(), current_token.end(), min_x) or { continue }
+
+		selected_span := cursor.resolve_line_selection_span(current_mode, line.runes().len, document_line_num)
+		if current_mode == .visual || current_mode == .visual_line {
+			if selected_span.full {
+				ctx.set_bg_color(selection_highlight_color)
+			}
+		}
+
 		visual_x_offset += render_token(
 			mut ctx, current_mode, line,
 			cur_token_bounds, previous_token,
 			current_token, next_token, syntax_def,
 			x, max_width,
 			visual_x_offset, y,
-			cursor.resolve_line_selection_span(current_mode, line.runes().len, document_line_num),
-			selection_highlight_color
 		)
+		ctx.reset_bg_color()
 		previous_token = current_token
 	}
 }
@@ -199,8 +206,6 @@ fn render_token(
 	syntax_def syntax.Syntax,
 	base_x int, max_width int,
 	x_offset int, y int,
-	selected_span SelectionSpan,
-	selection_highlight_color draw.Color
 ) int {
 	mut segment_to_render := line.runes()[cur_token_bounds.start..cur_token_bounds.end].string().replace("\t", " ".repeat(4))
 	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
@@ -223,13 +228,6 @@ fn render_token(
 	tui_color := ctx.theme().pallete[resolved_token_type]
 	ctx.set_color(draw.Color{ tui_color.r, tui_color.g, tui_color.b })
 
-	if current_mode == .visual || current_mode == .visual_line {
-		if selected_span.full {
-			ctx.set_bg_color(selection_highlight_color)
-			defer { ctx.reset_bg_color() }
-			ctx.reset_color()
-		}
-	}
 	ctx.draw_text(x_offset, y, segment_to_render)
 	return utf8_str_visible_length(segment_to_render)
 }
