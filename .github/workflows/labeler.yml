@@ -7,6 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
       - name: Content-Based
         uses: actions/labeler@v5
         with:

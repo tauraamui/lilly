@@ -163,7 +163,7 @@ fn draw_text_line(
 		if i + 1 < line_tokens.len - 1 { next_token = line_tokens[i + 1] }
 		cur_token_bounds := resolve_token_bounds(current_token.start(), current_token.end(), min_x) or { continue }
 		visual_x_offset += render_token(
-			mut ctx, line,
+			mut ctx, current_mode, line,
 			cur_token_bounds, previous_token,
 			current_token, next_token, syntax_def,
 			x, max_width,
@@ -191,7 +191,8 @@ fn resolve_token_bounds(token_start int, token_end int, min_x int) ?TokenBounds 
 
 fn render_token(
 	mut ctx draw.Contextable,
-	line string, cur_token_bounds TokenBounds,
+	current_mode core.Mode, line string,
+	cur_token_bounds TokenBounds,
 	previous_token ?syntax.Token,
 	current_token syntax.Token,
 	next_token ?syntax.Token,
@@ -221,10 +222,13 @@ fn render_token(
 
 	tui_color := ctx.theme().pallete[resolved_token_type]
 	ctx.set_color(draw.Color{ tui_color.r, tui_color.g, tui_color.b })
-	if selected_span.full {
-		ctx.set_bg_color(selection_highlight_color)
-		defer { ctx.reset_bg_color() }
-		ctx.reset_color()
+
+	if current_mode == .visual || current_mode == .visual_line {
+		if selected_span.full {
+			ctx.set_bg_color(selection_highlight_color)
+			defer { ctx.reset_bg_color() }
+			ctx.reset_color()
+		}
 	}
 	ctx.draw_text(x_offset, y, segment_to_render)
 	return utf8_str_visible_length(segment_to_render)
