@@ -859,6 +859,8 @@ fn draw_text_line_visual_selection_starts_before_but_ends_on_line(mut ctx draw.C
 			g: selection_highlight_color.g
 			b: selection_highlight_color.b
 		)
+		builtin_color := ctx.theme().pallete[.identifier]
+		ctx.set_color(r: builtin_color.r, g: builtin_color.g, b: builtin_color.b)
 		ctx.draw_text(screen_space_x + x_offset, screen_space_y, pre_end.string())
 		ctx.reset_bg_color()
 		x_offset += pre_end.len
@@ -883,6 +885,8 @@ fn draw_text_line_as_segments(mut ctx draw.Contextable,
 		false)
 
 	if segments.len == 0 {
+		builtin_color := ctx.theme().pallete[.identifier]
+		ctx.set_color(r: builtin_color.r, g: builtin_color.g, b: builtin_color.b)
 		ctx.draw_text(screen_space_x, screen_space_y, line)
 		return
 	}
@@ -892,6 +896,8 @@ fn draw_text_line_as_segments(mut ctx draw.Contextable,
 		// render text before next segment
 		if segment.start > pos {
 			s := line.runes()[pos..segment.start].string()
+			builtin_color := ctx.theme().pallete[.identifier]
+			ctx.set_color(r: builtin_color.r, g: builtin_color.g, b: builtin_color.b)
 			ctx.draw_text(screen_space_x + pos, screen_space_y, s)
 		}
 
@@ -903,6 +909,8 @@ fn draw_text_line_as_segments(mut ctx draw.Contextable,
 		pos = segment.end
 		if i == segments.len - 1 && segment.end < line.len {
 			final := line.runes()[segment.end..line.runes().len].string()
+			builtin_color := ctx.theme().pallete[.identifier]
+			ctx.set_color(r: builtin_color.r, g: builtin_color.g, b: builtin_color.b)
 			ctx.draw_text(screen_space_x + pos, screen_space_y, final)
 		}
 	}
