@@ -117,11 +117,6 @@ fn test_open_workspace_files_and_config() {
 	assert wrkspace.config == Config{
 		leader_key: ";"
 		relative_line_numbers:     true
-		selection_highlight_color: tui.Color{
-			r: 96
-			g: 138
-			b: 143
-		}
 		insert_tabs_not_spaces: false
 	}
 }
@@ -164,13 +159,7 @@ fn test_workspace_config_resolves_no_background_if_missing() {
 	assert wrkspace.config == Config{
 		relative_line_numbers:  true
 		insert_tabs_not_spaces: false
-		selection_highlight_color: tui.Color{
-			r: 101
-			g: 75
-			b: 143
-		}
 	}
-	assert wrkspace.config.selection_highlight_color() == tui.Color{ r: 101, g: 75, b: 143 }
 }
 
 fn test_workspace_config_resolves_no_selection_highlight_color_if_missing() {
@@ -211,9 +200,7 @@ fn test_workspace_config_resolves_no_selection_highlight_color_if_missing() {
 	assert wrkspace.config == Config{
 		relative_line_numbers:  true
 		insert_tabs_not_spaces: false
-		selection_highlight_color: ?tui.Color(none)
 	}
-	assert wrkspace.config.selection_highlight_color() == tui.Color{ r: 96, g: 138, b: 143 }
 }
 
 
@@ -252,11 +239,6 @@ fn test_open_workspace_files_but_fallsback_to_embedded_config() {
 		leader_key:                ' '
 		relative_line_numbers:     true
 		insert_tabs_not_spaces: true
-		selection_highlight_color: tui.Color{
-			r: 96
-			g: 138
-			b: 143
-		}
 		theme: "petal"
 	}
 }
@@ -300,11 +282,6 @@ fn test_open_workspace_resolves_git_branch() {
 		leader_key:                ' '
 		relative_line_numbers:     true
 		insert_tabs_not_spaces: true
-		selection_highlight_color: tui.Color{
-			r: 96
-			g: 138
-			b: 143
-		}
 		theme: "petal"
 	}
 }
