@@ -541,7 +541,7 @@ fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
 fn (mut view View) draw_x(mut ctx draw.Contextable) {
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
-	selection_highlight_color := view.config.selection_highlight_color()
+	selection_highlight_color := ctx.theme().selection_highlight_color
 	view.buf_view.draw(
 		mut ctx, 0, 0,
 		ctx.window_width(), ctx.window_height() - 2,
@@ -645,11 +645,11 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 		}
 
 		linex = linex.runes()[..max_width].string()
-		cfg_sel_highlight_color := view.config.selection_highlight_color()
+		theme_sel_highlight_color := ctx.theme().selection_highlight_color
 		sel_highlight_color := draw.Color{
-			r: cfg_sel_highlight_color.r
-			g: cfg_sel_highlight_color.g
-			b: cfg_sel_highlight_color.b
+			r: theme_sel_highlight_color.r
+			g: theme_sel_highlight_color.g
+			b: theme_sel_highlight_color.b
 		}
 		draw_text_line(mut ctx, view.syntaxes[view.current_syntax_idx] or { syntaxlib.Syntax{} },
 			view.cursor, view.leader_state.mode, sel_highlight_color, view.x, screen_space_y, document_space_y,
