@@ -31,7 +31,7 @@ const acme_pallete := {
 	.block_end:           tui.Color{ 15, 12, 0 }
 	.number:              tui.Color{ 15, 12, 0 }
 	.whitespace:          tui.Color{ 15, 12, 0 }
-	.keyword:             tui.Color{ 0, 175, 215 }
+	.keyword:             tui.Color{ 0, 200, 215 }
 	.literal:             tui.Color{ 15, 12, 0 }
 	.builtin:             tui.Color{ 15, 12, 0 }
 	.other:               tui.Color{ 15, 12, 0 }
@@ -69,7 +69,7 @@ pub struct Theme {
 pub:
 	pallete           Pallete
 	cursor_line_color tui.Color
-	background_color  tui.Color
+	background_color  ?tui.Color
 }
 
 pub fn Theme.new(name string) !Theme {
@@ -82,6 +82,12 @@ pub fn Theme.new(name string) !Theme {
 				pallete: petal_pallete,
 				cursor_line_color: tui.Color{ 53, 53, 53 },
 				background_color: tui.Color{ 59, 34, 76 }
+			}
+		}
+		"space" {
+			Theme{
+				pallete: petal_pallete,
+				cursor_line_color: tui.Color{ 53, 53, 53 },
 			}
 		}
 		"acme" {

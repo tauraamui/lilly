@@ -264,6 +264,7 @@ fn test_open_workspace_files_but_fallsback_to_embedded_config() {
 			b: 143
 		}
 		background_color: ?tui.Color{ r: 59, g: 34, b: 76 }
+		theme: "petal"
 	}
 }
 
@@ -312,5 +313,6 @@ fn test_open_workspace_resolves_git_branch() {
 			b: 143
 		}
 		background_color: ?tui.Color{ r: 59, g: 34, b: 76 }
+		theme: "petal"
 	}
 }
