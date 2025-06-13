@@ -67,9 +67,10 @@ pub type Pallete = map[syntaxlib.TokenType]tui.Color
 
 pub struct Theme {
 pub:
-	pallete           Pallete
-	cursor_line_color tui.Color
-	background_color  ?tui.Color
+	pallete                   Pallete
+	cursor_line_color         tui.Color
+	selection_highlight_color tui.Color
+	background_color          ?tui.Color
 }
 
 pub fn Theme.new(name string) !Theme {
@@ -81,6 +82,7 @@ pub fn Theme.new(name string) !Theme {
 			Theme{
 				pallete: petal_pallete,
 				cursor_line_color: tui.Color{ 53, 53, 53 },
+				selection_highlight_color: tui.Color{ 96, 138, 143 },
 				background_color: tui.Color{ 59, 34, 76 }
 			}
 		}
@@ -88,12 +90,14 @@ pub fn Theme.new(name string) !Theme {
 			Theme{
 				pallete: petal_pallete,
 				cursor_line_color: tui.Color{ 53, 53, 53 },
+				selection_highlight_color: tui.Color{ 96, 138, 143 },
 			}
 		}
 		"acme" {
 			Theme{
 				pallete: acme_pallete,
 				cursor_line_color: tui.Color{ 174, 255, 254 },
+				selection_highlight_color: tui.Color{ 96, 138, 143 },
 				background_color: tui.Color{ 254, 215, 175 }
 			}
 		}

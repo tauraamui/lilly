@@ -40,16 +40,10 @@ mut:
 pub struct Config {
 pub:
 	theme                  ?string
-mut:
-	selection_highlight_color ?tui.Color
 pub mut:
 	leader_key             string
 	relative_line_numbers  bool
 	insert_tabs_not_spaces bool
-}
-
-pub fn (config Config) selection_highlight_color() tui.Color {
-	return config.selection_highlight_color or { tui.Color{ r: 96, g: 138, b: 143 } }
 }
 
 pub fn open_workspace(mut _log Logger,
