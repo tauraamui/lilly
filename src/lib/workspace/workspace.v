@@ -46,7 +46,6 @@ pub mut:
 	leader_key             string
 	relative_line_numbers  bool
 	insert_tabs_not_spaces bool
-	background_color       ?tui.Color
 }
 
 pub fn (config Config) selection_highlight_color() tui.Color {

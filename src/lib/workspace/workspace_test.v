@@ -169,7 +169,6 @@ fn test_workspace_config_resolves_no_background_if_missing() {
 			g: 75
 			b: 143
 		}
-		background_color: ?tui.Color(none)
 	}
 	assert wrkspace.config.selection_highlight_color() == tui.Color{ r: 101, g: 75, b: 143 }
 }
@@ -213,11 +212,6 @@ fn test_workspace_config_resolves_no_selection_highlight_color_if_missing() {
 		relative_line_numbers:  true
 		insert_tabs_not_spaces: false
 		selection_highlight_color: ?tui.Color(none)
-		background_color: ?tui.Color{
-			r: 96
-			g: 138
-			b: 143
-		}
 	}
 	assert wrkspace.config.selection_highlight_color() == tui.Color{ r: 96, g: 138, b: 143 }
 }
@@ -263,7 +257,6 @@ fn test_open_workspace_files_but_fallsback_to_embedded_config() {
 			g: 138
 			b: 143
 		}
-		background_color: ?tui.Color{ r: 59, g: 34, b: 76 }
 		theme: "petal"
 	}
 }
@@ -312,7 +305,6 @@ fn test_open_workspace_resolves_git_branch() {
 			g: 138
 			b: 143
 		}
-		background_color: ?tui.Color{ r: 59, g: 34, b: 76 }
 		theme: "petal"
 	}
 }
