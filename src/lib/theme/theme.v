@@ -41,20 +41,20 @@ const acme_pallete := {
 //                               here to ensure that colour lookups in tests provide
 //                               unique results
 const test_pallete := {
-	syntaxlib.TokenType.identifier: tui.Color{ 999, 999, 999 }
-	.operator:            tui.Color{ 987, 987, 987 }
-	.string:              tui.Color{ 950, 950, 950 }
-	.comment:             tui.Color{ 943, 943, 943 }
-	.comment_start:       tui.Color{ 932, 932, 932 }
-	.comment_end:         tui.Color{ 920, 920, 920 }
-	.block_start:         tui.Color{ 919, 919, 919 }
-	.block_end:           tui.Color{ 915, 915, 915 }
-	.number:              tui.Color{ 909, 909, 909 }
-	.whitespace:          tui.Color{ 875, 445, 789 }
-	.keyword:             tui.Color{ 585, 321, 555 }
-	.literal:             tui.Color{ 289, 287, 285 }
-	.builtin:             tui.Color{ 543, 598, 555 }
-	.other:               tui.Color{ 874, 333, 401 }
+	syntaxlib.TokenType.identifier: tui.Color{ 99, 99, 99 }
+	.operator:            tui.Color{ 87, 87, 87 }
+	.string:              tui.Color{ 50, 50, 50 }
+	.comment:             tui.Color{ 43, 43, 43 }
+	.comment_start:       tui.Color{ 32, 32, 32 }
+	.comment_end:         tui.Color{ 20, 20, 20 }
+	.block_start:         tui.Color{ 19, 19, 19 }
+	.block_end:           tui.Color{ 15, 15, 15 }
+	.number:              tui.Color{ 49, 49, 49 }
+	.whitespace:          tui.Color{ 75, 45, 79 }
+	.keyword:             tui.Color{ 5, 21, 5 }
+	.literal:             tui.Color{ 15, 15, 15 }
+	.builtin:             tui.Color{ 102, 102, 102 }
+	.other:               tui.Color{ 211, 211, 211 }
 }
 
 pub fn color_to_type(color tui.Color) ?syntaxlib.TokenType {
