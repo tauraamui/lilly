@@ -168,7 +168,6 @@ fn draw_text_line(
 		if current_mode == .visual || current_mode == .visual_line {
 			if selected_span.full {
 				ctx.set_bg_color(selection_highlight_color)
-				ctx.reset_bg_color()
 			}
 		}
 
