@@ -199,7 +199,6 @@ fn resolve_token_bounds(token_start int, token_end int, min_x int) ?TokenBounds 
 fn resolve_token_fg_color(
 	theme themelib.Theme,
 	segment_to_render string,
-	cur_token_bounds TokenBounds,
 	previous_token ?syntax.Token,
 	current_token syntax.Token,
 	next_token ?syntax.Token,
@@ -238,7 +237,7 @@ fn render_token(
 	if segment_to_render.runes().len == 0 { return 0 }
 
 	tui_color := resolve_token_fg_color(
-		ctx.theme(), segment_to_render, cur_token_bounds, previous_token,
+		ctx.theme(), segment_to_render, previous_token,
 		current_token, next_token, syntax_def
 	)
 
