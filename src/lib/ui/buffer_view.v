@@ -18,7 +18,7 @@ import lib.buffer
 import lib.draw
 import term.ui as tui
 import lib.syntax
-import lib.theme
+import lib.theme as themelib
 import lib.utf8
 import lib.core
 
@@ -197,20 +197,14 @@ fn resolve_token_bounds(token_start int, token_end int, min_x int) ?TokenBounds 
 }
 
 fn resolve_token_fg_color(
-	mut ctx draw.Contextable,
-	current_mode core.Mode, line string,
+	theme themelib.Theme,
+	segment_to_render string,
 	cur_token_bounds TokenBounds,
 	previous_token ?syntax.Token,
 	current_token syntax.Token,
 	next_token ?syntax.Token,
 	syntax_def syntax.Syntax,
-	base_x int, max_width int,
-	x_offset int, y int,
 ) tui.Color {
-	mut segment_to_render := line.runes()[cur_token_bounds.start..cur_token_bounds.end].string().replace("\t", " ".repeat(4))
-	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
-	if segment_to_render.runes().len == 0 { return 0 }
-
 	prev_token_type := if prev_token := previous_token { prev_token.t_type() } else { .whitespace }
 	next_token_type := if n_token := next_token { n_token.t_type() } else { .whitespace }
 
@@ -225,7 +219,7 @@ fn resolve_token_fg_color(
 		else { cur_token_type }
 	}
 
-	return ctx.theme().pallete[resolved_token_type]
+	return theme.pallete[resolved_token_type]
 }
 
 fn render_token(
@@ -243,23 +237,12 @@ fn render_token(
 	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
 	if segment_to_render.runes().len == 0 { return 0 }
 
-	prev_token_type := if prev_token := previous_token { prev_token.t_type() } else { .whitespace }
-	next_token_type := if n_token := next_token { n_token.t_type() } else { .whitespace }
+	tui_color := resolve_token_fg_color(
+		ctx.theme(), segment_to_render, cur_token_bounds, previous_token,
+		current_token, next_token, syntax_def
+	)
 
-	cur_token_type := current_token.t_type()
-	resolved_token_type := match true {
-		cur_token_type               == .comment { cur_token_type }
-		cur_token_type               == .string  { cur_token_type }
-		(prev_token_type != .whitespace) || (next_token_type != .whitespace) { cur_token_type }
-		segment_to_render in syntax_def.literals { syntax.TokenType.literal }
-		segment_to_render in syntax_def.keywords { syntax.TokenType.keyword }
-		segment_to_render in syntax_def.builtins { syntax.TokenType.builtin }
-		else { cur_token_type }
-	}
-
-	tui_color := ctx.theme().pallete[resolved_token_type]
 	ctx.set_color(draw.Color{ tui_color.r, tui_color.g, tui_color.b })
-
 	ctx.draw_text(x_offset, y, segment_to_render)
 	return utf8_str_visible_length(segment_to_render)
 }
