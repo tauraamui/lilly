@@ -21,6 +21,14 @@ import lib.syntax
 import lib.theme as themelib
 import term.ui as tui
 
+struct ColoredDrawnText {
+	x        int
+	y        int
+	data     string
+	fg_color tui.Color
+	bg_color tui.Color
+}
+
 struct DrawnText {
 	x int
 	y int
@@ -32,6 +40,99 @@ struct DrawnRect {
 	y      int
 	width  int
 	height int
+}
+
+fn test_buffer_view_draws_lines_in_normal_mode_so_one_line_has_bg_the_rest_do_not() {
+	mut drawn_text := []ColoredDrawnText{}
+	mut drawn_text_ref := &drawn_text
+
+	mut active_fg_color := &tui.Color{}
+	mut set_fg_color_ref := &active_fg_color
+
+	mut active_bg_color := &tui.Color{}
+	mut set_bg_color_ref := &active_bg_color
+
+	mut drawn_rect := []DrawnRect{}
+	mut drawn_rect_ref := &drawn_rect
+
+	mut mock_ctx := MockContextable{
+		on_draw_cb: fn [
+			mut drawn_text_ref,
+			active_fg_color,
+			active_bg_color
+		] (x int, y int, text string) {
+			drawn_text_ref << ColoredDrawnText{
+				x, y, text, active_fg_color, active_bg_color
+			}
+		}
+		on_draw_rect_cb: fn [mut drawn_rect_ref] (x int, y int, width int, height int) {
+			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
+		}
+		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
+			set_fg_color_ref = &tui.Color{ c.r, c.g, c.b }
+		}
+		on_set_bg_color_cb: fn [mut set_bg_color_ref] (c draw.Color) {
+			set_bg_color_ref = &tui.Color{ c.r, c.g, c.b }
+		}
+	}
+
+	mut buf := buffer.Buffer.new("", false)
+	for i in 0..5 { buf.lines << "This is line ${i} in the document" }
+	mut buf_view := BufferView.new(&buf, [], 0)
+
+	x := 0
+	y := 0
+	width := 100
+	height := 3
+	min_x := 0
+	from_line_num := 0
+
+	buf_view.draw(
+		mut mock_ctx, x, y,
+		width, height, from_line_num,
+		min_x, false, .normal, BufferCursor{}, draw.Color{ 111, 0, 0 }
+	)
+
+	assert drawn_rect == [
+		DrawnRect{ x: 2, y: 0, width: 99, height: 1 }
+	]
+
+	assert drawn_text.len == 56
+
+	line_one_expected_drawn_data := [
+		ColoredDrawnText{ x: 0, y: 0, data: "1" }, ColoredDrawnText{ x: 2, y: 0, data: "This" },
+		ColoredDrawnText{ x: 6, y: 0, data: " " }, ColoredDrawnText{ x: 7, y: 0, data: "is" },
+		ColoredDrawnText{x: 9, y: 0, data: " " }, ColoredDrawnText{ x: 10, y: 0, data: "line" },
+		ColoredDrawnText{ x: 14, y: 0, data: " " }, ColoredDrawnText{ x: 15, y: 0, data: "0" },
+		ColoredDrawnText{ x: 16, y: 0, data: " " }, ColoredDrawnText{ x: 17, y: 0, data: "in" },
+		ColoredDrawnText{ x: 19, y: 0, data: " " }, ColoredDrawnText{ x: 20, y: 0, data: "the" },
+		ColoredDrawnText{ x: 23, y: 0, data: " " }, ColoredDrawnText{ x: 24, y: 0, data: "document" },
+	]
+	assert drawn_text[..14] == line_one_expected_drawn_data
+
+	/*
+	line_two_expected_drawn_data := [
+		DrawnText{ x: 0, y: 1, data: "2" }, DrawnText{ x: 2, y: 1, data: "This" },
+		DrawnText{ x: 6, y: 1, data: " " }, DrawnText{ x: 7, y: 1, data: "is" },
+		DrawnText{ x: 9, y: 1, data: " " }, DrawnText{ x: 10, y: 1, data: "line" },
+		DrawnText{ x: 14, y: 1, data: " " }, DrawnText{ x: 15, y: 1, data: "1" },
+		DrawnText{ x: 16, y: 1, data: " " }, DrawnText{ x: 17, y: 1, data: "in" },
+		DrawnText{ x: 19, y: 1, data: " " }, DrawnText{ x: 20, y: 1, data: "the" },
+		DrawnText{ x: 23, y: 1, data: " " }, DrawnText{ x: 24, y: 1, data: "document" },
+	]
+	assert drawn_text[14..28] == line_two_expected_drawn_data
+
+	line_three_expected_drawn_data := [
+		DrawnText{ x: 0, y: 2, data: "3" }, DrawnText{ x: 2, y: 2, data: "This" },
+		DrawnText{ x: 6, y: 2, data: " " }, DrawnText{ x: 7, y: 2, data: "is" },
+		DrawnText{ x: 9, y: 2, data: " " }, DrawnText{ x: 10, y: 2, data: "line" },
+		DrawnText{ x: 14, y: 2, data: " " }, DrawnText{ x: 15, y: 2, data: "2" },
+		DrawnText{ x: 16, y: 2, data: " " }, DrawnText{ x: 17, y: 2, data: "in" },
+		DrawnText{ x: 19, y: 2, data: " " }, DrawnText{ x: 20, y: 2, data: "the" },
+		DrawnText{ x: 23, y: 2, data: " " }, DrawnText{ x: 24, y: 2, data: "document" },
+	]
+	assert drawn_text[28..42] == line_three_expected_drawn_data
+	*/
 }
 
 fn test_buffer_view_draws_lines_0_to_max_height() {
