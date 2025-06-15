@@ -21,6 +21,14 @@ import lib.syntax
 import lib.theme as themelib
 import term.ui as tui
 
+struct ColoredDrawnText {
+	x        int
+	y        int
+	data     string
+	fg_color tui.Color
+	bg_color ?tui.Color
+}
+
 struct DrawnText {
 	x int
 	y int
@@ -32,6 +40,118 @@ struct DrawnRect {
 	y      int
 	width  int
 	height int
+}
+
+fn test_buffer_view_draws_lines_in_normal_mode_so_one_line_has_bg_the_rest_do_not() {
+	mut drawn_text := []ColoredDrawnText{}
+	mut drawn_text_ref := &drawn_text
+
+	mut active_fg_color := &tui.Color{}
+	mut set_fg_color_ref := &active_fg_color
+
+	mut active_bg_color := &tui.Color{}
+	mut set_bg_color_ref := &active_bg_color
+
+	mut drawn_rect := []DrawnRect{}
+	mut drawn_rect_ref := &drawn_rect
+
+	mut mock_ctx := MockColorContextable{
+		on_draw_cb: fn [
+			mut drawn_text_ref
+		] (x int, y int, text string, active_fg_color tui.Color, active_bg_color ?tui.Color) {
+			drawn_text_ref << ColoredDrawnText{
+				x, y, text, active_fg_color, active_bg_color
+			}
+		}
+		on_draw_rect_cb: fn [mut drawn_rect_ref] (x int, y int, width int, height int) {
+			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
+		}
+	}
+
+	mut buf := buffer.Buffer.new("", false)
+	for i in 0..5 { buf.lines << "This is line ${i} in the document" }
+	mut buf_view := BufferView.new(&buf, [], 0)
+
+	x := 0
+	y := 0
+	width := 100
+	height := 3
+	min_x := 0
+	from_line_num := 0
+
+	buf_view.draw(
+		mut mock_ctx, x, y,
+		width, height, from_line_num,
+		min_x, false, .normal, BufferCursor{ pos: CursorPos{ x: 0, y: 1 } }, draw.Color{ 111, 0, 0 }
+	)
+
+	assert drawn_rect == [
+		DrawnRect{ x: 2, y: 1, width: 99, height: 1 }
+	]
+
+	assert drawn_text.len == 56
+
+	test_theme          := mock_ctx.theme()
+	test_theme_pallete  := test_theme.pallete
+	identifier_fg_color := test_theme_pallete[.identifier]
+	whitespace_fg_color := test_theme_pallete[.whitespace]
+	number_fg_color     := test_theme_pallete[.number]
+	cursor_line_color   := test_theme.cursor_line_color
+
+	line_one_expected_drawn_data := [
+		ColoredDrawnText{ x: 0, y: 0, data: "1", fg_color: line_num_fg_color },
+		ColoredDrawnText{ x: 2, y: 0, data: "This", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 6, y: 0, data: " ", fg_color: whitespace_fg_color, },
+		ColoredDrawnText{ x: 7, y: 0, data: "is", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 9, y: 0, data: " ", fg_color: whitespace_fg_color },
+		ColoredDrawnText{ x: 10, y: 0, data: "line", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 14, y: 0, data: " ", fg_color: whitespace_fg_color },
+		ColoredDrawnText{ x: 15, y: 0, data: "0" fg_color: number_fg_color },
+		ColoredDrawnText{ x: 16, y: 0, data: " " fg_color: whitespace_fg_color },
+		ColoredDrawnText{ x: 17, y: 0, data: "in" fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 19, y: 0, data: " " fg_color: whitespace_fg_color },
+		ColoredDrawnText{ x: 20, y: 0, data: "the" fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 23, y: 0, data: " " fg_color: whitespace_fg_color },
+		ColoredDrawnText{ x: 24, y: 0, data: "document" fg_color: identifier_fg_color },
+	]
+	assert drawn_text[..14] == line_one_expected_drawn_data
+
+	line_two_expected_drawn_data := [
+		ColoredDrawnText{ x: 0, y: 1, data: "2", fg_color: line_num_fg_color },
+		ColoredDrawnText{ x: 2, y: 1, data: "This", fg_color: identifier_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 6, y: 1, data: " ", fg_color: whitespace_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 7, y: 1, data: "is", fg_color: identifier_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 9, y: 1, data: " ", fg_color: whitespace_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 10, y: 1, data: "line", fg_color: identifier_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 14, y: 1, data: " ", fg_color: whitespace_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 15, y: 1, data: "1", fg_color: number_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 16, y: 1, data: " ", fg_color: whitespace_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 17, y: 1, data: "in", fg_color: identifier_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 19, y: 1, data: " ", fg_color: whitespace_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 20, y: 1, data: "the", fg_color: identifier_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 23, y: 1, data: " ", fg_color: whitespace_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 24, y: 1, data: "document", fg_color: identifier_fg_color, bg_color: cursor_line_color },
+	]
+	assert drawn_text[14..28] == line_two_expected_drawn_data
+
+
+	line_three_expected_drawn_data := [
+		ColoredDrawnText{ x: 0, y: 2, data: "3", fg_color: line_num_fg_color },
+		ColoredDrawnText{ x: 2, y: 2, data: "This", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 6, y: 2, data: " ", fg_color: whitespace_fg_color },
+		ColoredDrawnText{ x: 7, y: 2, data: "is", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 9, y: 2, data: " ", fg_color: whitespace_fg_color },
+		ColoredDrawnText{ x: 10, y: 2, data: "line", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 14, y: 2, data: " ", fg_color: whitespace_fg_color },
+		ColoredDrawnText{ x: 15, y: 2, data: "2", fg_color: number_fg_color },
+		ColoredDrawnText{ x: 16, y: 2, data: " ", fg_color: whitespace_fg_color },
+		ColoredDrawnText{ x: 17, y: 2, data: "in", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 19, y: 2, data: " ", fg_color: whitespace_fg_color },
+		ColoredDrawnText{ x: 20, y: 2, data: "the", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 23, y: 2, data: " ", fg_color: whitespace_fg_color },
+		ColoredDrawnText{ x: 24, y: 2, data: "document", fg_color: identifier_fg_color },
+	]
+	assert drawn_text[28..42] == line_three_expected_drawn_data
 }
 
 fn test_buffer_view_draws_lines_0_to_max_height() {
@@ -1676,6 +1796,89 @@ fn test_resolve_token_bounds_min_x_is_5() {
 		end:   token_end
 	}
 }
+
+struct MockColorContextable {
+mut:
+	on_draw_cb         fn (x int, y int, text string, active_fg_color tui.Color, active_bg_color ?tui.Color)
+	on_draw_rect_cb    fn (x int, y int, width int, height int)
+	active_fg_color tui.Color
+	active_bg_color ?tui.Color
+}
+
+fn (mockctx MockColorContextable) theme() themelib.Theme {
+	return themelib.Theme.new("test") or { panic("error occurred loading theme: ${err}") }
+}
+
+fn (mockctx MockColorContextable) render_debug() bool { return false }
+
+fn (mockctx MockColorContextable) rate_limit_draws() bool {
+	return false
+}
+
+fn (mockctx MockColorContextable) window_width() int {
+	return 0
+}
+
+fn (mockctx MockColorContextable) window_height() int {
+	return 0
+}
+
+fn (mockctx MockColorContextable) set_cursor_position(x int, y int) {}
+
+fn (mockctx MockColorContextable) set_cursor_to_block() {}
+
+fn (mockctx MockColorContextable) set_cursor_to_underline() {}
+
+fn (mockctx MockColorContextable) set_cursor_to_vertical_bar() {}
+
+fn (mockctx MockColorContextable) show_cursor() {}
+
+fn (mockctx MockColorContextable) hide_cursor() {}
+
+fn (mockctx MockColorContextable) draw_text(x int, y int, text string) {
+	mockctx.on_draw_cb(x, y, text, mockctx.active_fg_color, mockctx.active_bg_color)
+}
+
+fn (mockctx MockColorContextable) write(c string) {}
+
+fn (mockctx MockColorContextable) draw_rect(x int, y int, width int, height int) {
+	if mockctx.on_draw_rect_cb == unsafe { nil } { return }
+	mockctx.on_draw_rect_cb(x, y, width, height)
+}
+
+fn (mockctx MockColorContextable) draw_point(x int, y int) {}
+
+fn (mut mockctx MockColorContextable) set_color(c draw.Color) {
+	mockctx.active_fg_color = tui.Color{ r: c.r, g: c.g, b: c.b }
+}
+
+fn (mut mockctx MockColorContextable) set_bg_color(c draw.Color) {
+	mockctx.active_bg_color = tui.Color{ r: c.r, g: c.g, b: c.b }
+}
+
+fn (mockctx MockColorContextable) revert_bg_color() {}
+
+fn (mut mockctx MockColorContextable) reset_color() {
+	mockctx.active_fg_color = tui.Color{}
+}
+
+fn (mut mockctx MockColorContextable) reset_bg_color() {
+	mockctx.active_bg_color = ?tui.Color(none)
+}
+
+fn (mockctx MockColorContextable) bold() {}
+
+fn (mockctx MockColorContextable) set_style(s draw.Style) {}
+
+fn (mockctx MockColorContextable) clear_style() {}
+
+fn (mockctx MockColorContextable) reset() {}
+
+fn (mockctx MockColorContextable) run() ! {}
+
+fn (mockctx MockColorContextable) clear() {}
+
+fn (mockctx MockColorContextable) flush() {}
 
 struct MockContextable {
 mut:

@@ -101,6 +101,7 @@ pub fn (mut buf_view BufferView) draw(
 	}
 }
 
+// NOTE(tauraamui) [15/06/2025]: should add this to themes, not in palette though.
 const line_num_fg_color = tui.Color{ r: 117, g: 118, b: 120 }
 
 fn draw_line_number(
@@ -167,6 +168,7 @@ fn draw_text_line(
 		if current_mode == .visual || current_mode == .visual_line {
 			if selected_span.full {
 				ctx.set_bg_color(selection_highlight_color)
+				ctx.reset_bg_color()
 			}
 		}
 
@@ -177,7 +179,6 @@ fn draw_text_line(
 			x, max_width,
 			visual_x_offset, y,
 		)
-		ctx.reset_bg_color()
 		previous_token = current_token
 	}
 }
