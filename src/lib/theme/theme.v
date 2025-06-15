@@ -98,7 +98,7 @@ pub fn Theme.new(name string) !Theme {
 				pallete: acme_pallete,
 				cursor_line_color: tui.Color{ 174, 255, 254 },
 				selection_highlight_color: tui.Color{ 96, 138, 143 },
-				background_color: tui.Color{ 254, 215, 175 }
+				background_color: tui.Color{ 255, 255, 215 }
 			}
 		}
 		else { error("unable to find theme '${name}'") }
