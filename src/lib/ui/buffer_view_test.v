@@ -12,6 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// TODO(tauraamui) [16/06/2025]: about half of the tests in this file have been migrated to use the
+//                               new mockcolorcontext ctx impl instead of the old mockcontext ctx impl.
+//                               the rest need to be migrated over to this too, but for now we're not doing
+//                               it because the focus needs to move back to using the new tests to assist
+//                               working on visual + visual line mode selection highlighting functionality
+
 module ui
 
 import lib.buffer
