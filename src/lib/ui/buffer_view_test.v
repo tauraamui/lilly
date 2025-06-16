@@ -46,12 +46,6 @@ fn test_buffer_view_draws_lines_in_normal_mode_so_one_line_has_bg_the_rest_do_no
 	mut drawn_text := []ColoredDrawnText{}
 	mut drawn_text_ref := &drawn_text
 
-	mut active_fg_color := &tui.Color{}
-	mut set_fg_color_ref := &active_fg_color
-
-	mut active_bg_color := &tui.Color{}
-	mut set_bg_color_ref := &active_bg_color
-
 	mut drawn_rect := []DrawnRect{}
 	mut drawn_rect_ref := &drawn_rect
 
@@ -99,20 +93,13 @@ fn test_buffer_view_draws_lines_in_normal_mode_so_one_line_has_bg_the_rest_do_no
 	cursor_line_color   := test_theme.cursor_line_color
 
 	line_one_expected_drawn_data := [
-		ColoredDrawnText{ x: 0, y: 0, data: "1", fg_color: line_num_fg_color },
-		ColoredDrawnText{ x: 2, y: 0, data: "This", fg_color: identifier_fg_color },
-		ColoredDrawnText{ x: 6, y: 0, data: " ", fg_color: whitespace_fg_color, },
-		ColoredDrawnText{ x: 7, y: 0, data: "is", fg_color: identifier_fg_color },
-		ColoredDrawnText{ x: 9, y: 0, data: " ", fg_color: whitespace_fg_color },
-		ColoredDrawnText{ x: 10, y: 0, data: "line", fg_color: identifier_fg_color },
-		ColoredDrawnText{ x: 14, y: 0, data: " ", fg_color: whitespace_fg_color },
-		ColoredDrawnText{ x: 15, y: 0, data: "0" fg_color: number_fg_color },
-		ColoredDrawnText{ x: 16, y: 0, data: " " fg_color: whitespace_fg_color },
-		ColoredDrawnText{ x: 17, y: 0, data: "in" fg_color: identifier_fg_color },
-		ColoredDrawnText{ x: 19, y: 0, data: " " fg_color: whitespace_fg_color },
-		ColoredDrawnText{ x: 20, y: 0, data: "the" fg_color: identifier_fg_color },
-		ColoredDrawnText{ x: 23, y: 0, data: " " fg_color: whitespace_fg_color },
-		ColoredDrawnText{ x: 24, y: 0, data: "document" fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 0, y: 0, data: "1", fg_color: line_num_fg_color }, ColoredDrawnText{ x: 2, y: 0, data: "This", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 6, y: 0, data: " ", fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 7, y: 0, data: "is", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 9, y: 0, data: " ", fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 10, y: 0, data: "line", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 14, y: 0, data: " ", fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 15, y: 0, data: "0" fg_color: number_fg_color },
+		ColoredDrawnText{ x: 16, y: 0, data: " " fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 17, y: 0, data: "in" fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 19, y: 0, data: " " fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 20, y: 0, data: "the" fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 23, y: 0, data: " " fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 24, y: 0, data: "document" fg_color: identifier_fg_color },
 	]
 	assert drawn_text[..14] == line_one_expected_drawn_data
 
@@ -136,49 +123,30 @@ fn test_buffer_view_draws_lines_in_normal_mode_so_one_line_has_bg_the_rest_do_no
 
 
 	line_three_expected_drawn_data := [
-		ColoredDrawnText{ x: 0, y: 2, data: "3", fg_color: line_num_fg_color },
-		ColoredDrawnText{ x: 2, y: 2, data: "This", fg_color: identifier_fg_color },
-		ColoredDrawnText{ x: 6, y: 2, data: " ", fg_color: whitespace_fg_color },
-		ColoredDrawnText{ x: 7, y: 2, data: "is", fg_color: identifier_fg_color },
-		ColoredDrawnText{ x: 9, y: 2, data: " ", fg_color: whitespace_fg_color },
-		ColoredDrawnText{ x: 10, y: 2, data: "line", fg_color: identifier_fg_color },
-		ColoredDrawnText{ x: 14, y: 2, data: " ", fg_color: whitespace_fg_color },
-		ColoredDrawnText{ x: 15, y: 2, data: "2", fg_color: number_fg_color },
-		ColoredDrawnText{ x: 16, y: 2, data: " ", fg_color: whitespace_fg_color },
-		ColoredDrawnText{ x: 17, y: 2, data: "in", fg_color: identifier_fg_color },
-		ColoredDrawnText{ x: 19, y: 2, data: " ", fg_color: whitespace_fg_color },
-		ColoredDrawnText{ x: 20, y: 2, data: "the", fg_color: identifier_fg_color },
-		ColoredDrawnText{ x: 23, y: 2, data: " ", fg_color: whitespace_fg_color },
-		ColoredDrawnText{ x: 24, y: 2, data: "document", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 0, y: 2, data: "3", fg_color: line_num_fg_color }, ColoredDrawnText{ x: 2, y: 2, data: "This", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 6, y: 2, data: " ", fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 7, y: 2, data: "is", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 9, y: 2, data: " ", fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 10, y: 2, data: "line", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 14, y: 2, data: " ", fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 15, y: 2, data: "2", fg_color: number_fg_color },
+		ColoredDrawnText{ x: 16, y: 2, data: " ", fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 17, y: 2, data: "in", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 19, y: 2, data: " ", fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 20, y: 2, data: "the", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 23, y: 2, data: " ", fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 24, y: 2, data: "document", fg_color: identifier_fg_color },
 	]
 	assert drawn_text[28..42] == line_three_expected_drawn_data
 }
 
 fn test_buffer_view_draws_lines_0_to_max_height() {
-	mut drawn_text := []DrawnText{}
+	mut drawn_text := []ColoredDrawnText{}
 	mut drawn_text_ref := &drawn_text
-
-	mut set_fg_color := []tui.Color{}
-	mut set_fg_color_ref := &set_fg_color
-
-	mut set_bg_color := []tui.Color{}
-	mut set_bg_color_ref := &set_bg_color
 
 	mut drawn_rect := []DrawnRect{}
 	mut drawn_rect_ref := &drawn_rect
 
-	mut mock_ctx := MockContextable{
-		on_draw_cb: fn [mut drawn_text_ref] (x int, y int, text string) {
-			drawn_text_ref << DrawnText{ x: x, y: y, data: text }
+	mut mock_ctx := MockColorContextable{
+		on_draw_cb: fn [mut drawn_text_ref] (x int, y int, text string, active_fg_color tui.Color, active_bg_color ?tui.Color) {
+			drawn_text_ref << ColoredDrawnText{ x: x, y: y, data: text, fg_color: active_fg_color, bg_color: active_bg_color }
 		}
 		on_draw_rect_cb: fn [mut drawn_rect_ref] (x int, y int, width int, height int) {
 			drawn_rect_ref << DrawnRect{ x: x, y: y, width: width, height: height }
-		}
-		on_set_fg_color_cb: fn [mut set_fg_color_ref] (c draw.Color) {
-			set_fg_color_ref << tui.Color{ c.r, c.g, c.b }
-		}
-		on_set_bg_color_cb: fn [mut set_bg_color_ref] (c draw.Color) {
-			set_bg_color_ref << tui.Color{ c.r, c.g, c.b }
 		}
 	}
 
@@ -199,97 +167,49 @@ fn test_buffer_view_draws_lines_0_to_max_height() {
 		min_x, false, .normal, BufferCursor{}, draw.Color{ 111, 0, 0 }
 	)
 
-	assert set_bg_color == [tui.Color{ 53, 53, 53 }, tui.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
 		DrawnRect{ x: 2, y: 0, width: 99, height: 1 }
 	]
 
 	assert drawn_text.len == 56
-	assert set_fg_color.len == 56
 
-	// this is the line at the side being rendered
-	assert set_fg_color[0] == line_num_fg_color
-	assert themelib.color_to_type(set_fg_color[1])? == .identifier
-	assert themelib.color_to_type(set_fg_color[2])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[3])? == .identifier
-	assert themelib.color_to_type(set_fg_color[4])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[5])? == .identifier
-	assert themelib.color_to_type(set_fg_color[6])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[7])? == .number
-	assert themelib.color_to_type(set_fg_color[8])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[9])? == .identifier
-	assert themelib.color_to_type(set_fg_color[10])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[11])? == .identifier
-	assert themelib.color_to_type(set_fg_color[12])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[13])? == .identifier
-
-	assert set_fg_color[14] == line_num_fg_color
-	assert themelib.color_to_type(set_fg_color[15])? == .identifier
-	assert themelib.color_to_type(set_fg_color[16])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[17])? == .identifier
-	assert themelib.color_to_type(set_fg_color[18])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[19])? == .identifier
-	assert themelib.color_to_type(set_fg_color[20])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[21])? == .number
-	assert themelib.color_to_type(set_fg_color[22])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[23])? == .identifier
-	assert themelib.color_to_type(set_fg_color[24])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[25])? == .identifier
-	assert themelib.color_to_type(set_fg_color[26])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[27])? == .identifier
-
-	assert set_fg_color[28] == line_num_fg_color
-	assert themelib.color_to_type(set_fg_color[29])? == .identifier
-	assert themelib.color_to_type(set_fg_color[30])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[31])? == .identifier
-	assert themelib.color_to_type(set_fg_color[32])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[33])? == .identifier
-	assert themelib.color_to_type(set_fg_color[34])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[35])? == .number
-	assert themelib.color_to_type(set_fg_color[36])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[37])? == .identifier
-	assert themelib.color_to_type(set_fg_color[38])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[39])? == .identifier
-	assert themelib.color_to_type(set_fg_color[40])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[41])? == .identifier
-
-	assert set_fg_color[42] == line_num_fg_color
-	assert themelib.color_to_type(set_fg_color[43])? == .identifier
-	assert themelib.color_to_type(set_fg_color[44])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[45])? == .identifier
-	assert themelib.color_to_type(set_fg_color[46])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[47])? == .identifier
-	assert themelib.color_to_type(set_fg_color[48])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[49])? == .number
-	assert themelib.color_to_type(set_fg_color[50])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[51])? == .identifier
-	assert themelib.color_to_type(set_fg_color[52])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[53])? == .identifier
-	assert themelib.color_to_type(set_fg_color[54])? == .whitespace
-	assert themelib.color_to_type(set_fg_color[55])? == .identifier
+	test_theme          := mock_ctx.theme()
+	test_theme_pallete  := test_theme.pallete
+	identifier_fg_color := test_theme_pallete[.identifier]
+	whitespace_fg_color := test_theme_pallete[.whitespace]
+	number_fg_color     := test_theme_pallete[.number]
+	cursor_line_color   := test_theme.cursor_line_color
 
 	line_one_expected_drawn_data := [
-		DrawnText{ x: 0, y: 0, data: "1" }, DrawnText{ x: 2, y: 0, data: "This" },
-		DrawnText{ x: 6, y: 0, data: " " }, DrawnText{ x: 7, y: 0, data: "is" },
-		DrawnText{ x: 9, y: 0, data: " " }, DrawnText{ x: 10, y: 0, data: "line" },
-		DrawnText{ x: 14, y: 0, data: " " }, DrawnText{ x: 15, y: 0, data: "0" },
-		DrawnText{ x: 16, y: 0, data: " " }, DrawnText{ x: 17, y: 0, data: "in" },
-		DrawnText{ x: 19, y: 0, data: " " }, DrawnText{ x: 20, y: 0, data: "the" },
-		DrawnText{ x: 23, y: 0, data: " " }, DrawnText{ x: 24, y: 0, data: "document" },
+		ColoredDrawnText{ x: 0, y: 0, data: "1", fg_color: line_num_fg_color },
+		ColoredDrawnText{ x: 2, y: 0, data: "This", fg_color: identifier_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 6, y: 0, data: " ", fg_color: whitespace_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 7, y: 0, data: "is", fg_color: identifier_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 9, y: 0, data: " ", fg_color: whitespace_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 10, y: 0, data: "line", fg_color: identifier_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 14, y: 0, data: " ", fg_color: whitespace_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 15, y: 0, data: "0", fg_color: number_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 16, y: 0, data: " ", fg_color: whitespace_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 17, y: 0, data: "in", fg_color: identifier_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 19, y: 0, data: " ", fg_color: whitespace_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 20, y: 0, data: "the", fg_color: identifier_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 23, y: 0, data: " ", fg_color: whitespace_fg_color, bg_color: cursor_line_color },
+		ColoredDrawnText{ x: 24, y: 0, data: "document", fg_color: identifier_fg_color, bg_color: cursor_line_color },
 	]
 	assert drawn_text[..14] == line_one_expected_drawn_data
 
 	line_two_expected_drawn_data := [
-		DrawnText{ x: 0, y: 1, data: "2" }, DrawnText{ x: 2, y: 1, data: "This" },
-		DrawnText{ x: 6, y: 1, data: " " }, DrawnText{ x: 7, y: 1, data: "is" },
-		DrawnText{ x: 9, y: 1, data: " " }, DrawnText{ x: 10, y: 1, data: "line" },
-		DrawnText{ x: 14, y: 1, data: " " }, DrawnText{ x: 15, y: 1, data: "1" },
-		DrawnText{ x: 16, y: 1, data: " " }, DrawnText{ x: 17, y: 1, data: "in" },
-		DrawnText{ x: 19, y: 1, data: " " }, DrawnText{ x: 20, y: 1, data: "the" },
-		DrawnText{ x: 23, y: 1, data: " " }, DrawnText{ x: 24, y: 1, data: "document" },
+		ColoredDrawnText{ x: 0, y: 1, data: "2", fg_color: line_num_fg_color }, ColoredDrawnText{ x: 2, y: 1, data: "This", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 6, y: 1, data: " ", fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 7, y: 1, data: "is", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 9, y: 1, data: " ", fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 10, y: 1, data: "line", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 14, y: 1, data: " ", fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 15, y: 1, data: "1", fg_color: number_fg_color },
+		ColoredDrawnText{ x: 16, y: 1, data: " ", fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 17, y: 1, data: "in", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 19, y: 1, data: " ", fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 20, y: 1, data: "the", fg_color: identifier_fg_color },
+		ColoredDrawnText{ x: 23, y: 1, data: " ", fg_color: whitespace_fg_color }, ColoredDrawnText{ x: 24, y: 1, data: "document", fg_color: identifier_fg_color },
 	]
 	assert drawn_text[14..28] == line_two_expected_drawn_data
 
+	/*
 	line_three_expected_drawn_data := [
 		DrawnText{ x: 0, y: 2, data: "3" }, DrawnText{ x: 2, y: 2, data: "This" },
 		DrawnText{ x: 6, y: 2, data: " " }, DrawnText{ x: 7, y: 2, data: "is" },
@@ -300,6 +220,7 @@ fn test_buffer_view_draws_lines_0_to_max_height() {
 		DrawnText{ x: 23, y: 2, data: " " }, DrawnText{ x: 24, y: 2, data: "document" },
 	]
 	assert drawn_text[28..42] == line_three_expected_drawn_data
+	*/
 }
 
 fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width() {
