@@ -48,7 +48,6 @@ pub fn (mut buf_view BufferView) draw(
 	relative_line_nums bool,
 	current_mode core.Mode,
 	cursor BufferCursor,
-	// selection_highlight_color draw.Color
 ) {
 	cursor_y_pos := cursor.pos.y
 	if buf_view.buf == unsafe { nil } { return }
@@ -147,7 +146,6 @@ fn draw_text_line(
 	min_x int, width int,
 	is_cursor_line bool,
 	cursor BufferCursor,
-	// selection_highlight_color draw.Color
 ) {
 	max_width := width - x
 	if current_mode != .visual_line && is_cursor_line { // no point in setting the bg in this case
@@ -164,26 +162,15 @@ fn draw_text_line(
 		if i + 1 < line_tokens.len - 1 { next_token = line_tokens[i + 1] }
 		cur_token_bounds := resolve_token_bounds(current_token.start(), current_token.end(), min_x) or { continue }
 
-		selected_span := cursor.resolve_line_selection_span(current_mode, line.runes().len, document_line_num)
-		if current_mode == .visual || current_mode == .visual_line {
-			if selected_span.full {
-				selection_highlight_color := ctx.theme().selection_highlight_color
-				ctx.set_bg_color(draw.Color{ r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b })
-			}
-		}
-
 		visual_x_offset += render_token(
 			mut ctx, current_mode, line,
 			cur_token_bounds, previous_token,
 			current_token, next_token, syntax_def,
 			x, max_width,
 			visual_x_offset, y,
+			cursor.resolve_line_selection_span(current_mode, line.runes().len, document_line_num)
 		)
-		if current_mode == .visual || current_mode == .visual_line {
-			if selected_span.full {
-				ctx.reset_bg_color()
-			}
-		}
+
 		previous_token = current_token
 	}
 }
@@ -237,6 +224,7 @@ fn render_token(
 	syntax_def syntax.Syntax,
 	base_x int, max_width int,
 	x_offset int, y int,
+	selection_span SelectionSpan
 ) int {
 	mut segment_to_render := line.runes()[cur_token_bounds.start..cur_token_bounds.end].string().replace("\t", " ".repeat(4))
 	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
@@ -248,6 +236,12 @@ fn render_token(
 	)
 
 	ctx.set_color(draw.Color{ tui_color.r, tui_color.g, tui_color.b })
+	if selection_span.full {
+		bg_color := ctx.theme().selection_highlight_color
+		ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
+		defer { ctx.reset_bg_color() }
+	}
+
 	ctx.draw_text(x_offset, y, segment_to_render)
 	return utf8_str_visible_length(segment_to_render)
 }
