@@ -179,6 +179,11 @@ fn draw_text_line(
 			x, max_width,
 			visual_x_offset, y,
 		)
+		if current_mode == .visual || current_mode == .visual_line {
+			if selected_span.full {
+				ctx.reset_bg_color()
+			}
+		}
 		previous_token = current_token
 	}
 }
