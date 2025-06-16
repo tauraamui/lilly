@@ -548,8 +548,7 @@ fn (mut view View) draw_x(mut ctx draw.Contextable) {
 		view.from, 0,
 		view.config.relative_line_numbers,
 		view.leader_state.mode,
-		view.cursor,
-		draw.Color{ r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b }
+		view.cursor
 	)
 
 	ui.draw_status_line(

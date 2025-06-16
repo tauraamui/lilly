@@ -18,7 +18,7 @@ import lib.buffer
 import lib.draw
 import term.ui as tui
 import lib.syntax
-import lib.theme
+import lib.theme as themelib
 import lib.utf8
 import lib.core
 
@@ -48,7 +48,6 @@ pub fn (mut buf_view BufferView) draw(
 	relative_line_nums bool,
 	current_mode core.Mode,
 	cursor BufferCursor,
-	selection_highlight_color draw.Color
 ) {
 	cursor_y_pos := cursor.pos.y
 	if buf_view.buf == unsafe { nil } { return }
@@ -92,7 +91,7 @@ pub fn (mut buf_view BufferView) draw(
 			width,
 			is_cursor_line,
 			cursor,
-			selection_highlight_color
+			// selection_highlight_color
 		)
 
 		screenspace_y_offset += 1
@@ -147,7 +146,6 @@ fn draw_text_line(
 	min_x int, width int,
 	is_cursor_line bool,
 	cursor BufferCursor,
-	selection_highlight_color draw.Color
 ) {
 	max_width := width - x
 	if current_mode != .visual_line && is_cursor_line { // no point in setting the bg in this case
@@ -164,21 +162,15 @@ fn draw_text_line(
 		if i + 1 < line_tokens.len - 1 { next_token = line_tokens[i + 1] }
 		cur_token_bounds := resolve_token_bounds(current_token.start(), current_token.end(), min_x) or { continue }
 
-		selected_span := cursor.resolve_line_selection_span(current_mode, line.runes().len, document_line_num)
-		if current_mode == .visual || current_mode == .visual_line {
-			if selected_span.full {
-				ctx.set_bg_color(selection_highlight_color)
-				ctx.reset_bg_color()
-			}
-		}
-
 		visual_x_offset += render_token(
 			mut ctx, current_mode, line,
 			cur_token_bounds, previous_token,
 			current_token, next_token, syntax_def,
 			x, max_width,
 			visual_x_offset, y,
+			cursor.resolve_line_selection_span(current_mode, line.runes().len, document_line_num)
 		)
+
 		previous_token = current_token
 	}
 }
@@ -197,21 +189,14 @@ fn resolve_token_bounds(token_start int, token_end int, min_x int) ?TokenBounds 
 	return TokenBounds{ start: token_start, end: token_end }
 }
 
-fn render_token(
-	mut ctx draw.Contextable,
-	current_mode core.Mode, line string,
-	cur_token_bounds TokenBounds,
+fn resolve_token_fg_color(
+	theme themelib.Theme,
+	segment_to_render string,
 	previous_token ?syntax.Token,
 	current_token syntax.Token,
 	next_token ?syntax.Token,
 	syntax_def syntax.Syntax,
-	base_x int, max_width int,
-	x_offset int, y int,
-) int {
-	mut segment_to_render := line.runes()[cur_token_bounds.start..cur_token_bounds.end].string().replace("\t", " ".repeat(4))
-	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
-	if segment_to_render.runes().len == 0 { return 0 }
-
+) tui.Color {
 	prev_token_type := if prev_token := previous_token { prev_token.t_type() } else { .whitespace }
 	next_token_type := if n_token := next_token { n_token.t_type() } else { .whitespace }
 
@@ -226,8 +211,36 @@ fn render_token(
 		else { cur_token_type }
 	}
 
-	tui_color := ctx.theme().pallete[resolved_token_type]
+	return theme.pallete[resolved_token_type]
+}
+
+fn render_token(
+	mut ctx draw.Contextable,
+	current_mode core.Mode, line string,
+	cur_token_bounds TokenBounds,
+	previous_token ?syntax.Token,
+	current_token syntax.Token,
+	next_token ?syntax.Token,
+	syntax_def syntax.Syntax,
+	base_x int, max_width int,
+	x_offset int, y int,
+	selection_span SelectionSpan
+) int {
+	mut segment_to_render := line.runes()[cur_token_bounds.start..cur_token_bounds.end].string().replace("\t", " ".repeat(4))
+	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
+	if segment_to_render.runes().len == 0 { return 0 }
+
+	tui_color := resolve_token_fg_color(
+		ctx.theme(), segment_to_render, previous_token,
+		current_token, next_token, syntax_def
+	)
+
 	ctx.set_color(draw.Color{ tui_color.r, tui_color.g, tui_color.b })
+	if selection_span.full {
+		bg_color := ctx.theme().selection_highlight_color
+		ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
+		defer { ctx.reset_bg_color() }
+	}
 
 	ctx.draw_text(x_offset, y, segment_to_render)
 	return utf8_str_visible_length(segment_to_render)

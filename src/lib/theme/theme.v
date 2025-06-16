@@ -75,7 +75,12 @@ pub:
 
 pub fn Theme.new(name string) !Theme {
 	$if test {
-		return Theme{ pallete: test_pallete, cursor_line_color: tui.Color{ 53, 53, 53 }, background_color: tui.Color{ 59, 34, 76 } }
+		return Theme{
+			pallete: test_pallete,
+			cursor_line_color: tui.Color{ 53, 53, 53 },
+			selection_highlight_color: tui.Color{ 111, 111, 111 },
+			background_color: tui.Color{ 59, 34, 76 }
+		}
 	}
 	return match name {
 		"petal" {
