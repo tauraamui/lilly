@@ -48,7 +48,7 @@ pub fn (mut buf_view BufferView) draw(
 	relative_line_nums bool,
 	current_mode core.Mode,
 	cursor BufferCursor,
-	selection_highlight_color draw.Color
+	// selection_highlight_color draw.Color
 ) {
 	cursor_y_pos := cursor.pos.y
 	if buf_view.buf == unsafe { nil } { return }
@@ -92,7 +92,7 @@ pub fn (mut buf_view BufferView) draw(
 			width,
 			is_cursor_line,
 			cursor,
-			selection_highlight_color
+			// selection_highlight_color
 		)
 
 		screenspace_y_offset += 1
@@ -147,7 +147,7 @@ fn draw_text_line(
 	min_x int, width int,
 	is_cursor_line bool,
 	cursor BufferCursor,
-	selection_highlight_color draw.Color
+	// selection_highlight_color draw.Color
 ) {
 	max_width := width - x
 	if current_mode != .visual_line && is_cursor_line { // no point in setting the bg in this case
@@ -167,7 +167,8 @@ fn draw_text_line(
 		selected_span := cursor.resolve_line_selection_span(current_mode, line.runes().len, document_line_num)
 		if current_mode == .visual || current_mode == .visual_line {
 			if selected_span.full {
-				ctx.set_bg_color(selection_highlight_color)
+				selection_highlight_color := ctx.theme().selection_highlight_color
+				ctx.set_bg_color(draw.Color{ r: selection_highlight_color.r, g: selection_highlight_color.g, b: selection_highlight_color.b })
 			}
 		}
 
