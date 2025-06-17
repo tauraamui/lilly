@@ -83,6 +83,22 @@ pub fn Theme.new(name string) !Theme {
 		}
 	}
 	return match name {
+		"acme" {
+			Theme{
+				pallete: acme_pallete,
+				cursor_line_color: tui.Color{ 174, 255, 254 },
+				selection_highlight_color: tui.Color{ 96, 138, 143 },
+				background_color: tui.Color{ 255, 255, 215 }
+			}
+		}
+		"bloo" { // boris johnson reference. "I like to paint them .. BLOO!" (if you know you know)
+			Theme{
+				pallete: acme_pallete,
+				cursor_line_color: tui.Color{ 174, 255, 254 },
+				selection_highlight_color: tui.Color{ 96, 138, 143 },
+				background_color: tui.Color{ 0, 95, 255 }
+			}
+		}
 		"petal" {
 			Theme{
 				pallete: petal_pallete,
@@ -96,14 +112,6 @@ pub fn Theme.new(name string) !Theme {
 				pallete: petal_pallete,
 				cursor_line_color: tui.Color{ 53, 53, 53 },
 				selection_highlight_color: tui.Color{ 96, 138, 143 },
-			}
-		}
-		"acme" {
-			Theme{
-				pallete: acme_pallete,
-				cursor_line_color: tui.Color{ 174, 255, 254 },
-				selection_highlight_color: tui.Color{ 96, 138, 143 },
-				background_color: tui.Color{ 255, 255, 215 }
 			}
 		}
 		else { error("unable to find theme '${name}'") }
