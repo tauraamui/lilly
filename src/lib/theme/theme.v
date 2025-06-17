@@ -37,6 +37,24 @@ const acme_pallete := {
 	.other:               tui.Color{ 15, 12, 0 }
 }
 
+const bloo_pallete := {
+	syntaxlib.TokenType.identifier: tui.Color{ 255, 255, 255 }
+	.operator:            tui.Color{ 15, 12, 0 }
+	.string:              tui.Color{ 146, 100, 25 }
+	.comment:             tui.Color{ 22, 78, 15 }
+	.comment_start:       tui.Color{ 22, 78, 15 }
+	.comment_end:         tui.Color{ 22, 78, 15 }
+	.block_start:         tui.Color{ 15, 12, 0 }
+	.block_end:           tui.Color{ 15, 12, 0 }
+	.number:              tui.Color{ 15, 12, 0 }
+	.whitespace:          tui.Color{ 15, 12, 0 }
+	.keyword:             tui.Color{ 0, 255, 255 }
+	.literal:             tui.Color{ 15, 12, 0 }
+	.builtin:             tui.Color{ 15, 12, 0 }
+	.other:               tui.Color{ 15, 12, 0 }
+}
+
+
 // NOTE(tauraamui) [10/06/2025]: these colors don't need to be valid at all they're only
 //                               here to ensure that colour lookups in tests provide
 //                               unique results
@@ -93,8 +111,8 @@ pub fn Theme.new(name string) !Theme {
 		}
 		"bloo" { // boris johnson reference. "I like to paint them .. BLOO!" (if you know you know)
 			Theme{
-				pallete: acme_pallete,
-				cursor_line_color: tui.Color{ 174, 255, 254 },
+				pallete: bloo_pallete,
+				cursor_line_color: tui.Color{ 0, 0, 175 },
 				selection_highlight_color: tui.Color{ 96, 138, 143 },
 				background_color: tui.Color{ 0, 95, 255 }
 			}
