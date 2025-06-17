@@ -255,7 +255,7 @@ fn render_segment(
 	match current_mode {
 		.visual_line { return render_segment_in_visual_line_mode(mut ctx, segment, fg_color, x, y, selection_span.full) }
 		.visual      { return render_segment_in_visual_mode(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span) }
-		else {}
+		else {} // do nothing, fallthrough please!
 	}
 
 	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
