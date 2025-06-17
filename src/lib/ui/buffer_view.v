@@ -247,11 +247,11 @@ fn render_segment(
 	//                               for this function is to separate eventual text rendering of tokens or parts
 	//                               of tokens with the correct background spanning the correct amount of said token,
 	//                               based on the current "leader mode".
-	//                                                   visual_line -> render_in_visual_line_mode
+	//                                                   visual_line -> render whole token with selection background color
 	//                                                  /
-	//                               The flow is - mode -> visual -> render_in_visual_mode
+	//                               The flow is - mode -> visual -> cut up token and render in pieces if necessary
 	//                                                  \
-	//                                                   anything_else -> render token as is
+	//                                                   anything_else -> render token as is (do not change the bg_color)
 	match current_mode {
 		.visual_line { return render_segment_in_visual_line_mode(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span.full) }
 		.visual      { return render_segment_in_visual_mode(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span) }
