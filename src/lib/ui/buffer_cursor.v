@@ -46,22 +46,23 @@ pub fn (cursor BufferCursor) resolve_line_selection_span(mode core.Mode, line_le
 		.visual {
 			start := cursor.sel_start() or { CursorPos{} }
 			end   := cursor.sel_end() or { CursorPos{} }
+			should_be_considered_full_line := line_y > start.y && line_y < end.y
 			min_x := if start.y == line_y { start.x } else { 0 }
 			max_x := if end.y == line_y { end.x } else { line_len }
-			SelectionSpan{ min_x: min_x, max_x: max_x, full: line_y > start.y && line_y < end.y }
+			SelectionSpan{ min_x: min_x, max_x: max_x, full: should_be_considered_full_line }
 		}
 		else { SelectionSpan{} }
 	}
 }
 
-pub fn (cursor BufferCursor) sel_start() ?CursorPos {
+pub fn (cursor BufferCursor) sel_start() ?CursorPos { // FIX(tauraamui): this is wrong, logic needs re-doing
 	start_pos := cursor.sel_start_pos or { return none }
 	if start_pos.y < cursor.pos.y { return start_pos }
 	if start_pos.x < cursor.pos.x { return start_pos }
 	return cursor.pos
 }
 
-pub fn (cursor BufferCursor) sel_end() ?CursorPos {
+pub fn (cursor BufferCursor) sel_end() ?CursorPos { // FIX(tauraamui): this is wrong, logic needs re-doing
 	start_pos := cursor.sel_start_pos or { return none }
 	if start_pos.y > cursor.pos.y { return start_pos }
 	if start_pos.x > cursor.pos.x { return start_pos }
