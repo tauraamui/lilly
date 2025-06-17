@@ -230,19 +230,28 @@ fn render_token(
 	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
 	if segment_to_render.runes().len == 0 { return 0 }
 
-	tui_color := resolve_token_fg_color(
+	fg_color := resolve_token_fg_color(
 		ctx.theme(), segment_to_render, previous_token,
 		current_token, next_token, syntax_def
 	)
 
-	ctx.set_color(draw.Color{ tui_color.r, tui_color.g, tui_color.b })
+	return render_segment(mut ctx, current_mode, segment_to_render, fg_color, x_offset, y, selection_span)
+}
+
+fn render_segment(
+	mut ctx draw.Contextable, current_mode core.Mode,
+	segment string, fg_color tui.Color,
+	x int, y int, selection_span SelectionSpan
+) int {
+	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
 	if selection_span.full {
+		assert current_mode == .visual_line
 		bg_color := ctx.theme().selection_highlight_color
 		ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
 		defer { ctx.reset_bg_color() }
 	}
 
-	ctx.draw_text(x_offset, y, segment_to_render)
-	return utf8_str_visible_length(segment_to_render)
+	ctx.draw_text(x, y, segment)
+	return utf8_str_visible_length(segment)
 }
 
