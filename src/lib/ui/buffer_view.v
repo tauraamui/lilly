@@ -253,7 +253,7 @@ fn render_segment(
 	//                                                  \
 	//                                                   anything_else -> render token as is (do not change the bg_color)
 	match current_mode {
-		.visual_line { return render_segment_in_visual_line_mode(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span.full) }
+		.visual_line { return render_segment_in_visual_line_mode(mut ctx, segment, fg_color, x, y, selection_span.full) }
 		.visual      { return render_segment_in_visual_mode(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span) }
 		else {}
 	}
@@ -263,7 +263,7 @@ fn render_segment(
 	return utf8_str_visible_length(segment)
 }
 
-fn render_segment_in_visual_line_mode(mut ctx draw.Contextable, segment_bounds TokenBounds, segment string, fg_color tui.Color, x int, y int, is_selected bool) int {
+fn render_segment_in_visual_line_mode(mut ctx draw.Contextable, segment string, fg_color tui.Color, x int, y int, is_selected bool) int {
 	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
 	if is_selected {
 		bg_color := ctx.theme().selection_highlight_color
