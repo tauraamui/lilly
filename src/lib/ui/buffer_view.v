@@ -290,6 +290,20 @@ fn render_segment_in_visual_mode(
 
 	if selection_span.min_x < segment_bounds.start {
 		if selection_span.max_x < segment_bounds.end {
+			i := selection_span.max_x - segment_bounds.start
+			selected_part_of_segment := segment.runes()[..i].string()
+			rest_of_segment          := segment.runes()[i..].string()
+
+			bg_color := ctx.theme().selection_highlight_color
+			ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
+			ctx.draw_text(x, y, selected_part_of_segment)
+			ctx.reset_bg_color()
+
+			visable_length := utf8_str_visible_length(selected_part_of_segment)
+			ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
+			ctx.draw_text(x + visable_length, y, rest_of_segment)
+
+			return visable_length + utf8_str_visible_length(rest_of_segment)
 		}
 	}
 
