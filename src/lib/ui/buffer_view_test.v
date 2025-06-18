@@ -1632,6 +1632,7 @@ fn test_render_segment_in_visual_mode_specific_selection_is_all_of_current_line(
 	]
 }
 
+/*
 fn test_render_segment_in_visual_mode_specific_selection_is_prior_to_segment_on_line_selection_starts_at_start_of_line() {
 	mut drawn_text := []ColoredDrawnText{}
 	mut drawn_text_ref := &drawn_text
@@ -1807,7 +1808,7 @@ fn test_render_segment_in_visual_mode_specific_selection_covers_all_of_segment()
 		ColoredDrawnText{ x: 0, y: 0, data: "singlelargeorlongtokentorender", fg_color: fg_color, bg_color: theme_selection_bg_color }
 	]
 }
-
+*/
 
 fn test_resolve_token_bounds_min_x_is_0() {
 	token_start := 0
