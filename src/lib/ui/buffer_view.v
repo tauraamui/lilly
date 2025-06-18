@@ -169,7 +169,6 @@ fn draw_text_line(
 			visual_x_offset, y,
 			document_line_num,
 			cursor,
-			// cursor.resolve_line_selection_span(current_mode, line.runes().len, document_line_num)
 		)
 
 		previous_token = current_token
@@ -227,7 +226,6 @@ fn render_token(
 	x_offset int, y int,
 	document_line_num int,
 	cursor BufferCursor
-	// selection_span SelectionSpan
 ) int {
 	mut segment_to_render := line.runes()[cur_token_bounds.start..cur_token_bounds.end].string().replace("\t", " ".repeat(4))
 	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
