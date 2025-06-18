@@ -292,7 +292,7 @@ fn render_segment_in_visual_mode(
 		render_segment_in_visual_mode_segment_overlaps_end_of_selection(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span)
 	}
 
-	if selection_span.min_x > segment_bounds.start && selection_span.max > segment_bounds.end {
+	if selection_span.min_x > segment_bounds.start && selection_span.max_x > segment_bounds.end {
 		render_segment_in_visual_mode_segment_overlaps_start_of_selection(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span)
 	}
 
