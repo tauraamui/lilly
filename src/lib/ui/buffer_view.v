@@ -288,6 +288,11 @@ fn render_segment_in_visual_mode(
 		return render_segment_in_visual_mode_segment_does_not_overlap_with_selection(mut ctx, segment_bounds, segment, fg_color, x, y)
 	}
 
+	if selection_span.min_x < segment_bounds.start {
+		if selection_span.max_x < segment_bounds.end {
+		}
+	}
+
 	return 0
 }
 
