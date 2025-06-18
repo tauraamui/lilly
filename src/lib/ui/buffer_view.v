@@ -289,23 +289,31 @@ fn render_segment_in_visual_mode(
 	}
 
 	if selection_span.min_x < segment_bounds.start && selection_span.max_x < segment_bounds.end {
-		i := selection_span.max_x - segment_bounds.start
-		selected_part_of_segment := segment.runes()[..i].string()
-		rest_of_segment          := segment.runes()[i..].string()
-
-		bg_color := ctx.theme().selection_highlight_color
-		ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
-		ctx.draw_text(x, y, selected_part_of_segment)
-		ctx.reset_bg_color()
-
-		visable_length := utf8_str_visible_length(selected_part_of_segment)
-		ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
-		ctx.draw_text(x + visable_length, y, rest_of_segment)
-
-		return visable_length + utf8_str_visible_length(rest_of_segment)
+		render_segment_in_visual_mode_segment_overlaps_end_of_selection(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span)
 	}
 
 	return 0
+}
+
+fn render_segment_in_visual_mode_segment_overlaps_end_of_selection(
+	mut ctx draw.Contextable, segment_bounds TokenBounds,
+	segment string, fg_color tui.Color,
+	x int, y int, selection_span SelectionSpan
+) int {
+	i := selection_span.max_x - segment_bounds.start
+	selected_part_of_segment := segment.runes()[..i].string()
+	rest_of_segment          := segment.runes()[i..].string()
+
+	bg_color := ctx.theme().selection_highlight_color
+	ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
+	ctx.draw_text(x, y, selected_part_of_segment)
+	ctx.reset_bg_color()
+
+	visable_length := utf8_str_visible_length(selected_part_of_segment)
+	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
+	ctx.draw_text(x + visable_length, y, rest_of_segment)
+
+	return visable_length + utf8_str_visible_length(rest_of_segment)
 }
 
 fn render_segment_in_visual_mode_segment_does_not_overlap_with_selection(
