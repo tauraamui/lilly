@@ -1632,7 +1632,6 @@ fn test_render_segment_in_visual_mode_specific_selection_is_all_of_current_line(
 	]
 }
 
-/*
 fn test_render_segment_in_visual_mode_specific_selection_is_prior_to_segment_on_line_selection_starts_at_start_of_line() {
 	mut drawn_text := []ColoredDrawnText{}
 	mut drawn_text_ref := &drawn_text
@@ -1699,6 +1698,7 @@ fn test_render_segment_in_visual_mode_specific_selection_is_past_to_segment_on_l
 	]
 }
 
+/*
 fn test_render_segment_in_visual_mode_specific_selection_overlaps_first_half_of_segment() {
 	mut drawn_text := []ColoredDrawnText{}
 	mut drawn_text_ref := &drawn_text
