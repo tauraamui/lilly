@@ -281,99 +281,10 @@ fn render_segment_in_visual_mode(
 	x int, y int, selection_span SelectionSpan
 ) int {
 	if selection_span.full {
-		return render_segment_in_visual_mode_span_full(mut ctx, segment_bounds, segment, fg_color, x, y)
+		bg_color := ctx.theme().selection_highlight_color
+		ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
+		defer { ctx.reset_bg_color() }
 	}
-
-	// lol all of these are seemingly broken
-	//
-	// will have to resort to manually testing these as they're added one by one
-	/*
-	if (selection_span.min_x < segment_bounds.start && selection_span.max_x < segment_bounds.start)
-		|| (selection_span.min_x > segment_bounds.end && selection_span.max_x > segment_bounds.end) {
-		return render_segment_in_visual_mode_segment_does_not_overlap_with_selection(mut ctx, segment_bounds, segment, fg_color, x, y)
-	}
-
-	if selection_span.min_x < segment_bounds.start && selection_span.max_x < segment_bounds.end {
-		return render_segment_in_visual_mode_segment_overlaps_end_of_selection(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span)
-	}
-
-	if selection_span.min_x > segment_bounds.start && selection_span.max_x > segment_bounds.end {
-		return render_segment_in_visual_mode_segment_overlaps_start_of_selection(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span)
-	}
-
-	if selection_span.min_x < segment_bounds.start && selection_span.max_x > segment_bounds.end {
-		return render_segment_in_visual_mode_span_full(mut ctx, segment_bounds, segment, fg_color, x, y)
-	}
-	*/
-
-	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
-	ctx.draw_text(x, y, segment)
-	return utf8_str_visible_length(segment)
-}
-
-fn render_segment_in_visual_mode_segment_overlaps_end_of_selection(
-	mut ctx draw.Contextable, segment_bounds TokenBounds,
-	segment string, fg_color tui.Color,
-	x int, y int, selection_span SelectionSpan
-) int {
-	i := selection_span.max_x - segment_bounds.start
-	selected_part_of_segment := segment.runes()[..i].string()
-	rest_of_segment          := segment.runes()[i..].string()
-
-	bg_color := ctx.theme().selection_highlight_color
-	ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
-	defer { ctx.reset_bg_color() }
-	ctx.draw_text(x + segment_bounds.start, y, selected_part_of_segment)
-
-	visable_length := utf8_str_visible_length(selected_part_of_segment)
-	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
-	ctx.draw_text(x + segment_bounds.start + visable_length, y, rest_of_segment)
-
-	return visable_length + utf8_str_visible_length(rest_of_segment)
-}
-
-fn render_segment_in_visual_mode_segment_overlaps_start_of_selection(
-	mut ctx draw.Contextable, segment_bounds TokenBounds,
-	segment string, fg_color tui.Color,
-	x int, y int, selection_span SelectionSpan
-) int {
-	i := selection_span.min_x - segment_bounds.start
-	rest_of_segment          := segment.runes()[..i].string()
-	selected_part_of_segment := segment.runes()[i..].string()
-
-	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
-	ctx.draw_text(x, y, rest_of_segment)
-	ctx.reset_color()
-
-	visable_length := utf8_str_visible_length(selected_part_of_segment)
-
-	bg_color := ctx.theme().selection_highlight_color
-	ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
-	defer { ctx.reset_bg_color() }
-	ctx.draw_text(x + segment_bounds.start + visable_length, y, selected_part_of_segment)
-
-	return visable_length + utf8_str_visible_length(rest_of_segment)
-}
-
-
-fn render_segment_in_visual_mode_segment_does_not_overlap_with_selection(
-	mut ctx draw.Contextable, segment_bounds TokenBounds,
-	segment string, fg_color tui.Color,
-	x int, y int
-) int {
-	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
-	ctx.draw_text(x, y, segment)
-	return utf8_str_visible_length(segment)
-}
-
-fn render_segment_in_visual_mode_span_full(
-	mut ctx draw.Contextable, segment_bounds TokenBounds,
-	segment string, fg_color tui.Color,
-	x int, y int
-) int {
-	bg_color := ctx.theme().selection_highlight_color
-	ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
-	defer { ctx.reset_bg_color() }
 
 	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
 	ctx.draw_text(x, y, segment)
