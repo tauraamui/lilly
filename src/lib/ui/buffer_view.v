@@ -281,10 +281,35 @@ fn render_segment_in_visual_mode(
 	x int, y int, selection_span SelectionSpan
 ) int {
 	if selection_span.full {
-		bg_color := ctx.theme().selection_highlight_color
-		ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
-		defer { ctx.reset_bg_color() }
+		return render_segment_in_visual_mode_span_full(mut ctx, segment_bounds, segment, fg_color, x, y)
 	}
+
+	if selection_span.max_x < segment_bounds.start {
+		return render_segment_in_visual_mode_selection_before_segment(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span)
+	}
+
+	return 0
+}
+
+fn render_segment_in_visual_mode_selection_before_segment(
+	mut ctx draw.Contextable, segment_bounds TokenBounds,
+	segment string, fg_color tui.Color,
+	x int, y int, selection_span SelectionSpan
+) int {
+	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
+	ctx.draw_text(x, y, segment)
+	return utf8_str_visible_length(segment)
+}
+
+fn render_segment_in_visual_mode_span_full(
+	mut ctx draw.Contextable, segment_bounds TokenBounds,
+	segment string, fg_color tui.Color,
+	x int, y int
+) int {
+	bg_color := ctx.theme().selection_highlight_color
+	ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
+	defer { ctx.reset_bg_color() }
+
 	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
 	ctx.draw_text(x, y, segment)
 	return utf8_str_visible_length(segment)
