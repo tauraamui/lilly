@@ -40,18 +40,18 @@ const acme_pallete := {
 const bloo_pallete := {
 	syntaxlib.TokenType.identifier: tui.Color{ 255, 255, 255 }
 	.operator:            tui.Color{ 15, 12, 0 }
-	.string:              tui.Color{ 146, 100, 25 }
-	.comment:             tui.Color{ 22, 78, 15 }
-	.comment_start:       tui.Color{ 22, 78, 15 }
-	.comment_end:         tui.Color{ 22, 78, 15 }
+	.string:              tui.Color{ 175, 255, 255 }
+	.comment:             tui.Color{ 192, 192, 192 }
+	.comment_start:       tui.Color{ 192, 192, 192 }
+	.comment_end:         tui.Color{ 192, 192, 192 }
 	.block_start:         tui.Color{ 15, 12, 0 }
 	.block_end:           tui.Color{ 15, 12, 0 }
-	.number:              tui.Color{ 15, 12, 0 }
+	.number:              tui.Color{ 175, 215, 255 }
 	.whitespace:          tui.Color{ 15, 12, 0 }
 	.keyword:             tui.Color{ 0, 255, 255 }
-	.literal:             tui.Color{ 15, 12, 0 }
-	.builtin:             tui.Color{ 15, 12, 0 }
-	.other:               tui.Color{ 15, 12, 0 }
+	.literal:             tui.Color{ 255, 255, 255 }
+	.builtin:             tui.Color{ 255, 255, 255 }
+	.other:               tui.Color{ 255, 255, 255 }
 }
 
 
