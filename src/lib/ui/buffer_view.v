@@ -262,7 +262,7 @@ fn render_segment(
 		match current_mode {
 			.visual_line { return render_segment_in_visual_line_mode(mut ctx, segment, fg_color, x, y, unwrapped_selection_span.full) }
 			.visual      { return render_segment_in_visual_mode(mut ctx, segment_bounds, segment, fg_color, x, y, unwrapped_selection_span) }
-			else {} // do nothing, fallthrough please!
+			else { return 0 } // should not be possible to reach, consider adding an assert here
 		}
 	}
 
