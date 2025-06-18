@@ -57,16 +57,22 @@ pub fn (cursor BufferCursor) resolve_line_selection_span(mode core.Mode, line_le
 
 pub fn (cursor BufferCursor) sel_start() ?CursorPos { // FIX(tauraamui) [17/06/2025]: this is wrong, logic needs re-doing
 	start_pos := cursor.sel_start_pos or { return none }
+	if start_pos.y == cursor.pos.y {
+		if start_pos.x < cursor.pos.x { return start_pos }
+		return cursor.pos
+	}
 	if start_pos.y < cursor.pos.y { return start_pos }
-	if start_pos.x < cursor.pos.x { return start_pos }
 	return cursor.pos
 }
 
 pub fn (cursor BufferCursor) sel_end() ?CursorPos { // FIX(tauraamui) [17/06/2025]: this is wrong, logic needs re-doing
 	start_pos := cursor.sel_start_pos or { return none }
-	if start_pos.y > cursor.pos.y { return start_pos }
-	if start_pos.x > cursor.pos.x { return start_pos }
-	return cursor.pos
+	if start_pos.y == cursor.pos.y {
+		if start_pos.x < cursor.pos.x { return cursor.pos }
+		return start_pos
+	}
+	if start_pos.y < cursor.pos.y { return cursor.pos }
+	return start_pos
 }
 
 pub fn (cursor BufferCursor) sel_active() bool {
