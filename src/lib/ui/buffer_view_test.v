@@ -1774,6 +1774,40 @@ fn test_render_segment_in_visual_mode_specific_selection_overlaps_second_half_of
 	]
 }
 
+fn test_render_segment_in_visual_mode_specific_selection_covers_all_of_segment() {
+	mut drawn_text := []ColoredDrawnText{}
+	mut drawn_text_ref := &drawn_text
+
+	mut mock_ctx := MockColorContextable{
+		on_draw_cb: fn [
+			mut drawn_text_ref
+		] (x int, y int, text string, active_fg_color tui.Color, active_bg_color ?tui.Color) {
+			drawn_text_ref << ColoredDrawnText{
+				x, y, text, active_fg_color, active_bg_color
+			}
+		}
+		on_draw_rect_cb: fn (x int, y int, w int, h int) {}
+	}
+
+	segment_to_render := "singlelargeorlongtokentorender"
+	segment_bounds    := TokenBounds{ start: 10, end: 40 }
+	fg_color          := tui.Color{ 110, 110, 110 }
+	// NOTE(tauraamui) [18/06/2025]: the coords in this case are mostly irrelevant
+	x                 := 0
+	y                 := 0
+	render_segment_in_visual_mode(
+		mut mock_ctx, segment_bounds,
+		segment_to_render, fg_color,
+		x, y, SelectionSpan{ min_x: 5, max_x: 45 }
+	)
+
+	theme_selection_bg_color := mock_ctx.theme().selection_highlight_color
+
+	assert drawn_text == [
+		ColoredDrawnText{ x: 0, y: 0, data: "singlelargeorlongtokentorender", fg_color: fg_color, bg_color: theme_selection_bg_color }
+	]
+}
+
 
 fn test_resolve_token_bounds_min_x_is_0() {
 	token_start := 0
