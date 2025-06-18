@@ -284,7 +284,8 @@ fn render_segment_in_visual_mode(
 		return render_segment_in_visual_mode_span_full(mut ctx, segment_bounds, segment, fg_color, x, y)
 	}
 
-	if selection_span.max_x < segment_bounds.start || segment_bounds.start < selection_span.min_x {
+	if (selection_span.min_x < segment_bounds.start && selection_span.max_x < segment_bounds.start)
+		|| (selection_span.min_x > segment_bounds.end && selection_span.max_x > segment_bounds.end) {
 		return render_segment_in_visual_mode_segment_does_not_overlap_with_selection(mut ctx, segment_bounds, segment, fg_color, x, y)
 	}
 
@@ -329,14 +330,16 @@ fn render_segment_in_visual_mode_segment_overlaps_start_of_selection(
 	rest_of_segment          := segment.runes()[..i].string()
 	selected_part_of_segment := segment.runes()[i..].string()
 
-	bg_color := ctx.theme().selection_highlight_color
-	ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
-	ctx.draw_text(x, y, selected_part_of_segment)
-	ctx.reset_bg_color()
+	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
+	ctx.draw_text(x, y, rest_of_segment)
+	ctx.reset_color()
 
 	visable_length := utf8_str_visible_length(selected_part_of_segment)
-	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
-	ctx.draw_text(x + visable_length, y, rest_of_segment)
+
+	bg_color := ctx.theme().selection_highlight_color
+	ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
+	ctx.draw_text(x + visable_length, y, selected_part_of_segment)
+	ctx.reset_bg_color()
 
 	return visable_length + utf8_str_visible_length(rest_of_segment)
 }
