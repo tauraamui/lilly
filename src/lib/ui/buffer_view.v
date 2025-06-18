@@ -91,7 +91,6 @@ pub fn (mut buf_view BufferView) draw(
 			width,
 			is_cursor_line,
 			cursor,
-			// selection_highlight_color
 		)
 
 		screenspace_y_offset += 1
@@ -168,7 +167,9 @@ fn draw_text_line(
 			current_token, next_token, syntax_def,
 			x, max_width,
 			visual_x_offset, y,
-			cursor.resolve_line_selection_span(current_mode, line.runes().len, document_line_num)
+			document_line_num,
+			cursor,
+			// cursor.resolve_line_selection_span(current_mode, line.runes().len, document_line_num)
 		)
 
 		previous_token = current_token
@@ -224,7 +225,9 @@ fn render_token(
 	syntax_def syntax.Syntax,
 	base_x int, max_width int,
 	x_offset int, y int,
-	selection_span SelectionSpan
+	document_line_num int,
+	cursor BufferCursor
+	// selection_span SelectionSpan
 ) int {
 	mut segment_to_render := line.runes()[cur_token_bounds.start..cur_token_bounds.end].string().replace("\t", " ".repeat(4))
 	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
@@ -235,13 +238,18 @@ fn render_token(
 		current_token, next_token, syntax_def
 	)
 
-	return render_segment(mut ctx, current_mode, cur_token_bounds, segment_to_render, fg_color, x_offset, y, selection_span)
+	mut sel_span := ?SelectionSpan(none)
+	if cursor.y_within_selection(document_line_num) {
+		sel_span = cursor.resolve_line_selection_span(current_mode, line.runes().len, document_line_num)
+	}
+
+	return render_segment(mut ctx, current_mode, cur_token_bounds, segment_to_render, fg_color, x_offset, y, sel_span)
 }
 
 fn render_segment(
 	mut ctx draw.Contextable, current_mode core.Mode,
 	segment_bounds TokenBounds, segment string, fg_color tui.Color,
-	x int, y int, selection_span SelectionSpan
+	x int, y int, selection_span ?SelectionSpan
 ) int {
 	// NOTE(tauraamui) [17/06/2025]: Just to be extremely explicit (in comment form) here, the logic flow
 	//                               for this function is to separate eventual text rendering of tokens or parts
@@ -252,10 +260,12 @@ fn render_segment(
 	//                               The flow is - mode -> visual -> cut up token and render in pieces if necessary
 	//                                                  \
 	//                                                   anything_else -> render token as is (do not change the bg_color)
-	match current_mode {
-		.visual_line { return render_segment_in_visual_line_mode(mut ctx, segment, fg_color, x, y, selection_span.full) }
-		.visual      { return render_segment_in_visual_mode(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span) }
-		else {} // do nothing, fallthrough please!
+	if unwrapped_selection_span := selection_span {
+		match current_mode {
+			.visual_line { return render_segment_in_visual_line_mode(mut ctx, segment, fg_color, x, y, unwrapped_selection_span.full) }
+			.visual      { return render_segment_in_visual_mode(mut ctx, segment_bounds, segment, fg_color, x, y, unwrapped_selection_span) }
+			else {} // do nothing, fallthrough please!
+		}
 	}
 
 	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
@@ -280,7 +290,9 @@ fn render_segment_in_visual_mode(
 	segment string, fg_color tui.Color,
 	x int, y int, selection_span SelectionSpan
 ) int {
-	if selection_span.full { return render_segment_in_visual_mode_current_line_is_fully_selected(mut ctx, segment_bounds, segment, fg_color, x, y) }
+	if selection_span.full {
+		return render_segment_in_visual_mode_current_line_is_fully_selected(mut ctx, segment_bounds, segment, fg_color, x, y)
+	}
 
 	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
 	ctx.draw_text(x, y, segment)
