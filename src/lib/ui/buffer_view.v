@@ -284,17 +284,17 @@ fn render_segment_in_visual_mode(
 		return render_segment_in_visual_mode_span_full(mut ctx, segment_bounds, segment, fg_color, x, y)
 	}
 
-	if selection_span.max_x < segment_bounds.start {
-		return render_segment_in_visual_mode_selection_before_segment(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span)
+	if selection_span.max_x < segment_bounds.start || segment_bounds.start < selection_span.min_x {
+		return render_segment_in_visual_mode_segment_does_not_overlap_with_selection(mut ctx, segment_bounds, segment, fg_color, x, y)
 	}
 
 	return 0
 }
 
-fn render_segment_in_visual_mode_selection_before_segment(
+fn render_segment_in_visual_mode_segment_does_not_overlap_with_selection(
 	mut ctx draw.Contextable, segment_bounds TokenBounds,
 	segment string, fg_color tui.Color,
-	x int, y int, selection_span SelectionSpan
+	x int, y int
 ) int {
 	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
 	ctx.draw_text(x, y, segment)
