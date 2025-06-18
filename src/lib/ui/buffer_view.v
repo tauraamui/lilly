@@ -275,7 +275,11 @@ fn render_segment_in_visual_line_mode(mut ctx draw.Contextable, segment string, 
 	return utf8_str_visible_length(segment)
 }
 
-fn render_segment_in_visual_mode(mut ctx draw.Contextable, segment_bounds TokenBounds, segment string, fg_color tui.Color, x int, y int, selection_span SelectionSpan) int {
+fn render_segment_in_visual_mode(
+	mut ctx draw.Contextable, segment_bounds TokenBounds,
+	segment string, fg_color tui.Color,
+	x int, y int, selection_span SelectionSpan
+) int {
 	if selection_span.full {
 		bg_color := ctx.theme().selection_highlight_color
 		ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
