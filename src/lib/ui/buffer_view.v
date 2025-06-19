@@ -91,7 +91,6 @@ pub fn (mut buf_view BufferView) draw(
 			width,
 			is_cursor_line,
 			cursor,
-			// selection_highlight_color
 		)
 
 		screenspace_y_offset += 1
@@ -166,7 +165,8 @@ fn draw_text_line(
 			current_token, next_token, syntax_def,
 			x, max_width,
 			visual_x_offset, y,
-			cursor.resolve_line_selection_span(current_mode, line.runes().len, document_line_num)
+			document_line_num,
+			cursor,
 		)
 
 		previous_token = current_token
@@ -222,25 +222,167 @@ fn render_token(
 	syntax_def syntax.Syntax,
 	base_x int, max_width int,
 	x_offset int, y int,
-	selection_span SelectionSpan
+	document_line_num int,
+	cursor BufferCursor
 ) int {
 	mut segment_to_render := line.runes()[cur_token_bounds.start..cur_token_bounds.end].string().replace("\t", " ".repeat(4))
 	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
 	if segment_to_render.runes().len == 0 { return 0 }
 
-	tui_color := resolve_token_fg_color(
+	fg_color := resolve_token_fg_color(
 		ctx.theme(), segment_to_render, previous_token,
 		current_token, next_token, syntax_def
 	)
 
-	ctx.set_color(draw.Color{ tui_color.r, tui_color.g, tui_color.b })
-	if selection_span.full {
+	mut sel_span := ?SelectionSpan(none)
+	if cursor.y_within_selection(document_line_num) {
+		sel_span = cursor.resolve_line_selection_span(current_mode, line.runes().len, document_line_num)
+	}
+
+	return render_segment(mut ctx, current_mode, cur_token_bounds, segment_to_render, fg_color, x_offset, y, sel_span)
+}
+
+fn render_segment(
+	mut ctx draw.Contextable, current_mode core.Mode,
+	segment_bounds TokenBounds, segment string, fg_color tui.Color,
+	x int, y int, selection_span ?SelectionSpan
+) int {
+	// NOTE(tauraamui) [17/06/2025]: Just to be extremely explicit (in comment form) here, the logic flow
+	//                               for this function is to separate eventual text rendering of tokens or parts
+	//                               of tokens with the correct background spanning the correct amount of said token,
+	//                               based on the current "leader mode".
+	//                                                   visual_line -> render whole token with selection background color
+	//                                                  /
+	//                               The flow is - mode -> visual -> cut up token and render in pieces if necessary
+	//                                                  \
+	//                                                   anything_else -> render token as is (do not change the bg_color)
+	if unwrapped_selection_span := selection_span {
+		match current_mode {
+			.visual_line { return render_segment_in_visual_line_mode(mut ctx, segment, fg_color, x, y, unwrapped_selection_span.full) }
+			.visual      { return render_segment_in_visual_mode(mut ctx, segment_bounds, segment, fg_color, x, y, unwrapped_selection_span) }
+			else { return 0 } // should not be possible to reach, consider adding an assert here
+		}
+	}
+
+	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
+	ctx.draw_text(x, y, segment)
+	return utf8_str_visible_length(segment)
+}
+
+fn render_segment_in_visual_line_mode(mut ctx draw.Contextable, segment string, fg_color tui.Color, x int, y int, is_selected bool) int {
+	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
+	if is_selected {
 		bg_color := ctx.theme().selection_highlight_color
 		ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
 		defer { ctx.reset_bg_color() }
 	}
 
-	ctx.draw_text(x_offset, y, segment_to_render)
-	return utf8_str_visible_length(segment_to_render)
+	ctx.draw_text(x, y, segment)
+	return utf8_str_visible_length(segment)
+}
+
+fn render_segment_in_visual_mode(
+	mut ctx draw.Contextable, segment_bounds TokenBounds,
+	segment string, fg_color tui.Color,
+	x int, y int, selection_span SelectionSpan
+) int {
+	if selection_span.full {
+		return render_segment_in_visual_mode_current_line_is_fully_selected(mut ctx, segment_bounds, segment, fg_color, x, y)
+	}
+
+	segment_before_selection := segment_bounds.end < selection_span.min_x
+	segment_after_selection := segment_bounds.start > selection_span.max_x
+
+	if segment_before_selection || segment_after_selection {
+		return render_segment_in_visual_mode_unselected(mut ctx, segment_bounds, segment, fg_color, x, y)
+	}
+
+	selection_starts_within_segment := segment_bounds.start < selection_span.min_x && segment_bounds.end > selection_span.min_x
+	selection_ends_within_segment   := segment_bounds.start < selection_span.max_x && segment_bounds.end > selection_span.max_x
+
+	if selection_starts_within_segment && selection_ends_within_segment {
+		return render_segment_in_visual_mode_selection_starts_and_ends_within(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span)
+	}
+
+	if selection_starts_within_segment && !selection_ends_within_segment {
+		return render_segment_in_visual_mode_selection_starts_within_but_does_not_end_within(mut ctx, segment_bounds, segment, fg_color, x, y)
+	}
+
+	if !selection_starts_within_segment && selection_ends_within_segment {
+		return render_segment_in_visual_mode_selection_ends_within_but_does_not_start_within(mut ctx, segment_bounds, segment, fg_color, x, y)
+	}
+
+	return render_segment_in_visual_mode_current_line_is_fully_selected(mut ctx, segment_bounds, segment, fg_color, x, y)
+}
+
+fn render_segment_in_visual_mode_unselected(
+	mut ctx draw.Contextable, segment_bounds TokenBounds,
+	segment string, fg_color tui.Color,
+	x int, y int
+) int {
+	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
+	ctx.draw_text(x, y, segment)
+	return utf8_str_visible_length(segment)
+}
+
+fn render_segment_in_visual_mode_current_line_is_fully_selected(
+	mut ctx draw.Contextable, segment_bounds TokenBounds,
+	segment string, fg_color tui.Color,
+	x int, y int
+) int {
+	bg_color := ctx.theme().selection_highlight_color
+	ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
+	defer { ctx.reset_bg_color() }
+
+	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
+	ctx.draw_text(x, y, segment)
+	return utf8_str_visible_length(segment)
+}
+
+fn render_segment_in_visual_mode_selection_starts_and_ends_within(
+	mut ctx draw.Contextable, segment_bounds TokenBounds,
+	segment string, fg_color tui.Color,
+	x int, y int, selection_span SelectionSpan
+) int {
+	selected_segment_span_start := selection_span.min_x - segment_bounds.start
+	selected_segment_span_end   := selection_span.max_x - segment_bounds.start
+
+	mut x_offset := 0
+
+	segment_first_part := segment.runes()[..selected_segment_span_start].string()
+	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
+	ctx.draw_text(x, y, segment_first_part)
+
+	x_offset += utf8_str_visible_length(segment_first_part)
+
+	segment_selected_part := segment.runes()[selected_segment_span_start..selected_segment_span_end].string()
+	bg_color := ctx.theme().selection_highlight_color
+	ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
+	ctx.reset_color()
+	ctx.draw_text(x + x_offset, y, segment_selected_part)
+
+	x_offset += utf8_str_visible_length(segment_selected_part)
+
+	segment_last_part := segment.runes()[selected_segment_span_end..].string()
+	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
+	ctx.reset_bg_color()
+	ctx.draw_text(x + x_offset, y, segment_last_part)
+	return utf8_str_visible_length(segment)
+}
+
+fn render_segment_in_visual_mode_selection_starts_within_but_does_not_end_within(
+	mut ctx draw.Contextable, segment_bounds TokenBounds,
+	segment string, fg_color tui.Color,
+	x int, y int
+) int {
+	return utf8_str_visible_length(segment)
+}
+
+fn render_segment_in_visual_mode_selection_ends_within_but_does_not_start_within(
+	mut ctx draw.Contextable, segment_bounds TokenBounds,
+	segment string, fg_color tui.Color,
+	x int, y int
+) int {
+	return utf8_str_visible_length(segment)
 }
 
