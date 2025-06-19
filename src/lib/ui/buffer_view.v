@@ -306,9 +306,13 @@ fn render_segment_in_visual_mode(
 		return render_segment_in_visual_mode_selection_starts_and_ends_within(mut ctx, segment_bounds, segment, fg_color, x, y)
 	}
 
-	bg_color := ctx.theme().selection_highlight_color
-	ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
-	defer { ctx.reset_bg_color() }
+	if selection_starts_within_segment && !selection_ends_within_segment {
+		return render_segment_in_visual_mode_selection_starts_within_but_does_not_end_within(mut ctx, segment_bounds, segment, fg_color, x, y)
+	}
+
+	if !selection_starts_within_segment && selection_ends_within_segment {
+		return render_segment_in_visual_mode_selection_ends_within_but_does_not_start_within(mut ctx, segment_bounds, segment, fg_color, x, y)
+	}
 
 	return render_segment_in_visual_mode_current_line_is_fully_selected(mut ctx, segment_bounds, segment, fg_color, x, y)
 }
@@ -338,6 +342,22 @@ fn render_segment_in_visual_mode_current_line_is_fully_selected(
 }
 
 fn render_segment_in_visual_mode_selection_starts_and_ends_within(
+	mut ctx draw.Contextable, segment_bounds TokenBounds,
+	segment string, fg_color tui.Color,
+	x int, y int
+) int {
+	return utf8_str_visible_length(segment)
+}
+
+fn render_segment_in_visual_mode_selection_starts_within_but_does_not_end_within(
+	mut ctx draw.Contextable, segment_bounds TokenBounds,
+	segment string, fg_color tui.Color,
+	x int, y int
+) int {
+	return utf8_str_visible_length(segment)
+}
+
+fn render_segment_in_visual_mode_selection_ends_within_but_does_not_start_within(
 	mut ctx draw.Contextable, segment_bounds TokenBounds,
 	segment string, fg_color tui.Color,
 	x int, y int
