@@ -32,7 +32,7 @@ const black_astra_pallete := {
 	.number:              tui.Color{ 255, 0, 175 }
 	.whitespace:          tui.Color{ 15, 12, 0 }
 	.keyword:             tui.Color{ 255, 0, 95 }
-	.literal:             tui.Color{ 255, 255, 255 }
+	.literal:             tui.Color{ 255, 135, 0 }
 	.builtin:             tui.Color{ 255, 255, 255 }
 	.other:               tui.Color{ 255, 255, 255 }
 }
@@ -88,7 +88,7 @@ const test_pallete := {
 	.keyword:             tui.Color{ 5, 21, 5 }
 	.literal:             tui.Color{ 15, 15, 15 }
 	.builtin:             tui.Color{ 102, 102, 102 }
-	.other:               tui.Color{ 211, 211, 211 }
+	.other:               tui.Color{ 215, 0, 0 }
 }
 
 pub fn color_to_type(color tui.Color) ?syntaxlib.TokenType {
@@ -150,8 +150,8 @@ pub fn Theme.new(name string) !Theme {
 			Theme{
 				pallete: black_astra_pallete,
 				cursor_line_color: tui.Color{ 53, 53, 53 },
-				selection_highlight_color: tui.Color{ 93, 93, 93 },
-				background_color: tui.Color{ 25, 25, 25 },
+				selection_highlight_color: tui.Color{ 135, 0, 175 },
+				background_color: tui.Color{ 20, 20, 20 },
 				line_number_color: tui.Color{ 175, 0, 0 }
 			}
 		}
