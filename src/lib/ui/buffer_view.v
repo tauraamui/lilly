@@ -303,7 +303,7 @@ fn render_segment_in_visual_mode(
 	selection_ends_within_segment   := segment_bounds.start < selection_span.max_x && segment_bounds.end > selection_span.max_x
 
 	if selection_starts_within_segment && selection_ends_within_segment {
-		return render_segment_in_visual_mode_selection_starts_and_ends_within(mut ctx, segment_bounds, segment, fg_color, x, y)
+		return render_segment_in_visual_mode_selection_starts_and_ends_within(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span)
 	}
 
 	if selection_starts_within_segment && !selection_ends_within_segment {
@@ -344,8 +344,11 @@ fn render_segment_in_visual_mode_current_line_is_fully_selected(
 fn render_segment_in_visual_mode_selection_starts_and_ends_within(
 	mut ctx draw.Contextable, segment_bounds TokenBounds,
 	segment string, fg_color tui.Color,
-	x int, y int
+	x int, y int, selection_span SelectionSpan
 ) int {
+	selected_segment_span_start := selection_span.min_x - segment_bounds.start
+	selected_segment_span_end   := selection_span.max_x - segment_bounds.start
+	ctx.draw_text(x, y, segment)
 	return utf8_str_visible_length(segment)
 }
 
