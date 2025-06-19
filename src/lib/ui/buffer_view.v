@@ -295,10 +295,22 @@ fn render_segment_in_visual_mode(
 	segment_before_selection := segment_bounds.end < selection_span.min_x
 	segment_after_selection := segment_bounds.start > selection_span.max_x
 
-	if !(segment_before_selection || segment_after_selection) {
-		return render_segment_in_visual_mode_current_line_is_fully_selected(mut ctx, segment_bounds, segment, fg_color, x, y)
+	if segment_before_selection || segment_after_selection {
+		return render_segment_in_visual_mode_unselected(mut ctx, segment_bounds, segment, fg_color, x, y)
 	}
 
+	bg_color := ctx.theme().selection_highlight_color
+	ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
+	defer { ctx.reset_bg_color() }
+
+	return render_segment_in_visual_mode_current_line_is_fully_selected(mut ctx, segment_bounds, segment, fg_color, x, y)
+}
+
+fn render_segment_in_visual_mode_unselected(
+	mut ctx draw.Contextable, segment_bounds TokenBounds,
+	segment string, fg_color tui.Color,
+	x int, y int
+) int {
 	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
 	ctx.draw_text(x, y, segment)
 	return utf8_str_visible_length(segment)
