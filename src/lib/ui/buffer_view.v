@@ -348,7 +348,27 @@ fn render_segment_in_visual_mode_selection_starts_and_ends_within(
 ) int {
 	selected_segment_span_start := selection_span.min_x - segment_bounds.start
 	selected_segment_span_end   := selection_span.max_x - segment_bounds.start
-	ctx.draw_text(x, y, segment)
+
+	mut x_offset := 0
+
+	segment_first_part := segment.runes()[..selected_segment_span_start].string()
+	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
+	ctx.draw_text(x, y, segment_first_part)
+
+	x_offset += utf8_str_visible_length(segment_first_part)
+
+	segment_selected_part := segment.runes()[selected_segment_span_start..selected_segment_span_end].string()
+	bg_color := ctx.theme().selection_highlight_color
+	ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
+	ctx.reset_color()
+	ctx.draw_text(x + x_offset, y, segment_selected_part)
+
+	x_offset += utf8_str_visible_length(segment_selected_part)
+
+	segment_last_part := segment.runes()[selected_segment_span_end..].string()
+	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
+	ctx.reset_bg_color()
+	ctx.draw_text(x + x_offset, y, segment_last_part)
 	return utf8_str_visible_length(segment)
 }
 
