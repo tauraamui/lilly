@@ -299,6 +299,10 @@ fn render_segment_in_visual_mode(
 		return render_segment_in_visual_mode_unselected(mut ctx, segment_bounds, segment, fg_color, x, y)
 	}
 
+	// 1. does selection end within segment
+	// |-> yes, render up to selection end, render selection part after
+	// |-> no, render segment as selected
+
 	bg_color := ctx.theme().selection_highlight_color
 	ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
 	defer { ctx.reset_bg_color() }
