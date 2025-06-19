@@ -3,23 +3,6 @@ module theme
 import term.ui as tui
 import lib.syntax as syntaxlib
 
-const petal_pallete := {
-	syntaxlib.TokenType.identifier: tui.Color{ 200, 200, 235 }
-	.operator:            tui.Color{ 200, 200, 235 }
-	.string:              tui.Color{ 87,  215, 217 }
-	.comment:             tui.Color{ 130, 130, 130 }
-	.comment_start:       tui.Color{ 200, 200, 235 }
-	.comment_end:         tui.Color{ 200, 200, 235 }
-	.block_start:         tui.Color{ 200, 200, 235 }
-	.block_end:           tui.Color{ 200, 200, 235 }
-	.number:              tui.Color{ 215, 135, 215 }
-	.whitespace:          tui.Color{ 200, 200, 235 }
-	.keyword:             tui.Color{ 255, 95,  175 }
-	.literal:             tui.Color{ 0,   215, 255 }
-	.builtin:             tui.Color{ 130, 144, 250 }
-	.other:               tui.Color{ 200, 200, 235 }
-}
-
 const acme_pallete := {
 	syntaxlib.TokenType.identifier: tui.Color{ 15, 12, 0 }
 	.operator:            tui.Color{ 15, 12, 0 }
@@ -35,6 +18,23 @@ const acme_pallete := {
 	.literal:             tui.Color{ 15, 12, 0 }
 	.builtin:             tui.Color{ 15, 12, 0 }
 	.other:               tui.Color{ 15, 12, 0 }
+}
+
+const black_astra_pallete := {
+	syntaxlib.TokenType.identifier: tui.Color{ 255, 255, 255 }
+	.operator:            tui.Color{ 15, 12, 0 }
+	.string:              tui.Color{ 255, 95, 135 }
+	.comment:             tui.Color{ 192, 192, 192 }
+	.comment_start:       tui.Color{ 192, 192, 192 }
+	.comment_end:         tui.Color{ 192, 192, 192 }
+	.block_start:         tui.Color{ 15, 12, 0 }
+	.block_end:           tui.Color{ 15, 12, 0 }
+	.number:              tui.Color{ 255, 0, 175 }
+	.whitespace:          tui.Color{ 15, 12, 0 }
+	.keyword:             tui.Color{ 255, 0, 95 }
+	.literal:             tui.Color{ 255, 255, 255 }
+	.builtin:             tui.Color{ 255, 255, 255 }
+	.other:               tui.Color{ 255, 255, 255 }
 }
 
 const bloo_pallete := {
@@ -54,6 +54,22 @@ const bloo_pallete := {
 	.other:               tui.Color{ 255, 255, 255 }
 }
 
+const petal_pallete := {
+	syntaxlib.TokenType.identifier: tui.Color{ 200, 200, 235 }
+	.operator:            tui.Color{ 200, 200, 235 }
+	.string:              tui.Color{ 87,  215, 217 }
+	.comment:             tui.Color{ 130, 130, 130 }
+	.comment_start:       tui.Color{ 200, 200, 235 }
+	.comment_end:         tui.Color{ 200, 200, 235 }
+	.block_start:         tui.Color{ 200, 200, 235 }
+	.block_end:           tui.Color{ 200, 200, 235 }
+	.number:              tui.Color{ 215, 135, 215 }
+	.whitespace:          tui.Color{ 200, 200, 235 }
+	.keyword:             tui.Color{ 255, 95,  175 }
+	.literal:             tui.Color{ 0,   215, 255 }
+	.builtin:             tui.Color{ 130, 144, 250 }
+	.other:               tui.Color{ 200, 200, 235 }
+}
 
 // NOTE(tauraamui) [10/06/2025]: these colors don't need to be valid at all they're only
 //                               here to ensure that colour lookups in tests provide
@@ -128,6 +144,15 @@ pub fn Theme.new(name string) !Theme {
 				selection_highlight_color: tui.Color{ 96, 138, 143 },
 				background_color: tui.Color{ 59, 34, 76 },
 				line_number_color: petal_pallete[.number]
+			}
+		}
+		"black-astra" { // black clover reference
+			Theme{
+				pallete: black_astra_pallete,
+				cursor_line_color: tui.Color{ 53, 53, 53 },
+				selection_highlight_color: tui.Color{ 93, 93, 93 },
+				background_color: tui.Color{ 25, 25, 25 },
+				line_number_color: tui.Color{ 175, 0, 0 }
 			}
 		}
 		"space" {
