@@ -100,15 +100,13 @@ pub fn (mut buf_view BufferView) draw(
 	}
 }
 
-// NOTE(tauraamui) [15/06/2025]: should add this to themes, not in palette though.
-const line_num_fg_color = tui.Color{ r: 117, g: 118, b: 120 }
-
 fn draw_line_number(
 	mut ctx draw.Contextable,
 	x int, y int,
 	document_line_num int, cursor_y_pos int, from int, relative_line_nums bool
 ) {
 	defer { ctx.reset_color() }
+	line_num_fg_color := ctx.theme().line_number_color
 	ctx.set_color(draw.Color{ line_num_fg_color.r, line_num_fg_color.g, line_num_fg_color.b })
 
 	// NOTE(tauraamui) [04/06/2025]: there's a fair amount of repeatition in this match

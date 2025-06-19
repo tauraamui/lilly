@@ -97,6 +97,7 @@ fn test_buffer_view_draws_lines_in_normal_mode_so_one_line_has_bg_the_rest_do_no
 	whitespace_fg_color := test_theme_pallete[.whitespace]
 	number_fg_color     := test_theme_pallete[.number]
 	cursor_line_color   := test_theme.cursor_line_color
+	line_num_fg_color :=   test_theme.line_number_color
 
 	line_one_expected_drawn_data := [
 		ColoredDrawnText{ x: 0, y: 0, data: "1", fg_color: line_num_fg_color }, ColoredDrawnText{ x: 2, y: 0, data: "This", fg_color: identifier_fg_color },
@@ -187,6 +188,7 @@ fn test_buffer_view_draws_lines_in_visual_line_mode_just_top_line_selected() {
 	number_fg_color     := test_theme_pallete[.number]
 	cursor_line_color   := test_theme.cursor_line_color
 	selected_line_color := test_theme.selection_highlight_color
+	line_num_fg_color :=   test_theme.line_number_color
 
 	line_one_expected_drawn_data := [
 		ColoredDrawnText{ x: 0, y: 0, data: "1", fg_color: line_num_fg_color }, ColoredDrawnText{ x: 2, y: 0, data: "This", fg_color: identifier_fg_color },
@@ -275,6 +277,7 @@ fn test_buffer_view_draws_lines_0_to_max_height() {
 	whitespace_fg_color := test_theme_pallete[.whitespace]
 	number_fg_color     := test_theme_pallete[.number]
 	cursor_line_color   := test_theme.cursor_line_color
+	line_num_fg_color :=   test_theme.line_number_color
 
 	line_one_expected_drawn_data := [
 		ColoredDrawnText{ x: 0, y: 0, data: "1", fg_color: line_num_fg_color },
@@ -358,6 +361,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 	test_theme_pallete  := test_theme.pallete
 	identifier_fg_color := test_theme_pallete[.identifier]
 	cursor_line_color   := test_theme.cursor_line_color
+	line_num_fg_color :=   test_theme.line_number_color
 
 	line_one_expected_drawn_data := [
 		ColoredDrawnText{ x: 0, y: 0, data: "1", fg_color: line_num_fg_color },
@@ -409,6 +413,7 @@ fn test_buffer_view_draws_1_line_as_multiple_segments_colored_as_expected() {
 	other_fg_color      := test_theme_pallete[.other]
 	whitespace_fg_color := test_theme_pallete[.whitespace]
 	cursor_line_color   := test_theme.cursor_line_color
+	line_num_fg_color :=   test_theme.line_number_color
 
 	assert drawn_text.len == 9
 
@@ -467,6 +472,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_single_emoji() {
 	test_theme_pallete  := test_theme.pallete
 	other_fg_color := test_theme_pallete[.other]
 	cursor_line_color   := test_theme.cursor_line_color
+	line_num_fg_color :=   test_theme.line_number_color
 
 	assert drawn_text.len == 2
 
@@ -521,6 +527,7 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	whitespace_fg_color := test_theme_pallete[.whitespace]
 	number_fg_color     := test_theme_pallete[.number]
 	cursor_line_color   := test_theme.cursor_line_color
+	line_num_fg_color :=   test_theme.line_number_color
 
 	assert drawn_text.len == 140
 
@@ -694,6 +701,8 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled()
 
 	assert drawn_text.len == 140
 	assert set_fg_color.len == 140
+
+	line_num_fg_color := mock_ctx.theme().line_number_color
 
 	assert set_fg_color[0] == line_num_fg_color
 	assert themelib.color_to_type(set_fg_color[1])? == .identifier
@@ -1009,6 +1018,8 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled_c
 	assert drawn_text.len == 140
 	assert set_fg_color.len == 140
 
+	line_num_fg_color := mock_ctx.theme().line_number_color
+
 	assert set_fg_color[0] == line_num_fg_color
 	assert themelib.color_to_type(set_fg_color[1])? == .identifier
 	assert themelib.color_to_type(set_fg_color[2])? == .whitespace
@@ -1259,6 +1270,8 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_14() {
 	assert drawn_text.len == 24
 	assert set_fg_color.len == 24
 
+	line_num_fg_color := mock_ctx.theme().line_number_color
+
 	// this is the line at the side being rendered
 	assert set_fg_color[0] == line_num_fg_color
 	assert themelib.color_to_type(set_fg_color[1])? == .number
@@ -1359,6 +1372,8 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_4_max_width_56() {
 
 	assert drawn_text.len == 42
 	assert set_fg_color.len == 42
+
+	line_num_fg_color := mock_ctx.theme().line_number_color
 
 	// this is the line at the side being rendered
 	assert set_fg_color[0] == line_num_fg_color
@@ -1483,6 +1498,8 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_56() {
 	assert drawn_text.len == 12
 	assert set_fg_color.len == 12
 
+	line_num_fg_color := mock_ctx.theme().line_number_color
+
 	// this is the line at the side being rendered
 	assert set_fg_color[0] == line_num_fg_color
 	assert themelib.color_to_type(set_fg_color[1])? == .identifier
@@ -1566,6 +1583,8 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_6() {
 
 	assert drawn_text.len == 12
 	assert set_fg_color.len == 12
+
+	line_num_fg_color := mock_ctx.theme().line_number_color
 
 	// this is the line at the side being rendered
 	assert set_fg_color[0] == line_num_fg_color
