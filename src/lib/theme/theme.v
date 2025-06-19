@@ -37,6 +37,24 @@ const acme_pallete := {
 	.other:               tui.Color{ 15, 12, 0 }
 }
 
+const bloo_pallete := {
+	syntaxlib.TokenType.identifier: tui.Color{ 255, 255, 255 }
+	.operator:            tui.Color{ 15, 12, 0 }
+	.string:              tui.Color{ 175, 255, 255 }
+	.comment:             tui.Color{ 192, 192, 192 }
+	.comment_start:       tui.Color{ 192, 192, 192 }
+	.comment_end:         tui.Color{ 192, 192, 192 }
+	.block_start:         tui.Color{ 15, 12, 0 }
+	.block_end:           tui.Color{ 15, 12, 0 }
+	.number:              tui.Color{ 175, 215, 255 }
+	.whitespace:          tui.Color{ 15, 12, 0 }
+	.keyword:             tui.Color{ 0, 255, 255 }
+	.literal:             tui.Color{ 255, 255, 255 }
+	.builtin:             tui.Color{ 255, 255, 255 }
+	.other:               tui.Color{ 255, 255, 255 }
+}
+
+
 // NOTE(tauraamui) [10/06/2025]: these colors don't need to be valid at all they're only
 //                               here to ensure that colour lookups in tests provide
 //                               unique results
@@ -71,6 +89,7 @@ pub:
 	cursor_line_color         tui.Color
 	selection_highlight_color tui.Color
 	background_color          ?tui.Color
+	line_number_color         tui.Color
 }
 
 pub fn Theme.new(name string) !Theme {
@@ -79,16 +98,36 @@ pub fn Theme.new(name string) !Theme {
 			pallete: test_pallete,
 			cursor_line_color: tui.Color{ 53, 53, 53 },
 			selection_highlight_color: tui.Color{ 111, 111, 111 },
-			background_color: tui.Color{ 59, 34, 76 }
+			background_color: tui.Color{ 59, 34, 76 },
+			line_number_color: test_pallete[.number]
 		}
 	}
 	return match name {
+		"acme" {
+			Theme{
+				pallete: acme_pallete,
+				cursor_line_color: tui.Color{ 174, 255, 254 },
+				selection_highlight_color: tui.Color{ 96, 138, 143 },
+				background_color: tui.Color{ 255, 255, 215 },
+				line_number_color: acme_pallete[.number]
+			}
+		}
+		"bloo" { // boris johnson reference. "I like to paint them .. BLOO!" (if you know you know)
+			Theme{
+				pallete: bloo_pallete,
+				cursor_line_color: tui.Color{ 0, 0, 175 },
+				selection_highlight_color: tui.Color{ 96, 138, 143 },
+				background_color: tui.Color{ 0, 95, 255 },
+				line_number_color: bloo_pallete[.number]
+			}
+		}
 		"petal" {
 			Theme{
 				pallete: petal_pallete,
 				cursor_line_color: tui.Color{ 53, 53, 53 },
 				selection_highlight_color: tui.Color{ 96, 138, 143 },
-				background_color: tui.Color{ 59, 34, 76 }
+				background_color: tui.Color{ 59, 34, 76 },
+				line_number_color: petal_pallete[.number]
 			}
 		}
 		"space" {
@@ -96,14 +135,7 @@ pub fn Theme.new(name string) !Theme {
 				pallete: petal_pallete,
 				cursor_line_color: tui.Color{ 53, 53, 53 },
 				selection_highlight_color: tui.Color{ 96, 138, 143 },
-			}
-		}
-		"acme" {
-			Theme{
-				pallete: acme_pallete,
-				cursor_line_color: tui.Color{ 174, 255, 254 },
-				selection_highlight_color: tui.Color{ 96, 138, 143 },
-				background_color: tui.Color{ 255, 255, 215 }
+				line_number_color: petal_pallete[.number]
 			}
 		}
 		else { error("unable to find theme '${name}'") }
