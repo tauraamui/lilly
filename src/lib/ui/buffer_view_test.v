@@ -1731,10 +1731,10 @@ fn test_render_segment_in_visual_mode_specific_selection_starts_and_ends_within_
 			x: 20, y: 0, data: "singlelargeorlo", fg_color: fg_color, bg_color: ?tui.Color(none)
 		},
 		ColoredDrawnText{
-			x: 20, y: 0, data: "ngtokentore", fg_color: tui.Color{ 0, 0, 0 }, bg_color: theme_selection_bg_color
+			x: 35, y: 0, data: "ngtokentor", fg_color: tui.Color{ 0, 0, 0 }, bg_color: theme_selection_bg_color
 		}
 		ColoredDrawnText{
-			x: 35, y: 0, data: "nder", fg_color: fg_color, bg_color: ?tui.Color(none)
+			x: 45, y: 0, data: "ender", fg_color: fg_color, bg_color: ?tui.Color(none)
 		}
 	]
 }
