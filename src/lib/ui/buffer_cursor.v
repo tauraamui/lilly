@@ -17,9 +17,9 @@ pub:
 
 pub struct BufferCursor {
 mut:
-	sel_start_pos       ?CursorPos
+	sel_start_pos ?CursorPos
 pub mut:
-	pos                 CursorPos
+	pos           CursorPos
 }
 
 // TODO(tauraamui) [11/06/2025]: make this private
