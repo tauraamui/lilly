@@ -292,6 +292,16 @@ fn render_segment_in_visual_mode(
 		return render_segment_in_visual_mode_current_line_is_fully_selected(mut ctx, segment_bounds, segment, fg_color, x, y)
 	}
 
+	// selection_start_within_segment := selection_span.min_x > segment_bounds.start && selection_span.min_x < segment_bounds.end
+	// selection_end_within_segment   := selection_span.max_x > segment_bounds.start && selection_span.max_x < segment_bounds.end
+
+	if fully_within_selection {
+		bg_color := ctx.theme().selection_highlight_color
+		ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
+		defer { ctx.reset_bg_color() }
+	}
+
+
 	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
 	ctx.draw_text(x, y, segment)
 	return utf8_str_visible_length(segment)

@@ -1698,7 +1698,6 @@ fn test_render_segment_in_visual_mode_specific_selection_is_past_to_segment_on_l
 	]
 }
 
-/*
 fn test_render_segment_in_visual_mode_specific_selection_overlaps_first_half_of_segment() {
 	mut drawn_text := []ColoredDrawnText{}
 	mut drawn_text_ref := &drawn_text
@@ -1737,6 +1736,7 @@ fn test_render_segment_in_visual_mode_specific_selection_overlaps_first_half_of_
 	]
 }
 
+/*
 fn test_render_segment_in_visual_mode_specific_selection_overlaps_second_half_of_segment() {
 	mut drawn_text := []ColoredDrawnText{}
 	mut drawn_text_ref := &drawn_text
