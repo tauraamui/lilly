@@ -155,51 +155,51 @@ fn test_lilly_resolve_matches_across_all_files_within_workspace() {
 fn test_lilly_extract_pos_from_path() {
 	mut extracted_path, mut extracted_pos := extract_pos_from_path("fake_file.v")
 	assert extracted_path == "fake_file.v"
-	assert extracted_pos  == ui.CursorPos{ x: 0, y: 0 }
+	assert extracted_pos  == none
 
 	extracted_path, extracted_pos = extract_pos_from_path("fake_file.v:4")
 	assert extracted_path == "fake_file.v"
-	assert extracted_pos == ui.CursorPos{ x: 0, y: 4 }
+	assert extracted_pos? == ui.CursorPos{ x: 0, y: 4 }
 
 	extracted_path, extracted_pos = extract_pos_from_path("x::::::::.v:55:101")
 	assert extracted_path == "x::::::::.v"
-	assert extracted_pos == ui.CursorPos{ x: 101, y: 55 }
+	assert extracted_pos? == ui.CursorPos{ x: 101, y: 55 }
 
 	extracted_path, extracted_pos = extract_pos_from_path("fake_file.v:30:10")
 	assert extracted_path == "fake_file.v"
-	assert extracted_pos == ui.CursorPos{ x: 10, y: 30 }
+	assert extracted_pos? == ui.CursorPos{ x: 10, y: 30 }
 
 	extracted_path, extracted_pos = extract_pos_from_path("fake_file.v::10")
 	assert extracted_path == "fake_file.v"
-	assert extracted_pos == ui.CursorPos{ x: 10, y: 0 }
+	assert extracted_pos? == ui.CursorPos{ x: 10, y: 0 }
 
 	extracted_path, extracted_pos = extract_pos_from_path("fake_file.v:")
 	assert extracted_path == "fake_file.v"
-	assert extracted_pos == ui.CursorPos{ x: 0, y: 0 } // this should just immediately considered an invalid format
+	assert extracted_pos  == none // this should just immediately considered an invalid format
 
 	extracted_path, extracted_pos = extract_pos_from_path("112:95")
 	assert extracted_path == "112"
-	assert extracted_pos == ui.CursorPos{ x: 0, y: 95 }
+	assert extracted_pos? == ui.CursorPos{ x: 0, y: 95 }
 
 	extracted_path, extracted_pos = extract_pos_from_path("fake_file.v:::")
-	assert extracted_path == "fake_file.v:"
-	assert extracted_pos == ui.CursorPos{ x: 0, y: 0 } // this should just immediately considered an invalid format
+	assert extracted_path == "fake_file.v"
+	assert extracted_pos  == none // this should just immediately considered an invalid format
 
 	extracted_path, extracted_pos = extract_pos_from_path("fake_file.v::::")
-	assert extracted_path == "fake_file.v::"
-	assert extracted_pos == ui.CursorPos{ x: 0, y: 0 } // this should just immediately considered an invalid format
+	assert extracted_path == "fake_file.v"
+	assert extracted_pos  == none // this should just immediately considered an invalid format
 
 	extracted_path, extracted_pos = extract_pos_from_path(":")
-	assert extracted_path == ":"
-	assert extracted_pos == ui.CursorPos{ x: 0, y: 0 } // this should just immediately considered an invalid format
+	assert extracted_path == ""
+	assert extracted_pos  == none // this should just immediately considered an invalid format
 
 	extracted_path, extracted_pos = extract_pos_from_path("::")
-	assert extracted_path == "::"
-	assert extracted_pos == ui.CursorPos{ x: 0, y: 0 } // this should just immediately considered an invalid format
+	assert extracted_path == ""
+	assert extracted_pos  == none // this should just immediately considered an invalid format
 
 	extracted_path, extracted_pos = extract_pos_from_path(":::")
-	assert extracted_path == ":"
-	assert extracted_pos == ui.CursorPos{ x: 0, y: 0 } // this should just immediately considered an invalid format
+	assert extracted_path == ""
+	assert extracted_pos  == none // this should just immediately considered an invalid format
 }
 
 fn test_lilly_resolve_inactive_file_buffer_paths() {

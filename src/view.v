@@ -457,6 +457,12 @@ fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes 
 	return res
 }
 
+pub fn (mut view View) jump_line_to_middle(y int) {
+	view.from = y - (view.height / 2)
+	view.cursor.pos.y = y
+	view.clamp_cursor_within_document_bounds()
+}
+
 fn resolve_syntax_id(syns []syntaxlib.Syntax, ext string) int {
 	for i, syntax in syns {
 		if ext in syntax.extensions {
@@ -473,6 +479,7 @@ fn (mut view View) set_current_syntax_idx(ext string) {
 interface Viewable {
 	file_path string
 mut:
+	jump_line_to_middle(int)
 	draw(mut draw.Contextable)
 	on_key_down(draw.Event, mut Root)
 	on_mouse_scroll(draw.Event)
@@ -486,7 +493,6 @@ fn (mut view View) offset_x_and_width_by_len_of_longest_line_number_str(win_widt
 }
 
 // TODO(tauraamui): use this/do something similar for visual mode highlighting
-@[inline]
 fn (mut view View) calc_cursor_x_offset() int {
 	cursor_line := view.buffer.lines[view.cursor.pos.y]
 	mut offset := 0
@@ -505,7 +511,6 @@ fn (mut view View) calc_cursor_x_offset() int {
 	return offset
 }
 
-@[inline]
 fn (mut view View) calc_cursor_y_in_screen_space() int {
 	mut cursor_screen_space_y := view.cursor.pos.y - view.from
 	if cursor_screen_space_y > view.code_view_height() - 1 {
@@ -514,7 +519,6 @@ fn (mut view View) calc_cursor_y_in_screen_space() int {
 	return cursor_screen_space_y
 }
 
-@[inline]
 fn (mut view View) draw_bottom_bar_of_command_or_search(mut ctx draw.Contextable) {
 	view.cmd_buf.draw(mut ctx, view.leader_state.mode == .command)
 	if view.leader_state.mode == .search {
@@ -524,7 +528,6 @@ fn (mut view View) draw_bottom_bar_of_command_or_search(mut ctx draw.Contextable
 	ctx.draw_text(ctx.window_width() - repeat_amount.len, ctx.window_height() - 1, repeat_amount)
 }
 
-@[inline]
 fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
 	if view.leader_state.mode == .insert {
 		ctx.set_cursor_to_vertical_bar()
@@ -588,262 +591,6 @@ fn (mut view View) update_to() {
 	}
 	view.to = to
 }
-
-enum SegmentKind {
-	a_string  = 1
-	a_comment = 2
-	a_key     = 3
-	a_lit     = 4
-	a_builtin = 5
-}
-
-struct LineSegment {
-	start            int
-	end              int
-	y                int
-	document_space_y int
-	typ              SegmentKind
-	fg_color         draw.Color
-}
-
-fn LineSegment.new_key(theme themelib.Theme, start int, line_y int, document_space_y int, end int) LineSegment {
-	keyword_color := theme.pallete[.keyword]
-	return LineSegment{
-		start:            start
-		end:              end
-		y:                line_y
-		document_space_y: document_space_y
-		typ:              .a_key
-		fg_color:         draw.Color{ keyword_color.r, keyword_color.g, keyword_color.b }
-	}
-}
-
-fn LineSegment.new_literal(theme themelib.Theme, start int, line_y int, document_space_y int, end int) LineSegment {
-	literal_color := theme.pallete[.literal]
-	return LineSegment{
-		start:            start
-		end:              end
-		y:                line_y
-		document_space_y: document_space_y
-		typ:              .a_lit
-		fg_color:         draw.Color{ literal_color.r, literal_color.g, literal_color.b }
-	}
-}
-
-fn LineSegment.new_builtin(theme themelib.Theme, start int, line_y int, document_space_y int, end int) LineSegment {
-	builtin_color := theme.pallete[.builtin]
-	return LineSegment{
-		start:            start
-		end:              end
-		y:                line_y
-		document_space_y: document_space_y
-		typ:              .a_builtin
-		fg_color:         draw.Color{ builtin_color.r, builtin_color.g, builtin_color.b }
-	}
-}
-
-fn LineSegment.new_string(theme themelib.Theme, start int, line_y int, document_space_y int, end int) LineSegment {
-	string_color := theme.pallete[.string]
-	return LineSegment{
-		start:            start
-		end:              end
-		y:                line_y
-		document_space_y: document_space_y
-		typ:              .a_string
-		fg_color:         draw.Color{ string_color.r, string_color.g, string_color.b }
-	}
-}
-
-fn LineSegment.new_comment(theme themelib.Theme, start int, line_y int, document_space_y int, end int) LineSegment {
-	comment_color := theme.pallete[.comment]
-	return LineSegment{
-		start:            start
-		end:              end
-		y:                line_y
-		document_space_y: document_space_y
-		typ:              .a_comment
-		fg_color:         draw.Color{ comment_color.r, comment_color.g, comment_color.b }
-	}
-}
-
-fn resolve_line_segments(syntax syntaxlib.Syntax, theme themelib.Theme, line string, line_y int, document_space_y int, is_multiline_comment bool) ([]LineSegment, bool) {
-	mut segments := []LineSegment{}
-	mut is_multiline_commentx := is_multiline_comment
-	line_runes := line.runes()
-	for i := 0; i < line_runes.len; i++ {
-		start := i
-		// '//' comment
-		if i > 0 && line_runes[i - 1] == `/` && line_runes[i] == `/` {
-			segments << LineSegment.new_comment(theme, start - 1, line_y, document_space_y, line_runes.len)
-			break
-		}
-
-		// '#' comment
-		if line_runes[i] == `#` {
-			segments << LineSegment.new_comment(theme, start, line_y, document_space_y, line_runes.len)
-			break
-		}
-
-		// /* comment
-		// (unless it's /* line_runes */ which is a single line_runes)
-		if i > 0 && line_runes[i - 1] == `/` && line_runes[i] == `*`
-			&& !(line_runes[line_runes.len - 2] == `*` && line_runes[line_runes.len - 1] == `/`) {
-			// all after /* is  a comment
-			segments << LineSegment.new_comment(theme, start, line_y, document_space_y, line_runes.len)
-			is_multiline_commentx = true
-			break
-		}
-		// end of /* */
-		if i > 0 && line_runes[i - 1] == `*` && line_runes[i] == `/` {
-			// all before */ is still a comment
-			segments << LineSegment.new_comment(theme, 0, line_y, document_space_y, start + 1)
-			is_multiline_commentx = false
-			break
-		}
-
-		// string
-		if line_runes[i] == `'` {
-			i++
-			for i < line_runes.len - 1 && line_runes[i] != `'` {
-				i++
-			}
-			if i >= line_runes.len {
-				i = line_runes.len - 1
-			}
-			segments << LineSegment.new_string(theme, start, line_y, document_space_y, i + 1)
-		}
-
-		if line_runes[i] == `"` {
-			i++
-			for i < line_runes.len - 1 && line_runes[i] != `"` {
-				i++
-			}
-			if i >= line_runes.len {
-				i = line_runes.len - 1
-			}
-			segments << LineSegment.new_string(theme, start, line_y, document_space_y, i + 1)
-		}
-
-		if line_runes[i] == `\`` {
-			i++
-			for i < line_runes.len - 1 && line_runes[i] != `\`` {
-				i++
-			}
-			if i >= line_runes.len {
-				i = line_runes.len - 1
-			}
-			segments << LineSegment.new_string(theme, start, line_y, document_space_y, i + 1)
-		}
-
-		// key
-		for i < line.runes().len && is_alpha_underscore(int(line.runes()[i])) {
-			i++
-		}
-		word := line.runes()[start..i].string()
-		if word in syntax.literals {
-			segments << LineSegment.new_literal(theme, start, line_y, document_space_y, i)
-		} else if word in syntax.keywords {
-			segments << LineSegment.new_key(theme, start, line_y, document_space_y, i)
-		} else if word in syntax.builtins {
-			segments << LineSegment.new_builtin(theme, start, line_y, document_space_y, i)
-		}
-	}
-	return segments, is_multiline_commentx
-}
-
-fn (mut view View) draw_text_line_number(mut ctx draw.Contextable, y int) {
-	cursor_screenspace_y := view.cursor.pos.y - view.from
-	ctx.set_color(r: 117, g: 118, b: 120)
-
-	mut line_num_str := '${view.from + y + 1}'
-	if view.config.relative_line_numbers {
-		if y < cursor_screenspace_y {
-			line_num_str = '${cursor_screenspace_y - y}'
-		} else if cursor_screenspace_y == y {
-			line_num_str = '${view.from + y + 1}'
-		} else if y > cursor_screenspace_y {
-			line_num_str = '${y - cursor_screenspace_y}'
-		}
-	}
-	ctx.draw_text(view.x - line_num_str.runes().len - 1, y, line_num_str)
-	ctx.reset_color()
-}
-
-fn (mut view View) draw_line_show_whitespace(mut ctx tui.Context, i int, line_cpy string) {
-	if i == view.cursor.pos.y {
-		mut xx := 0
-		for ci, c in line_cpy {
-			if ci > ctx.window_width {
-				return
-			}
-			match c {
-				`\t` {
-					ctx.set_color(r: 120, g: 120, b: 120)
-					ctx.draw_text(view.x + xx, i, '->->')
-					ctx.reset_color()
-					xx += 4
-				}
-				` ` {
-					ctx.set_color(r: 120, g: 120, b: 120)
-					ctx.draw_text(view.x, i, '·')
-					ctx.reset_color()
-					xx += 1
-				}
-				else {
-					ctx.draw_text(view.x + xx, i, c.ascii_str())
-					xx += 1
-				}
-			}
-		}
-		ctx.reset_bg_color()
-	} else {
-		mut xx := 0
-		for ci, c in line_cpy {
-			if ci > ctx.window_width {
-				return
-			}
-			match c {
-				`\t` {
-					ctx.set_color(r: 120, g: 120, b: 120)
-					ctx.draw_text(view.x + xx, i, '->->')
-					ctx.reset_color()
-					xx += 4
-				}
-				` ` {
-					ctx.set_color(r: 120, g: 120, b: 120)
-					ctx.draw_text(view.x + xx, i, '·')
-					ctx.reset_color()
-					xx += 1
-				}
-				else {
-					ctx.draw_text(view.x + xx, i, c.ascii_str())
-					xx += 1
-				}
-			}
-		}
-	}
-}
-
-// 0 - Default
-// 1 - Block (blinking)
-// 2 - Block (steady)
-// 3 - Underline (blinking)
-// 4 - Underline (steady)
-// 5 - Bar (blinking)
-// 6 - Bar (steady)
-/*
-fn set_cursor_to_block(mut ctx draw.Contextable) {
-	ctx.write('\x1b[0 q')
-}
-
-fn set_cursor_to_underline(mut ctx draw.Contextable) {
-	ctx.write('\x1b[4 q')
-}
-
-fn set_cursor_to_vertical_bar(mut ctx draw.Contextable) {
-	ctx.write('\x1b[6 q')
-}
-*/
 
 fn (mut view View) exec(op chords.Op) {
 	match op.kind {
@@ -1244,18 +991,6 @@ fn (mut view View) x() {
 	view.cursor.pos.x = pos.x
 	view.cursor.pos.y = pos.y
 }
-
-/*
-fn (mut view View) copy_lines_into_clipboard(start int, end int) {
-	assert start >= 0
-	assert end >= 0
-	assert end + 1 <= view.buffer.lines.len
-	view.clipboard.copy(arrays.join_to_string(view.buffer.lines[start..end + 1].clone(),
-		'\n', fn (s string) string {
-		return s
-	}))
-}
-*/
 
 fn (mut view View) visual_d(overwrite_y_lines bool) {}
 

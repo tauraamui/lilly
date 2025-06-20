@@ -22,6 +22,11 @@ struct Debug {
 
 const font_size = 16
 
+
+pub fn (mut debug Debug) jump_line_to_middle(y int) {}
+
+fn (mut debug Debug) set_from(from int) {}
+
 // It turns out that the TUI renderer actually considers 0 + 1 to be the same thing.
 // So technically we can say that the top left first possible to render position is 1, 1 instead of 0, 0.
 // Ok, for so for GUI rendering of text, or at least the invocation of "draw_text", it also seems to consider
