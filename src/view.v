@@ -1912,7 +1912,9 @@ fn (mut view View) shift_a() {
 }
 
 fn (mut view View) y() {
-	defer { view.leader_state.reset() }
+	defer {
+		view.escape()
+	}
 	assert view.cursor.sel_active() // if the selection pos isn't set the rest of this makes little sense
 	match view.leader_state.mode {
 		.visual {
