@@ -41,7 +41,7 @@ mut:
 	// NEW
 	active_view                  ActiveView
 	splash_screen                ui.SplashScreen
-	view_port                    ?ui.ViewPort
+	view_port                    Viewable
 
 	// OLD
 	view                              Viewable
@@ -86,7 +86,6 @@ pub fn open_lilly(
 	}
 	lilly.resolve_workspace_files = lilly.workspace.get_files
 
-	lilly.view = new_splash(commit_hash, lilly.workspace.config.leader_key)
 	if file_path.len != 0 {
 		lilly.open_file(file_path)!
 	}
