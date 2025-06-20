@@ -22,6 +22,9 @@ struct Debug {
 
 const font_size = 16
 
+
+pub fn (mut debug Debug) jump_cursor_to(y int) {}
+
 fn (mut debug Debug) set_from(from int) {}
 
 // It turns out that the TUI renderer actually considers 0 + 1 to be the same thing.

@@ -77,6 +77,8 @@ pub fn new_splash(commit_hash string, leader_key string) Viewable {
 	return splash
 }
 
+pub fn (splash SplashScreen) jump_cursor_to(y int) {}
+
 pub fn (splash SplashScreen) set_from(from int) {}
 
 pub fn (splash SplashScreen) draw(mut ctx draw.Contextable) {

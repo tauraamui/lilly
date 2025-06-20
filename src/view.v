@@ -457,6 +457,10 @@ fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes 
 	return res
 }
 
+pub fn (mut view View) jump_line_to_middle(y int) {
+	view.set_from(y)
+}
+
 pub fn (mut view View) set_from(from int) {
 	view.from = from
 	view.cursor.pos.y = from
@@ -479,6 +483,7 @@ fn (mut view View) set_current_syntax_idx(ext string) {
 interface Viewable {
 	file_path string
 mut:
+	jump_cursor_to(int)
 	set_from(int)
 	draw(mut draw.Contextable)
 	on_key_down(draw.Event, mut Root)
