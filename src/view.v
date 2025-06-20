@@ -1322,7 +1322,6 @@ fn (mut view View) escape() {
 	view.clamp_cursor_x_pos()
 	view.cmd_buf.clear()
 	view.search.clear()
-	view.leader_state.reset()
 
 	// if current line only contains whitespace prefix clear the line
 	if view.buffer.lines.len > 0 {
@@ -1482,7 +1481,6 @@ fn (mut view View) f(e draw.Event) {
 			}
 		}
 		view.clamp_cursor_within_document_bounds()
-		view.leader_state.reset()
 		view.escape()
 		return
 	}
@@ -1499,7 +1497,7 @@ fn (mut view View) g() {
 		} else {
 			view.jump_cursor_to(0)
 		}
-		view.leader_state.reset()
+		view.escape()
 	}
 	view.clamp_cursor_x_pos()
 }
@@ -1747,7 +1745,7 @@ fn (mut view View) d() {
 				pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
 				view.cursor.pos.x = pos.x
 				view.cursor.pos.y = pos.y
-				view.leader_state.reset()
+				view.escape()
 			}
 		}
 		.visual_line {
@@ -1763,7 +1761,7 @@ fn (mut view View) d() {
 			pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
 			view.cursor.pos.x = pos.x
 			view.cursor.pos.y = pos.y
-			view.leader_state.reset()
+			view.escape()
 		}
 		else {}
 	}
@@ -1840,7 +1838,7 @@ fn (mut view View) z() {
 	if view.leader_state.z_count == 1 { view.leader_state.mode = .pending_z }
 	if view.leader_state.z_count == 2 {
 		view.center_text_around_cursor()
-		view.leader_state.reset()
+		view.escape()
 	}
 }
 
