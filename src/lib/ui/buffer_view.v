@@ -70,7 +70,7 @@ pub fn (mut buf_view BufferView) draw(
 			document_line_num, cursor_y_pos, from_line_num, relative_line_nums
 		)
 
-		is_cursor_line := document_line_num == cursor_y_pos
+		is_cursor_line := (document_line_num == cursor_y_pos) && !(current_mode == .visual || current_mode == .visual_line)
 		if current_mode != .visual_line && is_cursor_line {
 			cursor_line_color := ctx.theme().cursor_line_color
 			ctx.set_bg_color(draw.Color{ r: cursor_line_color.r, g: cursor_line_color.g, b: cursor_line_color.b })
