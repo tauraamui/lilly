@@ -70,7 +70,7 @@ pub fn (mut buf_view BufferView) draw(
 			document_line_num, cursor_y_pos, from_line_num, relative_line_nums
 		)
 
-		is_cursor_line := document_line_num == cursor_y_pos
+		is_cursor_line := (document_line_num == cursor_y_pos) && !(current_mode == .visual || current_mode == .visual_line)
 		if current_mode != .visual_line && is_cursor_line {
 			cursor_line_color := ctx.theme().cursor_line_color
 			ctx.set_bg_color(draw.Color{ r: cursor_line_color.r, g: cursor_line_color.g, b: cursor_line_color.b })
@@ -297,19 +297,19 @@ fn render_segment_in_visual_mode(
 		return render_segment_in_visual_mode_unselected(mut ctx, segment_bounds, segment, fg_color, x, y)
 	}
 
-	selection_starts_within_segment := segment_bounds.start < selection_span.min_x && segment_bounds.end > selection_span.min_x
-	selection_ends_within_segment   := segment_bounds.start < selection_span.max_x && segment_bounds.end > selection_span.max_x
+	selection_starts_within_segment := segment_bounds.start <= selection_span.min_x && segment_bounds.end >= selection_span.min_x
+	selection_ends_within_segment   := segment_bounds.start <= selection_span.max_x && segment_bounds.end >= selection_span.max_x
 
 	if selection_starts_within_segment && selection_ends_within_segment {
 		return render_segment_in_visual_mode_selection_starts_and_ends_within(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span)
 	}
 
 	if selection_starts_within_segment && !selection_ends_within_segment {
-		return render_segment_in_visual_mode_selection_starts_within_but_does_not_end_within(mut ctx, segment_bounds, segment, fg_color, x, y)
+		return render_segment_in_visual_mode_selection_starts_within_but_does_not_end_within(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span)
 	}
 
 	if !selection_starts_within_segment && selection_ends_within_segment {
-		return render_segment_in_visual_mode_selection_ends_within_but_does_not_start_within(mut ctx, segment_bounds, segment, fg_color, x, y)
+		return render_segment_in_visual_mode_selection_ends_within_but_does_not_start_within(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span)
 	}
 
 	return render_segment_in_visual_mode_current_line_is_fully_selected(mut ctx, segment_bounds, segment, fg_color, x, y)
@@ -373,16 +373,44 @@ fn render_segment_in_visual_mode_selection_starts_and_ends_within(
 fn render_segment_in_visual_mode_selection_starts_within_but_does_not_end_within(
 	mut ctx draw.Contextable, segment_bounds TokenBounds,
 	segment string, fg_color tui.Color,
-	x int, y int
+	x int, y int, selection_span SelectionSpan
 ) int {
+	selected_segment_span_start := selection_span.min_x - segment_bounds.start
+	segment_unselected_part     := segment.runes()[..selected_segment_span_start].string()
+
+	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
+	ctx.draw_text(x, y, segment_unselected_part)
+
+	x_offset := utf8_str_visible_length(segment_unselected_part)
+
+	segment_selected_part := segment.runes()[selected_segment_span_start..].string()
+	bg_color := ctx.theme().selection_highlight_color
+	ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
+	ctx.reset_color()
+	ctx.draw_text(x + x_offset, y, segment_selected_part)
+
 	return utf8_str_visible_length(segment)
 }
 
 fn render_segment_in_visual_mode_selection_ends_within_but_does_not_start_within(
 	mut ctx draw.Contextable, segment_bounds TokenBounds,
 	segment string, fg_color tui.Color,
-	x int, y int
+	x int, y int, selection_span SelectionSpan
 ) int {
+	selected_segment_span_end := selection_span.max_x - segment_bounds.start
+	segment_selected_part     := segment.runes()[..selected_segment_span_end].string()
+
+	bg_color := ctx.theme().selection_highlight_color
+	ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
+	ctx.reset_color()
+	ctx.draw_text(x, y, segment_selected_part)
+
+	x_offset := utf8_str_visible_length(segment_selected_part)
+
+	segment_last_part := segment.runes()[selected_segment_span_end..].string()
+	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
+	ctx.reset_bg_color()
+	ctx.draw_text(x + x_offset, y, segment_last_part)
 	return utf8_str_visible_length(segment)
 }
 
