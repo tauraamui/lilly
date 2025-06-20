@@ -77,6 +77,8 @@ pub fn new_splash(commit_hash string, leader_key string) Viewable {
 	return splash
 }
 
+pub fn (splash SplashScreen) set_from(from int) {}
+
 pub fn (splash SplashScreen) draw(mut ctx draw.Contextable) {
 	offset_x := 0
 	mut offset_y := 0 + f64(ctx.window_height()) * 0.1

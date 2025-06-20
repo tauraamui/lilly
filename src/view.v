@@ -457,6 +457,12 @@ fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes 
 	return res
 }
 
+pub fn (mut view View) set_from(from int) {
+	view.from = from
+	view.cursor.pos.y = from
+	view.clamp_cursor_within_document_bounds()
+}
+
 fn resolve_syntax_id(syns []syntaxlib.Syntax, ext string) int {
 	for i, syntax in syns {
 		if ext in syntax.extensions {
@@ -473,6 +479,7 @@ fn (mut view View) set_current_syntax_idx(ext string) {
 interface Viewable {
 	file_path string
 mut:
+	set_from(int)
 	draw(mut draw.Contextable)
 	on_key_down(draw.Event, mut Root)
 	on_mouse_scroll(draw.Event)
