@@ -120,10 +120,12 @@ fn (mut lilly Lilly) open_file_with_reader_at(path string, pos ui.CursorPos, lin
 	if mut existing_file_buff := lilly.file_buffers[path] {
 		if existing_view := lilly.buffer_views[existing_file_buff.uuid] {
 			lilly.view = existing_view
+			lilly.view.set_from(pos.y)
 			return
 		}
 		lilly.view = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
 					lilly.workspace.syntaxes(), lilly.clipboard, mut existing_file_buff)
+		lilly.view.set_from(pos.y)
 		lilly.buffer_views[existing_file_buff.uuid] = lilly.view
 		return
 	}
@@ -134,6 +136,7 @@ fn (mut lilly Lilly) open_file_with_reader_at(path string, pos ui.CursorPos, lin
 	lilly.file_buffers[path] = buff
 	lilly.view = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
 				lilly.workspace.syntaxes(), lilly.clipboard, mut buff)
+	lilly.view.set_from(pos.y)
 	lilly.buffer_views[buff.uuid] = lilly.view
 }
 
