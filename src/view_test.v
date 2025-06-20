@@ -609,150 +609,6 @@ struct DrawnTextRec {
 	pos     ui.CursorPos
 }
 
-fn test_draw_text_line_visual_selection_start_end_on_same_line() {
-	mut drawn_text := []DrawnTextRec{}
-	mut drawn_text_ref := &drawn_text
-
-	mut m_ctx := MockContextable{
-		on_draw_cb: fn [mut drawn_text_ref] (x int, y int, text string) {
-			drawn_text_ref << DrawnTextRec{
-				content: text,
-				pos:     ui.CursorPos{ x: x, y: y }
-			}
-		}
-	}
-
-	mut m_cursor := ui.BufferCursor{
-		pos: ui.CursorPos{ x: 71, y: 0 }
-	}
-	m_cursor.set_selection(ui.CursorPos{ x: 44, y: 0 })
-	document_line := 'This part of the text is before the selection but this part is within it, and this part is after it'
-	draw_text_line_within_visual_selection(
-		mut m_ctx, resolve_test_syntax(),
-		m_cursor, draw.Color{ r: 10, g: 10, b: 10 },
-		0, 0, 0, 0, document_line, document_line
-	)
-
-	assert drawn_text.len == 3
-}
-
-fn test_draw_text_line_within_visual_selection_start_end_on_same_line_with_tab_prefix() {
-	mut drawed_text := []string{}
-	mut drawed_text_ref := &drawed_text
-	mut m_ctx := MockContextable{
-		on_draw_cb: fn [mut drawed_text_ref] (x int, y int, text string) {
-			drawed_text_ref << text
-		}
-	}
-
-	mut cursor := ui.BufferCursor{
-		pos: ui.CursorPos{
-			x: 16
-			y: 0
-		}
-	}
-	cursor.set_selection(ui.CursorPos{ x: 4, y: 0 })
-	document_line := '\tpre_sel := line_runes[..selection_start.x]'
-	draw_text_line_within_visual_selection(mut m_ctx, resolve_test_syntax(), cursor, draw.Color{
-		r: 10
-		g: 10
-		b: 10
-	}, 0, 0, 0, 0, document_line.replace('\t', ' '.repeat(4)), document_line)
-
-	assert drawed_text.len >= 1
-	assert drawed_text[0] == '    pre'
-	assert drawed_text[1] == '_sel := line'
-	assert drawed_text[2] == '_runes[..selection_start.x]'
-}
-
-fn test_draw_text_line_within_visual_selection_start_end_on_same_line() {
-	mut drawed_text := []string{}
-	mut drawed_text_ref := &drawed_text
-	mut m_ctx := MockContextable{
-		on_draw_cb: fn [mut drawed_text_ref] (x int, y int, text string) {
-			drawed_text_ref << text
-		}
-	}
-	mut cursor := ui.BufferCursor{
-		pos: ui.CursorPos{
-			x: 16
-			y: 0
-		}
-	}
-	cursor.set_selection(ui.CursorPos{ x: 4, y: 0 })
-
-	document_line := 'This is a line to draw.'
-	draw_text_line_within_visual_selection(mut m_ctx, resolve_test_syntax(), cursor, draw.Color{
-		r: 10
-		g: 10
-		b: 10
-	}, 0, 0, 0, 0, document_line.replace('\t', ' '.repeat(4)), document_line)
-
-	assert drawed_text.len >= 1
-	assert drawed_text[0] == 'This'
-	assert drawed_text[1] == ' is a line t'
-	assert drawed_text[2] == 'o draw.'
-}
-
-fn test_draw_text_line_within_visual_selection_start_pre_line_end_post_line() {
-	mut drawed_text := []string{}
-	mut drawed_text_ref := &drawed_text
-	mut m_ctx := MockContextable{
-		on_draw_cb: fn [mut drawed_text_ref] (x int, y int, text string) {
-			drawed_text_ref << text
-		}
-	}
-	mut cursor := ui.BufferCursor{
-		pos: ui.CursorPos{
-			x: 16
-			y: 2
-		}
-	}
-	cursor.set_selection(ui.CursorPos{ x: 4, y: 0 })
-
-	document_line := 'This is a line to draw.'
-	draw_text_line_within_visual_selection(mut m_ctx, resolve_test_syntax(), cursor, draw.Color{
-		r: 10
-		g: 10
-		b: 10
-	}, 0, 0, 1, 2, document_line.replace('\t', ' '.repeat(4)), document_line)
-
-	assert drawed_text.len >= 1
-	assert drawed_text[0] == 'This is a line to draw.'
-}
-
-fn test_draw_text_line_within_visual_selection_first_line_with_selection_end_on_second_line() {
-	mut drawed_text := []string{}
-	mut drawed_text_ref := &drawed_text
-	mut m_ctx := MockContextable{
-		on_draw_cb: fn [mut drawed_text_ref] (x int, y int, text string) {
-			drawed_text_ref << text
-		}
-	}
-	mut cursor := ui.BufferCursor{
-		pos: ui.CursorPos{ x: 0, y: 1 }
-	}
-	cursor.set_selection(ui.CursorPos{ x: 0, y: 0 })
-
-	mut document_line := 'This is a line to draw.'
-	draw_text_line_within_visual_selection(mut m_ctx, resolve_test_syntax(), cursor, draw.Color{
-		r: 10
-		g: 10
-		b: 10
-	}, 0, 0, 0, 0, document_line.replace('\t', ' '.repeat(4)), document_line)
-
-	document_line = 'This is a second line.'
-	draw_text_line_within_visual_selection(mut m_ctx, resolve_test_syntax(), cursor, draw.Color{
-		r: 10
-		g: 10
-		b: 10
-	}, 0, 0, 1, 1, document_line.replace('\t', ' '.repeat(4)), document_line)
-
-	assert drawed_text.len >= 1
-	assert drawed_text[0] == 'This is a line to draw.'
-	assert drawed_text[1] == 'This is a second line.'
-}
-
 struct DrawnText {
 	x int
 	y int
@@ -3204,41 +3060,6 @@ fn test_search_line_correct_overwrite() {
 	assert fake_view.search.cursor_x == 1
 }
 
-fn test_view_draw_document() {
-    mut fake_view := View{
-		log: log.Log{}
-        leader_state: ViewLeaderState{ mode: .normal }
-        height: 15 // Set a small height for testing
-		buffer: buffer.Buffer.new("", false)
-    }
-
-    fake_view.buffer.lines = [
-        'Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5',
-        'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10',
-        'Line 11', 'Line 12', 'Line 13', 'Line 14', 'Line 15'
-    ]
-
-	assert fake_view.from == 0
-
-	mut drawn_text := []string{}
-	mut ref := &drawn_text
-	mut mock_drawer := TestDrawer{
-		draw_text_callback: fn [mut ref] (x int, y int, text string) { ref << text }
-		draw_rect_callback: unsafe { nil }
-		window_height: fake_view.height
-	}
-	fake_view.draw(mut mock_drawer)
-
-	assert fake_view.to == 13
-	drawn_text_with_status_line_removed := drawn_text[..drawn_text.len - 13]
-	assert drawn_text_with_status_line_removed == [
-		"1", "Line 1", "2", "Line 2", "3", "Line 3", "4", "Line 4",
-		"5", "Line 5", "6", "Line 6", "7", "Line 7", "8", "Line 8",
-		"9", "Line 9", "10", "Line 10", "11", "Line 11", "12", "Line 12",
-		"13", "Line 13"
-	]
-}
-
 struct DrawnRect {
 	x int
 	y int
@@ -3276,7 +3097,7 @@ fn test_view_draw_document_with_method_using_buffer_view() {
 		window_height: fake_view.height
 	}
 	fake_view.update_to()
-	fake_view.draw_x(mut mock_drawer)
+	fake_view.draw_document(mut mock_drawer)
 
 	assert fake_view.to == 13
 	drawn_text_with_status_line_removed := drawn_text[..drawn_text.len - 13]
