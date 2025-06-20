@@ -25,6 +25,11 @@ import lib.draw
 import lib.ui
 import lib.core
 
+enum ActiveView as u8 {
+	splash_screen
+	view_port
+}
+
 @[heap]
 struct Lilly {
 	line_reader                       ?fn (file_path string) ![]string
@@ -32,6 +37,13 @@ struct Lilly {
 mut:
 	log                               log.Log
 	clipboard                         clipboardv3.Clipboard
+
+	// NEW
+	active_view                  ActiveView
+	splash_screen                ui.SplashScreen
+	view_port                    ?ui.ViewPort
+
+	// OLD
 	view                              Viewable
 	debug_view                        bool
 	use_gap_buffer                    bool
@@ -78,6 +90,8 @@ pub fn open_lilly(
 	if file_path.len != 0 {
 		lilly.open_file(file_path)!
 	}
+
+	lilly.splash_screen = ui.SplashScreen.new(commit_hash, lilly.workspace.config.leader_key)
 	return &lilly
 }
 
@@ -117,6 +131,7 @@ fn (mut lilly Lilly) open_file_at(path string, pos ?ui.CursorPos) ! {
 }
 
 fn (mut lilly Lilly) open_file_with_reader_at(path string, pos ?ui.CursorPos, line_reader fn (path string) ![]string) ! {
+	defer { lilly.active_view = .view_port }
 	if mut existing_file_buff := lilly.file_buffers[path] {
 		if existing_view := lilly.buffer_views[existing_file_buff.uuid] {
 			lilly.view = existing_view
@@ -326,7 +341,11 @@ fn (mut lilly Lilly) close_todo_comments_picker() {
 }
 
 pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
-	lilly.view.draw(mut ctx)
+	if lilly.active_view == .splash_screen {
+		lilly.splash_screen.draw(mut ctx)
+	} else {
+		lilly.view.draw(mut ctx)
+	}
 
 	if mut file_picker := lilly.file_picker_modal {
 		file_picker.draw(mut ctx)
@@ -374,7 +393,22 @@ pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
 		}
 	}
 
-	lilly.view.on_key_down(e, mut lilly)
+	match lilly.active_view {
+		.splash_screen {
+			action := lilly.splash_screen.on_key_down(e)
+			match action {
+				.no_op {}
+				.quit                                { lilly.quit() or {} }
+				.open_file_picker                    { lilly.open_file_picker(false) }
+				.open_file_picker_special            { lilly.open_file_picker(true) }
+				.open_inactive_buffer_picker         { lilly.open_inactive_buffer_picker(false) }
+				.open_inactive_buffer_picker_special { lilly.open_inactive_buffer_picker(true) }
+			}
+		}
+		.view_port {
+			lilly.view.on_key_down(e, mut lilly)
+		}
+	}
 }
 
 // NOTE(tauraamui) [06/04/2025]: just tried reading the below comment again, lol wtf am I on about, I understand the premise
