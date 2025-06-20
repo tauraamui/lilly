@@ -297,8 +297,8 @@ fn render_segment_in_visual_mode(
 		return render_segment_in_visual_mode_unselected(mut ctx, segment_bounds, segment, fg_color, x, y)
 	}
 
-	selection_starts_within_segment := segment_bounds.start < selection_span.min_x && segment_bounds.end > selection_span.min_x
-	selection_ends_within_segment   := segment_bounds.start < selection_span.max_x && segment_bounds.end > selection_span.max_x
+	selection_starts_within_segment := segment_bounds.start <= selection_span.min_x && segment_bounds.end >= selection_span.min_x
+	selection_ends_within_segment   := segment_bounds.start <= selection_span.max_x && segment_bounds.end >= selection_span.max_x
 
 	if selection_starts_within_segment && selection_ends_within_segment {
 		return render_segment_in_visual_mode_selection_starts_and_ends_within(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span)
