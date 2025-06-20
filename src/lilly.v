@@ -112,20 +112,24 @@ fn (mut lilly Lilly) open_file(path string) ! {
 	return lilly.open_file_at(extracted_path, extracted_pos)
 }
 
-fn (mut lilly Lilly) open_file_at(path string, pos ui.CursorPos) ! {
+fn (mut lilly Lilly) open_file_at(path string, pos ?ui.CursorPos) ! {
 	return lilly.open_file_with_reader_at(path, pos, lilly.line_reader or { os.read_lines })
 }
 
-fn (mut lilly Lilly) open_file_with_reader_at(path string, pos ui.CursorPos, line_reader fn (path string) ![]string) ! {
+fn (mut lilly Lilly) open_file_with_reader_at(path string, pos ?ui.CursorPos, line_reader fn (path string) ![]string) ! {
 	if mut existing_file_buff := lilly.file_buffers[path] {
 		if existing_view := lilly.buffer_views[existing_file_buff.uuid] {
 			lilly.view = existing_view
-			lilly.view.set_from(pos.y)
+			if uw_pos := pos {
+				lilly.view.jump_cursor_to(uw_pos.y)
+			}
 			return
 		}
 		lilly.view = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
 					lilly.workspace.syntaxes(), lilly.clipboard, mut existing_file_buff)
-		lilly.view.set_from(pos.y)
+		if uw_pos := pos {
+			lilly.view.jump_cursor_to(uw_pos.y)
+		}
 		lilly.buffer_views[existing_file_buff.uuid] = lilly.view
 		return
 	}
@@ -136,13 +140,15 @@ fn (mut lilly Lilly) open_file_with_reader_at(path string, pos ui.CursorPos, lin
 	lilly.file_buffers[path] = buff
 	lilly.view = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
 				lilly.workspace.syntaxes(), lilly.clipboard, mut buff)
-	lilly.view.set_from(pos.y)
+	if uw_pos := pos {
+		lilly.view.jump_cursor_to(uw_pos.y)
+	}
 	lilly.buffer_views[buff.uuid] = lilly.view
 }
 
 const colon = ":".runes()[0]
 
-fn extract_pos_from_path(file_path string) (string, ui.CursorPos) {
+fn extract_pos_from_path(file_path string) (string, ?ui.CursorPos) {
 	mut pos := ui.CursorPos{ x: -1, y: -1}
 
 	mut from_index := file_path.len
@@ -152,7 +158,7 @@ fn extract_pos_from_path(file_path string) (string, ui.CursorPos) {
 		if c != colon { continue }
 		if from_index == file_path.len {
 			pos_x_str := file_path[i + 1..from_index]
-			pos.y = strconv.atoi(pos_x_str) or { 0 }
+			pos.y = strconv.atoi(pos_x_str) or { -1 }
 			from_index = i
 			last_colon_index = i
 			continue
@@ -161,14 +167,19 @@ fn extract_pos_from_path(file_path string) (string, ui.CursorPos) {
 		if from_index < file_path.len {
 			pos.x = pos.y
 			pos_y_str := file_path[i + 1..from_index]
-			pos.y = strconv.atoi(pos_y_str) or { 0 }
+			pos.y = strconv.atoi(pos_y_str) or { -1 }
 			last_colon_index = i
 			break
 		}
 	}
 
+	if pos.x == -1 && pos.y == -1 {
+		return file_path.trim_right(":"), none
+	}
+
 	if pos.x == -1 { pos.x = 0 }
 	if pos.y == -1 { pos.y = 0 }
+
 	if last_colon_index == 0 { last_colon_index = file_path.len }
 
 	return file_path[..last_colon_index], pos
