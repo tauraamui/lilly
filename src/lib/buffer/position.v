@@ -18,6 +18,14 @@ pub fn (p Position) add(d Distance) Position {
 	}
 }
 
+pub fn (mut p Position) apply(d Distance) {
+	offset := if d.lines > 0 { d.offset } else { p.offset + d.offset }
+	p = Position {
+		line: p.line + d.lines
+		offset: offset
+	}
+}
+
 fn (a Position) < (b Position) bool {
 	return match true {
 		a.line < b.line     { true }
