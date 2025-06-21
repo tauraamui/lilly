@@ -456,8 +456,8 @@ fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes 
 		show_whitespace:    false
 		clipboard:          _clipboard
 		buffer:             buff
+		buf_view:           ui.BufferView.new(syntaxes, syn_id)
 	}
-	res.buf_view = ui.BufferView.new(&res.buffer, syntaxes, syn_id)
 	res.path = res.buffer.file_path
 	res.cursor.clear_selection()
 	return res
@@ -552,7 +552,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 
 	selection_highlight_color := ctx.theme().selection_highlight_color
 	view.buf_view.draw(
-		mut ctx, 0, 0,
+		mut ctx, view.buffer, 0, 0,
 		ctx.window_width(), ctx.window_height() - 2,
 		view.from, 0,
 		view.config.relative_line_numbers,
