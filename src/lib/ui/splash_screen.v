@@ -12,26 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module main
+module ui
 
 import math
 import lib.draw
 import lib.utf8
 
-const logo_contents = $embed_file('./src/splash-logo.txt')
+const logo_contents = $embed_file('./splash-logo.txt')
 
-struct Logo {
+struct SplashLogo {
 mut:
 	data  []string
 	width int
 }
 
-struct SplashScreen {
+pub struct SplashScreen {
 	commit_hash string
 pub:
 	file_path string
 mut:
-	logo         Logo
+	logo         SplashLogo
 	leader_state LeaderState
 	leader_key   string
 }
@@ -54,14 +54,14 @@ fn reset_leader_state(mut state LeaderState) {
 	state.normal  = false
 }
 
-pub fn new_splash(commit_hash string, leader_key string) Viewable {
+pub fn SplashScreen.new(commit_hash string, leader_key string) SplashScreen {
 	assert commit_hash.len > 0
 	assert leader_key.len == 1
 
 	mut splash := SplashScreen{
 		commit_hash: commit_hash
 		file_path:   '**lss**'
-		logo:        Logo{
+		logo:        SplashLogo{
 			data: logo_contents.to_string().split_into_lines()
 		}
 		leader_key: leader_key
@@ -175,7 +175,16 @@ fn has_colouring_directives(line string) bool {
 
 pub fn (mut splash SplashScreen) on_mouse_scroll(e draw.Event) {}
 
-pub fn (mut splash SplashScreen) on_key_down(e draw.Event, mut root Root) {
+pub enum SplashScreenAction as u8 {
+	no_op
+	quit
+	open_file_picker
+	open_inactive_buffer_picker
+	open_file_picker_special
+	open_inactive_buffer_picker_special
+}
+
+pub fn (mut splash SplashScreen) on_key_down(e draw.Event) SplashScreenAction {
 	match e.utf8 {
 		splash.leader_key { splash.leader_state.leader_mode = true }
 		else {}
@@ -184,12 +193,9 @@ pub fn (mut splash SplashScreen) on_key_down(e draw.Event, mut root Root) {
 		.escape {
 			if splash.leader_state.leader_mode {
 				reset_leader_state(mut splash.leader_state)
-				return
 			}
-			root.quit() or {}
+			return .quit
 		}
-		// leader_key { splash.leader_mode = true }
-		// TODO(tauraamui): move to f() method, this line is a too complicated/long statement now
 		.x {
 			if splash.leader_state.leader_mode {
 				splash.leader_state.x_count += 1
@@ -202,9 +208,8 @@ pub fn (mut splash SplashScreen) on_key_down(e draw.Event, mut root Root) {
 				if !splash.leader_state.special { splash.leader_state.normal = true }
 			}
 			if splash.leader_state.f_count == 2 {
-				// root.open_file_finder(splash.leader_state.special)
-				root.open_file_picker(splash.leader_state.special)
-				reset_leader_state(mut splash.leader_state)
+				defer { reset_leader_state(mut splash.leader_state) }
+				return if !splash.leader_state.special { .open_file_picker} else { .open_file_picker_special }
 			}
 		}
 		.b {
@@ -212,12 +217,12 @@ pub fn (mut splash SplashScreen) on_key_down(e draw.Event, mut root Root) {
 				splash.leader_state.b_count += 1
 				if !splash.leader_state.special { splash.leader_state.normal = true }
 				if splash.leader_state.f_count == 1 && splash.leader_state.b_count >= 1 {
-					// root.open_inactive_buffer_finder(splash.leader_state.special)
-					root.open_inactive_buffer_picker(splash.leader_state.special)
-					reset_leader_state(mut splash.leader_state)
+					defer { reset_leader_state(mut splash.leader_state) }
+					return if !splash.leader_state.special { .open_inactive_buffer_picker } else { .open_inactive_buffer_picker_special }
 				}
 			}
 		}
 		else {}
 	}
+	return .no_op
 }

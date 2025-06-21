@@ -16,7 +16,16 @@ module main
 
 import lib.draw
 
-fn (mut view View) on_key_down_leader_mode(e draw.Event, mut root Root) {
+enum ViewAction as u8 {
+	no_op
+	open_file_picker
+	open_inactive_buffer_picker
+	open_file_picker_special
+	open_inactive_buffer_picker_special
+	open_todo_comments_picker
+}
+
+fn (mut view View) on_key_down_leader_mode(e draw.Event, mut root Root) ViewAction {
 	match e.code {
 		.escape {
 			view.escape()
@@ -29,23 +38,25 @@ fn (mut view View) on_key_down_leader_mode(e draw.Event, mut root Root) {
 
 	match view.leader_state.suffix {
 		["f", "f"] {
-			root.open_file_picker(false)
-			view.escape()
+			defer { view.escape() }
+			return .open_file_picker
 		}
 		["f", "t", "c"] {
-			root.open_todo_comments_picker()
-			view.escape()
+			defer { view.escape() }
+			return .open_todo_comments_picker
 		}
 		["x","f","f"] {
-			root.open_file_picker(true)
-			view.escape()
+			defer { view.escape() }
+			return .open_file_picker_special
 		}
 		["f", "b"] {
+			defer { view.escape() }
 			root.open_inactive_buffer_picker(view.leader_state.special)
-			view.escape()
+			return if !view.leader_state.special { .open_inactive_buffer_picker } else { .open_inactive_buffer_picker_special }
 		}
 		else {}
 	}
+	return .no_op
 }
 
 fn (mut view View) on_key_down_normal_mode(e draw.Event, mut root Root) {
@@ -346,15 +357,14 @@ fn (mut view View) on_key_down_visual_line_mode(e draw.Event, mut root Root) {
 	}
 }
 
-fn (mut view View) on_key_down(e draw.Event, mut root Root) {
+fn (mut view View) on_key_down(e draw.Event, mut root Root) ViewAction {
 	match view.leader_state.mode {
 		.leader {
-			view.on_key_down_leader_mode(e, mut root)
-			return
+			return view.on_key_down_leader_mode(e, mut root)
 		}
 		.normal {
 			view.on_key_down_normal_mode(e, mut root)
-			return
+			return .no_op
 		}
 		.visual {
 			view.on_key_down_visual_mode(e, mut root)
@@ -387,7 +397,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 					view.cmd_buf.up()
 				}
 				.down {
-					return
+					return .no_op
 				}
 				.backspace {
 					view.cmd_buf.backspace()
@@ -423,7 +433,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 					view.search.find(view.buffer.lines)
 				}
 				.tab {
-					pos := view.search.next_find_pos() or { return }
+					pos := view.search.next_find_pos() or { return .no_op }
 					view.jump_cursor_to(pos.line)
 				}
 				else {
@@ -433,12 +443,12 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 		}
 		.insert {
 			if e.modifiers == .ctrl {
-				return
+				return .no_op
 			}
 			// ignore the ASCII group separators
 			// FS, GS and RS
 			match e.ascii {
-				28...31 { return }
+				28...31 { return .no_op }
 				else {}
 			}
 			match e.code {
@@ -580,4 +590,5 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) {
 			}
 		}
 	}
+	return .no_op
 }

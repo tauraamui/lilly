@@ -435,7 +435,7 @@ fn (mut cmd_buf CmdBuffer) clear_err() {
 	cmd_buf.code = .blank
 }
 
-fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes []syntaxlib.Syntax, _clipboard clipboardv3.Clipboard, mut buff buffer.Buffer) Viewable {
+fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes []syntaxlib.Syntax, _clipboard clipboardv3.Clipboard, mut buff buffer.Buffer) View {
 	file_path := buff.file_path
 	syn_id := resolve_syntax_id(syntaxes, os.file_ext(file_path))
 	mut res := View{

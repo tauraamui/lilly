@@ -25,24 +25,39 @@ import lib.draw
 import lib.ui
 import lib.core
 
+enum ActiveView as u8 {
+	splash_screen
+	view_port
+}
+
 @[heap]
 struct Lilly {
-	line_reader                       ?fn (file_path string) ![]string
-	is_binary_file                    ?fn (file_path string) bool
+	line_reader                  ?fn (file_path string) ![]string
+	is_binary_file               ?fn (file_path string) bool
 mut:
-	log                               log.Log
-	clipboard                         clipboardv3.Clipboard
-	view                              Viewable
-	debug_view                        bool
-	use_gap_buffer                    bool
-	file_buffers                      map[string]buffer.Buffer
-	buffer_views                      map[buffer.UUID_t]Viewable
-	file_picker_modal                 ?ui.FilePickerModal
-	inactive_buffer_picker_modal      ?ui.FilePickerModal
-	todo_comments_picker_modal        ?ui.TodoCommentPickerModal
-	workspace                         workspace.Workspace
-	resolve_workspace_files           ?fn () []string
-	syntaxes                          []syntax.Syntax
+	// univseral data + state
+	log                          log.Log
+	clipboard                    clipboardv3.Clipboard
+	workspace                    workspace.Workspace
+	resolve_workspace_files      ?fn () []string
+	syntaxes                     []syntax.Syntax
+
+	// visual/ui stuff
+	active_view                  ActiveView
+	splash_screen                ui.SplashScreen
+	view_port                    View
+
+	// document/buffer data
+	file_buffers                 map[string]buffer.Buffer
+	buffer_views                 map[buffer.UUID_t]View
+
+	// visual overlay/modal stuff
+	file_picker_modal            ?ui.FilePickerModal
+	inactive_buffer_picker_modal ?ui.FilePickerModal
+	todo_comments_picker_modal   ?ui.TodoCommentPickerModal
+
+	debug_view                   bool
+	use_gap_buffer               bool
 }
 
 interface Root {
@@ -74,18 +89,21 @@ pub fn open_lilly(
 	}
 	lilly.resolve_workspace_files = lilly.workspace.get_files
 
-	lilly.view = new_splash(commit_hash, lilly.workspace.config.leader_key)
 	if file_path.len != 0 {
 		lilly.open_file(file_path)!
 	}
+
+	lilly.splash_screen = ui.SplashScreen.new(commit_hash, lilly.workspace.config.leader_key)
 	return &lilly
 }
 
 fn (mut lilly Lilly) start_debug() {
+	/*
 	lilly.debug_view = true
 	lilly.view = &Debug{
 		file_path: '**dbg**'
 	}
+	*/
 }
 
 fn is_binary_file(path string) bool {
@@ -119,18 +137,20 @@ fn (mut lilly Lilly) open_file_at(path string, pos ?ui.CursorPos) ! {
 fn (mut lilly Lilly) open_file_with_reader_at(path string, pos ?ui.CursorPos, line_reader fn (path string) ![]string) ! {
 	if mut existing_file_buff := lilly.file_buffers[path] {
 		if existing_view := lilly.buffer_views[existing_file_buff.uuid] {
-			lilly.view = existing_view
+			lilly.view_port = existing_view
 			if uw_pos := pos {
-				lilly.view.jump_line_to_middle(uw_pos.y)
+				lilly.view_port.jump_line_to_middle(uw_pos.y)
 			}
+			lilly.active_view = .view_port
 			return
 		}
-		lilly.view = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
+		lilly.view_port = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
 					lilly.workspace.syntaxes(), lilly.clipboard, mut existing_file_buff)
 		if uw_pos := pos {
-			lilly.view.jump_line_to_middle(uw_pos.y)
+			lilly.view_port.jump_line_to_middle(uw_pos.y)
 		}
-		lilly.buffer_views[existing_file_buff.uuid] = lilly.view
+		lilly.buffer_views[existing_file_buff.uuid] = lilly.view_port
+		lilly.active_view = .view_port
 		return
 	}
 
@@ -138,12 +158,13 @@ fn (mut lilly Lilly) open_file_with_reader_at(path string, pos ?ui.CursorPos, li
 	buff.read_lines(line_reader) or { return err }
 
 	lilly.file_buffers[path] = buff
-	lilly.view = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
+	lilly.view_port = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
 				lilly.workspace.syntaxes(), lilly.clipboard, mut buff)
 	if uw_pos := pos {
-		lilly.view.jump_line_to_middle(uw_pos.y)
+		lilly.view_port.jump_line_to_middle(uw_pos.y)
 	}
-	lilly.buffer_views[buff.uuid] = lilly.view
+	lilly.buffer_views[buff.uuid] = lilly.view_port
+	lilly.active_view = .view_port
 }
 
 const colon = ":".runes()[0]
@@ -219,7 +240,7 @@ fn (mut lilly Lilly) open_inactive_buffer_picker(special_mode bool) {
 }
 
 fn (mut lilly Lilly) resolve_inactive_file_buffer_paths() []string {
-	return lilly.buffer_views.values().filter(it != lilly.view).map(it.file_path)
+	return lilly.buffer_views.values().filter(it != lilly.view_port).map(it.file_path)
 }
 
 fn (mut lilly Lilly) close_inactive_buffer_picker() {
@@ -304,7 +325,7 @@ fn resolve_matches_within_buffer(file_buffer buffer.Buffer, matches chan buffer.
 }
 
 fn (mut lilly Lilly) resolve_todo_comments_for_active_buffer(mut matches []buffer.Match) {
-	file_path := lilly.view.file_path
+	file_path := lilly.view_port.file_path
 	mut match_iter := lilly.file_buffers[file_path].match_iterator("TODO".runes())
 
 	for !match_iter.done() {
@@ -326,7 +347,14 @@ fn (mut lilly Lilly) close_todo_comments_picker() {
 }
 
 pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
-	lilly.view.draw(mut ctx)
+	match lilly.active_view {
+		.splash_screen {
+			lilly.splash_screen.draw(mut ctx)
+		}
+		.view_port {
+			lilly.view_port.draw(mut ctx)
+		}
+	}
 
 	if mut file_picker := lilly.file_picker_modal {
 		file_picker.draw(mut ctx)
@@ -349,7 +377,7 @@ pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
 
 pub fn (mut lilly Lilly) on_mouse_scroll(e draw.Event) {
 	if e.direction == .unknown { return }
-	lilly.view.on_mouse_scroll(e)
+	lilly.view_port.on_mouse_scroll(e)
 }
 
 pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
@@ -374,7 +402,30 @@ pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
 		}
 	}
 
-	lilly.view.on_key_down(e, mut lilly)
+	match lilly.active_view {
+		.splash_screen {
+			action := lilly.splash_screen.on_key_down(e)
+			match action {
+				.no_op                               {}
+				.quit                                { lilly.quit() or {} }
+				.open_file_picker                    { lilly.open_file_picker(false) }
+				.open_file_picker_special            { lilly.open_file_picker(true) }
+				.open_inactive_buffer_picker         { lilly.open_inactive_buffer_picker(false) }
+				.open_inactive_buffer_picker_special { lilly.open_inactive_buffer_picker(true) }
+			}
+		}
+		.view_port {
+			action := lilly.view_port.on_key_down(e, mut lilly)
+			match action {
+				.no_op                               {}
+				.open_file_picker                    { lilly.open_file_picker(false) }
+				.open_file_picker_special            { lilly.open_file_picker(true) }
+				.open_inactive_buffer_picker         { lilly.open_inactive_buffer_picker(false) }
+				.open_inactive_buffer_picker_special { lilly.open_inactive_buffer_picker(true) }
+				.open_todo_comments_picker           { lilly.open_todo_comments_picker() }
+			}
+		}
+	}
 }
 
 // NOTE(tauraamui) [06/04/2025]: just tried reading the below comment again, lol wtf am I on about, I understand the premise
@@ -440,11 +491,9 @@ pub fn (mut lilly Lilly) quit() ! {
 	if dirty_count > 0 {
 		return error("Cannot quit: ${dirty_count} unsaved buffer(s). Save changes or use :q! to force quit")
 	}
-	lilly.view = unsafe { nil }
 	exit(0)
 }
 
 pub fn (mut lilly Lilly) force_quit() {
-    lilly.view = unsafe { nil }
     exit(0)
 }
