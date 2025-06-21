@@ -23,16 +23,14 @@ import lib.utf8
 import lib.core
 
 pub struct BufferView {
-	buf       &buffer.Buffer = unsafe { nil }
 	syntaxes  []syntax.Syntax
 	syntax_id int
 mut:
 	parser   syntax.Parser
 }
 
-pub fn BufferView.new(buf &buffer.Buffer, syntaxes []syntax.Syntax, syntax_id int) BufferView {
+pub fn BufferView.new(syntaxes []syntax.Syntax, syntax_id int) BufferView {
 	return BufferView{
-		buf: buf
 		syntaxes: syntaxes
 		syntax_id: syntax_id
 		parser: syntax.Parser.new(syntaxes)
@@ -41,6 +39,7 @@ pub fn BufferView.new(buf &buffer.Buffer, syntaxes []syntax.Syntax, syntax_id in
 
 pub fn (mut buf_view BufferView) draw(
 	mut ctx draw.Contextable,
+	buf buffer.Buffer,
 	x int, y int,
 	width int, height int,
 	from_line_num int,
@@ -50,16 +49,15 @@ pub fn (mut buf_view BufferView) draw(
 	cursor BufferCursor,
 ) {
 	cursor_y_pos := cursor.pos.y
-	if buf_view.buf == unsafe { nil } { return }
 	syntax_def := buf_view.syntaxes[buf_view.syntax_id] or { syntax.Syntax{} }
 
-	mut screenspace_x_offset := buf_view.buf.num_of_lines().str().runes().len
+	mut screenspace_x_offset := buf.num_of_lines().str().runes().len
 	mut screenspace_y_offset := 0
 
 	buf_view.parser.reset()
 	mut syntax_parser := buf_view.parser
 
-	for document_line_num, line in buf_view.buf.line_iterator() {
+	for document_line_num, line in buf.line_iterator() {
 		syntax_parser.parse_line(document_line_num, line)
 		// if we haven't reached the line to render in the document yet, skip this
 		if document_line_num < from_line_num { continue }
