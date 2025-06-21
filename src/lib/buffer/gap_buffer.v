@@ -43,6 +43,10 @@ fn GapBuffer.new(d string) GapBuffer {
 	return gb
 }
 
+pub fn (gap_buffer GapBuffer) read(range Range) ?string {
+	return ?string(none)
+}
+
 pub fn (mut gap_buffer GapBuffer) move_cursor_to(pos Pos) {
 	gap_sizee := gap_buffer.gap_end - gap_buffer.gap_start
 	offset := gap_buffer.find_offset(pos) or { return }
@@ -466,10 +470,6 @@ pub fn (gap_buffer GapBuffer) down_to_next_blank_line(pos Pos) ?Pos {
 	}
 
 	return cursor_loc
-}
-
-pub fn (gap_buffer GapBuffer) read(range Range) string {
-	return ""
 }
 
 @[inline]

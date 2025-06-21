@@ -268,6 +268,13 @@ pub fn (mut buffer Buffer) delete(ignore_newlines bool) bool {
 	return buffer.c_buffer.delete(ignore_newlines)
 }
 
+pub fn (buffer Buffer) read(range Range) ?string {
+	if buffer.use_gap_buffer {
+		return buffer.c_buffer.read(range)
+	}
+	return ?string(none)
+}
+
 pub fn (mut buffer Buffer) str() string {
 	return buffer.c_buffer.str()
 }
