@@ -400,7 +400,7 @@ pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
 		.splash_screen {
 			action := lilly.splash_screen.on_key_down(e)
 			match action {
-				.no_op {}
+				.no_op                               {}
 				.quit                                { lilly.quit() or {} }
 				.open_file_picker                    { lilly.open_file_picker(false) }
 				.open_file_picker_special            { lilly.open_file_picker(true) }
