@@ -18,3 +18,17 @@ pub fn (p Position) add(d Distance) Position {
 	}
 }
 
+fn (a Position) < (b Position) bool {
+	return match true {
+		a.line < b.line     { true }
+		a.line > b.line     { false }
+		a.offset < b.offset { true }
+		a.offset > b.offset { true }
+		else { false }
+	}
+}
+
+fn (a Position) == (b Position) bool {
+	return a.line == b.line && a.offset == b.offset
+}
+
