@@ -70,7 +70,7 @@ fn test_buffer_view_draws_lines_in_normal_mode_so_one_line_has_bg_the_rest_do_no
 
 	mut buf := buffer.Buffer.new("", false)
 	for i in 0..5 { buf.lines << "This is line ${i} in the document" }
-	mut buf_view := BufferView.new(&buf, [], 0)
+	mut buf_view := BufferView.new([], 0)
 
 	x := 0
 	y := 0
@@ -80,7 +80,7 @@ fn test_buffer_view_draws_lines_in_normal_mode_so_one_line_has_bg_the_rest_do_no
 	from_line_num := 0
 
 	buf_view.draw(
-		mut mock_ctx, x, y,
+		mut mock_ctx, buf, x, y,
 		width, height, from_line_num,
 		min_x, false, .normal, BufferCursor{ pos: CursorPos{ x: 0, y: 1 } }
 	)
@@ -163,7 +163,7 @@ fn test_buffer_view_draws_lines_in_visual_line_mode_just_top_line_selected() {
 
 	mut buf := buffer.Buffer.new("", false)
 	for i in 0..5 { buf.lines << "This is line ${i} in the document" }
-	mut buf_view := BufferView.new(&buf, [], 0)
+	mut buf_view := BufferView.new([], 0)
 
 	x := 0
 	y := 0
@@ -173,7 +173,7 @@ fn test_buffer_view_draws_lines_in_visual_line_mode_just_top_line_selected() {
 	from_line_num := 0
 
 	buf_view.draw(
-		mut mock_ctx, x, y,
+		mut mock_ctx, buf, x, y,
 		width, height, from_line_num,
 		min_x, false, .visual_line,
 		BufferCursor{ pos: CursorPos{ x: 0, y: 1 }, sel_start_pos: CursorPos{ x:0, y: 1 } }
@@ -250,7 +250,7 @@ fn test_buffer_view_draws_lines_0_to_max_height() {
 
 	mut buf := buffer.Buffer.new("", false)
 	for i in 0..5 { buf.lines << "This is line ${i} in the document" }
-	mut buf_view := BufferView.new(&buf, [], 0)
+	mut buf_view := BufferView.new([], 0)
 
 	x := 0
 	y := 0
@@ -260,7 +260,7 @@ fn test_buffer_view_draws_lines_0_to_max_height() {
 	from_line_num := 0
 
 	buf_view.draw(
-		mut mock_ctx, x, y,
+		mut mock_ctx, buf, x, y,
 		width, height, from_line_num,
 		min_x, false, .normal, BufferCursor{}
 	)
@@ -338,7 +338,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 
 	mut buf := buffer.Buffer.new("", false)
 	buf.lines << "Thisisthelineinthedocument"
-	mut buf_view := BufferView.new(&buf, [], 0)
+	mut buf_view := BufferView.new([], 0)
 
 	x := 0
 	y := 0
@@ -348,7 +348,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 	from_line_num := 0
 
 	buf_view.draw(
-		mut mock_ctx, x, y,
+		mut mock_ctx, buf, x, y,
 		width, height, from_line_num,
 		min_x, false, .normal, BufferCursor{}
 	)
@@ -388,7 +388,7 @@ fn test_buffer_view_draws_1_line_as_multiple_segments_colored_as_expected() {
 
 	mut buf := buffer.Buffer.new("", false)
 	buf.lines << "fn name_of_function()"
-	mut buf_view := BufferView.new(&buf, [], 0)
+	mut buf_view := BufferView.new([], 0)
 
 	x := 0
 	y := 0
@@ -398,7 +398,7 @@ fn test_buffer_view_draws_1_line_as_multiple_segments_colored_as_expected() {
 	from_line_num := 0
 
 	buf_view.draw(
-		mut mock_ctx, x, y,
+		mut mock_ctx, buf, x, y,
 		width, height, from_line_num,
 		min_x, false, .normal, BufferCursor{}
 	)
@@ -449,7 +449,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_single_emoji() {
 
 	mut buf := buffer.Buffer.new("", false)
 	buf.lines << utf8.emoji_shark_char
-	mut buf_view := BufferView.new(&buf, [], 0)
+	mut buf_view := BufferView.new([], 0)
 
 	x := 0
 	y := 0
@@ -459,7 +459,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_single_emoji() {
 	from_line_num := 0
 
 	buf_view.draw(
-		mut mock_ctx, x, y,
+		mut mock_ctx, buf, x, y,
 		width, height, from_line_num,
 		min_x, false, .normal, BufferCursor{}
 	)
@@ -502,7 +502,7 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 
 	mut buf := buffer.Buffer.new("", false)
 	for i in 0..20 { buf.lines << "This is line ${i} in the document" }
-	mut buf_view := BufferView.new(&buf, [], 0)
+	mut buf_view := BufferView.new([], 0)
 
 	x := 0
 	y := 0
@@ -512,7 +512,7 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 	from_line_num := 10
 
 	buf_view.draw(
-		mut mock_ctx, x, y,
+		mut mock_ctx, buf, x, y,
 		width, height, from_line_num,
 		min_x, false, .normal, BufferCursor{ pos: CursorPos{ y: 12 } }
 	)
@@ -679,7 +679,7 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled()
 
 	mut buf := buffer.Buffer.new("", false)
 	for i in 0..20 { buf.lines << "This is line ${i} in the document" }
-	mut buf_view := BufferView.new(&buf, [], 0)
+	mut buf_view := BufferView.new([], 0)
 
 	x := 0
 	y := 0
@@ -689,7 +689,7 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled()
 	from_line_num := 10
 
 	buf_view.draw(
-		mut mock_ctx, x, y,
+		mut mock_ctx, buf, x, y,
 		width, height, from_line_num,
 		min_x, true, .normal, BufferCursor{ pos: CursorPos{ y: 15 } }
 	) // toggle relative line numbers on
@@ -995,7 +995,7 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled_c
 
 	mut buf := buffer.Buffer.new("", false)
 	for i in 0..20 { buf.lines << "This is line ${i} in the document" }
-	mut buf_view := BufferView.new(&buf, [], 0)
+	mut buf_view := BufferView.new([], 0)
 
 	x := 0
 	y := 0
@@ -1005,7 +1005,7 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled_c
 	from_line_num := 10
 
 	buf_view.draw(
-		mut mock_ctx, x, y,
+		mut mock_ctx, buf, x, y,
 		width, height, from_line_num,
 		min_x, true, .normal, BufferCursor{ pos: CursorPos{ y: 15 } }
 	) // toggle relative line numbers on
@@ -1183,7 +1183,7 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled_c
 
 	drawn_text.clear()
 	buf_view.draw(
-		mut mock_ctx, x, y,
+		mut mock_ctx, buf, x, y,
 		width, height, from_line_num,
 		min_x, true, .normal, BufferCursor{ pos: CursorPos{ y: 13 } }
 	) // toggle relative line numbers on
@@ -1201,7 +1201,7 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled_c
 
 	drawn_text.clear()
 	buf_view.draw(
-		mut mock_ctx, x, y,
+		mut mock_ctx, buf, x, y,
 		width, height, from_line_num,
 		min_x, true, .normal,
 		BufferCursor{ pos: CursorPos{ y: 18 } }
@@ -1251,7 +1251,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_14() {
 
 	mut buf      := buffer.Buffer.new("", false)
 	for i in 0..3 { buf.lines << "${i} This is line ${i} in the document" }
-	mut buf_view := BufferView.new(&buf, [], 0)
+	mut buf_view := BufferView.new([], 0)
 
 	x := 0
 	y := 0
@@ -1260,7 +1260,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_14() {
 	min_x := 0
 	from_line_num := 0
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{})
+	buf_view.draw(mut mock_ctx, buf, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{})
 
 	assert set_bg_color == [tui.Color{ 53, 53, 53 }, tui.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
@@ -1354,7 +1354,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_4_max_width_56() {
 
 	mut buf      := buffer.Buffer.new("", false)
 	for i in 0..3 { buf.lines << "${i} This is line ${i} in the document" }
-	mut buf_view := BufferView.new(&buf, [], 0)
+	mut buf_view := BufferView.new([], 0)
 
 	x := 0
 	y := 0
@@ -1363,7 +1363,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_4_max_width_56() {
 	min_x := 4
 	from_line_num := 0
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{})
+	buf_view.draw(mut mock_ctx, buf, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{})
 
 	assert set_bg_color == [tui.Color{ 53, 53, 53 }, tui.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
@@ -1479,7 +1479,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_56() {
 
 	mut buf      := buffer.Buffer.new("", false)
 	for i in 0..3 { buf.lines << "${i} This is line ${i} in the document" }
-	mut buf_view := BufferView.new(&buf, [], 0)
+	mut buf_view := BufferView.new([], 0)
 
 	x := 0
 	y := 0
@@ -1488,7 +1488,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_56() {
 	min_x := 21
 	from_line_num := 0
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{})
+	buf_view.draw(mut mock_ctx, buf, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{})
 
 	assert set_bg_color == [tui.Color{ 53, 53, 53 }, tui.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
@@ -1565,7 +1565,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_6() {
 
 	mut buf      := buffer.Buffer.new("", false)
 	for i in 0..3 { buf.lines << "${i} This is line ${i} in the document" }
-	mut buf_view := BufferView.new(&buf, [], 0)
+	mut buf_view := BufferView.new([], 0)
 
 	x := 0
 	y := 0
@@ -1574,7 +1574,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_6() {
 	min_x := 21
 	from_line_num := 0
 
-	buf_view.draw(mut mock_ctx, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{})
+	buf_view.draw(mut mock_ctx, buf, x, y, width, height, from_line_num, min_x, false, .normal, BufferCursor{})
 
 	assert set_bg_color == [tui.Color{ 53, 53, 53 }, tui.Color{ 53, 53, 53 }]
 	assert drawn_rect == [
