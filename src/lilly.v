@@ -131,13 +131,13 @@ fn (mut lilly Lilly) open_file_at(path string, pos ?ui.CursorPos) ! {
 }
 
 fn (mut lilly Lilly) open_file_with_reader_at(path string, pos ?ui.CursorPos, line_reader fn (path string) ![]string) ! {
-	defer { lilly.active_view = .view_port }
 	if mut existing_file_buff := lilly.file_buffers[path] {
 		if existing_view := lilly.buffer_views[existing_file_buff.uuid] {
 			lilly.view_port = existing_view
 			if uw_pos := pos {
 				lilly.view_port.jump_line_to_middle(uw_pos.y)
 			}
+			lilly.active_view = .view_port
 			return
 		}
 		lilly.view_port = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
@@ -146,6 +146,7 @@ fn (mut lilly Lilly) open_file_with_reader_at(path string, pos ?ui.CursorPos, li
 			lilly.view_port.jump_line_to_middle(uw_pos.y)
 		}
 		lilly.buffer_views[existing_file_buff.uuid] = lilly.view_port
+		lilly.active_view = .view_port
 		return
 	}
 
@@ -159,6 +160,7 @@ fn (mut lilly Lilly) open_file_with_reader_at(path string, pos ?ui.CursorPos, li
 		lilly.view_port.jump_line_to_middle(uw_pos.y)
 	}
 	lilly.buffer_views[buff.uuid] = lilly.view_port
+	lilly.active_view = .view_port
 }
 
 const colon = ":".runes()[0]
@@ -409,7 +411,15 @@ pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
 			}
 		}
 		.view_port {
-			lilly.view_port.on_key_down(e, mut lilly)
+			action := lilly.view_port.on_key_down(e, mut lilly)
+			match action {
+				.no_op {}
+				.open_file_picker                    { lilly.open_file_picker(false) }
+				.open_file_picker_special            { lilly.open_file_picker(true) }
+				.open_inactive_buffer_picker         { lilly.open_inactive_buffer_picker(false) }
+				.open_inactive_buffer_picker_special { lilly.open_inactive_buffer_picker(true) }
+				.open_todo_comments_picker           { lilly.open_todo_comments_picker() }
+			}
 		}
 	}
 }
