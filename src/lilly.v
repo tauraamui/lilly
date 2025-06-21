@@ -32,28 +32,32 @@ enum ActiveView as u8 {
 
 @[heap]
 struct Lilly {
-	line_reader                       ?fn (file_path string) ![]string
-	is_binary_file                    ?fn (file_path string) bool
+	line_reader                  ?fn (file_path string) ![]string
+	is_binary_file               ?fn (file_path string) bool
 mut:
-	log                               log.Log
-	clipboard                         clipboardv3.Clipboard
+	// univseral data + state
+	log                          log.Log
+	clipboard                    clipboardv3.Clipboard
+	workspace                    workspace.Workspace
+	resolve_workspace_files      ?fn () []string
+	syntaxes                     []syntax.Syntax
 
-	// NEW
+	// visual/ui stuff
 	active_view                  ActiveView
 	splash_screen                ui.SplashScreen
 	view_port                    View
 
-	// OLD
-	debug_view                        bool
-	use_gap_buffer                    bool
-	file_buffers                      map[string]buffer.Buffer
-	buffer_views                      map[buffer.UUID_t]View
-	file_picker_modal                 ?ui.FilePickerModal
-	inactive_buffer_picker_modal      ?ui.FilePickerModal
-	todo_comments_picker_modal        ?ui.TodoCommentPickerModal
-	workspace                         workspace.Workspace
-	resolve_workspace_files           ?fn () []string
-	syntaxes                          []syntax.Syntax
+	// document/buffer data
+	file_buffers                 map[string]buffer.Buffer
+	buffer_views                 map[buffer.UUID_t]View
+
+	// visual overlay/modal stuff
+	file_picker_modal            ?ui.FilePickerModal
+	inactive_buffer_picker_modal ?ui.FilePickerModal
+	todo_comments_picker_modal   ?ui.TodoCommentPickerModal
+
+	debug_view                   bool
+	use_gap_buffer               bool
 }
 
 interface Root {
