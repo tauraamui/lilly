@@ -364,7 +364,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) ViewAction {
 		}
 		.normal {
 			view.on_key_down_normal_mode(e, mut root)
-			return
+			return .no_op
 		}
 		.visual {
 			view.on_key_down_visual_mode(e, mut root)
@@ -397,7 +397,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) ViewAction {
 					view.cmd_buf.up()
 				}
 				.down {
-					return
+					return .no_op
 				}
 				.backspace {
 					view.cmd_buf.backspace()
@@ -433,7 +433,7 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) ViewAction {
 					view.search.find(view.buffer.lines)
 				}
 				.tab {
-					pos := view.search.next_find_pos() or { return }
+					pos := view.search.next_find_pos() or { return .no_op }
 					view.jump_cursor_to(pos.line)
 				}
 				else {
@@ -443,12 +443,12 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) ViewAction {
 		}
 		.insert {
 			if e.modifiers == .ctrl {
-				return
+				return .no_op
 			}
 			// ignore the ASCII group separators
 			// FS, GS and RS
 			match e.ascii {
-				28...31 { return }
+				28...31 { return .no_op }
 				else {}
 			}
 			match e.code {
@@ -590,4 +590,5 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) ViewAction {
 			}
 		}
 	}
+	return .no_op
 }
