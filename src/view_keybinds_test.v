@@ -70,8 +70,7 @@ fn test_view_keybind_key_event_of_value_leader_key_changes_mode_to_leader() {
 	fake_view.on_key_down(
 		draw.Event{
 			utf8: fake_view.leader_key
-		},
-		mut m_root
+		}
 	)
 
 	assert fake_view.leader_state.mode == .leader
@@ -79,8 +78,7 @@ fn test_view_keybind_key_event_of_value_leader_key_changes_mode_to_leader() {
 	fake_view.on_key_down(
 		draw.Event{
 			code: .escape
-		},
-		mut m_root
+		}
 	)
 
 	assert fake_view.leader_state.mode == .normal
@@ -100,21 +98,20 @@ fn test_view_keybind_leader_then_ff_suffix_opens_file_finder() {
 	fake_view.on_key_down(
 		draw.Event{
 			utf8: fake_view.leader_key
-		},
-		mut m_root
+		}
 	)
 
 	assert fake_view.leader_state.mode == .leader
 
 	mut action := fake_view.on_key_down(
-		draw.Event{ code: .f }, mut m_root
+		draw.Event{ code: .f }
 	)
 
 	assert action == .no_op
 	assert fake_view.leader_state.mode == .leader
 
 	action = fake_view.on_key_down(
-		draw.Event{ code: .f }, mut m_root
+		draw.Event{ code: .f }
 	)
 
 	assert fake_view.leader_state.mode == .normal
@@ -135,20 +132,19 @@ fn test_view_keybind_leader_then_xff_suffix_opens_file_finder_in_special_mode() 
 	fake_view.on_key_down(
 		draw.Event{
 			utf8: fake_view.leader_key
-		},
-		mut m_root
+		}
 	)
 
 	assert fake_view.leader_state.mode == .leader
 
 	mut action := fake_view.on_key_down(
-		draw.Event{ code: .x }, mut m_root
+		draw.Event{ code: .x }
 	)
 
 	assert action == .no_op
 
 	action = fake_view.on_key_down(
-		draw.Event{ code: .f }, mut m_root
+		draw.Event{ code: .f }
 	)
 
 	assert action == .no_op
@@ -156,7 +152,7 @@ fn test_view_keybind_leader_then_xff_suffix_opens_file_finder_in_special_mode() 
 	assert fake_view.leader_state.mode == .leader
 
 	action = fake_view.on_key_down(
-		draw.Event{ code: .f }, mut m_root
+		draw.Event{ code: .f }
 	)
 
 	assert fake_view.leader_state.mode == .normal
@@ -173,29 +169,28 @@ fn test_view_keybind_leader_then_fb_suffix_opens_inactive_buffer_finder() {
 	}
 	fake_view.buffer.lines = [] // NOTE(tauraamui) [21/01/25] can be empty just not nil
 
-	mut m_root := MockRoot{}
-	fake_view.on_key_down(
+	mut action := fake_view.on_key_down(
 		draw.Event{
 			utf8: fake_view.leader_key
-		},
-		mut m_root
+		}
 	)
 
+	assert action == .no_op
 	assert fake_view.leader_state.mode == .leader
 
-	fake_view.on_key_down(
-		draw.Event{ code: .f }, mut m_root
+	action = fake_view.on_key_down(
+		draw.Event{ code: .f }
 	)
 
+	assert action == .no_op
 	assert fake_view.leader_state.mode == .leader
 
-	fake_view.on_key_down(
-		draw.Event{ code: .b }, mut m_root
+	action = fake_view.on_key_down(
+		draw.Event{ code: .b }
 	)
 
+	assert action == .open_inactive_buffer_picker
 	assert fake_view.leader_state.mode == .normal
-	assert m_root.inactive_buffer_picker_open, "the inactive buffer picker modal was not opened as expected"
-	assert m_root.special_mode == false
 }
 
 fn test_view_keybind_leader_then_ftc_suffix_opens_todo_comments_finder() {
@@ -212,18 +207,17 @@ fn test_view_keybind_leader_then_ftc_suffix_opens_todo_comments_finder() {
 	mut action := fake_view.on_key_down(
 		draw.Event{
 			utf8: fake_view.leader_key
-		},
-		mut m_root
+		}
 	)
 	assert action == .no_op
 
 	assert fake_view.leader_state.mode == .leader
 
-	action = fake_view.on_key_down(draw.Event{ code: .f }, mut m_root)
+	action = fake_view.on_key_down(draw.Event{ code: .f })
 	assert action == .no_op
-	action = fake_view.on_key_down(draw.Event{ code: .t }, mut m_root)
+	action = fake_view.on_key_down(draw.Event{ code: .t })
 	assert action == .no_op
-	action = fake_view.on_key_down(draw.Event{ code: .c }, mut m_root)
+	action = fake_view.on_key_down(draw.Event{ code: .c })
 
 	assert action == .open_todo_comments_picker
 }
@@ -503,7 +497,7 @@ fn test_sets_of_key_events_for_views_on_key_down_adjusting_cursor_position() {
 		kevent := draw.Event{
 			code: case.code
 		}
-		fake_view.on_key_down(kevent, mut lilly)
+		fake_view.on_key_down(kevent)
 		assert fake_view.cursor.pos == case.expected_cursor_pos, 'test case ${case.name} - expected cursor pos assertion failed'
 	}
 }
@@ -533,7 +527,7 @@ fn test_w_moves_cursor_to_next_line_with_plain_comments() {
 		code: tui.KeyCode.w
 	}
 
-	fake_view.on_key_down(kevent, mut lilly)
+	fake_view.on_key_down(kevent)
 	assert fake_view.cursor.pos.y == 1
 	assert fake_view.cursor.pos.x == 0
 }
