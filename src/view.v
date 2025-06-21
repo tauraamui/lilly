@@ -1737,7 +1737,7 @@ fn (mut view View) right_square_bracket() {
 }
 
 fn (mut view View) replace_char(code u8, str string) {
-	view.buffer.replace_char(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, code, str)
+	view.buffer.replace_char(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x }, code, str)
 }
 
 fn (mut view View) close_pair(c string) bool {
