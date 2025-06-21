@@ -415,9 +415,11 @@ pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
 			}
 		}
 		.view_port {
-			action := lilly.view_port.on_key_down(e, mut lilly)
+			action := lilly.view_port.on_key_down(e)
 			match action {
 				.no_op                               {}
+				.quit                                { lilly.quit() or {} }
+				.force_quit                          { lilly.force_quit() }
 				.open_file_picker                    { lilly.open_file_picker(false) }
 				.open_file_picker_special            { lilly.open_file_picker(true) }
 				.open_inactive_buffer_picker         { lilly.open_inactive_buffer_picker(false) }

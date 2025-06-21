@@ -23,6 +23,8 @@ enum ViewAction as u8 {
 	open_file_picker_special
 	open_inactive_buffer_picker_special
 	open_todo_comments_picker
+	force_quit
+	quit
 }
 
 fn (mut view View) on_key_down_leader_mode(e draw.Event) ViewAction {
@@ -377,8 +379,13 @@ fn (mut view View) on_key_down(e draw.Event) ViewAction {
 					view.escape()
 				}
 				.enter {
-					view.cmd_buf.exec(mut view)
-					view.leader_state.mode = .normal
+					action := view.cmd_buf.exec(mut view)
+					defer { view.leader_state.mode = .normal }
+					match action {
+						.no_op      {}
+						.quit       { return .quit }
+						.force_quit { return .force_quit }
+					}
 				}
 				.space {
 					view.cmd_buf.put_char(' ')

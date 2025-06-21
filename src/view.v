@@ -305,19 +305,23 @@ fn (mut cmd_buf CmdBuffer) prepare_for_input() {
 	cmd_buf.cursor_x = 1
 }
 
-fn (mut cmd_buf CmdBuffer) exec(mut view View, mut root Root) {
+enum CmdAction as u8 {
+	no_op
+	force_quit
+	quit
+}
+
+// NOTE(tauraamui) [21/06/2025]: cmdbuffer should probably be owned by lilly instead of
+//                               viewport, but idk
+fn (mut cmd_buf CmdBuffer) exec(mut view View) CmdAction {
 	match view.cmd_buf.line {
 		':q' {
-			root.quit() or {
-				cmd_buf.code = .unsuccessful
-				cmd_buf.set_error(err.msg())
-				return
-			}
 			cmd_buf.code = .successful
+			return .quit
 		}
 		':q!' {
-			root.force_quit()
 			cmd_buf.code = .successful
+			return .force_quit
 		}
 		':toggle whitespace' {
 			// view.show_whitespace = !view.show_whitespace
@@ -343,7 +347,7 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View, mut root Root) {
 			view.save_file() or { cmd_buf.code = .unsuccessful }
 			view.buffer.dirty = false
 			if cmd_buf.code == .successful {
-				root.quit() or {}
+				return .quit
 			}
 		}
 		':version' {
@@ -351,7 +355,7 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View, mut root Root) {
 			cmd_buf.code = .successful
 		}
 		'' {
-			return
+			return .no_op
 		}
 		else {
 			jump_pos, parse_successful := try_to_parse_to_jump_to_line_num(view.cmd_buf.line)
@@ -368,6 +372,8 @@ fn (mut cmd_buf CmdBuffer) exec(mut view View, mut root Root) {
 		cmd_buf.cmd_history.push(cmd_buf.line)
 	}
 	cmd_buf.set_error(cmd_buf.code.str().replace('__', cmd_buf.line))
+
+	return .no_op
 }
 
 fn try_to_parse_to_jump_to_line_num(cmd_value string) (int, bool) {
