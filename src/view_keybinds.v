@@ -23,9 +23,11 @@ enum ViewAction as u8 {
 	open_file_picker_special
 	open_inactive_buffer_picker_special
 	open_todo_comments_picker
+	force_quit
+	quit
 }
 
-fn (mut view View) on_key_down_leader_mode(e draw.Event, mut root Root) ViewAction {
+fn (mut view View) on_key_down_leader_mode(e draw.Event) ViewAction {
 	match e.code {
 		.escape {
 			view.escape()
@@ -51,7 +53,6 @@ fn (mut view View) on_key_down_leader_mode(e draw.Event, mut root Root) ViewActi
 		}
 		["f", "b"] {
 			defer { view.escape() }
-			root.open_inactive_buffer_picker(view.leader_state.special)
 			return if !view.leader_state.special { .open_inactive_buffer_picker } else { .open_inactive_buffer_picker_special }
 		}
 		else {}
@@ -59,7 +60,7 @@ fn (mut view View) on_key_down_leader_mode(e draw.Event, mut root Root) ViewActi
 	return .no_op
 }
 
-fn (mut view View) on_key_down_normal_mode(e draw.Event, mut root Root) {
+fn (mut view View) on_key_down_normal_mode(e draw.Event) {
 	match e.utf8 {
 		view.leader_key { view.leader_state.mode = .leader }
 		else {}
@@ -217,7 +218,7 @@ fn (mut view View) on_key_down_normal_mode(e draw.Event, mut root Root) {
 	}
 }
 
-fn (mut view View) on_key_down_visual_mode(e draw.Event, mut root Root) {
+fn (mut view View) on_key_down_visual_mode(e draw.Event) {
 	match e.code {
 		.escape {
 			view.escape()
@@ -289,7 +290,7 @@ fn (mut view View) on_key_down_visual_mode(e draw.Event, mut root Root) {
 	}
 }
 
-fn (mut view View) on_key_down_visual_line_mode(e draw.Event, mut root Root) {
+fn (mut view View) on_key_down_visual_line_mode(e draw.Event) {
 	match e.code {
 		.escape {
 			view.escape()
@@ -357,20 +358,20 @@ fn (mut view View) on_key_down_visual_line_mode(e draw.Event, mut root Root) {
 	}
 }
 
-fn (mut view View) on_key_down(e draw.Event, mut root Root) ViewAction {
+fn (mut view View) on_key_down(e draw.Event) ViewAction {
 	match view.leader_state.mode {
 		.leader {
-			return view.on_key_down_leader_mode(e, mut root)
+			return view.on_key_down_leader_mode(e)
 		}
 		.normal {
-			view.on_key_down_normal_mode(e, mut root)
+			view.on_key_down_normal_mode(e)
 			return .no_op
 		}
 		.visual {
-			view.on_key_down_visual_mode(e, mut root)
+			view.on_key_down_visual_mode(e)
 		}
 		.visual_line {
-			view.on_key_down_visual_line_mode(e, mut root)
+			view.on_key_down_visual_line_mode(e)
 		}
 		.command {
 			match e.code {
@@ -378,8 +379,13 @@ fn (mut view View) on_key_down(e draw.Event, mut root Root) ViewAction {
 					view.escape()
 				}
 				.enter {
-					view.cmd_buf.exec(mut view, mut root)
-					view.leader_state.mode = .normal
+					action := view.cmd_buf.exec(mut view)
+					defer { view.leader_state.mode = .normal }
+					match action {
+						.no_op      {}
+						.quit       { return .quit }
+						.force_quit { return .force_quit }
+					}
 				}
 				.space {
 					view.cmd_buf.put_char(' ')

@@ -2667,7 +2667,7 @@ fn test_r_replaces_character_in_middle_of_line() {
 		ascii: 112
 		utf8:  'p'
 	}
-	fake_view.on_key_down(event, mut lilly)
+	fake_view.on_key_down(event)
 
 	assert fake_view.leader_state.mode == .normal
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == 'one past line'
@@ -2699,7 +2699,7 @@ fn test_r_replaces_character_with_special_character() {
 		ascii: 33
 		utf8:  '!'
 	}
-	fake_view.on_key_down(event, mut lilly)
+	fake_view.on_key_down(event)
 
 	assert fake_view.leader_state.mode == .normal
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == 'one last!line'
@@ -2731,7 +2731,7 @@ fn test_r_replaces_character_with_space() {
 		ascii: 32
 		utf8:  ' '
 	}
-	fake_view.on_key_down(event, mut lilly)
+	fake_view.on_key_down(event)
 
 	assert fake_view.leader_state.mode == .normal
 	assert fake_view.buffer.lines[fake_view.cursor.pos.y] == 'one  ast line'
@@ -2762,7 +2762,7 @@ fn test_r_doesnt_change_anything_when_escape_is_used() {
 		code:  tui.KeyCode.escape
 		ascii: 27
 	}
-	fake_view.on_key_down(event, mut lilly)
+	fake_view.on_key_down(event)
 
 	assert fake_view.leader_state.mode == .normal
 	assert fake_view.cursor.pos.x == 4
@@ -2793,7 +2793,7 @@ fn test_r_doesnt_change_anything_when_enter_is_used() {
 		code:  tui.KeyCode.enter
 		ascii: 10
 	}
-	fake_view.on_key_down(event, mut lilly)
+	fake_view.on_key_down(event)
 
 	assert fake_view.leader_state.mode == .normal
 	assert fake_view.cursor.pos.x == 7
@@ -2929,7 +2929,7 @@ fn test_auto_closing_square_brace() {
 		code:  tui.KeyCode.left_square_bracket
 		ascii: 91
 	}
-	fake_view.on_key_down(event, mut lilly)
+	fake_view.on_key_down(event)
 	assert fake_view.buffer.lines == ['[]']
 
 	assert fake_view.cursor.pos.x == 1 // ensure cursor is technically between the braces
@@ -2958,7 +2958,7 @@ fn test_auto_closing_curley_brace() {
 		code:  tui.KeyCode.left_curly_bracket
 		ascii: 91
 	}
-	fake_view.on_key_down(event, mut lilly)
+	fake_view.on_key_down(event)
 	assert fake_view.buffer.lines == ['{}']
 
 	assert fake_view.cursor.pos.x == 1 // ensure cursor is technically between the braces
@@ -2987,7 +2987,7 @@ fn test_auto_closing_curley_brace_inputting_secondary_close_should_only_move_cur
 		code:  tui.KeyCode.left_curly_bracket
 		ascii: 123
 	}
-	fake_view.on_key_down(event, mut lilly)
+	fake_view.on_key_down(event)
 	assert fake_view.buffer.lines == ['{}']
 
 	assert fake_view.cursor.pos.x == 1 // ensure cursor is technically between the braces
@@ -2996,7 +2996,7 @@ fn test_auto_closing_curley_brace_inputting_secondary_close_should_only_move_cur
 		code:  tui.KeyCode.right_curly_bracket
 		ascii: 125
 	}
-	fake_view.on_key_down(event, mut lilly)
+	fake_view.on_key_down(event)
 	assert fake_view.buffer.lines == ['{}'] // actual number of braces shouldn't have changed
 
 	assert fake_view.cursor.pos.x == 2 // ensure cursor is on the far right side of both braces
@@ -3025,7 +3025,7 @@ fn test_auto_closing_square_brace_inputting_secondary_close_should_only_move_cur
 		code:  tui.KeyCode.left_square_bracket
 		ascii: 91
 	}
-	fake_view.on_key_down(event, mut lilly)
+	fake_view.on_key_down(event)
 	assert fake_view.buffer.lines == ['[]']
 
 	assert fake_view.cursor.pos.x == 1 // ensure cursor is technically between the braces
@@ -3034,7 +3034,7 @@ fn test_auto_closing_square_brace_inputting_secondary_close_should_only_move_cur
 		code:  tui.KeyCode.right_square_bracket
 		ascii: 93
 	}
-	fake_view.on_key_down(event, mut lilly)
+	fake_view.on_key_down(event)
 	assert fake_view.buffer.lines == ['[]'] // actual number of braces shouldn't have changed
 
 	assert fake_view.cursor.pos.x == 2 // ensure cursor is on the far right side of both braces
