@@ -44,7 +44,6 @@ mut:
 	view_port                    View
 
 	// OLD
-	// view                              Viewable
 	debug_view                        bool
 	use_gap_buffer                    bool
 	file_buffers                      map[string]buffer.Buffer
@@ -342,10 +341,13 @@ fn (mut lilly Lilly) close_todo_comments_picker() {
 }
 
 pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
-	if lilly.active_view == .splash_screen {
-		lilly.splash_screen.draw(mut ctx)
-	} else {
-		lilly.view_port.draw(mut ctx)
+	match lilly.active_view {
+		.splash_screen {
+			lilly.splash_screen.draw(mut ctx)
+		}
+		.view_port {
+			lilly.view_port.draw(mut ctx)
+		}
 	}
 
 	if mut file_picker := lilly.file_picker_modal {
