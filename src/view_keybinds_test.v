@@ -106,19 +106,19 @@ fn test_view_keybind_leader_then_ff_suffix_opens_file_finder() {
 
 	assert fake_view.leader_state.mode == .leader
 
-	fake_view.on_key_down(
+	mut action := fake_view.on_key_down(
 		draw.Event{ code: .f }, mut m_root
 	)
 
+	assert action == .no_op
 	assert fake_view.leader_state.mode == .leader
 
-	fake_view.on_key_down(
+	action = fake_view.on_key_down(
 		draw.Event{ code: .f }, mut m_root
 	)
 
 	assert fake_view.leader_state.mode == .normal
-	assert m_root.file_picker_open, "the file picker modal was not opened as expected"
-	assert m_root.special_mode == false
+	assert action == .open_file_picker
 }
 
 fn test_view_keybind_leader_then_xff_suffix_opens_file_finder_in_special_mode() {
@@ -141,23 +141,26 @@ fn test_view_keybind_leader_then_xff_suffix_opens_file_finder_in_special_mode() 
 
 	assert fake_view.leader_state.mode == .leader
 
-	fake_view.on_key_down(
+	mut action := fake_view.on_key_down(
 		draw.Event{ code: .x }, mut m_root
 	)
 
-	fake_view.on_key_down(
+	assert action == .no_op
+
+	action = fake_view.on_key_down(
 		draw.Event{ code: .f }, mut m_root
 	)
 
+	assert action == .no_op
+
 	assert fake_view.leader_state.mode == .leader
 
-	fake_view.on_key_down(
+	action = fake_view.on_key_down(
 		draw.Event{ code: .f }, mut m_root
 	)
 
 	assert fake_view.leader_state.mode == .normal
-	assert m_root.file_picker_open, "the file picker modal was not opened as expected"
-	assert m_root.special_mode == true
+	assert action == .open_file_picker_special
 }
 
 fn test_view_keybind_leader_then_fb_suffix_opens_inactive_buffer_finder() {
@@ -206,21 +209,23 @@ fn test_view_keybind_leader_then_ftc_suffix_opens_todo_comments_finder() {
 	fake_view.buffer.lines = [] // NOTE(tauraamui) [21/01/25] can be empty just not nil
 
 	mut m_root := MockRoot{}
-	fake_view.on_key_down(
+	mut action := fake_view.on_key_down(
 		draw.Event{
 			utf8: fake_view.leader_key
 		},
 		mut m_root
 	)
+	assert action == .no_op
 
 	assert fake_view.leader_state.mode == .leader
 
-	fake_view.on_key_down(draw.Event{ code: .f }, mut m_root)
-	fake_view.on_key_down(draw.Event{ code: .t }, mut m_root)
-	fake_view.on_key_down(draw.Event{ code: .c }, mut m_root)
+	action = fake_view.on_key_down(draw.Event{ code: .f }, mut m_root)
+	assert action == .no_op
+	action = fake_view.on_key_down(draw.Event{ code: .t }, mut m_root)
+	assert action == .no_op
+	action = fake_view.on_key_down(draw.Event{ code: .c }, mut m_root)
 
-	// assert fake_view.leader_state.mode == .normal
-	assert m_root.todo_comments_picker_open
+	assert action == .open_todo_comments_picker
 }
 
 struct MovementKeyEventTestCase {
