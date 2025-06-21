@@ -50,7 +50,7 @@ fn test_lilly_open_file_loads_into_file_buffer_and_buffer_view_maps() {
 
 	file_buff := lilly.file_buffers["test-file.txt"] or { assert false, "failed to find buffer instance for path: test-file.txt" }
 	buff_view := lilly.buffer_views[file_buff.uuid]  or { assert false, "failed to find view instance for buffer of uuid: ${file_buff.uuid}" }
-	assert lilly.view == buff_view
+	assert lilly.view_port == buff_view
 }
 
 fn test_lilly_open_file_loads_into_file_buffer_and_buffer_view_maps_if_done_twice_does_not_create_extra_instances() {
@@ -71,20 +71,20 @@ fn test_lilly_open_file_loads_into_file_buffer_and_buffer_view_maps_if_done_twic
 	assert m_line_reader.given_path == "test-file.txt"
 	assert lilly.file_buffers.len == 1
 	assert lilly.buffer_views.len == 1
-	assert lilly.view.file_path == "test-file.txt"
+	assert lilly.view_port.file_path == "test-file.txt"
 
 	mut file_buff := lilly.file_buffers["test-file.txt"] or { assert false, "failed to find buffer instance for path: test-file.txt" }
 	mut buff_view := lilly.buffer_views[file_buff.uuid]  or { assert false, "failed to find view instance for buffer of uuid: ${file_buff.uuid}" }
-	assert lilly.view == buff_view
+	assert lilly.view_port == buff_view
 
 	lilly.open_file_with_reader_at("test-file.txt", ui.CursorPos{}, m_line_reader.read_lines) or { assert false }
 	assert lilly.file_buffers.len == 1
 	assert lilly.buffer_views.len == 1
-	assert lilly.view.file_path == "test-file.txt"
+	assert lilly.view_port.file_path == "test-file.txt"
 
 	file_buff = lilly.file_buffers["test-file.txt"] or { assert false, "failed to find buffer instance for path: test-file.txt" }
 	buff_view = lilly.buffer_views[file_buff.uuid]  or { assert false, "failed to find view instance for buffer of uuid: ${file_buff.uuid}" }
-	assert lilly.view == buff_view
+	assert lilly.view_port == buff_view
 }
 
 struct MockFS {
@@ -220,7 +220,7 @@ fn test_lilly_resolve_inactive_file_buffer_paths() {
 	assert lilly.file_buffers.len == 1
 	assert lilly.buffer_views.len == 1
 
-	assert lilly.view.file_path == "test-file.txt"
+	assert lilly.view_port.file_path == "test-file.txt"
 
 	m_line_reader = MockLineReader{
 		line_data: ["This is another fake document that doesn't exist on disk anywhere"]
@@ -228,7 +228,7 @@ fn test_lilly_resolve_inactive_file_buffer_paths() {
 
 	lilly.open_file_with_reader_at("different-test-file.txt", ui.CursorPos{}, m_line_reader.read_lines) or { assert false }
 
-	assert lilly.view.file_path == "different-test-file.txt"
+	assert lilly.view_port.file_path == "different-test-file.txt"
 
 	assert lilly.resolve_inactive_file_buffer_paths() == ["test-file.txt"]
 }
