@@ -46,7 +46,7 @@ fn GapBuffer.new(d string) GapBuffer {
 pub fn (mut gap_buffer GapBuffer) move_cursor_to(pos Pos) {
 	gap_sizee := gap_buffer.gap_end - gap_buffer.gap_start
 	offset := gap_buffer.find_offset(pos) or { return }
-	gap_buffer.move_cursor(offset - gap_sizee)
+	gap_buffer.move_data_cursor(offset - gap_sizee)
 }
 
 pub fn (mut gap_buffer GapBuffer) insert(r rune) {
@@ -85,7 +85,7 @@ fn (mut gap_buffer GapBuffer) insert_rune(r rune) {
 	gap_buffer.resize_if_full()
 }
 
-fn (mut gap_buffer GapBuffer) move_cursor(offset int) {
+fn (mut gap_buffer GapBuffer) move_data_cursor(offset int) {
 	if offset < gap_buffer.gap_start {
 		gap_buffer.move_cursor_left(gap_buffer.gap_start - offset)
 		return
@@ -466,6 +466,10 @@ pub fn (gap_buffer GapBuffer) down_to_next_blank_line(pos Pos) ?Pos {
 	}
 
 	return cursor_loc
+}
+
+pub fn (gap_buffer GapBuffer) read(range Range) string {
+	return ""
 }
 
 @[inline]
