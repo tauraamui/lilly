@@ -47,7 +47,7 @@ pub fn (gap_buffer GapBuffer) read(range Range) ?string {
 	return ?string(none)
 }
 
-pub fn (mut gap_buffer GapBuffer) move_cursor_to(pos Pos) {
+pub fn (mut gap_buffer GapBuffer) move_cursor_to(pos Position) {
 	gap_sizee := gap_buffer.gap_end - gap_buffer.gap_start
 	offset := gap_buffer.find_offset(pos) or { return }
 	gap_buffer.move_data_cursor(offset - gap_sizee)
@@ -75,7 +75,7 @@ pub fn (mut gap_buffer GapBuffer) delete(ignore_newlines bool) bool {
 	return true
 }
 
-pub fn (mut gap_buffer GapBuffer) x(pos Pos) ?Pos {
+pub fn (mut gap_buffer GapBuffer) x(pos Position) ?Position {
 	gap_buffer.move_cursor_to(pos)
 	distance_to_end_of_line := gap_buffer.find_end_of_line(pos) or { 0 }
 	if distance_to_end_of_line == 0 { return none }
@@ -140,7 +140,7 @@ pub fn (gap_buffer GapBuffer) in_bounds(pos Pos) bool {
 	return true
 }
 
-pub fn (gap_buffer GapBuffer) find_end_of_line(pos Pos) ?int {
+pub fn (gap_buffer GapBuffer) find_end_of_line(pos Position) ?int {
 	offset := gap_buffer.find_offset(pos) or { return none }
 
 	for count, r in gap_buffer.data[offset..] {
@@ -432,7 +432,7 @@ pub fn (gap_buffer GapBuffer) up_to_next_blank_line(pos Pos) ?Pos {
 	return cursor_loc
 }
 
-pub fn (gap_buffer GapBuffer) down_to_next_blank_line(pos Pos) ?Pos {
+pub fn (gap_buffer GapBuffer) down_to_next_blank_line(pos Position) ?Position {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
@@ -593,14 +593,14 @@ fn (mut s WordEndScanner) result() Pos {
 }
 
 // FIXME(tauraamui): I think this function doesn't need to include the gap as part of the offset'
-fn (gap_buffer GapBuffer) find_offset(pos Pos) ?int {
+fn (gap_buffer GapBuffer) find_offset(pos Position) ?int {
 	pre_gap_data := gap_buffer.data[..gap_buffer.gap_start]
 
 	mut line := 0
 	mut line_offset := 0
 
 	for offset, c in pre_gap_data {
-		if line == pos.y && line_offset == pos.x {
+		if line == pos.line && line_offset == pos.offset {
 			return offset
 		}
 
@@ -632,7 +632,7 @@ fn (gap_buffer GapBuffer) find_offset(pos Pos) ?int {
 		line_offset += 1
 	}
 
-	if line == pos.y && line_offset == pos.x {
+	if line == pos.line && line_offset == pos.offset {
 		return gap_buffer.data.len
 	}
 
