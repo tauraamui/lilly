@@ -80,13 +80,13 @@ fn test_todo_comment_modal_rendering_with_match_list_entries() {
 	mut mock_modal := TodoCommentPickerModal.new([
 		buffer.Match{
 			file_path: "example-file.txt"
-			pos: buffer.Pos{ x: 11, y: 38 },
+			pos: buffer.Position{ line: 38, offset: 11 },
 			contents: "TODO(tauraamui) [28/02/2025] random comment"
 			keyword_len: 4
 		},
 		buffer.Match{
 			file_path: "test-file.txt"
-			pos: buffer.Pos{ x: 3, y: 112 },
+			pos: buffer.Position{ line: 112, offset: 3 },
 			contents: "TODO(tauraamui) [11/01/2025] blah blah blah blah...!"
 			keyword_len: 4
 		}
@@ -112,12 +112,12 @@ fn test_todo_comment_modal_enter_returns_currently_selected_match_entry() {
 	mut mock_modal := TodoCommentPickerModal.new([
 		buffer.Match{
 			file_path: "example-file.txt"
-			pos: buffer.Pos{ x: 11, y: 38 },
+			pos: buffer.Position{ line: 38, offset: 11 },
 			contents: "A fake l // -x TODO(tauraamui) [28/02/2025] random comment"
 		},
 		buffer.Match{
 			file_path: "test-file.txt"
-			pos: buffer.Pos{ x: 3, y: 112 },
+			pos: buffer.Position{ line: 112, offset: 3 },
 			contents: "// -x TODO(tauraamui) [11/01/2025] blah blah blah blah...!"
 		}
 	])

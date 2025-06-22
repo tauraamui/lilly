@@ -583,7 +583,7 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 fn (mut view View) draw(mut ctx draw.Contextable) {
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
-	view.update_to() // NOTE(tauraamui) [18/03/2025]: yes, I shouldn't need to keep calling this
+	// view.update_to() // NOTE(tauraamui) [18/03/2025]: yes, I shouldn't need to keep calling this
 					 // anymore, seeing as the buffer_view just works off of the relative "from" and
 					 // the given height it is told to work within, but if we don't call it, the
 					 // cursor won't move, so... *sniff sniff*, smells like toxic tech debt, yayyyy!
@@ -665,11 +665,11 @@ fn (mut view View) exec(op chords.Op) {
 
 fn (mut view View) insert_tab() {
 	pos := view.buffer.insert_tab(
-		buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y },
+		buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x },
 		view.config.insert_tabs_not_spaces,
 	) or { return }
-	view.cursor.pos.x = pos.x
-	view.cursor.pos.y = pos.y
+	view.cursor.pos.y = pos.line
+	view.cursor.pos.x = pos.offset
 	view.scroll_from_and_to()
 }
 
@@ -731,9 +731,9 @@ fn (mut view View) char_insert(s string) {
 }
 
 fn (mut view View) insert_text(s string) {
-	pos := view.buffer.insert_text(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, s) or { return }
-	view.cursor.pos.x = pos.x
-	view.cursor.pos.y = pos.y
+	pos := view.buffer.insert_text(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x }, s) or { return }
+	view.cursor.pos.y = pos.line
+	view.cursor.pos.x = pos.offset
 	view.scroll_from_and_to()
 }
 
@@ -973,7 +973,7 @@ fn (mut view View) k() {
 
 fn (mut view View) i() {
 	view.leader_state.mode = .insert
-	view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
+	view.buffer.move_cursor_to(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x })
 	if view.buffer.use_gap_buffer { return }
 	view.clamp_cursor_x_pos()
 }
@@ -993,9 +993,9 @@ fn (mut view View) r() {
 }
 
 fn (mut view View) x() {
-	pos := view.buffer.x(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
-	view.cursor.pos.x = pos.x
-	view.cursor.pos.y = pos.y
+	pos := view.buffer.x(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x }) or { return }
+	view.cursor.pos.y = pos.line
+	view.cursor.pos.x = pos.offset
 }
 
 fn (mut view View) visual_d(overwrite_y_lines bool) {}
@@ -1019,9 +1019,9 @@ fn (mut view View) visual_line_d(overwrite_y_lines bool) {
 
 fn (mut view View) w() {
 	if view.buffer.use_gap_buffer {
-		pos := view.buffer.find_next_word_start(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
-		view.cursor.pos.x = pos.x
-		view.cursor.pos.y = pos.y
+		pos := view.buffer.find_next_word_start(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x }) or { return }
+		view.cursor.pos.y = pos.line
+		view.cursor.pos.x = pos.offset
 		view.scroll_from_and_to()
 		return
 	}
@@ -1045,9 +1045,9 @@ fn (mut view View) w() {
 
 fn (mut view View) e() {
 	if view.buffer.use_gap_buffer {
-		pos := view.buffer.find_next_word_end(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
-		view.cursor.pos.x = pos.x
-		view.cursor.pos.y = pos.y
+		pos := view.buffer.find_next_word_end(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x }) or { return }
+		view.cursor.pos.y = pos.line
+		view.cursor.pos.x = pos.offset
 		view.scroll_from_and_to()
 		return
 	}
@@ -1073,9 +1073,9 @@ fn (mut view View) e() {
 
 fn (mut view View) b() {
 	if view.buffer.use_gap_buffer {
-		pos := view.buffer.find_prev_word_start(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
-		view.cursor.pos.x = pos.x
-		view.cursor.pos.y = pos.y
+		pos := view.buffer.find_prev_word_start(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x }) or { return }
+		view.cursor.pos.y = pos.line
+		view.cursor.pos.x = pos.offset
 		view.scroll_from_and_to()
 		return
 	}
@@ -1157,9 +1157,9 @@ fn (mut view View) d() {
 				})
 				// view.delete_line(index)
 				view.buffer.delete_line(index)
-				pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
-				view.cursor.pos.x = pos.x
-				view.cursor.pos.y = pos.y
+				pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x })
+				view.cursor.pos.x = pos.offset
+				view.cursor.pos.y = pos.line
 				view.escape()
 			}
 		}
@@ -1173,9 +1173,9 @@ fn (mut view View) d() {
 			})
 			view.buffer.delete_line_range(start_index, end_index)
 			view.cursor.pos.y = start_index
-			pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
-			view.cursor.pos.x = pos.x
-			view.cursor.pos.y = pos.y
+			pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x })
+			view.cursor.pos.x = pos.offset
+			view.cursor.pos.y = pos.line
 			view.escape()
 		}
 		else {}
@@ -1280,7 +1280,7 @@ fn (mut view View) u() {}
 
 fn (mut view View) o() {
 	if view.buffer.use_gap_buffer {
-		view.cursor.pos.x = view.buffer.find_end_of_line(buffer.Pos{ y: view.cursor.pos.y }) or { 0 }
+		view.cursor.pos.x = view.buffer.find_end_of_line(buffer.Position{ line: view.cursor.pos.y }) or { 0 }
 		view.i()
 		view.insert_text(buffer.lf.str())
 		view.scroll_from_and_to()
@@ -1369,9 +1369,9 @@ fn (mut view View) y() {
 }
 
 fn (mut view View) enter() {
-	pos := view.buffer.enter(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
-	view.cursor.pos.x = pos.x
-	view.cursor.pos.y = pos.y
+	pos := view.buffer.enter(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x }) or { return }
+	view.cursor.pos.x = pos.offset
+	view.cursor.pos.y = pos.line
 	view.scroll_from_and_to()
 }
 
@@ -1387,37 +1387,37 @@ fn resolve_whitespace_prefix(line string) string {
 }
 
 fn (mut view View) backspace() {
-	pos := view.buffer.backspace(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
-	view.cursor.pos.x = pos.x
-	view.cursor.pos.y = pos.y
+	pos := view.buffer.backspace(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x }) or { return }
+	view.cursor.pos.x = pos.offset
+	view.cursor.pos.y = pos.line
 	view.scroll_from_and_to()
 	return
 }
 
 fn (mut view View) left() {
-	pos := view.buffer.left(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
-	view.cursor.pos.x = pos.x
-	view.cursor.pos.y = pos.y
+	pos := view.buffer.left(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x }, view.leader_state.mode == .insert) or { return }
+	view.cursor.pos.x = pos.offset
+	view.cursor.pos.y = pos.line
 }
 
 fn (mut view View) right() {
-	pos := view.buffer.right(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
-	view.cursor.pos.x = pos.x
-	view.cursor.pos.y = pos.y
+	pos := view.buffer.right(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x }, view.leader_state.mode == .insert) or { return }
+	view.cursor.pos.x = pos.offset
+	view.cursor.pos.y = pos.line
 }
 
 fn (mut view View) down() {
-	pos := view.buffer.down(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
-	view.cursor.pos.x = pos.x
-	view.cursor.pos.y = pos.y
+	pos := view.buffer.down(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x }, view.leader_state.mode == .insert) or { return }
+	view.cursor.pos.x = pos.offset
+	view.cursor.pos.y = pos.line
 	view.scroll_from_and_to()
 }
 
 // WARN(tauraamui) [18/03/2025]: DO NOT USE
 fn (mut view View) up() {
 	pos := view.buffer.up(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x }, view.leader_state.mode == .insert) or { return }
-	view.cursor.pos.x = pos.x
-	view.cursor.pos.y = pos.y
+	view.cursor.pos.x = pos.offset
+	view.cursor.pos.y = pos.line
 	view.scroll_from_and_to()
 }
 
@@ -1708,7 +1708,7 @@ fn (mut view View) jump_cursor_up_to_next_blank_line() {
 }
 
 fn (mut view View) jump_cursor_down_to_next_blank_line() {
-	pos := view.buffer.down_to_next_blank_line(buffer.Position{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+	pos := view.buffer.down_to_next_blank_line(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x }) or { return }
 	view.cursor.pos.x = pos.offset
 	view.cursor.pos.y = pos.line
 	view.scroll_from_and_to()
