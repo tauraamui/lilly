@@ -6,12 +6,21 @@ mut:
 }
 
 pub fn (mut l_buffer LineBuffer) insert_text(pos Position, s string) ?Position {
-	line_id := pos.line
-	mut line_content := l_buffer.lines[line_id]
-	if line_content.len == 0 {
-		l_buffer.lines[line_id] = s
-		return Position.new(line_id, s.runes().len)
+	if l_buffer.lines.len == 0 {
+		l_buffer.lines = []string{ len: pos.line + 1 }
+		l_buffer.lines[pos.line] = s
+		return Position.new(pos.line, s.runes().len)
 	}
-	return none
+
+	line_content := l_buffer.lines[pos.line]
+	mut clamped_offset := if pos.offset > line_content.len { line_content.len } else { pos.offset }
+	if clamped_offset > line_content.runes().len { return Position.new(pos.line, clamped_offset) }
+
+	pre_line_content  := line_content.runes()[..pos.offset].string()
+	post_line_content := line_content.runes()[pos.offset..line_content.runes().len].string()
+
+	l_buffer.lines[pos.line] = "${pre_line_content}${s}${post_line_content}"
+
+	return pos.add(Distance{ lines: 0, offset: s.runes().len })
 }
 
