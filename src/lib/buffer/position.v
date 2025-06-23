@@ -6,8 +6,8 @@ pub:
 	offset int
 }
 
-pub fn Position.new() Position {
-	return Position{ line: 0, offset: 0 }
+pub fn Position.new(line int, offset int) Position {
+	return Position{ line: line, offset: offset }
 }
 
 pub fn (p Position) add(d Distance) Position {

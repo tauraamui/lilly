@@ -76,7 +76,7 @@ pub fn (buffer Buffer) num_of_lines() int {
 }
 
 pub fn (mut buffer Buffer) move_cursor_to(pos Pos) {
-	buffer.c_buffer.move_cursor_to(pos)
+	buffer.c_buffer.move_cursor_to(Position.new(pos.y, pos.x))
 }
 
 /*
