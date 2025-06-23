@@ -70,4 +70,26 @@ fn test_line_buffer_insert_text_at_end_of_existing_line() {
 	assert line_buf.lines == ["1. first line", "2. second line text at end of second line", "3. third line", "4. fourth line"]
 }
 
+fn test_line_buffer_insert_tab_tabs_as_spaces_disabled() {
+	mut line_buf := LineBuffer{
+		lines: []
+	}
+
+	tabs_not_spaces := true
+	new_pos := line_buf.insert_tab(Position.new(0, 0), tabs_not_spaces)?
+	assert new_pos == Position.new(0, 1)
+	assert line_buf.lines == ['\t']
+}
+
+fn test_line_buffer_insert_tab_tabs_as_spaces_enabled() {
+	mut line_buf := LineBuffer{
+		lines: []
+	}
+
+	tabs_not_spaces := false
+	new_pos := line_buf.insert_tab(Position.new(0, 0), tabs_not_spaces)?
+	assert new_pos == Position.new(0, 4)
+	assert line_buf.lines == ["    "]
+}
+
 
