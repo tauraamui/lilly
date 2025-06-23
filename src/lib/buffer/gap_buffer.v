@@ -57,7 +57,7 @@ pub fn (mut gap_buffer GapBuffer) insert(r rune) {
 	gap_buffer.insert_rune(r)
 }
 
-pub fn (mut gap_buffer GapBuffer) insert_at(r rune, pos Position) {
+pub fn (mut gap_buffer GapBuffer) insert_at(r rune, pos Pos) {
 	gap_buffer.move_cursor_to(pos)
 	gap_buffer.insert_rune(r)
 }
@@ -135,7 +135,7 @@ fn (mut gap_buffer GapBuffer) resize_if_full() {
 	gap_buffer.data = data_dest
 }
 
-pub fn (gap_buffer GapBuffer) in_bounds(pos Position) bool {
+pub fn (gap_buffer GapBuffer) in_bounds(pos Pos) bool {
 	_ := gap_buffer.find_offset(pos) or { return false }
 	return true
 }
@@ -152,7 +152,7 @@ pub fn (gap_buffer GapBuffer) find_end_of_line(pos Position) ?int {
 	return gap_buffer.data[offset..].len
 }
 
-fn resolve_cursor_pos(mut scanner Scanner, data []rune, offset int, gap_start int, gap_end int) ?Position {
+fn resolve_cursor_pos(mut scanner Scanner, data []rune, offset int, gap_start int, gap_end int) ?Pos {
 	mut gap_count := 0
 	for index, c in data[offset..] {
 		cc := (index + offset)
@@ -169,7 +169,7 @@ fn resolve_cursor_pos(mut scanner Scanner, data []rune, offset int, gap_start in
 	return none
 }
 
-pub fn (gap_buffer GapBuffer) find_next_word_start(pos Position) ?Position {
+pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
@@ -180,7 +180,7 @@ pub fn (gap_buffer GapBuffer) find_next_word_start(pos Position) ?Position {
 	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset, gap_buffer.gap_start, gap_buffer.gap_end)
 }
 
-pub fn (gap_buffer GapBuffer) find_next_word_end(pos Position) ?Position {
+pub fn (gap_buffer GapBuffer) find_next_word_end(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
@@ -191,7 +191,7 @@ pub fn (gap_buffer GapBuffer) find_next_word_end(pos Position) ?Position {
 	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset, gap_buffer.gap_start, gap_buffer.gap_end)
 }
 
-pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Position) ?Position {
+pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
@@ -213,12 +213,12 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Position) ?Position {
 			if iter_count >= 1 && !is_whitespace(previous_cchar) {
 				break
 			}
-			cursor_loc.offset -= 1
+			cursor_loc.x -= 1
 			continue
 		}
 
 		if cchar == lf {
-			cursor_loc.line -= 1
+			cursor_loc.y -= 1
 			mut line_len := 0
 			for j := i; j >= 0; j-- {
 				if i == j { continue }
@@ -231,15 +231,15 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Position) ?Position {
 					break
 				}
 			}
-			cursor_loc.offset = line_len
-			if cursor_loc.offset == 0 {
+			cursor_loc.x = line_len
+			if cursor_loc.x == 0 {
 				break
 			}
 			continue
 		}
 
 		if !is_whitespace(cchar) {
-			cursor_loc.offset -= 1
+			cursor_loc.x -= 1
 			continue
 		}
 	}
@@ -249,7 +249,7 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Position) ?Position {
 
 // TODO(tauraamui) [20/01/25]: Need to adjust movement behaviour based on mode,
 //                             so basically when we're in insert mode do the thing.
-pub fn (gap_buffer GapBuffer) left(pos Position) ?Position {
+pub fn (gap_buffer GapBuffer) left(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
@@ -267,19 +267,19 @@ pub fn (gap_buffer GapBuffer) left(pos Position) ?Position {
 	//
 
 	if data.len == 0 { return none }
-	if cursor_loc.offset - 1 < 0 { return none }
+	if cursor_loc.x - 1 < 0 { return none }
 
-	if data[cursor_loc.offset - 1] == lf {
+	if data[cursor_loc.x - 1] == lf {
 		return none
 	}
 
-	cursor_loc.offset -= 1
-	if cursor_loc.offset < 0 { cursor_loc.offset = 0 }
+	cursor_loc.x -= 1
+	if cursor_loc.x < 0 { cursor_loc.x = 0 }
 
 	return cursor_loc
 }
 
-pub fn (gap_buffer GapBuffer) right(pos Position, insert_mode bool) ?Position {
+pub fn (gap_buffer GapBuffer) right(pos Pos, insert_mode bool) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
@@ -291,24 +291,24 @@ pub fn (gap_buffer GapBuffer) right(pos Position, insert_mode bool) ?Position {
 	//                          one position left or right, however its the fastest
 	//                          method to implement for now, but this needs to be
 	//                          optimised
-	data_pre_gap  := gap_buffer.data[..gap_buffer.gap_start]
+	data_pre_gap := gap_buffer.data[..gap_buffer.gap_start]
 	data_post_gap := gap_buffer.data[gap_buffer.gap_end..]
-	data          := arrays.merge(data_pre_gap, data_post_gap)
+	data := arrays.merge(data_pre_gap, data_post_gap)
 	//
 
 	if data.len == 0 { return none }
-	if cursor_loc.offset + 1 >= data.len { return none }
+	if cursor_loc.x + 1 >= data.len { return none }
 
-	if data[cursor_loc.offset + 1] == lf {
+	if data[cursor_loc.x + 1] == lf {
 		return none
 	}
 
-	cursor_loc.offset += 1
+	cursor_loc.x += 1
 
 	return cursor_loc
 }
 
-pub fn (gap_buffer GapBuffer) down(pos Position) ?Position {
+pub fn (gap_buffer GapBuffer) down(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
@@ -320,9 +320,9 @@ pub fn (gap_buffer GapBuffer) down(pos Position) ?Position {
 	//                          one position up or down, however its the fastest
 	//                          method to implement for now, but this needs to be
 	//                          optimised
-	data_pre_gap  := gap_buffer.data[..gap_buffer.gap_start]
+	data_pre_gap := gap_buffer.data[..gap_buffer.gap_start]
 	data_post_gap := gap_buffer.data[gap_buffer.gap_end..]
-	data          := arrays.merge(data_pre_gap, data_post_gap)[offset..]
+	data := arrays.merge(data_pre_gap, data_post_gap)[offset..]
 	//
 
 	if data.len == 0 { return none }
@@ -332,25 +332,25 @@ pub fn (gap_buffer GapBuffer) down(pos Position) ?Position {
 		if cchar == lf {
 			if already_found_newline { break }
 			already_found_newline = true
-			cursor_loc.line += 1
-			cursor_loc.offset = -1
+			cursor_loc.y += 1
+			cursor_loc.x = -1
 			continue
 		}
 		if already_found_newline {
-			cursor_loc.offset += 1
-			if cursor_loc.offset > pos.offset {
-				cursor_loc.offset = pos.offset
+			cursor_loc.x += 1
+			if cursor_loc.x > pos.x {
+				cursor_loc.x = pos.x
 				break
 			}
 		}
 	}
 
-	if cursor_loc.offset < 0 { cursor_loc.offset = 0 }
+	if cursor_loc.x < 0 { cursor_loc.x = 0 }
 
 	return cursor_loc
 }
 
-pub fn (gap_buffer GapBuffer) up(pos Position) ?Position {
+pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
@@ -362,9 +362,9 @@ pub fn (gap_buffer GapBuffer) up(pos Position) ?Position {
 	//                          one position left or right, however its the fastest
 	//                          method to implement for now, but this needs to be
 	//                          optimised
-	data_pre_gap  := gap_buffer.data[..gap_buffer.gap_start]
+	data_pre_gap := gap_buffer.data[..gap_buffer.gap_start]
 	data_post_gap := gap_buffer.data[gap_buffer.gap_end..]
-	data          := arrays.merge(data_pre_gap, data_post_gap)
+	data := arrays.merge(data_pre_gap, data_post_gap)
 	//
 
 	if data.len == 0 { return none }
@@ -374,25 +374,25 @@ pub fn (gap_buffer GapBuffer) up(pos Position) ?Position {
 		if cchar == lf {
 			if already_found_newline { break }
 			already_found_newline = true
-			cursor_loc.line -= 1
-			cursor_loc.offset = -1
+			cursor_loc.y -= 1
+			cursor_loc.x = -1
 			continue
 		}
 		if already_found_newline {
-			cursor_loc.offset += 1
-			if cursor_loc.offset > pos.offset {
-				cursor_loc.offset = pos.offset
+			cursor_loc.x += 1
+			if cursor_loc.x > pos.x {
+				cursor_loc.x = pos.x
 				break
 			}
 		}
 	}
 
-	if cursor_loc.offset < 0 { cursor_loc.offset = 0 }
+	if cursor_loc.x < 0 { cursor_loc.x = 0 }
 
 	return cursor_loc
 }
 
-pub fn (gap_buffer GapBuffer) up_to_next_blank_line(pos Position) ?Position {
+pub fn (gap_buffer GapBuffer) up_to_next_blank_line(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
 
@@ -408,9 +408,9 @@ pub fn (gap_buffer GapBuffer) up_to_next_blank_line(pos Position) ?Position {
 	// we've actually elapsed in the data as opposed to how much
 	// was the gap size. Should probably benchmark and alloc profile
 	// the two different options.
-	data_pre_gap  := gap_buffer.data[..gap_buffer.gap_start]
+	data_pre_gap := gap_buffer.data[..gap_buffer.gap_start]
 	data_post_gap := gap_buffer.data[gap_buffer.gap_end..]
-	data          := arrays.merge(data_pre_gap, data_post_gap)
+	data := arrays.merge(data_pre_gap, data_post_gap)
 
 	mut compound_y := 0
 	for i := offset; i >= 0; i-- {
@@ -425,8 +425,8 @@ pub fn (gap_buffer GapBuffer) up_to_next_blank_line(pos Position) ?Position {
 	}
 
 	if compound_y > 0 {
-		cursor_loc.offset = 0
-		cursor_loc.line -= compound_y
+		cursor_loc.x = 0
+		cursor_loc.y -= compound_y
 	}
 
 	return cursor_loc
@@ -448,9 +448,9 @@ pub fn (gap_buffer GapBuffer) down_to_next_blank_line(pos Position) ?Position {
 	// we've actually elapsed in the data as opposed to how much
 	// was the gap size. Should probably benchmark and alloc profile
 	// the two different options.
-	data_pre_gap  := gap_buffer.data[..gap_buffer.gap_start]
+	data_pre_gap := gap_buffer.data[..gap_buffer.gap_start]
 	data_post_gap := gap_buffer.data[gap_buffer.gap_end..]
-	data          := arrays.merge(data_pre_gap, data_post_gap)
+	data := arrays.merge(data_pre_gap, data_post_gap)
 
 	mut compound_y := 0
 	for i in offset..data.len - 1 {
@@ -465,8 +465,8 @@ pub fn (gap_buffer GapBuffer) down_to_next_blank_line(pos Position) ?Position {
 	}
 
 	if compound_y > 0 {
-		cursor_loc.offset = 0
-		cursor_loc.line += compound_y
+		cursor_loc.x = 0
+		cursor_loc.y += compound_y
 	}
 
 	return cursor_loc
@@ -498,20 +498,20 @@ fn (gap_buffer GapBuffer) raw_str() string {
 interface Scanner {
 mut:
 	consume(index int, c rune)
-	done()   bool
-	result() Position
+	done() bool
+	result() Pos
 }
 
 struct WordStartScanner {
 mut:
-	start_pos         Position
-	compound_x        int
-	compound_y        int
-	previous          rune
-	set_previous      bool
+	start_pos  Pos
+	compound_x int
+	compound_y int
+	previous   rune
+	set_previous bool
 	set_x_to_line_end bool
-	done              bool
-	res               ?Position
+	done       bool
+	res        ?Pos
 }
 
 fn (mut s WordStartScanner) consume(index int, c rune) {
@@ -529,7 +529,7 @@ fn (mut s WordStartScanner) consume(index int, c rune) {
 		s.compound_x += 1
 		if c == lf {
 			s.compound_x = 0
-			s.start_pos.offset = 0
+			s.start_pos.x = 0
 			if s.previous == lf {
 				s.done = true
 				return
@@ -544,18 +544,18 @@ fn (s WordStartScanner) done() bool {
 	return s.done
 }
 
-fn (mut s WordStartScanner) result() Position {
-	return Position{ line: s.start_pos.line + s.compound_y, offset: s.start_pos.offset + s.compound_x }
+fn (mut s WordStartScanner) result() Pos {
+	return Pos{ x: s.start_pos.x + s.compound_x, y: s.start_pos.y + s.compound_y }
 }
 
 struct WordEndScanner {
 mut:
-	start_pos  Position
+	start_pos  Pos
 	compound_x int
 	compound_y int
 	previous   rune
 	done       bool
-	res        ?Position
+	res        ?Pos
 }
 
 fn (mut s WordEndScanner) consume(index int, c rune) {
@@ -571,7 +571,7 @@ fn (mut s WordEndScanner) consume(index int, c rune) {
 		s.compound_x += 1
 		if c == lf {
 			s.compound_x = 0
-			s.start_pos.offset = 0
+			s.start_pos.x = 0
 			if s.previous == lf {
 				s.done = true
 				return
@@ -588,8 +588,8 @@ fn (mut s WordEndScanner) done() bool {
 	return s.done
 }
 
-fn (mut s WordEndScanner) result() Position {
-	return Position{ line: s.start_pos.line + s.compound_y, offset: s.start_pos.offset + s.compound_x }
+fn (mut s WordEndScanner) result() Pos {
+	return Pos{ x: s.start_pos.x + s.compound_x, y: s.start_pos.y + s.compound_y }
 }
 
 // FIXME(tauraamui): I think this function doesn't need to include the gap as part of the offset'
@@ -613,13 +613,13 @@ fn (gap_buffer GapBuffer) find_offset(pos Position) ?int {
 		line_offset += 1
 	}
 
-	if line == pos.line && line_offset == pos.offset {
+	if line == pos.y && line_offset == pos.x {
 		return gap_buffer.gap_start + (gap_buffer.gap_end - gap_buffer.gap_start)
 	}
 
 	post_gap_data := gap_buffer.data[gap_buffer.gap_start + (gap_buffer.gap_end - gap_buffer.gap_start)..]
 	for offset, c in post_gap_data {
-		if line == pos.line && line_offset == pos.offset {
+		if line == pos.y && line_offset == pos.x {
 			return gap_buffer.gap_start + (gap_buffer.gap_end - gap_buffer.gap_start) + offset
 		}
 
@@ -729,7 +729,7 @@ pub fn (mut iter PatternMatchIteratorFromGapBuffer) next() ?Match {
 		}
 
 		return Match{
-			pos:      Position{ line: current_line_id, offset: found_index }
+			pos: Pos{ x: found_index, y: current_line_id }
 			contents: line_to_search.runes()[found_index..found_index + iter.pattern.len].string()
 		}
 	}

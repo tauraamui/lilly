@@ -337,7 +337,7 @@ fn test_x_does_not_remove_characters_on_multi_line_document_if_at_line_end() {
 	// manually set the "document" contents
 	fake_view.buffer.load_contents_into_gap("1. first line\n2. second line\n3. third line")
 
-	fake_view.cursor.pos.x = fake_view.buffer.find_end_of_line(buffer.Position{ line: fake_view.cursor.pos.y }) or { 0 }
+	fake_view.cursor.pos.x = fake_view.buffer.find_end_of_line(buffer.Pos{ y: fake_view.cursor.pos.y }) or { 0 }
 	fake_view.x()
 
 	lines := fake_view.buffer.str().split("\n")
@@ -1338,11 +1338,11 @@ fn test_find_end_of_line() {
 	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 0
 
-	mut x_pos := fake_view.buffer.find_end_of_line(buffer.Position{ line: fake_view.cursor.pos.y }) or { 0 }
+	mut x_pos := fake_view.buffer.find_end_of_line(buffer.Pos{ y: fake_view.cursor.pos.y }) or { 0 }
 	assert x_pos == 13
 
 	fake_view.cursor.pos.y = 1
-	x_pos = fake_view.buffer.find_end_of_line(buffer.Position{ line: fake_view.cursor.pos.y }) or { 0 }
+	x_pos = fake_view.buffer.find_end_of_line(buffer.Pos{ y: fake_view.cursor.pos.y }) or { 0 }
 	assert x_pos == 35
 }
 

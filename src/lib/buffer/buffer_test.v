@@ -87,7 +87,7 @@ fn test_buffer_load_from_path_and_iterate_over_pattern_matches() {
 		found_match := match_iter.next() or { continue }
 		found_match_count += 1
 		assert found_match == Match{
-			pos: Position{ line: 1, offset: 3 }
+			pos: Pos{ x: 3, y: 1 }
 			contents: "TODO(tauraamui) [30/01/25]: this line has a comment to find"
 			keyword_len: 4
 		}
@@ -123,7 +123,7 @@ fn test_buffer_load_from_path_and_iterate_over_pattern_matches_excluding_matches
 
 	assert found_matches.len == 1
 	assert found_matches[0] == Match{
-		pos: Position{ line: 1, offset: 3 }
+		pos: Pos{ x: 3, y: 1 }
 		contents: "TODO(tauraamui) [30/01/25]: this line has a comment to find"
 		keyword_len: 4
 	}
@@ -156,7 +156,7 @@ fn test_buffer_load_from_path_and_iterate_over_pattern_matches_excluding_matches
 
 	assert found_matches.len == 1
 	assert found_matches[0] == Match{
-		pos: Position{ line: 2, offset: 3 }
+		pos: Pos{ x: 3, y: 2 }
 		contents: "TODO(tauraamui) [30/01/25]: comment without exclusion prefix 2. This is a second line"
 		keyword_len: 4
 	}
@@ -180,7 +180,7 @@ fn test_buffer_load_from_path_with_gap_buffer_and_iterate_over_pattern_matches()
 		found_match := match_iter.next() or { continue }
 		found_match_count += 1
 		assert found_match == Match{
-			pos: Position{ line: 1, offset: 3 }
+			pos: Pos{ x: 3, y: 1 }
 			contents: "TODO"
 		}
 	}
@@ -202,6 +202,6 @@ fn test_buffer_insert_text() {
 fn test_buffer_enter_inserts_newline_line() {
 	mut buffer := Buffer.new("", true)
 	buffer.c_buffer = GapBuffer.new("1. first line\n2. second line\n3. third line")
-	buffer.write_at(lf, Position{ line: 0, offset: 4 })
+	buffer.write_at(lf, Pos{ x: 4, y: 0 })
 	assert buffer.str() == "1. f\nirst line\n2. second line\n3. third line"
 }
