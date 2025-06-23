@@ -40,4 +40,14 @@ fn test_line_buffer_insert_text_at_middle_of_existing_line() {
 	assert line_buf.lines == ["1. first line", "2. seco middle text within second line nd line", "3. third line", "4. fourth line"]
 }
 
+fn test_line_buffer_insert_text_at_end_of_existing_line() {
+	mut line_buf := LineBuffer{
+		lines: ["1. first line", "2. second line", "3. third line", "4. fourth line"]
+	}
+
+	new_pos := line_buf.insert_text(Position.new(1, 14), " text at end of second line")?
+	assert new_pos == Position.new(1, 41)
+	assert line_buf.lines == ["1. first line", "2. second line text at end of second line", "3. third line", "4. fourth line"]
+}
+
 
