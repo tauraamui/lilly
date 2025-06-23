@@ -1415,7 +1415,7 @@ fn (mut view View) down() {
 
 // WARN(tauraamui) [18/03/2025]: DO NOT USE
 fn (mut view View) up() {
-	pos := view.buffer.up(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x }, view.leader_state.mode == .insert) or { return }
+	pos := view.buffer.up(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
 	view.cursor.pos.x = pos.x
 	view.cursor.pos.y = pos.y
 	view.scroll_from_and_to()
@@ -1701,16 +1701,16 @@ fn calc_b_move_amount(cursor_pos ui.CursorPos, line string, recursive_call bool)
 }
 
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
-	pos := view.buffer.up_to_next_blank_line(buffer.Position{ line: view.cursor.pos.y, offset: view.cursor.pos.x }) or { return }
-	view.cursor.pos.x = pos.offset
-	view.cursor.pos.y = pos.line
+	pos := view.buffer.up_to_next_blank_line(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
 	view.scroll_from_and_to()
 }
 
 fn (mut view View) jump_cursor_down_to_next_blank_line() {
-	pos := view.buffer.down_to_next_blank_line(buffer.Position{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
-	view.cursor.pos.x = pos.offset
-	view.cursor.pos.y = pos.line
+	pos := view.buffer.down_to_next_blank_line(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
 	view.scroll_from_and_to()
 }
 
