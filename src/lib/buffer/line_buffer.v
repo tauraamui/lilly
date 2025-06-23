@@ -26,3 +26,8 @@ pub fn (mut l_buffer LineBuffer) insert_text(pos Position, s string) ?Position {
 	return clamped_pos.add(Distance{ lines: 0, offset: s.runes().len })
 }
 
+pub fn (mut l_buffer LineBuffer) insert_tab(pos Position, tabs_not_spaces bool) ?Position {
+	if tabs_not_spaces { return l_buffer.insert_text(pos, '\t') }
+	return l_buffer.insert_text(pos, " ".repeat(4))
+}
+
