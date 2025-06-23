@@ -19,13 +19,11 @@ import rand
 
 pub type UUID_t = string
 
-/*
 pub struct Pos {
 pub mut:
 	x int
 	y int
 }
-*/
 
 @[heap]
 pub struct Buffer {
@@ -407,7 +405,7 @@ pub fn (buffer Buffer) down_to_next_blank_line(pos Pos) ?Pos {
 	return none
 }
 
-pub fn (mut buffer Buffer) replace_char(pos Position, code u8, str string) {
+pub fn (mut buffer Buffer) replace_char(pos Pos, code u8, str string) {
 	if buffer.use_gap_buffer {
 		assert true == false
 		return
@@ -417,10 +415,10 @@ pub fn (mut buffer Buffer) replace_char(pos Position, code u8, str string) {
 		return
 	}
 	cursor := pos
-	line := buffer.lines[pos.line].runes()
+	line := buffer.lines[pos.y].runes()
 	start := line[..cursor.x]
-	end := line[cursor.offset + 1..]
-	buffer.lines[cursor.line] = "${start.string()}${str}${end.string()}"
+	end := line[cursor.x + 1..]
+	buffer.lines[cursor.y] = "${start.string()}${str}${end.string()}"
 }
 
 pub fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
