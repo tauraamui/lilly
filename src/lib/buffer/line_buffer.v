@@ -6,8 +6,8 @@ mut:
 }
 
 pub fn (mut l_buffer LineBuffer) insert_text(pos Position, s string) ?Position {
-	if l_buffer.lines.len == 0 {
-		l_buffer.lines = []string{ len: pos.line + 1 }
+	if l_buffer.lines.len - 1 < pos.line {
+		l_buffer.lines << []string{ len: pos.line - l_buffer.lines.len + 1 }
 		l_buffer.lines[pos.line] = s
 		return Position.new(pos.line, s.runes().len)
 	}
