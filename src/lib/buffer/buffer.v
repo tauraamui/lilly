@@ -36,6 +36,7 @@ pub mut:
 	lines            []string
 	dirty            bool
 mut:
+	l_buffer         LineBuffer
 	c_buffer         GapBuffer
 	// line_tracker LineTracker
 }
