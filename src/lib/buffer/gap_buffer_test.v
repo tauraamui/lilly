@@ -113,10 +113,10 @@ fn test_find_offset() {
 
 	assert gb.gap_start == 0
 	gap_size := gb.gap_end - gb.gap_start
-	assert gb.find_offset(Pos{ x: 0, y: 0 })! == gap_size
-	assert gb.find_offset(Pos{ x: 3, y: 0 })! == gap_size + 3
-	assert gb.find_offset(Pos{ x: 0, y: 1 })! == gap_size + 14
-	assert gb.find_offset(Pos{ x: 4, y: 1 })! == gap_size + 18
+	assert gb.find_offset(Position{ line: 0, offset: 0 })! == gap_size
+	assert gb.find_offset(Position{ line: 0, offset: 3 })! == gap_size + 3
+	assert gb.find_offset(Position{ line: 1, offset: 0 })! == gap_size + 14
+	assert gb.find_offset(Position{ line: 1, offset: 4 })! == gap_size + 18
 	assert gb.in_bounds(Pos{ y: 255 }) == false
 	assert gb.in_bounds(Pos{ y: 2 })
 	assert gb.in_bounds(Pos{ y: 3 }) == false
