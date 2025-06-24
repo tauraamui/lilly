@@ -134,6 +134,8 @@ fn (mut lilly Lilly) open_file_at(path string, pos ?ui.CursorPos) ! {
 	return lilly.open_file_with_reader_at(path, pos, lilly.line_reader or { os.read_lines })
 }
 
+// TODO(tauraamui) [24/06/2025]: re-architect how the buffers/document contents themselves are managed
+//                  and passed into their respective views/buffer views
 fn (mut lilly Lilly) open_file_with_reader_at(path string, pos ?ui.CursorPos, line_reader fn (path string) ![]string) ! {
 	if mut existing_file_buff := lilly.file_buffers[path] {
 		if existing_view := lilly.buffer_views[existing_file_buff.uuid] {
