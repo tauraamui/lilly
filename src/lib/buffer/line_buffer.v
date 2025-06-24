@@ -6,10 +6,9 @@ mut:
 }
 
 pub fn (mut l_buffer LineBuffer) insert_text(pos Position, s string) ?Position {
-	if l_buffer.lines.len - 1 < pos.line {
-		l_buffer.lines << []string{ len: pos.line - l_buffer.lines.len + 1 }
-		l_buffer.lines[pos.line] = s
-		return Position.new(pos.line, s.runes().len)
+	// handle if set of lines up to position don't exist
+	if l_buffer.expansion_required(pos) {
+		return grow_and_set(mut l_buffer.lines, pos.line, s)
 	}
 
 	line_content := l_buffer.lines[pos.line]
@@ -29,5 +28,24 @@ pub fn (mut l_buffer LineBuffer) insert_text(pos Position, s string) ?Position {
 pub fn (mut l_buffer LineBuffer) insert_tab(pos Position, tabs_not_spaces bool) ?Position {
 	if tabs_not_spaces { return l_buffer.insert_text(pos, '\t') }
 	return l_buffer.insert_text(pos, " ".repeat(4))
+}
+
+pub fn (mut l_buffer LineBuffer) newline(pos Position) ?Position {
+	// handle if set of lines up to position don't exist
+	if l_buffer.expansion_required(pos) {
+		return grow_and_set(mut l_buffer.lines, pos.line, [lf].string())
+	}
+	return none
+}
+
+fn (l_buffer LineBuffer) expansion_required(pos Position) bool {
+	return l_buffer.lines.len - 1 < pos.line
+}
+
+fn grow_and_set(mut lines []string, pos_line int, data_to_set string) Position {
+	s := data_to_set
+	lines << []string{ len: pos_line - lines.len + 1 }
+	lines[pos_line] = s
+	return Position.new(pos_line, s.runes().len)
 }
 
