@@ -18,6 +18,28 @@
 An editor designed as a batteries included experience, eliminating the need for plugins. So, basically Helix but for VIM
 motions. The end vision is a one to one replacement/equivalent functionality for all VIM features, macros, motions, and more.
 
+## Current project state
+
+I am adding this note to attempt to convey the current state of the project. The main focus for the last few months has been
+to move the document rendering from the own `View.draw_document` method to the new `ui.BufferView` type. This was going fine
+until the old method of rendering to the screen started to become a bottleneck. This resulted in a lot of flickering on 99% of term
+emulators on all platforms slow + fast hardware alike, as the new document renderer was invoking a LOT more draw calls.
+
+So migrating to the new document renderer was put on hold until the rendering performance issue was addressed. These two tasks
+are now complete, so the document rendering performance is much much better (its also now possible to support fully filled in coloured backgrounds, yay!).
+The immediate mode style API and indeed 99% of the code for the rest of Lilly did not need to change for the render speedup at all,
+thanks to some initial foresight and good planning on my part (whew!).
+
+The focus has now switched back to moving all document structure stuff to the new gap buffer implementation and away from the first naive
+"what is literally the lowest effort thing we can do right now" list of strings, one string per line "line buffer". However, at present there
+is too much coupling between the document buffer state within the Buffer type, and `View`. This coupling needs to be removed but while still
+using the existing document data structure as to prevent too many large changes at once. I am attempting to acomplish this for now by
+moving all direct document lines interaction into its own buffer implementation, called "LineBuffer". The aim is that once we have finished,
+switching between different underlying buffers will be as simple as just changing the type field being used. This is currently not possible.
+
+Anyway, I get that there is a lot of text here, but hopefully someone finds this useful to understand where I (tauraamui) am putting my main
+focus within Lilly right now.
+
 ## Milestone 1: A pre-alpha release
 
 ### Targets:
