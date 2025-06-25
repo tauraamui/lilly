@@ -18,7 +18,7 @@
 An editor designed as a batteries included experience, eliminating the need for plugins. So, basically Helix but for VIM
 motions. The end vision is a one to one replacement/equivalent functionality for all VIM features, macros, motions, and more.
 
-## Current project state
+## Current project state (as of 25th Jun 2025)
 
 I am adding this note to attempt to convey the current state of the project. The main focus for the last few months has been
 to move the document rendering from the own `View.draw_document` method to the new `ui.BufferView` type. This was going fine
