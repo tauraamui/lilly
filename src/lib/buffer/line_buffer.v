@@ -35,6 +35,10 @@ pub fn (mut l_buffer LineBuffer) newline(pos Position) ?Position {
 	if l_buffer.expansion_required(pos) {
 		return grow_and_set(mut l_buffer.lines, pos.line, [lf].string())
 	}
+
+	line_at_pos := l_buffer.lines[pos.line]
+	clamped_offset := if pos.offset > line_at_pos.runes().len { line_at_pos.runes().len } else { pos.offset }
+	content_after_cursor := line_at_pos[clamped_offset..]
 	return none
 }
 
