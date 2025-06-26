@@ -1,5 +1,7 @@
 module buffer
 
+import arrays
+
 struct LineBuffer {
 mut:
 	lines []string
@@ -50,14 +52,14 @@ pub fn (mut l_buffer LineBuffer) newline(pos Position) ?Position {
 }
 
 fn resolve_whitespace_prefix_from_line(line string) string {
-	mut prefix_ends := 0
-	for i, c in line.runes() {
-		if !is_whitespace(c) {
-			prefix_ends = i
-			return line.runes()[..prefix_ends].string()
-		}
+	// when mapping over rune data, we acquire the first index for which a
+	// char is not empty/whitespace. first visible char we encounter, we return the index! :)
+	pre_prefix_index := arrays.index_of_first(line.runes(), fn (idx int, cchar rune) bool { return !is_whitespace(cchar) })
+	return match pre_prefix_index {
+		-1   { "" }
+		0    { "" }
+		else { line.runes()[..pre_prefix_index].string() }
 	}
-	return line
 }
 
 fn (l_buffer LineBuffer) expansion_required(pos Position) bool {
