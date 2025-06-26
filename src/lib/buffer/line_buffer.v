@@ -62,8 +62,26 @@ fn resolve_whitespace_prefix_from_line(line string) string {
 	}
 }
 
-fn (l_buffer LineBuffer) expansion_required(pos Position) bool {
+pub fn (mut l_buffer LineBuffer) x(pos Position) ?Position {
+	if l_buffer.is_oob(pos) { return none }
+
+	line_at_pos := l_buffer.lines[pos.line]
+	if line_at_pos.len == 0 { return none }
+
+	clamped_offset := if pos.offset >= line_at_pos.runes().len { line_at_pos.runes().len - 1 } else { pos.offset }
+	content_before_cursor := line_at_pos[..clamped_offset]
+	content_past_current_char := line_at_pos[clamped_offset + 1..]
+	l_buffer.lines[pos.line] = "${content_before_cursor}${content_past_current_char}"
+
+	return pos.add(Distance{ offset: -1 })
+}
+
+fn (l_buffer LineBuffer) is_oob(pos Position) bool {
 	return l_buffer.lines.len - 1 < pos.line
+}
+
+fn (l_buffer LineBuffer) expansion_required(pos Position) bool {
+	return l_buffer.is_oob(pos)
 }
 
 fn grow_and_set(mut lines []string, pos_line int, data_to_set string) Position {
