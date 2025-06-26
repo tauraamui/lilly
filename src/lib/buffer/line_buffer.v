@@ -33,12 +33,17 @@ pub fn (mut l_buffer LineBuffer) insert_tab(pos Position, tabs_not_spaces bool) 
 pub fn (mut l_buffer LineBuffer) newline(pos Position) ?Position {
 	// handle if set of lines up to position don't exist
 	if l_buffer.expansion_required(pos) {
+		// NOTE(tauraamui) [26/06/2025]: given that we should know for a fact
+		//                               in this scope that there is not existing line data
+		//                               to split and move, we should just do an append and return
+		//                               after the grow here, to save compute
 		return grow_and_set(mut l_buffer.lines, pos.line, [lf].string())
 	}
 
 	line_at_pos := l_buffer.lines[pos.line]
 	clamped_offset := if pos.offset > line_at_pos.runes().len { line_at_pos.runes().len } else { pos.offset }
 	content_after_cursor := line_at_pos[clamped_offset..]
+	content_before_cursor := line_at_pos[..clamped_offset]
 	return none
 }
 

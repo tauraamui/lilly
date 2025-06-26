@@ -92,4 +92,14 @@ fn test_line_buffer_insert_tab_tabs_as_spaces_enabled() {
 	assert line_buf.lines == ["    "]
 }
 
+fn test_line_buffer_newline_on_empty_document() {
+	mut line_buf := LineBuffer{
+		lines: []
+	}
+
+	line_buf.newline(Position.new(0, 0))
+
+	assert line_buf.lines == ["", ""]
+}
+
 
