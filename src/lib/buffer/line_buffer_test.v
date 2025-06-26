@@ -110,8 +110,18 @@ fn test_line_buffer_newline_on_existing_content_from_start_of_first_line() {
 
 	new_pos := line_buf.newline(Position.new(0, 0))?
 
-	assert new_pos == Position.new(1, 24)
+	assert new_pos == Position.new(1, 0)
 	assert line_buf.lines == ["", "1. first line of content"]
 }
 
+fn test_line_buffer_newline_on_existing_content_from_middle_of_first_line() {
+	mut line_buf := LineBuffer{
+		lines: ["1. first line of content"]
+	}
+
+	new_pos := line_buf.newline(Position.new(0, 11))?
+
+	assert new_pos == Position.new(1, 0)
+	assert line_buf.lines == ["1. first li", "ne of content"]
+}
 
