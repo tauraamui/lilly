@@ -97,8 +97,9 @@ fn test_line_buffer_newline_on_empty_document() {
 		lines: []
 	}
 
-	line_buf.newline(Position.new(0, 0))
+	new_pos := line_buf.newline(Position.new(0, 0))
 
+	assert new_pos == Position.new(1, 0)
 	assert line_buf.lines == ["", ""]
 }
 
