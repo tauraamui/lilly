@@ -42,9 +42,22 @@ pub fn (mut l_buffer LineBuffer) newline(pos Position) ?Position {
 	clamped_offset := if pos.offset > line_at_pos.runes().len { line_at_pos.runes().len } else { pos.offset }
 	content_after_cursor := line_at_pos[clamped_offset..]
 	content_before_cursor := line_at_pos[..clamped_offset]
+
+	whitespace_prefix := resolve_whitespace_prefix_from_line(content_before_cursor)
 	l_buffer.lines[pos.line] = content_before_cursor
-	l_buffer.lines << [content_after_cursor]
-	return Position.new(pos.line, 0).add(Distance{ lines: 1 })
+	l_buffer.lines << ["${whitespace_prefix}${content_after_cursor}"]
+	return Position.new(pos.line, 0).add(Distance{ lines: 1, offset: whitespace_prefix.runes().len })
+}
+
+fn resolve_whitespace_prefix_from_line(line string) string {
+	mut prefix_ends := 0
+	for i, c in line {
+		if !is_whitespace(c) {
+			prefix_ends = i
+			return line[..prefix_ends]
+		}
+	}
+	return line
 }
 
 fn (l_buffer LineBuffer) expansion_required(pos Position) bool {
