@@ -151,6 +151,11 @@ pub fn (mut buffer Buffer) insert_tab(pos Pos, tabs_not_spaces bool) ?Pos {
 	return buffer.insert_text(pos, ' '.repeat(4))
 }
 
+// NOTE(tauraamui) [26/06/2025]: this is effectively the newline insertion method.
+//                               when moving these methods line based logic to "LineBuffer"
+//                               it might be a good idea to take the opportunity to instead
+//                               handle processing newlines just as their own special case for
+//                               `text_insert`, but idk yet.
 pub fn (mut buffer Buffer) enter(pos Pos) ?Pos {
 	if buffer.use_gap_buffer {
 		buffer.move_cursor_to(pos)
