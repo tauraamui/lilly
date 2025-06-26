@@ -38,11 +38,13 @@ pub fn (mut l_buffer LineBuffer) newline(pos Position) ?Position {
 		return post_expand_pos.add(Distance{ lines: 1, offset: 0 })
 	}
 
-	// line_at_pos := l_buffer.lines[pos.line]
-	// clamped_offset := if pos.offset > line_at_pos.runes().len { line_at_pos.runes().len } else { pos.offset }
-	// content_after_cursor := line_at_pos[clamped_offset..]
-	// content_before_cursor := line_at_pos[..clamped_offset]
-	return none
+	line_at_pos := l_buffer.lines[pos.line]
+	clamped_offset := if pos.offset > line_at_pos.runes().len { line_at_pos.runes().len } else { pos.offset }
+	content_after_cursor := line_at_pos[clamped_offset..]
+	content_before_cursor := line_at_pos[..clamped_offset]
+	l_buffer.lines[pos.line] = content_before_cursor
+	l_buffer.lines << [content_after_cursor]
+	return pos.add(Distance{ lines: 1, offset: content_after_cursor.runes().len })
 }
 
 fn (l_buffer LineBuffer) expansion_required(pos Position) bool {
