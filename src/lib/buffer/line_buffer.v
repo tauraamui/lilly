@@ -51,10 +51,10 @@ pub fn (mut l_buffer LineBuffer) newline(pos Position) ?Position {
 
 fn resolve_whitespace_prefix_from_line(line string) string {
 	mut prefix_ends := 0
-	for i, c in line {
+	for i, c in line.runes() {
 		if !is_whitespace(c) {
 			prefix_ends = i
-			return line[..prefix_ends]
+			return line.runes()[..prefix_ends].string()
 		}
 	}
 	return line
