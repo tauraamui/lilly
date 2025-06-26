@@ -44,7 +44,7 @@ pub fn (mut l_buffer LineBuffer) newline(pos Position) ?Position {
 	content_before_cursor := line_at_pos[..clamped_offset]
 	l_buffer.lines[pos.line] = content_before_cursor
 	l_buffer.lines << [content_after_cursor]
-	return pos.add(Distance{ lines: 1, offset: content_after_cursor.runes().len })
+	return Position.new(pos.line, 0).add(Distance{ lines: 1 })
 }
 
 fn (l_buffer LineBuffer) expansion_required(pos Position) bool {
