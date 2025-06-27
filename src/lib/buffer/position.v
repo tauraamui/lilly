@@ -1,12 +1,12 @@
 module buffer
 
+@[noinit]
 pub struct Position {
 pub:
 	line   int
 	offset int
 }
 
-@[noinit]
 pub fn Position.new(line int, offset int) Position {
 	return Position{ line: line, offset: offset }
 }
