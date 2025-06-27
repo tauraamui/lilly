@@ -174,9 +174,9 @@ fn test_line_buffer_x_on_existing_content_from_end_of_first_line() {
 		lines: ["1. first line of content"]
 	}
 
-	new_pos := line_buf.x(Position.new(0, 24))?
+	new_pos := line_buf.x(Position.new(0, 23))?
 
-	assert new_pos == Position.new(0, 23)
+	assert new_pos == Position.new(0, 22)
 	assert line_buf.lines == ["1. first line of conten"]
 }
 
