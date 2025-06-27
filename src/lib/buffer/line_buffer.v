@@ -73,7 +73,7 @@ pub fn (mut l_buffer LineBuffer) x(pos Position) ?Position {
 	content_past_current_char := line_at_pos[clamped_offset + 1..]
 	l_buffer.lines[pos.line] = "${content_before_cursor}${content_past_current_char}"
 
-	return pos.add(Distance{ offset: -1 })
+	return Position.new(pos.line, clamped_offset).add(Distance{ offset: -1 })
 }
 
 fn (l_buffer LineBuffer) is_oob(pos Position) bool {
