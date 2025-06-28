@@ -13,9 +13,11 @@ pub fn Position.new(line int, offset int) Position {
 
 pub fn (p Position) add(d Distance) Position {
 	offset := if d.lines > 0 { d.offset } else { p.offset + d.offset }
+	line   := p.line + d.lines
+
 	return Position{
-		line: p.line + d.lines
-		offset: offset
+		line:   if line < 0 { 0 } else { line }
+		offset: if offset < 0 { 0 } else { offset }
 	}
 }
 
