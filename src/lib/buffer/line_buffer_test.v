@@ -218,9 +218,14 @@ fn test_line_buffer_backspace_on_existing_content_from_end_of_first_line() {
 		lines: ["1. first line of content"]
 	}
 
-	new_pos := line_buf.backspace(Position.new(0, 22))?
+	mut new_pos := line_buf.backspace(Position.new(0, 23))?
+
+	assert new_pos == Position.new(0, 22)
+	assert line_buf.lines == ["1. first line of conten"]
+
+	new_pos = line_buf.backspace(new_pos)?
 
 	assert new_pos == Position.new(0, 21)
-	assert line_buf.lines == ["1. first line of conten"]
+	assert line_buf.lines == ["1. first line of conte"]
 }
 
