@@ -76,6 +76,7 @@ pub fn (mut l_buffer LineBuffer) x(pos Position) ?Position {
 	return Position.new(pos.line, clamped_offset).add(Distance{ offset: -1 })
 }
 
+// NOTE(tauraamui): WIP/unfinished obviously :)
 pub fn (mut l_buffer LineBuffer) backspace(pos Position) ?Position {
 	if pos.line == 0 && pos.offset == 0 { return none }
 	return none
