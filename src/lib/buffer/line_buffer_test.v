@@ -147,6 +147,17 @@ fn test_line_buffer_newline_on_existing_content_within_middle_of_second_line() {
 	assert line_buf.lines == ["1. first line of content", "2. second lin", "e of content"]
 }
 
+fn test_line_buffer_newline_on_existing_content_within_middle_of_second_line_of_three_lines() {
+	mut line_buf := LineBuffer{
+		lines: ["1. first line of content", "2. second line of content", "3. third line of content"]
+	}
+
+	new_pos := line_buf.newline(Position.new(1, 13))?
+
+	assert new_pos == Position.new(2, 0)
+	assert line_buf.lines == ["1. first line of content", "2. second lin", "e of content"]
+}
+
 fn test_line_buffer_newline_on_existing_content_from_end_of_second_line_which_is_indented() {
 	mut line_buf := LineBuffer{
 		lines: ["fn function_definition() {", "    assert x == 100 && y == 20"]
