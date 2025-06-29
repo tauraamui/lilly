@@ -84,6 +84,12 @@ pub fn (mut l_buffer LineBuffer) backspace(pos Position) ?Position {
 	} else { pos }
 
 	line_at_pos := l_buffer.lines[clamped_pos.line]
+	if pos.offset > 0 {
+		mut line_content := l_buffer.lines[clamped_pos.line].runes()
+		line_content.delete(clamped_pos.offset)
+		l_buffer.lines[clamped_pos.line] = line_content.string()
+		return pos.add(Distance{ 0, -1 })
+	}
 
 	return none
 }
