@@ -180,7 +180,7 @@ fn test_line_buffer_x_on_existing_content_from_end_of_first_line() {
 	assert line_buf.lines == ["1. first line of conten"]
 }
 
-fn test_line_buffer_x_on_existing_content_from_end_of_start_of_line() {
+fn test_line_buffer_x_on_existing_content_from_start_of_line() {
 	mut line_buf := LineBuffer{
 		lines: ["1. first line of content"]
 	}
@@ -189,5 +189,16 @@ fn test_line_buffer_x_on_existing_content_from_end_of_start_of_line() {
 
 	assert new_pos == Position.new(0, 0)
 	assert line_buf.lines == [". first line of content"]
+}
+
+fn test_line_buffer_backspace_on_existing_content_from_start_of_first_line() {
+	mut line_buf := LineBuffer{
+		lines: ["1. first line of content"]
+	}
+
+	new_pos := line_buf.backspace(Position.new(0, 0))?
+
+	assert new_pos == Position.new(0, 0)
+	assert line_buf.lines == ["1. first line of content"]
 }
 
