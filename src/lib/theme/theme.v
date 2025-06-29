@@ -155,7 +155,9 @@ pub fn Theme.new(name string) !Theme {
 				line_number_color: tui.Color{ 175, 0, 0 }
 			}
 		}
-		"space" {
+		"space" { // this theme has a transparent background, if your terminal emulator
+				  // is also transparent this will enable you to see your wifu desktop pic
+				  // under your code :)
 			Theme{
 				pallete: petal_pallete,
 				cursor_line_color: tui.Color{ 53, 53, 53 },
