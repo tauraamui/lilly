@@ -47,7 +47,7 @@ pub fn (mut l_buffer LineBuffer) newline(pos Position) ?Position {
 
 	whitespace_prefix := resolve_whitespace_prefix_from_line(content_before_cursor)
 	l_buffer.lines[pos.line] = content_before_cursor
-	l_buffer.lines << ["${whitespace_prefix}${content_after_cursor}"]
+	l_buffer.lines.insert(pos.line + 1, "${whitespace_prefix}${content_after_cursor}")
 	return Position.new(pos.line, 0).add(Distance{ lines: 1, offset: whitespace_prefix.runes().len })
 }
 
