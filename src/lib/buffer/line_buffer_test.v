@@ -207,9 +207,9 @@ fn test_line_buffer_backspace_on_existing_content_from_start_of_first_line() {
 		lines: ["1. first line of content"]
 	}
 
-	// new_pos := line_buf.backspace(Position.new(0, 0))? // disabled as not expected to pass as yet
+	new_pos := line_buf.backspace(Position.new(0, 0))?
 
-	// assert new_pos == Position.new(0, 0) // disabled as not expected to pass as yet
-	// assert line_buf.lines == ["1. first line of content"] // disabled as not expected to pass as yet
+	assert new_pos == Position.new(0, 0)
+	assert line_buf.lines == ["1. first line of content"]
 }
 

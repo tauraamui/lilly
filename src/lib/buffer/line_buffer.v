@@ -78,7 +78,7 @@ pub fn (mut l_buffer LineBuffer) x(pos Position) ?Position {
 
 // NOTE(tauraamui): WIP/unfinished obviously :)
 pub fn (mut l_buffer LineBuffer) backspace(pos Position) ?Position {
-	if pos.line == 0 && pos.offset == 0 { return none }
+	if pos.line == 0 && pos.offset == 0 { return pos }
 	return none
 }
 
