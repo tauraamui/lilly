@@ -7,6 +7,10 @@ mut:
 	lines []string
 }
 
+fn LineBuffer.new(d []string) LineBuffer {
+	return LineBuffer{ lines: d }
+}
+
 pub fn (mut l_buffer LineBuffer) insert_text(pos Position, s string) ?Position {
 	// handle if set of lines up to position don't exist
 	if l_buffer.expansion_required(pos) {
@@ -101,6 +105,8 @@ pub fn (mut l_buffer LineBuffer) backspace(pos Position) ?Position {
 
 	return none
 }
+
+pub fn (l_buffer LineBuffer) num_of_lines() int { return l_buffer.lines.len }
 
 fn (l_buffer LineBuffer) is_oob(pos Position) bool {
 	return l_buffer.lines.len - 1 < pos.line

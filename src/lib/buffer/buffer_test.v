@@ -19,7 +19,7 @@ fn test_buffer_load_from_path() {
 		return ["1. This is a first line", "2. This is a second line", "3. This is a third line"]
 	}
 
-	mut buffer := Buffer.new("", false)
+	mut buffer := Buffer.new("", .legacy)
 	buffer.read_lines(line_reader)!
 
 	assert buffer.lines == ["1. This is a first line", "2. This is a second line", "3. This is a third line"]
@@ -30,7 +30,7 @@ fn test_buffer_load_from_path_and_iterate() {
 		return ["1. This is a first line", "2. This is a second line", "3. This is a third line"]
 	}
 
-	mut buffer := Buffer.new("", false)
+	mut buffer := Buffer.new("", .legacy)
 	buffer.read_lines(line_reader)!
 
 	assert buffer.lines == ["1. This is a first line", "2. This is a second line", "3. This is a third line"]
@@ -54,7 +54,7 @@ fn test_buffer_load_from_path_with_gap_buffer_and_iterate() {
 		return ["1. This is a first line", "2. This is a second line", "3. This is a third line"]
 	}
 
-	mut buffer := Buffer.new("", true)
+	mut buffer := Buffer.new("", .gap_buffer)
 	buffer.read_lines(line_reader)!
 
 	mut iteration_count := 0
@@ -76,7 +76,7 @@ fn test_buffer_load_from_path_and_iterate_over_pattern_matches() {
 		return ["1. This is a first line", "// TODO(tauraamui) [30/01/25]: this line has a comment to find", "2. This is a second line", "3. This is a third line"]
 	}
 
-	mut buffer := Buffer.new("", false)
+	mut buffer := Buffer.new("", .legacy)
 	buffer.read_lines(line_reader)!
 
 	mut iteration_count := 0
@@ -108,7 +108,7 @@ fn test_buffer_load_from_path_and_iterate_over_pattern_matches_excluding_matches
 		]
 	}
 
-	mut buffer := Buffer.new("", false)
+	mut buffer := Buffer.new("", .legacy)
 	buffer.read_lines(line_reader)!
 
 	mut found_matches := []Match{}
@@ -141,7 +141,7 @@ fn test_buffer_load_from_path_and_iterate_over_pattern_matches_excluding_matches
 		]
 	}
 
-	mut buffer := Buffer.new("", false)
+	mut buffer := Buffer.new("", .legacy)
 	buffer.read_lines(line_reader)!
 
 	mut found_matches := []Match{}
@@ -169,7 +169,7 @@ fn test_buffer_load_from_path_with_gap_buffer_and_iterate_over_pattern_matches()
 		return ["1. This is a first line", "// TODO(tauraamui) [30/01/25]: this line has a comment to find", "2. This is a second line", "3. This is a third line"]
 	}
 
-	mut buffer := Buffer.new("", true)
+	mut buffer := Buffer.new("", .gap_buffer)
 	buffer.read_lines(line_reader)!
 
 	mut iteration_count := 0
@@ -189,9 +189,8 @@ fn test_buffer_load_from_path_with_gap_buffer_and_iterate_over_pattern_matches()
 	assert iteration_count == 2
 }
 
-
-fn test_buffer_insert_text() {
-	mut buffer := Buffer.new("", true)
+fn test_buffer_gap_buffer_insert_text() {
+	mut buffer := Buffer.new("", .gap_buffer)
 	buffer.c_buffer = GapBuffer.new("")
 
 	for r in "Some text to insert!".runes() { buffer.c_buffer.insert(r) }
@@ -199,9 +198,12 @@ fn test_buffer_insert_text() {
 	assert buffer.str() == "Some text to insert!"
 }
 
-fn test_buffer_enter_inserts_newline_line() {
-	mut buffer := Buffer.new("", true)
+fn test_buffer_gap_buffer_enter_inserts_newline_line() {
+	mut buffer := Buffer.new("", .gap_buffer)
 	buffer.c_buffer = GapBuffer.new("1. first line\n2. second line\n3. third line")
 	buffer.write_at(lf, Pos{ x: 4, y: 0 })
 	assert buffer.str() == "1. f\nirst line\n2. second line\n3. third line"
 }
+
+
+

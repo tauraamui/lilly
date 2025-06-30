@@ -19,6 +19,12 @@ import rand
 
 pub type UUID_t = string
 
+pub enum BufferKind as u8 {
+	legacy
+	line_buffer
+	gap_buffer
+}
+
 pub struct Pos {
 pub mut:
 	x int
@@ -28,9 +34,10 @@ pub mut:
 @[heap]
 pub struct Buffer {
 pub:
-	uuid      UUID_t
-	file_path string
 	use_gap_buffer   bool
+	uuid        UUID_t
+	file_path   string
+	buffer_kind BufferKind
 pub mut:
 	auto_close_chars []string
 	lines            []string
@@ -41,59 +48,62 @@ mut:
 	// line_tracker LineTracker
 }
 
-pub fn Buffer.new(file_path string, use_gap bool) Buffer {
+pub fn Buffer.new(file_path string, b_kind BufferKind) Buffer {
 	return Buffer{
 		uuid: rand.uuid_v4()
 		file_path: file_path
-		use_gap_buffer: use_gap
+		buffer_kind: b_kind
+		use_gap_buffer: b_kind == .gap_buffer
 	}
 }
 
 pub fn (mut buffer Buffer) read_lines(line_reader fn (path string) ![]string) ! {
-	if buffer.use_gap_buffer {
-		lines := line_reader(buffer.file_path) or {
-			return error("unable to open file ${buffer.file_path}: ${err}")
+	match buffer.buffer_kind {
+		.gap_buffer {
+			lines := line_reader(buffer.file_path) or {
+				return error("unable to open file ${buffer.file_path}: ${err}")
+			}
+			buffer.load_contents_into_gap(lines.join("\n"))
 		}
-		buffer.load_contents_into_gap(lines.join("\n"))
-		return
-	}
-
-	buffer.lines = line_reader(buffer.file_path) or {
-		return error('unable to open file ${buffer.file_path}: ${err}')
-	}
-	if buffer.lines.len == 0 {
-		buffer.lines = ['']
+		.line_buffer {
+			lines := line_reader(buffer.file_path) or {
+				return error("unable to open file ${buffer.file_path}: ${err}")
+			}
+			buffer.load_contents_into_line_buffer(lines)
+		}
+		.legacy {
+			buffer.lines = line_reader(buffer.file_path) or {
+				return error('unable to open file ${buffer.file_path}: ${err}')
+			}
+			if buffer.lines.len == 0 {
+				buffer.lines = ['']
+			}
+		}
 	}
 }
 
 pub fn (mut buffer Buffer) load_contents_into_gap(contents string) {
-	if !buffer.use_gap_buffer { return }
 	buffer.c_buffer = GapBuffer.new(contents)
 }
 
+pub fn (mut buffer Buffer) load_contents_into_line_buffer(contents []string) {
+	buffer.l_buffer = LineBuffer.new(contents)
+}
+
 pub fn (buffer Buffer) num_of_lines() int {
-	if !buffer.use_gap_buffer { return buffer.lines.len }
-	return buffer.c_buffer.num_of_lines()
+	return match buffer.buffer_kind {
+		.gap_buffer  { buffer.c_buffer.num_of_lines() }
+		.line_buffer { buffer.l_buffer.num_of_lines() }
+		.legacy      { buffer.lines.len }
+	}
 }
 
 pub fn (mut buffer Buffer) move_cursor_to(pos Pos) {
-	buffer.c_buffer.move_cursor_to(Position.new(pos.y, pos.x))
-}
-
-/*
-pub fn (buffer Buffer) find_all_todo_comments() {
-	if buffer.use_gap_buffer {
-		return
-		// index := search.kmp(buffer.c_buffer)
-		// println("found todo comment: @${}")
-	}
-	for y, line in buffer.lines {
-		match_index := search.kmp(line.runes(), "TODO".runes())
-		if match_index == -1 { continue }
-		println("FOUND TODO COMMENT: LINE_Y: ${y}, POS: ${match_index}")
+	match buffer.buffer_kind {
+		.gap_buffer  { buffer.c_buffer.move_cursor_to(Position.new(pos.y, pos.x)) }
+		else {} // moving cursor doesn't really mean anything for the other buffer types
 	}
 }
-*/
 
 pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 	mut cursor := pos
@@ -137,12 +147,12 @@ pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 // NOTE(tauraamui) [15/01/25]: I don't like the implications of the existence of this method,
 //                             need to review all its potential usages and hopefully remove it.
 pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
-	if !buffer.use_gap_buffer { return }
+	if buffer.buffer_kind != .gap_buffer { return }
 	buffer.c_buffer.insert_at(r, pos)
 }
 
 pub fn (mut buffer Buffer) insert_tab(pos Pos, tabs_not_spaces bool) ?Pos {
-	if buffer.use_gap_buffer {
+	if buffer.buffer_kind == .gap_buffer {
 		buffer.move_cursor_to(pos)
 	}
 	if tabs_not_spaces {
