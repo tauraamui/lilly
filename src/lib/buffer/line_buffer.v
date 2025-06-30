@@ -104,6 +104,10 @@ pub fn (mut l_buffer LineBuffer) backspace(pos Position) ?Position {
 	return none
 }
 
+pub fn (l_buffer LineBuffer) delete(ignore_newlines bool) bool {
+	return false
+}
+
 pub fn (l_buffer LineBuffer) num_of_lines() int { return l_buffer.lines.len }
 
 pub fn (l_buffer LineBuffer) str() string {

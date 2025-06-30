@@ -307,7 +307,10 @@ pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
 }
 
 pub fn (mut buffer Buffer) delete(ignore_newlines bool) bool {
-	return buffer.c_buffer.delete(ignore_newlines)
+	return match buffer.buffer_kind {
+		.gap_buffer { buffer.c_buffer.delete(ignore_newlines) }
+		else        { false }
+	}
 }
 
 pub fn (buffer Buffer) read(range Range) ?string {
