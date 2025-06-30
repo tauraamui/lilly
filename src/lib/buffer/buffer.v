@@ -306,7 +306,11 @@ pub fn (buffer Buffer) read(range Range) ?string {
 }
 
 pub fn (mut buffer Buffer) str() string {
-	return buffer.c_buffer.str()
+	return match buffer.buffer_kind {
+		.gap_buffer { buffer.c_buffer.str() }
+		.legacy     { buffer.lines.join("\n") }
+		else { "" }
+	}
 }
 
 pub fn (mut buffer Buffer) raw_str() string {
