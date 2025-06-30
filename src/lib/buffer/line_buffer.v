@@ -91,6 +91,14 @@ pub fn (mut l_buffer LineBuffer) backspace(pos Position) ?Position {
 		return clamped_pos.add(Distance{ 0, -1 })
 	}
 
+	line_content := l_buffer.lines[clamped_pos.line]
+	if clamped_pos.line - 1 >= 0 {
+		length_pre_append := l_buffer.lines[clamped_pos.line - 1].runes().len
+		l_buffer.lines[clamped_pos.line - 1] = "${l_buffer.lines[clamped_pos.line - 1]}${line_content}"
+		l_buffer.lines.delete(clamped_pos.line)
+		return clamped_pos.add(Distance{ -1, length_pre_append - 1 })
+	}
+
 	return none
 }
 
