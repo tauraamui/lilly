@@ -245,19 +245,19 @@ fn test_line_buffer_backspace_on_existing_content_from_end_of_line_initial_pos_w
 	assert line_buf.lines == ["1. first line of conte"]
 }
 
-fn test_line_buffer_backspace_on_existing_content_from_start_of_second_line() {
+fn test_line_buffer_backspace_on_existing_content_from_start_of_second_line_of_three() {
 	mut line_buf := LineBuffer{
-		lines: ["1. first line of content", "2. second line of content"]
+		lines: ["1. first line of content", "2. second line of content", "3. third line of content"]
 	}
 
 	mut new_pos := line_buf.backspace(Position.new(1, 0))?
 
 	assert new_pos == Position.new(0, 22)
-	assert line_buf.lines == ["1. first line of content2. second line of content"]
+	assert line_buf.lines == ["1. first line of content2. second line of content", "3. third line of content"]
 
 	new_pos = line_buf.backspace(new_pos)?
 
 	assert new_pos == Position.new(0, 21)
-	assert line_buf.lines == ["1. first line of conten2. second line of content"]
+	assert line_buf.lines == ["1. first line of conten2. second line of content", "3. third line of content"]
 }
 
