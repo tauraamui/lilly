@@ -212,3 +212,16 @@ fn test_buffer_legacy_buffer_enter_inserts_newline_line() {
 	assert buffer.str() == "1. f\nirst line\n2. second line\n3. third line"
 }
 
+fn test_buffer_gap_buffer_x_deletes_char_from_line() {
+	mut buffer := Buffer.new("", .gap_buffer)
+	buffer.c_buffer = GapBuffer.new("1. first line\n2. second line\n3. third line")
+
+	mut new_pos := buffer.x(Pos{ x: 4, y: 0 })?
+	assert new_pos == Pos{ x: 4, y: 0 }
+	assert buffer.str() == "1. frst line\n2. second line\n3. third line"
+
+	new_pos = buffer.x(new_pos)?
+	assert new_pos == Pos{ x: 4, y: 0 }
+	assert buffer.str() == "1. fst line\n2. second line\n3. third line"
+}
+
