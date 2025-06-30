@@ -171,26 +171,30 @@ pub fn (mut buffer Buffer) insert_tab(pos Pos, tabs_not_spaces bool) ?Pos {
 //                               handle processing newlines just as their own special case for
 //                               `text_insert`, but idk yet.
 pub fn (mut buffer Buffer) enter(pos Pos) ?Pos {
-	if buffer.use_gap_buffer {
-		buffer.move_cursor_to(pos)
-		return buffer.insert_text(pos, lf.str())
+	match buffer.buffer_kind {
+		.gap_buffer {
+			buffer.move_cursor_to(pos)
+			return buffer.insert_text(pos, lf.str())
+		}
+		.line_buffer { return pos }
+		.legacy {
+			mut cursor := pos
+			y := cursor.y
+			mut whitespace_prefix := resolve_whitespace_prefix_from_line_str(buffer.lines[y])
+			if whitespace_prefix.len == buffer.lines[y].len {
+				buffer.lines[y] = ""
+				whitespace_prefix = ""
+				cursor.x = 0
+			}
+			after_cursor := buffer.lines[y].runes()[cursor.x..].string()
+			buffer.lines[y] = buffer.lines[y].runes()[..cursor.x].string()
+			buffer.lines.insert(y + 1, "${whitespace_prefix}${after_cursor}")
+			cursor.y += 1
+			cursor = buffer.clamp_cursor_within_document_bounds(cursor)
+			cursor.x = whitespace_prefix.len
+			return cursor
+		}
 	}
-
-	mut cursor := pos
-	y := cursor.y
-	mut whitespace_prefix := resolve_whitespace_prefix_from_line_str(buffer.lines[y])
-	if whitespace_prefix.len == buffer.lines[y].len {
-		buffer.lines[y] = ""
-		whitespace_prefix = ""
-		cursor.x = 0
-	}
-	after_cursor := buffer.lines[y].runes()[cursor.x..].string()
-	buffer.lines[y] = buffer.lines[y].runes()[..cursor.x].string()
-	buffer.lines.insert(y + 1, "${whitespace_prefix}${after_cursor}")
-	cursor.y += 1
-	cursor = buffer.clamp_cursor_within_document_bounds(cursor)
-	cursor.x = whitespace_prefix.len
-	return cursor
 }
 
 pub fn (mut buffer Buffer) delete_line(index int) {
