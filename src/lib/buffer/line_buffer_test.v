@@ -296,7 +296,7 @@ fn test_line_buffer_backspace_on_existing_content_from_start_of_second_line_of_t
 	assert new_pos == Position.new(0, 20)
 	assert line_buf.lines == ["1. first line of cont2. second line of content", "3. third line of content"]
 
-	new_pos = line_buf.newline(new_pos)?
+	new_pos = line_buf.newline(new_pos.add(Distance{ 0, 1 }))?
 
 	assert new_pos == Position.new(1, 0)
 	assert line_buf.lines == ["1. first line of cont", "2. second line of content", "3. third line of content"]
