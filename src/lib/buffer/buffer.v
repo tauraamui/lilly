@@ -100,48 +100,52 @@ pub fn (buffer Buffer) num_of_lines() int {
 
 pub fn (mut buffer Buffer) move_cursor_to(pos Pos) {
 	match buffer.buffer_kind {
-		.gap_buffer  { buffer.c_buffer.move_cursor_to(Position.new(pos.y, pos.x)) }
-		else {} // moving cursor doesn't really mean anything for the other buffer types
+		.gap_buffer { buffer.c_buffer.move_cursor_to(Position.new(pos.y, pos.x)) }
+		else        {} // moving cursor doesn't really mean anything for the other buffer types
 	}
 }
 
 pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
-	mut cursor := pos
-	if buffer.use_gap_buffer {
-		for c in s.runes() {
-			buffer.c_buffer.insert(c)
-			cursor.x += 1
-			if c == lf {
-				cursor.y += 1
-				cursor.x = 0
+	match buffer.buffer_kind {
+		.gap_buffer {
+			mut cursor := pos
+			for c in s.runes() {
+				buffer.c_buffer.insert(c)
+				cursor.x += 1
+				if c == lf {
+					cursor.y += 1
+					cursor.x = 0
+				}
 			}
+			return cursor
 		}
-		return cursor
-	}
+		.line_buffer { return pos }
+		.legacy {
+			mut cursor := pos
+			y := cursor.y
+			mut line := buffer.lines[y]
+			if line.len == 0 {
+				buffer.lines[y] = "${s}"
+				cursor.x = s.runes().len
+				return cursor
+			}
 
-	cursor = pos
-	y := cursor.y
-	mut line := buffer.lines[y]
-	if line.len == 0 {
-		buffer.lines[y] = "${s}"
-		cursor.x = s.runes().len
-		return cursor
-	}
+			if cursor.x > line.len {
+				cursor.x = line.len
+			}
+			uline := line.runes()
+			if cursor.x > uline.len {
+				return cursor
+			}
+			left := uline[..cursor.x].string()
+			right := uline[cursor.x..uline.len].string()
+			buffer.lines[y] = "${left}${s}${right}"
 
-	if cursor.x > line.len {
-		cursor.x = line.len
-	}
-	uline := line.runes()
-	if cursor.x > uline.len {
-		return cursor
-	}
-	left := uline[..cursor.x].string()
-	right := uline[cursor.x..uline.len].string()
-	buffer.lines[y] = "${left}${s}${right}"
+			cursor.x += s.runes().len
 
-	cursor.x += s.runes().len
-
-	return cursor
+			return cursor
+		}
+	}
 }
 
 // NOTE(tauraamui) [15/01/25]: I don't like the implications of the existence of this method,
