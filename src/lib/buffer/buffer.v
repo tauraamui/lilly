@@ -225,20 +225,26 @@ fn resolve_whitespace_prefix_from_line_str(line string) string {
 }
 
 pub fn (mut buffer Buffer) x(pos Pos) ?Pos {
-	mut cursor := pos
-	// TODO(tauraamui): Move this stuff into gap buffer directly
-	//                  as there's now confusion as to which methods here
-	//                  can be safely used by the gap buffer impl and which
-	//                  can not.
-	if buffer.use_gap_buffer {
-		return buffer.c_buffer.x(cursor)
+	match buffer.buffer_kind {
+		.gap_buffer {
+			// TODO(tauraamui): Move this stuff into gap buffer directly
+			//                  as there's now confusion as to which methods here
+			//                  can be safely used by the gap buffer impl and which
+			//                  can not.
+			mut cursor := pos
+			return buffer.c_buffer.x(cursor)
+		}
+		.line_buffer { return pos }
+		.legacy {
+			mut cursor := pos
+			line := buffer.lines[cursor.y].runes()
+			if line.len == 0 { return none }
+			start := line[..cursor.x]
+			end   := line[cursor.x + 1..]
+			buffer.lines[cursor.y] = "${start.string()}${end.string()}"
+			return buffer.clamp_cursor_x_pos(buffer.clamp_cursor_within_document_bounds(cursor), false)
+		}
 	}
-	line := buffer.lines[cursor.y].runes()
-	if line.len == 0 { return none }
-	start := line[..cursor.x]
-	end   := line[cursor.x + 1..]
-	buffer.lines[cursor.y] = "${start.string()}${end.string()}"
-	return buffer.clamp_cursor_x_pos(buffer.clamp_cursor_within_document_bounds(cursor), false)
 }
 
 pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
