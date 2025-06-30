@@ -62,7 +62,7 @@ fn test_view_keybind_key_event_of_value_leader_key_changes_mode_to_leader() {
 		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", false)
+		buffer: buffer.Buffer.new("", .legacy)
 	}
 	fake_view.buffer.lines = [] // NOTE(tauraamui) [21/01/25] can be empty just not nil
 
@@ -90,7 +90,7 @@ fn test_view_keybind_leader_then_ff_suffix_opens_file_finder() {
 		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", false)
+		buffer: buffer.Buffer.new("", .legacy)
 	}
 	fake_view.buffer.lines = [] // NOTE(tauraamui) [21/01/25] can be empty just not nil
 
@@ -124,7 +124,7 @@ fn test_view_keybind_leader_then_xff_suffix_opens_file_finder_in_special_mode() 
 		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", false)
+		buffer: buffer.Buffer.new("", .legacy)
 	}
 	fake_view.buffer.lines = [] // NOTE(tauraamui) [21/01/25] can be empty just not nil
 
@@ -165,7 +165,7 @@ fn test_view_keybind_leader_then_fb_suffix_opens_inactive_buffer_finder() {
 		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", false)
+		buffer: buffer.Buffer.new("", .legacy)
 	}
 	fake_view.buffer.lines = [] // NOTE(tauraamui) [21/01/25] can be empty just not nil
 
@@ -199,7 +199,7 @@ fn test_view_keybind_leader_then_ftc_suffix_opens_todo_comments_finder() {
 		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", false)
+		buffer: buffer.Buffer.new("", .legacy)
 	}
 	fake_view.buffer.lines = [] // NOTE(tauraamui) [21/01/25] can be empty just not nil
 
@@ -490,7 +490,7 @@ fn test_sets_of_key_events_for_views_on_key_down_adjusting_cursor_position() {
 			log:       log.Log{}
 			leader_state: ViewLeaderState{ mode: .normal }
 			clipboard: mut clip
-			buffer: buffer.Buffer.new("", false)
+			buffer: buffer.Buffer.new("", .legacy)
 		}
 		fake_view.buffer.lines = case.document_contents
 		fake_view.cursor.pos = case.starting_cursor_pos
@@ -517,7 +517,7 @@ fn test_w_moves_cursor_to_next_line_with_plain_comments() {
 		log:       log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", false)
+		buffer: buffer.Buffer.new("", .legacy)
 	}
 	fake_view.buffer.lines = fake_lines
 	fake_view.cursor.pos = ui.CursorPos{

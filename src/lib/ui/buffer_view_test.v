@@ -68,7 +68,7 @@ fn test_buffer_view_draws_lines_in_normal_mode_so_one_line_has_bg_the_rest_do_no
 		}
 	}
 
-	mut buf := buffer.Buffer.new("", false)
+	mut buf := buffer.Buffer.new("", .legacy)
 	for i in 0..5 { buf.lines << "This is line ${i} in the document" }
 	mut buf_view := BufferView.new([], 0)
 
@@ -161,7 +161,7 @@ fn test_buffer_view_draws_lines_in_visual_line_mode_just_top_line_selected() {
 		}
 	}
 
-	mut buf := buffer.Buffer.new("", false)
+	mut buf := buffer.Buffer.new("", .legacy)
 	for i in 0..5 { buf.lines << "This is line ${i} in the document" }
 	mut buf_view := BufferView.new([], 0)
 
@@ -248,7 +248,7 @@ fn test_buffer_view_draws_lines_0_to_max_height() {
 		}
 	}
 
-	mut buf := buffer.Buffer.new("", false)
+	mut buf := buffer.Buffer.new("", .legacy)
 	for i in 0..5 { buf.lines << "This is line ${i} in the document" }
 	mut buf_view := BufferView.new([], 0)
 
@@ -336,7 +336,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_that_that_elapses_max_width()
 		}
 	}
 
-	mut buf := buffer.Buffer.new("", false)
+	mut buf := buffer.Buffer.new("", .legacy)
 	buf.lines << "Thisisthelineinthedocument"
 	mut buf_view := BufferView.new([], 0)
 
@@ -386,7 +386,7 @@ fn test_buffer_view_draws_1_line_as_multiple_segments_colored_as_expected() {
 		}
 	}
 
-	mut buf := buffer.Buffer.new("", false)
+	mut buf := buffer.Buffer.new("", .legacy)
 	buf.lines << "fn name_of_function()"
 	mut buf_view := BufferView.new([], 0)
 
@@ -447,7 +447,7 @@ fn test_buffer_view_draws_1_line_as_single_segment_single_emoji() {
 		}
 	}
 
-	mut buf := buffer.Buffer.new("", false)
+	mut buf := buffer.Buffer.new("", .legacy)
 	buf.lines << utf8.emoji_shark_char
 	mut buf_view := BufferView.new([], 0)
 
@@ -500,7 +500,7 @@ fn test_buffer_view_draws_lines_10_to_max_height() {
 		}
 	}
 
-	mut buf := buffer.Buffer.new("", false)
+	mut buf := buffer.Buffer.new("", .legacy)
 	for i in 0..20 { buf.lines << "This is line ${i} in the document" }
 	mut buf_view := BufferView.new([], 0)
 
@@ -677,7 +677,7 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled()
 		}
 	}
 
-	mut buf := buffer.Buffer.new("", false)
+	mut buf := buffer.Buffer.new("", .legacy)
 	for i in 0..20 { buf.lines << "This is line ${i} in the document" }
 	mut buf_view := BufferView.new([], 0)
 
@@ -993,7 +993,7 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled_c
 		}
 	}
 
-	mut buf := buffer.Buffer.new("", false)
+	mut buf := buffer.Buffer.new("", .legacy)
 	for i in 0..20 { buf.lines << "This is line ${i} in the document" }
 	mut buf_view := BufferView.new([], 0)
 
@@ -1249,7 +1249,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_0_max_width_14() {
 		}
 	}
 
-	mut buf      := buffer.Buffer.new("", false)
+	mut buf      := buffer.Buffer.new("", .legacy)
 	for i in 0..3 { buf.lines << "${i} This is line ${i} in the document" }
 	mut buf_view := BufferView.new([], 0)
 
@@ -1352,7 +1352,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_4_max_width_56() {
 		}
 	}
 
-	mut buf      := buffer.Buffer.new("", false)
+	mut buf      := buffer.Buffer.new("", .legacy)
 	for i in 0..3 { buf.lines << "${i} This is line ${i} in the document" }
 	mut buf_view := BufferView.new([], 0)
 
@@ -1477,7 +1477,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_56() {
 		}
 	}
 
-	mut buf      := buffer.Buffer.new("", false)
+	mut buf      := buffer.Buffer.new("", .legacy)
 	for i in 0..3 { buf.lines << "${i} This is line ${i} in the document" }
 	mut buf_view := BufferView.new([], 0)
 
@@ -1563,7 +1563,7 @@ fn test_buffer_view_draws_lines_0_to_max_height_min_x_21_max_width_6() {
 		}
 	}
 
-	mut buf      := buffer.Buffer.new("", false)
+	mut buf      := buffer.Buffer.new("", .legacy)
 	for i in 0..3 { buf.lines << "${i} This is line ${i} in the document" }
 	mut buf_view := BufferView.new([], 0)
 

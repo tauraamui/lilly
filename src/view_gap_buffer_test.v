@@ -30,7 +30,7 @@ fn test_insert_text() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -51,7 +51,7 @@ fn test_insert_tab() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -76,7 +76,7 @@ fn test_shift_o_inserts_empty_line_above_current() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -103,7 +103,7 @@ fn test_shift_o_inserts_empty_line_above_current_first_line_of_document() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -130,7 +130,7 @@ fn test_o_inserts_empty_line_below_current() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -157,7 +157,7 @@ fn test_o_inserts_empty_line_below_current_last_line_of_document() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -184,7 +184,7 @@ fn test_x_removes_characters_on_single_line_document() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -210,7 +210,7 @@ fn test_x_removes_from_cursor_then_move_cursor_left_one() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -234,7 +234,7 @@ fn test_x_removes_from_cursor_on_line_with_single_char_then_move_cursor_right_on
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -261,7 +261,7 @@ fn test_x_removes_from_cursor_then_move_cursor_right_one() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -289,7 +289,7 @@ fn test_x_removes_from_cursor_to_end_of_line_and_beyond() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -331,7 +331,7 @@ fn test_x_does_not_remove_characters_on_multi_line_document_if_at_line_end() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -356,7 +356,7 @@ fn test_x_removes_characters_up_to_end_of_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -381,7 +381,7 @@ fn test_w_moves_to_start_of_next_word() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -402,7 +402,7 @@ fn test_w_moves_to_start_of_next_line_if_on_empty_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -426,7 +426,7 @@ fn test_w_moves_from_blank_line_to_next() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -462,7 +462,7 @@ fn test_w_moves_from_end_line_to_blank_next_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -486,7 +486,7 @@ fn test_w_moves_from_end_of_word_to_start_of_next() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -510,7 +510,7 @@ fn test_w_moves_to_start_of_next_word_across_a_newline() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -537,7 +537,7 @@ fn test_w_moves_to_start_of_next_word_up_to_document_end() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -557,7 +557,7 @@ fn test_w_moves_to_start_of_next_word_from_whitespace() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -577,7 +577,7 @@ fn test_e_moves_to_end_of_next_word() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -606,7 +606,7 @@ fn test_e_moves_from_blank_line_to_next() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -642,7 +642,7 @@ fn test_b_moves_to_start_of_current_word() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -666,7 +666,7 @@ fn test_b_moves_to_end_of_previous_line_if_on_empty_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -712,7 +712,7 @@ fn test_enter_inserts_newline_at_cursor_in_middle_of_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -739,7 +739,7 @@ fn test_enter_inserts_newline_at_cursor_in_line_multiple_times() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -770,7 +770,7 @@ fn test_enter_inserts_newline_at_cursor_at_start_of_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -797,7 +797,7 @@ fn test_enter_inserts_newline_at_cursor_at_end_of_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -824,7 +824,7 @@ fn test_backspace_deletes_character_at_cursor_in_middle_of_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -860,7 +860,7 @@ fn test_backspace_does_nothing_if_at_start_of_the_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -886,7 +886,7 @@ fn test_backspace_removing_newlines() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -928,7 +928,7 @@ fn test_left_arrow_at_start_of_sentence() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -949,7 +949,7 @@ fn test_left_arrow_at_end_of_sentence() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -970,7 +970,7 @@ fn test_right_arrow_at_start_of_sentence() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -991,7 +991,7 @@ fn test_right_arrow_at_end_of_sentence() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -1012,7 +1012,7 @@ fn test_h_at_start_of_sentence() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -1033,7 +1033,7 @@ fn test_h_at_end_of_sentence() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -1054,7 +1054,7 @@ fn test_l_at_start_of_sentence() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -1075,7 +1075,7 @@ fn test_l_at_end_of_sentence() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -1096,7 +1096,7 @@ fn test_j_at_start_of_sentence() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -1117,7 +1117,7 @@ fn test_j_in_middle_of_sentence_retain_x_pos_second_line_is_long_enough() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -1138,7 +1138,7 @@ fn test_j_in_middle_of_sentence_does_not_retain_x_pos_second_line_is_too_short()
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -1159,7 +1159,7 @@ fn test_k_at_start_of_sentence() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -1180,7 +1180,7 @@ fn test_k_in_middle_of_sentence_retain_x_pos_second_line_is_long_enough() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -1201,7 +1201,7 @@ fn test_k_in_middle_of_sentence_does_not_retain_x_pos_second_line_is_too_short()
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -1222,7 +1222,7 @@ fn test_jump_cursor_up_to_next_blank_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -1248,7 +1248,7 @@ fn test_jump_cursor_down_to_next_blank_line() {
 		log: log.Log{}
 		leader_state: ViewLeaderState{ mode: .normal }
 		clipboard: mut clip
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -1277,7 +1277,7 @@ fn test_tab_inserts_a_tab_not_spaces() {
 		config: workspace.Config{
 			insert_tabs_not_spaces: true
 		}
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -1302,7 +1302,7 @@ fn test_tab_inserts_spaces_not_a_tab() {
 		config: workspace.Config{
 			insert_tabs_not_spaces: false
 		}
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents
@@ -1328,7 +1328,7 @@ fn test_find_end_of_line() {
 		config: workspace.Config{
 			insert_tabs_not_spaces: false
 		}
-		buffer: buffer.Buffer.new("", true)
+		buffer: buffer.Buffer.new("", .gap_buffer)
 	}
 
 	// manually set the "document" contents

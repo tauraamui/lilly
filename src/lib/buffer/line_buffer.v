@@ -7,6 +7,10 @@ mut:
 	lines []string
 }
 
+fn LineBuffer.new(d []string) LineBuffer {
+	return LineBuffer{ lines: d }
+}
+
 pub fn (mut l_buffer LineBuffer) insert_text(pos Position, s string) ?Position {
 	// handle if set of lines up to position don't exist
 	if l_buffer.expansion_required(pos) {
@@ -47,7 +51,7 @@ pub fn (mut l_buffer LineBuffer) newline(pos Position) ?Position {
 
 	whitespace_prefix := resolve_whitespace_prefix_from_line(content_before_cursor)
 	l_buffer.lines[pos.line] = content_before_cursor
-	l_buffer.lines << ["${whitespace_prefix}${content_after_cursor}"]
+	l_buffer.lines.insert(pos.line + 1, "${whitespace_prefix}${content_after_cursor}")
 	return Position.new(pos.line, 0).add(Distance{ lines: 1, offset: whitespace_prefix.runes().len })
 }
 
@@ -62,24 +66,52 @@ fn resolve_whitespace_prefix_from_line(line string) string {
 	}
 }
 
-pub fn (mut l_buffer LineBuffer) x(pos Position) ?Position {
-	if l_buffer.is_oob(pos) { return none }
+pub fn (mut l_buffer LineBuffer) x(pos Position) Position {
+	if l_buffer.is_oob(pos) { return pos }
 
 	line_at_pos := l_buffer.lines[pos.line]
-	if line_at_pos.len == 0 { return none }
+	if line_at_pos.len == 0 { return pos }
 
 	clamped_offset := if pos.offset >= line_at_pos.runes().len { line_at_pos.runes().len - 1 } else { pos.offset }
-	content_before_cursor := line_at_pos[..clamped_offset]
-	content_past_current_char := line_at_pos[clamped_offset + 1..]
-	l_buffer.lines[pos.line] = "${content_before_cursor}${content_past_current_char}"
+	mut line_content := l_buffer.lines[pos.line].runes()
+	line_content.delete(clamped_offset)
+	l_buffer.lines[pos.line] = line_content.string()
 
-	return Position.new(pos.line, clamped_offset).add(Distance{ offset: -1 })
+	return Position.new(pos.line, clamped_offset)
 }
 
-// NOTE(tauraamui): WIP/unfinished obviously :)
 pub fn (mut l_buffer LineBuffer) backspace(pos Position) ?Position {
-	if pos.line == 0 && pos.offset == 0 { return none }
+	if pos.line == 0 && pos.offset == 0 { return pos }
+
+	clamped_pos := if l_buffer.is_oob(pos) { Position.new(l_buffer.lines.len - 1, l_buffer.lines[l_buffer.lines.len - 1].runes().len - 1) } else { pos }
+
+	line_at_pos := l_buffer.lines[clamped_pos.line]
+	if clamped_pos.offset > 0 {
+		mut line_content := l_buffer.lines[clamped_pos.line].runes()
+		line_content.delete(clamped_pos.offset)
+		l_buffer.lines[clamped_pos.line] = line_content.string()
+		return clamped_pos.add(Distance{ 0, -1 })
+	}
+
+	line_content := l_buffer.lines[clamped_pos.line]
+	if clamped_pos.line - 1 >= 0 {
+		length_pre_append := l_buffer.lines[clamped_pos.line - 1].runes().len
+		l_buffer.lines[clamped_pos.line - 1] = "${l_buffer.lines[clamped_pos.line - 1]}${line_content}"
+		l_buffer.lines.delete(clamped_pos.line)
+		return clamped_pos.add(Distance{ -1, length_pre_append - 1 })
+	}
+
 	return none
+}
+
+pub fn (l_buffer LineBuffer) delete(ignore_newlines bool) bool {
+	return false
+}
+
+pub fn (l_buffer LineBuffer) num_of_lines() int { return l_buffer.lines.len }
+
+pub fn (l_buffer LineBuffer) str() string {
+	return l_buffer.lines.join("\n")
 }
 
 fn (l_buffer LineBuffer) is_oob(pos Position) bool {

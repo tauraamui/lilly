@@ -68,6 +68,8 @@ pub fn (mut gap_buffer GapBuffer) backspace() bool {
 	return gap_buffer.data[gap_buffer.gap_start] == lf
 }
 
+// delete removes rune at current pos, returns true if a line has been fully deleted
+// and the source cursor's y needs to be decremented
 pub fn (mut gap_buffer GapBuffer) delete(ignore_newlines bool) bool {
 	if ignore_newlines && gap_buffer.gap_end < gap_buffer.data.len && gap_buffer.data[gap_buffer.gap_end] == lf { return false }
 	if gap_buffer.gap_end + 1 == gap_buffer.data.len { return false }
