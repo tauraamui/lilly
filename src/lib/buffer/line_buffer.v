@@ -66,18 +66,18 @@ fn resolve_whitespace_prefix_from_line(line string) string {
 	}
 }
 
-pub fn (mut l_buffer LineBuffer) x(pos Position) ?Position {
-	if l_buffer.is_oob(pos) { return none }
+pub fn (mut l_buffer LineBuffer) x(pos Position) Position {
+	if l_buffer.is_oob(pos) { return pos }
 
 	line_at_pos := l_buffer.lines[pos.line]
-	if line_at_pos.len == 0 { return none }
+	if line_at_pos.len == 0 { return pos }
 
 	clamped_offset := if pos.offset >= line_at_pos.runes().len { line_at_pos.runes().len - 1 } else { pos.offset }
 	mut line_content := l_buffer.lines[pos.line].runes()
 	line_content.delete(clamped_offset)
 	l_buffer.lines[pos.line] = line_content.string()
 
-	return Position.new(pos.line, clamped_offset).add(Distance{ offset: -1 })
+	return Position.new(pos.line, clamped_offset)
 }
 
 pub fn (mut l_buffer LineBuffer) backspace(pos Position) ?Position {
@@ -107,6 +107,10 @@ pub fn (mut l_buffer LineBuffer) backspace(pos Position) ?Position {
 }
 
 pub fn (l_buffer LineBuffer) num_of_lines() int { return l_buffer.lines.len }
+
+pub fn (l_buffer LineBuffer) str() string {
+	return l_buffer.lines.join("\n")
+}
 
 fn (l_buffer LineBuffer) is_oob(pos Position) bool {
 	return l_buffer.lines.len - 1 < pos.line
