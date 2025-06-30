@@ -234,7 +234,10 @@ pub fn (mut buffer Buffer) x(pos Pos) ?Pos {
 			mut cursor := pos
 			return buffer.c_buffer.x(cursor)
 		}
-		.line_buffer { return pos }
+		.line_buffer {
+			l_pos := buffer.l_buffer.x(Position.new(pos.y, pos.x))
+			return Pos{ x: l_pos.offset, y: l_pos.line }
+		}
 		.legacy {
 			mut cursor := pos
 			line := buffer.lines[cursor.y].runes()
@@ -307,9 +310,9 @@ pub fn (buffer Buffer) read(range Range) ?string {
 
 pub fn (mut buffer Buffer) str() string {
 	return match buffer.buffer_kind {
-		.gap_buffer { buffer.c_buffer.str() }
-		.legacy     { buffer.lines.join("\n") }
-		else { "" }
+		.gap_buffer  { buffer.c_buffer.str() }
+		.line_buffer { buffer.l_buffer.str() }
+		.legacy      { buffer.lines.join("\n") }
 	}
 }
 
