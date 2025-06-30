@@ -1,5 +1,26 @@
 module buffer
 
+fn test_line_buffer_num_of_lines_with_empty_doc() {
+	line_buf := LineBuffer{
+		lines: []
+	}
+	assert line_buf.num_of_lines() == 0
+}
+
+fn test_line_buffer_num_of_lines_with_single_line_doc() {
+	line_buf := LineBuffer{
+		lines: ["1. first line"]
+	}
+	assert line_buf.num_of_lines() == 1
+}
+
+fn test_line_buffer_num_of_lines_with_multi_line_doc() {
+	line_buf := LineBuffer{
+		lines: []string{ len: 512 }
+	}
+	assert line_buf.num_of_lines() == 512
+}
+
 fn test_line_buffer_insert_text_with_initially_empty_data() {
 	mut line_buf := LineBuffer{
 		lines: []
