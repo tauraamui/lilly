@@ -238,3 +238,17 @@ fn test_buffer_legacy_buffer_x_deletes_char_from_line() {
 	assert buffer.str() == "1. fst line\n2. second line\n3. third line"
 }
 
+fn test_buffer_line_buffer_x_deletes_char_from_line() {
+	mut buffer := Buffer.new("", .line_buffer)
+	lines := ["1. first line", "2. second line", "3. third line"]
+	buffer.load_contents_into_line_buffer(lines)
+
+	mut new_pos := buffer.x(Pos{ x: 4, y: 0 })?
+	assert new_pos == Pos{ x: 4, y: 0 }
+	assert buffer.str() == "1. frst line\n2. second line\n3. third line"
+
+	new_pos = buffer.x(new_pos)?
+	assert new_pos == Pos{ x: 4, y: 0 }
+	assert buffer.str() == "1. fst line\n2. second line\n3. third line"
+}
+
