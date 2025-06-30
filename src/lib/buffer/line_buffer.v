@@ -69,9 +69,9 @@ pub fn (mut l_buffer LineBuffer) x(pos Position) ?Position {
 	if line_at_pos.len == 0 { return none }
 
 	clamped_offset := if pos.offset >= line_at_pos.runes().len { line_at_pos.runes().len - 1 } else { pos.offset }
-	content_before_cursor := line_at_pos[..clamped_offset]
-	content_past_current_char := line_at_pos[clamped_offset + 1..]
-	l_buffer.lines[pos.line] = "${content_before_cursor}${content_past_current_char}"
+	mut line_content := l_buffer.lines[pos.line].runes()
+	line_content.delete(clamped_offset)
+	l_buffer.lines[pos.line] = line_content.string()
 
 	return Position.new(pos.line, clamped_offset).add(Distance{ offset: -1 })
 }
