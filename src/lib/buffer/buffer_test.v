@@ -201,9 +201,14 @@ fn test_buffer_gap_buffer_insert_text() {
 fn test_buffer_gap_buffer_enter_inserts_newline_line() {
 	mut buffer := Buffer.new("", .gap_buffer)
 	buffer.c_buffer = GapBuffer.new("1. first line\n2. second line\n3. third line")
-	buffer.write_at(lf, Pos{ x: 4, y: 0 })
+	buffer.enter(Pos{ x: 4, y: 0 })
 	assert buffer.str() == "1. f\nirst line\n2. second line\n3. third line"
 }
 
-
+fn test_buffer_legacy_buffer_enter_inserts_newline_line() {
+	mut buffer := Buffer.new("", .legacy)
+	buffer.lines = ["1. first line", "2. second line", "3. third line"]
+	buffer.enter(Pos{ x: 4, y: 0 })
+	assert buffer.str() == "1. f\nirst line\n2. second line\n3. third line"
+}
 
