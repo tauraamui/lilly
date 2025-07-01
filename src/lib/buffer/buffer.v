@@ -313,6 +313,18 @@ pub fn (mut buffer Buffer) delete(ignore_newlines bool) bool {
 	}
 }
 
+pub fn (mut buffer Buffer) o(pos Pos) ?Pos {
+	match buffer.buffer_kind {
+		.gap_buffer {
+			mut cursor := pos
+			cursor.x = buffer.find_end_of_line(cursor) or { 0 }
+			// NOTE(tauraamui): in gap buffer mode inserting newlines moves cursor down
+			buffer.insert_text(lf.str())
+			return cursor
+		}
+	}
+}
+
 pub fn (buffer Buffer) read(range Range) ?string {
 	if buffer.use_gap_buffer {
 		return buffer.c_buffer.read(range)

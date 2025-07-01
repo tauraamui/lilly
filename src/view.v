@@ -1278,6 +1278,14 @@ fn (mut view View) center_text_around_cursor() {
 
 fn (mut view View) u() {}
 
+fn (mut view View) o2() {
+	pos := view.buffer.o(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+	view.i()
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
+	view.scroll_from_and_to()
+}
+
 fn (mut view View) o() {
 	if view.buffer.use_gap_buffer {
 		view.cursor.pos.x = view.buffer.find_end_of_line(buffer.Pos{ y: view.cursor.pos.y }) or { 0 }
