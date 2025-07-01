@@ -319,6 +319,10 @@ pub fn (mut buffer Buffer) o(pos Pos) ?Pos {
 			new_pos := buffer.c_buffer.o(Position.new(pos.y, pos.x)) or { return pos }
 			return Pos{ x: new_pos.offset, y: new_pos.line }
 		}
+		.line_buffer {
+			new_pos := buffer.l_buffer.o(Position.new(pos.y, pos.x)) or { return pos }
+			return Pos{ x: new_pos.offset, y: new_pos.line }
+		}
 		else { return pos }
 	}
 }
