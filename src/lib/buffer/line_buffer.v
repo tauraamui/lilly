@@ -108,6 +108,16 @@ pub fn (l_buffer LineBuffer) delete(ignore_newlines bool) bool {
 	return false
 }
 
+pub fn (mut l_buffer LineBuffer) o(pos Position) ?Position {
+	if l_buffer.expansion_required(pos) {
+		post_expand_pos := grow_and_set(mut l_buffer.lines, pos.line, "")
+		l_buffer.lines << [""]
+		return post_expand_pos.add(Distance{ lines: 1, offset: 0 })
+	}
+	l_buffer.lines.insert(pos.line + 1, "")
+	return Position.new(pos.line, 0).add(Distance{ lines: 1 })
+}
+
 pub fn (l_buffer LineBuffer) num_of_lines() int { return l_buffer.lines.len }
 
 pub fn (l_buffer LineBuffer) str() string {
