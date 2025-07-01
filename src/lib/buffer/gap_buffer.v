@@ -53,12 +53,14 @@ pub fn (mut gap_buffer GapBuffer) move_cursor_to(pos Position) {
 	gap_buffer.move_data_cursor(offset - gap_sizee)
 }
 
+// TODO(tauraamui) [01/07/2025]: refactor all of the public methods for inserting
+//                               text content to bring it down to one entrypoint
 pub fn (mut gap_buffer GapBuffer) insert(r rune) {
 	gap_buffer.insert_rune(r)
 }
 
-pub fn (mut gap_buffer GapBuffer) insert_at(r rune, pos Pos) {
-	gap_buffer.move_cursor_to(Position.new(pos.y, pos.x))
+pub fn (mut gap_buffer GapBuffer) insert_at(r rune, pos Position) {
+	gap_buffer.move_cursor_to(pos)
 	gap_buffer.insert_rune(r)
 }
 
@@ -83,6 +85,10 @@ pub fn (mut gap_buffer GapBuffer) x(pos Pos) ?Pos {
 	if distance_to_end_of_line == 0 { return none }
 	gap_buffer.gap_end += 1
 	return pos
+}
+
+pub fn (mut gap_buffer GapBuffer) o(pos Position) ?Position {
+	return none
 }
 
 fn (mut gap_buffer GapBuffer) insert_rune(r rune) {

@@ -110,7 +110,7 @@ pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 		.gap_buffer {
 			mut cursor := pos
 			for c in s.runes() {
-				buffer.c_buffer.insert(c)
+				buffer.c_buffer.insert_at(c, Position.new(cursor.y, cursor.x))
 				cursor.x += 1
 				if c == lf {
 					cursor.y += 1
@@ -152,7 +152,7 @@ pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 //                             need to review all its potential usages and hopefully remove it.
 pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
 	if buffer.buffer_kind != .gap_buffer { return }
-	buffer.c_buffer.insert_at(r, pos)
+	buffer.c_buffer.insert_at(r, Position.new(pos.y, pos.x))
 }
 
 pub fn (mut buffer Buffer) insert_tab(pos Pos, tabs_not_spaces bool) ?Pos {
@@ -317,11 +317,11 @@ pub fn (mut buffer Buffer) o(pos Pos) ?Pos {
 	match buffer.buffer_kind {
 		.gap_buffer {
 			mut cursor := pos
-			cursor.x = buffer.find_end_of_line(cursor) or { 0 }
+			cursor.x += buffer.find_end_of_line(cursor) or { 0 }
 			// NOTE(tauraamui): in gap buffer mode inserting newlines moves cursor down
-			buffer.insert_text(lf.str())
-			return cursor
+			return buffer.insert_text(cursor, lf.str())
 		}
+		else { return pos }
 	}
 }
 
