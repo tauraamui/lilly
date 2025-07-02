@@ -118,6 +118,10 @@ pub fn (mut l_buffer LineBuffer) o(pos Position) ?Position {
 	return Position.new(pos.line, 0).add(Distance{ lines: 1 })
 }
 
+pub fn (l_buffer LineBuffer) left(pos Position) ?Position {
+	return pos.add(Distance{ lines: 0, offset: -1 })
+}
+
 pub fn (l_buffer LineBuffer) num_of_lines() int { return l_buffer.lines.len }
 
 pub fn (l_buffer LineBuffer) str() string {

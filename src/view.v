@@ -1286,29 +1286,6 @@ fn (mut view View) o() {
 	view.scroll_from_and_to()
 }
 
-/*
-fn (mut view View) o2() {
-	if view.buffer.use_gap_buffer {
-		view.cursor.pos.x = view.buffer.find_end_of_line(buffer.Pos{ y: view.cursor.pos.y }) or { 0 }
-		view.i()
-		view.insert_text(buffer.lf.str())
-		view.scroll_from_and_to()
-		return
-	}
-	pos := view.buffer.o(view.cursor.pos)
-	view.leader_state.mode = .insert
-	defer { view.move_cursor_down(1) }
-	y := view.cursor.pos.y
-	whitespace_prefix := resolve_whitespace_prefix(view.buffer.lines[y])
-	defer { view.cursor.pos.x = whitespace_prefix.len }
-	if y >= view.buffer.lines.len {
-		view.buffer.lines << '${whitespace_prefix}'
-		return
-	}
-	view.buffer.lines.insert(y + 1, '${whitespace_prefix}')
-}
-*/
-
 fn (mut view View) shift_o() {
 	if view.buffer.use_gap_buffer {
 		view.cursor.pos.x = 0
