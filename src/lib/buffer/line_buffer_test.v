@@ -347,3 +347,29 @@ fn test_line_buffer_o_on_existing_content_from_end_of_line_initial_pos_way_oob()
 	assert line_buf.lines == arrays.append(["1. first line of content"], []string{ len: 82 })
 }
 
+fn test_line_buffer_o_on_existing_content_from_start_of_second_line_of_three() {
+	mut line_buf := LineBuffer{
+		lines: ["1. first line of content", "2. second line of content", "3. third line of content"]
+	}
+
+	mut new_pos := line_buf.o(Position.new(1, 0))?
+
+	assert new_pos == Position.new(2, 0)
+	assert line_buf.lines == ["1. first line of content", "2. second line of content", "", "3. third line of content"]
+
+	new_pos = line_buf.o(new_pos)?
+
+	assert new_pos == Position.new(3, 0)
+	assert line_buf.lines == ["1. first line of content", "2. second line of content", "", "", "3. third line of content"]
+
+	new_pos = line_buf.o(new_pos)?
+
+	assert new_pos == Position.new(4, 0)
+	assert line_buf.lines == ["1. first line of content", "2. second line of content", "", "", "", "3. third line of content"]
+
+	new_pos = line_buf.o(new_pos)?
+
+	assert new_pos == Position.new(5, 0)
+	assert line_buf.lines == ["1. first line of content", "2. second line of content", "", "", "", "", "3. third line of content"]
+}
+
