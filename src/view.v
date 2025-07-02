@@ -1278,7 +1278,7 @@ fn (mut view View) center_text_around_cursor() {
 
 fn (mut view View) u() {}
 
-fn (mut view View) o2() {
+fn (mut view View) o() {
 	pos := view.buffer.o(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
 	view.i()
 	view.cursor.pos.x = pos.x
@@ -1286,7 +1286,8 @@ fn (mut view View) o2() {
 	view.scroll_from_and_to()
 }
 
-fn (mut view View) o() {
+fn (mut view View) o2() {
+	/*
 	if view.buffer.use_gap_buffer {
 		view.cursor.pos.x = view.buffer.find_end_of_line(buffer.Pos{ y: view.cursor.pos.y }) or { 0 }
 		view.i()
@@ -1294,6 +1295,8 @@ fn (mut view View) o() {
 		view.scroll_from_and_to()
 		return
 	}
+	*/
+	pos := view.buffer.o(view.cursor.pos)
 	view.leader_state.mode = .insert
 	defer { view.move_cursor_down(1) }
 	y := view.cursor.pos.y
