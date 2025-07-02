@@ -392,13 +392,6 @@ pub fn (buffer Buffer) left(pos Pos, insert_mode bool) ?Pos {
 	}
 }
 
-fn position_to_pos(position ?Position) ?Pos {
-	if unwrapped_position := position {
-		return Pos{ x: unwrapped_position.offset, y: unwrapped_position.line }
-	}
-	return none
-}
-
 pub fn (buffer Buffer) right(pos Pos, insert_mode bool) ?Pos {
 	match buffer.buffer_kind {
 		.gap_buffer  { return buffer.c_buffer.right(pos, insert_mode) }
@@ -409,6 +402,23 @@ pub fn (buffer Buffer) right(pos Pos, insert_mode bool) ?Pos {
 			cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
 			return cursor
 		}
+	}
+}
+
+pub fn (buffer Buffer) down2(pos Pos, insert_mode bool) ?Pos {
+	match buffer.buffer_kind {
+		.gap_buffer  { return buffer.c_buffer.down(pos) }
+		// .line_buffer { return position_to_pos(buffer.l_buffer.left(Position.new(pos.y, pos.x))) }
+		.legacy {
+			mut cursor := pos
+			cursor.y += 1
+			if cursor.y >= buffer.lines.len - 1 {
+				cursor.y = buffer.lines.len - 1
+			}
+			cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
+			return cursor
+		}
+		else { return none }
 	}
 }
 
@@ -546,6 +556,13 @@ pub fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
 		clamped.x = 0
 	}
 	return clamped
+}
+
+fn position_to_pos(position ?Position) ?Pos {
+	if unwrapped_position := position {
+		return Pos{ x: unwrapped_position.offset, y: unwrapped_position.line }
+	}
+	return none
 }
 
 pub interface PatternMatchIterator {
