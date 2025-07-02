@@ -1,5 +1,7 @@
 module buffer
 
+import "arrays"
+
 fn test_line_buffer_num_of_lines_with_empty_doc() {
 	line_buf := LineBuffer{
 		lines: []
@@ -321,5 +323,27 @@ fn test_line_buffer_backspace_on_existing_content_from_start_of_second_line_of_t
 
 	assert new_pos == Position.new(1, 0)
 	assert line_buf.lines == ["1. first line of cont", "2. second line of content", "3. third line of content"]
+}
+
+fn test_line_buffer_o_on_existing_content_from_middle_of_first_line() {
+	mut line_buf := LineBuffer{
+		lines: ["1. first line of content"]
+	}
+
+	new_pos := line_buf.o(Position.new(0, 11))?
+
+	assert new_pos == Position.new(1, 0)
+	assert line_buf.lines == ["1. first line of content", ""]
+}
+
+fn test_line_buffer_o_on_existing_content_from_end_of_line_initial_pos_way_oob() {
+	mut line_buf := LineBuffer{
+		lines: ["1. first line of content"]
+	}
+
+	mut new_pos := line_buf.o(Position.new(81, 60))?
+
+	assert new_pos == Position.new(82, 0)
+	assert line_buf.lines == arrays.append(["1. first line of content"], []string{ len: 82 })
 }
 
