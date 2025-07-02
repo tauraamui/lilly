@@ -400,13 +400,16 @@ fn position_to_pos(position ?Position) ?Pos {
 }
 
 pub fn (buffer Buffer) right(pos Pos, insert_mode bool) ?Pos {
-	if buffer.use_gap_buffer {
-		return buffer.c_buffer.right(pos, insert_mode)
+	match buffer.buffer_kind {
+		.gap_buffer  { return buffer.c_buffer.right(pos, insert_mode) }
+		.line_buffer { return position_to_pos(buffer.l_buffer.right(Position.new(pos.y, pos.x))) }
+		.legacy {
+			mut cursor := pos
+			cursor.x += 1
+			cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
+			return cursor
+		}
 	}
-	mut cursor := pos
-	cursor.x += 1
-	cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
-	return cursor
 }
 
 pub fn (buffer Buffer) down(pos Pos, insert_mode bool) ?Pos {
