@@ -132,13 +132,8 @@ pub fn (l_buffer LineBuffer) right(pos Position) ?Position {
 }
 
 pub fn (l_buffer LineBuffer) down(pos Position) ?Position {
-	if l_buffer.lines.len == 0       { return pos }
-	if l_buffer.lines.len < pos.line { return pos }
-	distance_to_line_end := l_buffer.lines[pos.line].len - pos.offset
-
-	return if distance_to_line_end >= 0 {
-		Position.new(pos.line, pos.offset).add(Distance{ offset: distance_to_line_end })
-	} else { pos }
+	// TODO(tauraamui): do this next
+	return none
 }
 
 pub fn (l_buffer LineBuffer) num_of_lines() int { return l_buffer.lines.len }
