@@ -405,7 +405,7 @@ pub fn (buffer Buffer) right(pos Pos, insert_mode bool) ?Pos {
 	}
 }
 
-pub fn (buffer Buffer) down2(pos Pos, insert_mode bool) ?Pos {
+pub fn (buffer Buffer) down(pos Pos, insert_mode bool) ?Pos {
 	match buffer.buffer_kind {
 		.gap_buffer  { return buffer.c_buffer.down(pos) }
 		// .line_buffer { return position_to_pos(buffer.l_buffer.left(Position.new(pos.y, pos.x))) }
@@ -420,22 +420,6 @@ pub fn (buffer Buffer) down2(pos Pos, insert_mode bool) ?Pos {
 		}
 		else { return none }
 	}
-}
-
-pub fn (buffer Buffer) down(pos Pos, insert_mode bool) ?Pos {
-	if buffer.use_gap_buffer {
-		return buffer.c_buffer.down(pos)
-	}
-	// FIXME(tauraamui) [17/01/25]: Both up and down MUST take the insert mode
-	//                              toggle into account when doing a total line
-	//                              length and truncation adjustment/check.
-	mut cursor := pos
-	cursor.y += 1
-	if cursor.y >= buffer.lines.len - 1 {
-		cursor.y = buffer.lines.len - 1
-	}
-	cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
-	return cursor
 }
 
 pub fn (buffer Buffer) up(pos Pos, insert_mode bool) ?Pos {
