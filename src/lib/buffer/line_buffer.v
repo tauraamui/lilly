@@ -132,8 +132,14 @@ pub fn (l_buffer LineBuffer) right(pos Position) ?Position {
 }
 
 pub fn (l_buffer LineBuffer) down(pos Position) ?Position {
-	// TODO(tauraamui): do this next
-	return none
+	if l_buffer.is_oob(pos) { return pos }
+
+	line_at_pos := l_buffer.lines[pos.line]
+	if line_at_pos.len == l_buffer.lines.len - 1 { return pos }
+
+	clamped_offset := if pos.offset >= line_at_pos.runes().len { line_at_pos.runes().len - 1 } else { pos.offset }
+
+	return Position.new(pos.line, clamped_offset).add(Distance{ lines: 1 })
 }
 
 pub fn (l_buffer LineBuffer) num_of_lines() int { return l_buffer.lines.len }
