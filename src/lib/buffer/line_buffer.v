@@ -127,15 +127,10 @@ pub fn (l_buffer LineBuffer) right(pos Position, insert_mode bool) ?Position {
 	return l_buffer.clamp_cursor_x_pos(pos.add(Distance{ offset: 1 }), insert_mode)
 }
 
-pub fn (l_buffer LineBuffer) down(pos Position) ?Position {
-	if l_buffer.is_oob(pos) { return pos }
-
-	line_at_pos := l_buffer.lines[pos.line]
-	if line_at_pos.len == l_buffer.lines.len - 1 { return pos }
-
-	clamped_offset := if pos.offset >= line_at_pos.runes().len { line_at_pos.runes().len - 1 } else { pos.offset }
-
-	return Position.new(pos.line, clamped_offset).add(Distance{ lines: 1 })
+pub fn (l_buffer LineBuffer) down(pos Position, insert_mode bool) ?Position {
+	pos_one_line_down := pos.add(Distance{ lines: 1 })
+	if pos_one_line_down.line >= l_buffer.lines.len { return pos }
+	return l_buffer.clamp_cursor_x_pos(pos_one_line_down, insert_mode)
 }
 
 pub fn (l_buffer LineBuffer) num_of_lines() int { return l_buffer.lines.len }
