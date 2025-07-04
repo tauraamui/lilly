@@ -122,14 +122,7 @@ pub fn (l_buffer LineBuffer) left(pos Position) ?Position {
 }
 
 pub fn (l_buffer LineBuffer) right(pos Position) ?Position {
-	// TODO(tauraamui) [03/07/2025]: use down methods oob checking content
-	if l_buffer.lines.len == 0       { return pos }
-	if l_buffer.lines.len < pos.line { return pos }
-	distance_to_line_end := l_buffer.lines[pos.line].len - pos.offset
-
-	return if distance_to_line_end >= 0 {
-		Position.new(pos.line, pos.offset).add(Distance{ offset: distance_to_line_end })
-	} else { pos }
+	return pos
 }
 
 pub fn (l_buffer LineBuffer) down(pos Position) ?Position {
