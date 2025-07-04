@@ -395,7 +395,7 @@ pub fn (buffer Buffer) left(pos Pos, insert_mode bool) ?Pos {
 pub fn (buffer Buffer) right(pos Pos, insert_mode bool) ?Pos {
 	match buffer.buffer_kind {
 		.gap_buffer  { return buffer.c_buffer.right(pos, insert_mode) }
-		.line_buffer { return position_to_pos(buffer.l_buffer.right(Position.new(pos.y, pos.x))) }
+		.line_buffer { return position_to_pos(buffer.l_buffer.right(Position.new(pos.y, pos.x), insert_mode)) }
 		.legacy {
 			mut cursor := pos
 			cursor.x += 1
