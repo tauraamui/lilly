@@ -118,6 +118,7 @@ pub fn (mut l_buffer LineBuffer) o(pos Position) ?Position {
 }
 
 pub fn (l_buffer LineBuffer) left(pos Position) ?Position {
+	// the add method auto clamps indexes of less than 0
 	return pos.add(Distance{ lines: 0, offset: -1 })
 }
 
