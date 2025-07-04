@@ -122,8 +122,9 @@ pub fn (l_buffer LineBuffer) left(pos Position) ?Position {
 	return pos.add(Distance{ lines: 0, offset: -1 })
 }
 
-pub fn (l_buffer LineBuffer) right(pos Position) ?Position {
-	return pos
+pub fn (l_buffer LineBuffer) right(pos Position, insert_mode bool) ?Position {
+	if l_buffer.is_oob(pos) { return pos }
+	return l_buffer.clamp_cursor_x_pos(pos.add(Distance{ offset: 1 }), insert_mode)
 }
 
 pub fn (l_buffer LineBuffer) down(pos Position) ?Position {
@@ -149,6 +150,28 @@ fn (l_buffer LineBuffer) is_oob(pos Position) bool {
 
 fn (l_buffer LineBuffer) expansion_required(pos Position) bool {
 	return l_buffer.is_oob(pos)
+}
+
+fn (l_buffer LineBuffer) clamp_cursor_x_pos(pos Position, insert_mode bool) Position {
+	mut clamped_offset := pos.offset
+	if clamped_offset < 0 { clamped_offset = 0 }
+
+	current_line_len := l_buffer.lines[pos.line].runes().len
+
+	if insert_mode {
+		if clamped_offset > current_line_len {
+			clamped_offset = current_line_len
+		}
+	} else {
+		diff := pos.offset - (current_line_len - 1)
+		if diff > 0 {
+			clamped_offset = current_line_len - 1
+		}
+	}
+	if clamped_offset < 0 {
+		clamped_offset = 0
+	}
+	return Position.new(pos.line, clamped_offset)
 }
 
 fn grow_and_set(mut lines []string, pos_line int, data_to_set string) Position {
