@@ -393,6 +393,35 @@ fn test_buffer_line_buffer_down_moves_cursor_down_successfully() {
 	assert buffer.str() == "1. first line\n2. second line\n3. third line"
 }
 
+fn test_buffer_gap_buffer_up_moves_cursor_up_successfully() {
+	mut buffer := Buffer.new("", .gap_buffer)
+	buffer.load_contents_into_gap("1. first line\n2. second line\n3. third line")
+
+	new_pos := buffer.up(Pos{ x: 3, y: 1 }, false)?
+	assert new_pos == Pos{ x: 3, y: 0 }
+	assert buffer.str() == "1. first line\n2. second line\n3. third line"
+}
+
+fn test_buffer_legacy_buffer_up_moves_cursor_up_successfully() {
+	mut buffer := Buffer.new("", .legacy)
+	lines := ["1. first line", "2. second line", "3. third line"]
+	buffer.lines = lines
+
+	new_pos := buffer.up(Pos{ x: 2, y: 1 }, false)?
+	assert new_pos == Pos{ x: 2, y: 0 }
+	assert buffer.str() == "1. first line\n2. second line\n3. third line"
+}
+
+fn test_buffer_line_buffer_up_moves_cursor_up_successfully() {
+	mut buffer := Buffer.new("", .line_buffer)
+	lines := ["1. first line", "2. second line", "3. third line"]
+	buffer.load_contents_into_line_buffer(lines)
+
+	new_pos := buffer.up(Pos{ x: 3, y: 1 }, false)?
+	assert new_pos == Pos{ x: 3, y: 0 }
+	assert buffer.str() == "1. first line\n2. second line\n3. third line"
+}
+
 fn test_buffer_gap_buffer_find_end_of_line() {
 	mut buffer := Buffer.new("", .gap_buffer)
 	buffer.load_contents_into_gap("1. first line\n2. second line\n3. third line")
