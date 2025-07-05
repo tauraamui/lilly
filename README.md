@@ -11,6 +11,9 @@
 > however many features are missing, and there is no guarantee of stable features or a lack of bugs.
 > Features, bug fixes and issues are welcome.
 
+> [!WARNING]
+> (the master branch is currently in a slightly broken state, checkout commit bee9e01 for last known stable version)
+
 ![Screenshot 2023-11-17 20 07 13](https://github.com/tauraamui/lilly/assets/3159648/12e893ce-0120-4eb4-9d54-71b1a076832c)
 
 ![Screenshot 2023-12-01 21 01 45](https://github.com/tauraamui/lilly/assets/3159648/e9023db2-0214-49e1-baad-9a75aa22d291)
