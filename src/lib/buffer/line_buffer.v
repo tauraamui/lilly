@@ -133,6 +133,11 @@ pub fn (l_buffer LineBuffer) down(pos Position, insert_mode bool) ?Position {
 	return l_buffer.clamp_cursor_x_pos(pos_one_line_down, insert_mode)
 }
 
+pub fn (l_buffer LineBuffer) up(pos Position, insert_mode bool) ?Position {
+	pos_one_line_down := pos.add(Distance{ lines: -1 })
+	return l_buffer.clamp_cursor_x_pos(pos_one_line_down, insert_mode)
+}
+
 pub fn (l_buffer LineBuffer) num_of_lines() int { return l_buffer.lines.len }
 
 pub fn (l_buffer LineBuffer) str() string {
@@ -151,6 +156,7 @@ fn (l_buffer LineBuffer) clamp_cursor_x_pos(pos Position, insert_mode bool) Posi
 	mut clamped_offset := pos.offset
 	if clamped_offset < 0 { clamped_offset = 0 }
 
+	if l_buffer.lines.len == 0 { return Position.new(0, 0) }
 	current_line_len := l_buffer.lines[pos.line].runes().len
 
 	if insert_mode {
