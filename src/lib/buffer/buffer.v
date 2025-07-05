@@ -422,16 +422,19 @@ pub fn (buffer Buffer) down(pos Pos, insert_mode bool) ?Pos {
 }
 
 pub fn (buffer Buffer) up(pos Pos, insert_mode bool) ?Pos {
-	if buffer.use_gap_buffer {
-		return buffer.c_buffer.up(pos)
+	match buffer.buffer_kind {
+		.gap_buffer { return buffer.c_buffer.up(pos) }
+		.line_buffer { return position_to_pos(buffer.l_buffer.up(Position.new(pos.y, pos.x), insert_mode)) }
+		.legacy {
+			mut cursor := pos
+			cursor.y -= 1
+			if cursor.y < 0 {
+				cursor.y = 0
+			}
+			cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
+			return cursor
+		}
 	}
-	mut cursor := pos
-	cursor.y -= 1
-	if cursor.y < 0 {
-		cursor.y = 0
-	}
-	cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
-	return cursor
 }
 
 pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
