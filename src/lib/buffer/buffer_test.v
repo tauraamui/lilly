@@ -422,6 +422,47 @@ fn test_buffer_line_buffer_up_moves_cursor_up_successfully() {
 	assert buffer.str() == "1. first line\n2. second line\n3. third line"
 }
 
+fn test_buffer_gap_buffer_up_to_next_blank_line_moves_cursor_up_successfully() {
+	mut buffer := Buffer.new("", .gap_buffer)
+	buffer.load_contents_into_gap("1. first line\n\n3. third line\n\n5. fifth line")
+
+	mut new_pos := buffer.up_to_next_blank_line(Pos{ x: 2, y: 4 })?
+	assert new_pos == Pos{ x: 0, y: 3 }
+
+	new_pos = buffer.up_to_next_blank_line(new_pos)?
+	assert new_pos == Pos{ x: 0, y: 1 }
+
+	assert buffer.str() == "1. first line\n\n3. third line\n\n5. fifth line"
+}
+
+fn test_buffer_legacy_buffer_up_to_next_blank_line_moves_cursor_up_successfully() {
+	mut buffer := Buffer.new("", .legacy)
+	lines := ["1. first line", "", "3. third line", "", "5. fifth line"]
+	buffer.lines = lines
+
+	mut new_pos := buffer.up_to_next_blank_line(Pos{ x: 2, y: 4 })?
+	assert new_pos == Pos{ x: 0, y: 3 }
+
+	new_pos = buffer.up_to_next_blank_line(new_pos)?
+	assert new_pos == Pos{ x: 0, y: 1 }
+
+	assert buffer.str() == "1. first line\n\n3. third line\n\n5. fifth line"
+}
+
+fn test_buffer_line_buffer_up_to_next_blank_line_moves_cursor_up_successfully() {
+	mut buffer := Buffer.new("", .line_buffer)
+	lines := ["1. first line", "", "3. third line", "", "5. fifth line"]
+	buffer.load_contents_into_line_buffer(lines)
+
+	mut new_pos := buffer.up_to_next_blank_line(Pos{ x: 2, y: 4 })?
+	assert new_pos == Pos{ x: 0, y: 3 }
+
+	new_pos = buffer.up_to_next_blank_line(new_pos)?
+	assert new_pos == Pos{ x: 2, y: 1 }
+
+	assert buffer.str() == "1. first line\n\n3. third line\n\n5. fifth line"
+}
+
 fn test_buffer_gap_buffer_find_end_of_line() {
 	mut buffer := Buffer.new("", .gap_buffer)
 	buffer.load_contents_into_gap("1. first line\n2. second line\n3. third line")

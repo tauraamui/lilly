@@ -138,6 +138,10 @@ pub fn (l_buffer LineBuffer) up(pos Position, insert_mode bool) ?Position {
 	return l_buffer.clamp_cursor_x_pos(pos_one_line_down, insert_mode)
 }
 
+pub fn (l_buffer LineBuffer) up_to_next_blank_line(pos Position) ?Position {
+	return none
+}
+
 pub fn (l_buffer LineBuffer) num_of_lines() int { return l_buffer.lines.len }
 
 pub fn (l_buffer LineBuffer) str() string {
