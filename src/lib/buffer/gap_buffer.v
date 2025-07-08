@@ -414,8 +414,11 @@ pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 	return cursor_loc
 }
 
+// up_to_next_blank_line returns cursor position at start of next blank line above current cursor.
+// If no blank line is found above the given cursor position `none` is returned instead.
 pub fn (gap_buffer GapBuffer) up_to_next_blank_line(pos Pos) ?Pos {
 	mut cursor_loc := pos
+	cursor_loc.x = 0
 	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or { return none }
 
 	if offset > gap_buffer.gap_end {
@@ -430,28 +433,26 @@ pub fn (gap_buffer GapBuffer) up_to_next_blank_line(pos Pos) ?Pos {
 	// we've actually elapsed in the data as opposed to how much
 	// was the gap size. Should probably benchmark and alloc profile
 	// the two different options.
+	gap_size := gap_buffer.gap_end - gap_buffer.gap_start
 	data_pre_gap := gap_buffer.data[..gap_buffer.gap_start]
 	data_post_gap := gap_buffer.data[gap_buffer.gap_end..]
 	data := arrays.merge(data_pre_gap, data_post_gap)
 
-	mut compound_y := 0
+	offset -= gap_size
+	mut newline_count := 0
+	mut last_rune_was_newline := false
 	for i := offset; i >= 0; i-- {
-		if data[i] == lf {
-			compound_y += 1
-			if i - 1 >= 0 {
-				if data[i - 1] == lf {
-					break
-				}
-			}
+		c := data[i]
+		if c == lf {
+			cursor_loc.y -= 1
+			if last_rune_was_newline { return cursor_loc }
+			last_rune_was_newline = true
+			continue
 		}
+		last_rune_was_newline = false
 	}
 
-	if compound_y > 0 {
-		cursor_loc.x = 0
-		cursor_loc.y -= compound_y
-	}
-
-	return cursor_loc
+	return none
 }
 
 pub fn (gap_buffer GapBuffer) down_to_next_blank_line(pos Pos) ?Pos {
