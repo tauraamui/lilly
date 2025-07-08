@@ -14,6 +14,12 @@
 
 module buffer
 
+fn test_up_to_next_blank_line_in_document_with_no_blank_line_given_cursor_at_top() {
+	mut gb := GapBuffer.new("1. First line\n2. Second line!\n3. Third line :3")
+	new_pos := gb.up_to_next_blank_line(Pos{ x: 0, y: 0 })
+	assert new_pos == none
+}
+
 fn test_inserting_into_gap_buffer() {
 	mut gb := GapBuffer.new("12345")
 
