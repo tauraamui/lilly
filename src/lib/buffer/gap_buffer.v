@@ -439,9 +439,14 @@ pub fn (gap_buffer GapBuffer) up_to_next_blank_line(pos Pos) ?Pos {
 	mut last_rune_was_newline := false
 	for i := offset; i >= 0; i-- {
 		c := data[i]
-		if c == lf {
-			if last_rune_was_newline { return cursor_loc }
-			cursor_loc.y -= 1
+		// we may have started on an existing blank line,
+		// so the first newline encountered should be ignored
+		if i != offset && c == lf {
+			if last_rune_was_newline {
+				cursor_loc.y -= newline_count
+				return cursor_loc
+			}
+			newline_count += 1
 			last_rune_was_newline = true
 			continue
 		}
