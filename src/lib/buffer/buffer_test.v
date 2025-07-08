@@ -422,6 +422,7 @@ fn test_buffer_line_buffer_up_moves_cursor_up_successfully() {
 	assert buffer.str() == "1. first line\n2. second line\n3. third line"
 }
 
+// TODO(tauraamui) [08/07/2025]: uncomment/re-enable this test
 /*
 fn test_buffer_gap_buffer_up_to_next_blank_line_moves_cursor_up_successfully() {
 	mut buffer := Buffer.new("", .gap_buffer)
