@@ -28,8 +28,7 @@ fn test_up_to_next_blank_line_in_document_with_blank_line_below_the_cursor_at_to
 
 fn test_up_to_next_blank_line_in_document_with_blank_line_above_the_cursor_in_middle() {
 	mut gb := GapBuffer.new("1. First line\n\n2. Second line!\n3. Third line :3")
-	new_pos := gb.up_to_next_blank_line(Pos{ x: 0, y: 3 })
-	assert new_pos == Pos{ x: 0, y: 1 }
+	assert gb.up_to_next_blank_line(Pos{ x: 0, y: 3 })? == Pos{ x: 0, y: 1 }
 }
 
 fn test_inserting_into_gap_buffer() {
