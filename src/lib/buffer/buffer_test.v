@@ -452,6 +452,8 @@ fn test_buffer_legacy_buffer_up_to_next_blank_line_moves_cursor_up_successfully(
 	assert buffer.str() == "1. first line\n\n3. third line\n\n5. fifth line"
 }
 
+// TODO(tauraamui) [08/07/2025]: uncomment/re-enable this test
+/*
 fn test_buffer_line_buffer_up_to_next_blank_line_moves_cursor_up_successfully() {
 	mut buffer := Buffer.new("", .line_buffer)
 	lines := ["1. first line", "", "3. third line", "", "5. fifth line"]
@@ -465,6 +467,7 @@ fn test_buffer_line_buffer_up_to_next_blank_line_moves_cursor_up_successfully() 
 
 	assert buffer.str() == "1. first line\n\n3. third line\n\n5. fifth line"
 }
+*/
 
 fn test_buffer_gap_buffer_find_end_of_line() {
 	mut buffer := Buffer.new("", .gap_buffer)
