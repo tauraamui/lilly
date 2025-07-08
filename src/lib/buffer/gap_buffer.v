@@ -101,17 +101,17 @@ fn (mut gap_buffer GapBuffer) insert_rune(r rune) {
 
 fn (mut gap_buffer GapBuffer) move_data_cursor(offset int) {
 	if offset < gap_buffer.gap_start {
-		gap_buffer.move_cursor_left(gap_buffer.gap_start - offset)
+		gap_buffer.move_data_cursor_left(gap_buffer.gap_start - offset)
 		return
 	}
 
 	if offset > gap_buffer.gap_start {
-		gap_buffer.move_cursor_right(offset - gap_buffer.gap_start)
+		gap_buffer.move_data_cursor_right(offset - gap_buffer.gap_start)
 		return
 	}
 }
 
-fn (mut gap_buffer GapBuffer) move_cursor_left(count int) {
+fn (mut gap_buffer GapBuffer) move_data_cursor_left(count int) {
 	max_allowed_count := gap_buffer.gap_start
 	to_move_count := int_min(count, max_allowed_count)
 
@@ -122,7 +122,7 @@ fn (mut gap_buffer GapBuffer) move_cursor_left(count int) {
 	}
 }
 
-fn (mut gap_buffer GapBuffer) move_cursor_right(count int) {
+fn (mut gap_buffer GapBuffer) move_data_cursor_right(count int) {
 	max_allowed_count := gap_buffer.data.len - gap_buffer.gap_end
 	to_move_count := int_min(count, max_allowed_count)
 
