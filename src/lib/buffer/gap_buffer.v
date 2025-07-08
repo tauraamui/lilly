@@ -420,7 +420,7 @@ pub fn (gap_buffer GapBuffer) up_to_next_blank_line(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	cursor_loc.x = 0
 	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or { return none }
-	offset -= gap_buffer.gap_end - gap_buffer.gap_start
+	offset -= gap_buffer.empty_gap_space_size()
 
 	// NOTE(tauraamui) [10/01/25]:
 	// this copying of the two sides of the buffer might be worth
@@ -461,7 +461,7 @@ pub fn (gap_buffer GapBuffer) down_to_next_blank_line(pos Pos) ?Pos {
 	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or { return none }
 
 	if offset > gap_buffer.gap_end {
-		offset -= gap_buffer.gap_end - gap_buffer.gap_start
+		offset -= gap_buffer.empty_gap_space_size()
 	}
 
 	// NOTE(tauraamui) [10/01/25]:
