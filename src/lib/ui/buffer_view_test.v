@@ -23,7 +23,6 @@ module ui
 import lib.buffer
 import lib.draw
 import lib.utf8
-import lib.syntax
 import lib.theme as themelib
 import term.ui as tui
 
@@ -1977,10 +1976,10 @@ fn (mockctx MockColorContextable) flush() {}
 
 struct MockContextable {
 mut:
-	on_draw_cb         fn (x int, y int, text string)
-	on_draw_rect_cb    fn (x int, y int, width int, height int)
-	on_set_fg_color_cb fn (c draw.Color)
-	on_set_bg_color_cb fn (c draw.Color)
+	on_draw_cb         fn (x int, y int, text string) = unsafe { nil }
+	on_draw_rect_cb    fn (x int, y int, width int, height int) = unsafe { nil }
+	on_set_fg_color_cb fn (c draw.Color) = unsafe { nil }
+	on_set_bg_color_cb fn (c draw.Color) = unsafe { nil }
 }
 
 fn (mockctx MockContextable) theme() themelib.Theme {

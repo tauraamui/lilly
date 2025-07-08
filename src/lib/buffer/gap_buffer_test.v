@@ -19,7 +19,7 @@ fn test_inserting_into_gap_buffer() {
 
 	assert gb.raw_str() == "${'_'.repeat(gap_size)}12345"
 
-	gb.move_cursor_right(gb.data.len - gb.gap_end) // move gap to end of the data
+	gb.move_data_cursor_right(gb.data.len - gb.gap_end) // move gap to end of the data
 
 	for c in "6".runes() { gb.insert(c) }
 	assert gb.raw_str() == "123456${'_'.repeat(gap_size - 1)}"
@@ -28,7 +28,7 @@ fn test_inserting_into_gap_buffer() {
 fn test_inserting_into_gap_buffer_and_then_backspacing() {
 	mut gb := GapBuffer.new("This is a full sentence!")
 
-	gb.move_cursor_right(gb.data.len - gb.gap_end) // move gap to end of the data
+	gb.move_data_cursor_right(gb.data.len - gb.gap_end) // move gap to end of the data
 
 	gb.backspace()
 	assert gb.raw_str() == "This is a full sentence${'_'.repeat(gap_size + 1)}"
@@ -49,11 +49,11 @@ fn test_inserting_into_gap_buffer_and_then_backspacing() {
 fn test_inserting_into_gap_buffer_and_then_deleting() {
 	mut gb := GapBuffer.new("This is a full sentence!")
 
-	gb.move_cursor_right(gb.data.len - gb.gap_end) // move gap to end of the data
+	gb.move_data_cursor_right(gb.data.len - gb.gap_end) // move gap to end of the data
 
 	assert gb.raw_str() == "This is a full sentence!${'_'.repeat(gap_size)}" // so we can see the gap is "nearly full", but one space is left
 
-	gb.move_cursor_left(10)
+	gb.move_data_cursor_left(10)
 	assert gb.raw_str() == "This is a full${'_'.repeat(gap_size)} sentence!" // so we can see the gap is "nearly full", but one space is left
 
 	gb.delete(false)
@@ -67,36 +67,36 @@ fn test_inserting_into_gap_buffer_and_then_deleting() {
 	assert gb.raw_str() == "This is a full${'_'.repeat(gap_size + 5)}ence!" // so we can see the gap is "nearly full", but one space is left
 }
 
-fn test_moving_cursor_left() {
+fn test_moving_data_cursor_left() {
 	mut gb := GapBuffer.new("Some test text, here we go!")
 
-	gb.move_cursor_right(gb.data.len - gb.gap_end) // move gap to end of the data
+	gb.move_data_cursor_right(gb.data.len - gb.gap_end) // move gap to end of the data
 
 	assert gb.raw_str() == "Some test text, here we go!${'_'.repeat(gap_size)}"
 
-	gb.move_cursor_left(1)
+	gb.move_data_cursor_left(1)
 	assert gb.raw_str() == "Some test text, here we go${'_'.repeat(gap_size)}!"
 }
 
-fn test_moving_cursor_right() {
+fn test_moving_data_cursor_right() {
 	mut gb := GapBuffer.new("Some test text, here we go!")
 
-	gb.move_cursor_right(4)
+	gb.move_data_cursor_right(4)
 	assert gb.raw_str() == "Some${'_'.repeat(gap_size)} test text, here we go!"
 
-	gb.move_cursor_left(2)
+	gb.move_data_cursor_left(2)
 	assert gb.raw_str() == "So${'_'.repeat(gap_size)}me test text, here we go!"
 
-	gb.move_cursor_right(1)
+	gb.move_data_cursor_right(1)
 	assert gb.raw_str() == "Som${'_'.repeat(gap_size)}e test text, here we go!"
 }
 
-fn test_moving_cursor_right_and_then_insert() {
+fn test_moving_data_cursor_right_and_then_insert() {
 	mut gb := GapBuffer.new("Some test text, here we go!")
 
 	assert gb.raw_str() == "${'_'.repeat(gap_size)}Some test text, here we go!"
 
-	gb.move_cursor_right(8)
+	gb.move_data_cursor_right(8)
 	assert gb.raw_str() == "Some tes${'_'.repeat(gap_size)}t text, here we go!"
 
 	for c in "??".runes() { gb.insert(c) }
@@ -112,7 +112,7 @@ fn test_find_offset() {
 	mut gb := GapBuffer.new("1. First line\n2. Second line!\n3. Third line :3")
 
 	assert gb.gap_start == 0
-	gap_size := gb.gap_end - gb.gap_start
+	ggap_size := gb.gap_end - gb.gap_start
 	assert gb.find_offset(Position{ line: 0, offset: 0 })! == gap_size
 	assert gb.find_offset(Position{ line: 0, offset: 3 })! == gap_size + 3
 	assert gb.find_offset(Position{ line: 1, offset: 0 })! == gap_size + 14

@@ -110,7 +110,7 @@ pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 		.gap_buffer {
 			mut cursor := pos
 			for c in s.runes() {
-				buffer.c_buffer.insert(c)
+				buffer.c_buffer.insert_at(c, Position.new(cursor.y, cursor.x))
 				cursor.x += 1
 				if c == lf {
 					cursor.y += 1
@@ -152,7 +152,7 @@ pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 //                             need to review all its potential usages and hopefully remove it.
 pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
 	if buffer.buffer_kind != .gap_buffer { return }
-	buffer.c_buffer.insert_at(r, pos)
+	buffer.c_buffer.insert_at(r, Position.new(pos.y, pos.x))
 }
 
 pub fn (mut buffer Buffer) insert_tab(pos Pos, tabs_not_spaces bool) ?Pos {
@@ -313,6 +313,37 @@ pub fn (mut buffer Buffer) delete(ignore_newlines bool) bool {
 	}
 }
 
+pub fn (mut buffer Buffer) o(pos Pos) ?Pos {
+	match buffer.buffer_kind {
+		.gap_buffer {
+			new_pos := buffer.c_buffer.o(Position.new(pos.y, pos.x)) or { return pos }
+			return Pos{ x: new_pos.offset, y: new_pos.line }
+		}
+		.line_buffer {
+			new_pos := buffer.l_buffer.o(Position.new(pos.y, pos.x)) or { return pos }
+			return Pos{ x: new_pos.offset, y: new_pos.line }
+		}
+		.legacy {
+			mut cursor := pos
+			y := pos.y
+			mut whitespace_prefix := resolve_whitespace_prefix_from_line_str(buffer.lines[y])
+			if whitespace_prefix.len == buffer.lines[y].len {
+				buffer.lines[y] = ""
+				whitespace_prefix = ""
+				cursor.x = 0
+			}
+			cursor.y += 1
+			cursor.x = whitespace_prefix.len
+			if y >= buffer.lines.len {
+				buffer.lines << whitespace_prefix
+				return cursor
+			}
+			buffer.lines.insert(y + 1, whitespace_prefix)
+			return cursor
+		}
+	}
+}
+
 pub fn (buffer Buffer) read(range Range) ?string {
 	if buffer.use_gap_buffer {
 		return buffer.c_buffer.read(range)
@@ -349,55 +380,94 @@ pub fn (buffer Buffer) find_prev_word_start(pos Pos) ?Pos {
 }
 
 pub fn (buffer Buffer) left(pos Pos, insert_mode bool) ?Pos {
-	if buffer.use_gap_buffer {
-		return buffer.c_buffer.left(pos)
+	match buffer.buffer_kind {
+		.gap_buffer  { return buffer.c_buffer.left(pos) }
+		.line_buffer { return position_to_pos(buffer.l_buffer.left(Position.new(pos.y, pos.x))) }
+		.legacy {
+			mut cursor := pos
+			cursor.x -= 1
+			cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
+			return cursor
+		}
 	}
-	mut cursor := pos
-	cursor.x -= 1
-	cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
-	return cursor
 }
 
 pub fn (buffer Buffer) right(pos Pos, insert_mode bool) ?Pos {
-	if buffer.use_gap_buffer {
-		return buffer.c_buffer.right(pos, insert_mode)
+	match buffer.buffer_kind {
+		.gap_buffer  { return buffer.c_buffer.right(pos, insert_mode) }
+		.line_buffer { return position_to_pos(buffer.l_buffer.right(Position.new(pos.y, pos.x), insert_mode)) }
+		.legacy {
+			mut cursor := pos
+			cursor.x += 1
+			cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
+			return cursor
+		}
 	}
-	mut cursor := pos
-	cursor.x += 1
-	cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
-	return cursor
 }
 
 pub fn (buffer Buffer) down(pos Pos, insert_mode bool) ?Pos {
-	if buffer.use_gap_buffer {
-		return buffer.c_buffer.down(pos)
+	match buffer.buffer_kind {
+		.gap_buffer  { return buffer.c_buffer.down(pos) }
+		.line_buffer { return position_to_pos(buffer.l_buffer.down(Position.new(pos.y, pos.x), insert_mode)) }
+		.legacy {
+			mut cursor := pos
+			cursor.y += 1
+			if cursor.y >= buffer.lines.len - 1 {
+				cursor.y = buffer.lines.len - 1
+			}
+			cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
+			return cursor
+		}
 	}
-	// FIXME(tauraamui) [17/01/25]: Both up and down MUST take the insert mode
-	//                              toggle into account when doing a total line
-	//                              length and truncation adjustment/check.
-	mut cursor := pos
-	cursor.y += 1
-	if cursor.y >= buffer.lines.len - 1 {
-		cursor.y = buffer.lines.len - 1
-	}
-	cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
-	return cursor
 }
 
 pub fn (buffer Buffer) up(pos Pos, insert_mode bool) ?Pos {
-	if buffer.use_gap_buffer {
-		return buffer.c_buffer.up(pos)
+	match buffer.buffer_kind {
+		.gap_buffer { return buffer.c_buffer.up(pos) }
+		.line_buffer { return position_to_pos(buffer.l_buffer.up(Position.new(pos.y, pos.x), insert_mode)) }
+		.legacy {
+			mut cursor := pos
+			cursor.y -= 1
+			if cursor.y < 0 {
+				cursor.y = 0
+			}
+			cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
+			return cursor
+		}
 	}
-	mut cursor := pos
-	cursor.y -= 1
-	if cursor.y < 0 {
-		cursor.y = 0
-	}
-	cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
-	return cursor
 }
 
 pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
+	match buffer.buffer_kind {
+		.gap_buffer { return buffer.c_buffer.up_to_next_blank_line(pos) }
+		.line_buffer { return none }
+		.legacy {
+			mut cursor := pos
+			cursor = buffer.clamp_cursor_within_document_bounds(pos)
+			if cursor.y == 0 { return none }
+
+			if buffer.lines.len == 0 { return none }
+
+			mut compound_y := 0
+			for i := cursor.y; i >= 0; i-- {
+				if i == cursor.y { continue }
+				compound_y += 1
+				if buffer.lines[i].len == 0 {
+					break
+				}
+			}
+
+			if compound_y > 0 {
+				cursor.x = 0
+				cursor.y -= compound_y
+				return cursor
+			}
+		}
+	}
+	return none
+}
+
+pub fn (buffer Buffer) up_to_next_blank_line1(pos Pos) ?Pos {
 	if buffer.use_gap_buffer {
 		return buffer.c_buffer.up_to_next_blank_line(pos)
 	}
@@ -502,6 +572,13 @@ pub fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
 		clamped.x = 0
 	}
 	return clamped
+}
+
+fn position_to_pos(position ?Position) ?Pos {
+	if unwrapped_position := position {
+		return Pos{ x: unwrapped_position.offset, y: unwrapped_position.line }
+	}
+	return none
 }
 
 pub interface PatternMatchIterator {

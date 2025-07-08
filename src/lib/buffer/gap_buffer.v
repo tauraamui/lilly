@@ -53,12 +53,14 @@ pub fn (mut gap_buffer GapBuffer) move_cursor_to(pos Position) {
 	gap_buffer.move_data_cursor(offset - gap_sizee)
 }
 
+// TODO(tauraamui) [01/07/2025]: refactor all of the public methods for inserting
+//                               text content to bring it down to one entrypoint
 pub fn (mut gap_buffer GapBuffer) insert(r rune) {
 	gap_buffer.insert_rune(r)
 }
 
-pub fn (mut gap_buffer GapBuffer) insert_at(r rune, pos Pos) {
-	gap_buffer.move_cursor_to(Position.new(pos.y, pos.x))
+pub fn (mut gap_buffer GapBuffer) insert_at(r rune, pos Position) {
+	gap_buffer.move_cursor_to(pos)
 	gap_buffer.insert_rune(r)
 }
 
@@ -85,6 +87,12 @@ pub fn (mut gap_buffer GapBuffer) x(pos Pos) ?Pos {
 	return pos
 }
 
+pub fn (mut gap_buffer GapBuffer) o(pos Position) ?Position {
+	end_of_line_pos := gap_buffer.find_end_of_line2(pos)?
+	gap_buffer.insert_at(lf, end_of_line_pos)
+	return Position.new(end_of_line_pos.line, 0).add(Distance{ lines: 1 })
+}
+
 fn (mut gap_buffer GapBuffer) insert_rune(r rune) {
 	gap_buffer.data[gap_buffer.gap_start] = r
 	gap_buffer.gap_start += 1
@@ -93,17 +101,17 @@ fn (mut gap_buffer GapBuffer) insert_rune(r rune) {
 
 fn (mut gap_buffer GapBuffer) move_data_cursor(offset int) {
 	if offset < gap_buffer.gap_start {
-		gap_buffer.move_cursor_left(gap_buffer.gap_start - offset)
+		gap_buffer.move_data_cursor_left(gap_buffer.gap_start - offset)
 		return
 	}
 
 	if offset > gap_buffer.gap_start {
-		gap_buffer.move_cursor_right(offset - gap_buffer.gap_start)
+		gap_buffer.move_data_cursor_right(offset - gap_buffer.gap_start)
 		return
 	}
 }
 
-fn (mut gap_buffer GapBuffer) move_cursor_left(count int) {
+fn (mut gap_buffer GapBuffer) move_data_cursor_left(count int) {
 	max_allowed_count := gap_buffer.gap_start
 	to_move_count := int_min(count, max_allowed_count)
 
@@ -114,7 +122,7 @@ fn (mut gap_buffer GapBuffer) move_cursor_left(count int) {
 	}
 }
 
-fn (mut gap_buffer GapBuffer) move_cursor_right(count int) {
+fn (mut gap_buffer GapBuffer) move_data_cursor_right(count int) {
 	max_allowed_count := gap_buffer.data.len - gap_buffer.gap_end
 	to_move_count := int_min(count, max_allowed_count)
 
@@ -140,6 +148,18 @@ fn (mut gap_buffer GapBuffer) resize_if_full() {
 pub fn (gap_buffer GapBuffer) in_bounds(pos Pos) bool {
 	_ := gap_buffer.find_offset(Position.new(pos.y, pos.x)) or { return false }
 	return true
+}
+
+pub fn (gap_buffer GapBuffer) find_end_of_line2(pos Position) ?Position {
+	offset := gap_buffer.find_offset(pos) or { return none }
+
+	for count, r in gap_buffer.data[offset..] {
+		cc := (count + offset)
+		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end { continue }
+		if r == lf { return pos.add(Distance{ offset: count }) }
+	}
+
+	return pos.add(Distance{ offset: gap_buffer.data[offset..].len })
 }
 
 pub fn (gap_buffer GapBuffer) find_end_of_line(pos Pos) ?int {
