@@ -139,6 +139,10 @@ pub fn (l_buffer LineBuffer) up(pos Position, insert_mode bool) ?Position {
 }
 
 pub fn (l_buffer LineBuffer) up_to_next_blank_line(pos Position) ?Position {
+	for i := l_buffer.lines.len - 1; i >= 0; i-- {
+		line_is_empty := l_buffer.lines[i].len == 0
+		println("LINE IS EMPTY: ${line_is_empty}, I: ${i}")
+	}
 	return none
 }
 
