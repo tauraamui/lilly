@@ -139,9 +139,12 @@ pub fn (l_buffer LineBuffer) up(pos Position, insert_mode bool) ?Position {
 }
 
 pub fn (l_buffer LineBuffer) up_to_next_blank_line(pos Position) ?Position {
-	for i := l_buffer.lines.len - 1; i >= 0; i-- {
+	from := pos.line
+	for i := from; i >= 0; i-- {
 		line_is_empty := l_buffer.lines[i].len == 0
-		println("LINE IS EMPTY: ${line_is_empty}, I: ${i}")
+		if i != from && line_is_empty {
+			return Position.new(pos.line, 0).add(Distance{ lines: (from - i) * -1 })
+		}
 	}
 	return none
 }
