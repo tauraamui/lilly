@@ -250,6 +250,7 @@ pub fn (mut buffer Buffer) x(pos Pos) ?Pos {
 	}
 }
 
+// TODO(tauraamui) [10/07/2025]: migrate this to gap and line buffers more completely
 pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
 	match buffer.buffer_kind {
 		.gap_buffer {
@@ -440,7 +441,7 @@ pub fn (buffer Buffer) up(pos Pos, insert_mode bool) ?Pos {
 pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
 	match buffer.buffer_kind {
 		.gap_buffer  { return buffer.c_buffer.up_to_next_blank_line(pos) }
-		.line_buffer { return buffer.l_buffer.up_to_next_blank_line(Position.new(pos.y, pos.x)) }
+		.line_buffer { return position_to_pos(buffer.l_buffer.up_to_next_blank_line(Position.new(pos.y, pos.x))) }
 		.legacy {
 			mut cursor := pos
 			cursor = buffer.clamp_cursor_within_document_bounds(pos)
