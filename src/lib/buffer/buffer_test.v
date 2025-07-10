@@ -434,6 +434,8 @@ fn test_buffer_gap_buffer_up_to_next_blank_line_moves_cursor_up_successfully() {
 	assert buffer.str() == "This is a doc\n1. first line\n\n2. second line\n3. third line\n5. fifth line"
 }
 
+// TODO(tauraamui) [10/07/2025]: migrate the below buffer up to next blank line to
+//                               down to next blank line
 fn test_buffer_gap_buffer_up_to_next_blank_line_moves_cursor_up_successfully_multiple_empty_lines_above() {
 	mut buffer := Buffer.new("", .gap_buffer)
 	buffer.load_contents_into_gap("This is a doc\n\n1. first line\n2. second line\n3. third line\n\n5. fifth line")
@@ -495,6 +497,32 @@ fn test_buffer_line_buffer_up_to_next_blank_line_moves_cursor_up_successfully_mu
 	assert new_pos == Pos{ x: 0, y: 1 }
 
 	assert buffer.str() == "This is a doc\n\n1. first line\n2. second line\n3. third line\n\n5. fifth line"
+}
+
+// ---------------------------------------------------------------
+
+fn test_buffer_gap_buffer_down_to_next_blank_line_moves_cursor_down_successfully() {
+	mut buffer := Buffer.new("", .gap_buffer)
+	buffer.load_contents_into_gap("This is a doc\n1. first line\n\n2. second line\n3. third line\n5. fifth line")
+
+	mut new_pos := buffer.down_to_next_blank_line(Pos{ x: 2, y: 0 })?
+	assert new_pos == Pos{ x: 0, y: 2 }
+
+	assert buffer.down_to_next_blank_line(new_pos)? == Pos{ x: 0, y: 5 }
+
+	assert buffer.str() == "This is a doc\n1. first line\n\n2. second line\n3. third line\n5. fifth line"
+}
+
+fn test_buffer_gap_buffer_down_to_next_blank_line_moves_cursor_down_successfully_multiple_empty_lines_below() {
+	mut buffer := Buffer.new("", .gap_buffer)
+	buffer.load_contents_into_gap("This is a doc\n1. first line\n\n2. second line\n3. third line\n\n5. fifth line")
+
+	mut new_pos := buffer.down_to_next_blank_line(Pos{ x: 2, y: 0 })?
+	assert new_pos == Pos{ x: 0, y: 2 }
+
+	assert buffer.down_to_next_blank_line(new_pos)? == Pos{ x: 0, y: 5 }
+
+	assert buffer.str() == "This is a doc\n1. first line\n\n2. second line\n3. third line\n\n5. fifth line"
 }
 
 fn test_buffer_gap_buffer_find_end_of_line() {
