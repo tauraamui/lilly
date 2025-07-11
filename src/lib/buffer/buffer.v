@@ -469,61 +469,34 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
 }
 
 pub fn (buffer Buffer) down_to_next_blank_line(pos Pos) ?Pos {
-	if buffer.use_gap_buffer {
-		return buffer.c_buffer.down_to_next_blank_line(pos)
-	}
+	match buffer.buffer_kind {
+		.gap_buffer { return buffer.c_buffer.down_to_next_blank_line(pos) }
+		.line_buffer { return none }
+		.legacy {
+			mut cursor := pos
+			cursor = buffer.clamp_cursor_within_document_bounds(pos)
 
-	mut cursor := pos
-	cursor = buffer.clamp_cursor_within_document_bounds(pos)
+			if buffer.lines.len == 0 { return none }
+			if cursor.y == buffer.lines.len { return none }
 
-	if buffer.lines.len == 0 { return none }
-	if cursor.y == buffer.lines.len { return none }
+			mut compound_y := 0
+			for i := cursor.y; i < buffer.lines.len; i++ {
+				if i == cursor.y { continue }
+				compound_y += 1
+				if buffer.lines[i].len == 0 {
+					break
+				}
+			}
 
-	mut compound_y := 0
-	for i := cursor.y; i < buffer.lines.len; i++ {
-		if i == cursor.y { continue }
-		compound_y += 1
-		if buffer.lines[i].len == 0 {
-			break
+			if compound_y > 0 {
+				cursor.x = 0
+				cursor.y += compound_y
+				return cursor
+			}
+
+			return none
 		}
 	}
-
-	if compound_y > 0 {
-		cursor.x = 0
-		cursor.y += compound_y
-		return cursor
-	}
-
-	return none
-}
-
-pub fn (buffer Buffer) down_to_next_blank_line1(pos Pos) ?Pos {
-	if buffer.use_gap_buffer {
-		return buffer.c_buffer.down_to_next_blank_line(pos)
-	}
-
-	mut cursor := pos
-	cursor = buffer.clamp_cursor_within_document_bounds(pos)
-
-	if buffer.lines.len == 0 { return none }
-	if cursor.y == buffer.lines.len { return none }
-
-	mut compound_y := 0
-	for i := cursor.y; i < buffer.lines.len; i++ {
-		if i == cursor.y { continue }
-		compound_y += 1
-		if buffer.lines[i].len == 0 {
-			break
-		}
-	}
-
-	if compound_y > 0 {
-		cursor.x = 0
-		cursor.y += compound_y
-		return cursor
-	}
-
-	return none
 }
 
 pub fn (mut buffer Buffer) replace_char(pos Pos, code u8, str string) {
