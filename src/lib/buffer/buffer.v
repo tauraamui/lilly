@@ -471,7 +471,7 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
 pub fn (buffer Buffer) down_to_next_blank_line(pos Pos) ?Pos {
 	match buffer.buffer_kind {
 		.gap_buffer { return buffer.c_buffer.down_to_next_blank_line(pos) }
-		.line_buffer { return none }
+		.line_buffer { return position_to_pos(buffer.l_buffer.down_to_next_blank_line(Position.new(pos.y, pos.x))) }
 		.legacy {
 			mut cursor := pos
 			cursor = buffer.clamp_cursor_within_document_bounds(pos)
