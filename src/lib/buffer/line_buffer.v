@@ -143,7 +143,18 @@ pub fn (l_buffer LineBuffer) up_to_next_blank_line(pos Position) ?Position {
 	for i := from; i >= 0; i-- {
 		line_is_empty := l_buffer.lines[i].len == 0
 		if i != from && line_is_empty {
-			return Position.new(pos.line, 0).add(Distance{ lines: (from - i) * -1 })
+			return Position.new(from, 0).add(Distance{ lines: (from - i) * -1 })
+		}
+	}
+	return none
+}
+
+pub fn (l_buffer LineBuffer) down_to_next_blank_line(pos Position) ?Position {
+	from := pos.line
+	for i := from; i < l_buffer.lines.len; i++ {
+		line_is_empty := l_buffer.lines[i].len == 0
+		if i != from && line_is_empty {
+			return Position.new(from, 0).add(Distance{ lines: i })
 		}
 	}
 	return none
