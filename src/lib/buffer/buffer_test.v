@@ -539,7 +539,7 @@ fn test_buffer_line_buffer_down_to_next_blank_line_moves_cursor_down_successfull
 	lines := ["This is a doc", "1. first line", "", "2. second line", "3. third line", "5. fifth line"]
 	buffer.load_contents_into_line_buffer(lines)
 
-	mut new_pos := buffer.down_to_next_blank_line(Pos{ x: 2, y: 5 })?
+	mut new_pos := buffer.down_to_next_blank_line(Pos{ x: 2, y: 0 })?
 	assert new_pos == Pos{ x: 0, y: 2 }
 
 	assert buffer.str() == "This is a doc\n1. first line\n\n2. second line\n3. third line\n5. fifth line"
@@ -550,11 +550,11 @@ fn test_buffer_line_buffer_down_to_next_blank_line_moves_cursor_up_successfully_
 	lines := ["This is a doc", "", "1. first line", "2. second line", "3. third line", "", "5. fifth line"]
 	buffer.load_contents_into_line_buffer(lines)
 
-	mut new_pos := buffer.down_to_next_blank_line(Pos{ x: 2, y: 6 })?
-	assert new_pos == Pos{ x: 0, y: 5 }
+	mut new_pos := buffer.down_to_next_blank_line(Pos{ x: 2, y: 0 })?
+	assert new_pos == Pos{ x: 0, y: 1 }
 
 	new_pos = buffer.down_to_next_blank_line(new_pos)?
-	assert new_pos == Pos{ x: 0, y: 1 }
+	assert new_pos == Pos{ x: 0, y: 6 }
 
 	assert buffer.str() == "This is a doc\n\n1. first line\n2. second line\n3. third line\n\n5. fifth line"
 }
