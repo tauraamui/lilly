@@ -185,6 +185,7 @@ fn resolve_token_bounds(token_start int, token_end int, min_x int) ?TokenBounds 
 	return TokenBounds{ start: token_start, end: token_end }
 }
 
+// NOTE(tauraamui) [14/07/2025]: use a param struct here
 fn resolve_token_fg_color(
 	theme themelib.Theme,
 	segment_to_render string,
@@ -210,6 +211,7 @@ fn resolve_token_fg_color(
 	return theme.pallete[resolved_token_type]
 }
 
+// NOTE(tauraamui) [14/07/2025]: use a param struct here
 fn render_token(
 	mut ctx draw.Contextable,
 	current_mode core.Mode, line string,
