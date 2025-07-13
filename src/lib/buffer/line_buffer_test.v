@@ -669,41 +669,34 @@ fn test_line_buffer_up_to_next_blank_line_on_no_content() {
 	assert line_buf.up_to_next_blank_line(Position.new(0, 0)) == none
 }
 
-fn test_line_buffer_up_to_next_blank_line_on_existing_content_from_end_of_first_line() {
+fn test_line_buffer_up_to_next_blank_line_on_existing_content_from_end_of_last_line() {
 	mut line_buf := LineBuffer{
-		lines: ["1. first line of content", "2. second line of content", "3. third line of content"]
+		lines: ["This is a doc", "1. first line", "", "2. second line", "3. third line", "5. fifth line"]
 	}
 
-	mut new_pos := line_buf.up_to_next_blank_line(Position.new(1, 55))?
+	mut new_pos := line_buf.up_to_next_blank_line(Position.new(5, 321))? // line y: 5, x: 321 so oobs
 
-	assert new_pos == Position.new(0, 23)
-	assert line_buf.lines == ["1. first line of content", "2. second line of content", "3. third line of content"]
+	assert new_pos == Position.new(2, 0)
+	assert line_buf.lines == ["This is a doc", "1. first line", "", "2. second line", "3. third line", "5. fifth line"]
 }
 
-fn test_line_buffer_up_to_next_blank_line_on_existing_content_from_start_of_second_line() {
+fn test_line_buffer_up_to_next_blank_line_on_existing_content_from_start_of_fourth_line() {
 	mut line_buf := LineBuffer{
-		lines: ["1. first line of content", "2. second line of content", "3. third line of content"]
+		lines: ["This is a doc", "1. first line", "", "2. second line", "3. third line", "5. fifth line"]
 	}
 
-	mut new_pos := line_buf.up_to_next_blank_line(Position.new(2, 0))?
+	mut new_pos := line_buf.up_to_next_blank_line(Position.new(4, 0))?
 
-	assert new_pos == Position.new(1, 0)
-	assert line_buf.lines == ["1. first line of content", "2. second line of content", "3. third line of content"]
+	assert new_pos == Position.new(2, 0)
+	assert line_buf.lines == ["This is a doc", "1. first line", "", "2. second line", "3. third line", "5. fifth line"]
 }
 
 fn test_line_buffer_up_to_next_blank_line_on_existing_content_from_middle_of_second_line() {
 	mut line_buf := LineBuffer{
-		lines: ["1. first line of content", "2. second line of content", "3. third line of content"]
+		lines: ["This is a doc", "1. first line", "", "2. second line", "3. third line", "5. fifth line"]
 	}
 
-	mut new_pos := line_buf.up_to_next_blank_line(Position.new(2, 12))?
-
-	assert new_pos == Position.new(1, 12)
-	assert line_buf.lines == ["1. first line of content", "2. second line of content", "3. third line of content"]
-
-	new_pos = line_buf.up_to_next_blank_line(new_pos)?
-
-	assert new_pos == Position.new(0, 12)
-	assert line_buf.lines == ["1. first line of content", "2. second line of content", "3. third line of content"]
+	assert line_buf.up_to_next_blank_line(Position.new(1, 12)) == none
+	assert line_buf.lines == ["This is a doc", "1. first line", "", "2. second line", "3. third line", "5. fifth line"]
 }
 
