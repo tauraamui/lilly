@@ -345,11 +345,18 @@ pub fn (mut buffer Buffer) o(pos Pos) ?Pos {
 	}
 }
 
-pub fn (buffer Buffer) read(range Range) ?string {
+pub fn (buffer Buffer) read_line(y int) ?string {
+	if lines := buffer.read(Range.new(Position.new(y, 0), Position.new(y, 0))) {
+		return lines[0]
+	}
+	return none
+}
+
+pub fn (buffer Buffer) read(range Range) ?[]string {
 	if buffer.use_gap_buffer {
 		return buffer.c_buffer.read(range)
 	}
-	return ?string(none)
+	return ?[]string(none)
 }
 
 pub fn (mut buffer Buffer) str() string {
@@ -364,6 +371,8 @@ pub fn (mut buffer Buffer) raw_str() string {
 	return buffer.c_buffer.raw_str()
 }
 
+// *
+// NOTE(tauraamui) [13/07/2025]: pretty sure these are unused, or if they are, we want to get rid
 pub fn (buffer Buffer) find_end_of_line(pos Pos) ?int {
 	return buffer.c_buffer.find_end_of_line(pos)
 }
@@ -379,6 +388,7 @@ pub fn (buffer Buffer) find_next_word_end(pos Pos) ?Pos {
 pub fn (buffer Buffer) find_prev_word_start(pos Pos) ?Pos {
 	return buffer.c_buffer.find_prev_word_start(pos)
 }
+// *
 
 pub fn (buffer Buffer) left(pos Pos, insert_mode bool) ?Pos {
 	match buffer.buffer_kind {

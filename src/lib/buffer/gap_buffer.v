@@ -43,8 +43,8 @@ fn GapBuffer.new(d string) GapBuffer {
 	return gb
 }
 
-pub fn (gap_buffer GapBuffer) read(range Range) ?string {
-	return ?string(none)
+pub fn (gap_buffer GapBuffer) read(range Range) ?[]string {
+	return ?[]string(none)
 }
 
 pub fn (mut gap_buffer GapBuffer) move_cursor_to(pos Position) {
