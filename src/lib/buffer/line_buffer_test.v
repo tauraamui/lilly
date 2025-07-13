@@ -661,3 +661,49 @@ fn test_line_buffer_up_insert_mode_on_existing_content_from_middle_of_second_lin
 	assert line_buf.lines == ["1. first line of content", "2. second line of content", "3. third line of content"]
 }
 
+fn test_line_buffer_up_to_next_blank_line_on_no_content() {
+	mut line_buf := LineBuffer{
+		lines: []
+	}
+
+	assert line_buf.up_to_next_blank_line(Position.new(0, 0)) == none
+}
+
+fn test_line_buffer_up_to_next_blank_line_on_existing_content_from_end_of_first_line() {
+	mut line_buf := LineBuffer{
+		lines: ["1. first line of content", "2. second line of content", "3. third line of content"]
+	}
+
+	mut new_pos := line_buf.up_to_next_blank_line(Position.new(1, 55))?
+
+	assert new_pos == Position.new(0, 23)
+	assert line_buf.lines == ["1. first line of content", "2. second line of content", "3. third line of content"]
+}
+
+fn test_line_buffer_up_to_next_blank_line_on_existing_content_from_start_of_second_line() {
+	mut line_buf := LineBuffer{
+		lines: ["1. first line of content", "2. second line of content", "3. third line of content"]
+	}
+
+	mut new_pos := line_buf.up_to_next_blank_line(Position.new(2, 0))?
+
+	assert new_pos == Position.new(1, 0)
+	assert line_buf.lines == ["1. first line of content", "2. second line of content", "3. third line of content"]
+}
+
+fn test_line_buffer_up_to_next_blank_line_on_existing_content_from_middle_of_second_line() {
+	mut line_buf := LineBuffer{
+		lines: ["1. first line of content", "2. second line of content", "3. third line of content"]
+	}
+
+	mut new_pos := line_buf.up_to_next_blank_line(Position.new(2, 12))?
+
+	assert new_pos == Position.new(1, 12)
+	assert line_buf.lines == ["1. first line of content", "2. second line of content", "3. third line of content"]
+
+	new_pos = line_buf.up_to_next_blank_line(new_pos)?
+
+	assert new_pos == Position.new(0, 12)
+	assert line_buf.lines == ["1. first line of content", "2. second line of content", "3. third line of content"]
+}
+
