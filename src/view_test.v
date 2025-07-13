@@ -116,6 +116,37 @@ fn test_selection_start_smallest_wins_check_2() {
 	assert cursor.sel_start()? == ui.CursorPos{4, 3}
 }
 
+fn test_calc_cursor_x_offset() {
+	mut clip := clipboardv3.new()
+	mut fake_view := View{
+		log:       log.Log{}
+		leader_state: ViewLeaderState{ mode: .normal }
+		clipboard: mut clip
+		buffer: buffer.Buffer.new("", .legacy)
+	}
+	fake_view.buffer.lines = ['\t1. first line', '\t\t2. second line', '\t\t\t3. third line', '\t\t\t\t4. fourth line']
+
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 1
+
+	assert fake_view.calc_cursor_x_offset() == 4
+
+	fake_view.cursor.pos.y = 1
+	fake_view.cursor.pos.x = 2
+
+	assert fake_view.calc_cursor_x_offset() == 8
+
+	fake_view.cursor.pos.y = 2
+	fake_view.cursor.pos.x = 3
+
+	assert fake_view.calc_cursor_x_offset() == 12
+
+	fake_view.cursor.pos.y = 3
+	fake_view.cursor.pos.x = 1
+
+	assert fake_view.calc_cursor_x_offset() == 4 // cursor is only past the first tab on this line
+}
+
 fn test_dd_deletes_current_line_at_start_of_doc() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
