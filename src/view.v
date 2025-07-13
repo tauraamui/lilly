@@ -500,8 +500,10 @@ fn (mut view View) offset_x_and_width_by_len_of_longest_line_number_str(win_widt
 
 // TODO(tauraamui): use this/do something similar for visual mode highlighting
 fn (mut view View) calc_cursor_x_offset() int {
-	cursor_line := view.buffer.lines[view.cursor.pos.y]
 	mut offset := 0
+	cursor_line := view.buffer.lines[view.cursor.pos.y]
+	// TODO(tauraamui) [14/07/2025]: migrate from direct lines access to buffer method
+	// cursor_line := view.buffer.read_line(view.cursor.pos.y) or { return offset }
 	mut scanto := view.cursor.pos.x
 	if scanto > cursor_line.runes().len {
 		scanto = cursor_line.runes().len
@@ -513,7 +515,6 @@ fn (mut view View) calc_cursor_x_offset() int {
 			else { offset += 1 }
 		}
 	}
-
 	return offset
 }
 
