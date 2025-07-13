@@ -62,7 +62,6 @@ pub fn (mut buf_view BufferView) draw(
 		// if we haven't reached the line to render in the document yet, skip this
 		if document_line_num < from_line_num { continue }
 
-		// draw line number
 		draw_line_number(
 			mut ctx, x + screenspace_x_offset, y + screenspace_y_offset,
 			document_line_num, cursor_y_pos, from_line_num, relative_line_nums
@@ -92,7 +91,6 @@ pub fn (mut buf_view BufferView) draw(
 		)
 
 		screenspace_y_offset += 1
-		// detect if number of lines drawn would exceed current height of view
 		if screenspace_y_offset > height { return }
 	}
 }
