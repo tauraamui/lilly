@@ -68,8 +68,13 @@ pub fn (mut buf_view BufferView) draw(mut ctx draw.Contextable, args BufferViewD
 		if document_line_num < args.from_line_num { continue }
 
 		draw_line_number(
-			mut ctx, args.x + screenspace_x_offset, args.y + screenspace_y_offset,
-			document_line_num, cursor_y_pos, args.from_line_num, args.relative_line_nums
+			mut ctx,
+			x: args.x + screenspace_x_offset,
+			y: args.y + screenspace_y_offset,
+			from: args.from_line_num,
+			cursor_y_pos: cursor_y_pos,
+			document_line_num: document_line_num,
+			relative_line_nums: args.relative_line_nums
 		)
 
 		is_cursor_line := (document_line_num == cursor_y_pos) && !(args.current_mode == .visual || args.current_mode == .visual_line)
@@ -100,10 +105,19 @@ pub fn (mut buf_view BufferView) draw(mut ctx draw.Contextable, args BufferViewD
 	}
 }
 
+@[params]
+struct DrawLineNumberArgs {
+	x int
+	y int
+	from int
+	cursor_y_pos int
+	document_line_num int
+	relative_line_nums bool
+}
+
 fn draw_line_number(
 	mut ctx draw.Contextable,
-	x int, y int,
-	document_line_num int, cursor_y_pos int, from int, relative_line_nums bool
+	args DrawLineNumberArgs
 ) {
 	defer { ctx.reset_color() }
 	line_num_fg_color := ctx.theme().line_number_color
@@ -111,26 +125,26 @@ fn draw_line_number(
 
 	// NOTE(tauraamui) [04/06/2025]: there's a fair amount of repeatition in this match
 	//                               but I think it's probably fine
-	line_num_str := match relative_line_nums {
+	line_num_str := match args.relative_line_nums {
 		true {
-			match document_line_num == cursor_y_pos {
-				true { "${document_line_num + 1}" }
+			match args.document_line_num == args.cursor_y_pos {
+				true { "${args.document_line_num + 1}" }
 				else {
-					cursor_screenspace_y := cursor_y_pos - from
+					cursor_screenspace_y := args.cursor_y_pos - args.from
 					match true {
-						y < cursor_screenspace_y { "${cursor_screenspace_y - y}" }
-						y > cursor_screenspace_y { "${y - cursor_screenspace_y}" }
-						else { "${document_line_num + 1}" }
+						args.y < cursor_screenspace_y { "${cursor_screenspace_y - args.y}" }
+						args.y > cursor_screenspace_y { "${args.y - cursor_screenspace_y}" }
+						else { "${args.document_line_num + 1}" }
 					}
 				}
 			}
 		}
 		else {
-			"${document_line_num + 1}"
+			"${args.document_line_num + 1}"
 		}
 	}
 
-	ctx.draw_text(x - line_num_str.runes().len, y, line_num_str)
+	ctx.draw_text(args.x - line_num_str.runes().len, args.y, line_num_str)
 }
 
 @[params]
