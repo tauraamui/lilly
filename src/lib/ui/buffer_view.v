@@ -283,14 +283,30 @@ fn render_token(
 		sel_span = args.cursor.resolve_line_selection_span(args.current_mode, args.line.runes().len, args.document_line_num)
 	}
 
-	return render_segment(mut ctx, args.current_mode, args.cur_token_bounds, segment_to_render, fg_color, args.x_offset, args.y, sel_span)
+	return render_segment(
+		mut ctx,
+		x: args.x_offset, y: args.y,
+		segment: segment_to_render,
+		fg_color: fg_color,
+		selection_span: sel_span,
+		segment_bounds: args.cur_token_bounds,
+		current_mode: args.current_mode
+	)
+}
+
+@[params]
+struct RenderSegmentArgs {
+	x int
+	y int
+	segment string
+	fg_color tui.Color
+	selection_span ?SelectionSpan
+	segment_bounds TokenBounds
+	current_mode core.Mode
 }
 
 fn render_segment(
-	mut ctx draw.Contextable, current_mode core.Mode,
-	segment_bounds TokenBounds, segment string, fg_color tui.Color,
-	x int, y int, selection_span ?SelectionSpan
-) int {
+	mut ctx draw.Contextable, args RenderSegmentArgs) int {
 	// NOTE(tauraamui) [17/06/2025]: Just to be extremely explicit (in comment form) here, the logic flow
 	//                               for this function is to separate eventual text rendering of tokens or parts
 	//                               of tokens with the correct background spanning the correct amount of said token,
@@ -300,17 +316,17 @@ fn render_segment(
 	//                               The flow is - mode -> visual -> cut up token and render in pieces if necessary
 	//                                                  \
 	//                                                   anything_else -> render token as is (do not change the bg_color)
-	if unwrapped_selection_span := selection_span {
-		match current_mode {
-			.visual_line { return render_segment_in_visual_line_mode(mut ctx, segment, fg_color, x, y, unwrapped_selection_span.full) }
-			.visual      { return render_segment_in_visual_mode(mut ctx, segment_bounds, segment, fg_color, x, y, unwrapped_selection_span) }
+	if unwrapped_selection_span := args.selection_span {
+		match args.current_mode {
+			.visual_line { return render_segment_in_visual_line_mode(mut ctx, args.segment, args.fg_color, args.x, args.y, unwrapped_selection_span.full) }
+			.visual      { return render_segment_in_visual_mode(mut ctx, args.segment_bounds, args.segment, args.fg_color, args.x, args.y, unwrapped_selection_span) }
 			else { return 0 } // should not be possible to reach, consider adding an assert here
 		}
 	}
 
-	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
-	ctx.draw_text(x, y, segment)
-	return utf8_str_visible_length(segment)
+	ctx.set_color(draw.Color{ args.fg_color.r, args.fg_color.g, args.fg_color.b })
+	ctx.draw_text(args.x, args.y, args.segment)
+	return utf8_str_visible_length(args.segment)
 }
 
 fn render_segment_in_visual_line_mode(mut ctx draw.Contextable, segment string, fg_color tui.Color, x int, y int, is_selected bool) int {
