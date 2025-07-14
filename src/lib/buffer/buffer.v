@@ -250,6 +250,7 @@ pub fn (mut buffer Buffer) x(pos Pos) ?Pos {
 	}
 }
 
+// TODO(tauraamui) [10/07/2025]: migrate this to gap and line buffers more completely
 pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
 	match buffer.buffer_kind {
 		.gap_buffer {
@@ -439,8 +440,8 @@ pub fn (buffer Buffer) up(pos Pos, insert_mode bool) ?Pos {
 
 pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
 	match buffer.buffer_kind {
-		.gap_buffer { return buffer.c_buffer.up_to_next_blank_line(pos) }
-		.line_buffer { return none }
+		.gap_buffer  { return buffer.c_buffer.up_to_next_blank_line(pos) }
+		.line_buffer { return position_to_pos(buffer.l_buffer.up_to_next_blank_line(Position.new(pos.y, pos.x))) }
 		.legacy {
 			mut cursor := pos
 			cursor = buffer.clamp_cursor_within_document_bounds(pos)
@@ -467,61 +468,35 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
 	return none
 }
 
-pub fn (buffer Buffer) up_to_next_blank_line1(pos Pos) ?Pos {
-	if buffer.use_gap_buffer {
-		return buffer.c_buffer.up_to_next_blank_line(pos)
-	}
-	mut cursor := pos
-	cursor = buffer.clamp_cursor_within_document_bounds(pos)
-	if cursor.y == 0 { return none }
-
-	if buffer.lines.len == 0 { return none }
-
-	mut compound_y := 0
-	for i := cursor.y; i >= 0; i-- {
-		if i == cursor.y { continue }
-		compound_y += 1
-		if buffer.lines[i].len == 0 {
-			break
-		}
-	}
-
-	if compound_y > 0 {
-		cursor.x = 0
-		cursor.y -= compound_y
-		return cursor
-	}
-
-	return none
-}
-
 pub fn (buffer Buffer) down_to_next_blank_line(pos Pos) ?Pos {
-	if buffer.use_gap_buffer {
-		return buffer.c_buffer.down_to_next_blank_line(pos)
-	}
+	match buffer.buffer_kind {
+		.gap_buffer { return buffer.c_buffer.down_to_next_blank_line(pos) }
+		.line_buffer { return position_to_pos(buffer.l_buffer.down_to_next_blank_line(Position.new(pos.y, pos.x))) }
+		.legacy {
+			mut cursor := pos
+			cursor = buffer.clamp_cursor_within_document_bounds(pos)
 
-	mut cursor := pos
-	cursor = buffer.clamp_cursor_within_document_bounds(pos)
+			if buffer.lines.len == 0 { return none }
+			if cursor.y == buffer.lines.len { return none }
 
-	if buffer.lines.len == 0 { return none }
-	if cursor.y == buffer.lines.len { return none }
+			mut compound_y := 0
+			for i := cursor.y; i < buffer.lines.len; i++ {
+				if i == cursor.y { continue }
+				compound_y += 1
+				if buffer.lines[i].len == 0 {
+					break
+				}
+			}
 
-	mut compound_y := 0
-	for i := cursor.y; i < buffer.lines.len; i++ {
-		if i == cursor.y { continue }
-		compound_y += 1
-		if buffer.lines[i].len == 0 {
-			break
+			if compound_y > 0 {
+				cursor.x = 0
+				cursor.y += compound_y
+				return cursor
+			}
+
+			return none
 		}
 	}
-
-	if compound_y > 0 {
-		cursor.x = 0
-		cursor.y += compound_y
-		return cursor
-	}
-
-	return none
 }
 
 pub fn (mut buffer Buffer) replace_char(pos Pos, code u8, str string) {

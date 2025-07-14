@@ -139,6 +139,26 @@ pub fn (l_buffer LineBuffer) up(pos Position, insert_mode bool) ?Position {
 }
 
 pub fn (l_buffer LineBuffer) up_to_next_blank_line(pos Position) ?Position {
+	if pos.line >= l_buffer.lines.len { return none }
+	from := pos.line
+	for i := from; i >= 0; i-- {
+		line_is_empty := l_buffer.lines[i].len == 0
+		if i != from && line_is_empty {
+			return Position.new(from, 0).add(Distance{ lines: (from - i) * -1 })
+		}
+	}
+	return none
+}
+
+pub fn (l_buffer LineBuffer) down_to_next_blank_line(pos Position) ?Position {
+	if pos.line >= l_buffer.lines.len { return none }
+	from := pos.line
+	for i := from; i < l_buffer.lines.len; i++ {
+		line_is_empty := l_buffer.lines[i].len == 0
+		if i != from && line_is_empty {
+			return Position.new(from, 0).add(Distance{ lines: i })
+		}
+	}
 	return none
 }
 
