@@ -319,6 +319,7 @@ struct RenderSegmentArgs {
 	selection_span ?SelectionSpan
 	segment_bounds TokenBounds
 	current_mode core.Mode
+	is_selected bool
 }
 
 fn render_segment(
@@ -334,7 +335,10 @@ fn render_segment(
 	//                                                   anything_else -> render token as is (do not change the bg_color)
 	if unwrapped_selection_span := args.selection_span {
 		match args.current_mode {
-			.visual_line { return render_segment_in_visual_line_mode(mut ctx, args.segment, args.fg_color, args.x, args.y, unwrapped_selection_span.full) }
+			.visual_line { return render_segment_in_visual_line_mode(
+					mut ctx, x: args.x, y: args.y, segment: args.segment, fg_color: args.fg_color, is_selected: unwrapped_selection_span.full
+				)
+			}
 			.visual      { return render_segment_in_visual_mode(mut ctx, args.segment_bounds, args.segment, args.fg_color, args.x, args.y, unwrapped_selection_span) }
 			else { return 0 } // should not be possible to reach, consider adding an assert here
 		}
@@ -345,16 +349,16 @@ fn render_segment(
 	return utf8_str_visible_length(args.segment)
 }
 
-fn render_segment_in_visual_line_mode(mut ctx draw.Contextable, segment string, fg_color tui.Color, x int, y int, is_selected bool) int {
-	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
-	if is_selected {
+fn render_segment_in_visual_line_mode(mut ctx draw.Contextable, args RenderSegmentArgs) int {
+	ctx.set_color(draw.Color{ args.fg_color.r, args.fg_color.g, args.fg_color.b })
+	if args.is_selected {
 		bg_color := ctx.theme().selection_highlight_color
 		ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
 		defer { ctx.reset_bg_color() }
 	}
 
-	ctx.draw_text(x, y, segment)
-	return utf8_str_visible_length(segment)
+	ctx.draw_text(args.x, args.y, args.segment)
+	return utf8_str_visible_length(args.segment)
 }
 
 fn render_segment_in_visual_mode(
