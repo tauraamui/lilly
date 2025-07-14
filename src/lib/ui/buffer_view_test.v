@@ -1708,7 +1708,14 @@ fn test_render_segment_in_visual_mode_specific_selection_is_all_of_current_line(
 	// NOTE(tauraamui) [18/06/2025]: the coords in this case are mostly irrelevant
 	x                 := 0
 	y                 := 0
-	render_segment_in_visual_mode(mut mock_ctx, segment_bounds, segment_to_render, fg_color, x, y, SelectionSpan{ full: true })
+	render_segment_in_visual_mode(
+		mut mock_ctx,
+		x: x,
+		y: y,
+		segment: segment_to_render,
+		fg_color: fg_color,
+		selection_span: SelectionSpan{ full: true }
+	)
 
 	theme_selection_bg_color := mock_ctx.theme().selection_highlight_color
 
@@ -1739,9 +1746,13 @@ fn test_render_segment_in_visual_mode_specific_selection_is_prior_to_segment_on_
 	x                 := 0
 	y                 := 0
 	render_segment_in_visual_mode(
-		mut mock_ctx, segment_bounds,
-		segment_to_render, fg_color,
-		x, y, SelectionSpan{ min_x: 0, max_x: 15 }
+		mut mock_ctx,
+		x: x,
+		y: y,
+		segment: segment_to_render,
+		fg_color: fg_color,
+		selection_span: SelectionSpan{ min_x: 0, max_x: 15 }
+		segment_bounds: segment_bounds
 	)
 
 	theme_selection_bg_color := ?tui.Color(none)
@@ -1772,9 +1783,12 @@ fn test_render_segment_in_visual_mode_specific_selection_is_past_to_segment_on_l
 	x                 := 0
 	y                 := 0
 	render_segment_in_visual_mode(
-		mut mock_ctx, segment_bounds,
-		segment_to_render, fg_color,
-		x, y, SelectionSpan{ min_x: 55, max_x: 75 }
+		mut mock_ctx,
+		x: x,
+		y: y,
+		segment: segment_to_render,
+		fg_color: fg_color,
+		selection_span: SelectionSpan{ min_x: 55, max_x: 75 }
 	)
 
 	theme_selection_bg_color := ?tui.Color(none)
@@ -1805,9 +1819,13 @@ fn test_render_segment_in_visual_mode_specific_selection_starts_and_ends_within_
 	x                 := 20
 	y                 := 0
 	render_segment_in_visual_mode(
-		mut mock_ctx, segment_bounds,
-		segment_to_render, fg_color,
-		x, y, SelectionSpan{ min_x: 35, max_x: 45 }
+		mut mock_ctx,
+		x: x,
+		y: y,
+		segment: segment_to_render,
+		fg_color: fg_color,
+		selection_span: SelectionSpan{ min_x: 35, max_x: 45 }
+		segment_bounds: segment_bounds
 	)
 
 	theme_selection_bg_color := mock_ctx.theme().selection_highlight_color
@@ -1846,9 +1864,13 @@ fn test_render_segment_in_visual_mode_specific_selection_overlaps_first_half_of_
 	x                 := 20
 	y                 := 0
 	render_segment_in_visual_mode(
-		mut mock_ctx, segment_bounds,
-		segment_to_render, fg_color,
-		x, y, SelectionSpan{ min_x: 0, max_x: 35 }
+		mut mock_ctx,
+		x: x,
+		y: y,
+		segment: segment_to_render,
+		fg_color: fg_color,
+		selection_span: SelectionSpan{ min_x: 0, max_x: 35 },
+		segment_bounds: segment_bounds
 	)
 
 	theme_selection_bg_color := mock_ctx.theme().selection_highlight_color
@@ -1884,9 +1906,13 @@ fn test_render_segment_in_visual_mode_specific_selection_overlaps_second_half_of
 	x                 := 20
 	y                 := 0
 	render_segment_in_visual_mode(
-		mut mock_ctx, segment_bounds,
-		segment_to_render, fg_color,
-		x, y, SelectionSpan{ min_x: 35, max_x: 70 }
+		mut mock_ctx,
+		x: x,
+		y: y,
+		segment: segment_to_render,
+		fg_color: fg_color,
+		selection_span: SelectionSpan{ min_x: 35, max_x: 70 },
+		segment_bounds: segment_bounds,
 	)
 
 	theme_selection_bg_color := mock_ctx.theme().selection_highlight_color
