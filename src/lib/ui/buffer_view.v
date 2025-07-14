@@ -209,30 +209,32 @@ fn resolve_token_bounds(token_start int, token_end int, min_x int) ?TokenBounds 
 	return TokenBounds{ start: token_start, end: token_end }
 }
 
-// NOTE(tauraamui) [14/07/2025]: use a param struct here
-fn resolve_token_fg_color(
-	theme themelib.Theme,
-	segment_to_render string,
-	previous_token ?syntax.Token,
-	current_token syntax.Token,
-	next_token ?syntax.Token,
-	syntax_def syntax.Syntax,
-) tui.Color {
-	prev_token_type := if prev_token := previous_token { prev_token.t_type() } else { .whitespace }
-	next_token_type := if n_token := next_token { n_token.t_type() } else { .whitespace }
+@[params]
+struct ResolveTokenFGColorArgs {
+	theme themelib.Theme
+	segment_to_render string
+	previous_token ?syntax.Token
+	current_token syntax.Token
+	next_token ?syntax.Token
+	syntax_def syntax.Syntax
+}
 
-	cur_token_type := current_token.t_type()
+fn resolve_token_fg_color(args ResolveTokenFGColorArgs) tui.Color {
+	prev_token_type := if prev_token := args.previous_token { prev_token.t_type() } else { .whitespace }
+	next_token_type := if n_token := args.next_token { n_token.t_type() } else { .whitespace }
+
+	cur_token_type := args.current_token.t_type()
 	resolved_token_type := match true {
 		cur_token_type               == .comment { cur_token_type }
 		cur_token_type               == .string  { cur_token_type }
 		(prev_token_type != .whitespace) || (next_token_type != .whitespace) { cur_token_type }
-		segment_to_render in syntax_def.literals { syntax.TokenType.literal }
-		segment_to_render in syntax_def.keywords { syntax.TokenType.keyword }
-		segment_to_render in syntax_def.builtins { syntax.TokenType.builtin }
+		args.segment_to_render in args.syntax_def.literals { syntax.TokenType.literal }
+		args.segment_to_render in args.syntax_def.keywords { syntax.TokenType.keyword }
+		args.segment_to_render in args.syntax_def.builtins { syntax.TokenType.builtin }
 		else { cur_token_type }
 	}
 
-	return theme.pallete[resolved_token_type]
+	return args.theme.pallete[resolved_token_type]
 }
 
 // NOTE(tauraamui) [14/07/2025]: use a param struct here
@@ -254,8 +256,12 @@ fn render_token(
 	if segment_to_render.runes().len == 0 { return 0 }
 
 	fg_color := resolve_token_fg_color(
-		ctx.theme(), segment_to_render, previous_token,
-		current_token, next_token, syntax_def
+		theme: ctx.theme(),
+		segment_to_render: segment_to_render,
+		previous_token: previous_token,
+		current_token: current_token,
+		next_token: next_token,
+		syntax_def: syntax_def
 	)
 
 	mut sel_span := ?SelectionSpan(none)
