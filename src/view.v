@@ -564,18 +564,16 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 	)
 
 	ui.draw_status_line(
-		mut ctx, ui.Status{
-			view.leader_state.mode,
-			view.cursor.pos.x, view.cursor.pos.y,
-			os.base(view.path),
-			ui.SearchSelection{
-				active:  view.leader_state.mode == .search
-				total:   view.search.total_finds
-				current: view.search.current_find.match_index
-			},
-			view.branch,
-			view.buffer.dirty
-		}
+		mut ctx, mode: view.leader_state.mode,
+		cursor_x: view.cursor.pos.x, cursor_y: view.cursor.pos.y,
+		file_name: os.base(view.path),
+		selection: ui.SearchSelection{
+			active:  view.leader_state.mode == .search
+			total:   view.search.total_finds
+			current: view.search.current_find.match_index
+		},
+		git_branch: view.branch,
+		dirty: view.buffer.dirty
 	)
 
 	view.draw_bottom_bar_of_command_or_search(mut ctx)

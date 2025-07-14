@@ -24,6 +24,7 @@ pub:
 	current int
 }
 
+@[params]
 pub struct Status {
 pub:
 	mode       core.Mode
