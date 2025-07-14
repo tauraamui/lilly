@@ -553,12 +553,14 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 
 	selection_highlight_color := ctx.theme().selection_highlight_color
 	view.buf_view.draw(
-		mut ctx, view.buffer, 0, 0,
-		ctx.window_width(), ctx.window_height() - 2,
-		view.from, 0,
-		view.config.relative_line_numbers,
-		view.leader_state.mode,
-		view.cursor
+		mut ctx, buf: view.buffer,
+		x: 0, y: 0,
+		width: ctx.window_width(), height: ctx.window_height() - 2,
+		from_line_num: view.from,
+		min_x: 0,
+		relative_line_nums: view.config.relative_line_numbers,
+		current_mode: view.leader_state.mode,
+		cursor: view.cursor
 	)
 
 	ui.draw_status_line(
