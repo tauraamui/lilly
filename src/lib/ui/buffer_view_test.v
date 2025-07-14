@@ -721,20 +721,13 @@ fn test_buffer_view_draws_lines_10_to_max_height_relative_line_numbers_enabled()
 	for i in 0..20 { buf.lines << "This is line ${i} in the document" }
 	mut buf_view := BufferView.new([], 0)
 
-	x := 0
-	y := 0
-	width := 100
-	height := 10
-	min_x := 0
-	from_line_num := 10
-
 	buf_view.draw(
 		mut mock_ctx,
 		buf: buf,
-		x: x, y: y,
-		width: width, height: height,
-		from_line_num: from_line_num,
-		min_x: min_x,
+		x: 0, y: 0,
+		width: 100, height: 10,
+		from_line_num: 10,
+		min_x: 0,
 		relative_line_nums: true,
 		current_mode: .normal,
 		cursor: BufferCursor{ pos: CursorPos{ y: 15 } }
