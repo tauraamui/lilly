@@ -340,7 +340,7 @@ fn render_segment(
 				)
 			}
 			.visual { return render_segment_in_visual_mode(
-					mut ctx, args.segment_bounds, args.segment, args.fg_color, args.x, args.y, unwrapped_selection_span
+					mut ctx, x: args.x, y: args.y, segment: args.segment, segment_bounds: args.segment_bounds, fg_color: args.fg_color, selection_span: unwrapped_selection_span
 				)
 			}
 			else { return 0 } // should not be possible to reach, consider adding an assert here
@@ -364,38 +364,36 @@ fn render_segment_in_visual_line_mode(mut ctx draw.Contextable, args RenderSegme
 	return utf8_str_visible_length(args.segment)
 }
 
-fn render_segment_in_visual_mode(
-	mut ctx draw.Contextable, segment_bounds TokenBounds,
-	segment string, fg_color tui.Color,
-	x int, y int, selection_span SelectionSpan
-) int {
-	if selection_span.full {
-		return render_segment_in_visual_mode_current_line_is_fully_selected(mut ctx, segment_bounds, segment, fg_color, x, y)
+fn render_segment_in_visual_mode(mut ctx draw.Contextable, args RenderSegmentArgs) int {
+	unwrapped_selection_span := args.selection_span or { return 0 }
+	if unwrapped_selection_span.full {
+		// NOTE(tauraamui) [14/07/2025]: when we get to migrating this call site, just pass in the same args instance
+		return render_segment_in_visual_mode_current_line_is_fully_selected(mut ctx, args.segment_bounds, args.segment, args.fg_color, args.x, args.y)
 	}
 
-	segment_before_selection := segment_bounds.end < selection_span.min_x
-	segment_after_selection := segment_bounds.start > selection_span.max_x
+	segment_before_selection := args.segment_bounds.end < unwrapped_selection_span.min_x
+	segment_after_selection := args.segment_bounds.start > unwrapped_selection_span.max_x
 
 	if segment_before_selection || segment_after_selection {
-		return render_segment_in_visual_mode_unselected(mut ctx, segment_bounds, segment, fg_color, x, y)
+		return render_segment_in_visual_mode_unselected(mut ctx, args.segment_bounds, args.segment, args.fg_color, args.x, args.y)
 	}
 
-	selection_starts_within_segment := segment_bounds.start <= selection_span.min_x && segment_bounds.end >= selection_span.min_x
-	selection_ends_within_segment   := segment_bounds.start <= selection_span.max_x && segment_bounds.end >= selection_span.max_x
+	selection_starts_within_segment := args.segment_bounds.start <= unwrapped_selection_span.min_x && args.segment_bounds.end >= unwrapped_selection_span.min_x
+	selection_ends_within_segment   := args.segment_bounds.start <= unwrapped_selection_span.max_x && args.segment_bounds.end >= unwrapped_selection_span.max_x
 
 	if selection_starts_within_segment && selection_ends_within_segment {
-		return render_segment_in_visual_mode_selection_starts_and_ends_within(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span)
+		return render_segment_in_visual_mode_selection_starts_and_ends_within(mut ctx, args.segment_bounds, args.segment, args.fg_color, args.x, args.y, unwrapped_selection_span)
 	}
 
 	if selection_starts_within_segment && !selection_ends_within_segment {
-		return render_segment_in_visual_mode_selection_starts_within_but_does_not_end_within(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span)
+		return render_segment_in_visual_mode_selection_starts_within_but_does_not_end_within(mut ctx, args.segment_bounds, args.segment, args.fg_color, args.x, args.y, unwrapped_selection_span)
 	}
 
 	if !selection_starts_within_segment && selection_ends_within_segment {
-		return render_segment_in_visual_mode_selection_ends_within_but_does_not_start_within(mut ctx, segment_bounds, segment, fg_color, x, y, selection_span)
+		return render_segment_in_visual_mode_selection_ends_within_but_does_not_start_within(mut ctx, args.segment_bounds, args.segment, args.fg_color, args.x, args.y, unwrapped_selection_span)
 	}
 
-	return render_segment_in_visual_mode_current_line_is_fully_selected(mut ctx, segment_bounds, segment, fg_color, x, y)
+	return render_segment_in_visual_mode_current_line_is_fully_selected(mut ctx, args.segment_bounds, args.segment, args.fg_color, args.x, args.y)
 }
 
 fn render_segment_in_visual_mode_unselected(
