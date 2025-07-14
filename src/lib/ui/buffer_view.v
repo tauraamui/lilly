@@ -37,61 +37,66 @@ pub fn BufferView.new(syntaxes []syntax.Syntax, syntax_id int) BufferView {
 	}
 }
 
-pub fn (mut buf_view BufferView) draw(
-	mut ctx draw.Contextable,
-	buf buffer.Buffer,
-	x int, y int,
-	width int, height int,
-	from_line_num int,
-	min_x int,
-	relative_line_nums bool,
-	current_mode core.Mode,
-	cursor BufferCursor,
-) {
-	cursor_y_pos := cursor.pos.y
+@[params]
+pub struct BufferViewDrawArgs {
+pub:
+	buf buffer.Buffer
+	x int
+	y int
+	width int
+	height int
+	from_line_num int
+	min_x int
+	relative_line_nums bool
+	current_mode core.Mode
+	cursor BufferCursor
+}
+
+pub fn (mut buf_view BufferView) draw(mut ctx draw.Contextable, args BufferViewDrawArgs) {
+	cursor_y_pos := args.cursor.pos.y
 	syntax_def := buf_view.syntaxes[buf_view.syntax_id] or { syntax.Syntax{} }
 
-	mut screenspace_x_offset := buf.num_of_lines().str().runes().len
+	mut screenspace_x_offset := args.buf.num_of_lines().str().runes().len
 	mut screenspace_y_offset := 0
 
 	buf_view.parser.reset()
 	mut syntax_parser := buf_view.parser
 
-	for document_line_num, line in buf.line_iterator() {
+	for document_line_num, line in args.buf.line_iterator() {
 		syntax_parser.parse_line(document_line_num, line)
 		// if we haven't reached the line to render in the document yet, skip this
-		if document_line_num < from_line_num { continue }
+		if document_line_num < args.from_line_num { continue }
 
 		draw_line_number(
-			mut ctx, x + screenspace_x_offset, y + screenspace_y_offset,
-			document_line_num, cursor_y_pos, from_line_num, relative_line_nums
+			mut ctx, args.x + screenspace_x_offset, args.y + screenspace_y_offset,
+			document_line_num, cursor_y_pos, args.from_line_num, args.relative_line_nums
 		)
 
-		is_cursor_line := (document_line_num == cursor_y_pos) && !(current_mode == .visual || current_mode == .visual_line)
-		if current_mode != .visual_line && is_cursor_line {
+		is_cursor_line := (document_line_num == cursor_y_pos) && !(args.current_mode == .visual || args.current_mode == .visual_line)
+		if args.current_mode != .visual_line && is_cursor_line {
 			cursor_line_color := ctx.theme().cursor_line_color
 			ctx.set_bg_color(draw.Color{ r: cursor_line_color.r, g: cursor_line_color.g, b: cursor_line_color.b })
-			ctx.draw_rect(x + screenspace_x_offset + 1, y + screenspace_y_offset, width - (x + screenspace_x_offset), 1)
+			ctx.draw_rect(args.x + screenspace_x_offset + 1, args.y + screenspace_y_offset, args.width - (args.x + screenspace_x_offset), 1)
 			ctx.reset_bg_color()
 		}
 		// draw the line of text, offset by the position of the buffer view
 		draw_text_line(
 			mut ctx,
-			current_mode,
-			x + screenspace_x_offset + 1,
-			y + screenspace_y_offset,
+			args.current_mode,
+			args.x + screenspace_x_offset + 1,
+			args.y + screenspace_y_offset,
 			document_line_num,
 			line,
 			syntax_parser.get_line_tokens(document_line_num),
 			syntax_def,
-			min_x,
-			width,
+			args.min_x,
+			args.width,
 			is_cursor_line,
-			cursor,
+			args.cursor,
 		)
 
 		screenspace_y_offset += 1
-		if screenspace_y_offset > height { return }
+		if screenspace_y_offset > args.height { return }
 	}
 }
 
