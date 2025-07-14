@@ -182,25 +182,21 @@ fn draw_text_line(
 		cur_token_bounds := resolve_token_bounds(current_token.start(), current_token.end(), args.min_x) or { continue }
 
 		visual_x_offset += render_token(
-			mut ctx, args.current_mode, args.line,
-			cur_token_bounds, previous_token,
-			current_token, next_token, args.syntax_def,
-			args.x, max_width,
-			visual_x_offset, args.y,
-			args.document_line_num,
-			args.cursor,
+			mut ctx,
+			y: args.y,
+			base_x: args.x,
+			max_width: max_width,
+			x_offset: visual_x_offset,
+			document_line_num: args.document_line_num,
+			line: args.line,
+			cursor: args.cursor,
+			previous_token: previous_token,
+			current_token: current_token,
+			next_token: next_token,
+			cur_token_bounds: cur_token_bounds,
+			syntax_def: args.syntax_def,
+			current_mode: args.current_mode
 		)
-		/*
-		visual_x_offset += render_token(
-			mut ctx, args.current_mode, args.line,
-			cur_token_bounds, previous_token,
-			current_token, next_token, args.syntax_def,
-			args.x, max_width,
-			visual_x_offset, args.y,
-			args.document_line_num,
-			args.cursor,
-		)
-		*/
 
 		previous_token = current_token
 	}
