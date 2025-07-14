@@ -190,6 +190,17 @@ fn draw_text_line(
 			args.document_line_num,
 			args.cursor,
 		)
+		/*
+		visual_x_offset += render_token(
+			mut ctx, args.current_mode, args.line,
+			cur_token_bounds, previous_token,
+			current_token, next_token, args.syntax_def,
+			args.x, max_width,
+			visual_x_offset, args.y,
+			args.document_line_num,
+			args.cursor,
+		)
+		*/
 
 		previous_token = current_token
 	}
@@ -237,39 +248,46 @@ fn resolve_token_fg_color(args ResolveTokenFGColorArgs) tui.Color {
 	return args.theme.pallete[resolved_token_type]
 }
 
-// NOTE(tauraamui) [14/07/2025]: use a param struct here
+@[params]
+struct RenderTokenArgs {
+	y int
+	base_x int
+	max_width int
+	x_offset int
+	document_line_num int
+	line string
+	cursor BufferCursor
+	previous_token ?syntax.Token
+	current_token syntax.Token
+	next_token ?syntax.Token
+	cur_token_bounds TokenBounds
+	syntax_def syntax.Syntax
+	current_mode core.Mode
+}
+
 fn render_token(
 	mut ctx draw.Contextable,
-	current_mode core.Mode, line string,
-	cur_token_bounds TokenBounds,
-	previous_token ?syntax.Token,
-	current_token syntax.Token,
-	next_token ?syntax.Token,
-	syntax_def syntax.Syntax,
-	base_x int, max_width int,
-	x_offset int, y int,
-	document_line_num int,
-	cursor BufferCursor
+	args RenderTokenArgs
 ) int {
-	mut segment_to_render := line.runes()[cur_token_bounds.start..cur_token_bounds.end].string().replace("\t", " ".repeat(4))
-	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, max_width - (x_offset - base_x))
+	mut segment_to_render := args.line.runes()[args.cur_token_bounds.start..args.cur_token_bounds.end].string().replace("\t", " ".repeat(4))
+	segment_to_render = utf8.str_clamp_to_visible_length(segment_to_render, args.max_width - (args.x_offset - args.base_x))
 	if segment_to_render.runes().len == 0 { return 0 }
 
 	fg_color := resolve_token_fg_color(
 		theme: ctx.theme(),
 		segment_to_render: segment_to_render,
-		previous_token: previous_token,
-		current_token: current_token,
-		next_token: next_token,
-		syntax_def: syntax_def
+		previous_token: args.previous_token,
+		current_token: args.current_token,
+		next_token: args.next_token,
+		syntax_def: args.syntax_def
 	)
 
 	mut sel_span := ?SelectionSpan(none)
-	if cursor.y_within_selection(document_line_num) {
-		sel_span = cursor.resolve_line_selection_span(current_mode, line.runes().len, document_line_num)
+	if args.cursor.y_within_selection(args.document_line_num) {
+		sel_span = args.cursor.resolve_line_selection_span(args.current_mode, args.line.runes().len, args.document_line_num)
 	}
 
-	return render_segment(mut ctx, current_mode, cur_token_bounds, segment_to_render, fg_color, x_offset, y, sel_span)
+	return render_segment(mut ctx, args.current_mode, args.cur_token_bounds, segment_to_render, fg_color, args.x_offset, args.y, sel_span)
 }
 
 fn render_segment(
