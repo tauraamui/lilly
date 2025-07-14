@@ -178,8 +178,14 @@ fn draw_text_line(
 	for i, token in args.line_tokens {
 		current_token := token
 		mut next_token := ?syntax.Token(none)
+
 		if i + 1 < args.line_tokens.len - 1 { next_token = args.line_tokens[i + 1] }
-		cur_token_bounds := resolve_token_bounds(current_token.start(), current_token.end(), args.min_x) or { continue }
+
+		cur_token_bounds := resolve_token_bounds(
+			token_start: current_token.start(),
+			token_end: current_token.end(),
+			min_x: args.min_x
+		) or { continue }
 
 		visual_x_offset += render_token(
 			mut ctx,
@@ -207,7 +213,17 @@ struct TokenBounds {
 	end   int
 }
 
-fn resolve_token_bounds(token_start int, token_end int, min_x int) ?TokenBounds {
+@[params]
+struct ResolveTokenBoundsArgs {
+	token_start int
+	token_end int
+	min_x int
+}
+
+fn resolve_token_bounds(args ResolveTokenBoundsArgs) ?TokenBounds {
+	token_start := args.token_start
+	token_end := args.token_end
+	min_x := args.min_x
 	if token_end < token_start { return none }
 	if token_end < min_x { return none }
 	if token_end > min_x && token_start < min_x {

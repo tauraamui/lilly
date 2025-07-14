@@ -1937,24 +1937,16 @@ fn test_render_segment_in_visual_mode_specific_selection_covers_all_of_segment()
 */
 
 fn test_resolve_token_bounds_min_x_is_0() {
-	token_start := 0
-	token_end   := 13
-	min_x       := 0
-
-	assert resolve_token_bounds(token_start, token_end, min_x)! == TokenBounds{
-		start: token_start
-		end:   token_end
+	assert resolve_token_bounds(token_start: 0, token_end: 13, min_x: 0)! == TokenBounds{
+		start: 0
+		end: 13
 	}
 }
 
 fn test_resolve_token_bounds_min_x_is_5() {
-	token_start := 0
-	token_end   := 13
-	min_x       := 5
-
-	assert resolve_token_bounds(token_start, token_end, min_x)! == TokenBounds{
+	assert resolve_token_bounds(token_start: 0, token_end: 13, min_x: 5)! == TokenBounds{
 		start: 5
-		end:   token_end
+		end: 13
 	}
 }
 
