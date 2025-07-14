@@ -339,7 +339,10 @@ fn render_segment(
 					mut ctx, x: args.x, y: args.y, segment: args.segment, fg_color: args.fg_color, is_selected: unwrapped_selection_span.full
 				)
 			}
-			.visual      { return render_segment_in_visual_mode(mut ctx, args.segment_bounds, args.segment, args.fg_color, args.x, args.y, unwrapped_selection_span) }
+			.visual { return render_segment_in_visual_mode(
+					mut ctx, args.segment_bounds, args.segment, args.fg_color, args.x, args.y, unwrapped_selection_span
+				)
+			}
 			else { return 0 } // should not be possible to reach, consider adding an assert here
 		}
 	}
