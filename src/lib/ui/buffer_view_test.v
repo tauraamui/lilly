@@ -1812,32 +1812,27 @@ fn test_render_segment_in_visual_mode_specific_selection_starts_and_ends_within_
 		on_draw_rect_cb: fn (x int, y int, w int, h int) {}
 	}
 
-	segment_to_render := "singlelargeorlongtokentorender"
-	segment_bounds    := TokenBounds{ start: 20, end: 50 }
-	fg_color          := tui.Color{ 110, 110, 110 }
 	// NOTE(tauraamui) [18/06/2025]: the coords in this case are mostly irrelevant
-	x                 := 20
-	y                 := 0
 	render_segment_in_visual_mode(
 		mut mock_ctx,
-		x: x,
-		y: y,
-		segment: segment_to_render,
-		fg_color: fg_color,
+		x: 20,
+		y: 0,
+		segment: "singlelargeorlongtokentorender",
+		fg_color: tui.Color{ 110, 110, 110 },
 		selection_span: SelectionSpan{ min_x: 35, max_x: 45 }
-		segment_bounds: segment_bounds
+		segment_bounds: TokenBounds{ start: 20, end: 50 }
 	)
 
 	theme_selection_bg_color := mock_ctx.theme().selection_highlight_color
 	assert drawn_text == [
 		ColoredDrawnText{
-			x: 20, y: 0, data: "singlelargeorlo", fg_color: fg_color, bg_color: ?tui.Color(none)
+			x: 20, y: 0, data: "singlelargeorlo", fg_color: tui.Color{ 110, 110, 110 }, bg_color: ?tui.Color(none)
 		},
 		ColoredDrawnText{
 			x: 35, y: 0, data: "ngtokentor", fg_color: tui.Color{ 0, 0, 0 }, bg_color: theme_selection_bg_color
 		}
 		ColoredDrawnText{
-			x: 45, y: 0, data: "ender", fg_color: fg_color, bg_color: ?tui.Color(none)
+			x: 45, y: 0, data: "ender", fg_color: tui.Color{ 110, 110, 110 }, bg_color: ?tui.Color(none)
 		}
 	]
 }
