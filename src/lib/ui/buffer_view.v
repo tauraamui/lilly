@@ -375,7 +375,9 @@ fn render_segment_in_visual_mode(mut ctx draw.Contextable, args RenderSegmentArg
 	segment_after_selection := args.segment_bounds.start > unwrapped_selection_span.max_x
 
 	if segment_before_selection || segment_after_selection {
-		return render_segment_in_visual_mode_unselected(mut ctx, args.segment_bounds, args.segment, args.fg_color, args.x, args.y)
+		return render_segment_in_visual_mode_unselected(
+			mut ctx, x: args.x, y: args.y, fg_color: args.fg_color, segment: args.segment
+		)
 	}
 
 	selection_starts_within_segment := args.segment_bounds.start <= unwrapped_selection_span.min_x && args.segment_bounds.end >= unwrapped_selection_span.min_x
@@ -396,14 +398,10 @@ fn render_segment_in_visual_mode(mut ctx draw.Contextable, args RenderSegmentArg
 	return render_segment_in_visual_mode_current_line_is_fully_selected(mut ctx, args.segment_bounds, args.segment, args.fg_color, args.x, args.y)
 }
 
-fn render_segment_in_visual_mode_unselected(
-	mut ctx draw.Contextable, segment_bounds TokenBounds,
-	segment string, fg_color tui.Color,
-	x int, y int
-) int {
-	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
-	ctx.draw_text(x, y, segment)
-	return utf8_str_visible_length(segment)
+fn render_segment_in_visual_mode_unselected(mut ctx draw.Contextable, args RenderSegmentArgs) int {
+	ctx.set_color(draw.Color{ args.fg_color.r, args.fg_color.g, args.fg_color.b })
+	ctx.draw_text(args.x, args.y, args.segment)
+	return utf8_str_visible_length(args.segment)
 }
 
 fn render_segment_in_visual_mode_current_line_is_fully_selected(
