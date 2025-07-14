@@ -82,17 +82,17 @@ pub fn (mut buf_view BufferView) draw(mut ctx draw.Contextable, args BufferViewD
 		// draw the line of text, offset by the position of the buffer view
 		draw_text_line(
 			mut ctx,
-			args.current_mode,
-			args.x + screenspace_x_offset + 1,
-			args.y + screenspace_y_offset,
-			document_line_num,
-			line,
-			syntax_parser.get_line_tokens(document_line_num),
-			syntax_def,
-			args.min_x,
-			args.width,
-			is_cursor_line,
-			args.cursor,
+			x: args.x + screenspace_x_offset + 1,
+			y: args.y + screenspace_y_offset,
+			width: args.width,
+			min_x: args.min_x,
+			document_line_num: document_line_num,
+			is_cursor_line: is_cursor_line,
+			line: line,
+			line_tokens: syntax_parser.get_line_tokens(document_line_num),
+			syntax_def: syntax_def,
+			current_mode: args.current_mode,
+			cursor: args.cursor,
 		)
 
 		screenspace_y_offset += 1
@@ -133,41 +133,48 @@ fn draw_line_number(
 	ctx.draw_text(x - line_num_str.runes().len, y, line_num_str)
 }
 
+@[params]
+struct DrawTextLineArgs {
+	x int
+	y int
+	width int
+	min_x int
+	document_line_num int
+	is_cursor_line bool
+	line string
+	line_tokens []syntax.Token
+	syntax_def syntax.Syntax
+	current_mode core.Mode
+	cursor BufferCursor
+}
+
 fn draw_text_line(
 	mut ctx draw.Contextable,
-	current_mode core.Mode,
-	x int, y int,
-	document_line_num int,
-	line string,
-	line_tokens []syntax.Token,
-	syntax_def syntax.Syntax,
-	min_x int, width int,
-	is_cursor_line bool,
-	cursor BufferCursor,
+	args DrawTextLineArgs
 ) {
-	max_width := width - x
-	if current_mode != .visual_line && is_cursor_line { // no point in setting the bg in this case
+	max_width := args.width - args.x
+	if args.current_mode != .visual_line && args.is_cursor_line { // no point in setting the bg in this case
 		cursor_line_color := ctx.theme().cursor_line_color
 		ctx.set_bg_color(draw.Color{ r: cursor_line_color.r, g: cursor_line_color.g, b: cursor_line_color.b })
 		defer { ctx.reset_bg_color() }
 	}
 
-	mut visual_x_offset := x
+	mut visual_x_offset := args.x
 	mut previous_token := ?syntax.Token(none)
-	for i, token in line_tokens {
+	for i, token in args.line_tokens {
 		current_token := token
 		mut next_token := ?syntax.Token(none)
-		if i + 1 < line_tokens.len - 1 { next_token = line_tokens[i + 1] }
-		cur_token_bounds := resolve_token_bounds(current_token.start(), current_token.end(), min_x) or { continue }
+		if i + 1 < args.line_tokens.len - 1 { next_token = args.line_tokens[i + 1] }
+		cur_token_bounds := resolve_token_bounds(current_token.start(), current_token.end(), args.min_x) or { continue }
 
 		visual_x_offset += render_token(
-			mut ctx, current_mode, line,
+			mut ctx, args.current_mode, args.line,
 			cur_token_bounds, previous_token,
-			current_token, next_token, syntax_def,
-			x, max_width,
-			visual_x_offset, y,
-			document_line_num,
-			cursor,
+			current_token, next_token, args.syntax_def,
+			args.x, max_width,
+			visual_x_offset, args.y,
+			args.document_line_num,
+			args.cursor,
 		)
 
 		previous_token = current_token
