@@ -18,7 +18,8 @@ enum State {
 	default
 	in_comment
 	in_block_comment
-	in_string
+	in_double_quote
+	in_single_quote
 }
 
 pub enum TokenType {
@@ -124,7 +125,8 @@ fn for_each_char(
 			token_type = match parser_state {
 				.in_comment       { TokenType.comment }
 				.in_block_comment { TokenType.comment }
-				.in_string        { TokenType.string }
+				.in_double_quote { TokenType.string }
+				.in_single_quote  { TokenType.string }
 				.default          { last_char_type }
 			}
 		}
@@ -168,12 +170,16 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 				match true {
 					l_char == `/` && c_char == `/` { .in_comment }
 					l_char == `/` && c_char == `*` { .in_block_comment }
-					c_char == `"` || c_char == `'` { .in_string }
+					c_char == `"` { .in_double_quote }
+					c_char == `'` { .in_single_quote }
 					else { State.default }
 				}
 			}
-			.in_string {
-				if c_char == `"` || c_char == `'` { State.default } else { State.in_string }
+			.in_double_quote {
+				if c_char == `"` { State.default } else { State.in_double_quote }
+			}
+			.in_single_quote {
+				if c_char == `'` { State.default } else {State.in_single_quote }
 			}
 			.in_block_comment {
 				match true {
@@ -191,7 +197,8 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 	token_type = match parser.state {
 		.in_comment       { TokenType.comment }
 		.in_block_comment { TokenType.comment }
-		.in_string        { TokenType.string }
+		.in_double_quote  { TokenType.string }
+		.in_single_quote  { TokenType.string }
 		else              { token_type }
 	}
 
