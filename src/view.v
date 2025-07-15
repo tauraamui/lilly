@@ -599,11 +599,9 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 }
 
 fn (mut view View) update_to() {
-	mut to := view.from + view.code_view_height()
-	if to > view.buffer.lines.len {
-		to = view.buffer.lines.len
-	}
-	view.to = to
+	to := view.from + view.code_view_height()
+	num_of_lines := view.buffer.num_of_lines()
+	view.to = if to > num_of_lines { num_of_lines } else { to }
 }
 
 fn (mut view View) exec(op chords.Op) {
