@@ -38,12 +38,12 @@ context.task(name: 'compile-make', run: |self| system('v -prod -skip-running mak
 // TEST TASKS
 context.task(
 	name:    'test'
-	depends: ['_generate-git-hash']
+	depends: ['format', '_generate-git-hash']
 	run:     |self| exit(system('v -g test ./src'))
 )
 context.task(
 	name:    'verbose-test'
-	depends: ['_generate-git-hash']
+	depends: ['format', '_generate-git-hash']
 	run:     |self| exit(system('v -g -stats test ./src'))
 )
 
@@ -77,6 +77,8 @@ context.task(
 )
 
 // UTIL TASKS
+context.task(name: 'format', run: |self| system('v fmt -w .'))
+
 context.task(
 	name: 'ansi-colour-codes'
 	help: 'displays ansi colour code chart'
