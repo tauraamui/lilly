@@ -403,7 +403,9 @@ fn render_segment_in_visual_mode(mut ctx draw.Contextable, args RenderSegmentArg
 	}
 
 	if !selection_starts_within_segment && selection_ends_within_segment {
-		return render_segment_in_visual_mode_selection_ends_within_but_does_not_start_within(mut ctx, args.segment_bounds, args.segment, args.fg_color, args.x, args.y, unwrapped_selection_span)
+		return render_segment_in_visual_mode_selection_ends_within_but_does_not_start_within(
+			mut ctx, x: args.x, y: args.y, fg_color: args.fg_color, segment: args.segment, segment_bounds: args.segment_bounds, unwrapped_selection_span: unwrapped_selection_span
+		)
 	}
 
 	return render_segment_in_visual_mode_current_line_is_fully_selected(
@@ -454,9 +456,7 @@ fn render_segment_in_visual_mode_selection_starts_and_ends_within(mut ctx draw.C
 	return utf8_str_visible_length(args.segment)
 }
 
-fn render_segment_in_visual_mode_selection_starts_within_but_does_not_end_within(
-	mut ctx draw.Contextable, args RenderSegmentArgsWithUnwrappedSelectionSpan
-) int {
+fn render_segment_in_visual_mode_selection_starts_within_but_does_not_end_within(mut ctx draw.Contextable, args RenderSegmentArgsWithUnwrappedSelectionSpan) int {
 	selected_segment_span_start := args.unwrapped_selection_span.min_x - args.segment_bounds.start
 	segment_unselected_part     := args.segment.runes()[..selected_segment_span_start].string()
 
@@ -474,25 +474,21 @@ fn render_segment_in_visual_mode_selection_starts_within_but_does_not_end_within
 	return utf8_str_visible_length(args.segment)
 }
 
-fn render_segment_in_visual_mode_selection_ends_within_but_does_not_start_within(
-	mut ctx draw.Contextable, segment_bounds TokenBounds,
-	segment string, fg_color tui.Color,
-	x int, y int, selection_span SelectionSpan
-) int {
-	selected_segment_span_end := selection_span.max_x - segment_bounds.start
-	segment_selected_part     := segment.runes()[..selected_segment_span_end].string()
+fn render_segment_in_visual_mode_selection_ends_within_but_does_not_start_within(mut ctx draw.Contextable, args RenderSegmentArgsWithUnwrappedSelectionSpan) int {
+	selected_segment_span_end := args.unwrapped_selection_span.max_x - args.segment_bounds.start
+	segment_selected_part     := args.segment.runes()[..selected_segment_span_end].string()
 
 	bg_color := ctx.theme().selection_highlight_color
 	ctx.set_bg_color(draw.Color{ bg_color.r, bg_color.g, bg_color.b })
 	ctx.reset_color()
-	ctx.draw_text(x, y, segment_selected_part)
+	ctx.draw_text(args.x, args.y, segment_selected_part)
 
 	x_offset := utf8_str_visible_length(segment_selected_part)
 
-	segment_last_part := segment.runes()[selected_segment_span_end..].string()
-	ctx.set_color(draw.Color{ fg_color.r, fg_color.g, fg_color.b })
+	segment_last_part := args.segment.runes()[selected_segment_span_end..].string()
+	ctx.set_color(draw.Color{ args.fg_color.r, args.fg_color.g, args.fg_color.b })
 	ctx.reset_bg_color()
-	ctx.draw_text(x + x_offset, y, segment_last_part)
-	return utf8_str_visible_length(segment)
+	ctx.draw_text(args.x + x_offset, args.y, segment_last_part)
+	return utf8_str_visible_length(args.segment)
 }
 
