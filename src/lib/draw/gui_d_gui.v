@@ -51,11 +51,11 @@ pub fn new_context(cfg Config) (&Contextable, Runner) {
 const font_size = 16
 
 fn (mut ctx Context) run_wrapper() ! {
-    ctx.gg.run()
+	ctx.gg.run()
 }
 
 fn (mut ctx Context) render_debug() bool {
-    return true
+	return true
 }
 
 fn frame(mut ctx Context) {
@@ -65,7 +65,7 @@ fn frame(mut ctx Context) {
 		scale_factor = 1
 	}
 	ctx.txt_cfg = gx.TextCfg{
-		size: draw.font_size * int(scale_factor)
+		size: font_size * int(scale_factor)
 	}
 	ctx.frame_cb(ctx.user_data)
 	if ctx.text_draws_since_last_pass < 1000 {
@@ -93,7 +93,7 @@ fn (mut ctx Context) draw_text(x int, y int, text string) {
 	if ctx.text_draws_since_last_pass == 0 {
 		ctx.gg.begin()
 	}
-	ctx.gg.draw_text((draw.font_size / 2) + x - (draw.font_size / 2), (y * draw.font_size) - draw.font_size,
+	ctx.gg.draw_text((font_size / 2) + x - (font_size / 2), (y * font_size) - font_size,
 		text, ctx.txt_cfg)
 	if ctx.text_draws_since_last_pass >= 1000 {
 		ctx.gg.end(how: .passthru)

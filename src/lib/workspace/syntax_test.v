@@ -28,7 +28,10 @@ fn (mut mock_log MockLogger) error(msg string) {
 struct MockOS {}
 
 fn (mock_os MockOS) execute(cmd string) os.Result {
-  return os.Result{exit_code: 0, output: "branch"}
+	return os.Result{
+		exit_code: 0
+		output:    'branch'
+	}
 }
 
 struct MockFS {
@@ -75,8 +78,8 @@ fn (mock_fs MockFS) config_dir() !string {
 
 fn test_open_workspace_loads_builtin_syntax() {
 	mock_fs := MockFS{
-		pwd:  '/home/test-user/dev/fakeproject'
-		dirs: {
+		pwd:           '/home/test-user/dev/fakeproject'
+		dirs:          {
 			'/home/test-user/dev/fakeproject': []
 		}
 		files:         {}
@@ -87,8 +90,8 @@ fn test_open_workspace_loads_builtin_syntax() {
 
 	mut mock_log := MockLogger{}
 	cfg := resolve_config(mut mock_log, mock_fs.config_dir, mock_fs.read_file)
-	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker, cfg,
-		mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err.msg()}') }
+	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker,
+		cfg, mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err.msg()}') }
 	assert wrkspace.syntaxes.len == 8
 	assert wrkspace.syntaxes[0].name == 'V'
 	assert wrkspace.syntaxes[1].name == 'Go'

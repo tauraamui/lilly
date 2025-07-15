@@ -30,7 +30,7 @@ struct App {
 mut:
 	log       &log.Log
 	ui        &draw.Contextable = unsafe { nil }
-	lilly     &Lilly           = unsafe { nil }
+	lilly     &Lilly            = unsafe { nil }
 	view      &View             = unsafe { nil }
 	views     []View
 	cur_split int
@@ -80,9 +80,9 @@ mut:
 	long_show_version_flag           string
 	short_show_version_flag          string
 	show_version                     bool
-	long_show_config_path_flag        string
-	short_show_config_path_flag       string
-	show_config_root_path             bool
+	long_show_config_path_flag       string
+	short_show_config_path_flag      string
+	show_config_root_path            bool
 	long_symlink_flag                string
 	short_symlink_flag               string
 	symlink                          bool
@@ -150,13 +150,15 @@ fn resolve_options_from_args(args []string) Options {
 		|| '-${opts.short_disable_panic_capture_flag}' in flags
 
 	opts.log_level = .disabled
-	if "--${opts.long_log_level_label_flag}" in flags {
-		log_level_option := cmdline.option(args, "--${opts.long_log_level_label_flag}", "").to_upper()
+	if '--${opts.long_log_level_label_flag}' in flags {
+		log_level_option := cmdline.option(args, '--${opts.long_log_level_label_flag}',
+			'').to_upper()
 		opts.log_level = log.level_from_tag(log_level_option) or { log.Level.disabled }
 	}
 
-	if "-${opts.short_log_level_label_flag}" in flags {
-		log_level_option := cmdline.option(args, "-${opts.short_log_level_label_flag}", "").to_upper()
+	if '-${opts.short_log_level_label_flag}' in flags {
+		log_level_option := cmdline.option(args, '-${opts.short_log_level_label_flag}',
+			'').to_upper()
 		opts.log_level = log.level_from_tag(log_level_option) or { log.Level.disabled }
 	}
 
@@ -193,21 +195,26 @@ fn output_version_and_close(commit_hash string) {
 }
 
 fn output_config_root_path_and_close(config_root_path string) {
-	path := os.join_path(config_root_path, workspace.lilly_config_root_dir_name, "lilly.conf")
+	path := os.join_path(config_root_path, workspace.lilly_config_root_dir_name, 'lilly.conf')
 	config_root_path_label := 'lilly - config root dir (#${path})'
 	print_and_exit(config_root_path_label)
 }
 
 fn symlink_and_close() {
-	$if windows { return }
-	mut link_path := "/data/data/com.termux/files/usr/bin/lilly"
+	$if windows {
+		return
+	}
+	mut link_path := '/data/data/com.termux/files/usr/bin/lilly'
 
-	if !os.is_dir("/data/data/com.termux/files") {
+	if !os.is_dir('/data/data/com.termux/files') {
 		link_dir := os.local_bin_dir()
 		if !os.exists(link_dir) {
-			os.mkdir_all(link_dir) or { eprintln("failed to symlink: ${err}"); exit(1) }
+			os.mkdir_all(link_dir) or {
+				eprintln('failed to symlink: ${err}')
+				exit(1)
+			}
 		}
-		link_path = link_dir + "/lilly"
+		link_path = link_dir + '/lilly'
 	}
 
 	os.rm(link_path) or {}
@@ -215,7 +222,7 @@ fn symlink_and_close() {
 		eprintln("failed to create symlink '${link_path}'. try again with sudo.")
 	}
 
-	println("created symlink ${link_path} successfully")
+	println('created symlink ${link_path} successfully')
 	exit(0)
 }
 
@@ -235,7 +242,7 @@ fn resolve_file_and_workspace_dir_paths(args []string, resolve_wd WDResolver) !(
 	return file_or_dir_path, os.dir(file_or_dir_path)
 }
 
-const default_bg_color = tui.Color{ 59, 34, 76 }
+const default_bg_color = tui.Color{59, 34, 76}
 
 fn main() {
 	mut args := os.args[1..].clone()
@@ -279,7 +286,9 @@ fn main() {
 	}
 
 	ctx, run := draw.new_context(
-		theme:                theme.Theme.new(cfg.theme or { "petal" }) or { panic("error occurred loading theme: ${err}") }
+		theme:                theme.Theme.new(cfg.theme or { 'petal' }) or {
+			panic('error occurred loading theme: ${err}')
+		}
 		render_debug:         opts.render_debug_mode
 		user_data:            app
 		event_fn:             event
@@ -295,7 +304,8 @@ fn main() {
 		'', ''
 	}
 	mut clip := clipboardv3.new()
-	app.lilly = open_lilly(mut l, cfg, mut clip, gitcommit_hash, file_path, workspace_path, opts.use_gap_buffer) or {
+	app.lilly = open_lilly(mut l, cfg, mut clip, gitcommit_hash, file_path, workspace_path,
+		opts.use_gap_buffer) or {
 		print_and_exit('${err}')
 		unsafe { nil }
 	}

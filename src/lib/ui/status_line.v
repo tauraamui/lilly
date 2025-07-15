@@ -46,8 +46,8 @@ pub fn draw_status_line(mut ctx draw.Contextable, status Status) {
 
 	// if filename provided, render its segment next
 	if status.file_name.len > 0 {
-        dirty_indicator := if status.dirty { ' [+]' } else { '' }
-        offset += draw_file_name_segment(mut ctx, offset, y, status.file_name + dirty_indicator)
+		dirty_indicator := if status.dirty { ' [+]' } else { '' }
+		offset += draw_file_name_segment(mut ctx, offset, y, status.file_name + dirty_indicator)
 	}
 
 	// if search selection active/provided, render it's segment next
@@ -105,16 +105,18 @@ fn draw_git_branch_section(mut ctx draw.Contextable, x int, y int, git_branch st
 
 fn draw_cursor_position_segment(mut ctx draw.Contextable, x int, y int, last_segment_offset int, cursor_x int, cursor_y int) int {
 	cursor_info_label := '${cursor_y + 1}:${cursor_x + 1}'
-	draw.paint_shape_text(mut ctx, ctx.window_width() - 1, y, draw.Color{245, 42, 42}, '${core.block}${core.block}')
+	draw.paint_shape_text(mut ctx, ctx.window_width() - 1, y, draw.Color{245, 42, 42},
+		'${core.block}${core.block}')
 	ctx.bold()
 	draw.paint_text_on_background(mut ctx, ctx.window_width() - 1 - cursor_info_label.len,
 		y, draw.Color{245, 42, 42}, draw.Color{255, 255, 255}, cursor_info_label)
-	draw.paint_shape_text(mut ctx, ctx.window_width() - 2 - cursor_info_label.len - 2, y, draw.Color{245, 42, 42},
-		'${core.slant_right_flat_top}${core.slant_left_flat_bottom}${core.block}')
-	draw.paint_shape_text(mut ctx, ctx.window_width() - 2 - cursor_info_label.len - 2, y, draw.Color{25, 25, 25},
-		'${core.slant_right_flat_top}')
+	draw.paint_shape_text(mut ctx, ctx.window_width() - 2 - cursor_info_label.len - 2,
+		y, draw.Color{245, 42, 42}, '${core.slant_right_flat_top}${core.slant_left_flat_bottom}${core.block}')
+	draw.paint_shape_text(mut ctx, ctx.window_width() - 2 - cursor_info_label.len - 2,
+		y, draw.Color{25, 25, 25}, '${core.slant_right_flat_top}')
 	ctx.set_bg_color(draw.Color{25, 25, 25})
-	ctx.draw_rect(last_segment_offset, y, (ctx.window_width() - 2 - cursor_info_label.len - 2) - last_segment_offset, 1)
+	ctx.draw_rect(last_segment_offset, y, (ctx.window_width() - 2 - cursor_info_label.len - 2) - last_segment_offset,
+		1)
 	ctx.reset_bg_color()
 	return 0
 }

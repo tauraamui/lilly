@@ -39,21 +39,25 @@ fn (mut view View) on_key_down_leader_mode(e draw.Event) ViewAction {
 	}
 
 	match view.leader_state.suffix {
-		["f", "f"] {
+		['f', 'f'] {
 			defer { view.escape() }
 			return .open_file_picker
 		}
-		["f", "t", "c"] {
+		['f', 't', 'c'] {
 			defer { view.escape() }
 			return .open_todo_comments_picker
 		}
-		["x","f","f"] {
+		['x', 'f', 'f'] {
 			defer { view.escape() }
 			return .open_file_picker_special
 		}
-		["f", "b"] {
+		['f', 'b'] {
 			defer { view.escape() }
-			return if !view.leader_state.special { .open_inactive_buffer_picker } else { .open_inactive_buffer_picker_special }
+			return if !view.leader_state.special {
+				.open_inactive_buffer_picker
+			} else {
+				.open_inactive_buffer_picker_special
+			}
 		}
 		else {}
 	}
@@ -165,7 +169,9 @@ fn (mut view View) on_key_down_normal_mode(e draw.Event) {
 		.c {
 			view.exec(view.chord.c())
 		}
-		.z     { view.z() }
+		.z {
+			view.z()
+		}
 		.d {
 			if e.modifiers == .ctrl {
 				view.ctrl_d()
@@ -382,8 +388,8 @@ fn (mut view View) on_key_down(e draw.Event) ViewAction {
 					action := view.cmd_buf.exec(mut view)
 					defer { view.leader_state.mode = .normal }
 					match action {
-						.no_op      {}
-						.quit       { return .quit }
+						.no_op {}
+						.quit { return .quit }
 						.force_quit { return .force_quit }
 					}
 				}

@@ -23,13 +23,12 @@ const t_lilly_syntaxes_dir_name = 'syntaxes'
 fn test_loads_builtin_syntax() {
 	builtins := load_builtin_syntaxes()
 	assert builtins.len == 8
-	assert builtins[0].name == "V"
-	assert builtins[1].name == "Go"
-	assert builtins[2].name == "C"
-	assert builtins[3].name == "Rust"
-	assert builtins[4].name == "JavaScript"
-	assert builtins[5].name == "TypeScript"
-	assert builtins[6].name == "Python"
-	assert builtins[7].name == "Perl"
+	assert builtins[0].name == 'V'
+	assert builtins[1].name == 'Go'
+	assert builtins[2].name == 'C'
+	assert builtins[3].name == 'Rust'
+	assert builtins[4].name == 'JavaScript'
+	assert builtins[5].name == 'TypeScript'
+	assert builtins[6].name == 'Python'
+	assert builtins[7].name == 'Perl'
 }
-

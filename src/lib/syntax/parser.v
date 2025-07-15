@@ -42,8 +42,8 @@ pub enum TokenType {
 pub struct Token {
 	t_type TokenType
 mut:
-	start  int
-	end    int
+	start int
+	end   int
 }
 
 pub fn (t Token) start() int {
@@ -64,7 +64,7 @@ struct LineInfo {
 }
 
 pub struct Parser {
-	l_syntax      []Syntax
+	l_syntax []Syntax
 mut:
 	state         State
 	pending_token ?Token
@@ -73,7 +73,9 @@ mut:
 }
 
 pub fn Parser.new(syn []Syntax) Parser {
-	return Parser{ l_syntax: syn }
+	return Parser{
+		l_syntax: syn
+	}
 }
 
 pub fn (mut parser Parser) reset() {
@@ -87,14 +89,16 @@ pub fn (parser Parser) get_line_tokens(line_num int) []Token {
 	if line_num < 0 || line_num >= parser.line_info.len {
 		return []Token{}
 	}
-	line_info   := parser.line_info[line_num]
+	line_info := parser.line_info[line_num]
 	start_index := line_info.start_token_index
-	end_index   := start_index + line_info.token_count
+	end_index := start_index + line_info.token_count
 	return parser.tokens[start_index..end_index]
 }
 
 pub fn (mut parser Parser) parse_lines(lines []string) {
-	for i, line in lines { parser.parse_line(i, line) }
+	for i, line in lines {
+		parser.parse_line(i, line)
+	}
 }
 
 fn resolve_char_type(c_char rune) TokenType {
@@ -103,19 +107,17 @@ fn resolve_char_type(c_char rune) TokenType {
 		` `, `\t` { .whitespace }
 		`a`...`z`, `A`...`Z` { .identifier }
 		`0`...`9` { .number }
-		`"`, `'` { .string }  // quotes should be string tokens
+		`"`, `'` { .string } // quotes should be string tokens
 		else { .other }
 	}
 }
 
-fn for_each_char(
-	index int,
+fn for_each_char(index int,
 	l_char rune, c_char rune,
 	mut rune_count &int,
 	mut token_count &int,
 	mut tokens []Token,
-	parser_state State
-) TokenType {
+	parser_state State) TokenType {
 	current_char_type := resolve_char_type(c_char)
 	if l_char != rune(0) {
 		last_char_type := resolve_char_type(l_char)
@@ -123,11 +125,11 @@ fn for_each_char(
 		mut token_type := last_char_type
 		if last_char_type != .whitespace {
 			token_type = match parser_state {
-				.in_comment       { TokenType.comment }
+				.in_comment { TokenType.comment }
 				.in_block_comment { TokenType.comment }
 				.in_double_quote { TokenType.string }
-				.in_single_quote  { TokenType.string }
-				.default          { last_char_type }
+				.in_single_quote { TokenType.string }
+				.default { last_char_type }
 			}
 		}
 
@@ -135,8 +137,8 @@ fn for_each_char(
 		if transition_occurred {
 			token := Token{
 				t_type: token_type
-				start: index - rune_count
-				end: index
+				start:  index - rune_count
+				end:    index
 			}
 			tokens << token
 			token_count += 1
@@ -149,11 +151,14 @@ fn for_each_char(
 }
 
 pub fn (mut parser Parser) parse_line(index int, line string) []Token {
-	mut start_token_index   := parser.tokens.len
-	mut token_count         := 0
-	mut rune_count          := 0
-	runes                   := line.runes()
-	if parser.state == .in_comment { parser.state = .default } // single line comments terminate at the end of the line
+	mut start_token_index := parser.tokens.len
+	mut token_count := 0
+	mut rune_count := 0
+	runes := line.runes()
+	if parser.state == .in_comment {
+		parser.state = .default
+	}
+	// single line comments terminate at the end of the line
 
 	mut token_type := TokenType.other
 	for i, c_char in runes {
@@ -179,7 +184,7 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 				if c_char == `"` { State.default } else { State.in_double_quote }
 			}
 			.in_single_quote {
-				if c_char == `'` { State.default } else {State.in_single_quote }
+				if c_char == `'` { State.default } else { State.in_single_quote }
 			}
 			.in_block_comment {
 				match true {
@@ -187,26 +192,29 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 					else { State.in_block_comment }
 				}
 			}
-			else { parser.state }
+			else {
+				parser.state
+			}
 		}
 
 		// use previous_state for classifying the previous character
-		token_type = for_each_char(i, l_char, c_char, mut &rune_count, mut &token_count, mut parser.tokens, previous_state)
+		token_type = for_each_char(i, l_char, c_char, mut &rune_count, mut &token_count, mut
+			parser.tokens, previous_state)
 	}
 
 	token_type = match parser.state {
-		.in_comment       { TokenType.comment }
+		.in_comment { TokenType.comment }
 		.in_block_comment { TokenType.comment }
-		.in_double_quote  { TokenType.string }
-		.in_single_quote  { TokenType.string }
-		else              { token_type }
+		.in_double_quote { TokenType.string }
+		.in_single_quote { TokenType.string }
+		else { token_type }
 	}
 
 	if rune_count > 0 {
 		token := Token{
 			t_type: token_type
-			start: runes.len - rune_count
-			end: runes.len
+			start:  runes.len - rune_count
+			end:    runes.len
 		}
 		parser.tokens << token
 		token_count += 1
@@ -214,9 +222,8 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 
 	line_info := LineInfo{
 		start_token_index: start_token_index
-		token_count: token_count
+		token_count:       token_count
 	}
 	parser.line_info << line_info
 	return parser.get_line_tokens(index)
 }
-

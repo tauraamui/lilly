@@ -60,14 +60,13 @@ pub fn load_builtin_syntaxes() []Syntax {
 		panic('builting Perl syntax file failed to decode: ${err}')
 	}
 
-	return [v_syntax, go_syntax, c_syntax, rust_syntax, js_syntax, ts_syntax, python_syntax, perl_syntax]
+	return [v_syntax, go_syntax, c_syntax, rust_syntax, js_syntax, ts_syntax, python_syntax,
+		perl_syntax]
 }
 
-fn load_syntaxes_from_disk(
-	syntax_config_dir fn () !string,
+fn load_syntaxes_from_disk(syntax_config_dir fn () !string,
 	dir_walker fn (path string, f fn (string)),
-	read_file fn (path string) !string
-) ![]Syntax {
+	read_file fn (path string) !string) ![]Syntax {
 	syntax_dir_full_path := syntax_config_dir() or { return err }
 	mut syns := []Syntax{}
 	dir_walker(syntax_dir_full_path, fn [mut syns, read_file] (file_path string) {
@@ -131,4 +130,3 @@ fn load_syntaxes_from_disk(
 	})
 	return syns
 }
-

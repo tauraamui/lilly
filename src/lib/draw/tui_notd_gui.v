@@ -36,26 +36,34 @@ mut:
 }
 
 fn Grid.new(width int, height int) !Grid {
-	if width < 0 || height < 0 { return error("width and height must be positive") }
-	mut grid_data := []Cell{ len: width * height }
-	for i in 0..grid_data.len {
+	if width < 0 || height < 0 {
+		return error('width and height must be positive')
+	}
+	mut grid_data := []Cell{len: width * height}
+	for i in 0 .. grid_data.len {
 		grid_data[i] = Cell{}
 	}
-	return Grid{ width: width, height: height, data: grid_data }
+	return Grid{
+		width:  width
+		height: height
+		data:   grid_data
+	}
 }
 
 fn (mut grid Grid) set(x int, y int, c Cell) ! {
 	if x < 0 || x >= grid.width || y < 0 || y >= grid.height {
-		return error("x: ${x}, y: ${y} is out of bounds")
+		return error('x: ${x}, y: ${y} is out of bounds')
 	}
 	index := y * grid.width + x
-	if index >= grid.data.len { return }
+	if index >= grid.data.len {
+		return
+	}
 	grid.data[index] = c
 }
 
 fn (grid Grid) get(x int, y int) !Cell {
 	if x < 0 || x >= grid.width || y < 0 || y >= grid.height {
-		return error("x: ${x}, y: ${y} is out of bounds")
+		return error('x: ${x}, y: ${y} is out of bounds')
 	}
 	index := y * grid.width + x
 	return grid.data[index]
@@ -63,12 +71,12 @@ fn (grid Grid) get(x int, y int) !Cell {
 
 fn (grid Grid) get_rows(min int, max int) ![][]Cell {
 	if min < 0 || min >= grid.data.len || max < 0 || max >= grid.data.len || min > max {
-		return error("invalid row range")
+		return error('invalid row range')
 	}
 	rows_in_range := max - min + 1
-	mut result := [][]Cell{ len: rows_in_range }
+	mut result := [][]Cell{len: rows_in_range}
 
-	for i in 0..rows_in_range {
+	for i in 0 .. rows_in_range {
 		current_row := min + i
 		start_index := current_row * grid.width
 		end_index := start_index + grid.width
@@ -79,23 +87,27 @@ fn (grid Grid) get_rows(min int, max int) ![][]Cell {
 }
 
 fn (mut grid Grid) resize(width int, height int) ! {
-	if width <= 0 || height <= 0 { return error("width and height must be positive") }
+	if width <= 0 || height <= 0 {
+		return error('width and height must be positive')
+	}
 	if height == grid.height && width == grid.width {
 		return
 	}
 
-	mut new_data := []Cell{ len: width * height }
-	for i in 0..new_data.len {
+	mut new_data := []Cell{len: width * height}
+	for i in 0 .. new_data.len {
 		new_data[i] = Cell{}
 	}
 	overlap_rows := int_min(grid.height, height)
 	overlap_cols := int_min(grid.width, width)
 
-	for i in 0..overlap_rows {
-		for j in 0..overlap_cols {
+	for i in 0 .. overlap_rows {
+		for j in 0 .. overlap_cols {
 			old_index := i * grid.width + j
 			new_index := i * width + j
-			if old_index >= grid.data.len { continue }
+			if old_index >= grid.data.len {
+				continue
+			}
 			new_data[new_index] = grid.data[old_index]
 		}
 	}
@@ -145,9 +157,9 @@ enum CursorStyle as u8 {
 }
 
 struct Context {
-	render_debug bool
+	render_debug     bool
 	default_bg_color ?tui.Color
-	theme          themelib.Theme
+	theme            themelib.Theme
 mut:
 	ref            NativeContext
 	data           Grid
@@ -163,7 +175,7 @@ mut:
 }
 
 interface NativeContext {
-	window_width int
+	window_width  int
 	window_height int
 mut:
 	set_cursor_position(x int, y int)
@@ -186,21 +198,21 @@ type Runner = fn () !
 
 pub fn new_context(cfg Config) (&Contextable, Runner) {
 	mut ctx := Context{
-		render_debug: cfg.render_debug
+		render_debug:     cfg.render_debug
 		default_bg_color: cfg.default_bg_color
-		theme: cfg.theme
-		ref: tui.init(
-			user_data: cfg.user_data
-			event_fn:  fn [cfg] (e &tui.Event, app voidptr) {
+		theme:            cfg.theme
+		ref:              tui.init(
+			user_data:            cfg.user_data
+			event_fn:             fn [cfg] (e &tui.Event, app voidptr) {
 				cfg.event_fn(Event{e}, app)
 			}
 			frame_fn:             cfg.frame_fn
 			capture_events:       cfg.capture_events
 			use_alternate_buffer: cfg.use_alternate_buffer
-			frame_rate: 30
+			frame_rate:           30
 		)
 	}
-	ctx.setup_grid() or { panic("unable to init grid -> ${err}") }
+	ctx.setup_grid() or { panic('unable to init grid -> ${err}') }
 	return ctx, unsafe { ctx.run }
 }
 
@@ -216,25 +228,33 @@ fn (mut ctx Context) rate_limit_draws() bool {
 	return true
 }
 
-fn (mut ctx Context) render_debug() bool { return ctx.render_debug }
+fn (mut ctx Context) render_debug() bool {
+	return ctx.render_debug
+}
 
 fn (mut ctx Context) window_width() int {
-	if ctx.ref.window_width <= 0 { return 100 }
+	if ctx.ref.window_width <= 0 {
+		return 100
+	}
 	return ctx.ref.window_width
 }
 
 fn (mut ctx Context) window_height() int {
-	if ctx.ref.window_width <= 0 { return 100 }
+	if ctx.ref.window_width <= 0 {
+		return 100
+	}
 	return ctx.ref.window_height
 }
 
 fn (mut ctx Context) write(c string) {
 	cursor_pos := ctx.cursor_pos
 	for i, c_char in c.runes() {
-		ctx.data.set(
-			cursor_pos.x + i, cursor_pos.y,
-			Cell{ data: c_char, fg_color: ctx.fg_color, bg_color: ctx.bg_color, style: ctx.style }
-		) or { break }
+		ctx.data.set(cursor_pos.x + i, cursor_pos.y, Cell{
+			data:     c_char
+			fg_color: ctx.fg_color
+			bg_color: ctx.bg_color
+			style:    ctx.style
+		}) or { break }
 	}
 }
 
@@ -251,7 +271,10 @@ fn (mut ctx Context) clear_style() {
 }
 
 fn (mut ctx Context) set_cursor_position(x int, y int) {
-	ctx.cursor_pos = Pos{ x: x, y: y }
+	ctx.cursor_pos = Pos{
+		x: x
+		y: y
+	}
 	ctx.cursor_pos_set = true
 }
 
@@ -292,14 +315,14 @@ fn (mut ctx Context) reset_bg_color() {
 }
 
 fn (mut ctx Context) reset() {
-	ctx.bold     = false
+	ctx.bold = false
 	ctx.fg_color = none
 	ctx.bg_color = none
 }
 
 fn (mut ctx Context) clear() {
-	mut new_data := []Cell{ len: ctx.window_width() * ctx.window_height() }
-	for i in 0..new_data.len {
+	mut new_data := []Cell{len: ctx.window_width() * ctx.window_height()}
+	for i in 0 .. new_data.len {
 		new_data[i] = Cell{}
 	}
 	ctx.data.data = new_data
@@ -412,27 +435,37 @@ fn (mut ctx Context) run() ! {
 fn (mut ctx Context) flush() {
 	defer { ctx.prev_data = ctx.data }
 
-	ctx.data.resize(ctx.window_width(), ctx.window_height()) or { panic("flush failed to resize grid -> ${err}") }
+	ctx.data.resize(ctx.window_width(), ctx.window_height()) or {
+		panic('flush failed to resize grid -> ${err}')
+	}
 	ctx.ref.hide_cursor()
 	mut style := ?Style(none)
-	for y in 0..ctx.data.height {
-		for x in 0..ctx.data.width {
+	for y in 0 .. ctx.data.height {
+		for x in 0 .. ctx.data.width {
 			cell := ctx.data.get(x, y) or { Cell{} }
 
-			if prev_style := style { ctx.ref.write(prev_style.close()) }
-			if cell_style := cell.style { ctx.ref.write(cell_style.open()) }
+			if prev_style := style {
+				ctx.ref.write(prev_style.close())
+			}
+			if cell_style := cell.style {
+				ctx.ref.write(cell_style.open())
+			}
 			style = cell.style
 
 			if prev_grid := ctx.prev_data {
 				if prev_cell := prev_grid.get(x, y) {
-					if prev_cell == cell { continue }
+					if prev_cell == cell {
+						continue
+					}
 				}
 			}
 
 			ctx.ref.set_cursor_position(x + 1, y + 1)
-			if c := cell.fg_color { ctx.ref.set_color(tui.Color{ c.r, c.g, c.b }) }
+			if c := cell.fg_color {
+				ctx.ref.set_color(tui.Color{c.r, c.g, c.b})
+			}
 			if c := cell.bg_color {
-				ctx.ref.set_bg_color(tui.Color{ c.r, c.g, c.b })
+				ctx.ref.set_bg_color(tui.Color{c.r, c.g, c.b})
 			} else {
 				/*
 				if default_bg_color := ctx.default_bg_color {
@@ -453,8 +486,12 @@ fn (mut ctx Context) flush() {
 	if ctx.hide_cursor == false {
 		ctx.ref.show_cursor()
 		match ctx.cursor_style {
-			.underline { ctx.ref.write('\x1b[4 q') }
-			.vertical_bar { ctx.ref.write('\x1b[6 q') }
+			.underline {
+				ctx.ref.write('\x1b[4 q')
+			}
+			.vertical_bar {
+				ctx.ref.write('\x1b[6 q')
+			}
 			else {
 				ctx.ref.write('\x1b[0 q')
 			}
@@ -462,4 +499,3 @@ fn (mut ctx Context) flush() {
 	}
 	ctx.ref.flush()
 }
-

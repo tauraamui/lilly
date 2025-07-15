@@ -28,29 +28,31 @@ type Runner = fn () !
 pub fn new_immediate_context(cfg Config) (&Contextable, Runner) {
 	ctx := ImmediateContext{
 		render_debug: cfg.render_debug
-		ref: tui.init(
-			user_data: cfg.user_data
-			event_fn:  fn [cfg] (e &tui.Event, app voidptr) {
+		ref:          tui.init(
+			user_data:            cfg.user_data
+			event_fn:             fn [cfg] (e &tui.Event, app voidptr) {
 				cfg.event_fn(Event{e}, app)
 			}
 			frame_fn:             cfg.frame_fn
 			capture_events:       cfg.capture_events
 			use_alternate_buffer: cfg.use_alternate_buffer
-			frame_rate: 30
+			frame_rate:           30
 		)
 	}
 	return ctx, unsafe { ctx.run }
 }
 
 fn (ctx ImmediateContext) theme() themelib.Theme {
-	return themelib.Theme.new("test") or { panic("error occured trying to resolve theme: ${err}") }
+	return themelib.Theme.new('test') or { panic('error occured trying to resolve theme: ${err}') }
 }
 
 fn (mut ctx ImmediateContext) rate_limit_draws() bool {
 	return true
 }
 
-fn (mut ctx ImmediateContext) render_debug() bool { return ctx.render_debug }
+fn (mut ctx ImmediateContext) render_debug() bool {
+	return ctx.render_debug
+}
 
 fn (mut ctx ImmediateContext) window_width() int {
 	return ctx.ref.window_width

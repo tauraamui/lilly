@@ -14,7 +14,7 @@
 
 module clipboardv3
 
-struct FallbackClipboard{
+struct FallbackClipboard {
 mut:
 	content ?ClipboardContent
 }
@@ -30,4 +30,3 @@ fn (mut clipboard FallbackClipboard) get_content() ?ClipboardContent {
 fn (mut clipboard FallbackClipboard) set_content(content ClipboardContent) {
 	clipboard.content = content
 }
-

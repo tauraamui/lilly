@@ -27,16 +27,30 @@ fn (mut mock_log MockLogger) error(msg string) {
 }
 
 struct MockOS {
-  branch string
-  exit_code int
+	branch    string
+	exit_code int
 }
 
 fn (mock_os MockOS) execute(cmd string) os.Result {
-  match cmd {
-    'git rev-parse --is-inside-work-tree' { return os.Result{exit_code: mock_os.exit_code} }
-    'git branch --show-current' { return os.Result{exit_code: mock_os.exit_code, output: mock_os.branch } }
-    else { return os.Result{exit_code: 1, output: 'no matching command found'} }
-  }
+	match cmd {
+		'git rev-parse --is-inside-work-tree' {
+			return os.Result{
+				exit_code: mock_os.exit_code
+			}
+		}
+		'git branch --show-current' {
+			return os.Result{
+				exit_code: mock_os.exit_code
+				output:    mock_os.branch
+			}
+		}
+		else {
+			return os.Result{
+				exit_code: 1
+				output:    'no matching command found'
+			}
+		}
+	}
 }
 
 struct MockFS {
@@ -81,12 +95,12 @@ fn (mock_fs MockFS) config_dir() !string {
 
 fn test_open_workspace_files_and_config() {
 	mock_fs := MockFS{
-		pwd:  '/dev/fake-project'
-		dirs: {
+		pwd:           '/dev/fake-project'
+		dirs:          {
 			'/home/test-user/.config/lilly': []
 			'/dev/fake-project':             ['.git', 'src', 'research-notes']
 		}
-		files: {
+		files:         {
 			'/home/test-user/.config/lilly':        ['lilly.conf']
 			'/dev/fake-project/.git/8494859384953': ['something.patch']
 			'/dev/fake-project/src':                ['main.v', 'some_other_code.v']
@@ -98,14 +112,14 @@ fn test_open_workspace_files_and_config() {
 	}
 
 	mock_os := MockOS{
-	  branch: "git-branch-status-line"
+		branch:    'git-branch-status-line'
 		exit_code: 0
 	}
 
 	mut mock_log := MockLogger{}
 	cfg := resolve_config(mut mock_log, mock_fs.config_dir, mock_fs.read_file)
-	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker, cfg,
-		mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err}') }
+	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker,
+		cfg, mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err}') }
 
 	assert wrkspace.files == [
 		'/dev/fake-project/src/main.v',
@@ -115,20 +129,20 @@ fn test_open_workspace_files_and_config() {
 	]
 
 	assert wrkspace.config == Config{
-		leader_key: ";"
-		relative_line_numbers:     true
+		leader_key:             ';'
+		relative_line_numbers:  true
 		insert_tabs_not_spaces: false
 	}
 }
 
 fn test_workspace_config_resolves_no_background_if_missing() {
 	mock_fs := MockFS{
-		pwd:  '/dev/fake-project'
-		dirs: {
+		pwd:           '/dev/fake-project'
+		dirs:          {
 			'/home/test-user/.config/lilly': []
 			'/dev/fake-project':             ['.git', 'src', 'research-notes']
 		}
-		files: {
+		files:         {
 			'/home/test-user/.config/lilly':        ['lilly.conf']
 			'/dev/fake-project/.git/8494859384953': ['something.patch']
 			'/dev/fake-project/src':                ['main.v', 'some_other_code.v']
@@ -140,14 +154,14 @@ fn test_workspace_config_resolves_no_background_if_missing() {
 	}
 
 	mock_os := MockOS{
-	  branch: "git-branch-status-line"
+		branch:    'git-branch-status-line'
 		exit_code: 0
 	}
 
 	mut mock_log := MockLogger{}
 	cfg := resolve_config(mut mock_log, mock_fs.config_dir, mock_fs.read_file)
-	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker, cfg,
-		mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err}') }
+	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker,
+		cfg, mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err}') }
 
 	assert wrkspace.files == [
 		'/dev/fake-project/src/main.v',
@@ -164,12 +178,12 @@ fn test_workspace_config_resolves_no_background_if_missing() {
 
 fn test_workspace_config_resolves_no_selection_highlight_color_if_missing() {
 	mock_fs := MockFS{
-		pwd:  '/dev/fake-project'
-		dirs: {
+		pwd:           '/dev/fake-project'
+		dirs:          {
 			'/home/test-user/.config/lilly': []
 			'/dev/fake-project':             ['.git', 'src', 'research-notes']
 		}
-		files: {
+		files:         {
 			'/home/test-user/.config/lilly':        ['lilly.conf']
 			'/dev/fake-project/.git/8494859384953': ['something.patch']
 			'/dev/fake-project/src':                ['main.v', 'some_other_code.v']
@@ -181,14 +195,14 @@ fn test_workspace_config_resolves_no_selection_highlight_color_if_missing() {
 	}
 
 	mock_os := MockOS{
-	  branch: "git-branch-status-line"
+		branch:    'git-branch-status-line'
 		exit_code: 0
 	}
 
 	mut mock_log := MockLogger{}
 	cfg := resolve_config(mut mock_log, mock_fs.config_dir, mock_fs.read_file)
-	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker, cfg,
-		mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err}') }
+	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker,
+		cfg, mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err}') }
 
 	assert wrkspace.files == [
 		'/dev/fake-project/src/main.v',
@@ -203,15 +217,14 @@ fn test_workspace_config_resolves_no_selection_highlight_color_if_missing() {
 	}
 }
 
-
 fn test_open_workspace_files_but_fallsback_to_embedded_config() {
 	mock_fs := MockFS{
-		pwd:  '/dev/fake-project'
-		dirs: {
+		pwd:           '/dev/fake-project'
+		dirs:          {
 			'/home/test-user/.config/lilly': []
 			'/dev/fake-project':             ['src', 'research-notes']
 		}
-		files: {
+		files:         {
 			'/dev/fake-project/src':            ['main.v', 'some_other_code.v']
 			'/dev/fake-project/research-notes': ['brainstorm.pdf', 'article-links.txt']
 		}
@@ -219,14 +232,14 @@ fn test_open_workspace_files_but_fallsback_to_embedded_config() {
 	}
 
 	mock_os := MockOS{
-	  branch: "git-branch-status-line"
+		branch:    'git-branch-status-line'
 		exit_code: 0
 	}
 
 	mut mock_log := MockLogger{}
 	cfg := resolve_config(mut mock_log, mock_fs.config_dir, mock_fs.read_file)
-	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker, cfg,
-		mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err}') }
+	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker,
+		cfg, mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err}') }
 
 	assert wrkspace.files == [
 		'/dev/fake-project/src/main.v',
@@ -236,22 +249,22 @@ fn test_open_workspace_files_but_fallsback_to_embedded_config() {
 	]
 
 	assert wrkspace.config == Config{
-		leader_key:                ' '
-		relative_line_numbers:     true
+		leader_key:             ' '
+		relative_line_numbers:  true
 		insert_tabs_not_spaces: true
-		theme: "petal"
+		theme:                  'petal'
 	}
 }
 
 fn test_open_workspace_resolves_git_branch() {
 	mock_fs := MockFS{
-		pwd:  '/dev/fake-project'
-		dirs: {
+		pwd:           '/dev/fake-project'
+		dirs:          {
 			'/home/test-user/.config/lilly': []
 			'/dev/fake-project':             ['.git', 'src', 'research-notes']
 			'/dev/fake-project/.git':        ['src', 'research-notes']
 		}
-		files: {
+		files:         {
 			'/dev/fake-project/.git':           ['HEAD']
 			'/dev/fake-project/src':            ['main.v', 'some_other_code.v']
 			'/dev/fake-project/research-notes': ['brainstorm.pdf', 'article-links.txt']
@@ -260,14 +273,14 @@ fn test_open_workspace_resolves_git_branch() {
 	}
 
 	mock_os := MockOS{
-	  branch: "feat/git-branch-status-line"
+		branch:    'feat/git-branch-status-line'
 		exit_code: 0
 	}
 
 	mut mock_log := MockLogger{}
 	cfg := resolve_config(mut mock_log, mock_fs.config_dir, mock_fs.read_file)
-	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker, cfg,
-		mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err}') }
+	wrkspace := open_workspace(mut mock_log, './', mock_fs.is_dir, mock_fs.dir_walker,
+		cfg, mock_fs.config_dir, mock_fs.read_file, mock_os.execute) or { panic('${err}') }
 
 	assert wrkspace.git_branch == '\uE0A0 feat/git-branch-status-line'
 
@@ -279,9 +292,9 @@ fn test_open_workspace_resolves_git_branch() {
 	]
 
 	assert wrkspace.config == Config{
-		leader_key:                ' '
-		relative_line_numbers:     true
+		leader_key:             ' '
+		relative_line_numbers:  true
 		insert_tabs_not_spaces: true
-		theme: "petal"
+		theme:                  'petal'
 	}
 }

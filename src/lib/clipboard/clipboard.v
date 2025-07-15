@@ -22,7 +22,7 @@ mut:
 
 pub fn new() Clipboard {
 	$if windows {
-		return clipboard.new()
+		return new()
 	} $else {
 		return new_clipboard()
 	}

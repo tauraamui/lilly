@@ -46,12 +46,14 @@ pub fn (mode Mode) draw(mut ctx draw.Contextable, x int, y int) int {
 	status_line_x := x
 	status_color := mode.color()
 	mut offset := 0
-	draw.paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, '${left_rounded}${block}')
+	draw.paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color,
+		'${left_rounded}${block}')
 	offset += 2
 	draw.paint_text_on_background(mut ctx, status_line_x + offset, status_line_y, status_color,
 		draw.Color{0, 0, 0}, label)
 	offset += label.len
-	draw.paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color, '${block}${slant_right_flat_bottom}')
+	draw.paint_shape_text(mut ctx, status_line_x + offset, status_line_y, status_color,
+		'${block}${slant_right_flat_bottom}')
 	offset += 2
 	return status_line_x + offset
 }
@@ -85,7 +87,7 @@ pub fn (mode Mode) str() string {
 		.leader { 'LEADER' }
 		.pending_delete { 'NORMAL' }
 		.replace { 'NORMAL' }
-		.pending_z { "NORMAL" }
+		.pending_z { 'NORMAL' }
 		.pending_g { 'NORMAL' }
 		.pending_f { 'SEARCH' }
 		.replacing { 'NORMAL' }

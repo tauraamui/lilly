@@ -29,17 +29,19 @@ import log
 import time
 
 struct TestDrawer {
-	draw_text_callback fn (x int, y int, text string) @[required]
+	draw_text_callback fn (x int, y int, text string)           @[required]
 	draw_rect_callback fn (x int, y int, width int, height int) @[required]
 	window_height      int
 }
 
 fn (drawer TestDrawer) theme() themelib.Theme {
-	return themelib.Theme.new("test") or { panic("error occurred loading theme: ${err}") }
+	return themelib.Theme.new('test') or { panic('error occurred loading theme: ${err}') }
 }
 
 fn (mut drawer TestDrawer) draw_text(x int, y int, text string) {
-	if drawer.draw_text_callback == unsafe { nil } { return }
+	if drawer.draw_text_callback == unsafe { nil } {
+		return
+	}
 	drawer.draw_text_callback(x, y, text)
 }
 
@@ -48,7 +50,9 @@ fn (mut drawer TestDrawer) write(text string) {
 }
 
 fn (mut drawer TestDrawer) draw_rect(x int, y int, width int, height int) {
-	if drawer.draw_rect_callback == unsafe { nil } { return }
+	if drawer.draw_rect_callback == unsafe { nil } {
+		return
+	}
 	drawer.draw_rect_callback(x, y, width, height)
 }
 
@@ -56,25 +60,52 @@ fn (mut drawer TestDrawer) draw_point(x int, y int) {
 	time.sleep(1 * time.millisecond)
 }
 
-fn (mut drawer TestDrawer) render_debug() bool { return false }
+fn (mut drawer TestDrawer) render_debug() bool {
+	return false
+}
+
 fn (mut drawer TestDrawer) set_color(c draw.Color) {}
+
 fn (mut drawer TestDrawer) set_bg_color(c draw.Color) {}
+
 fn (mut drawer TestDrawer) reset_color() {}
+
 fn (mut drawer TestDrawer) reset_bg_color() {}
-fn (mut drawer TestDrawer) rate_limit_draws() bool { return false }
-fn (mut drawer TestDrawer) window_width() int { return 500 }
-fn (mut drawer TestDrawer) window_height() int { return drawer.window_height }
+
+fn (mut drawer TestDrawer) rate_limit_draws() bool {
+	return false
+}
+
+fn (mut drawer TestDrawer) window_width() int {
+	return 500
+}
+
+fn (mut drawer TestDrawer) window_height() int {
+	return drawer.window_height
+}
+
 fn (mut drawer TestDrawer) set_cursor_position(x int, y int) {}
+
 fn (mut drawer TestDrawer) set_cursor_to_block() {}
+
 fn (mut drawer TestDrawer) set_cursor_to_underline() {}
+
 fn (mut drawer TestDrawer) set_cursor_to_vertical_bar() {}
+
 fn (mut drawer TestDrawer) show_cursor() {}
+
 fn (mut drawer TestDrawer) hide_cursor() {}
+
 fn (mut drawer TestDrawer) set_style(s draw.Style) {}
+
 fn (mut drawer TestDrawer) clear_style() {}
+
 fn (mut drawer TestDrawer) bold() {}
+
 fn (mut drawer TestDrawer) reset() {}
+
 fn (mut drawer TestDrawer) clear() {}
+
 fn (mut drawer TestDrawer) flush() {}
 
 const example_file = 'module history\n\nimport datatypes\nimport lib.diff { Op }\n\npub struct History {\nmut:\n\tundos datatypes.Stack[Op] // will actually be type diff.Op\n\tredos datatypes.Stack[Op]\n}'
@@ -119,12 +150,15 @@ fn test_selection_start_smallest_wins_check_2() {
 fn test_calc_cursor_x_offset() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log:       log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
-	fake_view.buffer.lines = ['\t1. first line', '\t\t2. second line', '\t\t\t3. third line', '\t\t\t\t4. fourth line']
+	fake_view.buffer.lines = ['\t1. first line', '\t\t2. second line', '\t\t\t3. third line',
+		'\t\t\t\t4. fourth line']
 
 	fake_view.cursor.pos.y = 0
 	fake_view.cursor.pos.x = 1
@@ -150,10 +184,12 @@ fn test_calc_cursor_x_offset() {
 fn test_dd_deletes_current_line_at_start_of_doc() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log:       log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. fourth line']
 	fake_view.cursor.pos.y = 0
@@ -168,10 +204,12 @@ fn test_dd_deletes_current_line_at_start_of_doc() {
 fn test_dd_deletes_current_line_in_middle_of_doc() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log:       log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. fourth line']
 	fake_view.cursor.pos.y = 2
@@ -187,10 +225,12 @@ fn test_dd_deletes_current_line_in_middle_of_doc() {
 fn test_dd_deletes_current_line_at_end_of_doc() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log:       log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line']
@@ -209,10 +249,12 @@ fn test_dd_deletes_current_line_at_end_of_doc() {
 fn test_dd_deletes_current_line_and_p_reinserts_it_correctly() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log:       log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. forth line']
 	fake_view.cursor.pos.y = 0
@@ -223,12 +265,13 @@ fn test_dd_deletes_current_line_and_p_reinserts_it_correctly() {
 
 	assert fake_view.buffer.lines == ['2. second line', '3. third line', '4. forth line']
 	assert fake_view.clipboard.get_content()! == clipboardv3.ClipboardContent{
-		type: .block,
-		data: "1. first line"
+		type: .block
+		data: '1. first line'
 	}
 
 	fake_view.p()
-	assert fake_view.buffer.lines == ['2. second line', '1. first line', '3. third line', '4. forth line']
+	assert fake_view.buffer.lines == ['2. second line', '1. first line', '3. third line',
+		'4. forth line']
 	assert fake_view.leader_state.mode == .normal
 	assert fake_view.cursor.pos.y == 1
 	assert fake_view.cursor.pos.x == 0
@@ -237,10 +280,12 @@ fn test_dd_deletes_current_line_and_p_reinserts_it_correctly() {
 fn test_visual_line_select_delete_and_paste_works_correctly() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log:      log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = ['1. first line', '2. second line', '3. third line', '4. fourth line']
 	fake_view.j()
@@ -249,24 +294,28 @@ fn test_visual_line_select_delete_and_paste_works_correctly() {
 	fake_view.d()
 
 	assert fake_view.clipboard.get_content()! == clipboardv3.ClipboardContent{
-		type: .block,
-		data: "2. second line\n3. third line"
+		type: .block
+		data: '2. second line\n3. third line'
 	}
 
 	fake_view.p()
 
-	assert fake_view.buffer.lines == ['1. first line', '4. fourth line', '2. second line', '3. third line']
+	assert fake_view.buffer.lines == ['1. first line', '4. fourth line', '2. second line',
+		'3. third line']
 }
 
 fn test_visual_select_copy_and_paste_works_correctly() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log:       log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
-	fake_view.buffer.lines = ['This is kind of a mega line right? It is pretty long!', '2. second line', '3. third line', '4. fourth line']
+	fake_view.buffer.lines = ['This is kind of a mega line right? It is pretty long!',
+		'2. second line', '3. third line', '4. fourth line']
 
 	fake_view.cursor.pos.y = 0
 
@@ -290,7 +339,7 @@ fn test_visual_select_copy_and_paste_works_correctly() {
 
 	assert fake_view.clipboard.get_content()! == clipboardv3.ClipboardContent{
 		type: .inline
-		data: "of a mega line"
+		data: 'of a mega line'
 	}
 
 	fake_view.j()
@@ -299,7 +348,7 @@ fn test_visual_select_copy_and_paste_works_correctly() {
 	fake_view.e()
 
 	fake_view.p()
-	assert fake_view.buffer.lines[1] == "2. secondof a mega line line"
+	assert fake_view.buffer.lines[1] == '2. secondof a mega line line'
 }
 
 /*
@@ -346,17 +395,19 @@ fn test_visual_select_across_multiple_lines_copy_and_paste_works_correctly() {
 fn test_insert_text() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['1. first line', '2. second line']
 	// ensure cursor is set to sit on the first line
 	fake_view.cursor.pos.y = 0
 
-	fake_view.insert_text("Random words!")
+	fake_view.insert_text('Random words!')
 
 	assert fake_view.leader_state.mode == .normal
 	assert fake_view.buffer.lines == ['Random words!1. first line', '2. second line']
@@ -367,10 +418,12 @@ fn test_insert_text() {
 fn test_o_inserts_sentance_line() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['1. first line', '2. second line']
@@ -388,10 +441,12 @@ fn test_o_inserts_sentance_line() {
 fn test_o_inserts_sentance_line_end_of_document() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['1. first line', '2. second line']
@@ -409,10 +464,12 @@ fn test_o_inserts_sentance_line_end_of_document() {
 fn test_o_inserts_line_and_auto_indents() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['	1. first line']
@@ -430,10 +487,12 @@ fn test_o_inserts_line_and_auto_indents() {
 fn test_o_auto_indents_but_clears_if_nothing_added_to_line() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['	1. first line']
@@ -475,10 +534,12 @@ fn test_cursor_selection_start_and_end_methods_basic_situation() {
 fn test_v_toggles_visual_mode_and_starts_selection() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['1. first line']
@@ -546,10 +607,12 @@ fn resolve_test_syntax() syntax.Syntax {
 fn test_shift_v_toggles_visual_line_mode_and_starts_selection() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['1. first line']
@@ -571,11 +634,12 @@ mut:
 }
 
 fn (mockctx MockContextable) theme() themelib.Theme {
-	return themelib.Theme.new("test") or { panic("error occurred loading theme: ${err}") }
+	return themelib.Theme.new('test') or { panic('error occurred loading theme: ${err}') }
 }
 
-
-fn (mockctx MockContextable) render_debug() bool { return false }
+fn (mockctx MockContextable) render_debug() bool {
+	return false
+}
 
 fn (mockctx MockContextable) rate_limit_draws() bool {
 	return false
@@ -641,18 +705,20 @@ struct DrawnTextRec {
 }
 
 struct DrawnText {
-	x int
-	y int
+	x    int
+	y    int
 	data string
 }
 
 fn test_enter_from_start_of_line() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .insert }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .insert
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = [
@@ -674,10 +740,12 @@ fn test_enter_from_start_of_line() {
 fn test_enter_moves_trailing_segment_to_next_line_and_moves_cursor_in_front() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .insert }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .insert
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = [
@@ -699,10 +767,12 @@ fn test_enter_moves_trailing_segment_to_next_line_and_moves_cursor_in_front() {
 fn test_enter_moves_trailing_segment_to_next_line_and_moves_cursor_to_past_prefix_whitespace() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .insert }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .insert
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = [
 		'    1. first line with whitespace prefix',
@@ -723,10 +793,12 @@ fn test_enter_moves_trailing_segment_to_next_line_and_moves_cursor_to_past_prefi
 fn test_enter_inserts_line_at_cur_pos_and_auto_indents() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .insert }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .insert
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['	indented first line']
@@ -744,10 +816,12 @@ fn test_enter_inserts_line_at_cur_pos_and_auto_indents() {
 fn test_enter_auto_indents_but_clears_if_nothing_added_to_line() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .insert }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .insert
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['	indented first line']
@@ -767,10 +841,12 @@ fn test_enter_auto_indents_but_clears_if_nothing_added_to_line() {
 fn test_backspace_deletes_char_from_end_of_sentance() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	// manually set the "document" contents
 	fake_view.buffer.lines = ['single line of text!']
@@ -791,10 +867,12 @@ fn test_backspace_deletes_char_from_end_of_sentance() {
 fn test_backspace_deletes_char_from_start_of_sentance() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.leader_state.mode = .insert
 
@@ -813,10 +891,12 @@ fn test_backspace_deletes_char_from_start_of_sentance() {
 fn test_backspace_moves_line_up_to_previous_line() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.leader_state.mode = .insert
 
@@ -835,10 +915,12 @@ fn test_backspace_moves_line_up_to_previous_line() {
 fn test_backspace_moves_line_up_to_end_of_previous_line() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.leader_state.mode = .insert
 
@@ -860,10 +942,12 @@ fn test_backspace_moves_line_up_to_end_of_previous_line() {
 fn test_backspace_at_start_of_sentance_first_line_does_nothing() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.leader_state.mode = .insert
 
@@ -881,10 +965,12 @@ fn test_backspace_at_start_of_sentance_first_line_does_nothing() {
 
 fn test_move_cursor_left_with_h_proceeds_to_start_of_line() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv3.new()
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    clipboardv3.new()
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = ['1. first line']
 
@@ -901,7 +987,9 @@ fn test_move_cursor_left_with_h_proceeds_to_start_of_line() {
 	assert fake_view.cursor.pos.x == 7
 	assert fake_view.cursor.pos.y == 0
 
-	for _ in 0..7 { fake_view.h() }
+	for _ in 0 .. 7 {
+		fake_view.h()
+	}
 
 	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 0
@@ -911,15 +999,16 @@ fn test_move_cursor_left_with_h_proceeds_to_start_of_line() {
 	// ensure cursor within document bounds
 	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 0
-
 }
 
 fn test_move_cursor_right_with_l_proceeds_to_end_of_line() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv3.new()
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    clipboardv3.new()
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = ['1. first line']
 
@@ -936,7 +1025,9 @@ fn test_move_cursor_right_with_l_proceeds_to_end_of_line() {
 	assert fake_view.cursor.pos.x == 7
 	assert fake_view.cursor.pos.y == 0
 
-	for _ in 0..5 { fake_view.l() }
+	for _ in 0 .. 5 {
+		fake_view.l()
+	}
 
 	assert fake_view.cursor.pos.x == 12
 	assert fake_view.cursor.pos.y == 0
@@ -950,10 +1041,12 @@ fn test_move_cursor_right_with_l_proceeds_to_end_of_line() {
 
 fn test_move_cursor_down_with_j_proceeds_to_next_line_with_x_maxed() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv3.new()
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    clipboardv3.new()
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = [
 		'1. first line with five words',
@@ -976,7 +1069,9 @@ fn test_move_cursor_down_with_j_proceeds_to_next_line_with_x_maxed() {
 	assert fake_view.cursor.pos.x == 5
 	assert fake_view.cursor.pos.y == 2
 
-	for _ in 0..2 { fake_view.j() }
+	for _ in 0 .. 2 {
+		fake_view.j()
+	}
 
 	assert fake_view.cursor.pos.x == 5
 	assert fake_view.cursor.pos.y == 4
@@ -990,10 +1085,12 @@ fn test_move_cursor_down_with_j_proceeds_to_next_line_with_x_maxed() {
 
 fn test_move_cursor_up_with_k_proceeds_to_previous_line_with_x_maxed() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv3.new()
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    clipboardv3.new()
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = [
 		'1. first line with five words',
@@ -1016,7 +1113,9 @@ fn test_move_cursor_up_with_k_proceeds_to_previous_line_with_x_maxed() {
 	assert fake_view.cursor.pos.x == 5
 	assert fake_view.cursor.pos.y == 2
 
-	for _ in 0..2 { fake_view.k() }
+	for _ in 0 .. 2 {
+		fake_view.k()
+	}
 
 	assert fake_view.cursor.pos.x == 5
 	assert fake_view.cursor.pos.y == 0
@@ -1030,10 +1129,12 @@ fn test_move_cursor_up_with_k_proceeds_to_previous_line_with_x_maxed() {
 
 fn test_move_cursor_left_with_left_proceeds_to_start_of_line() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv3.new()
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    clipboardv3.new()
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = ['1. first line']
 
@@ -1050,7 +1151,9 @@ fn test_move_cursor_left_with_left_proceeds_to_start_of_line() {
 	assert fake_view.cursor.pos.x == 7
 	assert fake_view.cursor.pos.y == 0
 
-	for _ in 0..7 { fake_view.left() }
+	for _ in 0 .. 7 {
+		fake_view.left()
+	}
 
 	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 0
@@ -1060,15 +1163,16 @@ fn test_move_cursor_left_with_left_proceeds_to_start_of_line() {
 	// ensure cursor within document bounds
 	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 0
-
 }
 
 fn test_move_cursor_right_with_right_proceeds_to_end_of_line() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv3.new()
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    clipboardv3.new()
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = ['1. first line']
 
@@ -1085,7 +1189,9 @@ fn test_move_cursor_right_with_right_proceeds_to_end_of_line() {
 	assert fake_view.cursor.pos.x == 7
 	assert fake_view.cursor.pos.y == 0
 
-	for _ in 0..5 { fake_view.right() }
+	for _ in 0 .. 5 {
+		fake_view.right()
+	}
 
 	assert fake_view.cursor.pos.x == 12
 	assert fake_view.cursor.pos.y == 0
@@ -1099,10 +1205,12 @@ fn test_move_cursor_right_with_right_proceeds_to_end_of_line() {
 
 fn test_move_cursor_down_with_down_proceeds_to_next_line_with_x_maxed() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv3.new()
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    clipboardv3.new()
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = [
 		'1. first line with five words',
@@ -1125,7 +1233,9 @@ fn test_move_cursor_down_with_down_proceeds_to_next_line_with_x_maxed() {
 	assert fake_view.cursor.pos.x == 5
 	assert fake_view.cursor.pos.y == 2
 
-	for _ in 0..2 { fake_view.down() }
+	for _ in 0 .. 2 {
+		fake_view.down()
+	}
 
 	assert fake_view.cursor.pos.x == 5
 	assert fake_view.cursor.pos.y == 4
@@ -1139,10 +1249,12 @@ fn test_move_cursor_down_with_down_proceeds_to_next_line_with_x_maxed() {
 
 fn test_move_cursor_down_with_down_proceeds_to_next_line_with_x_maxed_contains_blank_lines() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv3.new()
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    clipboardv3.new()
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = [
 		'1. first line with five words',
@@ -1165,7 +1277,9 @@ fn test_move_cursor_down_with_down_proceeds_to_next_line_with_x_maxed_contains_b
 	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 2
 
-	for _ in 0..2 { fake_view.down() }
+	for _ in 0 .. 2 {
+		fake_view.down()
+	}
 
 	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 4
@@ -1179,10 +1293,12 @@ fn test_move_cursor_down_with_down_proceeds_to_next_line_with_x_maxed_contains_b
 
 fn test_move_cursor_up_with_up_proceeds_to_previous_line_with_x_maxed() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv3.new()
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    clipboardv3.new()
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = [
 		'1. first line with five words',
@@ -1205,7 +1321,9 @@ fn test_move_cursor_up_with_up_proceeds_to_previous_line_with_x_maxed() {
 	assert fake_view.cursor.pos.x == 5
 	assert fake_view.cursor.pos.y == 2
 
-	for _ in 0..2 { fake_view.k() }
+	for _ in 0 .. 2 {
+		fake_view.k()
+	}
 
 	assert fake_view.cursor.pos.x == 5
 	assert fake_view.cursor.pos.y == 0
@@ -1219,16 +1337,18 @@ fn test_move_cursor_up_with_up_proceeds_to_previous_line_with_x_maxed() {
 
 fn test_move_cursor_up_with_up_proceeds_to_next_line_with_x_maxed_contains_blank_lines() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv3.new()
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    clipboardv3.new()
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = [
 		'1. first line with five words',
-		"",
+		'',
 		'3. third line with five words',
-		"",
+		'',
 		'5. fifth line with five words',
 	]
 
@@ -1245,7 +1365,9 @@ fn test_move_cursor_up_with_up_proceeds_to_next_line_with_x_maxed_contains_blank
 	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 2
 
-	for _ in 0..2 { fake_view.k() }
+	for _ in 0 .. 2 {
+		fake_view.k()
+	}
 
 	assert fake_view.cursor.pos.x == 0
 	assert fake_view.cursor.pos.y == 0
@@ -1260,10 +1382,12 @@ fn test_move_cursor_up_with_up_proceeds_to_next_line_with_x_maxed_contains_blank
 fn test_left_arrow_at_start_of_sentence_in_insert_mode() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.leader_state.mode = .insert
 
@@ -1284,10 +1408,12 @@ fn test_left_arrow_at_start_of_sentence_in_insert_mode() {
 fn test_left_arrow_at_end_of_sentence_in_insert_mode() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.leader_state.mode = .insert
 
@@ -1307,10 +1433,12 @@ fn test_left_arrow_at_end_of_sentence_in_insert_mode() {
 fn test_right_arrow_at_start_of_sentence_in_insert_mode() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.leader_state.mode = .insert
 
@@ -1330,10 +1458,12 @@ fn test_right_arrow_at_start_of_sentence_in_insert_mode() {
 fn test_right_arrow_at_end_of_sentence_in_insert_mode() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.leader_state.mode = .insert
 
@@ -1353,10 +1483,12 @@ fn test_right_arrow_at_end_of_sentence_in_insert_mode() {
 fn test_right_arrow_on_empty_line_in_normal_mode() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	// fake_view.leader_state.mode = .insert
 
@@ -1376,10 +1508,12 @@ fn test_right_arrow_on_empty_line_in_normal_mode() {
 fn test_tab_inserts_spaces() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .insert }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .insert
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	// manually set the documents contents
@@ -1400,13 +1534,15 @@ fn test_tab_inserts_spaces() {
 fn test_tab_inserts_tabs_not_spaces_if_enabled() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .insert }
-		clipboard: mut clip
-		config:    workspace.Config{
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .insert
+		}
+		clipboard:    mut clip
+		config:       workspace.Config{
 			insert_tabs_not_spaces: true
 		}
-		buffer: buffer.Buffer.new("", .legacy)
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	// manually set the documents contents
@@ -1426,13 +1562,15 @@ fn test_tab_inserts_tabs_not_spaces_if_enabled() {
 
 fn test_visual_indent_indents_highlighted_lines() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .visual }
-		clipboard: clipboardv3.new()
-		config:    workspace.Config{
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .visual
+		}
+		clipboard:    clipboardv3.new()
+		config:       workspace.Config{
 			insert_tabs_not_spaces: true
 		}
-		buffer: buffer.Buffer.new("", .legacy)
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = [
@@ -1465,13 +1603,15 @@ fn test_visual_indent_indents_highlighted_lines() {
 
 fn test_visual_unindent_unindents_highlighted_lines() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .visual_line }
-		clipboard: clipboardv3.new()
-		config:    workspace.Config{
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .visual_line
+		}
+		clipboard:    clipboardv3.new()
+		config:       workspace.Config{
 			insert_tabs_not_spaces: true
 		}
-		buffer: buffer.Buffer.new("", .legacy)
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = [
@@ -1505,10 +1645,12 @@ fn test_visual_unindent_unindents_highlighted_lines() {
 fn test_visual_insert_mode_and_delete_in_place() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	// manually set the documents contents
@@ -1527,10 +1669,12 @@ fn test_visual_insert_mode_and_delete_in_place() {
 fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	// manually set the documents contents
@@ -1550,10 +1694,12 @@ fn test_visual_insert_mode_selection_move_down_once_and_delete() {
 fn test_visual_selection_copy_starts_and_ends_on_same_line_and_selects_whole_line() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	// manually set the documents contents
@@ -1574,18 +1720,20 @@ fn test_visual_selection_copy_starts_and_ends_on_same_line_and_selects_whole_lin
 	fake_view.y()
 
 	assert fake_view.clipboard.get_content()! == clipboardv3.ClipboardContent{
-		type: .inline,
-		data: "2. second line"
+		type: .inline
+		data: '2. second line'
 	}
 }
 
 fn test_visual_selection_mode_escaped_leaves_cursor_in_final_position() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	// manually set the documents contents
@@ -1861,10 +2009,12 @@ fn test_copying_full_lines_with_visual_line_mode_and_pasting() {
 fn test_search_is_toggled() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.search()
@@ -1967,10 +2117,12 @@ fn test_search_within_for_multiple_lines_multiple_matches_per_line() {
 
 fn test_move_cursor_with_b_from_start_of_line_which_preceeds_a_blank_line() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv3.new()
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    clipboardv3.new()
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = ['1. first line', '', '3. third line']
 
@@ -1985,10 +2137,12 @@ fn test_move_cursor_with_b_from_start_of_line_which_preceeds_a_blank_line() {
 
 fn test_jump_cursor_up_to_next_blank_line() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv3.new()
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    clipboardv3.new()
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = [
 		'# Top of the file',
@@ -2010,10 +2164,12 @@ fn test_jump_cursor_up_to_next_blank_line() {
 
 fn test_jump_cursor_down_to_next_blank_line() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv3.new()
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    clipboardv3.new()
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = [
 		'# Top of the file',
@@ -2037,10 +2193,12 @@ fn test_jump_cursor_down_to_next_blank_line() {
 
 fn test_calc_w_move_end_of_line_jumps_down_to_next_line_which_is_blank() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv3.new()
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    clipboardv3.new()
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = [
 		'# Top of the file',
@@ -2173,34 +2331,38 @@ fn test_calc_w_move_amount_code_line() {
 fn test_calc_w_move_cursor_remains_on_same_line_when_encountering_floating_underscore() {
 	// manually set the documents contents
 	fake_lines := [
-		"mut line_segments, _ := resolve_line_segments(resolve_text_syntax(), line, 0, false)",
-		"this is the second line!"
+		'mut line_segments, _ := resolve_line_segments(resolve_text_syntax(), line, 0, false)',
+		'this is the second line!',
 	]
 
-	fake_lines_str := arrays.join_to_string(fake_lines, '\n', fn (e string) string { return e })
+	fake_lines_str := arrays.join_to_string(fake_lines, '\n', fn (e string) string {
+		return e
+	})
 
-	mut fake_cursor_pos := ui.CursorPos{ x: 1 }
+	mut fake_cursor_pos := ui.CursorPos{
+		x: 1
+	}
 
 	mut amount := calc_w_move_amount(fake_cursor_pos, fake_lines_str, false)
 
 	assert amount == 3
 	fake_cursor_pos.x += amount
-	assert fake_lines_str[fake_cursor_pos.x].ascii_str() == "l"
+	assert fake_lines_str[fake_cursor_pos.x].ascii_str() == 'l'
 
 	amount = calc_w_move_amount(fake_cursor_pos, fake_lines_str, false)
 	assert amount == 13
 	fake_cursor_pos.x += amount
-	assert fake_lines_str[fake_cursor_pos.x].ascii_str() == ","
+	assert fake_lines_str[fake_cursor_pos.x].ascii_str() == ','
 
 	amount = calc_w_move_amount(fake_cursor_pos, fake_lines_str, false)
 	assert amount == 2
 	fake_cursor_pos.x += amount
-	assert fake_lines_str[fake_cursor_pos.x].ascii_str() == "_"
+	assert fake_lines_str[fake_cursor_pos.x].ascii_str() == '_'
 
 	amount = calc_w_move_amount(fake_cursor_pos, fake_lines_str, false)
 	assert amount == 2
 	fake_cursor_pos.x += amount
-	assert fake_lines_str[fake_cursor_pos.x].ascii_str() == ":"
+	assert fake_lines_str[fake_cursor_pos.x].ascii_str() == ':'
 }
 
 fn test_calc_w_move_cursor_to_next_line_with_plain_comments() {
@@ -2636,10 +2798,12 @@ fn test_calc_b_move_amount_general() {
 fn test_a_enters_insert_mode_after_cursor_position() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = ['single line of text!']
@@ -2655,10 +2819,12 @@ fn test_a_enters_insert_mode_after_cursor_position() {
 fn test_shift_a_enters_insert_mode_at_the_end_of_current_line() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = ['some line of text', 'single line of text!', 'a third line!']
@@ -2677,13 +2843,15 @@ fn test_shift_a_enters_insert_mode_at_the_end_of_current_line() {
 fn test_r_replaces_character_in_middle_of_line() {
 	mut clip := clipboardv3.new()
 	mut lilly := Lilly{
-		clipboard:         mut clip
+		clipboard: mut clip
 	}
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = ['some random line', 'another line of text', 'one last line']
@@ -2709,13 +2877,15 @@ fn test_r_replaces_character_in_middle_of_line() {
 fn test_r_replaces_character_with_special_character() {
 	mut clip := clipboardv3.new()
 	mut lilly := Lilly{
-		clipboard:         mut clip
+		clipboard: mut clip
 	}
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = ['some random line', 'another line of text', 'one last line']
@@ -2741,13 +2911,15 @@ fn test_r_replaces_character_with_special_character() {
 fn test_r_replaces_character_with_space() {
 	mut clip := clipboardv3.new()
 	mut lilly := Lilly{
-		clipboard:         mut clip
+		clipboard: mut clip
 	}
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = ['some random line', 'another line of text', 'one last line']
@@ -2773,13 +2945,15 @@ fn test_r_replaces_character_with_space() {
 fn test_r_doesnt_change_anything_when_escape_is_used() {
 	mut clip := clipboardv3.new()
 	mut lilly := Lilly{
-		clipboard:         mut clip
+		clipboard: mut clip
 	}
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = ['some random line', 'another line of text', 'one last line']
@@ -2804,13 +2978,15 @@ fn test_r_doesnt_change_anything_when_escape_is_used() {
 fn test_r_doesnt_change_anything_when_enter_is_used() {
 	mut clip := clipboardv3.new()
 	mut lilly := Lilly{
-		clipboard:         mut clip
+		clipboard: mut clip
 	}
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = ['some random line', 'another line of text', 'one last line']
@@ -2835,10 +3011,12 @@ fn test_r_doesnt_change_anything_when_enter_is_used() {
 fn test_shift_o_adds_line_above_cursor() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = ['some line of text', 'another line of text']
@@ -2857,10 +3035,12 @@ fn test_shift_o_adds_line_above_cursor() {
 fn test_shift_o_adds_line_above_cursor_at_start_of_file() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = ['some line of text', 'another line of text']
@@ -2880,10 +3060,12 @@ fn test_x_removes_character_in_middle_of_line() {
 	mut clip := clipboardv3.new()
 
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = ['this is a lines of text']
@@ -2901,10 +3083,12 @@ fn test_x_removes_character_and_shifts_cursor_back_at_end_of_line() {
 	mut clip := clipboardv3.new()
 
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = ['this is a lines of text']
@@ -2940,13 +3124,15 @@ fn test_find_position_within_word_lines() {
 fn test_auto_closing_square_brace() {
 	mut clip := clipboardv3.new()
 	mut lilly := Lilly{
-		clipboard:         mut clip
+		clipboard: mut clip
 	}
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = ['']
@@ -2969,13 +3155,15 @@ fn test_auto_closing_square_brace() {
 fn test_auto_closing_curley_brace() {
 	mut clip := clipboardv3.new()
 	mut lilly := Lilly{
-		clipboard:         mut clip
+		clipboard: mut clip
 	}
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = ['']
@@ -2998,13 +3186,15 @@ fn test_auto_closing_curley_brace() {
 fn test_auto_closing_curley_brace_inputting_secondary_close_should_only_move_cursor_pos() {
 	mut clip := clipboardv3.new()
 	mut lilly := Lilly{
-		clipboard:         mut clip
+		clipboard: mut clip
 	}
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = ['']
@@ -3036,13 +3226,15 @@ fn test_auto_closing_curley_brace_inputting_secondary_close_should_only_move_cur
 fn test_auto_closing_square_brace_inputting_secondary_close_should_only_move_cursor_pos() {
 	mut clip := clipboardv3.new()
 	mut lilly := Lilly{
-		clipboard:         mut clip
+		clipboard: mut clip
 	}
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = ['']
@@ -3073,13 +3265,15 @@ fn test_auto_closing_square_brace_inputting_secondary_close_should_only_move_cur
 
 fn test_search_line_correct_overwrite() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: clipboardv3.new()
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    clipboardv3.new()
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
-	fake_view.cmd_buf.err_msg = "previously run unrecognised command error message"
+	fake_view.cmd_buf.err_msg = 'previously run unrecognised command error message'
 
 	fake_view.search()
 
@@ -3092,26 +3286,40 @@ fn test_search_line_correct_overwrite() {
 }
 
 struct DrawnRect {
-	x int
-	y int
-	width int
+	x      int
+	y      int
+	width  int
 	height int
 }
 
 fn test_view_draw_document_with_method_using_buffer_view() {
-	mut buf := buffer.Buffer.new("", .legacy)
-    buf.lines = [
-        'Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5',
-        'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10',
-        'Line 11', 'Line 12', 'Line 13', 'Line 14', 'Line 15'
-    ]
+	mut buf := buffer.Buffer.new('', .legacy)
+	buf.lines = [
+		'Line 1',
+		'Line 2',
+		'Line 3',
+		'Line 4',
+		'Line 5',
+		'Line 6',
+		'Line 7',
+		'Line 8',
+		'Line 9',
+		'Line 10',
+		'Line 11',
+		'Line 12',
+		'Line 13',
+		'Line 14',
+		'Line 15',
+	]
 
-    mut fake_view := View{
-		log: log.Log{}
-        leader_state: ViewLeaderState{ mode: .normal }
-        height: 15 // Set a small height for testing
-		buffer: buf
-    }
+	mut fake_view := View{
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		height:       15 // Set a small height for testing
+		buffer:       buf
+	}
 	fake_view.buf_view = ui.BufferView.new([], 0)
 
 	assert fake_view.from == 0
@@ -3123,9 +3331,13 @@ fn test_view_draw_document_with_method_using_buffer_view() {
 	mut drawn_rects_ref := &drawn_rects
 
 	mut mock_drawer := TestDrawer{
-		draw_text_callback: fn [mut drawn_text_ref] (x int, y int, text string) { drawn_text_ref << text }
-		draw_rect_callback: fn [mut drawn_rects_ref] (x int, y int, width int, height int) { drawn_rects_ref << DrawnRect{ x, y, width, height } }
-		window_height: fake_view.height
+		draw_text_callback: fn [mut drawn_text_ref] (x int, y int, text string) {
+			drawn_text_ref << text
+		}
+		draw_rect_callback: fn [mut drawn_rects_ref] (x int, y int, width int, height int) {
+			drawn_rects_ref << DrawnRect{x, y, width, height}
+		}
+		window_height:      fake_view.height
 	}
 	fake_view.update_to()
 	fake_view.draw_document(mut mock_drawer)
@@ -3133,14 +3345,76 @@ fn test_view_draw_document_with_method_using_buffer_view() {
 	assert fake_view.to == 13
 	drawn_text_with_status_line_removed := drawn_text[..drawn_text.len - 13]
 	assert drawn_text_with_status_line_removed == [
-		"1", "Line", " ", "1", "2", "Line", " ", "2", "3", "Line", " ", "3", "4", "Line", " ", "4",
-		"5", "Line", " ", "5", "6", "Line", " ", "6", "7", "Line", " ", "7", "8", "Line", " ", "8",
-		"9", "Line", " ", "9", "10", "Line", " ", "10", "11", "Line", " ", "11", "12", "Line", " ", "12",
-		"13", "Line", " ", "13", "14", "Line", " ", "14"
+		'1',
+		'Line',
+		' ',
+		'1',
+		'2',
+		'Line',
+		' ',
+		'2',
+		'3',
+		'Line',
+		' ',
+		'3',
+		'4',
+		'Line',
+		' ',
+		'4',
+		'5',
+		'Line',
+		' ',
+		'5',
+		'6',
+		'Line',
+		' ',
+		'6',
+		'7',
+		'Line',
+		' ',
+		'7',
+		'8',
+		'Line',
+		' ',
+		'8',
+		'9',
+		'Line',
+		' ',
+		'9',
+		'10',
+		'Line',
+		' ',
+		'10',
+		'11',
+		'Line',
+		' ',
+		'11',
+		'12',
+		'Line',
+		' ',
+		'12',
+		'13',
+		'Line',
+		' ',
+		'13',
+		'14',
+		'Line',
+		' ',
+		'14',
 	]
 	assert drawn_rects == [
-		DrawnRect{ x: 3, y: 0, width: 498, height: 1 }   // this is the cursor highlight rect line
-		DrawnRect{ x: 16, y: 13, width: 477, height: 1 } // this is the gap spread in the status line
+		DrawnRect{
+			x:      3
+			y:      0
+			width:  498
+			height: 1
+		}, // this is the cursor highlight rect line
+		DrawnRect{
+			x:      16
+			y:      13
+			width:  477
+			height: 1
+		}, // this is the gap spread in the status line
 	]
 }
 
@@ -3205,61 +3479,77 @@ fn test_scroll_view_down() {
 */
 
 fn test_center_text_around_cursor() {
-    mut fake_view := View{
-		log: log.Log{}
-        leader_state: ViewLeaderState{ mode: .normal }
-        height: 10 // Set a small height for testing
-		buffer: buffer.Buffer.new("", .legacy)
-    }
+	mut fake_view := View{
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		height:       10 // Set a small height for testing
+		buffer:       buffer.Buffer.new('', .legacy)
+	}
 
-    // Create a document with more lines than the view height
-    fake_view.buffer.lines = [
-        'Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5',
-        'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10',
-        'Line 11', 'Line 12', 'Line 13', 'Line 14', 'Line 15'
-    ]
+	// Create a document with more lines than the view height
+	fake_view.buffer.lines = [
+		'Line 1',
+		'Line 2',
+		'Line 3',
+		'Line 4',
+		'Line 5',
+		'Line 6',
+		'Line 7',
+		'Line 8',
+		'Line 9',
+		'Line 10',
+		'Line 11',
+		'Line 12',
+		'Line 13',
+		'Line 14',
+		'Line 15',
+	]
 
-    // Set initial view bounds
-    fake_view.from = 0
-    fake_view.to = 10
+	// Set initial view bounds
+	fake_view.from = 0
+	fake_view.to = 10
 
-    // Set cursor to Line 8
-    fake_view.cursor.pos.y = 7
-    mut original_cursor_pos := fake_view.cursor.pos.y
+	// Set cursor to Line 8
+	fake_view.cursor.pos.y = 7
+	mut original_cursor_pos := fake_view.cursor.pos.y
 
-    // Call the center_text_around_cursor function
-    fake_view.center_text_around_cursor()
+	// Call the center_text_around_cursor function
+	fake_view.center_text_around_cursor()
 
-    // Check if the cursor position remains unchanged
-    assert fake_view.cursor.pos.y == original_cursor_pos
+	// Check if the cursor position remains unchanged
+	assert fake_view.cursor.pos.y == original_cursor_pos
 
-    // Check if the view is centered correctly
+	// Check if the view is centered correctly
 	// The '+2' is to account for the extra lines in the total
 	// height of the view, used so we don't run off the bottom
 	// of the view
-    assert fake_view.from <= original_cursor_pos
-    assert fake_view.to > original_cursor_pos
-    assert (fake_view.to - fake_view.from)+2 == fake_view.height
+	assert fake_view.from <= original_cursor_pos
+	assert fake_view.to > original_cursor_pos
+	assert (fake_view.to - fake_view.from) + 2 == fake_view.height
 
-    // Move cursor to the end and test again
-    fake_view.cursor.pos.y = 14
-    original_cursor_pos = fake_view.cursor.pos.y
-    fake_view.center_text_around_cursor()
+	// Move cursor to the end and test again
+	fake_view.cursor.pos.y = 14
+	original_cursor_pos = fake_view.cursor.pos.y
+	fake_view.center_text_around_cursor()
 
-    // Check if the cursor position remains unchanged
-    assert fake_view.cursor.pos.y == original_cursor_pos
+	// Check if the cursor position remains unchanged
+	assert fake_view.cursor.pos.y == original_cursor_pos
 
-    // Check if the view is adjusted for the end of the document
+	// Check if the view is adjusted for the end of the document
 	// The '+5' is to account for the extra lines in the total
-    assert fake_view.from <= original_cursor_pos
-    assert fake_view.to+5 == fake_view.buffer.lines.len
+	assert fake_view.from <= original_cursor_pos
+	assert fake_view.to + 5 == fake_view.buffer.lines.len
 }
 
 fn test_zero_key_handling() {
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 
 	fake_view.buffer.lines = ['    This is a test line', 'Another line']
@@ -3286,16 +3576,18 @@ fn test_zero_key_handling() {
 }
 
 fn test_repeat_command_with_chord_repeat_amount() {
-    mut fake_view := View{
-		log: log.Log{}
-        leader_state: ViewLeaderState{ mode: .normal }
-        height: 40
-		buffer: buffer.Buffer.new("", .legacy)
-    }
+	mut fake_view := View{
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		height:       40
+		buffer:       buffer.Buffer.new('', .legacy)
+	}
 
-    // Set initial view bounds
-    fake_view.from = 0
-    fake_view.to = 0
+	// Set initial view bounds
+	fake_view.from = 0
+	fake_view.to = 0
 
 	// Test that the chord starting with a '0' doesn't move the cursor
 	fake_view.chord.append_to_repeat_amount('0')
@@ -3316,7 +3608,7 @@ fn test_repeat_command_with_chord_repeat_amount() {
 	fake_view.chord.reset()
 	fake_view.chord.append_to_repeat_amount('1')
 	fake_view.chord.append_to_repeat_amount('0')
-	assert fake_view.chord.pending_repeat_amount() == "10"
+	assert fake_view.chord.pending_repeat_amount() == '10'
 
 	op := fake_view.chord.j()
 	assert op.kind == .move
@@ -3331,7 +3623,7 @@ fn test_repeat_command_with_chord_repeat_amount() {
 	fake_view.chord.append_to_repeat_amount('0')
 	fake_view.chord.append_to_repeat_amount('2')
 	fake_view.chord.append_to_repeat_amount('0')
-	assert fake_view.chord.pending_repeat_amount() == "020"
+	assert fake_view.chord.pending_repeat_amount() == '020'
 
 	op2 := fake_view.chord.j()
 	assert op2.kind == .move
@@ -3342,10 +3634,12 @@ fn test_repeat_command_with_chord_repeat_amount() {
 fn test_f_finds_in_current_line_command() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = ['The quick brown fox jumps over the lazy dog']
 	fake_view.cursor.pos.x = 0
@@ -3365,10 +3659,12 @@ fn test_f_finds_in_current_line_command() {
 fn test_gg_goes_to_top_of_file_command() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3']
 	fake_view.cursor.pos.y = 2
@@ -3382,14 +3678,16 @@ fn test_gg_goes_to_top_of_file_command() {
 fn test_left_square_brace_goes_to_top_of_file() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = []string{}
-	for i in 0..100 {
-		fake_view.buffer.lines << "Line ${i}"
+	for i in 0 .. 100 {
+		fake_view.buffer.lines << 'Line ${i}'
 	}
 	fake_view.from = 50
 	fake_view.to = 100
@@ -3406,10 +3704,12 @@ fn test_left_square_brace_goes_to_top_of_file() {
 fn test_shift_g_goes_to_bottom_of_file_command() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3']
 	fake_view.cursor.pos.y = 2
@@ -3422,14 +3722,16 @@ fn test_shift_g_goes_to_bottom_of_file_command() {
 fn test_right_square_brace_goes_to_top_of_file() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = []string{}
-	for i in 0..100 {
-		fake_view.buffer.lines << "Line ${i}"
+	for i in 0 .. 100 {
+		fake_view.buffer.lines << 'Line ${i}'
 	}
 	fake_view.from = 0
 	fake_view.to = 50
@@ -3449,20 +3751,22 @@ fn test_right_square_brace_goes_to_top_of_file() {
 fn test_shift_r_replaces_character_in_line_command() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = ['The quick brown fox']
 	fake_view.cursor.pos.x = 2
 	fake_view.cursor.pos.y = 0
 
 	fake_view.leader_state.mode = .replacing
-	fake_view.replace_char(113, 'q')  // ASCII 113 is 'q'
+	fake_view.replace_char(113, 'q') // ASCII 113 is 'q'
 	assert fake_view.buffer.lines[0] == 'Thq quick brown fox'
 
-	fake_view.replace_char(112, 'p')  // ASCII 113 is 'q'
+	fake_view.replace_char(112, 'p') // ASCII 113 is 'q'
 	assert fake_view.buffer.lines[0] == 'Thp quick brown fox'
 
 	fake_view.escape()
@@ -3472,13 +3776,16 @@ fn test_shift_r_replaces_character_in_line_command() {
 fn test_shift_l_goes_to_lowest_part_of_view_command() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		height: 10
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		height:       10
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
-	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5', 'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10']
+	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5', 'Line 6', 'Line 7',
+		'Line 8', 'Line 9', 'Line 10']
 	fake_view.from = 0
 	fake_view.to = 10
 
@@ -3490,13 +3797,16 @@ fn test_shift_l_goes_to_lowest_part_of_view_command() {
 fn test_shift_m_goes_to_middle_part_of_view_command() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		height: 10
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		height:       10
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
-	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5', 'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10']
+	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5', 'Line 6', 'Line 7',
+		'Line 8', 'Line 9', 'Line 10']
 	fake_view.from = 0
 	fake_view.to = 10
 
@@ -3508,13 +3818,16 @@ fn test_shift_m_goes_to_middle_part_of_view_command() {
 fn test_shift_h_goes_to_highest_part_of_view_command() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log: log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		height: 10
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		height:       10
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
-	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5', 'Line 6', 'Line 7', 'Line 8', 'Line 9', 'Line 10']
+	fake_view.buffer.lines = ['Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5', 'Line 6', 'Line 7',
+		'Line 8', 'Line 9', 'Line 10']
 	fake_view.from = 0
 	fake_view.to = 10
 

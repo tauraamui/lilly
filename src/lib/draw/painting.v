@@ -25,4 +25,3 @@ pub fn paint_text_on_background(mut ctx Contextable, x int, y int, bg_color Colo
 	ctx.set_color(r: fg_color.r, g: fg_color.g, b: fg_color.b)
 	ctx.draw_text(x, y, text)
 }
-

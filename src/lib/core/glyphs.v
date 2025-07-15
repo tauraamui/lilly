@@ -48,4 +48,3 @@ pub const zero_width_unicode = [
 	`\u206f`, // U+206F NOMINAL DIGIT SHAPES
 	`\ufeff`, // U+FEFF ZERO WIDTH NO-BREAK SPACE
 ]
-

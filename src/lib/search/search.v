@@ -35,7 +35,7 @@ fn compute_lps(pattern []rune, mut lps []int) {
 }
 
 pub fn kmp(text []rune, pattern []rune) int {
-	mut lps := []int{ len: pattern.len }
+	mut lps := []int{len: pattern.len}
 	compute_lps(pattern, mut lps)
 
 	mut i := 0
@@ -60,4 +60,3 @@ pub fn kmp(text []rune, pattern []rune) int {
 
 	return -1
 }
-

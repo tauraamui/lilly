@@ -43,7 +43,7 @@ mut:
 	x_count     int
 	f_count     int
 	b_count     int
-	leader_mode  bool
+	leader_mode bool
 }
 
 fn reset_leader_state(mut state LeaderState) {
@@ -51,7 +51,7 @@ fn reset_leader_state(mut state LeaderState) {
 	state.f_count = 0
 	state.b_count = 0
 	state.special = false
-	state.normal  = false
+	state.normal = false
 }
 
 pub fn SplashScreen.new(commit_hash string, leader_key string) SplashScreen {
@@ -64,7 +64,7 @@ pub fn SplashScreen.new(commit_hash string, leader_key string) SplashScreen {
 		logo:        SplashLogo{
 			data: logo_contents.to_string().split_into_lines()
 		}
-		leader_key: leader_key
+		leader_key:  leader_key
 	}
 
 	for l in splash.logo.data {
@@ -159,7 +159,7 @@ pub fn (splash SplashScreen) draw(mut ctx draw.Contextable) {
 
 fn resolve_whitespace_to_name(leader_key string) string {
 	match leader_key {
-		" " { return "space" }
+		' ' { return 'space' }
 		else { return leader_key }
 	}
 }
@@ -199,26 +199,40 @@ pub fn (mut splash SplashScreen) on_key_down(e draw.Event) SplashScreenAction {
 		.x {
 			if splash.leader_state.leader_mode {
 				splash.leader_state.x_count += 1
-				if !splash.leader_state.normal { splash.leader_state.special = true }
+				if !splash.leader_state.normal {
+					splash.leader_state.special = true
+				}
 			}
 		}
 		.f {
 			if splash.leader_state.leader_mode {
 				splash.leader_state.f_count += 1
-				if !splash.leader_state.special { splash.leader_state.normal = true }
+				if !splash.leader_state.special {
+					splash.leader_state.normal = true
+				}
 			}
 			if splash.leader_state.f_count == 2 {
 				defer { reset_leader_state(mut splash.leader_state) }
-				return if !splash.leader_state.special { .open_file_picker} else { .open_file_picker_special }
+				return if !splash.leader_state.special {
+					.open_file_picker
+				} else {
+					.open_file_picker_special
+				}
 			}
 		}
 		.b {
 			if splash.leader_state.leader_mode {
 				splash.leader_state.b_count += 1
-				if !splash.leader_state.special { splash.leader_state.normal = true }
+				if !splash.leader_state.special {
+					splash.leader_state.normal = true
+				}
 				if splash.leader_state.f_count == 1 && splash.leader_state.b_count >= 1 {
 					defer { reset_leader_state(mut splash.leader_state) }
-					return if !splash.leader_state.special { .open_inactive_buffer_picker } else { .open_inactive_buffer_picker_special }
+					return if !splash.leader_state.special {
+						.open_inactive_buffer_picker
+					} else {
+						.open_inactive_buffer_picker_special
+					}
 				}
 			}
 		}
