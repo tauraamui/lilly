@@ -22,8 +22,8 @@ pub enum ContentType as u8 {
 
 pub struct ClipboardContent {
 pub:
-	type        ContentType
-	data         string
+	type ContentType
+	data string
 }
 
 pub struct Clipboard {
@@ -33,7 +33,9 @@ mut:
 
 pub fn new() &Clipboard {
 	return &Clipboard{
-		content: ClipboardContent{ type: .none }
+		content: ClipboardContent{
+			type: .none
+		}
 	}
 }
 

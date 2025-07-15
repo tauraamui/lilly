@@ -39,7 +39,7 @@ mut:
 
 pub struct Config {
 pub:
-	theme                  ?string
+	theme ?string
 pub mut:
 	leader_key             string
 	relative_line_numbers  bool
@@ -48,13 +48,12 @@ pub mut:
 
 pub fn open_workspace(mut _log Logger,
 	root_path string,
-	is_dir     fn (path string) bool,
+	is_dir fn (path string) bool,
 	dir_walker fn (path string, f fn (string)),
-	config     Config,
+	config Config,
 	config_dir fn () !string,
-	read_file  fn (path string) !string,
-	execute    fn (cmd string) os.Result
-) !Workspace {
+	read_file fn (path string) !string,
+	execute fn (cmd string) os.Result) !Workspace {
 	path := root_path
 	if !is_dir(path) {
 		return error('${path} is not a directory')
@@ -92,8 +91,7 @@ fn get_branch(execute fn (cmd string) os.Result) string {
 
 fn (mut workspace Workspace) resolve_files(path string,
 	is_dir fn (path string) bool,
-	dir_walker fn (path string, f fn (string))
-) {
+	dir_walker fn (path string, f fn (string))) {
 	mut files_ref := &workspace.files
 	dir_walker(path, fn [mut files_ref, is_dir] (file_path string) {
 		if file_path.contains('.git') {

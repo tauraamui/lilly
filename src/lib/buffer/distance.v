@@ -12,4 +12,3 @@ pub fn Distance.of_str(from string) Distance {
 		offset: from.split([lf].string()).last().len
 	}
 }
-

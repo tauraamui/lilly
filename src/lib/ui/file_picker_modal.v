@@ -22,9 +22,9 @@ const max_height = 20
 
 @[noinit]
 pub struct FilePickerModal {
-	title          string
+	title string
 pub mut:
-	special_mode   bool // NOTE(tsauraamui) [14/02/2025] will likely deprecate or change this for now
+	special_mode bool // NOTE(tsauraamui) [14/02/2025] will likely deprecate or change this for now
 mut:
 	file_paths     []string
 	search         FileSearch
@@ -61,10 +61,10 @@ fn (mut file_search FileSearch) backspace() {
 
 pub fn FilePickerModal.new(title string, file_paths []string, special_mode bool) FilePickerModal {
 	return FilePickerModal{
-		title: if title.len == 0 { "FILE PICKER" } else { title }
-		file_paths: file_paths
+		title:        if title.len == 0 { 'FILE PICKER' } else { title }
+		file_paths:   file_paths
 		special_mode: special_mode
-		search: FileSearch{}
+		search:       FileSearch{}
 	}
 }
 
@@ -77,9 +77,9 @@ pub fn (mut f_picker FilePickerModal) draw(mut ctx draw.Contextable) {
 	ctx.set_color(r: 245, g: 245, b: 245)
 	ctx.set_bg_color(r: 15, g: 15, b: 15)
 	mut y_offset := 0
-	debug_mode_str := if ctx.render_debug() { " *** RENDER DEBUG MODE ***" } else { "" }
-	special_mode_str := if f_picker.special_mode { " - SPECIAL MODE" } else { "" }
-	ctx.draw_text(0, y_offset, "=== ${debug_mode_str} ${f_picker.title}${special_mode_str} ${debug_mode_str} ===")
+	debug_mode_str := if ctx.render_debug() { ' *** RENDER DEBUG MODE ***' } else { '' }
+	special_mode_str := if f_picker.special_mode { ' - SPECIAL MODE' } else { '' }
+	ctx.draw_text(0, y_offset, '=== ${debug_mode_str} ${f_picker.title}${special_mode_str} ${debug_mode_str} ===')
 	y_offset += 1
 	ctx.set_cursor_position(0, y_offset + f_picker.current_sel_id - f_picker.from)
 	y_offset += f_picker.draw_scrollable_list(mut ctx, y_offset, f_picker.file_paths)
@@ -121,7 +121,9 @@ pub enum ActionOp as u8 {
 pub fn (mut f_picker FilePickerModal) on_key_down(e draw.Event) Action {
 	match e.code {
 		.escape {
-			return Action{ op: .close_op }
+			return Action{
+				op: .close_op
+			}
 		}
 		48...57, 97...122 {
 			f_picker.search.put_char(e.ascii.ascii_str())
@@ -149,7 +151,9 @@ pub fn (mut f_picker FilePickerModal) on_key_down(e draw.Event) Action {
 			f_picker.reorder_file_paths()
 		}
 	}
-	return Action{ op: .no_op }
+	return Action{
+		op: .no_op
+	}
 }
 
 fn (mut f_picker FilePickerModal) move_selection_down() {
@@ -182,8 +186,15 @@ fn (mut f_picker FilePickerModal) move_selection_up() {
 fn (mut f_picker FilePickerModal) file_selected(skip_byte_check bool) Action {
 	file_paths := f_picker.file_paths
 	selected_path := file_paths[f_picker.current_sel_id]
-	if !skip_byte_check && core.is_binary_file(selected_path) { return Action{ op: .no_op } }
-	return Action{ op: .open_file_op, file_path: selected_path }
+	if !skip_byte_check && core.is_binary_file(selected_path) {
+		return Action{
+			op: .no_op
+		}
+	}
+	return Action{
+		op:        .open_file_op
+		file_path: selected_path
+	}
 }
 
 fn (mut f_picker FilePickerModal) reorder_file_paths() {
@@ -191,8 +202,12 @@ fn (mut f_picker FilePickerModal) reorder_file_paths() {
 	f_picker.file_paths.sort_with_compare(fn [query] (a &string, b &string) int {
 		a_score := score_value_by_query(query, a)
 		b_score := score_value_by_query(query, b)
-		if b_score > a_score  { return 1 }
-		if a_score == b_score { return 0 }
+		if b_score > a_score {
+			return 1
+		}
+		if a_score == b_score {
+			return 0
+		}
 		return -1
 	})
 }
@@ -206,7 +221,9 @@ fn (mut f_picker FilePickerModal) resolve_to() int {
 	return to
 }
 
-pub fn (f_picker FilePickerModal) is_open() bool { return f_picker.open }
+pub fn (f_picker FilePickerModal) is_open() bool {
+	return f_picker.open
+}
 
 pub fn (mut f_picker FilePickerModal) close() {
 	f_picker.open = false
@@ -216,4 +233,3 @@ pub fn (mut f_picker FilePickerModal) close() {
 fn score_value_by_query(query string, value string) f32 {
 	return f32(int(strings.dice_coefficient(query, value) * 1000)) / 1000
 }
-

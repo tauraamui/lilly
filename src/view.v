@@ -56,8 +56,8 @@ mut:
 
 fn (mut state ViewLeaderState) reset() {
 	state.special = false
-	state.normal  = false
-	state.mode    = .normal
+	state.normal = false
+	state.mode = .normal
 	state.suffix.clear()
 	state.d_count = 0
 	state.f_count = 0
@@ -78,7 +78,7 @@ mut:
 	leader_state              ViewLeaderState
 	buf_view                  ui.BufferView
 	buffer                    buffer.Buffer
-	leader_key                string = " "
+	leader_key                string = ' '
 	cursor                    ui.BufferCursor
 	cmd_buf                   CmdBuffer
 	search                    Search
@@ -452,7 +452,9 @@ fn open_view(mut _log log.Log, config workspace.Config, branch string, syntaxes 
 		file_path:          file_path
 		config:             config
 		leader_key:         config.leader_key
-		leader_state:       ViewLeaderState{ mode: .normal }
+		leader_state:       ViewLeaderState{
+			mode: .normal
+		}
 		show_whitespace:    false
 		clipboard:          _clipboard
 		buffer:             buff
@@ -500,8 +502,10 @@ fn (mut view View) offset_x_and_width_by_len_of_longest_line_number_str(win_widt
 
 // TODO(tauraamui): use this/do something similar for visual mode highlighting
 fn (mut view View) calc_cursor_x_offset() int {
-	cursor_line := view.buffer.lines[view.cursor.pos.y]
 	mut offset := 0
+	cursor_line := view.buffer.lines[view.cursor.pos.y]
+	// TODO(tauraamui) [14/07/2025]: migrate from direct lines access to buffer method
+	// cursor_line := view.buffer.read_line(view.cursor.pos.y) or { return offset }
 	mut scanto := view.cursor.pos.x
 	if scanto > cursor_line.runes().len {
 		scanto = cursor_line.runes().len
@@ -513,7 +517,6 @@ fn (mut view View) calc_cursor_x_offset() int {
 			else { offset += 1 }
 		}
 	}
-
 	return offset
 }
 
@@ -540,7 +543,9 @@ fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
 	} else {
 		ctx.set_cursor_to_block()
 	}
-	if view.leader_state.d_count == 1 || view.leader_state.z_count == 1 || view.leader_state.mode == .replace || view.leader_state.g_count == 1 || view.leader_state.f_count == 1 || view.leader_state.mode == .replacing {
+	if view.leader_state.d_count == 1 || view.leader_state.z_count == 1
+		|| view.leader_state.mode == .replace || view.leader_state.g_count == 1
+		|| view.leader_state.f_count == 1 || view.leader_state.mode == .replacing {
 		ctx.set_cursor_to_underline()
 	}
 	ctx.set_cursor_position(view.x + 1 + view.calc_cursor_x_offset(),
@@ -551,28 +556,31 @@ fn (mut view View) draw_document(mut ctx draw.Contextable) {
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
 	selection_highlight_color := ctx.theme().selection_highlight_color
-	view.buf_view.draw(
-		mut ctx, view.buffer, 0, 0,
-		ctx.window_width(), ctx.window_height() - 2,
-		view.from, 0,
-		view.config.relative_line_numbers,
-		view.leader_state.mode,
-		view.cursor
+	view.buf_view.draw(mut ctx,
+		buf:                view.buffer
+		x:                  0
+		y:                  0
+		width:              ctx.window_width()
+		height:             ctx.window_height() - 2
+		from_line_num:      view.from
+		min_x:              0
+		relative_line_nums: view.config.relative_line_numbers
+		current_mode:       view.leader_state.mode
+		cursor:             view.cursor
 	)
 
-	ui.draw_status_line(
-		mut ctx, ui.Status{
-			view.leader_state.mode,
-			view.cursor.pos.x, view.cursor.pos.y,
-			os.base(view.path),
-			ui.SearchSelection{
-				active:  view.leader_state.mode == .search
-				total:   view.search.total_finds
-				current: view.search.current_find.match_index
-			},
-			view.branch,
-			view.buffer.dirty
+	ui.draw_status_line(mut ctx,
+		mode:       view.leader_state.mode
+		cursor_x:   view.cursor.pos.x
+		cursor_y:   view.cursor.pos.y
+		file_name:  os.base(view.path)
+		selection:  ui.SearchSelection{
+			active:  view.leader_state.mode == .search
+			total:   view.search.total_finds
+			current: view.search.current_find.match_index
 		}
+		git_branch: view.branch
+		dirty:      view.buffer.dirty
 	)
 
 	view.draw_bottom_bar_of_command_or_search(mut ctx)
@@ -584,9 +592,9 @@ fn (mut view View) draw(mut ctx draw.Contextable) {
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
 	view.update_to() // NOTE(tauraamui) [18/03/2025]: yes, I shouldn't need to keep calling this
-					 // anymore, seeing as the buffer_view just works off of the relative "from" and
-					 // the given height it is told to work within, but if we don't call it, the
-					 // cursor won't move, so... *sniff sniff*, smells like toxic tech debt, yayyyy!
+	// anymore, seeing as the buffer_view just works off of the relative "from" and
+	// the given height it is told to work within, but if we don't call it, the
+	// cursor won't move, so... *sniff sniff*, smells like toxic tech debt, yayyyy!
 	view.draw_document(mut ctx)
 }
 
@@ -664,10 +672,8 @@ fn (mut view View) exec(op chords.Op) {
 }
 
 fn (mut view View) insert_tab() {
-	pos := view.buffer.insert_tab(
-		buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y },
-		view.config.insert_tabs_not_spaces,
-	) or { return }
+	pos := view.buffer.insert_tab(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y },
+		view.config.insert_tabs_not_spaces) or { return }
 	view.cursor.pos.x = pos.x
 	view.cursor.pos.y = pos.y
 	view.scroll_from_and_to()
@@ -677,8 +683,10 @@ fn (mut view View) insert_tab() {
 //                             thought through before this stuff is migrated to the
 //                             buffer wrapper type data structure.
 fn (mut view View) visual_indent() {
-	mut start := if sel_start := view.cursor.sel_start() { sel_start.y } else { return }
-	mut end := if sel_end := view.cursor.sel_end() { sel_end.y } else { return }
+	mut start := if sel_start := view.cursor.sel_start() { sel_start.y } else { return
+	 }
+	mut end := if sel_end := view.cursor.sel_end() { sel_end.y } else { return
+	 }
 
 	prefix := if view.config.insert_tabs_not_spaces { '\t' } else { ' '.repeat(4) }
 
@@ -688,8 +696,10 @@ fn (mut view View) visual_indent() {
 }
 
 fn (mut view View) visual_unindent() {
-	mut start := if sel_start := view.cursor.sel_start() { sel_start.y } else { return }
-	mut end := if sel_end := view.cursor.sel_end() { sel_end.y } else { return }
+	mut start := if sel_start := view.cursor.sel_start() { sel_start.y } else { return
+	 }
+	mut end := if sel_end := view.cursor.sel_end() { sel_end.y } else { return
+	 }
 
 	prefix := if view.config.insert_tabs_not_spaces { '\t' } else { ' '.repeat(4) }
 
@@ -731,7 +741,8 @@ fn (mut view View) char_insert(s string) {
 }
 
 fn (mut view View) insert_text(s string) {
-	pos := view.buffer.insert_text(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, s) or { return }
+	pos := view.buffer.insert_text(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y },
+		s) or { return }
 	view.cursor.pos.x = pos.x
 	view.cursor.pos.y = pos.y
 	view.scroll_from_and_to()
@@ -798,7 +809,7 @@ fn (mut view View) scroll_from_and_to() {
 	if view.cursor.pos.y < view.from {
 		diff := view.from - view.cursor.pos.y
 		view.from -= diff
-		view.to   -= diff
+		view.to -= diff
 		if view.from < 0 {
 			view.from = 0
 		}
@@ -833,7 +844,9 @@ fn (mut view View) num_of_lines_in_view() int {
 
 fn (mut view View) clamp_cursor_x_pos() int {
 	view.clamp_cursor_within_document_bounds()
-	if view.buffer.lines.len == 0 { return 0 }
+	if view.buffer.lines.len == 0 {
+		return 0
+	}
 	line_len := view.buffer.lines[view.cursor.pos.y].runes().len
 	if line_len == 0 {
 		view.cursor.pos.x = 0
@@ -884,18 +897,23 @@ fn (mut view View) exec_cmd() bool {
 fn (mut view View) search() {
 	view.leader_state.mode = .search
 	view.cmd_buf.clear_err()
-	view.cmd_buf.line = "//"
+	view.cmd_buf.line = '//'
 	view.cmd_buf.cursor_x = 1
 	view.search.prepare_for_input()
 }
 
 fn (mut view View) f(e draw.Event) {
 	view.leader_state.f_count += 1
-	if view.leader_state.f_count == 1 { view.leader_state.mode = .pending_f return }
+	if view.leader_state.f_count == 1 {
+		view.leader_state.mode = .pending_f
+		return
+	}
 	if view.leader_state.f_count == 2 {
 		cursor_pos := view.cursor.pos.x
 		line := view.buffer.lines[view.cursor.pos.y]
-		if line.len == 0 { return }
+		if line.len == 0 {
+			return
+		}
 		line_runes := line.runes()
 		remaining_line := line_runes[cursor_pos..line_runes.len].string()
 
@@ -916,7 +934,9 @@ fn (mut view View) f(e draw.Event) {
 fn (mut view View) g() {
 	repeat_amount := strconv.atoi(view.chord.pending_repeat_amount()) or { 0 }
 	view.leader_state.g_count += 1
-	if view.leader_state.g_count == 1 { view.leader_state.mode = .pending_g }
+	if view.leader_state.g_count == 1 {
+		view.leader_state.mode = .pending_g
+	}
 	if view.leader_state.g_count == 2 {
 		if repeat_amount > 0 {
 			view.jump_cursor_to(repeat_amount - 1)
@@ -974,7 +994,9 @@ fn (mut view View) k() {
 fn (mut view View) i() {
 	view.leader_state.mode = .insert
 	view.buffer.move_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
-	if view.buffer.use_gap_buffer { return }
+	if view.buffer.use_gap_buffer {
+		return
+	}
 	view.clamp_cursor_x_pos()
 }
 
@@ -1004,8 +1026,10 @@ fn (mut view View) visual_line_d(overwrite_y_lines bool) {
 	defer { view.clamp_cursor_within_document_bounds() }
 	assert view.cursor.sel_active()
 
-	mut start := if sel_start := view.cursor.sel_start() { sel_start.y } else { return }
-	mut end := if sel_end := view.cursor.sel_end() { sel_end.y } else { return }
+	mut start := if sel_start := view.cursor.sel_start() { sel_start.y } else { return
+	 }
+	mut end := if sel_end := view.cursor.sel_end() { sel_end.y } else { return
+	 }
 
 	// view.copy_lines_into_clipboard(start, end)
 	before := view.buffer.lines[..start]
@@ -1019,7 +1043,10 @@ fn (mut view View) visual_line_d(overwrite_y_lines bool) {
 
 fn (mut view View) w() {
 	if view.buffer.use_gap_buffer {
-		pos := view.buffer.find_next_word_start(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+		pos := view.buffer.find_next_word_start(buffer.Pos{
+			x: view.cursor.pos.x
+			y: view.cursor.pos.y
+		}) or { return }
 		view.cursor.pos.x = pos.x
 		view.cursor.pos.y = pos.y
 		view.scroll_from_and_to()
@@ -1045,7 +1072,9 @@ fn (mut view View) w() {
 
 fn (mut view View) e() {
 	if view.buffer.use_gap_buffer {
-		pos := view.buffer.find_next_word_end(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+		pos := view.buffer.find_next_word_end(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or {
+			return
+		}
 		view.cursor.pos.x = pos.x
 		view.cursor.pos.y = pos.y
 		view.scroll_from_and_to()
@@ -1073,7 +1102,10 @@ fn (mut view View) e() {
 
 fn (mut view View) b() {
 	if view.buffer.use_gap_buffer {
-		pos := view.buffer.find_prev_word_start(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+		pos := view.buffer.find_prev_word_start(buffer.Pos{
+			x: view.cursor.pos.x
+			y: view.cursor.pos.y
+		}) or { return }
 		view.cursor.pos.x = pos.x
 		view.cursor.pos.y = pos.y
 		view.scroll_from_and_to()
@@ -1104,7 +1136,9 @@ fn (mut view View) ctrl_u() {
 fn (mut view View) hat() {
 	defer { view.clamp_cursor_x_pos() }
 	line := view.buffer.lines[view.cursor.pos.y]
-	if line.len == 0 { return }
+	if line.len == 0 {
+		return
+	}
 
 	mut pos := 0
 	line_chars := line.runes()
@@ -1150,14 +1184,21 @@ fn (mut view View) d() {
 		.pending_delete {
 			view.leader_state.d_count += 1
 			if view.leader_state.d_count >= 2 {
-				index := if view.cursor.pos.y == view.buffer.lines.len { view.cursor.pos.y - 1 } else { view.cursor.pos.y }
+				index := if view.cursor.pos.y == view.buffer.lines.len {
+					view.cursor.pos.y - 1
+				} else {
+					view.cursor.pos.y
+				}
 				view.clipboard.set_content(clipboardv3.ClipboardContent{
-					type: .block,
+					type: .block
 					data: view.buffer.lines[index]
 				})
 				// view.delete_line(index)
 				view.buffer.delete_line(index)
-				pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
+				pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Pos{
+					x: view.cursor.pos.x
+					y: view.cursor.pos.y
+				})
 				view.cursor.pos.x = pos.x
 				view.cursor.pos.y = pos.y
 				view.escape()
@@ -1165,15 +1206,20 @@ fn (mut view View) d() {
 		}
 		.visual_line {
 			assert view.cursor.sel_active()
-			start_index := if sel_start := view.cursor.sel_start() { sel_start.y } else { return }
-			mut end_index := if sel_end := view.cursor.sel_end() { sel_end.y } else { return }
+			start_index := if sel_start := view.cursor.sel_start() { sel_start.y } else { return
+			 }
+			mut end_index := if sel_end := view.cursor.sel_end() { sel_end.y } else { return
+			 }
 			view.clipboard.set_content(clipboardv3.ClipboardContent{
-				type: .block,
-				data: view.buffer.lines[start_index..end_index + 1].join("\n")
+				type: .block
+				data: view.buffer.lines[start_index..end_index + 1].join('\n')
 			})
 			view.buffer.delete_line_range(start_index, end_index)
 			view.cursor.pos.y = start_index
-			pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
+			pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Pos{
+				x: view.cursor.pos.x
+				y: view.cursor.pos.y
+			})
 			view.cursor.pos.x = pos.x
 			view.cursor.pos.y = pos.y
 			view.escape()
@@ -1189,20 +1235,23 @@ fn (mut view View) p() {
 	}
 	if content := view.clipboard.get_content() {
 		match content.type {
-			.none { return }
+			.none {
+				return
+			}
 			.inline {
-				content_data_array := content.data.split("\n")
+				content_data_array := content.data.split('\n')
 				if content_data_array.len == 1 {
 					pre_cursor := view.buffer.lines[view.cursor.pos.y][..view.cursor.pos.x + 1]
 					post_cursor := view.buffer.lines[view.cursor.pos.y][view.cursor.pos.x + 1..]
-					view.buffer.lines[view.cursor.pos.y] = pre_cursor + content_data_array[0] + post_cursor
+					view.buffer.lines[view.cursor.pos.y] = pre_cursor + content_data_array[0] +
+						post_cursor
 					view.cursor.pos.x += content_data_array[0].runes().len
 					return
 				}
 			}
 			.block {
 				if insert_below {
-					view.buffer.lines.insert(view.cursor.pos.y + 1, content.data.split("\n"))
+					view.buffer.lines.insert(view.cursor.pos.y + 1, content.data.split('\n'))
 					view.j()
 					view.hat()
 				}
@@ -1221,7 +1270,7 @@ fn (mut view View) delete_line_range(start int, end int) {
 		return
 	}
 	before := view.buffer.lines[..start]
-	after  := view.buffer.lines[end + 1..]
+	after := view.buffer.lines[end + 1..]
 
 	view.buffer.lines = before
 	view.buffer.lines << after
@@ -1250,7 +1299,9 @@ fn (mut view View) d() {
 
 fn (mut view View) z() {
 	view.leader_state.z_count += 1
-	if view.leader_state.z_count == 1 { view.leader_state.mode = .pending_z }
+	if view.leader_state.z_count == 1 {
+		view.leader_state.mode = .pending_z
+	}
 	if view.leader_state.z_count == 2 {
 		view.center_text_around_cursor()
 		view.escape()
@@ -1260,14 +1311,14 @@ fn (mut view View) z() {
 // TODO(tauraamui) [07/03/2025]: I have no idea how this code works, should probably ask Kelly to remind me
 fn (mut view View) center_text_around_cursor() {
 	orig_cursor_pos := view.cursor.pos.y
-	window_center_offset := int((view.to - view.from)/2)
+	window_center_offset := int((view.to - view.from) / 2)
 	mut cursor_screen_pos := view.calc_cursor_y_in_screen_space()
 
 	// With the following logic, a second zz action will not move the cursor
 	if cursor_screen_pos < window_center_offset {
 		view.jump_cursor_to(view.from)
 		view.move_cursor_up(window_center_offset - cursor_screen_pos)
-	} else if cursor_screen_pos > window_center_offset{
+	} else if cursor_screen_pos > window_center_offset {
 		cursor_screen_pos = cursor_screen_pos - window_center_offset - 2
 		view.jump_cursor_to(view.to)
 		view.move_cursor_down(cursor_screen_pos)
@@ -1320,11 +1371,15 @@ fn (mut view View) y() {
 	match view.leader_state.mode {
 		.visual {
 			// NOTE(tauraamui) [08/06/2025]: this logic is pretty much all wrong
-			start := if sel_start := view.cursor.sel_start() { sel_start } else { ui.CursorPos{ -1, -1 } }
-			end := if sel_end := view.cursor.sel_end() { sel_end } else { ui.CursorPos{ -1, -1 } }
+			start := if sel_start := view.cursor.sel_start() {
+				sel_start
+			} else {
+				ui.CursorPos{-1, -1}
+			}
+			end := if sel_end := view.cursor.sel_end() { sel_end } else { ui.CursorPos{-1, -1} }
 			if start.y == end.y {
 				view.clipboard.set_content(clipboardv3.ClipboardContent{
-					type: .inline,
+					type: .inline
 					data: view.buffer.lines[start.y][start.x..end.x + 1]
 				})
 				return
@@ -1333,21 +1388,21 @@ fn (mut view View) y() {
 			selection_line_span := end.y - start.y
 			copied_line_contents << view.buffer.lines[start.y][view.cursor.pos.x + 1..]
 
-			for i in 1..selection_line_span {
+			for i in 1 .. selection_line_span {
 				copied_line_contents << view.buffer.lines[start.y + i]
 			}
 			copied_line_contents << view.buffer.lines[end.y][..view.cursor.pos.x + 1]
 			view.clipboard.set_content(clipboardv3.ClipboardContent{
-				type: .inline,
-				data: copied_line_contents.join("\n")
+				type: .inline
+				data: copied_line_contents.join('\n')
 			})
 		}
 		.visual_line {
-			start_index   := if sel_start := view.cursor.sel_start() { sel_start.y } else { 0 }
+			start_index := if sel_start := view.cursor.sel_start() { sel_start.y } else { 0 }
 			mut end_index := if sel_end := view.cursor.sel_end() { sel_end.y } else { 0 }
 			view.clipboard.set_content(clipboardv3.ClipboardContent{
-				type: .block,
-				data: view.buffer.lines[start_index..end_index + 1].join("\n")
+				type: .block
+				data: view.buffer.lines[start_index..end_index + 1].join('\n')
 			})
 			view.cursor.pos.y = start_index
 			view.clamp_cursor_within_document_bounds()
@@ -1375,7 +1430,9 @@ fn resolve_whitespace_prefix(line string) string {
 }
 
 fn (mut view View) backspace() {
-	pos := view.buffer.backspace(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+	pos := view.buffer.backspace(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or {
+		return
+	}
 	view.cursor.pos.x = pos.x
 	view.cursor.pos.y = pos.y
 	view.scroll_from_and_to()
@@ -1383,19 +1440,22 @@ fn (mut view View) backspace() {
 }
 
 fn (mut view View) left() {
-	pos := view.buffer.left(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
+	pos := view.buffer.left(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y },
+		view.leader_state.mode == .insert) or { return }
 	view.cursor.pos.x = pos.x
 	view.cursor.pos.y = pos.y
 }
 
 fn (mut view View) right() {
-	pos := view.buffer.right(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
+	pos := view.buffer.right(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y },
+		view.leader_state.mode == .insert) or { return }
 	view.cursor.pos.x = pos.x
 	view.cursor.pos.y = pos.y
 }
 
 fn (mut view View) down() {
-	pos := view.buffer.down(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
+	pos := view.buffer.down(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y },
+		view.leader_state.mode == .insert) or { return }
 	view.cursor.pos.x = pos.x
 	view.cursor.pos.y = pos.y
 	view.scroll_from_and_to()
@@ -1403,7 +1463,9 @@ fn (mut view View) down() {
 
 // WARN(tauraamui) [18/03/2025]: DO NOT USE
 fn (mut view View) up() {
-	pos := view.buffer.up(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or { return }
+	pos := view.buffer.up(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, view.leader_state.mode == .insert) or {
+		return
+	}
 	view.cursor.pos.x = pos.x
 	view.cursor.pos.y = pos.y
 	view.scroll_from_and_to()
@@ -1423,9 +1485,11 @@ fn (mut view View) scroll_down() {
 }
 
 fn (mut view View) on_mouse_scroll(e draw.Event) {
-	if e.y <= 0 || e.y > view.height - 2 { return }
+	if e.y <= 0 || e.y > view.height - 2 {
+		return
+	}
 	match e.direction {
-		.up   { view.scroll_up() }
+		.up { view.scroll_up() }
 		.down { view.scroll_down() }
 		else {}
 	}
@@ -1464,8 +1528,10 @@ fn calc_w_move_amount(cursor_pos ui.CursorPos, line string, recursive_call bool)
 				continue
 			}
 			if is_whitespace(c) {
-				return calc_w_move_amount(ui.CursorPos{ x: cursor_pos.x + i +
-					1, y: cursor_pos.y }, line, true) + i + 1
+				return calc_w_move_amount(ui.CursorPos{
+					x: cursor_pos.x + i + 1
+					y: cursor_pos.y
+				}, line, true) + i + 1
 			}
 			return i + 1
 		}
@@ -1488,8 +1554,10 @@ fn calc_w_move_amount(cursor_pos ui.CursorPos, line string, recursive_call bool)
 		}
 		for i, c in line_chars[cursor_pos.x + 1..] {
 			if is_non_alpha(c) {
-				return calc_w_move_amount(ui.CursorPos{ x: cursor_pos.x + i +
-					1, y: cursor_pos.y }, line, true) + i + 1
+				return calc_w_move_amount(ui.CursorPos{
+					x: cursor_pos.x + i + 1
+					y: cursor_pos.y
+				}, line, true) + i + 1
 			}
 		}
 	}
@@ -1552,9 +1620,10 @@ fn calc_e_move_amount(cursor_pos ui.CursorPos, line string, recursive_call bool)
 				break
 			}
 		}
-		return calc_e_move_amount(ui.CursorPos{ x: cursor_pos.x + end_of_whitespace_set, y: cursor_pos.y }, line, true) or {
-			return err
-		} + end_of_whitespace_set
+		return calc_e_move_amount(ui.CursorPos{
+			x: cursor_pos.x + end_of_whitespace_set
+			y: cursor_pos.y
+		}, line, true) or { return err } + end_of_whitespace_set
 	}
 
 	if is_alpha(line_chars[cursor_pos.x]) {
@@ -1640,7 +1709,8 @@ fn calc_b_move_amount(cursor_pos ui.CursorPos, line string, recursive_call bool)
 			// find out if on single special char
 			if i == 0 && !recursive_call {
 				return
-					calc_b_move_amount(ui.CursorPos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) + 1
+					calc_b_move_amount(ui.CursorPos{ x: cursor_pos.x - 1, y: cursor_pos.y }, line, true) +
+					1
 			}
 			return i
 		}
@@ -1655,8 +1725,10 @@ fn calc_b_move_amount(cursor_pos ui.CursorPos, line string, recursive_call bool)
 		for i, c in line_chars[..cursor_pos.x].reverse() {
 			max_i = i
 			if !is_whitespace(c) {
-				return calc_b_move_amount(ui.CursorPos{ x: cursor_pos.x - (i +
-					1), y: cursor_pos.y }, line, true) + i + 1
+				return calc_b_move_amount(ui.CursorPos{
+					x: cursor_pos.x - (i + 1)
+					y: cursor_pos.y
+				}, line, true) + i + 1
 			}
 		}
 		return max_i + 1 // NOTE(tauraamui): -> Really this behaviour is wrong, if nothing but whitespace between here and line start,
@@ -1689,14 +1761,19 @@ fn calc_b_move_amount(cursor_pos ui.CursorPos, line string, recursive_call bool)
 }
 
 fn (mut view View) jump_cursor_up_to_next_blank_line() {
-	pos := view.buffer.up_to_next_blank_line(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+	pos := view.buffer.up_to_next_blank_line(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or {
+		return
+	}
 	view.cursor.pos.x = pos.x
 	view.cursor.pos.y = pos.y
 	view.scroll_from_and_to()
 }
 
 fn (mut view View) jump_cursor_down_to_next_blank_line() {
-	pos := view.buffer.down_to_next_blank_line(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+	pos := view.buffer.down_to_next_blank_line(buffer.Pos{
+		x: view.cursor.pos.x
+		y: view.cursor.pos.y
+	}) or { return }
 	view.cursor.pos.x = pos.x
 	view.cursor.pos.y = pos.y
 	view.scroll_from_and_to()
@@ -1725,7 +1802,8 @@ fn (mut view View) right_square_bracket() {
 }
 
 fn (mut view View) replace_char(code u8, str string) {
-	view.buffer.replace_char(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }, code, str)
+	view.buffer.replace_char(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y },
+		code, str)
 }
 
 fn (mut view View) close_pair(c string) bool {

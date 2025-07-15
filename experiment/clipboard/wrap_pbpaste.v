@@ -6,12 +6,12 @@ fn set_content() {
 	p.set_redirect_stdio()
 	p.run()
 
-	p.stdin_write("set clipboard to me")
+	p.stdin_write('set clipboard to me')
 	os.fd_close(p.stdio_fd[0])
 
 	p.close()
 	p.wait()
-	println("ERR: ${p.err}, CODE: ${p.code}")
+	println('ERR: ${p.err}, CODE: ${p.code}')
 }
 
 fn get_content() {
@@ -50,11 +50,10 @@ fn get_content() {
 		rc = 1
 	}
 
-	println("${out.join('')}, ${rc}, ${er.join('')}")
+	println('${out.join('')}, ${rc}, ${er.join('')}')
 }
 
 fn main() {
 	// set_content()
 	get_content()
 }
-

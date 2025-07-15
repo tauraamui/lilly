@@ -22,7 +22,6 @@ struct Debug {
 
 const font_size = 16
 
-
 pub fn (mut debug Debug) jump_line_to_middle(y int) {}
 
 fn (mut debug Debug) set_from(from int) {}

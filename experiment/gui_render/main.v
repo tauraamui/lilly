@@ -74,18 +74,18 @@ fn main() {
 	pass_action.colors[0] = color_action
 	state := &AppState{
 		pass_action: pass_action
-		fons: unsafe { nil } // &fontstash.Context(0)
+		fons:        unsafe { nil } // &fontstash.Context(0)
 	}
 	title := 'V Metal/GL Text Rendering'
 	desc := sapp.Desc{
-		user_data: state
-		init_userdata_cb: init
+		user_data:         state
+		init_userdata_cb:  init
 		frame_userdata_cb: frame
-		window_title: title.str
+		window_title:      title.str
 		html5_canvas_name: title.str
-		width: 600
-		height: 700
-		high_dpi: true
+		width:             600
+		height:            700
+		high_dpi:          true
 	}
 	sapp.run(&desc)
 }
@@ -97,8 +97,7 @@ fn init(mut state AppState) {
 	sgl.setup(s)
 	state.fons = sfons.create(512, 512, 1)
 	// or use DroidSerif-Regular.ttf
-	if bytes := os.read_bytes(os.resource_abs_path('RobotoMono-Regular.ttf'))
-	{
+	if bytes := os.read_bytes(os.resource_abs_path('RobotoMono-Regular.ttf')) {
 		println('loaded font: ${bytes.len}')
 		state.font_normal = state.fons.add_font_mem('sans', bytes, false)
 	}

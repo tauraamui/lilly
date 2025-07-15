@@ -17,7 +17,7 @@ module clipboardv3
 import os
 import time
 
-struct LinuxClipboard{
+struct LinuxClipboard {
 mut:
 	last_type ContentType
 }
@@ -33,7 +33,7 @@ fn (c LinuxClipboard) get_content() ?ClipboardContent {
 	mut er := []string{}
 
 	mut p := os.new_process('/usr/bin/xclip')
-	p.set_args(["-selection", "clipboard", "-out"])
+	p.set_args(['-selection', 'clipboard', '-out'])
 	p.set_redirect_stdio()
 	p.run()
 
@@ -53,14 +53,14 @@ fn (c LinuxClipboard) get_content() ?ClipboardContent {
 	p.wait()
 
 	return ClipboardContent{
-		data: out.join(''),
+		data: out.join('')
 		type: c.last_type
 	}
 }
 
 fn (mut c LinuxClipboard) set_content(content ClipboardContent) {
 	mut p := os.new_process('/usr/bin/xclip')
-	p.set_args(["-selection", "clipboard", "-in"])
+	p.set_args(['-selection', 'clipboard', '-in'])
 	p.set_redirect_stdio()
 	p.run()
 
@@ -73,7 +73,9 @@ fn (mut c LinuxClipboard) set_content(content ClipboardContent) {
 
 	start := time.now()
 	for {
-		if (time.now() - start).milliseconds() >= 100 { break }
+		if (time.now() - start).milliseconds() >= 100 {
+			break
+		}
 		current_clip_content := c.get_content() or { continue }
 		if content_to_set == current_clip_content.data {
 			break
@@ -81,4 +83,3 @@ fn (mut c LinuxClipboard) set_content(content ClipboardContent) {
 	}
 	c.last_type = content.type
 }
-

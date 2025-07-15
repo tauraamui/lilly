@@ -23,12 +23,12 @@ import log
 
 struct MockRoot {
 mut:
-	file_picker_open                     bool
-	inactive_buffer_picker_open          bool
-	close_file_picker_invoked            bool
-	todo_comments_picker_open            bool
-	close_todo_comments_finder_invoked   bool
-	special_mode                         bool
+	file_picker_open                   bool
+	inactive_buffer_picker_open        bool
+	close_file_picker_invoked          bool
+	todo_comments_picker_open          bool
+	close_todo_comments_finder_invoked bool
+	special_mode                       bool
 }
 
 fn (mut root MockRoot) open_file_picker(special_mode bool) {
@@ -45,7 +45,9 @@ fn (mut root MockRoot) open_todo_comments_picker() {
 	root.todo_comments_picker_open = true
 }
 
-fn (mut root MockRoot) open_file(path string) ! { return }
+fn (mut root MockRoot) open_file(path string) ! {
+	return
+}
 
 fn (mut root MockRoot) close_file_picker() {
 	root.close_file_picker_invoked = true
@@ -53,33 +55,34 @@ fn (mut root MockRoot) close_file_picker() {
 	root.special_mode = false
 }
 
-fn (mut root MockRoot) quit() ! { return }
+fn (mut root MockRoot) quit() ! {
+	return
+}
+
 fn (mut root MockRoot) force_quit() {}
 
 fn test_view_keybind_key_event_of_value_leader_key_changes_mode_to_leader() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log:       log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = [] // NOTE(tauraamui) [21/01/25] can be empty just not nil
 
 	mut m_root := MockRoot{}
-	fake_view.on_key_down(
-		draw.Event{
-			utf8: fake_view.leader_key
-		}
-	)
+	fake_view.on_key_down(draw.Event{
+		utf8: fake_view.leader_key
+	})
 
 	assert fake_view.leader_state.mode == .leader
 
-	fake_view.on_key_down(
-		draw.Event{
-			code: .escape
-		}
-	)
+	fake_view.on_key_down(draw.Event{
+		code: .escape
+	})
 
 	assert fake_view.leader_state.mode == .normal
 }
@@ -87,32 +90,28 @@ fn test_view_keybind_key_event_of_value_leader_key_changes_mode_to_leader() {
 fn test_view_keybind_leader_then_ff_suffix_opens_file_finder() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log:       log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = [] // NOTE(tauraamui) [21/01/25] can be empty just not nil
 
 	mut m_root := MockRoot{}
-	fake_view.on_key_down(
-		draw.Event{
-			utf8: fake_view.leader_key
-		}
-	)
+	fake_view.on_key_down(draw.Event{
+		utf8: fake_view.leader_key
+	})
 
 	assert fake_view.leader_state.mode == .leader
 
-	mut action := fake_view.on_key_down(
-		draw.Event{ code: .f }
-	)
+	mut action := fake_view.on_key_down(draw.Event{ code: .f })
 
 	assert action == .no_op
 	assert fake_view.leader_state.mode == .leader
 
-	action = fake_view.on_key_down(
-		draw.Event{ code: .f }
-	)
+	action = fake_view.on_key_down(draw.Event{ code: .f })
 
 	assert fake_view.leader_state.mode == .normal
 	assert action == .open_file_picker
@@ -121,39 +120,33 @@ fn test_view_keybind_leader_then_ff_suffix_opens_file_finder() {
 fn test_view_keybind_leader_then_xff_suffix_opens_file_finder_in_special_mode() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log:       log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = [] // NOTE(tauraamui) [21/01/25] can be empty just not nil
 
 	mut m_root := MockRoot{}
-	fake_view.on_key_down(
-		draw.Event{
-			utf8: fake_view.leader_key
-		}
-	)
+	fake_view.on_key_down(draw.Event{
+		utf8: fake_view.leader_key
+	})
 
 	assert fake_view.leader_state.mode == .leader
 
-	mut action := fake_view.on_key_down(
-		draw.Event{ code: .x }
-	)
+	mut action := fake_view.on_key_down(draw.Event{ code: .x })
 
 	assert action == .no_op
 
-	action = fake_view.on_key_down(
-		draw.Event{ code: .f }
-	)
+	action = fake_view.on_key_down(draw.Event{ code: .f })
 
 	assert action == .no_op
 
 	assert fake_view.leader_state.mode == .leader
 
-	action = fake_view.on_key_down(
-		draw.Event{ code: .f }
-	)
+	action = fake_view.on_key_down(draw.Event{ code: .f })
 
 	assert fake_view.leader_state.mode == .normal
 	assert action == .open_file_picker_special
@@ -162,32 +155,28 @@ fn test_view_keybind_leader_then_xff_suffix_opens_file_finder_in_special_mode() 
 fn test_view_keybind_leader_then_fb_suffix_opens_inactive_buffer_finder() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log:       log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = [] // NOTE(tauraamui) [21/01/25] can be empty just not nil
 
-	mut action := fake_view.on_key_down(
-		draw.Event{
-			utf8: fake_view.leader_key
-		}
-	)
+	mut action := fake_view.on_key_down(draw.Event{
+		utf8: fake_view.leader_key
+	})
 
 	assert action == .no_op
 	assert fake_view.leader_state.mode == .leader
 
-	action = fake_view.on_key_down(
-		draw.Event{ code: .f }
-	)
+	action = fake_view.on_key_down(draw.Event{ code: .f })
 
 	assert action == .no_op
 	assert fake_view.leader_state.mode == .leader
 
-	action = fake_view.on_key_down(
-		draw.Event{ code: .b }
-	)
+	action = fake_view.on_key_down(draw.Event{ code: .b })
 
 	assert action == .open_inactive_buffer_picker
 	assert fake_view.leader_state.mode == .normal
@@ -196,19 +185,19 @@ fn test_view_keybind_leader_then_fb_suffix_opens_inactive_buffer_finder() {
 fn test_view_keybind_leader_then_ftc_suffix_opens_todo_comments_finder() {
 	mut clip := clipboardv3.new()
 	mut fake_view := View{
-		log:       log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = [] // NOTE(tauraamui) [21/01/25] can be empty just not nil
 
 	mut m_root := MockRoot{}
-	mut action := fake_view.on_key_down(
-		draw.Event{
-			utf8: fake_view.leader_key
-		}
-	)
+	mut action := fake_view.on_key_down(draw.Event{
+		utf8: fake_view.leader_key
+	})
 	assert action == .no_op
 
 	assert fake_view.leader_state.mode == .leader
@@ -484,13 +473,15 @@ fn test_sets_of_key_events_for_views_on_key_down_adjusting_cursor_position() {
 		}
 		mut clip := clipboardv3.new()
 		mut lilly := Lilly{
-			clipboard:         mut clip
+			clipboard: mut clip
 		}
 		mut fake_view := View{
-			log:       log.Log{}
-			leader_state: ViewLeaderState{ mode: .normal }
-			clipboard: mut clip
-			buffer: buffer.Buffer.new("", .legacy)
+			log:          log.Log{}
+			leader_state: ViewLeaderState{
+				mode: .normal
+			}
+			clipboard:    mut clip
+			buffer:       buffer.Buffer.new('', .legacy)
 		}
 		fake_view.buffer.lines = case.document_contents
 		fake_view.cursor.pos = case.starting_cursor_pos
@@ -511,13 +502,15 @@ fn test_w_moves_cursor_to_next_line_with_plain_comments() {
 
 	mut clip := clipboardv3.new()
 	mut lilly := Lilly{
-		clipboard:         mut clip
+		clipboard: mut clip
 	}
 	mut fake_view := View{
-		log:       log.Log{}
-		leader_state: ViewLeaderState{ mode: .normal }
-		clipboard: mut clip
-		buffer: buffer.Buffer.new("", .legacy)
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
 	}
 	fake_view.buffer.lines = fake_lines
 	fake_view.cursor.pos = ui.CursorPos{

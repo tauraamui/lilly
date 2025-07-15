@@ -43,8 +43,8 @@ fn GapBuffer.new(d string) GapBuffer {
 	return gb
 }
 
-pub fn (gap_buffer GapBuffer) read(range Range) ?string {
-	return ?string(none)
+pub fn (gap_buffer GapBuffer) read(range Range) ?[]string {
+	return ?[]string(none)
 }
 
 pub fn (mut gap_buffer GapBuffer) move_cursor_to(pos Position) {
@@ -65,7 +65,9 @@ pub fn (mut gap_buffer GapBuffer) insert_at(r rune, pos Position) {
 }
 
 pub fn (mut gap_buffer GapBuffer) backspace() bool {
-	if gap_buffer.gap_start == 0 { return false }
+	if gap_buffer.gap_start == 0 {
+		return false
+	}
 	gap_buffer.gap_start -= 1
 	return gap_buffer.data[gap_buffer.gap_start] == lf
 }
@@ -73,8 +75,13 @@ pub fn (mut gap_buffer GapBuffer) backspace() bool {
 // delete removes rune at current pos, returns true if a line has been fully deleted
 // and the source cursor's y needs to be decremented
 pub fn (mut gap_buffer GapBuffer) delete(ignore_newlines bool) bool {
-	if ignore_newlines && gap_buffer.gap_end < gap_buffer.data.len && gap_buffer.data[gap_buffer.gap_end] == lf { return false }
-	if gap_buffer.gap_end + 1 == gap_buffer.data.len { return false }
+	if ignore_newlines && gap_buffer.gap_end < gap_buffer.data.len
+		&& gap_buffer.data[gap_buffer.gap_end] == lf {
+		return false
+	}
+	if gap_buffer.gap_end + 1 == gap_buffer.data.len {
+		return false
+	}
 	gap_buffer.gap_end += 1
 	return true
 }
@@ -82,7 +89,9 @@ pub fn (mut gap_buffer GapBuffer) delete(ignore_newlines bool) bool {
 pub fn (mut gap_buffer GapBuffer) x(pos Pos) ?Pos {
 	gap_buffer.move_cursor_to(Position.new(pos.y, pos.x))
 	distance_to_end_of_line := gap_buffer.find_end_of_line(pos) or { 0 }
-	if distance_to_end_of_line == 0 { return none }
+	if distance_to_end_of_line == 0 {
+		return none
+	}
 	gap_buffer.gap_end += 1
 	return pos
 }
@@ -115,10 +124,10 @@ fn (mut gap_buffer GapBuffer) move_data_cursor_left(count int) {
 	max_allowed_count := gap_buffer.gap_start
 	to_move_count := int_min(count, max_allowed_count)
 
-	for _ in 0..to_move_count {
+	for _ in 0 .. to_move_count {
 		gap_buffer.data[gap_buffer.gap_end - 1] = gap_buffer.data[gap_buffer.gap_start - 1]
 		gap_buffer.gap_start -= 1
-		gap_buffer.gap_end   -= 1
+		gap_buffer.gap_end -= 1
 	}
 }
 
@@ -126,20 +135,23 @@ fn (mut gap_buffer GapBuffer) move_data_cursor_right(count int) {
 	max_allowed_count := gap_buffer.data.len - gap_buffer.gap_end
 	to_move_count := int_min(count, max_allowed_count)
 
-	for _ in 0..to_move_count {
+	for _ in 0 .. to_move_count {
 		gap_buffer.data[gap_buffer.gap_start] = gap_buffer.data[gap_buffer.gap_end]
 		gap_buffer.gap_start += 1
-		gap_buffer.gap_end   += 1
+		gap_buffer.gap_end += 1
 	}
 }
 
 fn (mut gap_buffer GapBuffer) resize_if_full() {
-	if gap_buffer.empty_gap_space_size() != 0 { return }
+	if gap_buffer.empty_gap_space_size() != 0 {
+		return
+	}
 	size := gap_buffer.data.len + gap_size
-	mut data_dest := []rune{ len: size, cap: size }
+	mut data_dest := []rune{len: size, cap: size}
 
 	arrays.copy(mut data_dest[..gap_buffer.gap_start], gap_buffer.data[..gap_buffer.gap_start])
-	arrays.copy(mut data_dest[gap_buffer.gap_end + (gap_size - (gap_buffer.empty_gap_space_size()))..], gap_buffer.data[gap_buffer.gap_end..])
+	arrays.copy(mut data_dest[gap_buffer.gap_end + (gap_size - (gap_buffer.empty_gap_space_size()))..],
+		gap_buffer.data[gap_buffer.gap_end..])
 	gap_buffer.gap_end += gap_size
 
 	gap_buffer.data = data_dest
@@ -155,8 +167,12 @@ pub fn (gap_buffer GapBuffer) find_end_of_line2(pos Position) ?Position {
 
 	for count, r in gap_buffer.data[offset..] {
 		cc := (count + offset)
-		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end { continue }
-		if r == lf { return pos.add(Distance{ offset: count }) }
+		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end {
+			continue
+		}
+		if r == lf {
+			return pos.add(Distance{ offset: count })
+		}
 	}
 
 	return pos.add(Distance{ offset: gap_buffer.data[offset..].len })
@@ -167,8 +183,12 @@ pub fn (gap_buffer GapBuffer) find_end_of_line(pos Pos) ?int {
 
 	for count, r in gap_buffer.data[offset..] {
 		cc := (count + offset)
-		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end { continue }
-		if r == lf { return count }
+		if cc > gap_buffer.gap_start && cc < gap_buffer.gap_end {
+			continue
+		}
+		if r == lf {
+			return count
+		}
 	}
 
 	return gap_buffer.data[offset..].len
@@ -193,29 +213,37 @@ fn resolve_cursor_pos(mut scanner Scanner, data []rune, offset int, gap_start in
 
 pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) ?Pos {
 	mut cursor_loc := pos
-	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or { return none }
+	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or {
+		return none
+	}
 
 	mut scanner := WordStartScanner{
 		start_pos: cursor_loc
 	}
 
-	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset, gap_buffer.gap_start, gap_buffer.gap_end)
+	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset, gap_buffer.gap_start,
+		gap_buffer.gap_end)
 }
 
 pub fn (gap_buffer GapBuffer) find_next_word_end(pos Pos) ?Pos {
 	mut cursor_loc := pos
-	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or { return none }
+	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or {
+		return none
+	}
 
 	mut scanner := WordEndScanner{
 		start_pos: cursor_loc
 	}
 
-	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset, gap_buffer.gap_start, gap_buffer.gap_end)
+	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset, gap_buffer.gap_start,
+		gap_buffer.gap_end)
 }
 
 pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 	mut cursor_loc := pos
-	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or { return none }
+	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or {
+		return none
+	}
 
 	if offset > gap_buffer.gap_end {
 		offset -= gap_buffer.gap_end - gap_buffer.gap_start
@@ -229,7 +257,9 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 	for i := data.len - 1; i >= 0; i-- {
 		iter_count := data.len - 1 - i
 		cchar := data[i]
-		if iter_count >= 1 { previous_cchar = data[i + 1] }
+		if iter_count >= 1 {
+			previous_cchar = data[i + 1]
+		}
 
 		if is_whitespace(cchar) && cchar != lf {
 			if iter_count >= 1 && !is_whitespace(previous_cchar) {
@@ -243,7 +273,9 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 			cursor_loc.y -= 1
 			mut line_len := 0
 			for j := i; j >= 0; j-- {
-				if i == j { continue }
+				if i == j {
+					continue
+				}
 				if data[j] == lf {
 					line_len = i - j
 					break
@@ -273,7 +305,9 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 //                             so basically when we're in insert mode do the thing.
 pub fn (gap_buffer GapBuffer) left(pos Pos) ?Pos {
 	mut cursor_loc := pos
-	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or { return none }
+	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or {
+		return none
+	}
 
 	if offset > gap_buffer.gap_end {
 		offset -= gap_buffer.gap_end - gap_buffer.gap_start
@@ -288,22 +322,30 @@ pub fn (gap_buffer GapBuffer) left(pos Pos) ?Pos {
 	data := arrays.merge(data_pre_gap, data_post_gap)
 	//
 
-	if data.len == 0 { return none }
-	if cursor_loc.x - 1 < 0 { return none }
+	if data.len == 0 {
+		return none
+	}
+	if cursor_loc.x - 1 < 0 {
+		return none
+	}
 
 	if data[cursor_loc.x - 1] == lf {
 		return none
 	}
 
 	cursor_loc.x -= 1
-	if cursor_loc.x < 0 { cursor_loc.x = 0 }
+	if cursor_loc.x < 0 {
+		cursor_loc.x = 0
+	}
 
 	return cursor_loc
 }
 
 pub fn (gap_buffer GapBuffer) right(pos Pos, insert_mode bool) ?Pos {
 	mut cursor_loc := pos
-	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or { return none }
+	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or {
+		return none
+	}
 
 	if offset > gap_buffer.gap_end {
 		offset -= gap_buffer.gap_end - gap_buffer.gap_start
@@ -318,8 +360,12 @@ pub fn (gap_buffer GapBuffer) right(pos Pos, insert_mode bool) ?Pos {
 	data := arrays.merge(data_pre_gap, data_post_gap)
 	//
 
-	if data.len == 0 { return none }
-	if cursor_loc.x + 1 >= data.len { return none }
+	if data.len == 0 {
+		return none
+	}
+	if cursor_loc.x + 1 >= data.len {
+		return none
+	}
 
 	if data[cursor_loc.x + 1] == lf {
 		return none
@@ -332,7 +378,9 @@ pub fn (gap_buffer GapBuffer) right(pos Pos, insert_mode bool) ?Pos {
 
 pub fn (gap_buffer GapBuffer) down(pos Pos) ?Pos {
 	mut cursor_loc := pos
-	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or { return none }
+	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or {
+		return none
+	}
 
 	if offset > gap_buffer.gap_end {
 		offset -= gap_buffer.gap_end - gap_buffer.gap_start
@@ -347,12 +395,16 @@ pub fn (gap_buffer GapBuffer) down(pos Pos) ?Pos {
 	data := arrays.merge(data_pre_gap, data_post_gap)[offset..]
 	//
 
-	if data.len == 0 { return none }
+	if data.len == 0 {
+		return none
+	}
 
 	mut already_found_newline := false
 	for cchar in data {
 		if cchar == lf {
-			if already_found_newline { break }
+			if already_found_newline {
+				break
+			}
 			already_found_newline = true
 			cursor_loc.y += 1
 			cursor_loc.x = -1
@@ -367,14 +419,18 @@ pub fn (gap_buffer GapBuffer) down(pos Pos) ?Pos {
 		}
 	}
 
-	if cursor_loc.x < 0 { cursor_loc.x = 0 }
+	if cursor_loc.x < 0 {
+		cursor_loc.x = 0
+	}
 
 	return cursor_loc
 }
 
 pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 	mut cursor_loc := pos
-	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or { return none }
+	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or {
+		return none
+	}
 
 	if offset > gap_buffer.gap_end {
 		offset -= gap_buffer.gap_end - gap_buffer.gap_start
@@ -389,12 +445,16 @@ pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 	data := arrays.merge(data_pre_gap, data_post_gap)
 	//
 
-	if data.len == 0 { return none }
+	if data.len == 0 {
+		return none
+	}
 
 	mut already_found_newline := false
 	for cchar in data {
 		if cchar == lf {
-			if already_found_newline { break }
+			if already_found_newline {
+				break
+			}
 			already_found_newline = true
 			cursor_loc.y -= 1
 			cursor_loc.x = -1
@@ -409,7 +469,9 @@ pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 		}
 	}
 
-	if cursor_loc.x < 0 { cursor_loc.x = 0 }
+	if cursor_loc.x < 0 {
+		cursor_loc.x = 0
+	}
 
 	return cursor_loc
 }
@@ -419,7 +481,9 @@ pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 pub fn (gap_buffer GapBuffer) up_to_next_blank_line(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	cursor_loc.x = 0
-	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or { return none }
+	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or {
+		return none
+	}
 	offset -= gap_buffer.empty_gap_space_size()
 
 	// NOTE(tauraamui) [10/01/25]:
@@ -458,7 +522,9 @@ pub fn (gap_buffer GapBuffer) up_to_next_blank_line(pos Pos) ?Pos {
 
 pub fn (gap_buffer GapBuffer) down_to_next_blank_line(pos Pos) ?Pos {
 	mut cursor_loc := pos
-	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or { return none }
+	mut offset := gap_buffer.find_offset(Position.new(cursor_loc.y, cursor_loc.x)) or {
+		return none
+	}
 
 	if offset > gap_buffer.gap_end {
 		offset -= gap_buffer.empty_gap_space_size()
@@ -477,7 +543,7 @@ pub fn (gap_buffer GapBuffer) down_to_next_blank_line(pos Pos) ?Pos {
 	data := arrays.merge(data_pre_gap, data_post_gap)
 
 	mut compound_y := 0
-	for i in offset..data.len - 1 {
+	for i in offset .. data.len - 1 {
 		if data[i] == lf {
 			compound_y += 1
 			if i + 1 <= data.len - 1 {
@@ -503,7 +569,8 @@ fn (gap_buffer GapBuffer) empty_gap_space_size() int {
 
 @[inline]
 fn (gap_buffer GapBuffer) str() string {
-	return gap_buffer.data[..gap_buffer.gap_start].string() + gap_buffer.data[gap_buffer.gap_end..].string()
+	return gap_buffer.data[..gap_buffer.gap_start].string() +
+		gap_buffer.data[gap_buffer.gap_end..].string()
 }
 
 @[inline]
@@ -514,7 +581,7 @@ fn (gap_buffer GapBuffer) runes() []rune {
 fn (gap_buffer GapBuffer) raw_str() string {
 	mut sb := strings.new_builder(512)
 	sb.write_runes(gap_buffer.data[..gap_buffer.gap_start])
-	sb.write_string(strings.repeat_string("_", gap_buffer.gap_end - gap_buffer.gap_start))
+	sb.write_string(strings.repeat_string('_', gap_buffer.gap_end - gap_buffer.gap_start))
 	sb.write_runes(gap_buffer.data[gap_buffer.gap_end..])
 	return sb.str()
 }
@@ -528,14 +595,14 @@ mut:
 
 struct WordStartScanner {
 mut:
-	start_pos  Pos
-	compound_x int
-	compound_y int
-	previous   rune
-	set_previous bool
+	start_pos         Pos
+	compound_x        int
+	compound_y        int
+	previous          rune
+	set_previous      bool
 	set_x_to_line_end bool
-	done       bool
-	res        ?Pos
+	done              bool
+	res               ?Pos
 }
 
 fn (mut s WordStartScanner) consume(index int, c rune) {
@@ -569,7 +636,10 @@ fn (s WordStartScanner) done() bool {
 }
 
 fn (mut s WordStartScanner) result() Pos {
-	return Pos{ x: s.start_pos.x + s.compound_x, y: s.start_pos.y + s.compound_y }
+	return Pos{
+		x: s.start_pos.x + s.compound_x
+		y: s.start_pos.y + s.compound_y
+	}
 }
 
 struct WordEndScanner {
@@ -613,7 +683,10 @@ fn (mut s WordEndScanner) done() bool {
 }
 
 fn (mut s WordEndScanner) result() Pos {
-	return Pos{ x: s.start_pos.x + s.compound_x, y: s.start_pos.y + s.compound_y }
+	return Pos{
+		x: s.start_pos.x + s.compound_x
+		y: s.start_pos.y + s.compound_y
+	}
 }
 
 // FIXME(tauraamui): I think this function doesn't need to include the gap as part of the offset'
@@ -641,7 +714,8 @@ fn (gap_buffer GapBuffer) find_offset(pos Position) ?int {
 		return gap_buffer.gap_start + (gap_buffer.gap_end - gap_buffer.gap_start)
 	}
 
-	post_gap_data := gap_buffer.data[gap_buffer.gap_start + (gap_buffer.gap_end - gap_buffer.gap_start)..]
+	post_gap_data := gap_buffer.data[gap_buffer.gap_start +
+		(gap_buffer.gap_end - gap_buffer.gap_start)..]
 	for offset, c in post_gap_data {
 		if line == pos.line && line_offset == pos.offset {
 			return gap_buffer.gap_start + (gap_buffer.gap_end - gap_buffer.gap_start) + offset
@@ -663,7 +737,7 @@ fn (gap_buffer GapBuffer) find_offset(pos Position) ?int {
 	return none
 }
 
-pub const lf := `\n`
+pub const lf = `\n`
 
 // TODO(tauraamui) [16/03/2025]: paralellise this, one thread for pre-gap, one for post
 pub fn (gap_buffer GapBuffer) num_of_lines() int {
@@ -677,7 +751,8 @@ pub fn (gap_buffer GapBuffer) num_of_lines() int {
 		}
 	}
 
-	post_gap_data := gap_buffer.data[gap_buffer.gap_start + (gap_buffer.gap_end - gap_buffer.gap_start)..]
+	post_gap_data := gap_buffer.data[gap_buffer.gap_start +
+		(gap_buffer.gap_end - gap_buffer.gap_start)..]
 	for _, c in post_gap_data {
 		if c == lf {
 			line_count += 1
@@ -689,7 +764,7 @@ pub fn (gap_buffer GapBuffer) num_of_lines() int {
 }
 
 struct LineIteratorFromGapBuffer {
-	data  string
+	data string
 mut:
 	line_start int
 	done       bool
@@ -702,9 +777,11 @@ fn new_gap_buffer_line_iterator(buffer GapBuffer) LineIterator {
 }
 
 pub fn (mut iter LineIteratorFromGapBuffer) next() ?string {
-	if iter.done { return none }
+	if iter.done {
+		return none
+	}
 	mut line := ?string(none)
-	for index in iter.line_start..iter.data.len {
+	for index in iter.line_start .. iter.data.len {
 		if iter.data[index] == lf {
 			line = iter.data[iter.line_start..index]
 			iter.line_start = index + 1
@@ -722,12 +799,12 @@ pub fn (mut iter LineIteratorFromGapBuffer) next() ?string {
 }
 
 struct PatternMatchIteratorFromGapBuffer {
-	pattern   []rune
-	data      []rune
+	pattern []rune
+	data    []rune
 mut:
-	line_id    int
-	line_iter  LineIterator
-	done       bool
+	line_id   int
+	line_iter LineIterator
+	done      bool
 }
 
 fn new_gap_buffer_pattern_match_iterator(pattern []rune, buffer GapBuffer) PatternMatchIterator {
@@ -753,7 +830,10 @@ pub fn (mut iter PatternMatchIteratorFromGapBuffer) next() ?Match {
 		}
 
 		return Match{
-			pos: Pos{ x: found_index, y: current_line_id }
+			pos:      Pos{
+				x: found_index
+				y: current_line_id
+			}
 			contents: line_to_search.runes()[found_index..found_index + iter.pattern.len].string()
 		}
 	}

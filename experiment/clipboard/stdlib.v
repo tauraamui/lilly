@@ -5,6 +5,5 @@ fn main() {
 	defer {
 		s_clip.shutdown_with_persistence()
 	}
-	s_clip.set_text("Some example text for stdlib clipboard copy!")
+	s_clip.set_text('Some example text for stdlib clipboard copy!')
 }
-

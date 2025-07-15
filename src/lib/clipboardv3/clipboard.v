@@ -22,7 +22,7 @@ pub enum ContentType as u8 {
 
 pub struct ClipboardContent {
 pub mut:
-	data   string
+	data string
 	type ContentType
 }
 
@@ -46,4 +46,3 @@ pub fn new() Clipboard {
 	}
 	return new_fallback_clipboard()
 }
-

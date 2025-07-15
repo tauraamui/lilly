@@ -2,7 +2,7 @@ module utf8
 
 pub fn str_clamp_to_visible_length(s string, max_width int) string {
 	if max_width <= 0 {
-		return ""
+		return ''
 	}
 
 	if utf8_str_visible_length(s) <= max_width {

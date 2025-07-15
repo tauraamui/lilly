@@ -23,7 +23,7 @@ pub struct Event {
 
 pub struct Config {
 pub:
-	render_debug bool
+	render_debug     bool
 	default_bg_color ?tui.Color
 	theme            themelib.Theme
 	user_data        voidptr
@@ -86,8 +86,7 @@ mut:
 
 	reset()
 
-//	run() !
+	//	run() !
 	clear()
 	flush()
 }
-

@@ -32,32 +32,32 @@ enum ActiveView as u8 {
 
 @[heap]
 struct Lilly {
-	line_reader                  ?fn (file_path string) ![]string
-	is_binary_file               ?fn (file_path string) bool
+	line_reader    ?fn (file_path string) ![]string
+	is_binary_file ?fn (file_path string) bool
 mut:
 	// univseral data + state
-	log                          log.Log
-	clipboard                    clipboardv3.Clipboard
-	workspace                    workspace.Workspace
-	resolve_workspace_files      ?fn () []string
-	syntaxes                     []syntax.Syntax
+	log                     log.Log
+	clipboard               clipboardv3.Clipboard
+	workspace               workspace.Workspace
+	resolve_workspace_files ?fn () []string
+	syntaxes                []syntax.Syntax
 
 	// visual/ui stuff
-	active_view                  ActiveView
-	splash_screen                ui.SplashScreen
-	view_port                    View
+	active_view   ActiveView
+	splash_screen ui.SplashScreen
+	view_port     View
 
 	// document/buffer data
-	file_buffers                 map[string]buffer.Buffer
-	buffer_views                 map[buffer.UUID_t]View
+	file_buffers map[string]buffer.Buffer
+	buffer_views map[buffer.UUID_t]View
 
 	// visual overlay/modal stuff
 	file_picker_modal            ?ui.FilePickerModal
 	inactive_buffer_picker_modal ?ui.FilePickerModal
 	todo_comments_picker_modal   ?ui.TodoCommentPickerModal
 
-	debug_view                   bool
-	use_gap_buffer               bool
+	debug_view     bool
+	use_gap_buffer bool
 }
 
 interface Root {
@@ -70,16 +70,14 @@ mut:
 	force_quit()
 }
 
-pub fn open_lilly(
-	mut _log log.Log,
+pub fn open_lilly(mut _log log.Log,
 	cfg workspace.Config,
 	mut _clipboard clipboardv3.Clipboard,
 	commit_hash string, file_path string,
-	workspace_root_dir string, use_gap_buffer bool,
-) !&Lilly {
+	workspace_root_dir string, use_gap_buffer bool) !&Lilly {
 	mut lilly := Lilly{
-		log: _log
-		clipboard:         _clipboard
+		log:            _log
+		clipboard:      _clipboard
 		use_gap_buffer: use_gap_buffer
 		line_reader:    os.read_lines
 	}
@@ -107,22 +105,22 @@ fn (mut lilly Lilly) start_debug() {
 }
 
 fn is_binary_file(path string) bool {
-    mut f := os.open(path) or { return false }
-    mut buf := []u8{len: 1024}
-    bytes_read := f.read_bytes_into(0, mut buf) or { return false }
+	mut f := os.open(path) or { return false }
+	mut buf := []u8{len: 1024}
+	bytes_read := f.read_bytes_into(0, mut buf) or { return false }
 
-    // Check first N bytes for binary patterns
-    mut non_text_bytes := 0
-    for i := 0; i < bytes_read; i++ {
-        b := buf[i]
-        // Count bytes outside printable ASCII range
-        if (b < 32 && b != 9 && b != 10 && b != 13) || b > 126 {
-            non_text_bytes++
-        }
-    }
+	// Check first N bytes for binary patterns
+	mut non_text_bytes := 0
+	for i := 0; i < bytes_read; i++ {
+		b := buf[i]
+		// Count bytes outside printable ASCII range
+		if (b < 32 && b != 9 && b != 10 && b != 13) || b > 126 {
+			non_text_bytes++
+		}
+	}
 
-    // If more than 30% non-text bytes, consider it binary
-    return (f64(non_text_bytes) / f64(bytes_read)) > 0.3
+	// If more than 30% non-text bytes, consider it binary
+	return (f64(non_text_bytes) / f64(bytes_read)) > 0.3
 }
 
 fn (mut lilly Lilly) open_file(path string) ! {
@@ -147,7 +145,7 @@ fn (mut lilly Lilly) open_file_with_reader_at(path string, pos ?ui.CursorPos, li
 			return
 		}
 		lilly.view_port = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
-					lilly.workspace.syntaxes(), lilly.clipboard, mut existing_file_buff)
+			lilly.workspace.syntaxes(), lilly.clipboard, mut existing_file_buff)
 		if uw_pos := pos {
 			lilly.view_port.jump_line_to_middle(uw_pos.y)
 		}
@@ -161,7 +159,7 @@ fn (mut lilly Lilly) open_file_with_reader_at(path string, pos ?ui.CursorPos, li
 
 	lilly.file_buffers[path] = buff
 	lilly.view_port = open_view(mut lilly.log, lilly.workspace.config, lilly.workspace.branch(),
-				lilly.workspace.syntaxes(), lilly.clipboard, mut buff)
+		lilly.workspace.syntaxes(), lilly.clipboard, mut buff)
 	if uw_pos := pos {
 		lilly.view_port.jump_line_to_middle(uw_pos.y)
 	}
@@ -169,16 +167,21 @@ fn (mut lilly Lilly) open_file_with_reader_at(path string, pos ?ui.CursorPos, li
 	lilly.active_view = .view_port
 }
 
-const colon = ":".runes()[0]
+const colon = ':'.runes()[0]
 
 fn extract_pos_from_path(file_path string) (string, ?ui.CursorPos) {
-	mut pos := ui.CursorPos{ x: -1, y: -1}
+	mut pos := ui.CursorPos{
+		x: -1
+		y: -1
+	}
 
 	mut from_index := file_path.len
 	mut last_colon_index := 0
 	for i := file_path.len - 1; i >= 0; i-- {
 		c := file_path[i]
-		if c != colon { continue }
+		if c != colon {
+			continue
+		}
 		if from_index == file_path.len {
 			pos_x_str := file_path[i + 1..from_index]
 			pos.y = strconv.atoi(pos_x_str) or { -1 }
@@ -197,26 +200,35 @@ fn extract_pos_from_path(file_path string) (string, ?ui.CursorPos) {
 	}
 
 	if pos.x == -1 && pos.y == -1 {
-		return file_path.trim_right(":"), none
+		return file_path.trim_right(':'), none
 	}
 
-	if pos.x == -1 { pos.x = 0 }
-	if pos.y == -1 { pos.y = 0 }
+	if pos.x == -1 {
+		pos.x = 0
+	}
+	if pos.y == -1 {
+		pos.y = 0
+	}
 
-	if last_colon_index == 0 { last_colon_index = file_path.len }
+	if last_colon_index == 0 {
+		last_colon_index = file_path.len
+	}
 
 	return file_path[..last_colon_index], pos
 }
 
 fn (mut lilly Lilly) open_file_picker(special_mode bool) {
 	if mut file_picker := lilly.file_picker_modal {
-		if file_picker.is_open() { return } // this should never be reached
+		if file_picker.is_open() {
+			return
+		}
+		// this should never be reached
 		file_picker.open()
 		lilly.file_picker_modal = file_picker
 		return
 	}
 	mut resolve_files := lilly.resolve_workspace_files or { lilly.workspace.get_files }
-	mut file_picker := ui.FilePickerModal.new("", resolve_files(), special_mode)
+	mut file_picker := ui.FilePickerModal.new('', resolve_files(), special_mode)
 	file_picker.open()
 	lilly.file_picker_modal = file_picker
 }
@@ -229,14 +241,18 @@ fn (mut lilly Lilly) close_file_picker() {
 
 fn (mut lilly Lilly) open_inactive_buffer_picker(special_mode bool) {
 	if mut inactive_buffer_picker := lilly.inactive_buffer_picker_modal {
-		if inactive_buffer_picker.is_open() { return } // this should never happen/be reached
+		if inactive_buffer_picker.is_open() {
+			return
+		}
+		// this should never happen/be reached
 		inactive_buffer_picker.open()
 		lilly.inactive_buffer_picker_modal = inactive_buffer_picker
 		return
 	}
 	// TODO(tauraamui) [15/02/2025]: resolve all file paths for any buffers with no view instance
 	//                               or any view which is not the current/active view
-	mut inactive_buffer_picker := ui.FilePickerModal.new("INACTIVE BUFFERS PICKER", lilly.resolve_inactive_file_buffer_paths(), special_mode)
+	mut inactive_buffer_picker := ui.FilePickerModal.new('INACTIVE BUFFERS PICKER', lilly.resolve_inactive_file_buffer_paths(),
+		special_mode)
 	inactive_buffer_picker.open()
 	lilly.inactive_buffer_picker_modal = inactive_buffer_picker
 }
@@ -253,7 +269,9 @@ fn (mut lilly Lilly) close_inactive_buffer_picker() {
 
 fn (mut lilly Lilly) open_todo_comments_picker() {
 	if mut todo_comments_picker := lilly.todo_comments_picker_modal {
-		if todo_comments_picker.is_open() { return }
+		if todo_comments_picker.is_open() {
+			return
+		}
 		todo_comments_picker.open()
 		lilly.todo_comments_picker_modal = todo_comments_picker
 		return
@@ -280,7 +298,7 @@ fn (mut lilly Lilly) open_todo_comments_picker() {
 //                              false positive matches in the results list
 fn (mut lilly Lilly) resolve_todo_comments_matches() []buffer.Match {
 	mut matches := []buffer.Match{}
-	match_ch    := chan buffer.Match{}
+	match_ch := chan buffer.Match{}
 	mut threads := []thread{}
 
 	mut matches_ref := &matches
@@ -294,11 +312,17 @@ fn (mut lilly Lilly) resolve_todo_comments_matches() []buffer.Match {
 	resolve_workspace_files := lilly.resolve_workspace_files or { lilly.workspace.get_files }
 	unopened_file_paths := resolve_workspace_files().filter(!open_file_buffer_paths.contains(it))
 	line_reader := lilly.line_reader or { os.read_lines }
-	is_binary   := lilly.is_binary_file or { core.is_binary_file }
+	is_binary := lilly.is_binary_file or { core.is_binary_file }
 	for file_path in unopened_file_paths {
-		if is_binary(file_path) { continue }
+		if is_binary(file_path) {
+			continue
+		}
 		threads << go fn (line_reader fn (path string) ![]string, use_gap_buffer bool, file_path string, match_ch chan buffer.Match) {
-			mut buff := buffer.Buffer.new(file_path, if use_gap_buffer{ .gap_buffer } else { .legacy })
+			mut buff := buffer.Buffer.new(file_path, if use_gap_buffer {
+				.gap_buffer
+			} else {
+				.legacy
+			})
 			buff.read_lines(line_reader) or { return }
 			resolve_matches_within_buffer(buff, match_ch)
 		}(line_reader, lilly.use_gap_buffer, file_path, match_ch)
@@ -319,7 +343,7 @@ fn read_matches_from_channel_write_to_array(mut matches []buffer.Match, match_ch
 }
 
 fn resolve_matches_within_buffer(file_buffer buffer.Buffer, matches chan buffer.Match) {
-	mut match_iter := file_buffer.match_iterator("TODO".runes())
+	mut match_iter := file_buffer.match_iterator('TODO'.runes())
 	for !match_iter.done() {
 		m_match := match_iter.next() or { continue }
 		matches <- m_match
@@ -328,7 +352,7 @@ fn resolve_matches_within_buffer(file_buffer buffer.Buffer, matches chan buffer.
 
 fn (mut lilly Lilly) resolve_todo_comments_for_active_buffer(mut matches []buffer.Match) {
 	file_path := lilly.view_port.file_path
-	mut match_iter := lilly.file_buffers[file_path].match_iterator("TODO".runes())
+	mut match_iter := lilly.file_buffers[file_path].match_iterator('TODO'.runes())
 
 	for !match_iter.done() {
 		m_match := match_iter.next() or { continue }
@@ -366,7 +390,7 @@ pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
 
 	if mut inactive_buffer_picker := lilly.inactive_buffer_picker_modal {
 		inactive_buffer_picker.draw(mut ctx)
-		lilly.inactive_buffer_picker_modal = inactive_buffer_picker// draw internally can mutate state so ensure we keep this
+		lilly.inactive_buffer_picker_modal = inactive_buffer_picker // draw internally can mutate state so ensure we keep this
 		return
 	}
 
@@ -378,7 +402,9 @@ pub fn (mut lilly Lilly) draw(mut ctx draw.Contextable) {
 }
 
 pub fn (mut lilly Lilly) on_mouse_scroll(e draw.Event) {
-	if e.direction == .unknown { return }
+	if e.direction == .unknown {
+		return
+	}
 	lilly.view_port.on_mouse_scroll(e)
 }
 
@@ -408,25 +434,25 @@ pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
 		.splash_screen {
 			action := lilly.splash_screen.on_key_down(e)
 			match action {
-				.no_op                               {}
-				.quit                                { lilly.quit() or {} }
-				.open_file_picker                    { lilly.open_file_picker(false) }
-				.open_file_picker_special            { lilly.open_file_picker(true) }
-				.open_inactive_buffer_picker         { lilly.open_inactive_buffer_picker(false) }
+				.no_op {}
+				.quit { lilly.quit() or {} }
+				.open_file_picker { lilly.open_file_picker(false) }
+				.open_file_picker_special { lilly.open_file_picker(true) }
+				.open_inactive_buffer_picker { lilly.open_inactive_buffer_picker(false) }
 				.open_inactive_buffer_picker_special { lilly.open_inactive_buffer_picker(true) }
 			}
 		}
 		.view_port {
 			action := lilly.view_port.on_key_down(e)
 			match action {
-				.no_op                               {}
-				.quit                                { lilly.quit() or {} }
-				.force_quit                          { lilly.force_quit() }
-				.open_file_picker                    { lilly.open_file_picker(false) }
-				.open_file_picker_special            { lilly.open_file_picker(true) }
-				.open_inactive_buffer_picker         { lilly.open_inactive_buffer_picker(false) }
+				.no_op {}
+				.quit { lilly.quit() or {} }
+				.force_quit { lilly.force_quit() }
+				.open_file_picker { lilly.open_file_picker(false) }
+				.open_file_picker_special { lilly.open_file_picker(true) }
+				.open_inactive_buffer_picker { lilly.open_inactive_buffer_picker(false) }
 				.open_inactive_buffer_picker_special { lilly.open_inactive_buffer_picker(true) }
-				.open_todo_comments_picker           { lilly.open_todo_comments_picker() }
+				.open_todo_comments_picker { lilly.open_todo_comments_picker() }
 			}
 		}
 	}
@@ -445,42 +471,63 @@ pub fn (mut lilly Lilly) on_key_down(e draw.Event) {
 pub fn (mut lilly Lilly) file_picker_on_key_down(mut fp_modal ui.FilePickerModal, e draw.Event) {
 	action := fp_modal.on_key_down(e)
 	match action.op {
-		.no_op { lilly.file_picker_modal = fp_modal }
+		.no_op {
+			lilly.file_picker_modal = fp_modal
+		}
 		// NOTE(tauraamui) [12/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
 		.open_file_op {
-			lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
+			lilly.open_file(action.file_path) or {
+				panic('failed to open file ${action.file_path}: ${err}')
+			}
 			lilly.close_file_picker()
 			return
 		}
-		.close_op { lilly.close_file_picker(); return }
+		.close_op {
+			lilly.close_file_picker()
+			return
+		}
 	}
 }
 
 pub fn (mut lilly Lilly) inactive_buffer_picker_on_key_down(mut inactive_buffer_picker ui.FilePickerModal, e draw.Event) {
 	action := inactive_buffer_picker.on_key_down(e)
 	match action.op {
-		.no_op { lilly.inactive_buffer_picker_modal = inactive_buffer_picker }
+		.no_op {
+			lilly.inactive_buffer_picker_modal = inactive_buffer_picker
+		}
 		// NOTE(tauraamui) [16/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
 		.open_file_op {
-			lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
+			lilly.open_file(action.file_path) or {
+				panic('failed to open file ${action.file_path}: ${err}')
+			}
 			lilly.close_inactive_buffer_picker()
 			return
 		}
-		.close_op { lilly.close_inactive_buffer_picker(); return }
+		.close_op {
+			lilly.close_inactive_buffer_picker()
+			return
+		}
 	}
 }
 
 pub fn (mut lilly Lilly) todo_comments_picker_on_key_down(mut todo_comments_picker ui.TodoCommentPickerModal, e draw.Event) {
 	action := todo_comments_picker.on_key_down(e)
 	match action.op {
-		.no_op { lilly.todo_comments_picker_modal = todo_comments_picker }
+		.no_op {
+			lilly.todo_comments_picker_modal = todo_comments_picker
+		}
 		// NOTE(tauraamui) [16/02/2025]: should probably handle file opening failure better, will address in future (pinky promise!)
 		.open_file_op {
-			lilly.open_file(action.file_path) or { panic("failed to open file ${action.file_path}: ${err}") }
+			lilly.open_file(action.file_path) or {
+				panic('failed to open file ${action.file_path}: ${err}')
+			}
 			lilly.close_todo_comments_picker()
 			return
 		}
-		.close_op { lilly.close_todo_comments_picker(); return }
+		.close_op {
+			lilly.close_todo_comments_picker()
+			return
+		}
 	}
 }
 
@@ -489,15 +536,17 @@ pub fn (mut lilly Lilly) todo_comments_picker_on_key_down(mut todo_comments_pick
 pub fn (mut lilly Lilly) quit() ! {
 	mut dirty_count := 0
 	for _, buff in lilly.file_buffers {
-		if buff.dirty { dirty_count += 1 }
+		if buff.dirty {
+			dirty_count += 1
+		}
 	}
 
 	if dirty_count > 0 {
-		return error("Cannot quit: ${dirty_count} unsaved buffer(s). Save changes or use :q! to force quit")
+		return error('Cannot quit: ${dirty_count} unsaved buffer(s). Save changes or use :q! to force quit')
 	}
 	exit(0)
 }
 
 pub fn (mut lilly Lilly) force_quit() {
-    exit(0)
+	exit(0)
 }

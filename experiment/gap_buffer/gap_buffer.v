@@ -27,9 +27,9 @@ mut:
 
 fn GapBuffer.new() GapBuffer {
 	return GapBuffer{
-		data: []rune{ len: gap_size, cap: gap_size }
+		data:      []rune{len: gap_size, cap: gap_size}
 		gap_start: 0
-		gap_end: gap_size
+		gap_end:   gap_size
 	}
 }
 
@@ -40,12 +40,16 @@ pub fn (mut gap_buffer GapBuffer) insert(s string) {
 }
 
 pub fn (mut gap_buffer GapBuffer) backspace() {
-	if gap_buffer.gap_start == 0 { return }
+	if gap_buffer.gap_start == 0 {
+		return
+	}
 	gap_buffer.gap_start -= 1
 }
 
 pub fn (mut gap_buffer GapBuffer) delete() {
-	if gap_buffer.gap_end + 1 == gap_buffer.data.len { return }
+	if gap_buffer.gap_end + 1 == gap_buffer.data.len {
+		return
+	}
 	gap_buffer.gap_end += 1
 }
 
@@ -59,10 +63,10 @@ fn (mut gap_buffer GapBuffer) move_cursor_left(count int) {
 	max_allowed_count := gap_buffer.gap_start
 	to_move_count := int_min(count, max_allowed_count)
 
-	for _ in 0..to_move_count {
+	for _ in 0 .. to_move_count {
 		gap_buffer.data[gap_buffer.gap_end - 1] = gap_buffer.data[gap_buffer.gap_start - 1]
 		gap_buffer.gap_start -= 1
-		gap_buffer.gap_end   -= 1
+		gap_buffer.gap_end -= 1
 	}
 }
 
@@ -70,32 +74,35 @@ fn (mut gap_buffer GapBuffer) move_cursor_right(count int) {
 	max_allowed_count := gap_buffer.data.len - gap_buffer.gap_end
 	to_move_count := int_min(count, max_allowed_count)
 
-	for _ in 0..to_move_count {
+	for _ in 0 .. to_move_count {
 		gap_buffer.data[gap_buffer.gap_start] = gap_buffer.data[gap_buffer.gap_end]
 		gap_buffer.gap_start += 1
-		gap_buffer.gap_end   += 1
+		gap_buffer.gap_end += 1
 	}
 }
 
 fn (mut gap_buffer GapBuffer) resize_if_full() {
-	if gap_buffer.empty_gap_space_size() != 0 { return }
+	if gap_buffer.empty_gap_space_size() != 0 {
+		return
+	}
 	size := gap_buffer.data.len + gap_size
-	mut data_dest := []rune{ len: size, cap: size }
+	mut data_dest := []rune{len: size, cap: size}
 
 	arrays.copy(mut data_dest[..gap_buffer.gap_start], gap_buffer.data[..gap_buffer.gap_start])
-	arrays.copy(mut data_dest[gap_buffer.gap_end + (gap_size - (gap_buffer.empty_gap_space_size()))..], gap_buffer.data[gap_buffer.gap_end..])
+	arrays.copy(mut data_dest[gap_buffer.gap_end + (gap_size - (gap_buffer.empty_gap_space_size()))..],
+		gap_buffer.data[gap_buffer.gap_end..])
 	gap_buffer.gap_end += gap_size
 
 	gap_buffer.data = data_dest
 }
 
 struct LineIterator {
-	data       string
+	data string
 mut:
 	line_number int
-	line_start int
-	line_end  int
-	done bool
+	line_start  int
+	line_end    int
+	done        bool
 }
 
 fn (mut line_iter LineIterator) next() ?string {
@@ -134,23 +141,24 @@ fn (gap_buffer GapBuffer) empty_gap_space_size() int {
 
 @[inline]
 fn (gap_buffer GapBuffer) str() string {
-	return gap_buffer.data[..gap_buffer.gap_start].string() + gap_buffer.data[gap_buffer.gap_end..].string()
+	return gap_buffer.data[..gap_buffer.gap_start].string() +
+		gap_buffer.data[gap_buffer.gap_end..].string()
 }
 
 fn (gap_buffer GapBuffer) raw_str() string {
 	mut sb := strings.new_builder(512)
 	sb.write_runes(gap_buffer.data[..gap_buffer.gap_start])
-	sb.write_string(strings.repeat_string("_", gap_buffer.gap_end - gap_buffer.gap_start))
+	sb.write_string(strings.repeat_string('_', gap_buffer.gap_end - gap_buffer.gap_start))
 	sb.write_runes(gap_buffer.data[gap_buffer.gap_end..])
 	return sb.str()
 }
 
 fn main() {
-	println("Hello World!")
+	println('Hello World!')
 	mut gb := GapBuffer.new()
-	gb.insert("Hello")
-	gb.insert(" Wo")
-	gb.insert("rld")
-	gb.insert("!")
+	gb.insert('Hello')
+	gb.insert(' Wo')
+	gb.insert('rld')
+	gb.insert('!')
 	println(gb.str())
 }

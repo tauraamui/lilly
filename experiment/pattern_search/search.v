@@ -21,7 +21,7 @@ fn compute_lps(pattern string, mut lps []int) {
 }
 
 fn kmp(text string, pattern string) int {
-	mut lps := []int{ len: pattern.len }
+	mut lps := []int{len: pattern.len}
 	compute_lps(pattern, mut lps)
 
 	mut i := 0
