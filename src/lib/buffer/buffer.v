@@ -160,13 +160,36 @@ pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
 }
 
 pub fn (mut buffer Buffer) insert_tab(pos Pos, tabs_not_spaces bool) ?Pos {
+	prefix := if tabs_not_spaces { '\t' } else { ' '.repeat(4) }
+	match buffer.buffer_kind {
+		.gap_buffer {
+			buffer.move_cursor_to(pos)
+			return buffer.insert_text(pos, prefix)
+		}
+		.line_buffer {
+			return position_to_pos(buffer.l_buffer.insert_tab(Position.new(pos.y, pos.x),
+				tabs_not_spaces))
+		}
+		.legacy {
+			return buffer.insert_text(pos, prefix)
+		}
+	}
+}
+
+pub fn (mut buffer Buffer) visual_indent(range Range, tabs_not_spaces bool) ?Pos {
 	if buffer.buffer_kind == .gap_buffer {
-		buffer.move_cursor_to(pos)
+		return none
 	}
-	if tabs_not_spaces {
-		return buffer.insert_text(pos, '\t')
+
+	prefix := if tabs_not_spaces { '\t' } else { ' '.repeat(4) }
+
+	/*
+	for i := start; i < end + 1; i++ {
+		view.buffer.lines[i] = '${prefix}${view.buffer.lines[i]}'
 	}
-	return buffer.insert_text(pos, ' '.repeat(4))
+	*/
+
+	return none
 }
 
 // NOTE(tauraamui) [26/06/2025]: this is effectively the newline insertion method.

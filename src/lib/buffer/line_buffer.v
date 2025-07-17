@@ -36,10 +36,8 @@ pub fn (mut l_buffer LineBuffer) insert_text(pos Position, s string) ?Position {
 }
 
 pub fn (mut l_buffer LineBuffer) insert_tab(pos Position, tabs_not_spaces bool) ?Position {
-	if tabs_not_spaces {
-		return l_buffer.insert_text(pos, '\t')
-	}
-	return l_buffer.insert_text(pos, ' '.repeat(4))
+	prefix := if tabs_not_spaces { '\t' } else { ' '.repeat(4) }
+	return l_buffer.insert_text(pos, prefix)
 }
 
 pub fn (mut l_buffer LineBuffer) newline(pos Position) ?Position {

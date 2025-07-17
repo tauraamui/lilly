@@ -685,12 +685,11 @@ fn (mut view View) visual_indent() {
 	 }
 	end := if ss := view.cursor.sel_end() { ss.y } else { return
 	 }
-
-	prefix := if view.config.insert_tabs_not_spaces { '\t' } else { ' '.repeat(4) }
-
-	for i := start; i < end + 1; i++ {
-		view.buffer.lines[i] = '${prefix}${view.buffer.lines[i]}'
-	}
+	pos := view.buffer.visual_indent(buffer.Range.new(buffer.Position.new(start, 0), buffer.Position.new(end,
+		0)), view.config.insert_tabs_not_spaces) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
+	view.scroll_from_and_to()
 }
 
 fn (mut view View) visual_unindent() {
