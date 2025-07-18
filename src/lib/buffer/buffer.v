@@ -176,20 +176,10 @@ pub fn (mut buffer Buffer) insert_tab(pos Pos, tabs_not_spaces bool) ?Pos {
 	}
 }
 
-pub fn (mut buffer Buffer) visual_indent(range Range, tabs_not_spaces bool) ?Pos {
-	if buffer.buffer_kind == .gap_buffer {
-		return none
+pub fn (mut buffer Buffer) visual_indent(range Range, tabs_not_spaces bool) {
+	for line_y := range.start.line; line_y <= range.end.line; line_y++ {
+		buffer.insert_tab(Pos{ y: line_y, x: 0 }, tabs_not_spaces)
 	}
-
-	prefix := if tabs_not_spaces { '\t' } else { ' '.repeat(4) }
-
-	/*
-	for i := start; i < end + 1; i++ {
-		view.buffer.lines[i] = '${prefix}${view.buffer.lines[i]}'
-	}
-	*/
-
-	return none
 }
 
 // NOTE(tauraamui) [26/06/2025]: this is effectively the newline insertion method.
