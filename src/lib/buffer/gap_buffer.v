@@ -44,6 +44,9 @@ fn GapBuffer.new(d string) GapBuffer {
 }
 
 pub fn (gap_buffer GapBuffer) read(range Range) ?[]string {
+	start_offset := gap_buffer.find_offset(range.start) or { return none }
+	end_offset := gap_buffer.find_offset(range.end) or { return none }
+
 	return ?[]string(none)
 }
 
