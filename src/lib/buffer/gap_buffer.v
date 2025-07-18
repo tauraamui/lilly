@@ -162,6 +162,8 @@ pub fn (gap_buffer GapBuffer) in_bounds(pos Pos) bool {
 	return true
 }
 
+// NOTE(tauraamui) [15/07/2025]: keep this around until we get around to migrating all of the buffer types
+//                               to use the new Position type
 pub fn (gap_buffer GapBuffer) find_end_of_line2(pos Position) ?Position {
 	offset := gap_buffer.find_offset(pos) or { return none }
 

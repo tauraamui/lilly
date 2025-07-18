@@ -677,26 +677,20 @@ fn (mut view View) insert_tab() {
 	view.scroll_from_and_to()
 }
 
-// NOTE(tauraamui) [15/01/25]: The mechanisms around selections needs to be properly
-//                             thought through before this stuff is migrated to the
-//                             buffer wrapper type data structure.
 fn (mut view View) visual_indent() {
-	mut start := if sel_start := view.cursor.sel_start() { sel_start.y } else { return
+	start := if ss := view.cursor.sel_start() { ss.y } else { return
 	 }
-	mut end := if sel_end := view.cursor.sel_end() { sel_end.y } else { return
+	end := if ss := view.cursor.sel_end() { ss.y } else { return
 	 }
-
-	prefix := if view.config.insert_tabs_not_spaces { '\t' } else { ' '.repeat(4) }
-
-	for i := start; i < end + 1; i++ {
-		view.buffer.lines[i] = '${prefix}${view.buffer.lines[i]}'
-	}
+	view.buffer.visual_indent(buffer.Range.new(buffer.Position.new(start, 0), buffer.Position.new(end,
+		0)), view.config.insert_tabs_not_spaces)
+	view.scroll_from_and_to() // just in case
 }
 
 fn (mut view View) visual_unindent() {
-	mut start := if sel_start := view.cursor.sel_start() { sel_start.y } else { return
+	start := if ss := view.cursor.sel_start() { ss.y } else { return
 	 }
-	mut end := if sel_end := view.cursor.sel_end() { sel_end.y } else { return
+	end := if ss := view.cursor.sel_end() { ss.y } else { return
 	 }
 
 	prefix := if view.config.insert_tabs_not_spaces { '\t' } else { ' '.repeat(4) }
