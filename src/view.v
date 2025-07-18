@@ -677,19 +677,14 @@ fn (mut view View) insert_tab() {
 	view.scroll_from_and_to()
 }
 
-// NOTE(tauraamui) [15/01/25]: The mechanisms around selections needs to be properly
-//                             thought through before this stuff is migrated to the
-//                             buffer wrapper type data structure.
 fn (mut view View) visual_indent() {
 	start := if ss := view.cursor.sel_start() { ss.y } else { return
 	 }
 	end := if ss := view.cursor.sel_end() { ss.y } else { return
 	 }
-	pos := view.buffer.visual_indent(buffer.Range.new(buffer.Position.new(start, 0), buffer.Position.new(end,
-		0)), view.config.insert_tabs_not_spaces) or { return }
-	view.cursor.pos.x = pos.x
-	view.cursor.pos.y = pos.y
-	view.scroll_from_and_to()
+	view.buffer.visual_indent(buffer.Range.new(buffer.Position.new(start, 0), buffer.Position.new(end,
+		0)), view.config.insert_tabs_not_spaces)
+	view.scroll_from_and_to() // just in case
 }
 
 fn (mut view View) visual_unindent() {
