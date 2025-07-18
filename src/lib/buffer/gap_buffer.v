@@ -43,11 +43,19 @@ fn GapBuffer.new(d string) GapBuffer {
 	return gb
 }
 
-pub fn (gap_buffer GapBuffer) read(range Range) ?[]string {
+pub fn (gap_buffer GapBuffer) read(range Range) ?string {
 	start_offset := gap_buffer.find_offset(range.start) or { return none }
 	end_offset := gap_buffer.find_offset(range.end) or { return none }
 
-	return ?[]string(none)
+	if start_offset < gap_buffer.gap_start && gap_buffer.gap_start < end_offset {
+		gap_sizee := gap_buffer.gap_end - gap_buffer.gap_start
+		first_half := gap_buffer.data[start_offset..gap_buffer.gap_start]
+		second_half := gap_buffer.data[gap_buffer.gap_start + gap_sizee..end_offset]
+
+		return arrays.merge(first_half, second_half).string()
+	}
+
+	return gap_buffer.data[start_offset..end_offset].string()
 }
 
 pub fn (mut gap_buffer GapBuffer) move_cursor_to(pos Position) {
