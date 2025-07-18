@@ -14,6 +14,13 @@
 
 module buffer
 
+fn test_read_range_from_document_with_content() {
+	mut gb := GapBuffer.new('1. First line\n2. Second line!\n3. Third line :3')
+	assert gb.read(Range.new(Position.new(0, 0), Position.new(1, 0)))? == "1. First line\n"
+	assert gb.read(Range.new(Position.new(1, 0), Position.new(2, 0)))? == "2. Second line!\n"
+	// assert gb.read(Range.new(Position.new(2, 0), Position.new(2, gb.find_end_of_line(Pos{ y: 2, x: 0 }) or { 0 })))? == "2. Second line\n"
+}
+
 fn test_up_to_next_blank_line_in_document_with_no_blank_line_given_cursor_at_top() {
 	mut gb := GapBuffer.new('1. First line\n2. Second line!\n3. Third line :3')
 	new_pos := gb.up_to_next_blank_line(Pos{ x: 0, y: 0 })
