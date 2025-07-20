@@ -46,9 +46,8 @@ fn GapBuffer.new(d string) GapBuffer {
 pub fn (gap_buffer GapBuffer) read(range Range) ?string {
 	start_offset := gap_buffer.find_offset(range.start) or { return none }
 	end_offset := gap_buffer.find_offset(range.end) or { return none }
-	println("START OFFSET: ${start_offset}, END OFFSET: ${end_offset}")
 
-	if start_offset < gap_buffer.gap_start < end_offset {
+	if start_offset < gap_buffer.gap_start && gap_buffer.gap_start < end_offset {
 		gap_size := gap_buffer.gap_end - gap_buffer.gap_start
 		first_half := gap_buffer.data[start_offset..gap_buffer.gap_start]
 		second_half := gap_buffer.data[gap_buffer.gap_start + gap_size..end_offset]
