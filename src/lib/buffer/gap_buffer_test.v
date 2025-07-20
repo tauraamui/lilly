@@ -14,16 +14,20 @@
 
 module buffer
 
-fn test_read_range_from_document_with_content() {
+fn test_read_range_of_each_full_line_from_document_with_content() {
 	mut gb := GapBuffer.new('1. First line\n2. Second line!\n3. Third line :3')
 
-	start_1 := Position.new(0, 0)
-	end_1 := gb.find_end_of_line2(start_1)?
-	println("START: ${start_1}, END: ${end_1}")
-	assert gb.read(Range.new(start_1, end_1))? == "1. First line\n"
+	mut start_pos := Position.new(0, 0)
+	mut end_pos := gb.find_end_of_line2(start_pos)?
+	assert gb.read(Range.new(start_pos, end_pos))? == "1. First line"
 
-	assert gb.read(Range.new(Position.new(1, 0), Position.new(2, 0)))? == "2. Second line!\n"
-	// assert gb.read(Range.new(Position.new(2, 0), Position.new(2, gb.find_end_of_line(Pos{ y: 2, x: 0 }) or { 0 })))? == "2. Second line\n"
+	start_pos = Position.new(1, 0)
+	end_pos = gb.find_end_of_line2(start_pos)?
+	assert gb.read(Range.new(start_pos, end_pos))? == "2. Second line!"
+
+	start_pos = Position.new(2, 0)
+	end_pos = gb.find_end_of_line2(start_pos)?
+	assert gb.read(Range.new(start_pos, end_pos))? == "3. Third line :3"
 }
 
 fn test_up_to_next_blank_line_in_document_with_no_blank_line_given_cursor_at_top() {
