@@ -393,7 +393,7 @@ pub fn (buffer Buffer) read_line(y int) ?string {
 
 pub fn (buffer Buffer) read(range Range) ?[]string {
 	if buffer.use_gap_buffer {
-		return buffer.c_buffer.read(range)
+		if data := buffer.c_buffer.read(range) { return data.split("${lf}") } else { return ?[]string(none) }
 	}
 	return ?[]string(none)
 }

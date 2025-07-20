@@ -32,6 +32,36 @@ fn test_new_range_swaps_start_and_end_when_end_precedes_start() {
 	assert range.end == start
 }
 
+fn test_new_range_swaps_start_and_end_when_end_precedes_start_on_same_line() {
+	start := Position{
+		line:   0
+		offset: 4
+	}
+	end := Position{
+		line:   0
+		offset: 1
+	}
+	range := Range.new(start, end)
+
+	assert range.start == end
+	assert range.end == start
+}
+
+fn test_new_range_swaps_start_and_end_when_end_precedes_start_when_start_is_zeroed_out_on_same_line() {
+	start := Position{
+		line:   0
+		offset: 0
+	}
+	end := Position{
+		line:   0
+		offset: 8
+	}
+	range := Range.new(start, end)
+
+	assert range.start == Position.new(0, 0)
+	assert range.end == Position.new(0, 8)
+}
+
 fn test_new_range_does_not_swap_start_and_end_if_end_does_not_precedes_start() {
 	start := Position{
 		line:   0

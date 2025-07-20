@@ -29,14 +29,20 @@ pub fn (mut p Position) apply(d Distance) {
 	p = p.add(d)
 }
 
+const less = true
+const greater = false
+
 fn (a Position) < (b Position) bool {
-	return match true {
-		a.line < b.line { true }
-		a.line > b.line { false }
-		a.offset < b.offset { true }
-		a.offset > b.offset { true }
-		else { false }
+	if a.line < b.line {
+		return less
+	} else if a.line > b.line {
+		return greater
+	} else if a.offset < b.offset {
+		return less
+	} else if a.offset > b.offset {
+		return greater
 	}
+	return greater
 }
 
 fn (a Position) == (b Position) bool {
