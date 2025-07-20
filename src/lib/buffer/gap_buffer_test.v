@@ -14,6 +14,18 @@
 
 module buffer
 
+fn test_read_range_of_full_lines_across_multiple_lines() {
+	mut gb := GapBuffer.new('1. First line that has more content\n2. Second line!\n3. Third line :3')
+
+	mut start_pos := Position.new(0, 4)
+	mut end_pos := start_pos.add(Distance{ lines: 1, offset: 7 })
+	assert gb.read(Range.new(start_pos, end_pos))? == "irst line that has more content\n2. Second l"
+
+	start_pos = Position.new(1, 0)
+	end_pos = gb.find_end_of_line2(start_pos.add(Distance{ lines: 1 }))?
+	assert gb.read(Range.new(start_pos, end_pos))? == "2. Second line!\n3. Third line :3"
+}
+
 fn test_read_range_of_partials_of_each_line_from_document_with_content() {
 	mut gb := GapBuffer.new('1. First line that has more content\n2. Second line!\n3. Third line :3')
 
