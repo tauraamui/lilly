@@ -682,8 +682,7 @@ fn (mut view View) visual_indent() {
 	 }
 	end := if ss := view.cursor.sel_end() { ss.y } else { return
 	 }
-	view.buffer.visual_indent(buffer.Range.new(buffer.Position.new(start, 0), buffer.Position.new(end,
-		0)), view.config.insert_tabs_not_spaces)
+	view.buffer.visual_indent(buffer.Range.new(buffer.Position.new(line: start), buffer.Position.new(line: end)), view.config.insert_tabs_not_spaces)
 	view.scroll_from_and_to() // just in case
 }
 

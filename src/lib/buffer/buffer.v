@@ -31,6 +31,14 @@ pub mut:
 	y int
 }
 
+pub fn pos_to_position(pos Pos) Position {
+	return Position.new(line: pos.y, offset: pos.x)
+}
+
+pub fn position_to_pos(pos Position) Pos {
+	return Pos{ y: pos.line, x: pos.offset }
+}
+
 @[heap]
 pub struct Buffer {
 pub:

@@ -22,7 +22,7 @@ pub fn (mut l_buffer LineBuffer) insert_text(pos Position, s string) ?Position {
 	line_content := l_buffer.lines[pos.line]
 	mut clamped_offset := if pos.offset > line_content.len { line_content.len } else { pos.offset }
 	if clamped_offset > line_content.runes().len {
-		return Position.new(pos.line, clamped_offset)
+		return Position.new(line: pos.line, offset: clamped_offset)
 	}
 
 	pre_line_content := line_content.runes()[..clamped_offset].string()
@@ -30,7 +30,7 @@ pub fn (mut l_buffer LineBuffer) insert_text(pos Position, s string) ?Position {
 
 	l_buffer.lines[pos.line] = '${pre_line_content}${s}${post_line_content}'
 
-	clamped_pos := Position.new(pos.line, clamped_offset)
+	clamped_pos := Position.new(line: pos.line, offset: clamped_offset)
 
 	return clamped_pos.add(Distance{ lines: 0, offset: s.runes().len })
 }
@@ -60,7 +60,7 @@ pub fn (mut l_buffer LineBuffer) newline(pos Position) ?Position {
 	whitespace_prefix := resolve_whitespace_prefix_from_line(content_before_cursor)
 	l_buffer.lines[pos.line] = content_before_cursor
 	l_buffer.lines.insert(pos.line + 1, '${whitespace_prefix}${content_after_cursor}')
-	return Position.new(pos.line, 0).add(Distance{ lines: 1, offset: whitespace_prefix.runes().len })
+	return Position.new(line: pos.line, offset: 0).add(Distance{ lines: 1, offset: whitespace_prefix.runes().len })
 }
 
 fn resolve_whitespace_prefix_from_line(line string) string {
@@ -95,7 +95,7 @@ pub fn (mut l_buffer LineBuffer) x(pos Position) Position {
 	line_content.delete(clamped_offset)
 	l_buffer.lines[pos.line] = line_content.string()
 
-	return Position.new(pos.line, clamped_offset)
+	return Position.new(line: pos.line, offset: clamped_offset)
 }
 
 pub fn (mut l_buffer LineBuffer) backspace(pos Position) ?Position {
@@ -104,7 +104,7 @@ pub fn (mut l_buffer LineBuffer) backspace(pos Position) ?Position {
 	}
 
 	clamped_pos := if l_buffer.is_oob(pos) {
-		Position.new(l_buffer.lines.len - 1, l_buffer.lines[l_buffer.lines.len - 1].runes().len - 1)
+		Position.new(line: l_buffer.lines.len - 1, offset: l_buffer.lines[l_buffer.lines.len - 1].runes().len - 1)
 	} else {
 		pos
 	}
@@ -138,7 +138,7 @@ pub fn (mut l_buffer LineBuffer) o(pos Position) ?Position {
 		return post_expand_pos.add(Distance{ lines: 1, offset: 0 })
 	}
 	l_buffer.lines.insert(pos.line + 1, '')
-	return Position.new(pos.line, 0).add(Distance{ lines: 1 })
+	return Position.new(line: pos.line, offset: 0).add(Distance{ lines: 1 })
 }
 
 pub fn (l_buffer LineBuffer) left(pos Position) ?Position {
@@ -174,7 +174,7 @@ pub fn (l_buffer LineBuffer) up_to_next_blank_line(pos Position) ?Position {
 	for i := from; i >= 0; i-- {
 		line_is_empty := l_buffer.lines[i].len == 0
 		if i != from && line_is_empty {
-			return Position.new(from, 0).add(Distance{ lines: (from - i) * -1 })
+			return Position.new(line: from, offset: 0).add(Distance{ lines: (from - i) * -1 })
 		}
 	}
 	return none
@@ -188,7 +188,7 @@ pub fn (l_buffer LineBuffer) down_to_next_blank_line(pos Position) ?Position {
 	for i := from; i < l_buffer.lines.len; i++ {
 		line_is_empty := l_buffer.lines[i].len == 0
 		if i != from && line_is_empty {
-			return Position.new(from, 0).add(Distance{ lines: i })
+			return Position.new(line: from, offset: 0).add(Distance{ lines: i })
 		}
 	}
 	return none
@@ -217,7 +217,7 @@ fn (l_buffer LineBuffer) clamp_cursor_x_pos(pos Position, insert_mode bool) Posi
 	}
 
 	if l_buffer.lines.len == 0 {
-		return Position.new(0, 0)
+		return Position.new(line: 0, offset: 0)
 	}
 	current_line_len := l_buffer.lines[pos.line].runes().len
 
@@ -234,12 +234,12 @@ fn (l_buffer LineBuffer) clamp_cursor_x_pos(pos Position, insert_mode bool) Posi
 	if clamped_offset < 0 {
 		clamped_offset = 0
 	}
-	return Position.new(pos.line, clamped_offset)
+	return Position.new(line: pos.line, offset: clamped_offset)
 }
 
 fn grow_and_set(mut lines []string, pos_line int, data_to_set string) Position {
 	s := data_to_set
 	lines << []string{len: pos_line - lines.len + 1}
 	lines[pos_line] = s
-	return Position.new(pos_line, s.runes().len)
+	return Position.new(line: pos_line, offset: s.runes().len)
 }
