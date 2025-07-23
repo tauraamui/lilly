@@ -215,6 +215,15 @@ fn test_buffer_clamp_cursor_within_document_bounds() {
 	assert buffer.clamp_cursor_within_document_bounds(Pos{ x: 0, y: 19 }) == Pos{ x: 0, y: 2 }
 }
 
+fn test_buffer_clamp_cursor_within_document_bounds_new() {
+	mut buffer := Buffer.new('', .legacy)
+	buffer.lines = ['1. first line', '2. second line', '3. third line']
+	assert buffer.clamp_cursor_within_document_bounds_new(Position.new(line: -10, offset: 0)) == Position.new(line: 0, offset: 0)
+	assert buffer.clamp_cursor_within_document_bounds_new(Position.new(line: 1, offset: 0)) == Position.new(line: 1, offset: 0)
+	assert buffer.clamp_cursor_within_document_bounds_new(Position.new(line: 2, offset: 0)) == Position.new(line: 2, offset: 0)
+	assert buffer.clamp_cursor_within_document_bounds_new(Position.new(line: 19, offset: 0)) == Position.new(line: 2, offset: 0)
+}
+
 fn test_buffer_gap_buffer_insert_text() {
 	mut buffer := Buffer.new('', .gap_buffer)
 	buffer.c_buffer = GapBuffer.new('')
