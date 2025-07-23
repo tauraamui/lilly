@@ -58,8 +58,8 @@ fn test_new_range_swaps_start_and_end_when_end_precedes_start_when_start_is_zero
 	}
 	range := Range.new(start, end)
 
-	assert range.start == Position.new(0, 0)
-	assert range.end == Position.new(0, 8)
+	assert range.start == Position.new(line: 0, offset: 0)
+	assert range.end == Position.new(line: 0, offset: 8)
 }
 
 fn test_new_range_does_not_swap_start_and_end_if_end_does_not_precedes_start() {
