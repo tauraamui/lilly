@@ -220,21 +220,21 @@ fn test_buffer_gap_buffer_insert_text() {
 fn test_buffer_gap_buffer_enter_inserts_newline_line() {
 	mut buffer := Buffer.new('', .gap_buffer)
 	buffer.c_buffer = GapBuffer.new('1. first line\n2. second line\n3. third line')
-	buffer.enter(Pos{ x: 4, y: 0 })
+	buffer.enter(Position.new(line: 0, offset: 4))
 	assert buffer.str() == '1. f\nirst line\n2. second line\n3. third line'
 }
 
 fn test_buffer_legacy_buffer_enter_inserts_newline_line() {
 	mut buffer := Buffer.new('', .legacy)
 	buffer.lines = ['1. first line', '2. second line', '3. third line']
-	buffer.enter(Pos{ x: 4, y: 0 })
+	buffer.enter(Position.new(line: 0, offset: 4))
 	assert buffer.str() == '1. f\nirst line\n2. second line\n3. third line'
 }
 
 fn test_buffer_line_buffer_enter_inserts_newline_line() {
 	mut buffer := Buffer.new('', .line_buffer)
 	buffer.load_contents_into_line_buffer(['1. first line', '2. second line', '3. third line'])
-	buffer.enter(Pos{ x: 4, y: 0 })
+	buffer.enter(Position.new(line: 0, offset: 4))
 	// NOTE(tauraamui) [23/07/2025]: currently the line buffer version of this method
 	//                               does nothing, and is therefore not expected to mutate
 	//                               the document by inserting any newlines

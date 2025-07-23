@@ -201,17 +201,18 @@ pub fn (mut buffer Buffer) visual_indent(range Range, tabs_not_spaces bool) {
 //                               it might be a good idea to take the opportunity to instead
 //                               handle processing newlines just as their own special case for
 //                               `text_insert`, but idk yet.
-pub fn (mut buffer Buffer) enter(pos Pos) ?Pos {
+pub fn (mut buffer Buffer) enter(pos Position) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
-			buffer.move_cursor_to(pos)
-			return buffer.insert_text(pos, lf.str())
+			cursor_loc := position_to_pos(pos)
+			buffer.move_cursor_to(cursor_loc)
+			return pos_to_position(buffer.insert_text(cursor_loc, lf.str()))
 		}
 		.line_buffer {
 			return pos
 		}
 		.legacy {
-			mut cursor := pos
+			mut cursor := position_to_pos(pos)
 			y := cursor.y
 			mut whitespace_prefix := resolve_whitespace_prefix_from_line_str(buffer.lines[y])
 			if whitespace_prefix.len == buffer.lines[y].len {
@@ -225,7 +226,7 @@ pub fn (mut buffer Buffer) enter(pos Pos) ?Pos {
 			cursor.y += 1
 			cursor = buffer.clamp_cursor_within_document_bounds(cursor)
 			cursor.x = whitespace_prefix.len
-			return cursor
+			return pos_to_position(cursor)
 		}
 	}
 }
