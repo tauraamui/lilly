@@ -360,11 +360,13 @@ fn (mut lilly Lilly) resolve_todo_comments_for_active_buffer(mut matches []buffe
 	}
 }
 
+/*
 fn (mut lilly Lilly) resolve_todo_comments_across_workspace() []buffer.Match {
 	mut matches := []buffer.Match{}
 
 	return matches
 }
+*/
 
 fn (mut lilly Lilly) close_todo_comments_picker() {
 	mut todo_comments_picker := lilly.todo_comments_picker_modal or { return }
