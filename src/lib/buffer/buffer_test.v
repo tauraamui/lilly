@@ -206,6 +206,15 @@ fn test_buffer_load_from_path_with_gap_buffer_and_iterate_over_pattern_matches()
 	assert iteration_count == 2
 }
 
+fn test_buffer_clamp_cursor_within_document_bounds() {
+	mut buffer := Buffer.new('', .legacy)
+	buffer.lines = ['1. first line', '2. second line', '3. third line']
+	assert buffer.clamp_cursor_within_document_bounds(Pos{ x: 0, y: -10 }) == Pos{}
+	assert buffer.clamp_cursor_within_document_bounds(Pos{ x: 0, y: 1 }) == Pos{ x: 0, y: 1 }
+	assert buffer.clamp_cursor_within_document_bounds(Pos{ x: 0, y: 2 }) == Pos{ x: 0, y: 2 }
+	assert buffer.clamp_cursor_within_document_bounds(Pos{ x: 0, y: 19 }) == Pos{ x: 0, y: 2 }
+}
+
 fn test_buffer_gap_buffer_insert_text() {
 	mut buffer := Buffer.new('', .gap_buffer)
 	buffer.c_buffer = GapBuffer.new('')
@@ -716,3 +725,4 @@ fn test_buffer_gap_buffer_find_end_of_line() {
 	end_of_line_pos_x := buffer.find_end_of_line(Pos{ x: 3, y: 1 })?
 	assert end_of_line_pos_x == 11
 }
+
