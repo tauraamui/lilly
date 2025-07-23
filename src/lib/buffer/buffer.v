@@ -616,6 +616,10 @@ pub fn (mut buffer Buffer) replace_char(pos Pos, code u8, str string) {
 	buffer.lines[cursor.y] = '${start.string()}${str}${end.string()}'
 }
 
+pub fn (buffer Buffer) clamp_cursor_within_document_bounds_new(pos Position) Position {
+	return Position.new(line: 0, offset: 0)
+}
+
 pub fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
 	mut cursor := pos
 	if pos.y < 0 {
