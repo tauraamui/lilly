@@ -2,12 +2,24 @@ module buffer
 
 @[noinit]
 pub struct Position {
+	PositionFields
+}
+
+pub struct PositionArgs {
+	PositionFields
+}
+
+@[params]
+struct PositionFields {
 pub:
 	line   int
 	offset int
 }
 
-pub fn Position.new(line int, offset int) Position {
+// pub fn Position.new(line int, offset int) Position {
+pub fn Position.new(args PositionArgs) Position {
+	line := args.line
+	offset := args.offset
 	return Position{
 		line:   if line < 0 { 0 } else { line }
 		offset: if offset < 0 { 0 } else { offset }
