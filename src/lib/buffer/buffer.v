@@ -217,6 +217,24 @@ pub fn (mut buffer Buffer) enter(pos Position) ?Position {
 	}
 }
 
+fn (mut buffer Buffer) legacy_buffer_enter_new(pos Position) Position {
+	mut cursor := position_to_pos(pos)
+	y := cursor.y
+	mut whitespace_prefix := resolve_whitespace_prefix_from_line_str(buffer.lines[y])
+	if whitespace_prefix.len == buffer.lines[y].len {
+		buffer.lines[y] = ''
+		whitespace_prefix = ''
+		cursor.x = 0
+	}
+	after_cursor := buffer.lines[y].runes()[cursor.x..].string()
+	buffer.lines[y] = buffer.lines[y].runes()[..cursor.x].string()
+	buffer.lines.insert(y + 1, '${whitespace_prefix}${after_cursor}')
+	cursor.y += 1
+	cursor = buffer.clamp_cursor_within_document_bounds(cursor)
+	cursor.x = whitespace_prefix.len
+	return pos_to_position(cursor)
+}
+
 fn (mut buffer Buffer) legacy_buffer_enter(pos Position) Position {
 	mut cursor := position_to_pos(pos)
 	y := cursor.y
