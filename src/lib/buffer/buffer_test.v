@@ -299,6 +299,20 @@ fn test_buffer_gap_buffer_x_deletes_char_from_line() {
 	assert buffer.str() == '1. fst line\n2. second line\n3. third line'
 }
 
+fn test_buffer_legacy_buffer_x_new_deletes_char_from_line() {
+	mut buffer := Buffer.new('', .legacy)
+	buffer.lines = ['1. first line', '2. second line', '3. third line']
+
+	mut new_pos := buffer.x_new(Position.new(line: 0, offset: 4))?
+	assert new_pos == Position.new(line: 0, offset: 4)
+
+	assert buffer.str() == '1. frst line\n2. second line\n3. third line'
+
+	new_pos = buffer.x_new(new_pos)?
+	assert new_pos == Position.new(line: 0, offset: 4)
+	assert buffer.str() == '1. fst line\n2. second line\n3. third line'
+}
+
 fn test_buffer_legacy_buffer_x_deletes_char_from_line() {
 	mut buffer := Buffer.new('', .legacy)
 	buffer.lines = ['1. first line', '2. second line', '3. third line']

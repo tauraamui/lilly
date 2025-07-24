@@ -262,6 +262,33 @@ fn resolve_whitespace_prefix_from_line_str(line string) string {
 	return line
 }
 
+pub fn (mut buffer Buffer) x_new(pos Position) ?Position {
+	match buffer.buffer_kind {
+		.gap_buffer {
+			// TODO(tauraamui): Move this stuff into gap buffer directly
+			//                  as there's now confusion as to which methods here
+			//                  can be safely used by the gap buffer impl and which
+			//                  can not.
+			return pos_to_position(buffer.c_buffer.x(position_to_pos(pos)))
+		}
+		.line_buffer {
+			return buffer.l_buffer.x(pos)
+		}
+		.legacy {
+			mut cursor := position_to_pos(pos)
+			line := buffer.lines[cursor.y].runes()
+			if line.len == 0 {
+				return none
+			}
+			start := line[..cursor.x]
+			end := line[cursor.x + 1..]
+			buffer.lines[cursor.y] = '${start.string()}${end.string()}'
+			return pos_to_position(buffer.clamp_cursor_x_pos(buffer.clamp_cursor_within_document_bounds(cursor),
+				false))
+		}
+	}
+}
+
 pub fn (mut buffer Buffer) x(pos Pos) ?Pos {
 	match buffer.buffer_kind {
 		.gap_buffer {
