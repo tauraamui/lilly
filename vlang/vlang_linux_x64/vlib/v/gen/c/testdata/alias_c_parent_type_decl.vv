@@ -1,3 +1,0 @@
-pub struct C.atype {}
-
-type BType = &C.atype

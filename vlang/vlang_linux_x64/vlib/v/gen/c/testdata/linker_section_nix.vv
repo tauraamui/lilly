@@ -1,7 +1,0 @@
-@[_linker_section: foo]
-fn test() {
-}
-
-fn main() {
-	test()
-}
