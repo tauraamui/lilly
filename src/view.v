@@ -732,10 +732,9 @@ fn (mut view View) char_insert(s string) {
 }
 
 fn (mut view View) insert_text(s string) {
-	pos := view.buffer.insert_text(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y },
-		s) or { return }
-	view.cursor.pos.x = pos.x
-	view.cursor.pos.y = pos.y
+	pos := view.buffer.insert_text(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x), s) or { return }
+	view.cursor.pos.y = pos.line
+	view.cursor.pos.x = pos.offset
 	view.scroll_from_and_to()
 }
 

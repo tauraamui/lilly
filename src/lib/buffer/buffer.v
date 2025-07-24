@@ -119,10 +119,10 @@ pub fn (mut buffer Buffer) move_cursor_to(pos Pos) {
 	}
 }
 
-pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
+pub fn (mut buffer Buffer) insert_text(pos Position, s string) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
-			mut cursor := pos
+			mut cursor := position_to_pos(pos)
 			for c in s.runes() {
 				buffer.c_buffer.insert_at(c, Position.new(line: cursor.y, offset: cursor.x))
 				cursor.x += 1
@@ -131,19 +131,19 @@ pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 					cursor.x = 0
 				}
 			}
-			return cursor
+			return pos_to_position(cursor)
 		}
 		.line_buffer {
 			return pos
 		}
 		.legacy {
-			mut cursor := pos
+			mut cursor := position_to_pos(pos)
 			y := cursor.y
 			mut line := buffer.lines[y]
 			if line.len == 0 {
 				buffer.lines[y] = '${s}'
 				cursor.x = s.runes().len
-				return cursor
+				return pos_to_position(cursor)
 			}
 
 			if cursor.x > line.len {
@@ -151,7 +151,7 @@ pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 			}
 			uline := line.runes()
 			if cursor.x > uline.len {
-				return cursor
+				return pos_to_position(cursor)
 			}
 			left := uline[..cursor.x].string()
 			right := uline[cursor.x..uline.len].string()
@@ -159,7 +159,7 @@ pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 
 			cursor.x += s.runes().len
 
-			return cursor
+			return pos_to_position(cursor)
 		}
 	}
 }
@@ -178,14 +178,14 @@ pub fn (mut buffer Buffer) insert_tab(pos Pos, tabs_not_spaces bool) ?Pos {
 	match buffer.buffer_kind {
 		.gap_buffer {
 			buffer.move_cursor_to(pos)
-			return buffer.insert_text(pos, prefix)
+			return position_to_pos(buffer.insert_text(pos_to_position(pos), prefix))
 		}
 		.line_buffer {
 			return position_to_pos(buffer.l_buffer.insert_tab(Position.new(line: pos.y, offset: pos.x),
 				tabs_not_spaces))
 		}
 		.legacy {
-			return buffer.insert_text(pos, prefix)
+			return position_to_pos(buffer.insert_text(pos_to_position(pos), prefix))
 		}
 	}
 }
@@ -206,7 +206,7 @@ pub fn (mut buffer Buffer) enter(pos Position) ?Position {
 		.gap_buffer {
 			cursor_loc := position_to_pos(pos)
 			buffer.move_cursor_to(cursor_loc)
-			return pos_to_position(buffer.insert_text(cursor_loc, lf.str()))
+			return buffer.insert_text(pos, lf.str())
 		}
 		.line_buffer {
 			return pos
