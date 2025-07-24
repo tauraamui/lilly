@@ -115,9 +115,9 @@ pub fn (buffer Buffer) num_of_lines() int {
 	}
 }
 
-pub fn (mut buffer Buffer) move_data_cursor_to(pos Pos) {
+pub fn (mut buffer Buffer) move_data_cursor_to(pos Position) {
 	match buffer.buffer_kind {
-		.gap_buffer { buffer.c_buffer.move_cursor_to(Position.new(line: pos.y, offset: pos.x)) }
+		.gap_buffer { buffer.c_buffer.move_cursor_to(pos) }
 		else {} // moving cursor doesn't really mean anything for the other buffer types
 	}
 }
@@ -180,7 +180,7 @@ pub fn (mut buffer Buffer) insert_tab(pos Position, tabs_not_spaces bool) ?Posit
 	prefix := if tabs_not_spaces { '\t' } else { ' '.repeat(4) }
 	match buffer.buffer_kind {
 		.gap_buffer {
-			buffer.move_data_cursor_to(position_to_pos(pos))
+			buffer.move_data_cursor_to(pos)
 			return buffer.insert_text(pos, prefix)
 		}
 		.line_buffer {
@@ -206,8 +206,7 @@ pub fn (mut buffer Buffer) visual_indent(range Range, tabs_not_spaces bool) {
 pub fn (mut buffer Buffer) enter(pos Position) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
-			cursor_loc := position_to_pos(pos)
-			buffer.move_data_cursor_to(cursor_loc)
+			buffer.move_data_cursor_to(pos)
 			return buffer.insert_text(pos, lf.str())
 		}
 		.line_buffer {
@@ -304,7 +303,7 @@ pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
 				return none
 			}
 			if buffer.use_gap_buffer {
-				buffer.move_data_cursor_to(pos)
+				buffer.move_data_cursor_to(pos_to_position(pos))
 				if buffer.c_buffer.backspace() {
 					cursor.y -= 1
 					cursor.x = buffer.find_end_of_line(cursor) or { 0 }

@@ -986,7 +986,10 @@ fn (mut view View) k() {
 fn (mut view View) i() {
 	view.leader_state.mode = .insert
 	if view.buffer.use_gap_buffer {
-		view.buffer.move_data_cursor_to(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y })
+		view.buffer.move_data_cursor_to(buffer.Position.new(
+			line:   view.cursor.pos.y
+			offset: view.cursor.pos.x
+		))
 		return
 	}
 	view.clamp_cursor_x_pos()
