@@ -670,10 +670,9 @@ fn (mut view View) exec(op chords.Op) {
 }
 
 fn (mut view View) insert_tab() {
-	pos := view.buffer.insert_tab(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y },
-		view.config.insert_tabs_not_spaces) or { return }
-	view.cursor.pos.x = pos.x
-	view.cursor.pos.y = pos.y
+	pos := view.buffer.insert_tab(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x), view.config.insert_tabs_not_spaces) or { return }
+	view.cursor.pos.y = pos.line
+	view.cursor.pos.x = pos.offset
 	view.scroll_from_and_to()
 }
 

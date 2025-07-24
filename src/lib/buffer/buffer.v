@@ -173,19 +173,18 @@ pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
 	buffer.c_buffer.insert_at(r, Position.new(line: pos.y, offset: pos.x))
 }
 
-pub fn (mut buffer Buffer) insert_tab(pos Pos, tabs_not_spaces bool) ?Pos {
+pub fn (mut buffer Buffer) insert_tab(pos Position, tabs_not_spaces bool) ?Position {
 	prefix := if tabs_not_spaces { '\t' } else { ' '.repeat(4) }
 	match buffer.buffer_kind {
 		.gap_buffer {
 			buffer.move_data_cursor_to(pos)
-			return position_to_pos(buffer.insert_text(pos_to_position(pos), prefix))
+			return buffer.insert_text(pos, prefix)
 		}
 		.line_buffer {
-			return position_to_pos(buffer.l_buffer.insert_tab(Position.new(line: pos.y, offset: pos.x),
-				tabs_not_spaces))
+			return buffer.l_buffer.insert_tab(Position.new(line: pos.y, offset: pos.x), tabs_not_spaces)
 		}
 		.legacy {
-			return position_to_pos(buffer.insert_text(pos_to_position(pos), prefix))
+			return buffer.insert_text(pos, prefix)
 		}
 	}
 }
