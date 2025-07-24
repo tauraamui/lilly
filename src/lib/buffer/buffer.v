@@ -218,21 +218,21 @@ pub fn (mut buffer Buffer) enter(pos Position) ?Position {
 }
 
 fn (mut buffer Buffer) legacy_buffer_enter_new(pos Position) Position {
-	mut cursor := position_to_pos(pos)
-	y := cursor.y
-	mut whitespace_prefix := resolve_whitespace_prefix_from_line_str(buffer.lines[y])
-	if whitespace_prefix.len == buffer.lines[y].len {
-		buffer.lines[y] = ''
+	mut line := pos.line
+	mut offset := pos.offset
+
+	mut whitespace_prefix := resolve_whitespace_prefix_from_line_str(buffer.lines[line])
+	if whitespace_prefix.len == buffer.lines[line].len {
+		buffer.lines[line] = ''
 		whitespace_prefix = ''
-		cursor.x = 0
+		offset = 0
 	}
-	after_cursor := buffer.lines[y].runes()[cursor.x..].string()
-	buffer.lines[y] = buffer.lines[y].runes()[..cursor.x].string()
-	buffer.lines.insert(y + 1, '${whitespace_prefix}${after_cursor}')
-	cursor.y += 1
-	cursor = buffer.clamp_cursor_within_document_bounds(cursor)
-	cursor.x = whitespace_prefix.len
-	return pos_to_position(cursor)
+	after_cursor := buffer.lines[line].runes()[offset..].string()
+	buffer.lines[line] = buffer.lines[line].runes()[..offset].string()
+	buffer.lines.insert(line + 1, '${whitespace_prefix}${after_cursor}')
+	line += 1
+
+	return buffer.clamp_cursor_within_document_bounds_new(Position.new(line: line, offset: 0)).add(Distance{ offset: whitespace_prefix.len })
 }
 
 fn (mut buffer Buffer) legacy_buffer_enter(pos Position) Position {
