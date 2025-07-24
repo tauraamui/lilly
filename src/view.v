@@ -555,7 +555,6 @@ fn (mut view View) draw_cursor_pointer(mut ctx draw.Contextable) {
 fn (mut view View) draw_document(mut ctx draw.Contextable) {
 	view.offset_x_and_width_by_len_of_longest_line_number_str(ctx.window_width(), ctx.window_height())
 
-	selection_highlight_color := ctx.theme().selection_highlight_color
 	view.buf_view.draw(mut ctx,
 		buf:                view.buffer
 		x:                  0
@@ -670,26 +669,27 @@ fn (mut view View) exec(op chords.Op) {
 }
 
 fn (mut view View) insert_tab() {
-	pos := view.buffer.insert_tab(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x), view.config.insert_tabs_not_spaces) or { return }
+	pos := view.buffer.insert_tab(buffer.Position.new(
+		line:   view.cursor.pos.y
+		offset: view.cursor.pos.x
+	), view.config.insert_tabs_not_spaces) or { return }
 	view.cursor.pos.y = pos.line
 	view.cursor.pos.x = pos.offset
 	view.scroll_from_and_to()
 }
 
 fn (mut view View) visual_indent() {
-	start := if ss := view.cursor.sel_start() { ss.y } else { return
-	 }
-	end := if ss := view.cursor.sel_end() { ss.y } else { return
-	 }
-	view.buffer.visual_indent(buffer.Range.new(buffer.Position.new(line: start), buffer.Position.new(line: end)), view.config.insert_tabs_not_spaces)
+	start := if ss := view.cursor.sel_start() { ss.y } else { return }
+	end := if ss := view.cursor.sel_end() { ss.y } else { return }
+	view.buffer.visual_indent(buffer.Range.new(buffer.Position.new(line: start), buffer.Position.new(
+		line: end
+	)), view.config.insert_tabs_not_spaces)
 	view.scroll_from_and_to() // just in case
 }
 
 fn (mut view View) visual_unindent() {
-	start := if ss := view.cursor.sel_start() { ss.y } else { return
-	 }
-	end := if ss := view.cursor.sel_end() { ss.y } else { return
-	 }
+	start := if ss := view.cursor.sel_start() { ss.y } else { return }
+	end := if ss := view.cursor.sel_end() { ss.y } else { return }
 
 	prefix := if view.config.insert_tabs_not_spaces { '\t' } else { ' '.repeat(4) }
 
@@ -731,7 +731,10 @@ fn (mut view View) char_insert(s string) {
 }
 
 fn (mut view View) insert_text(s string) {
-	pos := view.buffer.insert_text(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x), s) or { return }
+	pos := view.buffer.insert_text(buffer.Position.new(
+		line:   view.cursor.pos.y
+		offset: view.cursor.pos.x
+	), s) or { return }
 	view.cursor.pos.y = pos.line
 	view.cursor.pos.x = pos.offset
 	view.scroll_from_and_to()
@@ -1015,10 +1018,8 @@ fn (mut view View) visual_line_d(overwrite_y_lines bool) {
 	defer { view.clamp_cursor_within_document_bounds() }
 	assert view.cursor.sel_active()
 
-	mut start := if sel_start := view.cursor.sel_start() { sel_start.y } else { return
-	 }
-	mut end := if sel_end := view.cursor.sel_end() { sel_end.y } else { return
-	 }
+	mut start := if sel_start := view.cursor.sel_start() { sel_start.y } else { return }
+	mut end := if sel_end := view.cursor.sel_end() { sel_end.y } else { return }
 
 	// view.copy_lines_into_clipboard(start, end)
 	before := view.buffer.lines[..start]
@@ -1195,10 +1196,8 @@ fn (mut view View) d() {
 		}
 		.visual_line {
 			assert view.cursor.sel_active()
-			start_index := if sel_start := view.cursor.sel_start() { sel_start.y } else { return
-			 }
-			mut end_index := if sel_end := view.cursor.sel_end() { sel_end.y } else { return
-			 }
+			start_index := if sel_start := view.cursor.sel_start() { sel_start.y } else { return }
+			mut end_index := if sel_end := view.cursor.sel_end() { sel_end.y } else { return }
 			view.clipboard.set_content(clipboardv3.ClipboardContent{
 				type: .block
 				data: view.buffer.lines[start_index..end_index + 1].join('\n')
@@ -1401,7 +1400,9 @@ fn (mut view View) y() {
 }
 
 fn (mut view View) enter() {
-	pos := view.buffer.enter(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x)) or { return }
+	pos := view.buffer.enter(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x)) or {
+		return
+	}
 	view.cursor.pos.y = pos.line
 	view.cursor.pos.x = pos.offset
 	view.scroll_from_and_to()

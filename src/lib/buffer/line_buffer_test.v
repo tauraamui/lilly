@@ -788,7 +788,10 @@ fn test_line_buffer_down_to_next_blank_line_on_existing_content_from_middle_of_s
 			'5. fifth line']
 	}
 
-	assert line_buf.down_to_next_blank_line(Position.new(line: 1, offset: 12))? == Position.new(line: 3, offset: 0)
+	assert line_buf.down_to_next_blank_line(Position.new(line: 1, offset: 12))? == Position.new(
+		line:   3
+		offset: 0
+	)
 	assert line_buf.lines == ['This is a doc', '1. first line', '', '2. second line', '3. third line',
 		'5. fifth line']
 }

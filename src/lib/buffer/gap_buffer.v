@@ -193,7 +193,9 @@ pub fn (gap_buffer GapBuffer) find_end_of_line2(pos Position) ?Position {
 
 pub fn (gap_buffer GapBuffer) find_end_of_line(pos Pos) ?int {
 	cursor_loc := pos
-	offset := gap_buffer.find_offset(Position.new(line: cursor_loc.y, offset: cursor_loc.x)) or { return none }
+	offset := gap_buffer.find_offset(Position.new(line: cursor_loc.y, offset: cursor_loc.x)) or {
+		return none
+	}
 
 	for count, r in gap_buffer.data[offset..] {
 		cc := (count + offset)
@@ -508,7 +510,6 @@ pub fn (gap_buffer GapBuffer) up_to_next_blank_line(pos Pos) ?Pos {
 	// we've actually elapsed in the data as opposed to how much
 	// was the gap size. Should probably benchmark and alloc profile
 	// the two different options.
-	gap_size := gap_buffer.gap_end - gap_buffer.gap_start
 	data_pre_gap := gap_buffer.data[..gap_buffer.gap_start]
 	data_post_gap := gap_buffer.data[gap_buffer.gap_end..]
 	data := arrays.merge(data_pre_gap, data_post_gap)

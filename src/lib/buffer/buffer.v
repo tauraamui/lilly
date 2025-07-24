@@ -40,7 +40,10 @@ pub fn pos_to_position(pos ?Pos) Position {
 
 pub fn position_to_pos(pos ?Position) Pos {
 	if unwrapped_position := pos {
-		return Pos{ y: unwrapped_position.line, x: unwrapped_position.offset }
+		return Pos{
+			y: unwrapped_position.line
+			x: unwrapped_position.offset
+		}
 	}
 	return Pos{}
 }
@@ -177,11 +180,11 @@ pub fn (mut buffer Buffer) insert_tab(pos Position, tabs_not_spaces bool) ?Posit
 	prefix := if tabs_not_spaces { '\t' } else { ' '.repeat(4) }
 	match buffer.buffer_kind {
 		.gap_buffer {
-			buffer.move_data_cursor_to(pos)
+			buffer.move_data_cursor_to(position_to_pos(pos))
 			return buffer.insert_text(pos, prefix)
 		}
 		.line_buffer {
-			return buffer.l_buffer.insert_tab(Position.new(line: pos.y, offset: pos.x), tabs_not_spaces)
+			return buffer.l_buffer.insert_tab(pos, tabs_not_spaces)
 		}
 		.legacy {
 			return buffer.insert_text(pos, prefix)
@@ -191,7 +194,7 @@ pub fn (mut buffer Buffer) insert_tab(pos Position, tabs_not_spaces bool) ?Posit
 
 pub fn (mut buffer Buffer) visual_indent(range Range, tabs_not_spaces bool) {
 	for line_y := range.start.line; line_y <= range.end.line; line_y++ {
-		buffer.insert_tab(Pos{ y: line_y, x: 0 }, tabs_not_spaces)
+		buffer.insert_tab(Position.new(line: line_y, offset: 0), tabs_not_spaces)
 	}
 }
 
@@ -225,7 +228,10 @@ pub fn (mut buffer Buffer) enter(pos Position) ?Position {
 			buffer.lines.insert(line + 1, '${whitespace_prefix}${after_cursor}')
 			line += 1
 
-			return buffer.clamp_cursor_within_document_bounds_new(pos.add(Distance{ lines: line, offset: offset * -1 })).add(Distance{ offset: whitespace_prefix.len })
+			return buffer.clamp_cursor_within_document_bounds_new(pos.add(Distance{
+				lines:  line
+				offset: offset * -1
+			})).add(Distance{ offset: whitespace_prefix.len })
 		}
 	}
 }
@@ -399,7 +405,11 @@ pub fn (mut buffer Buffer) o(pos Pos) ?Pos {
 }
 
 pub fn (buffer Buffer) read_line(y int) ?string {
-	if lines := buffer.read(Range.new(Position.new(line: y, offset: 0), Position.new(line: y, offset: 0))) {
+	if lines := buffer.read(Range.new(Position.new(line: y, offset: 0), Position.new(
+		line:   y
+		offset: 0
+	)))
+	{
 		return lines[0]
 	}
 	return none
@@ -407,7 +417,11 @@ pub fn (buffer Buffer) read_line(y int) ?string {
 
 pub fn (buffer Buffer) read(range Range) ?[]string {
 	if buffer.use_gap_buffer {
-		if data := buffer.c_buffer.read(range) { return data.split("${lf}") } else { return ?[]string(none) }
+		if data := buffer.c_buffer.read(range) {
+			return data.split('${lf}')
+		} else {
+			return ?[]string(none)
+		}
 	}
 	return ?[]string(none)
 }
@@ -467,7 +481,8 @@ pub fn (buffer Buffer) right(pos Pos, insert_mode bool) ?Pos {
 			return buffer.c_buffer.right(pos, insert_mode)
 		}
 		.line_buffer {
-			return position_to_pos(buffer.l_buffer.right(Position.new(line: pos.y, offset: pos.x), insert_mode))
+			return position_to_pos(buffer.l_buffer.right(Position.new(line: pos.y, offset: pos.x),
+				insert_mode))
 		}
 		.legacy {
 			mut cursor := pos
@@ -484,7 +499,8 @@ pub fn (buffer Buffer) down(pos Pos, insert_mode bool) ?Pos {
 			return buffer.c_buffer.down(pos)
 		}
 		.line_buffer {
-			return position_to_pos(buffer.l_buffer.down(Position.new(line: pos.y, offset: pos.x), insert_mode))
+			return position_to_pos(buffer.l_buffer.down(Position.new(line: pos.y, offset: pos.x),
+				insert_mode))
 		}
 		.legacy {
 			mut cursor := pos
@@ -504,7 +520,8 @@ pub fn (buffer Buffer) up(pos Pos, insert_mode bool) ?Pos {
 			return buffer.c_buffer.up(pos)
 		}
 		.line_buffer {
-			return position_to_pos(buffer.l_buffer.up(Position.new(line: pos.y, offset: pos.x), insert_mode))
+			return position_to_pos(buffer.l_buffer.up(Position.new(line: pos.y, offset: pos.x),
+				insert_mode))
 		}
 		.legacy {
 			mut cursor := pos
@@ -524,7 +541,10 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
 			return buffer.c_buffer.up_to_next_blank_line(pos)
 		}
 		.line_buffer {
-			return position_to_pos(buffer.l_buffer.up_to_next_blank_line(Position.new(line: pos.y, offset: pos.x)))
+			return position_to_pos(buffer.l_buffer.up_to_next_blank_line(Position.new(
+				line:   pos.y
+				offset: pos.x
+			)))
 		}
 		.legacy {
 			mut cursor := pos
@@ -564,7 +584,10 @@ pub fn (buffer Buffer) down_to_next_blank_line(pos Pos) ?Pos {
 			return buffer.c_buffer.down_to_next_blank_line(pos)
 		}
 		.line_buffer {
-			return position_to_pos(buffer.l_buffer.down_to_next_blank_line(Position.new(line: pos.y, offset: pos.x)))
+			return position_to_pos(buffer.l_buffer.down_to_next_blank_line(Position.new(
+				line:   pos.y
+				offset: pos.x
+			)))
 		}
 		.legacy {
 			mut cursor := pos
@@ -616,7 +639,13 @@ pub fn (mut buffer Buffer) replace_char(pos Pos, code u8, str string) {
 }
 
 pub fn (buffer Buffer) clamp_cursor_within_document_bounds_new(pos Position) Position {
-	return pos.add(Distance{ lines: if pos.line > buffer.lines.len - 1 { (pos.line - (buffer.lines.len - 1)) } else { 0 } * -1 })
+	return pos.add(Distance{
+		lines: if pos.line > buffer.lines.len - 1 {
+			(pos.line - (buffer.lines.len - 1))
+		} else {
+			0
+		} * -1
+	})
 }
 
 pub fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {

@@ -60,7 +60,10 @@ pub fn (mut l_buffer LineBuffer) newline(pos Position) ?Position {
 	whitespace_prefix := resolve_whitespace_prefix_from_line(content_before_cursor)
 	l_buffer.lines[pos.line] = content_before_cursor
 	l_buffer.lines.insert(pos.line + 1, '${whitespace_prefix}${content_after_cursor}')
-	return Position.new(line: pos.line, offset: 0).add(Distance{ lines: 1, offset: whitespace_prefix.runes().len })
+	return Position.new(line: pos.line, offset: 0).add(Distance{
+		lines:  1
+		offset: whitespace_prefix.runes().len
+	})
 }
 
 fn resolve_whitespace_prefix_from_line(line string) string {
@@ -104,7 +107,10 @@ pub fn (mut l_buffer LineBuffer) backspace(pos Position) ?Position {
 	}
 
 	clamped_pos := if l_buffer.is_oob(pos) {
-		Position.new(line: l_buffer.lines.len - 1, offset: l_buffer.lines[l_buffer.lines.len - 1].runes().len - 1)
+		Position.new(
+			line:   l_buffer.lines.len - 1
+			offset: l_buffer.lines[l_buffer.lines.len - 1].runes().len - 1
+		)
 	} else {
 		pos
 	}

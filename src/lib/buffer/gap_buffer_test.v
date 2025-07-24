@@ -19,11 +19,11 @@ fn test_read_range_of_full_lines_across_multiple_lines() {
 
 	mut start_pos := Position.new(line: 0, offset: 4)
 	mut end_pos := start_pos.add(Distance{ lines: 1, offset: 7 })
-	assert gb.read(Range.new(start_pos, end_pos))? == "irst line that has more content\n2. Second l"
+	assert gb.read(Range.new(start_pos, end_pos))? == 'irst line that has more content\n2. Second l'
 
 	start_pos = Position.new(line: 1, offset: 0)
 	end_pos = gb.find_end_of_line2(start_pos.add(Distance{ lines: 1 }))?
-	assert gb.read(Range.new(start_pos, end_pos))? == "2. Second line!\n3. Third line :3"
+	assert gb.read(Range.new(start_pos, end_pos))? == '2. Second line!\n3. Third line :3'
 }
 
 fn test_read_range_of_partials_of_each_line_from_document_with_content() {
@@ -31,15 +31,15 @@ fn test_read_range_of_partials_of_each_line_from_document_with_content() {
 
 	mut start_pos := Position.new(line: 0, offset: 4)
 	mut end_pos := start_pos.add(Distance{ offset: 7 })
-	assert gb.read(Range.new(start_pos, end_pos))? == "irst li"
+	assert gb.read(Range.new(start_pos, end_pos))? == 'irst li'
 
 	start_pos = Position.new(line: 1, offset: 0)
 	end_pos = start_pos.add(Distance{ offset: 8 })
-	assert gb.read(Range.new(start_pos, end_pos))? == "2. Secon"
+	assert gb.read(Range.new(start_pos, end_pos))? == '2. Secon'
 
 	start_pos = Position.new(line: 2, offset: 9)
 	end_pos = start_pos.add(Distance{ offset: 7 })
-	assert gb.read(Range.new(start_pos, end_pos))? == "line :3"
+	assert gb.read(Range.new(start_pos, end_pos))? == 'line :3'
 }
 
 fn test_read_range_of_each_full_line_from_document_with_content() {
@@ -47,15 +47,15 @@ fn test_read_range_of_each_full_line_from_document_with_content() {
 
 	mut start_pos := Position.new(line: 0, offset: 0)
 	mut end_pos := gb.find_end_of_line2(start_pos)?
-	assert gb.read(Range.new(start_pos, end_pos))? == "1. First line"
+	assert gb.read(Range.new(start_pos, end_pos))? == '1. First line'
 
 	start_pos = Position.new(line: 1, offset: 0)
 	end_pos = gb.find_end_of_line2(start_pos)?
-	assert gb.read(Range.new(start_pos, end_pos))? == "2. Second line!"
+	assert gb.read(Range.new(start_pos, end_pos))? == '2. Second line!'
 
 	start_pos = Position.new(line: 2, offset: 0)
 	end_pos = gb.find_end_of_line2(start_pos)?
-	assert gb.read(Range.new(start_pos, end_pos))? == "3. Third line :3"
+	assert gb.read(Range.new(start_pos, end_pos))? == '3. Third line :3'
 }
 
 fn test_up_to_next_blank_line_in_document_with_no_blank_line_given_cursor_at_top() {
