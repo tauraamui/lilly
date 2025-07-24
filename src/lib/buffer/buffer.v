@@ -617,9 +617,7 @@ pub fn (mut buffer Buffer) replace_char(pos Pos, code u8, str string) {
 }
 
 pub fn (buffer Buffer) clamp_cursor_within_document_bounds_new(pos Position) Position {
-	if pos.line < 0 { return Position.new(line: pos.line, offset: pos.offset) }
-	if pos.line > buffer.lines.len - 1 { return Position.new(line: buffer.lines.len - 1, offset: pos.offset) }
-	return pos
+	return pos.add(Distance{ lines: if pos.line > buffer.lines.len - 1 { (pos.line - (buffer.lines.len - 1)) } else { 0 } * -1 })
 }
 
 pub fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
