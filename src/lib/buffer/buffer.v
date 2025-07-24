@@ -169,11 +169,11 @@ pub fn (mut buffer Buffer) insert_text(pos Position, s string) ?Position {
 
 // NOTE(tauraamui) [15/01/25]: I don't like the implications of the existence of this method,
 //                             need to review all its potential usages and hopefully remove it.
-pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
+pub fn (mut buffer Buffer) write_at(r rune, pos Position) {
 	if buffer.buffer_kind != .gap_buffer {
 		return
 	}
-	buffer.c_buffer.insert_at(r, Position.new(line: pos.y, offset: pos.x))
+	buffer.c_buffer.insert_at(r, pos)
 }
 
 pub fn (mut buffer Buffer) insert_tab(pos Position, tabs_not_spaces bool) ?Position {
