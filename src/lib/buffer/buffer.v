@@ -262,7 +262,7 @@ fn resolve_whitespace_prefix_from_line_str(line string) string {
 	return line
 }
 
-pub fn (mut buffer Buffer) x_new(pos Position) ?Position {
+pub fn (mut buffer Buffer) x(pos Position) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
 			// TODO(tauraamui): Move this stuff into gap buffer directly
@@ -289,6 +289,7 @@ pub fn (mut buffer Buffer) x_new(pos Position) ?Position {
 	}
 }
 
+/*
 pub fn (mut buffer Buffer) x(pos Pos) ?Pos {
 	match buffer.buffer_kind {
 		.gap_buffer {
@@ -320,6 +321,7 @@ pub fn (mut buffer Buffer) x(pos Pos) ?Pos {
 		}
 	}
 }
+*/
 
 // TODO(tauraamui) [10/07/2025]: migrate this to gap and line buffers more completely
 pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
