@@ -282,7 +282,7 @@ pub fn (mut buffer Buffer) x_new(pos Position) ?Position {
 			}
 			start := line[..cursor.x]
 			end := line[cursor.x + 1..]
-			buffer.lines[cursor.y] = '${start.string()}${end.string()}'
+			buffer.lines[cursor.y] = "${start.string()}${end.string()}"
 			return pos_to_position(buffer.clamp_cursor_x_pos(buffer.clamp_cursor_within_document_bounds(cursor),
 				false))
 		}
