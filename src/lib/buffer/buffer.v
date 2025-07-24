@@ -212,15 +212,15 @@ pub fn (mut buffer Buffer) enter(pos Position) ?Position {
 			return pos
 		}
 		.legacy {
-			mut line := pos.line
-			mut offset := pos.offset
-
-			mut whitespace_prefix := resolve_whitespace_prefix_from_line_str(buffer.lines[line])
-			if whitespace_prefix.len == buffer.lines[line].len {
-				buffer.lines[line] = ''
+			mut whitespace_prefix := resolve_whitespace_prefix_from_line_str(buffer.lines[pos.line])
+			prefix_is_same_len_as_line := whitespace_prefix.len == buffer.lines[pos.line].len
+			if prefix_is_same_len_as_line {
+				buffer.lines[pos.line] = ''
 				whitespace_prefix = ''
-				offset = 0
 			}
+
+			mut line := pos.line
+			offset := if prefix_is_same_len_as_line { 0 } else { pos.offset }
 			after_cursor := buffer.lines[line].runes()[offset..].string()
 			buffer.lines[line] = buffer.lines[line].runes()[..offset].string()
 			buffer.lines.insert(line + 1, '${whitespace_prefix}${after_cursor}')
