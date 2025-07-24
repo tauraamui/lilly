@@ -31,6 +31,23 @@ pub mut:
 	y int
 }
 
+pub fn pos_to_position(pos ?Pos) Position {
+	if unwrapped_pos := pos {
+		return Position.new(line: unwrapped_pos.y, offset: unwrapped_pos.x)
+	}
+	return Position.new(line: 0, offset: 0)
+}
+
+pub fn position_to_pos(pos ?Position) Pos {
+	if unwrapped_position := pos {
+		return Pos{
+			y: unwrapped_position.line
+			x: unwrapped_position.offset
+		}
+	}
+	return Pos{}
+}
+
 @[heap]
 pub struct Buffer {
 pub:
@@ -98,38 +115,38 @@ pub fn (buffer Buffer) num_of_lines() int {
 	}
 }
 
-pub fn (mut buffer Buffer) move_cursor_to(pos Pos) {
+pub fn (mut buffer Buffer) move_data_cursor_to(pos Position) {
 	match buffer.buffer_kind {
-		.gap_buffer { buffer.c_buffer.move_cursor_to(Position.new(pos.y, pos.x)) }
+		.gap_buffer { buffer.c_buffer.move_cursor_to(pos) }
 		else {} // moving cursor doesn't really mean anything for the other buffer types
 	}
 }
 
-pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
+pub fn (mut buffer Buffer) insert_text(pos Position, s string) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
-			mut cursor := pos
+			mut cursor := position_to_pos(pos)
 			for c in s.runes() {
-				buffer.c_buffer.insert_at(c, Position.new(cursor.y, cursor.x))
+				buffer.c_buffer.insert_at(c, Position.new(line: cursor.y, offset: cursor.x))
 				cursor.x += 1
 				if c == lf {
 					cursor.y += 1
 					cursor.x = 0
 				}
 			}
-			return cursor
+			return pos_to_position(cursor)
 		}
 		.line_buffer {
 			return pos
 		}
 		.legacy {
-			mut cursor := pos
+			mut cursor := position_to_pos(pos)
 			y := cursor.y
 			mut line := buffer.lines[y]
 			if line.len == 0 {
 				buffer.lines[y] = '${s}'
 				cursor.x = s.runes().len
-				return cursor
+				return pos_to_position(cursor)
 			}
 
 			if cursor.x > line.len {
@@ -137,7 +154,7 @@ pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 			}
 			uline := line.runes()
 			if cursor.x > uline.len {
-				return cursor
+				return pos_to_position(cursor)
 			}
 			left := uline[..cursor.x].string()
 			right := uline[cursor.x..uline.len].string()
@@ -145,30 +162,29 @@ pub fn (mut buffer Buffer) insert_text(pos Pos, s string) ?Pos {
 
 			cursor.x += s.runes().len
 
-			return cursor
+			return pos_to_position(cursor)
 		}
 	}
 }
 
 // NOTE(tauraamui) [15/01/25]: I don't like the implications of the existence of this method,
 //                             need to review all its potential usages and hopefully remove it.
-pub fn (mut buffer Buffer) write_at(r rune, pos Pos) {
+pub fn (mut buffer Buffer) write_at(r rune, pos Position) {
 	if buffer.buffer_kind != .gap_buffer {
 		return
 	}
-	buffer.c_buffer.insert_at(r, Position.new(pos.y, pos.x))
+	buffer.c_buffer.insert_at(r, pos)
 }
 
-pub fn (mut buffer Buffer) insert_tab(pos Pos, tabs_not_spaces bool) ?Pos {
+pub fn (mut buffer Buffer) insert_tab(pos Position, tabs_not_spaces bool) ?Position {
 	prefix := if tabs_not_spaces { '\t' } else { ' '.repeat(4) }
 	match buffer.buffer_kind {
 		.gap_buffer {
-			buffer.move_cursor_to(pos)
+			buffer.move_data_cursor_to(pos)
 			return buffer.insert_text(pos, prefix)
 		}
 		.line_buffer {
-			return position_to_pos(buffer.l_buffer.insert_tab(Position.new(pos.y, pos.x),
-				tabs_not_spaces))
+			return buffer.l_buffer.insert_tab(pos, tabs_not_spaces)
 		}
 		.legacy {
 			return buffer.insert_text(pos, prefix)
@@ -178,7 +194,7 @@ pub fn (mut buffer Buffer) insert_tab(pos Pos, tabs_not_spaces bool) ?Pos {
 
 pub fn (mut buffer Buffer) visual_indent(range Range, tabs_not_spaces bool) {
 	for line_y := range.start.line; line_y <= range.end.line; line_y++ {
-		buffer.insert_tab(Pos{ y: line_y, x: 0 }, tabs_not_spaces)
+		buffer.insert_tab(Position.new(line: line_y, offset: 0), tabs_not_spaces)
 	}
 }
 
@@ -187,31 +203,34 @@ pub fn (mut buffer Buffer) visual_indent(range Range, tabs_not_spaces bool) {
 //                               it might be a good idea to take the opportunity to instead
 //                               handle processing newlines just as their own special case for
 //                               `text_insert`, but idk yet.
-pub fn (mut buffer Buffer) enter(pos Pos) ?Pos {
+pub fn (mut buffer Buffer) enter(pos Position) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
-			buffer.move_cursor_to(pos)
+			buffer.move_data_cursor_to(pos)
 			return buffer.insert_text(pos, lf.str())
 		}
 		.line_buffer {
 			return pos
 		}
 		.legacy {
-			mut cursor := pos
-			y := cursor.y
-			mut whitespace_prefix := resolve_whitespace_prefix_from_line_str(buffer.lines[y])
-			if whitespace_prefix.len == buffer.lines[y].len {
-				buffer.lines[y] = ''
+			mut whitespace_prefix := resolve_whitespace_prefix_from_line_str(buffer.lines[pos.line])
+			prefix_is_same_len_as_line := whitespace_prefix.len == buffer.lines[pos.line].len
+			if prefix_is_same_len_as_line {
+				buffer.lines[pos.line] = ''
 				whitespace_prefix = ''
-				cursor.x = 0
 			}
-			after_cursor := buffer.lines[y].runes()[cursor.x..].string()
-			buffer.lines[y] = buffer.lines[y].runes()[..cursor.x].string()
-			buffer.lines.insert(y + 1, '${whitespace_prefix}${after_cursor}')
-			cursor.y += 1
-			cursor = buffer.clamp_cursor_within_document_bounds(cursor)
-			cursor.x = whitespace_prefix.len
-			return cursor
+
+			mut line := pos.line
+			offset := if prefix_is_same_len_as_line { 0 } else { pos.offset }
+			after_cursor := buffer.lines[line].runes()[offset..].string()
+			buffer.lines[line] = buffer.lines[line].runes()[..offset].string()
+			buffer.lines.insert(line + 1, '${whitespace_prefix}${after_cursor}')
+			line += 1
+
+			return buffer.clamp_cursor_within_document_bounds_new(pos.add(Distance{
+				lines:  line
+				offset: offset * -1
+			})).add(Distance{ offset: whitespace_prefix.len })
 		}
 	}
 }
@@ -243,6 +262,33 @@ fn resolve_whitespace_prefix_from_line_str(line string) string {
 	return line
 }
 
+pub fn (mut buffer Buffer) x_new(pos Position) ?Position {
+	match buffer.buffer_kind {
+		.gap_buffer {
+			// TODO(tauraamui): Move this stuff into gap buffer directly
+			//                  as there's now confusion as to which methods here
+			//                  can be safely used by the gap buffer impl and which
+			//                  can not.
+			return pos_to_position(buffer.c_buffer.x(position_to_pos(pos)))
+		}
+		.line_buffer {
+			return buffer.l_buffer.x(pos)
+		}
+		.legacy {
+			mut cursor := position_to_pos(pos)
+			line := buffer.lines[cursor.y].runes()
+			if line.len == 0 {
+				return none
+			}
+			start := line[..cursor.x]
+			end := line[cursor.x + 1..]
+			buffer.lines[cursor.y] = '${start.string()}${end.string()}'
+			return pos_to_position(buffer.clamp_cursor_x_pos(buffer.clamp_cursor_within_document_bounds(cursor),
+				false))
+		}
+	}
+}
+
 pub fn (mut buffer Buffer) x(pos Pos) ?Pos {
 	match buffer.buffer_kind {
 		.gap_buffer {
@@ -254,7 +300,7 @@ pub fn (mut buffer Buffer) x(pos Pos) ?Pos {
 			return buffer.c_buffer.x(cursor)
 		}
 		.line_buffer {
-			l_pos := buffer.l_buffer.x(Position.new(pos.y, pos.x))
+			l_pos := buffer.l_buffer.x(Position.new(line: pos.y, offset: pos.x))
 			return Pos{
 				x: l_pos.offset
 				y: l_pos.line
@@ -284,7 +330,7 @@ pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
 				return none
 			}
 			if buffer.use_gap_buffer {
-				buffer.move_cursor_to(pos)
+				buffer.move_data_cursor_to(pos_to_position(pos))
 				if buffer.c_buffer.backspace() {
 					cursor.y -= 1
 					cursor.x = buffer.find_end_of_line(cursor) or { 0 }
@@ -350,14 +396,14 @@ pub fn (mut buffer Buffer) delete(ignore_newlines bool) bool {
 pub fn (mut buffer Buffer) o(pos Pos) ?Pos {
 	match buffer.buffer_kind {
 		.gap_buffer {
-			new_pos := buffer.c_buffer.o(Position.new(pos.y, pos.x)) or { return pos }
+			new_pos := buffer.c_buffer.o(Position.new(line: pos.y, offset: pos.x)) or { return pos }
 			return Pos{
 				x: new_pos.offset
 				y: new_pos.line
 			}
 		}
 		.line_buffer {
-			new_pos := buffer.l_buffer.o(Position.new(pos.y, pos.x)) or { return pos }
+			new_pos := buffer.l_buffer.o(Position.new(line: pos.y, offset: pos.x)) or { return pos }
 			return Pos{
 				x: new_pos.offset
 				y: new_pos.line
@@ -385,7 +431,11 @@ pub fn (mut buffer Buffer) o(pos Pos) ?Pos {
 }
 
 pub fn (buffer Buffer) read_line(y int) ?string {
-	if lines := buffer.read(Range.new(Position.new(y, 0), Position.new(y, 0))) {
+	if lines := buffer.read(Range.new(Position.new(line: y, offset: 0), Position.new(
+		line:   y
+		offset: 0
+	)))
+	{
 		return lines[0]
 	}
 	return none
@@ -393,7 +443,11 @@ pub fn (buffer Buffer) read_line(y int) ?string {
 
 pub fn (buffer Buffer) read(range Range) ?[]string {
 	if buffer.use_gap_buffer {
-		if data := buffer.c_buffer.read(range) { return data.split("${lf}") } else { return ?[]string(none) }
+		if data := buffer.c_buffer.read(range) {
+			return data.split('${lf}')
+		} else {
+			return ?[]string(none)
+		}
 	}
 	return ?[]string(none)
 }
@@ -436,7 +490,7 @@ pub fn (buffer Buffer) left(pos Pos, insert_mode bool) ?Pos {
 			return buffer.c_buffer.left(pos)
 		}
 		.line_buffer {
-			return position_to_pos(buffer.l_buffer.left(Position.new(pos.y, pos.x)))
+			return position_to_pos(buffer.l_buffer.left(Position.new(line: pos.y, offset: pos.x)))
 		}
 		.legacy {
 			mut cursor := pos
@@ -453,7 +507,8 @@ pub fn (buffer Buffer) right(pos Pos, insert_mode bool) ?Pos {
 			return buffer.c_buffer.right(pos, insert_mode)
 		}
 		.line_buffer {
-			return position_to_pos(buffer.l_buffer.right(Position.new(pos.y, pos.x), insert_mode))
+			return position_to_pos(buffer.l_buffer.right(Position.new(line: pos.y, offset: pos.x),
+				insert_mode))
 		}
 		.legacy {
 			mut cursor := pos
@@ -470,7 +525,8 @@ pub fn (buffer Buffer) down(pos Pos, insert_mode bool) ?Pos {
 			return buffer.c_buffer.down(pos)
 		}
 		.line_buffer {
-			return position_to_pos(buffer.l_buffer.down(Position.new(pos.y, pos.x), insert_mode))
+			return position_to_pos(buffer.l_buffer.down(Position.new(line: pos.y, offset: pos.x),
+				insert_mode))
 		}
 		.legacy {
 			mut cursor := pos
@@ -490,7 +546,8 @@ pub fn (buffer Buffer) up(pos Pos, insert_mode bool) ?Pos {
 			return buffer.c_buffer.up(pos)
 		}
 		.line_buffer {
-			return position_to_pos(buffer.l_buffer.up(Position.new(pos.y, pos.x), insert_mode))
+			return position_to_pos(buffer.l_buffer.up(Position.new(line: pos.y, offset: pos.x),
+				insert_mode))
 		}
 		.legacy {
 			mut cursor := pos
@@ -510,8 +567,10 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
 			return buffer.c_buffer.up_to_next_blank_line(pos)
 		}
 		.line_buffer {
-			return position_to_pos(buffer.l_buffer.up_to_next_blank_line(Position.new(pos.y,
-				pos.x)))
+			return position_to_pos(buffer.l_buffer.up_to_next_blank_line(Position.new(
+				line:   pos.y
+				offset: pos.x
+			)))
 		}
 		.legacy {
 			mut cursor := pos
@@ -551,8 +610,10 @@ pub fn (buffer Buffer) down_to_next_blank_line(pos Pos) ?Pos {
 			return buffer.c_buffer.down_to_next_blank_line(pos)
 		}
 		.line_buffer {
-			return position_to_pos(buffer.l_buffer.down_to_next_blank_line(Position.new(pos.y,
-				pos.x)))
+			return position_to_pos(buffer.l_buffer.down_to_next_blank_line(Position.new(
+				line:   pos.y
+				offset: pos.x
+			)))
 		}
 		.legacy {
 			mut cursor := pos
@@ -603,6 +664,16 @@ pub fn (mut buffer Buffer) replace_char(pos Pos, code u8, str string) {
 	buffer.lines[cursor.y] = '${start.string()}${str}${end.string()}'
 }
 
+pub fn (buffer Buffer) clamp_cursor_within_document_bounds_new(pos Position) Position {
+	return pos.add(Distance{
+		lines: if pos.line > buffer.lines.len - 1 {
+			(pos.line - (buffer.lines.len - 1))
+		} else {
+			0
+		} * -1
+	})
+}
+
 pub fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
 	mut cursor := pos
 	if pos.y < 0 {
@@ -637,16 +708,6 @@ pub fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
 		clamped.x = 0
 	}
 	return clamped
-}
-
-fn position_to_pos(position ?Position) ?Pos {
-	if unwrapped_position := position {
-		return Pos{
-			x: unwrapped_position.offset
-			y: unwrapped_position.line
-		}
-	}
-	return none
 }
 
 pub interface PatternMatchIterator {

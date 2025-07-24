@@ -206,6 +206,45 @@ fn test_buffer_load_from_path_with_gap_buffer_and_iterate_over_pattern_matches()
 	assert iteration_count == 2
 }
 
+fn test_buffer_clamp_cursor_within_document_bounds() {
+	mut buffer := Buffer.new('', .legacy)
+	buffer.lines = ['1. first line', '2. second line', '3. third line']
+	assert buffer.clamp_cursor_within_document_bounds(Pos{ x: 0, y: -10 }) == Pos{}
+	assert buffer.clamp_cursor_within_document_bounds(Pos{ x: 0, y: 1 }) == Pos{
+		x: 0
+		y: 1
+	}
+	assert buffer.clamp_cursor_within_document_bounds(Pos{ x: 0, y: 2 }) == Pos{
+		x: 0
+		y: 2
+	}
+	assert buffer.clamp_cursor_within_document_bounds(Pos{ x: 0, y: 19 }) == Pos{
+		x: 0
+		y: 2
+	}
+}
+
+fn test_buffer_clamp_cursor_within_document_bounds_new() {
+	mut buffer := Buffer.new('', .legacy)
+	buffer.lines = ['1. first line', '2. second line', '3. third line']
+	assert buffer.clamp_cursor_within_document_bounds_new(Position.new(line: -10, offset: 0)) == Position.new(
+		line:   0
+		offset: 0
+	)
+	assert buffer.clamp_cursor_within_document_bounds_new(Position.new(line: 1, offset: 0)) == Position.new(
+		line:   1
+		offset: 0
+	)
+	assert buffer.clamp_cursor_within_document_bounds_new(Position.new(line: 2, offset: 0)) == Position.new(
+		line:   2
+		offset: 0
+	)
+	assert buffer.clamp_cursor_within_document_bounds_new(Position.new(line: 19, offset: 0)) == Position.new(
+		line:   2
+		offset: 0
+	)
+}
+
 fn test_buffer_gap_buffer_insert_text() {
 	mut buffer := Buffer.new('', .gap_buffer)
 	buffer.c_buffer = GapBuffer.new('')
@@ -220,15 +259,25 @@ fn test_buffer_gap_buffer_insert_text() {
 fn test_buffer_gap_buffer_enter_inserts_newline_line() {
 	mut buffer := Buffer.new('', .gap_buffer)
 	buffer.c_buffer = GapBuffer.new('1. first line\n2. second line\n3. third line')
-	buffer.enter(Pos{ x: 4, y: 0 })
+	buffer.enter(Position.new(line: 0, offset: 4))
 	assert buffer.str() == '1. f\nirst line\n2. second line\n3. third line'
 }
 
 fn test_buffer_legacy_buffer_enter_inserts_newline_line() {
 	mut buffer := Buffer.new('', .legacy)
 	buffer.lines = ['1. first line', '2. second line', '3. third line']
-	buffer.enter(Pos{ x: 4, y: 0 })
+	buffer.enter(Position.new(line: 0, offset: 4))
 	assert buffer.str() == '1. f\nirst line\n2. second line\n3. third line'
+}
+
+fn test_buffer_line_buffer_enter_inserts_newline_line() {
+	mut buffer := Buffer.new('', .line_buffer)
+	buffer.load_contents_into_line_buffer(['1. first line', '2. second line', '3. third line'])
+	buffer.enter(Position.new(line: 0, offset: 4))
+	// NOTE(tauraamui) [23/07/2025]: currently the line buffer version of this method
+	//                               does nothing, and is therefore not expected to mutate
+	//                               the document by inserting any newlines
+	assert buffer.str() == '1. first line\n2. second line\n3. third line'
 }
 
 fn test_buffer_gap_buffer_x_deletes_char_from_line() {
@@ -247,6 +296,20 @@ fn test_buffer_gap_buffer_x_deletes_char_from_line() {
 		x: 4
 		y: 0
 	}
+	assert buffer.str() == '1. fst line\n2. second line\n3. third line'
+}
+
+fn test_buffer_legacy_buffer_x_new_deletes_char_from_line() {
+	mut buffer := Buffer.new('', .legacy)
+	buffer.lines = ['1. first line', '2. second line', '3. third line']
+
+	mut new_pos := buffer.x_new(Position.new(line: 0, offset: 4))?
+	assert new_pos == Position.new(line: 0, offset: 4)
+
+	assert buffer.str() == '1. frst line\n2. second line\n3. third line'
+
+	new_pos = buffer.x_new(new_pos)?
+	assert new_pos == Position.new(line: 0, offset: 4)
 	assert buffer.str() == '1. fst line\n2. second line\n3. third line'
 }
 

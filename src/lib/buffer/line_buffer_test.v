@@ -28,8 +28,8 @@ fn test_line_buffer_insert_text_with_initially_empty_data() {
 		lines: []
 	}
 
-	new_pos := line_buf.insert_text(Position.new(0, 0), '1')?
-	assert new_pos == Position.new(0, 1)
+	new_pos := line_buf.insert_text(Position.new(line: 0, offset: 0), '1')?
+	assert new_pos == Position.new(line: 0, offset: 1)
 	assert line_buf.lines == ['1']
 }
 
@@ -38,8 +38,8 @@ fn test_line_buffer_insert_text_at_offset_higher_than_current_line_size() {
 		lines: ['1. first line', '2. second line', '3. third line', '4. fourth line']
 	}
 
-	new_pos := line_buf.insert_text(Position.new(1, 79), ' text at end of second line')?
-	assert new_pos == Position.new(1, 41)
+	new_pos := line_buf.insert_text(Position.new(line: 1, offset: 79), ' text at end of second line')?
+	assert new_pos == Position.new(line: 1, offset: 41)
 	assert line_buf.lines == ['1. first line', '2. second line text at end of second line',
 		'3. third line', '4. fourth line']
 }
@@ -49,8 +49,8 @@ fn test_line_buffer_insert_text_at_offset_higher_than_0_when_current_line_is_emp
 		lines: ['1. first line', '', '3. third line', '4. fourth line']
 	}
 
-	new_pos := line_buf.insert_text(Position.new(1, 140), ' text at end of second line')?
-	assert new_pos == Position.new(1, 27)
+	new_pos := line_buf.insert_text(Position.new(line: 1, offset: 140), ' text at end of second line')?
+	assert new_pos == Position.new(line: 1, offset: 27)
 	assert line_buf.lines == ['1. first line', ' text at end of second line', '3. third line',
 		'4. fourth line']
 }
@@ -60,8 +60,8 @@ fn test_line_buffer_insert_text_at_line_higher_than_current_data() {
 		lines: ['1. first line', '2. second line', '3. third line', '4. fourth line']
 	}
 
-	new_pos := line_buf.insert_text(Position.new(7, 0), '8. eighth line')?
-	assert new_pos == Position.new(7, 14)
+	new_pos := line_buf.insert_text(Position.new(line: 7, offset: 0), '8. eighth line')?
+	assert new_pos == Position.new(line: 7, offset: 14)
 	assert line_buf.lines == ['1. first line', '2. second line', '3. third line', '4. fourth line',
 		'', '', '', '8. eighth line']
 }
@@ -71,8 +71,8 @@ fn test_line_buffer_insert_text_at_start_of_existing_line() {
 		lines: ['1. first line', '2. second line', '3. third line', '4. fourth line']
 	}
 
-	new_pos := line_buf.insert_text(Position.new(1, 0), 'prefix text on second line')?
-	assert new_pos == Position.new(1, 26)
+	new_pos := line_buf.insert_text(Position.new(line: 1, offset: 0), 'prefix text on second line')?
+	assert new_pos == Position.new(line: 1, offset: 26)
 	assert line_buf.lines == ['1. first line', 'prefix text on second line2. second line',
 		'3. third line', '4. fourth line']
 }
@@ -82,8 +82,8 @@ fn test_line_buffer_insert_text_at_middle_of_existing_line() {
 		lines: ['1. first line', '2. second line', '3. third line', '4. fourth line']
 	}
 
-	new_pos := line_buf.insert_text(Position.new(1, 7), ' middle text within second line ')?
-	assert new_pos == Position.new(1, 39)
+	new_pos := line_buf.insert_text(Position.new(line: 1, offset: 7), ' middle text within second line ')?
+	assert new_pos == Position.new(line: 1, offset: 39)
 	assert line_buf.lines == ['1. first line', '2. seco middle text within second line nd line',
 		'3. third line', '4. fourth line']
 }
@@ -93,8 +93,8 @@ fn test_line_buffer_insert_text_at_end_of_existing_line() {
 		lines: ['1. first line', '2. second line', '3. third line', '4. fourth line']
 	}
 
-	new_pos := line_buf.insert_text(Position.new(1, 14), ' text at end of second line')?
-	assert new_pos == Position.new(1, 41)
+	new_pos := line_buf.insert_text(Position.new(line: 1, offset: 14), ' text at end of second line')?
+	assert new_pos == Position.new(line: 1, offset: 41)
 	assert line_buf.lines == ['1. first line', '2. second line text at end of second line',
 		'3. third line', '4. fourth line']
 }
@@ -105,8 +105,8 @@ fn test_line_buffer_insert_tab_tabs_as_spaces_disabled() {
 	}
 
 	tabs_not_spaces := true
-	new_pos := line_buf.insert_tab(Position.new(0, 0), tabs_not_spaces)?
-	assert new_pos == Position.new(0, 1)
+	new_pos := line_buf.insert_tab(Position.new(line: 0, offset: 0), tabs_not_spaces)?
+	assert new_pos == Position.new(line: 0, offset: 1)
 	assert line_buf.lines == ['\t']
 }
 
@@ -116,8 +116,8 @@ fn test_line_buffer_insert_tab_tabs_as_spaces_enabled() {
 	}
 
 	tabs_not_spaces := false
-	new_pos := line_buf.insert_tab(Position.new(0, 0), tabs_not_spaces)?
-	assert new_pos == Position.new(0, 4)
+	new_pos := line_buf.insert_tab(Position.new(line: 0, offset: 0), tabs_not_spaces)?
+	assert new_pos == Position.new(line: 0, offset: 4)
 	assert line_buf.lines == ['    ']
 }
 
@@ -126,9 +126,9 @@ fn test_line_buffer_newline_on_empty_document() {
 		lines: []
 	}
 
-	new_pos := line_buf.newline(Position.new(0, 0))?
+	new_pos := line_buf.newline(Position.new(line: 0, offset: 0))?
 
-	assert new_pos == Position.new(1, 0)
+	assert new_pos == Position.new(line: 1, offset: 0)
 	assert line_buf.lines == ['', '']
 }
 
@@ -137,9 +137,9 @@ fn test_line_buffer_newline_on_existing_content_from_start_of_first_line() {
 		lines: ['1. first line of content']
 	}
 
-	new_pos := line_buf.newline(Position.new(0, 0))?
+	new_pos := line_buf.newline(Position.new(line: 0, offset: 0))?
 
-	assert new_pos == Position.new(1, 0)
+	assert new_pos == Position.new(line: 1, offset: 0)
 	assert line_buf.lines == ['', '1. first line of content']
 }
 
@@ -148,9 +148,9 @@ fn test_line_buffer_newline_on_existing_content_from_middle_of_first_line() {
 		lines: ['1. first line of content']
 	}
 
-	new_pos := line_buf.newline(Position.new(0, 11))?
+	new_pos := line_buf.newline(Position.new(line: 0, offset: 11))?
 
-	assert new_pos == Position.new(1, 0)
+	assert new_pos == Position.new(line: 1, offset: 0)
 	assert line_buf.lines == ['1. first li', 'ne of content']
 }
 
@@ -159,9 +159,9 @@ fn test_line_buffer_newline_on_existing_content_from_end_of_first_line() {
 		lines: ['1. first line of content']
 	}
 
-	new_pos := line_buf.newline(Position.new(0, 24))?
+	new_pos := line_buf.newline(Position.new(line: 0, offset: 24))?
 
-	assert new_pos == Position.new(1, 0)
+	assert new_pos == Position.new(line: 1, offset: 0)
 	assert line_buf.lines == ['1. first line of content', '']
 }
 
@@ -170,9 +170,9 @@ fn test_line_buffer_newline_on_existing_content_within_middle_of_second_line() {
 		lines: ['1. first line of content', '2. second line of content']
 	}
 
-	new_pos := line_buf.newline(Position.new(1, 13))?
+	new_pos := line_buf.newline(Position.new(line: 1, offset: 13))?
 
-	assert new_pos == Position.new(2, 0)
+	assert new_pos == Position.new(line: 2, offset: 0)
 	assert line_buf.lines == ['1. first line of content', '2. second lin', 'e of content']
 }
 
@@ -181,9 +181,9 @@ fn test_line_buffer_newline_on_existing_content_within_middle_of_second_line_of_
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	new_pos := line_buf.newline(Position.new(1, 13))?
+	new_pos := line_buf.newline(Position.new(line: 1, offset: 13))?
 
-	assert new_pos == Position.new(2, 0)
+	assert new_pos == Position.new(line: 2, offset: 0)
 	assert line_buf.lines == ['1. first line of content', '2. second lin', 'e of content',
 		'3. third line of content']
 }
@@ -193,9 +193,9 @@ fn test_line_buffer_newline_on_existing_content_from_end_of_second_line_which_is
 		lines: ['fn function_definition() {', '    assert x == 100 && y == 20']
 	}
 
-	new_pos := line_buf.newline(Position.new(1, 30))?
+	new_pos := line_buf.newline(Position.new(line: 1, offset: 30))?
 
-	assert new_pos == Position.new(2, 4)
+	assert new_pos == Position.new(line: 2, offset: 4)
 	assert line_buf.lines == ['fn function_definition() {', '    assert x == 100 && y == 20', '    ']
 }
 
@@ -204,9 +204,9 @@ fn test_line_buffer_newline_on_existing_content_from_middle_of_second_line_which
 		lines: ['fn function_definition() {', '    assert x == 100 && y == 20']
 	}
 
-	new_pos := line_buf.newline(Position.new(1, 15))?
+	new_pos := line_buf.newline(Position.new(line: 1, offset: 15))?
 
-	assert new_pos == Position.new(2, 4)
+	assert new_pos == Position.new(line: 2, offset: 4)
 	assert line_buf.lines == ['fn function_definition() {', '    assert x ==', '     100 && y == 20']
 }
 
@@ -215,9 +215,9 @@ fn test_line_buffer_x_on_existing_content_from_end_of_first_line() {
 		lines: ['1. first line of content']
 	}
 
-	new_pos := line_buf.x(Position.new(0, 23))
+	new_pos := line_buf.x(Position.new(line: 0, offset: 23))
 
-	assert new_pos == Position.new(0, 23)
+	assert new_pos == Position.new(line: 0, offset: 23)
 	assert line_buf.lines == ['1. first line of conten']
 }
 
@@ -226,9 +226,9 @@ fn test_line_buffer_x_on_existing_content_from_start_of_line() {
 		lines: ['1. first line of content']
 	}
 
-	new_pos := line_buf.x(Position.new(0, 0))
+	new_pos := line_buf.x(Position.new(line: 0, offset: 0))
 
-	assert new_pos == Position.new(0, 0)
+	assert new_pos == Position.new(line: 0, offset: 0)
 	assert line_buf.lines == ['. first line of content']
 }
 
@@ -237,9 +237,9 @@ fn test_line_buffer_backspace_on_existing_content_from_start_of_first_line() {
 		lines: ['1. first line of content']
 	}
 
-	new_pos := line_buf.backspace(Position.new(0, 0))?
+	new_pos := line_buf.backspace(Position.new(line: 0, offset: 0))?
 
-	assert new_pos == Position.new(0, 0)
+	assert new_pos == Position.new(line: 0, offset: 0)
 	assert line_buf.lines == ['1. first line of content']
 }
 
@@ -248,14 +248,14 @@ fn test_line_buffer_backspace_on_existing_content_from_end_of_first_line() {
 		lines: ['1. first line of content']
 	}
 
-	mut new_pos := line_buf.backspace(Position.new(0, 23))?
+	mut new_pos := line_buf.backspace(Position.new(line: 0, offset: 23))?
 
-	assert new_pos == Position.new(0, 22)
+	assert new_pos == Position.new(line: 0, offset: 22)
 	assert line_buf.lines == ['1. first line of conten']
 
 	new_pos = line_buf.backspace(new_pos)?
 
-	assert new_pos == Position.new(0, 21)
+	assert new_pos == Position.new(line: 0, offset: 21)
 	assert line_buf.lines == ['1. first line of conte']
 }
 
@@ -264,14 +264,14 @@ fn test_line_buffer_backspace_on_existing_content_from_end_of_line_initial_pos_w
 		lines: ['1. first line of content']
 	}
 
-	mut new_pos := line_buf.backspace(Position.new(81, 60))?
+	mut new_pos := line_buf.backspace(Position.new(line: 81, offset: 60))?
 
-	assert new_pos == Position.new(0, 22)
+	assert new_pos == Position.new(line: 0, offset: 22)
 	assert line_buf.lines == ['1. first line of conten']
 
 	new_pos = line_buf.backspace(new_pos)?
 
-	assert new_pos == Position.new(0, 21)
+	assert new_pos == Position.new(line: 0, offset: 21)
 	assert line_buf.lines == ['1. first line of conte']
 }
 
@@ -280,27 +280,27 @@ fn test_line_buffer_backspace_on_existing_content_from_start_of_second_line_of_t
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.backspace(Position.new(1, 0))?
+	mut new_pos := line_buf.backspace(Position.new(line: 1, offset: 0))?
 
-	assert new_pos == Position.new(0, 23)
+	assert new_pos == Position.new(line: 0, offset: 23)
 	assert line_buf.lines == ['1. first line of content2. second line of content',
 		'3. third line of content']
 
 	new_pos = line_buf.backspace(new_pos)?
 
-	assert new_pos == Position.new(0, 22)
+	assert new_pos == Position.new(line: 0, offset: 22)
 	assert line_buf.lines == ['1. first line of conten2. second line of content',
 		'3. third line of content']
 
 	new_pos = line_buf.backspace(new_pos)?
 
-	assert new_pos == Position.new(0, 21)
+	assert new_pos == Position.new(line: 0, offset: 21)
 	assert line_buf.lines == ['1. first line of conte2. second line of content',
 		'3. third line of content']
 
 	new_pos = line_buf.backspace(new_pos)?
 
-	assert new_pos == Position.new(0, 20)
+	assert new_pos == Position.new(line: 0, offset: 20)
 	assert line_buf.lines == ['1. first line of cont2. second line of content',
 		'3. third line of content']
 }
@@ -310,33 +310,33 @@ fn test_line_buffer_backspace_on_existing_content_from_start_of_second_line_of_t
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.backspace(Position.new(1, 0))?
+	mut new_pos := line_buf.backspace(Position.new(line: 1, offset: 0))?
 
-	assert new_pos == Position.new(0, 23)
+	assert new_pos == Position.new(line: 0, offset: 23)
 	assert line_buf.lines == ['1. first line of content2. second line of content',
 		'3. third line of content']
 
 	new_pos = line_buf.backspace(new_pos)?
 
-	assert new_pos == Position.new(0, 22)
+	assert new_pos == Position.new(line: 0, offset: 22)
 	assert line_buf.lines == ['1. first line of conten2. second line of content',
 		'3. third line of content']
 
 	new_pos = line_buf.backspace(new_pos)?
 
-	assert new_pos == Position.new(0, 21)
+	assert new_pos == Position.new(line: 0, offset: 21)
 	assert line_buf.lines == ['1. first line of conte2. second line of content',
 		'3. third line of content']
 
 	new_pos = line_buf.backspace(new_pos)?
 
-	assert new_pos == Position.new(0, 20)
+	assert new_pos == Position.new(line: 0, offset: 20)
 	assert line_buf.lines == ['1. first line of cont2. second line of content',
 		'3. third line of content']
 
 	new_pos = line_buf.newline(new_pos.add(Distance{0, 1}))?
 
-	assert new_pos == Position.new(1, 0)
+	assert new_pos == Position.new(line: 1, offset: 0)
 	assert line_buf.lines == ['1. first line of cont', '2. second line of content',
 		'3. third line of content']
 }
@@ -346,9 +346,9 @@ fn test_line_buffer_o_on_existing_content_from_middle_of_first_line() {
 		lines: ['1. first line of content']
 	}
 
-	new_pos := line_buf.o(Position.new(0, 11))?
+	new_pos := line_buf.o(Position.new(line: 0, offset: 11))?
 
-	assert new_pos == Position.new(1, 0)
+	assert new_pos == Position.new(line: 1, offset: 0)
 	assert line_buf.lines == ['1. first line of content', '']
 }
 
@@ -357,9 +357,9 @@ fn test_line_buffer_o_on_existing_content_from_end_of_line_initial_pos_way_oob()
 		lines: ['1. first line of content']
 	}
 
-	mut new_pos := line_buf.o(Position.new(81, 60))?
+	mut new_pos := line_buf.o(Position.new(line: 81, offset: 60))?
 
-	assert new_pos == Position.new(82, 0)
+	assert new_pos == Position.new(line: 82, offset: 0)
 	assert line_buf.lines == arrays.append(['1. first line of content'], []string{len: 82})
 }
 
@@ -368,27 +368,27 @@ fn test_line_buffer_o_on_existing_content_from_start_of_second_line_of_three() {
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.o(Position.new(1, 0))?
+	mut new_pos := line_buf.o(Position.new(line: 1, offset: 0))?
 
-	assert new_pos == Position.new(2, 0)
+	assert new_pos == Position.new(line: 2, offset: 0)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content', '',
 		'3. third line of content']
 
 	new_pos = line_buf.o(new_pos)?
 
-	assert new_pos == Position.new(3, 0)
+	assert new_pos == Position.new(line: 3, offset: 0)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content', '', '',
 		'3. third line of content']
 
 	new_pos = line_buf.o(new_pos)?
 
-	assert new_pos == Position.new(4, 0)
+	assert new_pos == Position.new(line: 4, offset: 0)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content', '', '',
 		'', '3. third line of content']
 
 	new_pos = line_buf.o(new_pos)?
 
-	assert new_pos == Position.new(5, 0)
+	assert new_pos == Position.new(line: 5, offset: 0)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content', '', '',
 		'', '', '3. third line of content']
 }
@@ -398,9 +398,9 @@ fn test_line_buffer_left_on_no_content() {
 		lines: []
 	}
 
-	mut new_pos := line_buf.left(Position.new(0, 0))?
+	mut new_pos := line_buf.left(Position.new(line: 0, offset: 0))?
 
-	assert new_pos == Position.new(0, 0)
+	assert new_pos == Position.new(line: 0, offset: 0)
 }
 
 fn test_line_buffer_left_on_existing_content_from_start_of_first_line() {
@@ -408,9 +408,9 @@ fn test_line_buffer_left_on_existing_content_from_start_of_first_line() {
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.left(Position.new(0, 0))?
+	mut new_pos := line_buf.left(Position.new(line: 0, offset: 0))?
 
-	assert new_pos == Position.new(0, 0)
+	assert new_pos == Position.new(line: 0, offset: 0)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -420,9 +420,9 @@ fn test_line_buffer_left_on_existing_content_from_start_of_second_line() {
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.left(Position.new(1, 0))?
+	mut new_pos := line_buf.left(Position.new(line: 1, offset: 0))?
 
-	assert new_pos == Position.new(1, 0)
+	assert new_pos == Position.new(line: 1, offset: 0)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -432,15 +432,15 @@ fn test_line_buffer_left_on_existing_content_from_middle_of_second_line() {
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.left(Position.new(1, 12))?
+	mut new_pos := line_buf.left(Position.new(line: 1, offset: 12))?
 
-	assert new_pos == Position.new(1, 11)
+	assert new_pos == Position.new(line: 1, offset: 11)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 
 	new_pos = line_buf.left(new_pos)?
 
-	assert new_pos == Position.new(1, 10)
+	assert new_pos == Position.new(line: 1, offset: 10)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -450,9 +450,9 @@ fn test_line_buffer_right_on_no_content() {
 		lines: []
 	}
 
-	mut new_pos := line_buf.right(Position.new(0, 0), false)?
+	mut new_pos := line_buf.right(Position.new(line: 0, offset: 0), false)?
 
-	assert new_pos == Position.new(0, 0)
+	assert new_pos == Position.new(line: 0, offset: 0)
 }
 
 fn test_line_buffer_right_on_existing_content_from_end_of_first_line() {
@@ -460,9 +460,9 @@ fn test_line_buffer_right_on_existing_content_from_end_of_first_line() {
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.right(Position.new(0, 23), false)?
+	mut new_pos := line_buf.right(Position.new(line: 0, offset: 23), false)?
 
-	assert new_pos == Position.new(0, 23)
+	assert new_pos == Position.new(line: 0, offset: 23)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -472,9 +472,9 @@ fn test_line_buffer_right_on_existing_content_from_start_of_second_line() {
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.right(Position.new(1, 0), false)?
+	mut new_pos := line_buf.right(Position.new(line: 1, offset: 0), false)?
 
-	assert new_pos == Position.new(1, 1)
+	assert new_pos == Position.new(line: 1, offset: 1)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -484,15 +484,15 @@ fn test_line_buffer_right_on_existing_content_from_middle_of_second_line() {
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.right(Position.new(1, 12), false)?
+	mut new_pos := line_buf.right(Position.new(line: 1, offset: 12), false)?
 
-	assert new_pos == Position.new(1, 13)
+	assert new_pos == Position.new(line: 1, offset: 13)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 
 	new_pos = line_buf.right(new_pos, false)?
 
-	assert new_pos == Position.new(1, 14)
+	assert new_pos == Position.new(line: 1, offset: 14)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -502,9 +502,9 @@ fn test_line_buffer_down_on_no_content() {
 		lines: []
 	}
 
-	mut new_pos := line_buf.down(Position.new(0, 0), false)?
+	mut new_pos := line_buf.down(Position.new(line: 0, offset: 0), false)?
 
-	assert new_pos == Position.new(0, 0)
+	assert new_pos == Position.new(line: 0, offset: 0)
 }
 
 fn test_line_buffer_down_on_existing_content_from_end_of_first_line() {
@@ -512,9 +512,9 @@ fn test_line_buffer_down_on_existing_content_from_end_of_first_line() {
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.down(Position.new(0, 55), false)?
+	mut new_pos := line_buf.down(Position.new(line: 0, offset: 55), false)?
 
-	assert new_pos == Position.new(1, 24)
+	assert new_pos == Position.new(line: 1, offset: 24)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -524,9 +524,9 @@ fn test_line_buffer_down_on_existing_content_from_start_of_second_line() {
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.down(Position.new(1, 0), false)?
+	mut new_pos := line_buf.down(Position.new(line: 1, offset: 0), false)?
 
-	assert new_pos == Position.new(2, 0)
+	assert new_pos == Position.new(line: 2, offset: 0)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -536,15 +536,15 @@ fn test_line_buffer_down_on_existing_content_from_middle_of_second_line() {
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.down(Position.new(1, 12), false)?
+	mut new_pos := line_buf.down(Position.new(line: 1, offset: 12), false)?
 
-	assert new_pos == Position.new(2, 12)
+	assert new_pos == Position.new(line: 2, offset: 12)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 
 	new_pos = line_buf.down(new_pos, false)?
 
-	assert new_pos == Position.new(2, 12)
+	assert new_pos == Position.new(line: 2, offset: 12)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -554,9 +554,9 @@ fn test_line_buffer_down_insert_mode_on_no_content() {
 		lines: []
 	}
 
-	mut new_pos := line_buf.down(Position.new(0, 0), true)?
+	mut new_pos := line_buf.down(Position.new(line: 0, offset: 0), true)?
 
-	assert new_pos == Position.new(0, 0)
+	assert new_pos == Position.new(line: 0, offset: 0)
 }
 
 fn test_line_buffer_down_insert_mode_on_existing_content_from_end_of_first_line() {
@@ -564,9 +564,9 @@ fn test_line_buffer_down_insert_mode_on_existing_content_from_end_of_first_line(
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.down(Position.new(0, 55), true)?
+	mut new_pos := line_buf.down(Position.new(line: 0, offset: 55), true)?
 
-	assert new_pos == Position.new(1, 25)
+	assert new_pos == Position.new(line: 1, offset: 25)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -576,9 +576,9 @@ fn test_line_buffer_down_insert_mode_on_existing_content_from_start_of_second_li
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.down(Position.new(1, 0), true)?
+	mut new_pos := line_buf.down(Position.new(line: 1, offset: 0), true)?
 
-	assert new_pos == Position.new(2, 0)
+	assert new_pos == Position.new(line: 2, offset: 0)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -588,15 +588,15 @@ fn test_line_buffer_down_insert_mode_on_existing_content_from_middle_of_second_l
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.down(Position.new(1, 12), true)?
+	mut new_pos := line_buf.down(Position.new(line: 1, offset: 12), true)?
 
-	assert new_pos == Position.new(2, 12)
+	assert new_pos == Position.new(line: 2, offset: 12)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 
 	new_pos = line_buf.down(new_pos, false)?
 
-	assert new_pos == Position.new(2, 12)
+	assert new_pos == Position.new(line: 2, offset: 12)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -606,9 +606,9 @@ fn test_line_buffer_up_on_no_content() {
 		lines: []
 	}
 
-	mut new_pos := line_buf.up(Position.new(0, 0), false)?
+	mut new_pos := line_buf.up(Position.new(line: 0, offset: 0), false)?
 
-	assert new_pos == Position.new(0, 0)
+	assert new_pos == Position.new(line: 0, offset: 0)
 }
 
 fn test_line_buffer_up_on_existing_content_from_end_of_first_line() {
@@ -616,9 +616,9 @@ fn test_line_buffer_up_on_existing_content_from_end_of_first_line() {
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.up(Position.new(1, 55), false)?
+	mut new_pos := line_buf.up(Position.new(line: 1, offset: 55), false)?
 
-	assert new_pos == Position.new(0, 23)
+	assert new_pos == Position.new(line: 0, offset: 23)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -628,9 +628,9 @@ fn test_line_buffer_up_on_existing_content_from_start_of_second_line() {
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.up(Position.new(2, 0), false)?
+	mut new_pos := line_buf.up(Position.new(line: 2, offset: 0), false)?
 
-	assert new_pos == Position.new(1, 0)
+	assert new_pos == Position.new(line: 1, offset: 0)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -640,15 +640,15 @@ fn test_line_buffer_up_on_existing_content_from_middle_of_second_line() {
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.up(Position.new(2, 12), false)?
+	mut new_pos := line_buf.up(Position.new(line: 2, offset: 12), false)?
 
-	assert new_pos == Position.new(1, 12)
+	assert new_pos == Position.new(line: 1, offset: 12)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 
 	new_pos = line_buf.up(new_pos, false)?
 
-	assert new_pos == Position.new(0, 12)
+	assert new_pos == Position.new(line: 0, offset: 12)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -658,9 +658,9 @@ fn test_line_buffer_up_insert_mode_on_no_content() {
 		lines: []
 	}
 
-	mut new_pos := line_buf.up(Position.new(0, 0), true)?
+	mut new_pos := line_buf.up(Position.new(line: 0, offset: 0), true)?
 
-	assert new_pos == Position.new(0, 0)
+	assert new_pos == Position.new(line: 0, offset: 0)
 }
 
 fn test_line_buffer_up_insert_mode_on_existing_content_from_end_of_first_line() {
@@ -668,9 +668,9 @@ fn test_line_buffer_up_insert_mode_on_existing_content_from_end_of_first_line() 
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.up(Position.new(1, 55), true)?
+	mut new_pos := line_buf.up(Position.new(line: 1, offset: 55), true)?
 
-	assert new_pos == Position.new(0, 24)
+	assert new_pos == Position.new(line: 0, offset: 24)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -680,9 +680,9 @@ fn test_line_buffer_up_insert_mode_on_existing_content_from_start_of_second_line
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.up(Position.new(2, 0), true)?
+	mut new_pos := line_buf.up(Position.new(line: 2, offset: 0), true)?
 
-	assert new_pos == Position.new(1, 0)
+	assert new_pos == Position.new(line: 1, offset: 0)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -692,15 +692,15 @@ fn test_line_buffer_up_insert_mode_on_existing_content_from_middle_of_second_lin
 		lines: ['1. first line of content', '2. second line of content', '3. third line of content']
 	}
 
-	mut new_pos := line_buf.up(Position.new(2, 12), true)?
+	mut new_pos := line_buf.up(Position.new(line: 2, offset: 12), true)?
 
-	assert new_pos == Position.new(1, 12)
+	assert new_pos == Position.new(line: 1, offset: 12)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 
 	new_pos = line_buf.up(new_pos, false)?
 
-	assert new_pos == Position.new(0, 12)
+	assert new_pos == Position.new(line: 0, offset: 12)
 	assert line_buf.lines == ['1. first line of content', '2. second line of content',
 		'3. third line of content']
 }
@@ -710,7 +710,7 @@ fn test_line_buffer_up_to_next_blank_line_on_no_content() {
 		lines: []
 	}
 
-	assert line_buf.up_to_next_blank_line(Position.new(0, 0)) == none
+	assert line_buf.up_to_next_blank_line(Position.new(line: 0, offset: 0)) == none
 }
 
 fn test_line_buffer_up_to_next_blank_line_on_existing_content_from_end_of_last_line() {
@@ -719,9 +719,9 @@ fn test_line_buffer_up_to_next_blank_line_on_existing_content_from_end_of_last_l
 			'5. fifth line']
 	}
 
-	new_pos := line_buf.up_to_next_blank_line(Position.new(5, 321))? // line y: 5, x: 321 so oobs
+	new_pos := line_buf.up_to_next_blank_line(Position.new(line: 5, offset: 321))? // line y: 5, x: 321 so oobs
 
-	assert new_pos == Position.new(2, 0)
+	assert new_pos == Position.new(line: 2, offset: 0)
 	assert line_buf.lines == ['This is a doc', '1. first line', '', '2. second line', '3. third line',
 		'5. fifth line']
 }
@@ -732,9 +732,9 @@ fn test_line_buffer_up_to_next_blank_line_on_existing_content_from_start_of_four
 			'5. fifth line']
 	}
 
-	new_pos := line_buf.up_to_next_blank_line(Position.new(4, 0))?
+	new_pos := line_buf.up_to_next_blank_line(Position.new(line: 4, offset: 0))?
 
-	assert new_pos == Position.new(2, 0)
+	assert new_pos == Position.new(line: 2, offset: 0)
 	assert line_buf.lines == ['This is a doc', '1. first line', '', '2. second line', '3. third line',
 		'5. fifth line']
 }
@@ -745,7 +745,7 @@ fn test_line_buffer_up_to_next_blank_line_on_existing_content_from_middle_of_sec
 			'5. fifth line']
 	}
 
-	assert line_buf.up_to_next_blank_line(Position.new(1, 12)) == none
+	assert line_buf.up_to_next_blank_line(Position.new(line: 1, offset: 12)) == none
 	assert line_buf.lines == ['This is a doc', '1. first line', '', '2. second line', '3. third line',
 		'5. fifth line']
 }
@@ -755,7 +755,7 @@ fn test_line_buffer_down_to_next_blank_line_on_no_content() {
 		lines: []
 	}
 
-	assert line_buf.down_to_next_blank_line(Position.new(0, 0)) == none
+	assert line_buf.down_to_next_blank_line(Position.new(line: 0, offset: 0)) == none
 }
 
 fn test_line_buffer_down_to_next_blank_line_on_existing_content_from_end_of_last_line() {
@@ -764,9 +764,9 @@ fn test_line_buffer_down_to_next_blank_line_on_existing_content_from_end_of_last
 			'5. fifth line']
 	}
 
-	new_pos := line_buf.down_to_next_blank_line(Position.new(0, 321))? // line y: 1, x: 321 so oobs
+	new_pos := line_buf.down_to_next_blank_line(Position.new(line: 0, offset: 321))? // line y: 1, x: 321 so oobs
 
-	assert new_pos == Position.new(2, 0)
+	assert new_pos == Position.new(line: 2, offset: 0)
 	assert line_buf.lines == ['This is a doc', '1. first line', '', '2. second line', '3. third line',
 		'5. fifth line']
 }
@@ -777,7 +777,7 @@ fn test_line_buffer_down_to_next_blank_line_on_existing_content_from_start_of_fo
 			'5. fifth line']
 	}
 
-	assert line_buf.down_to_next_blank_line(Position.new(4, 0)) == none
+	assert line_buf.down_to_next_blank_line(Position.new(line: 4, offset: 0)) == none
 	assert line_buf.lines == ['This is a doc', '1. first line', '', '2. second line', '3. third line',
 		'5. fifth line']
 }
@@ -788,7 +788,10 @@ fn test_line_buffer_down_to_next_blank_line_on_existing_content_from_middle_of_s
 			'5. fifth line']
 	}
 
-	assert line_buf.down_to_next_blank_line(Position.new(1, 12))? == Position.new(3, 0)
+	assert line_buf.down_to_next_blank_line(Position.new(line: 1, offset: 12))? == Position.new(
+		line:   3
+		offset: 0
+	)
 	assert line_buf.lines == ['This is a doc', '1. first line', '', '2. second line', '3. third line',
 		'5. fifth line']
 }
