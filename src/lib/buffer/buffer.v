@@ -212,27 +212,23 @@ pub fn (mut buffer Buffer) enter(pos Position) ?Position {
 			return pos
 		}
 		.legacy {
-			return buffer.legacy_buffer_enter(pos)
+			mut line := pos.line
+			mut offset := pos.offset
+
+			mut whitespace_prefix := resolve_whitespace_prefix_from_line_str(buffer.lines[line])
+			if whitespace_prefix.len == buffer.lines[line].len {
+				buffer.lines[line] = ''
+				whitespace_prefix = ''
+				offset = 0
+			}
+			after_cursor := buffer.lines[line].runes()[offset..].string()
+			buffer.lines[line] = buffer.lines[line].runes()[..offset].string()
+			buffer.lines.insert(line + 1, '${whitespace_prefix}${after_cursor}')
+			line += 1
+
+			return buffer.clamp_cursor_within_document_bounds_new(pos.add(Distance{ lines: line, offset: offset * -1 })).add(Distance{ offset: whitespace_prefix.len })
 		}
 	}
-}
-
-fn (mut buffer Buffer) legacy_buffer_enter(pos Position) Position {
-	mut line := pos.line
-	mut offset := pos.offset
-
-	mut whitespace_prefix := resolve_whitespace_prefix_from_line_str(buffer.lines[line])
-	if whitespace_prefix.len == buffer.lines[line].len {
-		buffer.lines[line] = ''
-		whitespace_prefix = ''
-		offset = 0
-	}
-	after_cursor := buffer.lines[line].runes()[offset..].string()
-	buffer.lines[line] = buffer.lines[line].runes()[..offset].string()
-	buffer.lines.insert(line + 1, '${whitespace_prefix}${after_cursor}')
-	line += 1
-
-	return buffer.clamp_cursor_within_document_bounds_new(pos.add(Distance{ lines: line, offset: offset * -1 })).add(Distance{ offset: whitespace_prefix.len })
 }
 
 pub fn (mut buffer Buffer) delete_line(index int) {

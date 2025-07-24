@@ -249,13 +249,6 @@ fn test_buffer_legacy_buffer_enter_inserts_newline_line() {
 	assert buffer.str() == '1. f\nirst line\n2. second line\n3. third line'
 }
 
-fn test_buffer_legacy_buffer_direct_enter_method_invocation_inserts_newline_line() {
-	mut buffer := Buffer.new('', .legacy)
-	buffer.lines = ['1. first line', '2. second line', '3. third line']
-	buffer.legacy_buffer_enter(Position.new(line: 0, offset: 4))
-	assert buffer.str() == '1. f\nirst line\n2. second line\n3. third line'
-}
-
 fn test_buffer_line_buffer_enter_inserts_newline_line() {
 	mut buffer := Buffer.new('', .line_buffer)
 	buffer.load_contents_into_line_buffer(['1. first line', '2. second line', '3. third line'])
