@@ -1010,15 +1010,9 @@ fn (mut view View) r() {
 }
 
 fn (mut view View) x() {
-	pos := view.buffer.x_new(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x)) or { return }
+	pos := view.buffer.x(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x)) or { return }
 	view.cursor.pos.y = pos.line
 	view.cursor.pos.x = pos.offset
-}
-
-fn (mut view View) x_old() {
-	pos := view.buffer.x(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
-	view.cursor.pos.x = pos.x
-	view.cursor.pos.y = pos.y
 }
 
 fn (mut view View) visual_d(overwrite_y_lines bool) {}
