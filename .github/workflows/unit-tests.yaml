@@ -1,22 +1,35 @@
 name: "Unit Tests"
 
 on:
-  pull_request:
+  workflow_run:                       # wait for the formatter
+    workflows: ["Format PR branch"]
+    types:
+      - completed
   push:
     branches:
       - master
+
+permissions:
+  contents: read
+
 jobs:
   unit_tests:
+    # Only run if the formatter succeeded (or if this is a push to master)
+    if: |
+      github.event_name == 'push' ||
+      (github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout lilly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+
       - name: Install V
         uses: vlang/setup-v@v1.4
         with:
           check-latest: true
-
-      - name: Checkout lilly
-        uses: actions/checkout@v2
 
       - name: Build lilly
         run: v run ./make.vsh build
