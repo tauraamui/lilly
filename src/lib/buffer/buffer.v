@@ -269,7 +269,9 @@ pub fn (mut buffer Buffer) x(pos Position) ?Position {
 			//                  as there's now confusion as to which methods here
 			//                  can be safely used by the gap buffer impl and which
 			//                  can not.
-			return pos_to_position(buffer.c_buffer.x(position_to_pos(pos)) or { position_to_pos(pos) })
+			return pos_to_position(buffer.c_buffer.x(position_to_pos(pos)) or {
+				position_to_pos(pos)
+			})
 		}
 		.line_buffer {
 			return buffer.l_buffer.x(pos)

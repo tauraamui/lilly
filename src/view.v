@@ -1010,7 +1010,9 @@ fn (mut view View) r() {
 }
 
 fn (mut view View) x() {
-	pos := view.buffer.x(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x)) or { return }
+	pos := view.buffer.x(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x)) or {
+		return
+	}
 	view.cursor.pos.y = pos.line
 	view.cursor.pos.x = pos.offset
 }
