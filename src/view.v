@@ -1009,6 +1009,12 @@ fn (mut view View) r() {
 	view.leader_state.mode = .replace
 }
 
+fn (mut view View) x_new() {
+	pos := view.buffer.x_new(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
+	view.cursor.pos.x = pos.x
+	view.cursor.pos.y = pos.y
+}
+
 fn (mut view View) x() {
 	pos := view.buffer.x(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y }) or { return }
 	view.cursor.pos.x = pos.x

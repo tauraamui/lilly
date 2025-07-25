@@ -3056,6 +3056,63 @@ fn test_shift_o_adds_line_above_cursor_at_start_of_file() {
 	assert fake_view.leader_state.mode == .insert
 }
 
+fn test_x_new_removes_character_in_middle_of_line() {
+	mut clip := clipboardv3.new()
+
+	mut fake_view := View{
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
+	}
+
+	fake_view.buffer.lines = ['this is a lines of text']
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 14
+
+	fake_view.x_new()
+
+	assert fake_view.buffer.lines == ['this is a line of text']
+	assert fake_view.leader_state.mode == .normal
+	assert fake_view.cursor.pos.x == 14
+}
+
+fn test_x_new_removes_character_and_shifts_cursor_back_at_end_of_line() {
+	mut clip := clipboardv3.new()
+
+	mut fake_view := View{
+		log:          log.Log{}
+		leader_state: ViewLeaderState{
+			mode: .normal
+		}
+		clipboard:    mut clip
+		buffer:       buffer.Buffer.new('', .legacy)
+	}
+
+	fake_view.buffer.lines = ['this is a lines of text']
+	fake_view.cursor.pos.y = 0
+	fake_view.cursor.pos.x = 22
+
+	// to show it reduces the length in later assertion
+	assert fake_view.buffer.lines[fake_view.cursor.pos.y].len == 23
+
+	fake_view.x_new()
+
+	assert fake_view.buffer.lines == ['this is a lines of tex']
+	assert fake_view.leader_state.mode == .normal
+	assert fake_view.cursor.pos.x == 21
+	assert fake_view.buffer.lines[fake_view.cursor.pos.y].len == 22
+
+	fake_view.x_new()
+
+	assert fake_view.buffer.lines == ['this is a lines of te']
+	assert fake_view.leader_state.mode == .normal
+	assert fake_view.cursor.pos.x == 20
+	assert fake_view.buffer.lines[fake_view.cursor.pos.y].len == 21
+}
+
 fn test_x_removes_character_in_middle_of_line() {
 	mut clip := clipboardv3.new()
 
