@@ -7,7 +7,7 @@ pub:
 	end   Position
 }
 
-fn Range.new(start Position, end Position) Range {
+pub fn Range.new(start Position, end Position) Range {
 	if start > end {
 		return Range{
 			start: end
