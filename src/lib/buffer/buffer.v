@@ -226,7 +226,10 @@ pub fn (mut buffer Buffer) enter(pos Position) ?Position {
 			buffer.lines[line] = buffer.lines[line].runes()[..offset].string()
 			buffer.lines.insert(line + 1, '${whitespace_prefix}${after_cursor}')
 
-			return pos.add(Distance{ offset: offset * -1 }).add(Distance{ lines: 1, offset: whitespace_prefix.len })
+			return pos.add(Distance{ offset: offset * -1 }).add(Distance{
+				lines:  1
+				offset: whitespace_prefix.len
+			})
 		}
 	}
 }
