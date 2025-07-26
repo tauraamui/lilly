@@ -220,17 +220,16 @@ pub fn (mut buffer Buffer) enter(pos Position) ?Position {
 				whitespace_prefix = ''
 			}
 
-			mut line := pos.line
+			line := pos.line
 			offset := if prefix_is_same_len_as_line { 0 } else { pos.offset }
 			after_cursor := buffer.lines[line].runes()[offset..].string()
 			buffer.lines[line] = buffer.lines[line].runes()[..offset].string()
 			buffer.lines.insert(line + 1, '${whitespace_prefix}${after_cursor}')
-			line += 1
 
-			return buffer.clamp_cursor_within_document_bounds_new(pos.add(Distance{
-				lines:  line
-				offset: offset * -1
-			})).add(Distance{ offset: whitespace_prefix.len })
+			return pos.add(Distance{ offset: offset * -1 }).add(Distance{
+				lines:  1
+				offset: whitespace_prefix.len
+			})
 		}
 	}
 }
