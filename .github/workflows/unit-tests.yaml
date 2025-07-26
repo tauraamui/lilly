@@ -15,9 +15,7 @@ permissions:
 jobs:
   unit_tests:
     # Only run if the formatter succeeded (or if this is a push to master)
-    if: |
-      github.event_name == 'push' ||
-      (github.event.workflow_run.conclusion == 'success')
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
