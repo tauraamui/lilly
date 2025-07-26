@@ -431,21 +431,27 @@ fn test_buffer_gap_buffer_backspace_deletes_char_from_line() {
 	assert buffer.str() == '1.irst line\n2. second line\n3. third line'
 }
 
-/*
-fn test_buffer_legacy_buffer_x_deletes_char_from_line() {
+fn test_buffer_legacy_buffer_backspace_deletes_char_from_line() {
 	mut buffer := Buffer.new('', .legacy)
 	buffer.lines = ['1. first line', '2. second line', '3. third line']
 
-	mut new_pos := buffer.x(Position.new(line: 0, offset: 4))?
-	assert new_pos == Position.new(line: 0, offset: 4)
+	mut new_pos := buffer.backspace(Pos{ x: 4, y: 0 })?
+	assert new_pos == Pos{
+		x: 3
+		y: 0
+	}
 
-	assert buffer.str() == '1. frst line\n2. second line\n3. third line'
+	assert buffer.str() == '1. irst line\n2. second line\n3. third line'
 
-	new_pos = buffer.x(new_pos)?
-	assert new_pos == Position.new(line: 0, offset: 4)
-	assert buffer.str() == '1. fst line\n2. second line\n3. third line'
+	new_pos = buffer.backspace(new_pos)?
+	assert new_pos == Pos{
+		x: 2
+		y: 0
+	}
+	assert buffer.str() == '1.irst line\n2. second line\n3. third line'
 }
 
+/*
 fn test_buffer_line_buffer_x_deletes_char_from_line() {
 	mut buffer := Buffer.new('', .line_buffer)
 	lines := ['1. first line', '2. second line', '3. third line']
