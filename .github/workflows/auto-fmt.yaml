@@ -2,7 +2,7 @@ name: Format PR branch
 
 on:
   pull_request:
-    types: [synchronize, opened, reopened]
+    types: [push, synchronize, opened, reopened]
 
 permissions:
   contents: write
