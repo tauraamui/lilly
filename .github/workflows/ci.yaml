@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write   # needed to push formatting commits
+  checks: write
+
+jobs:
+  format:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      - uses: vlang/setup-v@v1.4
+        with:
+          check-latest: true
+
+      - run: v fmt -w src/
+
+      - uses: EndBug/add-and-commit@v9
+        with:
+          add: 'src/'
+          message: 'style: auto-format V code in src/'
+          default_author: github_actions
+
+  unit_tests:
+    needs: format          # waits for the formatter on PRs
+    if: always()           # still runs on push to master
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref || github.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+
+      - uses: vlang/setup-v@v1.4
+        with:
+          check-latest: true
+
+      - run: v run ./make.vsh build
+      - run: v run ./make.vsh verbose-test
