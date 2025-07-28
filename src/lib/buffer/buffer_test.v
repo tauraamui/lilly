@@ -415,19 +415,13 @@ fn test_buffer_gap_buffer_backspace_new_deletes_char_from_line() {
 	mut buffer := Buffer.new('', .gap_buffer)
 	buffer.c_buffer = GapBuffer.new('1. first line\n2. second line\n3. third line')
 
-	mut new_pos := buffer.backspace(Pos{ x: 4, y: 0 })?
-	assert new_pos == Pos{
-		x: 3
-		y: 0
-	}
+	mut new_pos := buffer.backspace_new(Position.new(line: 0, offset: 4))?
+	assert new_pos == Position.new(line: 0, offset: 3)
 
 	assert buffer.str() == '1. irst line\n2. second line\n3. third line'
 
 	new_pos = buffer.backspace_new(new_pos)?
-	assert new_pos == Pos{
-		x: 2
-		y: 0
-	}
+	assert new_pos == Position.new(line: 0, offset: 2)
 	assert buffer.str() == '1.irst line\n2. second line\n3. third line'
 }
 
@@ -435,19 +429,13 @@ fn test_buffer_legacy_buffer_backspace_new_deletes_char_from_line() {
 	mut buffer := Buffer.new('', .legacy)
 	buffer.lines = ['1. first line', '2. second line', '3. third line']
 
-	mut new_pos := buffer.backspace_new(Pos{ x: 4, y: 0 })?
-	assert new_pos == Pos{
-		x: 3
-		y: 0
-	}
+	mut new_pos := buffer.backspace_new(Position.new(line: 0, offset: 4))?
+	assert new_pos == Position.new(line: 0, offset: 3)
 
 	assert buffer.str() == '1. irst line\n2. second line\n3. third line'
 
 	new_pos = buffer.backspace_new(new_pos)?
-	assert new_pos == Pos{
-		x: 2
-		y: 0
-	}
+	assert new_pos == Position.new(line: 0, offset: 2)
 	assert buffer.str() == '1.irst line\n2. second line\n3. third line'
 }
 
