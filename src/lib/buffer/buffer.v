@@ -291,6 +291,10 @@ pub fn (mut buffer Buffer) x(pos Position) ?Position {
 }
 
 // TODO(tauraamui) [10/07/2025]: migrate this to gap and line buffers more completely
+// TODO(tauraamui) [28/07/2025]: properly refactor this to really use the new position type
+//                               more completely, for example we stop using the convertion functions
+//                               and actually instantiate a new, well instance of position using the
+//                               constructor
 pub fn (mut buffer Buffer) backspace_new(pos Position) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
