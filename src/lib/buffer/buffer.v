@@ -366,6 +366,43 @@ pub fn (mut buffer Buffer) delete(ignore_newlines bool) bool {
 	}
 }
 
+pub fn (mut buffer Buffer) o_new(pos Pos) ?Pos {
+	match buffer.buffer_kind {
+		.gap_buffer {
+			new_pos := buffer.c_buffer.o(Position.new(line: pos.y, offset: pos.x)) or { return pos }
+			return Pos{
+				x: new_pos.offset
+				y: new_pos.line
+			}
+		}
+		.line_buffer {
+			new_pos := buffer.l_buffer.o(Position.new(line: pos.y, offset: pos.x)) or { return pos }
+			return Pos{
+				x: new_pos.offset
+				y: new_pos.line
+			}
+		}
+		.legacy {
+			mut cursor := pos
+			y := pos.y
+			mut whitespace_prefix := resolve_whitespace_prefix_from_line_str(buffer.lines[y])
+			if whitespace_prefix.len == buffer.lines[y].len {
+				buffer.lines[y] = ''
+				whitespace_prefix = ''
+				cursor.x = 0
+			}
+			cursor.y += 1
+			cursor.x = whitespace_prefix.len
+			if y >= buffer.lines.len {
+				buffer.lines << whitespace_prefix
+				return cursor
+			}
+			buffer.lines.insert(y + 1, whitespace_prefix)
+			return cursor
+		}
+	}
+}
+
 pub fn (mut buffer Buffer) o(pos Pos) ?Pos {
 	match buffer.buffer_kind {
 		.gap_buffer {
