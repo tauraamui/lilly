@@ -295,7 +295,7 @@ pub fn (mut buffer Buffer) x(pos Position) ?Position {
 //                               more completely, for example we stop using the convertion functions
 //                               and actually instantiate a new, well instance of position using the
 //                               constructor
-pub fn (mut buffer Buffer) backspace_new(pos Position) ?Position {
+pub fn (mut buffer Buffer) backspace(pos Position) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
 			mut cursor := position_to_pos(pos)
@@ -354,71 +354,6 @@ pub fn (mut buffer Buffer) backspace_new(pos Position) ?Position {
 			}
 
 			return pos_to_position(cursor)
-		}
-	}
-	return none
-}
-
-// TODO(tauraamui) [10/07/2025]: migrate this to gap and line buffers more completely
-pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
-	match buffer.buffer_kind {
-		.gap_buffer {
-			mut cursor := pos
-			if cursor.x == 0 && cursor.y == 0 {
-				return none
-			}
-			if buffer.use_gap_buffer {
-				buffer.move_data_cursor_to(pos_to_position(pos))
-				if buffer.c_buffer.backspace() {
-					cursor.y -= 1
-					cursor.x = buffer.find_end_of_line(cursor) or { 0 }
-					return cursor
-				}
-				cursor.x -= 1
-				if cursor.x < 0 {
-					cursor.x = 0
-				}
-				return cursor
-			}
-		}
-		.line_buffer {
-			return none
-		}
-		.legacy {
-			mut cursor := pos
-			if cursor.x == 0 && cursor.y == 0 {
-				return none
-			}
-			mut line := buffer.lines[cursor.y]
-			if cursor.x == 0 {
-				previous_line := buffer.lines[cursor.y - 1]
-				buffer.lines[cursor.y - 1] = '${previous_line}${buffer.lines[cursor.y]}'
-				buffer.lines.delete(cursor.y)
-				cursor.y -= 1
-				cursor = buffer.clamp_cursor_within_document_bounds(cursor)
-				cursor.x = previous_line.len
-
-				if cursor.y < 0 {
-					cursor.y = 0
-				}
-				return cursor
-			}
-
-			if cursor.x == line.len {
-				buffer.lines[cursor.y] = line.runes()[..line.len - 1].string()
-				cursor.x = buffer.lines[cursor.y].len
-				return cursor
-			}
-
-			before := line.runes()[..cursor.x - 1].string()
-			after := line.runes()[cursor.x..].string()
-			buffer.lines[cursor.y] = '${before}${after}'
-			cursor.x -= 1
-			if cursor.x < 0 {
-				cursor.x = 0
-			}
-
-			return cursor
 		}
 	}
 	return none
