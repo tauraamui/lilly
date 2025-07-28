@@ -34,7 +34,7 @@ jobs:
 
   unit_tests:
     needs: format          # waits for the formatter on PRs
-    if: always()           # still runs on push to master
+    if: ${{ always() }}    # still runs on push to master
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
