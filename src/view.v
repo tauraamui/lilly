@@ -1425,9 +1425,10 @@ fn resolve_whitespace_prefix(line string) string {
 }
 
 fn (mut view View) backspace() {
-	pos := view.buffer.backspace(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x)) or {
-		return
-	}
+	pos := view.buffer.backspace(buffer.Position.new(
+		line:   view.cursor.pos.y
+		offset: view.cursor.pos.x
+	)) or { return }
 	view.cursor.pos.y = pos.line
 	view.cursor.pos.x = pos.offset
 	view.scroll_from_and_to()
