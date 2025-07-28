@@ -291,32 +291,36 @@ pub fn (mut buffer Buffer) x(pos Position) ?Position {
 }
 
 // TODO(tauraamui) [10/07/2025]: migrate this to gap and line buffers more completely
-pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
+// TODO(tauraamui) [28/07/2025]: properly refactor this to really use the new position type
+//                               more completely, for example we stop using the convertion functions
+//                               and actually instantiate a new, well instance of position using the
+//                               constructor
+pub fn (mut buffer Buffer) backspace(pos Position) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
-			mut cursor := pos
+			mut cursor := position_to_pos(pos)
 			if cursor.x == 0 && cursor.y == 0 {
 				return none
 			}
 			if buffer.use_gap_buffer {
-				buffer.move_data_cursor_to(pos_to_position(pos))
+				buffer.move_data_cursor_to(pos)
 				if buffer.c_buffer.backspace() {
 					cursor.y -= 1
 					cursor.x = buffer.find_end_of_line(cursor) or { 0 }
-					return cursor
+					return pos_to_position(cursor)
 				}
 				cursor.x -= 1
 				if cursor.x < 0 {
 					cursor.x = 0
 				}
-				return cursor
+				return pos_to_position(cursor)
 			}
 		}
 		.line_buffer {
 			return none
 		}
 		.legacy {
-			mut cursor := pos
+			mut cursor := position_to_pos(pos)
 			if cursor.x == 0 && cursor.y == 0 {
 				return none
 			}
@@ -332,13 +336,13 @@ pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
 				if cursor.y < 0 {
 					cursor.y = 0
 				}
-				return cursor
+				return pos_to_position(cursor)
 			}
 
 			if cursor.x == line.len {
 				buffer.lines[cursor.y] = line.runes()[..line.len - 1].string()
 				cursor.x = buffer.lines[cursor.y].len
-				return cursor
+				return pos_to_position(cursor)
 			}
 
 			before := line.runes()[..cursor.x - 1].string()
@@ -349,7 +353,7 @@ pub fn (mut buffer Buffer) backspace(pos Pos) ?Pos {
 				cursor.x = 0
 			}
 
-			return cursor
+			return pos_to_position(cursor)
 		}
 	}
 	return none
