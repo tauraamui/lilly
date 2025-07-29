@@ -477,11 +477,8 @@ fn test_buffer_gap_buffer_left_new_moves_cursor_left_successfully() {
 	mut buffer := Buffer.new('', .gap_buffer)
 	buffer.c_buffer = GapBuffer.new('1. first line\n2. second line\n3. third line')
 
-	new_pos := buffer.left_new(Pos{ x: 3, y: 1 }, false)?
-	assert new_pos == Pos{
-		x: 2
-		y: 1
-	}
+	new_pos := buffer.left_new(Position.new(line: 1, offset: 3), false)?
+	assert new_pos == Position.new(line: 1, offset: 2)
 	assert buffer.str() == '1. first line\n2. second line\n3. third line'
 }
 
@@ -490,12 +487,17 @@ fn test_buffer_legacy_buffer_left_new_moves_cursor_left_successfully() {
 	lines := ['1. first line', '2. second line', '3. third line']
 	buffer.lines = lines
 
+	new_pos := buffer.left_new(Position.new(line: 1, offset: 3), false)?
+	assert new_pos == Position.new(line: 1, offset: 2)
+	assert buffer.str() == '1. first line\n2. second line\n3. third line'
+	/*
 	new_pos := buffer.left_new(Pos{ x: 2, y: 1 }, false)?
 	assert new_pos == Pos{
 		x: 1
 		y: 1
 	}
 	assert buffer.str() == '1. first line\n2. second line\n3. third line'
+	*/
 }
 
 fn test_buffer_line_buffer_left_new_moves_cursor_left_successfully() {
@@ -503,12 +505,17 @@ fn test_buffer_line_buffer_left_new_moves_cursor_left_successfully() {
 	lines := ['1. first line', '2. second line', '3. third line']
 	buffer.load_contents_into_line_buffer(lines)
 
+	new_pos := buffer.left_new(Position.new(line: 1, offset: 3), false)?
+	assert new_pos == Position.new(line: 1, offset: 2)
+	assert buffer.str() == '1. first line\n2. second line\n3. third line'
+	/*
 	new_pos := buffer.left_new(Pos{ x: 3, y: 1 }, false)?
 	assert new_pos == Pos{
 		x: 2
 		y: 1
 	}
 	assert buffer.str() == '1. first line\n2. second line\n3. third line'
+	*/
 }
 
 fn test_buffer_gap_buffer_left_moves_cursor_left_successfully() {
