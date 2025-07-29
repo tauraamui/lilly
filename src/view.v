@@ -1323,7 +1323,9 @@ fn (mut view View) center_text_around_cursor() {
 fn (mut view View) u() {}
 
 fn (mut view View) o() {
-	pos := view.buffer.o(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x)) or { return }
+	pos := view.buffer.o(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x)) or {
+		return
+	}
 	view.i()
 	view.cursor.pos.y = pos.line
 	view.cursor.pos.x = pos.offset
