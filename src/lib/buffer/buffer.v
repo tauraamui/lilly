@@ -461,7 +461,7 @@ pub fn (buffer Buffer) find_prev_word_start(pos Pos) ?Pos {
 pub fn (buffer Buffer) left(pos Position, insert_mode bool) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
-			return pos_to_position(buffer.c_buffer.left(position_to_pos(pos)))
+			return if p := buffer.c_buffer.left(position_to_pos(pos)) { pos_to_position(p) } else { pos }
 		}
 		.line_buffer {
 			return buffer.l_buffer.left(pos)
