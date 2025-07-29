@@ -458,7 +458,7 @@ pub fn (buffer Buffer) find_prev_word_start(pos Pos) ?Pos {
 
 // *
 
-pub fn (buffer Buffer) left_new(pos Position, insert_mode bool) ?Position {
+pub fn (buffer Buffer) left(pos Position, insert_mode bool) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
 			return pos_to_position(buffer.c_buffer.left(position_to_pos(pos)))
@@ -471,23 +471,6 @@ pub fn (buffer Buffer) left_new(pos Position, insert_mode bool) ?Position {
 			cursor.x -= 1
 			cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
 			return pos_to_position(cursor)
-		}
-	}
-}
-
-pub fn (buffer Buffer) left(pos Pos, insert_mode bool) ?Pos {
-	match buffer.buffer_kind {
-		.gap_buffer {
-			return buffer.c_buffer.left(pos)
-		}
-		.line_buffer {
-			return position_to_pos(buffer.l_buffer.left(Position.new(line: pos.y, offset: pos.x)))
-		}
-		.legacy {
-			mut cursor := pos
-			cursor.x -= 1
-			cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
-			return cursor
 		}
 	}
 }
