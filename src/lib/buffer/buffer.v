@@ -366,25 +366,26 @@ pub fn (mut buffer Buffer) delete(ignore_newlines bool) bool {
 	}
 }
 
-pub fn (mut buffer Buffer) o(pos Pos) ?Pos {
+pub fn (mut buffer Buffer) o(pos Position) ?Position {
+	// NOTE(tauraamui) [28/07/2025]: the commented code is basically the dream
+	//                               but we have to deprecate the legacy stuff first
+	/*
+	buff := match buffer.buffer_kind {
+		.gap_buffer { buffer.c_buffer }
+		.line_buffer { buffer.l_buffer }
+	}
+	return buff.o(pos) or { pos }
+	*/
 	match buffer.buffer_kind {
 		.gap_buffer {
-			new_pos := buffer.c_buffer.o(Position.new(line: pos.y, offset: pos.x)) or { return pos }
-			return Pos{
-				x: new_pos.offset
-				y: new_pos.line
-			}
+			return buffer.c_buffer.o(pos) or { pos }
 		}
 		.line_buffer {
-			new_pos := buffer.l_buffer.o(Position.new(line: pos.y, offset: pos.x)) or { return pos }
-			return Pos{
-				x: new_pos.offset
-				y: new_pos.line
-			}
+			return buffer.l_buffer.o(pos) or { pos }
 		}
 		.legacy {
-			mut cursor := pos
-			y := pos.y
+			mut cursor := position_to_pos(pos)
+			y := pos.line
 			mut whitespace_prefix := resolve_whitespace_prefix_from_line_str(buffer.lines[y])
 			if whitespace_prefix.len == buffer.lines[y].len {
 				buffer.lines[y] = ''
@@ -395,10 +396,10 @@ pub fn (mut buffer Buffer) o(pos Pos) ?Pos {
 			cursor.x = whitespace_prefix.len
 			if y >= buffer.lines.len {
 				buffer.lines << whitespace_prefix
-				return cursor
+				return pos_to_position(cursor)
 			}
 			buffer.lines.insert(y + 1, whitespace_prefix)
-			return cursor
+			return pos_to_position(cursor)
 		}
 	}
 }
