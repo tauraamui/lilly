@@ -506,11 +506,8 @@ fn test_buffer_gap_buffer_right_moves_cursor_right_successfully() {
 	mut buffer := Buffer.new('', .gap_buffer)
 	buffer.load_contents_into_gap('1. first line\n2. second line\n3. third line')
 
-	new_pos := buffer.right(Pos{ x: 3, y: 1 }, false)?
-	assert new_pos == Pos{
-		x: 4
-		y: 1
-	}
+	new_pos := buffer.right(Position.new(line: 1, offset: 3), false)?
+	assert new_pos == Position.new(line: 1, offset: 4)
 	assert buffer.str() == '1. first line\n2. second line\n3. third line'
 }
 
@@ -519,11 +516,8 @@ fn test_buffer_legacy_buffer_right_moves_cursor_right_successfully() {
 	lines := ['1. first line', '2. second line', '3. third line']
 	buffer.lines = lines
 
-	new_pos := buffer.right(Pos{ x: 2, y: 1 }, false)?
-	assert new_pos == Pos{
-		x: 3
-		y: 1
-	}
+	new_pos := buffer.right(Position.new(line: 1, offset: 2), false)?
+	assert new_pos == Position.new(line: 1, offset: 3)
 	assert buffer.str() == '1. first line\n2. second line\n3. third line'
 }
 
@@ -532,11 +526,8 @@ fn test_buffer_line_buffer_right_moves_cursor_right_successfully() {
 	lines := ['1. first line', '2. second line', '3. third line']
 	buffer.load_contents_into_line_buffer(lines)
 
-	new_pos := buffer.right(Pos{ x: 3, y: 1 }, false)?
-	assert new_pos == Pos{
-		x: 4
-		y: 1
-	}
+	new_pos := buffer.right(Position.new(line: 1, offset: 3), false)?
+	assert new_pos == Position.new(line: 1, offset: 4)
 	assert buffer.str() == '1. first line\n2. second line\n3. third line'
 }
 

@@ -1445,10 +1445,10 @@ fn (mut view View) left() {
 }
 
 fn (mut view View) right() {
-	pos := view.buffer.right(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y },
+	pos := view.buffer.right(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x),
 		view.leader_state.mode == .insert) or { return }
-	view.cursor.pos.x = pos.x
-	view.cursor.pos.y = pos.y
+	view.cursor.pos.y = pos.line
+	view.cursor.pos.x = pos.offset
 }
 
 fn (mut view View) down() {
