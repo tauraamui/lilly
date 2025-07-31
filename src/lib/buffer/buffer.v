@@ -503,7 +503,11 @@ pub fn (buffer Buffer) right(pos Position, insert_mode bool) ?Position {
 pub fn (buffer Buffer) down(pos Position, insert_mode bool) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
-			return if p := buffer.c_buffer.down(position_to_pos(pos)) { pos_to_position(p) } else { pos }
+			return if p := buffer.c_buffer.down(position_to_pos(pos)) {
+				pos_to_position(p)
+			} else {
+				pos
+			}
 		}
 		.line_buffer {
 			return buffer.l_buffer.down(pos, insert_mode)
@@ -523,7 +527,11 @@ pub fn (buffer Buffer) down(pos Position, insert_mode bool) ?Position {
 pub fn (buffer Buffer) up(pos Position, insert_mode bool) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
-			return if p := buffer.c_buffer.up(position_to_pos(pos)) { pos_to_position(p) } else { pos }
+			return if p := buffer.c_buffer.up(position_to_pos(pos)) {
+				pos_to_position(p)
+			} else {
+				pos
+			}
 		}
 		.line_buffer {
 			return buffer.l_buffer.up(pos, insert_mode)
@@ -543,7 +551,11 @@ pub fn (buffer Buffer) up(pos Position, insert_mode bool) ?Position {
 pub fn (buffer Buffer) up_to_next_blank_line(pos Position) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
-			return if p := buffer.c_buffer.up_to_next_blank_line(position_to_pos(pos)) { pos_to_position(p) } else { none }
+			return if p := buffer.c_buffer.up_to_next_blank_line(position_to_pos(pos)) {
+				pos_to_position(p)
+			} else {
+				none
+			}
 		}
 		.line_buffer {
 			return buffer.l_buffer.up_to_next_blank_line(pos)
