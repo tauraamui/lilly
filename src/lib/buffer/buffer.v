@@ -503,11 +503,7 @@ pub fn (buffer Buffer) right(pos Position, insert_mode bool) ?Position {
 pub fn (buffer Buffer) down(pos Position, insert_mode bool) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
-			return if p := buffer.c_buffer.down(position_to_pos(pos)) {
-				pos_to_position(p)
-			} else {
-				pos
-			}
+			return if p := buffer.c_buffer.down(position_to_pos(pos)) { pos_to_position(p) } else { pos }
 		}
 		.line_buffer {
 			return buffer.l_buffer.down(pos, insert_mode)
@@ -517,6 +513,26 @@ pub fn (buffer Buffer) down(pos Position, insert_mode bool) ?Position {
 			cursor.y += 1
 			if cursor.y >= buffer.lines.len - 1 {
 				cursor.y = buffer.lines.len - 1
+			}
+			cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
+			return pos_to_position(cursor)
+		}
+	}
+}
+
+pub fn (buffer Buffer) up_new(pos Position, insert_mode bool) ?Position {
+	match buffer.buffer_kind {
+		.gap_buffer {
+			return if p := buffer.c_buffer.down(position_to_pos(pos)) { pos_to_position(p) } else { pos }
+		}
+		.line_buffer {
+			return buffer.l_buffer.up(pos, insert_mode)
+		}
+		.legacy {
+			mut cursor := position_to_pos(pos)
+			cursor.y -= 1
+			if cursor.y < 0 {
+				cursor.y = 0
 			}
 			cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
 			return pos_to_position(cursor)
