@@ -524,23 +524,26 @@ pub fn (buffer Buffer) down(pos Position, insert_mode bool) ?Position {
 	}
 }
 
-pub fn (buffer Buffer) up(pos Pos, insert_mode bool) ?Pos {
+pub fn (buffer Buffer) up(pos Position, insert_mode bool) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
-			return buffer.c_buffer.up(pos)
+			return if p := buffer.c_buffer.up(position_to_pos(pos)) {
+				pos_to_position(p)
+			} else {
+				pos
+			}
 		}
 		.line_buffer {
-			return position_to_pos(buffer.l_buffer.up(Position.new(line: pos.y, offset: pos.x),
-				insert_mode))
+			return buffer.l_buffer.up(pos, insert_mode)
 		}
 		.legacy {
-			mut cursor := pos
+			mut cursor := position_to_pos(pos)
 			cursor.y -= 1
 			if cursor.y < 0 {
 				cursor.y = 0
 			}
 			cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
-			return cursor
+			return pos_to_position(cursor)
 		}
 	}
 }
