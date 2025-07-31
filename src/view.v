@@ -1452,7 +1452,8 @@ fn (mut view View) right() {
 }
 
 fn (mut view View) down() {
-	pos := view.buffer.down(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x), view.leader_state.mode == .insert) or { return }
+	pos := view.buffer.down(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x),
+		view.leader_state.mode == .insert) or { return }
 	view.cursor.pos.y = pos.line
 	view.cursor.pos.x = pos.offset
 	view.scroll_from_and_to()
@@ -1461,9 +1462,8 @@ fn (mut view View) down() {
 // WARN(tauraamui) [18/03/2025]: DO NOT USE
 // NOTE(tauraamui) [31/07/2025]: why not?
 fn (mut view View) up() {
-	pos := view.buffer.up(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x), view.leader_state.mode == .insert) or {
-		return
-	}
+	pos := view.buffer.up(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x),
+		view.leader_state.mode == .insert) or { return }
 	view.cursor.pos.y = pos.line
 	view.cursor.pos.x = pos.offset
 	view.scroll_from_and_to()
