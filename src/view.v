@@ -1452,7 +1452,8 @@ fn (mut view View) right() {
 }
 
 fn (mut view View) down() {
-	pos := view.buffer.down(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x), view.leader_state.mode == .insert) or { return }
+	pos := view.buffer.down(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x),
+		view.leader_state.mode == .insert) or { return }
 	view.cursor.pos.y = pos.line
 	view.cursor.pos.x = pos.offset
 	view.scroll_from_and_to()
