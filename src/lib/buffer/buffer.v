@@ -548,20 +548,21 @@ pub fn (buffer Buffer) up(pos Position, insert_mode bool) ?Position {
 	}
 }
 
-pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
+pub fn (buffer Buffer) up_to_next_blank_line(pos Position) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
-			return buffer.c_buffer.up_to_next_blank_line(pos)
+			return if p := buffer.c_buffer.up_to_next_blank_line(position_to_pos(pos)) {
+				pos_to_position(p)
+			} else {
+				none
+			}
 		}
 		.line_buffer {
-			return position_to_pos(buffer.l_buffer.up_to_next_blank_line(Position.new(
-				line:   pos.y
-				offset: pos.x
-			)))
+			return buffer.l_buffer.up_to_next_blank_line(pos)
 		}
 		.legacy {
-			mut cursor := pos
-			cursor = buffer.clamp_cursor_within_document_bounds(pos)
+			mut cursor := position_to_pos(pos)
+			cursor = buffer.clamp_cursor_within_document_bounds(cursor)
 			if cursor.y == 0 {
 				return none
 			}
@@ -584,7 +585,7 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
 			if compound_y > 0 {
 				cursor.x = 0
 				cursor.y -= compound_y
-				return cursor
+				return pos_to_position(cursor)
 			}
 		}
 	}

@@ -593,11 +593,8 @@ fn test_buffer_gap_buffer_up_to_next_blank_line_moves_cursor_up_successfully() {
 	mut buffer := Buffer.new('', .gap_buffer)
 	buffer.load_contents_into_gap('This is a doc\n1. first line\n\n2. second line\n3. third line\n5. fifth line')
 
-	mut new_pos := buffer.up_to_next_blank_line(Pos{ x: 2, y: 5 })?
-	assert new_pos == Pos{
-		x: 0
-		y: 2
-	}
+	mut new_pos := buffer.up_to_next_blank_line(Position.new(line: 5, offset: 2))?
+	assert new_pos == Position.new(line: 2, offset: 0)
 
 	assert buffer.up_to_next_blank_line(new_pos) == none
 
@@ -608,17 +605,11 @@ fn test_buffer_gap_buffer_up_to_next_blank_line_moves_cursor_up_successfully_mul
 	mut buffer := Buffer.new('', .gap_buffer)
 	buffer.load_contents_into_gap('This is a doc\n\n1. first line\n2. second line\n3. third line\n\n5. fifth line')
 
-	mut new_pos := buffer.up_to_next_blank_line(Pos{ x: 2, y: 6 })?
-	assert new_pos == Pos{
-		x: 0
-		y: 5
-	}
+	mut new_pos := buffer.up_to_next_blank_line(Position.new(line: 6, offset: 2))?
+	assert new_pos == Position.new(line: 5, offset: 0)
 
 	new_pos = buffer.up_to_next_blank_line(new_pos)?
-	assert new_pos == Pos{
-		x: 0
-		y: 1
-	}
+	assert new_pos == Position.new(line: 1, offset: 0)
 
 	assert buffer.str() == 'This is a doc\n\n1. first line\n2. second line\n3. third line\n\n5. fifth line'
 }
@@ -629,11 +620,8 @@ fn test_buffer_legacy_buffer_up_to_next_blank_line_moves_cursor_up_successfully(
 		'5. fifth line']
 	buffer.lines = lines
 
-	mut new_pos := buffer.up_to_next_blank_line(Pos{ x: 2, y: 5 })?
-	assert new_pos == Pos{
-		x: 0
-		y: 2
-	}
+	mut new_pos := buffer.up_to_next_blank_line(Position.new(line: 5, offset: 2))?
+	assert new_pos == Position.new(line: 2, offset: 0)
 
 	assert buffer.str() == 'This is a doc\n1. first line\n\n2. second line\n3. third line\n5. fifth line'
 }
@@ -644,17 +632,11 @@ fn test_buffer_legacy_buffer_up_to_next_blank_line_moves_cursor_up_successfully_
 		'5. fifth line']
 	buffer.lines = lines
 
-	mut new_pos := buffer.up_to_next_blank_line(Pos{ x: 2, y: 6 })?
-	assert new_pos == Pos{
-		x: 0
-		y: 5
-	}
+	mut new_pos := buffer.up_to_next_blank_line(Position.new(line: 6, offset: 2))?
+	assert new_pos == Position.new(line: 5, offset: 0)
 
 	new_pos = buffer.up_to_next_blank_line(new_pos)?
-	assert new_pos == Pos{
-		x: 0
-		y: 1
-	}
+	assert new_pos == Position.new(line: 1, offset: 0)
 
 	assert buffer.str() == 'This is a doc\n\n1. first line\n2. second line\n3. third line\n\n5. fifth line'
 }
@@ -665,11 +647,8 @@ fn test_buffer_line_buffer_up_to_next_blank_line_moves_cursor_up_successfully() 
 		'5. fifth line']
 	buffer.load_contents_into_line_buffer(lines)
 
-	mut new_pos := buffer.up_to_next_blank_line(Pos{ x: 2, y: 5 })?
-	assert new_pos == Pos{
-		x: 0
-		y: 2
-	}
+	mut new_pos := buffer.up_to_next_blank_line(Position.new(line: 5, offset: 2))?
+	assert new_pos == Position.new(line: 2, offset: 0)
 
 	assert buffer.str() == 'This is a doc\n1. first line\n\n2. second line\n3. third line\n5. fifth line'
 }
