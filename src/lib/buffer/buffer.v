@@ -540,7 +540,7 @@ pub fn (buffer Buffer) up(pos Position, insert_mode bool) ?Position {
 	}
 }
 
-pub fn (buffer Buffer) up_to_next_blank_line_new(pos Position) ?Position {
+pub fn (buffer Buffer) up_to_next_blank_line(pos Position) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
 			return if p := buffer.c_buffer.up_to_next_blank_line(position_to_pos(pos)) { pos_to_position(p) } else { none }
@@ -574,49 +574,6 @@ pub fn (buffer Buffer) up_to_next_blank_line_new(pos Position) ?Position {
 				cursor.x = 0
 				cursor.y -= compound_y
 				return pos_to_position(cursor)
-			}
-		}
-	}
-	return none
-}
-
-pub fn (buffer Buffer) up_to_next_blank_line(pos Pos) ?Pos {
-	match buffer.buffer_kind {
-		.gap_buffer {
-			return buffer.c_buffer.up_to_next_blank_line(pos)
-		}
-		.line_buffer {
-			return position_to_pos(buffer.l_buffer.up_to_next_blank_line(Position.new(
-				line:   pos.y
-				offset: pos.x
-			)))
-		}
-		.legacy {
-			mut cursor := pos
-			cursor = buffer.clamp_cursor_within_document_bounds(pos)
-			if cursor.y == 0 {
-				return none
-			}
-
-			if buffer.lines.len == 0 {
-				return none
-			}
-
-			mut compound_y := 0
-			for i := cursor.y; i >= 0; i-- {
-				if i == cursor.y {
-					continue
-				}
-				compound_y += 1
-				if buffer.lines[i].len == 0 {
-					break
-				}
-			}
-
-			if compound_y > 0 {
-				cursor.x = 0
-				cursor.y -= compound_y
-				return cursor
 			}
 		}
 	}
