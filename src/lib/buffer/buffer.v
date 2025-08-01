@@ -592,6 +592,50 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Position) ?Position {
 	return none
 }
 
+pub fn (buffer Buffer) down_to_next_blank_line_new(pos Pos) ?Pos {
+	match buffer.buffer_kind {
+		.gap_buffer {
+			return buffer.c_buffer.down_to_next_blank_line(pos)
+		}
+		.line_buffer {
+			return position_to_pos(buffer.l_buffer.down_to_next_blank_line(Position.new(
+				line:   pos.y
+				offset: pos.x
+			)))
+		}
+		.legacy {
+			mut cursor := pos
+			cursor = buffer.clamp_cursor_within_document_bounds(pos)
+
+			if buffer.lines.len == 0 {
+				return none
+			}
+			if cursor.y == buffer.lines.len {
+				return none
+			}
+
+			mut compound_y := 0
+			for i := cursor.y; i < buffer.lines.len; i++ {
+				if i == cursor.y {
+					continue
+				}
+				compound_y += 1
+				if buffer.lines[i].len == 0 {
+					break
+				}
+			}
+
+			if compound_y > 0 {
+				cursor.x = 0
+				cursor.y += compound_y
+				return cursor
+			}
+
+			return none
+		}
+	}
+}
+
 pub fn (buffer Buffer) down_to_next_blank_line(pos Pos) ?Pos {
 	match buffer.buffer_kind {
 		.gap_buffer {
