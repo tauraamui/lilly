@@ -653,6 +653,24 @@ fn test_buffer_line_buffer_up_to_next_blank_line_moves_cursor_up_successfully() 
 	assert buffer.str() == 'This is a doc\n1. first line\n\n2. second line\n3. third line\n5. fifth line'
 }
 
+fn test_buffer_gap_buffer_down_to_next_blank_line_new_moves_cursor_down_successfully() {
+	mut buffer := Buffer.new('', .gap_buffer)
+	buffer.load_contents_into_gap('This is a doc\n1. first line\n\n2. second line\n3. third line\n5. fifth line')
+
+	mut new_pos := buffer.down_to_next_blank_line_new(Pos{ x: 2, y: 0 })?
+	assert new_pos == Pos{
+		x: 0
+		y: 2
+	}
+
+	assert buffer.down_to_next_blank_line_new(new_pos)? == Pos{
+		x: 0
+		y: 5
+	}
+
+	assert buffer.str() == 'This is a doc\n1. first line\n\n2. second line\n3. third line\n5. fifth line'
+}
+
 fn test_buffer_gap_buffer_down_to_next_blank_line_moves_cursor_down_successfully() {
 	mut buffer := Buffer.new('', .gap_buffer)
 	buffer.load_contents_into_gap('This is a doc\n1. first line\n\n2. second line\n3. third line\n5. fifth line')
