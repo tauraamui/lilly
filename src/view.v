@@ -1101,8 +1101,7 @@ fn (mut view View) b() {
 			x: view.cursor.pos.x
 			y: view.cursor.pos.y
 		}) or { return }
-		view.cursor.pos.x = pos.x
-		view.cursor.pos.y = pos.y
+		view.set_cursor_pos(pos)
 		view.scroll_from_and_to()
 		return
 	}
@@ -1191,7 +1190,7 @@ fn (mut view View) d() {
 				// view.delete_line(index)
 				view.buffer.delete_line(index)
 
-				view.set_cursor_pos(view.buffer.clamp_cursor_within_document_bounds_new(buffer.Position.new(
+				view.set_cursor_pos(view.buffer.clamp_cursor_within_document_bounds(buffer.Position.new(
 					line: view.cursor.pos.y
 					offset: view.cursor.pos.x
 				)))
@@ -1209,7 +1208,7 @@ fn (mut view View) d() {
 			view.buffer.delete_line_range(start_index, end_index)
 			view.cursor.pos.y = start_index
 
-			view.set_cursor_pos(view.buffer.clamp_cursor_within_document_bounds_new(buffer.Position.new(
+			view.set_cursor_pos(view.buffer.clamp_cursor_within_document_bounds(buffer.Position.new(
 				line: view.cursor.pos.y
 				offset: view.cursor.pos.x
 			)))
@@ -1414,8 +1413,7 @@ fn (mut view View) enter() {
 	pos := view.buffer.enter(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x)) or {
 		return
 	}
-	view.cursor.pos.y = pos.line
-	view.cursor.pos.x = pos.offset
+	view.set_cursor_pos(pos)
 	view.scroll_from_and_to()
 }
 
