@@ -637,17 +637,16 @@ pub fn (buffer Buffer) down_to_next_blank_line(pos Position) ?Position {
 	}
 }
 
-pub fn (mut buffer Buffer) replace_char(pos Pos, code u8, str string) {
+pub fn (mut buffer Buffer) replace_char(pos Position, code u8, str string) {
 	if buffer.use_gap_buffer {
-		assert true == false
-		return
+		panic("replace char buffer.replace_char method unsupported for gap buffer")
 	}
 
 	if code < 32 {
 		return
 	}
-	cursor := pos
-	line := buffer.lines[pos.y].runes()
+	cursor := position_to_pos(pos)
+	line := buffer.lines[cursor.y].runes()
 	start := line[..cursor.x]
 	end := line[cursor.x + 1..]
 	buffer.lines[cursor.y] = '${start.string()}${str}${end.string()}'

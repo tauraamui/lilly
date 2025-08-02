@@ -1190,12 +1190,11 @@ fn (mut view View) d() {
 				})
 				// view.delete_line(index)
 				view.buffer.delete_line(index)
-				pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Pos{
-					x: view.cursor.pos.x
-					y: view.cursor.pos.y
-				})
-				view.cursor.pos.x = pos.x
-				view.cursor.pos.y = pos.y
+
+				view.set_cursor_pos(view.buffer.clamp_cursor_within_document_bounds_new(buffer.Position.new(
+					line: view.cursor.pos.y
+					offset: view.cursor.pos.x
+				)))
 				view.escape()
 			}
 		}
@@ -1209,16 +1208,21 @@ fn (mut view View) d() {
 			})
 			view.buffer.delete_line_range(start_index, end_index)
 			view.cursor.pos.y = start_index
-			pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Pos{
-				x: view.cursor.pos.x
-				y: view.cursor.pos.y
-			})
-			view.cursor.pos.x = pos.x
-			view.cursor.pos.y = pos.y
+
+			view.set_cursor_pos(view.buffer.clamp_cursor_within_document_bounds_new(buffer.Position.new(
+				line: view.cursor.pos.y
+				offset: view.cursor.pos.x
+			)))
+
 			view.escape()
 		}
 		else {}
 	}
+}
+
+fn (mut view View) set_cursor_pos(b_pos buffer.Position) {
+	view.cursor.pos.y = b_pos.line
+	view.cursor.pos.x = b_pos.offset
 }
 
 fn (mut view View) p() {
@@ -1431,8 +1435,7 @@ fn (mut view View) backspace() {
 		line:   view.cursor.pos.y
 		offset: view.cursor.pos.x
 	)) or { return }
-	view.cursor.pos.y = pos.line
-	view.cursor.pos.x = pos.offset
+	view.set_cursor_pos(pos)
 	view.scroll_from_and_to()
 	return
 }
@@ -1440,22 +1443,19 @@ fn (mut view View) backspace() {
 fn (mut view View) left() {
 	pos := view.buffer.left(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x),
 		view.leader_state.mode == .insert) or { return }
-	view.cursor.pos.y = pos.line
-	view.cursor.pos.x = pos.offset
+	view.set_cursor_pos(pos)
 }
 
 fn (mut view View) right() {
 	pos := view.buffer.right(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x),
 		view.leader_state.mode == .insert) or { return }
-	view.cursor.pos.y = pos.line
-	view.cursor.pos.x = pos.offset
+	view.set_cursor_pos(pos)
 }
 
 fn (mut view View) down() {
 	pos := view.buffer.down(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x),
 		view.leader_state.mode == .insert) or { return }
-	view.cursor.pos.y = pos.line
-	view.cursor.pos.x = pos.offset
+	view.set_cursor_pos(pos)
 	view.scroll_from_and_to()
 }
 
@@ -1464,8 +1464,7 @@ fn (mut view View) down() {
 fn (mut view View) up() {
 	pos := view.buffer.up(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x),
 		view.leader_state.mode == .insert) or { return }
-	view.cursor.pos.y = pos.line
-	view.cursor.pos.x = pos.offset
+	view.set_cursor_pos(pos)
 	view.scroll_from_and_to()
 }
 
@@ -1763,8 +1762,7 @@ fn (mut view View) jump_cursor_up_to_next_blank_line() {
 		line:   view.cursor.pos.y
 		offset: view.cursor.pos.x
 	)) or { return }
-	view.cursor.pos.y = pos.line
-	view.cursor.pos.x = pos.offset
+	view.set_cursor_pos(pos)
 	view.scroll_from_and_to()
 }
 
@@ -1773,8 +1771,7 @@ fn (mut view View) jump_cursor_down_to_next_blank_line() {
 		line:   view.cursor.pos.y
 		offset: view.cursor.pos.x
 	)) or { return }
-	view.cursor.pos.y = pos.line
-	view.cursor.pos.x = pos.offset
+	view.set_cursor_pos(pos)
 	view.scroll_from_and_to()
 }
 
@@ -1801,8 +1798,7 @@ fn (mut view View) right_square_bracket() {
 }
 
 fn (mut view View) replace_char(code u8, str string) {
-	view.buffer.replace_char(buffer.Pos{ x: view.cursor.pos.x, y: view.cursor.pos.y },
-		code, str)
+	view.buffer.replace_char(buffer.Position.new(line: view.cursor.pos.y, offset: view.cursor.pos.x), code, str)
 }
 
 fn (mut view View) close_pair(c string) bool {
