@@ -329,7 +329,7 @@ pub fn (mut buffer Buffer) backspace(pos Position) ?Position {
 				buffer.lines[cursor.y - 1] = '${previous_line}${buffer.lines[cursor.y]}'
 				buffer.lines.delete(cursor.y)
 				cursor.y -= 1
-				cursor = buffer.clamp_cursor_within_document_bounds(cursor)
+				cursor = position_to_pos(buffer.clamp_cursor_within_document_bounds_new(pos_to_position(cursor)))
 				cursor.x = previous_line.len
 
 				if cursor.y < 0 {
