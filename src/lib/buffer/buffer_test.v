@@ -811,4 +811,3 @@ fn test_buffer_clamp_cursor_pos_x_same_length_of_line_insert_mode() {
 		offset: 13
 	)
 }
-
