@@ -513,13 +513,9 @@ pub fn (buffer Buffer) down(pos Position, insert_mode bool) ?Position {
 			return buffer.l_buffer.down(pos, insert_mode)
 		}
 		.legacy {
-			mut cursor := position_to_pos(pos)
-			cursor.y += 1
-			if cursor.y >= buffer.lines.len - 1 {
-				cursor.y = buffer.lines.len - 1
-			}
-			cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
-			return pos_to_position(cursor)
+			return buffer.clamp_cursor_x_pos_new(buffer.clamp_cursor_within_document_bounds_new(pos.add(Distance{
+				lines: 1
+			})), insert_mode)
 		}
 	}
 }
@@ -676,7 +672,7 @@ pub fn (buffer Buffer) clamp_cursor_x_pos_new(pos Position, insert_mode bool) Po
 }
 
 pub fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
-// pub fn (buffer Buffer) clamp_cursor_x_pos_old(pos Pos, insert_mode bool) Pos {
+	// pub fn (buffer Buffer) clamp_cursor_x_pos_old(pos Pos, insert_mode bool) Pos {
 	// mut clamped := buffer.clamp_cursor_within_document_bounds(pos)
 	mut clamped := pos
 	if clamped.x < 0 {
