@@ -593,11 +593,9 @@ pub fn (buffer Buffer) down_to_next_blank_line(pos Position) ?Position {
 			}
 
 			clamped_pos := buffer.clamp_cursor_within_document_bounds_new(pos)
-			mut cursor := position_to_pos(clamped_pos)
+			if clamped_pos.line == buffer.lines.len { return none }
 
-			if cursor.y == buffer.lines.len {
-				return none
-			}
+			mut cursor := position_to_pos(clamped_pos)
 
 			mut compound_y := 0
 			for i := cursor.y; i < buffer.lines.len; i++ {
