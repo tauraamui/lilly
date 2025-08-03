@@ -588,12 +588,13 @@ pub fn (buffer Buffer) down_to_next_blank_line(pos Position) ?Position {
 			return buffer.l_buffer.down_to_next_blank_line(pos)
 		}
 		.legacy {
-			mut cursor := position_to_pos(pos)
-			cursor = buffer.clamp_cursor_within_document_bounds_old(cursor)
-
 			if buffer.lines.len == 0 {
 				return none
 			}
+
+			clamped_pos := buffer.clamp_cursor_within_document_bounds_new(pos)
+			mut cursor := position_to_pos(clamped_pos)
+
 			if cursor.y == buffer.lines.len {
 				return none
 			}
