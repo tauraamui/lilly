@@ -284,7 +284,8 @@ pub fn (mut buffer Buffer) x(pos Position) ?Position {
 			start := line[..cursor.x]
 			end := line[cursor.x + 1..]
 			buffer.lines[cursor.y] = '${start.string()}${end.string()}'
-			return buffer.clamp_cursor_x_pos(buffer.clamp_cursor_within_document_bounds(pos_to_position(cursor)), false)
+			return buffer.clamp_cursor_x_pos(buffer.clamp_cursor_within_document_bounds(pos_to_position(cursor)),
+				false)
 		}
 	}
 }
@@ -551,7 +552,9 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Position) ?Position {
 			}
 
 			clamped_pos := buffer.clamp_cursor_within_document_bounds(pos)
-			if clamped_pos.line == 0 { return none }
+			if clamped_pos.line == 0 {
+				return none
+			}
 
 			mut compound_y := 0
 			for i := clamped_pos.line; i >= 0; i-- {
@@ -592,7 +595,9 @@ pub fn (buffer Buffer) down_to_next_blank_line(pos Position) ?Position {
 			}
 
 			clamped_pos := buffer.clamp_cursor_within_document_bounds(pos)
-			if clamped_pos.line == buffer.lines.len { return none }
+			if clamped_pos.line == buffer.lines.len {
+				return none
+			}
 
 			mut compound_y := 0
 			for i := clamped_pos.line; i < buffer.lines.len; i++ {
