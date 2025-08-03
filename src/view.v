@@ -1190,12 +1190,13 @@ fn (mut view View) d() {
 				})
 				// view.delete_line(index)
 				view.buffer.delete_line(index)
-				pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Pos{
-					x: view.cursor.pos.x
-					y: view.cursor.pos.y
-				})
-				view.cursor.pos.x = pos.x
-				view.cursor.pos.y = pos.y
+
+				pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Position.new(
+					line:   view.cursor.pos.y
+					offset: view.cursor.pos.x
+				))
+				view.cursor.pos.y = pos.line
+				view.cursor.pos.x = pos.offset
 				view.escape()
 			}
 		}
@@ -1209,12 +1210,12 @@ fn (mut view View) d() {
 			})
 			view.buffer.delete_line_range(start_index, end_index)
 			view.cursor.pos.y = start_index
-			pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Pos{
-				x: view.cursor.pos.x
-				y: view.cursor.pos.y
-			})
-			view.cursor.pos.x = pos.x
-			view.cursor.pos.y = pos.y
+			pos := view.buffer.clamp_cursor_within_document_bounds(buffer.Position.new(
+				line:   view.cursor.pos.y
+				offset: view.cursor.pos.x
+			))
+			view.cursor.pos.y = pos.line
+			view.cursor.pos.x = pos.offset
 			view.escape()
 		}
 		else {}

@@ -209,37 +209,19 @@ fn test_buffer_load_from_path_with_gap_buffer_and_iterate_over_pattern_matches()
 fn test_buffer_clamp_cursor_within_document_bounds() {
 	mut buffer := Buffer.new('', .legacy)
 	buffer.lines = ['1. first line', '2. second line', '3. third line']
-	assert buffer.clamp_cursor_within_document_bounds(Pos{ x: 0, y: -10 }) == Pos{}
-	assert buffer.clamp_cursor_within_document_bounds(Pos{ x: 0, y: 1 }) == Pos{
-		x: 0
-		y: 1
-	}
-	assert buffer.clamp_cursor_within_document_bounds(Pos{ x: 0, y: 2 }) == Pos{
-		x: 0
-		y: 2
-	}
-	assert buffer.clamp_cursor_within_document_bounds(Pos{ x: 0, y: 19 }) == Pos{
-		x: 0
-		y: 2
-	}
-}
-
-fn test_buffer_clamp_cursor_within_document_bounds_new() {
-	mut buffer := Buffer.new('', .legacy)
-	buffer.lines = ['1. first line', '2. second line', '3. third line']
-	assert buffer.clamp_cursor_within_document_bounds_new(Position.new(line: -10, offset: 0)) == Position.new(
+	assert buffer.clamp_cursor_within_document_bounds(Position.new(line: -10, offset: 0)) == Position.new(
 		line:   0
 		offset: 0
 	)
-	assert buffer.clamp_cursor_within_document_bounds_new(Position.new(line: 1, offset: 0)) == Position.new(
+	assert buffer.clamp_cursor_within_document_bounds(Position.new(line: 1, offset: 0)) == Position.new(
 		line:   1
 		offset: 0
 	)
-	assert buffer.clamp_cursor_within_document_bounds_new(Position.new(line: 2, offset: 0)) == Position.new(
+	assert buffer.clamp_cursor_within_document_bounds(Position.new(line: 2, offset: 0)) == Position.new(
 		line:   2
 		offset: 0
 	)
-	assert buffer.clamp_cursor_within_document_bounds_new(Position.new(line: 19, offset: 0)) == Position.new(
+	assert buffer.clamp_cursor_within_document_bounds(Position.new(line: 19, offset: 0)) == Position.new(
 		line:   2
 		offset: 0
 	)
