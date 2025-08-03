@@ -674,6 +674,31 @@ pub fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
 	return cursor
 }
 
+pub fn (buffer Buffer) clamp_cursor_x_pos_new(pos Position, insert_mode bool) Position {
+	// mut clamped := buffer.clamp_cursor_within_document_bounds(pos)
+	mut clamped := pos
+	if clamped.x < 0 {
+		clamped.x = 0
+	}
+
+	current_line_len := buffer.lines[pos.y].runes().len
+
+	if insert_mode {
+		if clamped.x > current_line_len {
+			clamped.x = current_line_len
+		}
+	} else {
+		diff := pos.x - (current_line_len - 1)
+		if diff > 0 {
+			clamped.x = current_line_len - 1
+		}
+	}
+	if clamped.x < 0 {
+		clamped.x = 0
+	}
+	return clamped
+}
+
 pub fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
 	// mut clamped := buffer.clamp_cursor_within_document_bounds(pos)
 	mut clamped := pos
