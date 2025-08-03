@@ -492,10 +492,7 @@ pub fn (buffer Buffer) right(pos Position, insert_mode bool) ?Position {
 			return buffer.l_buffer.right(pos, insert_mode)
 		}
 		.legacy {
-			mut cursor := position_to_pos(pos)
-			cursor.x += 1
-			cursor = buffer.clamp_cursor_x_pos(cursor, insert_mode)
-			return pos_to_position(cursor)
+			return buffer.clamp_cursor_x_pos_new(pos.add(Distance{ offset: 1 }), insert_mode)
 		}
 	}
 }
