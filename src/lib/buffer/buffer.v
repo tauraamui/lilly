@@ -595,11 +595,9 @@ pub fn (buffer Buffer) down_to_next_blank_line(pos Position) ?Position {
 			clamped_pos := buffer.clamp_cursor_within_document_bounds_new(pos)
 			if clamped_pos.line == buffer.lines.len { return none }
 
-			mut cursor := position_to_pos(clamped_pos)
-
 			mut compound_y := 0
-			for i := cursor.y; i < buffer.lines.len; i++ {
-				if i == cursor.y {
+			for i := clamped_pos.line; i < buffer.lines.len; i++ {
+				if i == clamped_pos.line {
 					continue
 				}
 				compound_y += 1
@@ -608,13 +606,11 @@ pub fn (buffer Buffer) down_to_next_blank_line(pos Position) ?Position {
 				}
 			}
 
-			if compound_y > 0 {
-				cursor.x = 0
-				cursor.y += compound_y
-				return pos_to_position(cursor)
+			if compound_y == 0 {
+				return none
 			}
 
-			return none
+			return clamped_pos.add(Distance{ lines: compound_y, offset: clamped_pos.offset * -1 })
 		}
 	}
 }
