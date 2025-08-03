@@ -819,7 +819,7 @@ fn test_buffer_clamp_cursor_pos_x_within_line_not_insert_mode() {
 		'5. fifth line']
 	buffer.lines = lines
 
-	assert buffer.clamp_cursor_x_pos(Pos{ x: 8, y: 0 }, false) == Pos{
+	assert buffer.clamp_cursor_x_pos_old(Pos{ x: 8, y: 0 }, false) == Pos{
 		x: 8
 		y: 0
 	}
@@ -831,7 +831,7 @@ fn test_buffer_clamp_cursor_pos_x_longer_than_line_not_insert_mode() {
 		'5. fifth line']
 	buffer.lines = lines
 
-	assert buffer.clamp_cursor_x_pos(Pos{ x: 20, y: 0 }, false) == Pos{
+	assert buffer.clamp_cursor_x_pos_old(Pos{ x: 20, y: 0 }, false) == Pos{
 		x: 12
 		y: 0
 	}
@@ -843,7 +843,7 @@ fn test_buffer_clamp_cursor_pos_x_same_length_of_line_not_insert_mode() {
 		'5. fifth line']
 	buffer.lines = lines
 
-	assert buffer.clamp_cursor_x_pos(Pos{ x: 12, y: 0 }, true) == Pos{
+	assert buffer.clamp_cursor_x_pos_old(Pos{ x: 12, y: 0 }, true) == Pos{
 		x: 12
 		y: 0
 	}
@@ -855,7 +855,7 @@ fn test_buffer_clamp_cursor_pos_x_within_line_insert_mode() {
 		'5. fifth line']
 	buffer.lines = lines
 
-	assert buffer.clamp_cursor_x_pos(Pos{ x: 8, y: 0 }, true) == Pos{
+	assert buffer.clamp_cursor_x_pos_old(Pos{ x: 8, y: 0 }, true) == Pos{
 		x: 8
 		y: 0
 	}
@@ -867,7 +867,7 @@ fn test_buffer_clamp_cursor_pos_x_longer_than_line_insert_mode() {
 		'5. fifth line']
 	buffer.lines = lines
 
-	assert buffer.clamp_cursor_x_pos(Pos{ x: 20, y: 0 }, true) == Pos{
+	assert buffer.clamp_cursor_x_pos_old(Pos{ x: 20, y: 0 }, true) == Pos{
 		x: 13
 		y: 0
 	}
@@ -879,7 +879,7 @@ fn test_buffer_clamp_cursor_pos_x_same_length_of_line_insert_mode() {
 		'5. fifth line']
 	buffer.lines = lines
 
-	assert buffer.clamp_cursor_x_pos(Pos{ x: 13, y: 0 }, true) == Pos{
+	assert buffer.clamp_cursor_x_pos_old(Pos{ x: 13, y: 0 }, true) == Pos{
 		x: 13
 		y: 0
 	}

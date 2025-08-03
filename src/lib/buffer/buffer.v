@@ -664,7 +664,7 @@ pub fn (buffer Buffer) clamp_cursor_x_pos_new(pos Position, insert_mode bool) Po
 	})
 }
 
-pub fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
+pub fn (buffer Buffer) clamp_cursor_x_pos_old(pos Pos, insert_mode bool) Pos {
 	// pub fn (buffer Buffer) clamp_cursor_x_pos_old(pos Pos, insert_mode bool) Pos {
 	// mut clamped := buffer.clamp_cursor_within_document_bounds(pos)
 	mut clamped := pos
