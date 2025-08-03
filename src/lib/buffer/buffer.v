@@ -526,7 +526,9 @@ pub fn (buffer Buffer) up(pos Position, insert_mode bool) ?Position {
 			return buffer.l_buffer.up(pos, insert_mode)
 		}
 		.legacy {
-			return buffer.clamp_cursor_x_pos(pos.add(Distance{ lines: -1 }), insert_mode)
+			return buffer.clamp_cursor_x_pos(buffer.clamp_cursor_within_document_bounds_new(pos.add(Distance{
+				lines: -1
+			})), insert_mode)
 		}
 	}
 }
@@ -544,19 +546,16 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Position) ?Position {
 			return buffer.l_buffer.up_to_next_blank_line(pos)
 		}
 		.legacy {
-			mut cursor := position_to_pos(pos)
-			cursor = buffer.clamp_cursor_within_document_bounds_old(cursor)
-			if cursor.y == 0 {
-				return none
-			}
-
 			if buffer.lines.len == 0 {
 				return none
 			}
 
+			clamped_pos := buffer.clamp_cursor_within_document_bounds_new(pos)
+			if clamped_pos.line == 0 { return none }
+
 			mut compound_y := 0
-			for i := cursor.y; i >= 0; i-- {
-				if i == cursor.y {
+			for i := clamped_pos.line; i >= 0; i-- {
+				if i == clamped_pos.line {
 					continue
 				}
 				compound_y += 1
@@ -565,11 +564,11 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Position) ?Position {
 				}
 			}
 
-			if compound_y > 0 {
-				cursor.x = 0
-				cursor.y -= compound_y
-				return pos_to_position(cursor)
+			if compound_y == 0 {
+				return none
 			}
+
+			return clamped_pos.add(Distance{ lines: compound_y * -1, offset: clamped_pos.offset * -1 })
 		}
 	}
 	return none
