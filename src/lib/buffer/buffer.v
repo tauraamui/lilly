@@ -545,7 +545,7 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Position) ?Position {
 		}
 		.legacy {
 			mut cursor := position_to_pos(pos)
-			cursor = buffer.clamp_cursor_within_document_bounds(cursor)
+			cursor = buffer.clamp_cursor_within_document_bounds_old(cursor)
 			if cursor.y == 0 {
 				return none
 			}
@@ -589,7 +589,7 @@ pub fn (buffer Buffer) down_to_next_blank_line(pos Position) ?Position {
 		}
 		.legacy {
 			mut cursor := position_to_pos(pos)
-			cursor = buffer.clamp_cursor_within_document_bounds(cursor)
+			cursor = buffer.clamp_cursor_within_document_bounds_old(cursor)
 
 			if buffer.lines.len == 0 {
 				return none

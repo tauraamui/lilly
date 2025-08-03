@@ -209,16 +209,16 @@ fn test_buffer_load_from_path_with_gap_buffer_and_iterate_over_pattern_matches()
 fn test_buffer_clamp_cursor_within_document_bounds() {
 	mut buffer := Buffer.new('', .legacy)
 	buffer.lines = ['1. first line', '2. second line', '3. third line']
-	assert buffer.clamp_cursor_within_document_bounds(Pos{ x: 0, y: -10 }) == Pos{}
-	assert buffer.clamp_cursor_within_document_bounds(Pos{ x: 0, y: 1 }) == Pos{
+	assert buffer.clamp_cursor_within_document_bounds_old(Pos{ x: 0, y: -10 }) == Pos{}
+	assert buffer.clamp_cursor_within_document_bounds_old(Pos{ x: 0, y: 1 }) == Pos{
 		x: 0
 		y: 1
 	}
-	assert buffer.clamp_cursor_within_document_bounds(Pos{ x: 0, y: 2 }) == Pos{
+	assert buffer.clamp_cursor_within_document_bounds_old(Pos{ x: 0, y: 2 }) == Pos{
 		x: 0
 		y: 2
 	}
-	assert buffer.clamp_cursor_within_document_bounds(Pos{ x: 0, y: 19 }) == Pos{
+	assert buffer.clamp_cursor_within_document_bounds_old(Pos{ x: 0, y: 19 }) == Pos{
 		x: 0
 		y: 2
 	}
