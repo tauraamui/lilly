@@ -674,7 +674,12 @@ pub fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
 	return cursor
 }
 
-pub fn (buffer Buffer) clamp_cursor_x_pos_new(pos Pos, insert_mode bool) Pos {
+pub fn (buffer Buffer) clamp_cursor_x_pos_new(pos Position, insert_mode bool) Position {
+	current_line_len := buffer.lines[pos.line].runes().len - if insert_mode { 0 } else { 1 }
+	println("LINE LEN: ${current_line_len}, INSERT MODE: ${insert_mode}")
+	return pos
+
+	/*
 	// mut clamped := buffer.clamp_cursor_within_document_bounds(pos)
 	mut clamped := pos
 	if clamped.x < 0 {
@@ -697,6 +702,7 @@ pub fn (buffer Buffer) clamp_cursor_x_pos_new(pos Pos, insert_mode bool) Pos {
 		clamped.x = 0
 	}
 	return clamped
+	*/
 }
 
 pub fn (buffer Buffer) clamp_cursor_x_pos(pos Pos, insert_mode bool) Pos {
