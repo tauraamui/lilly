@@ -740,25 +740,25 @@ fn test_buffer_gap_buffer_find_end_of_line() {
 	assert end_of_line_pos_x == 11
 }
 
-fn test_buffer_clamp_cursor_pos_x_within_line_new_not_insert_mode() {
+fn test_buffer_clamp_cursor_pos_x_within_line_not_insert_mode() {
 	mut buffer := Buffer.new('', .legacy)
 	lines := ['This is a doc', '', '1. first line', '2. second line', '3. third line', '',
 		'5. fifth line']
 	buffer.lines = lines
 
-	assert buffer.clamp_cursor_x_pos_new(Position.new(line: 0, offset: 8), false) == Position.new(
+	assert buffer.clamp_cursor_x_pos(Position.new(line: 0, offset: 8), false) == Position.new(
 		line:   0
 		offset: 8
 	)
 }
 
-fn test_buffer_clamp_cursor_pos_x_longer_than_line_new_not_insert_mode() {
+fn test_buffer_clamp_cursor_pos_x_longer_than_line_not_insert_mode() {
 	mut buffer := Buffer.new('', .legacy)
 	lines := ['This is a doc', '', '1. first line', '2. second line', '3. third line', '',
 		'5. fifth line']
 	buffer.lines = lines
 
-	assert buffer.clamp_cursor_x_pos_new(Position.new(line: 0, offset: 20), false) == Position.new(
+	assert buffer.clamp_cursor_x_pos(Position.new(line: 0, offset: 20), false) == Position.new(
 		line:   0
 		offset: 12
 	)
@@ -770,83 +770,10 @@ fn test_buffer_clamp_cursor_pos_x_same_length_of_line_new_not_insert_mode() {
 		'5. fifth line']
 	buffer.lines = lines
 
-	assert buffer.clamp_cursor_x_pos_new(Position.new(line: 0, offset: 12), true) == Position.new(
+	assert buffer.clamp_cursor_x_pos(Position.new(line: 0, offset: 12), true) == Position.new(
 		line:   0
 		offset: 12
 	)
-}
-
-fn test_buffer_clamp_cursor_pos_x_within_line_new_insert_mode() {
-	mut buffer := Buffer.new('', .legacy)
-	lines := ['This is a doc', '', '1. first line', '2. second line', '3. third line', '',
-		'5. fifth line']
-	buffer.lines = lines
-
-	assert buffer.clamp_cursor_x_pos_new(Position.new(line: 0, offset: 8), true) == Position.new(
-		line:   0
-		offset: 8
-	)
-}
-
-fn test_buffer_clamp_cursor_pos_x_longer_than_line_new_insert_mode() {
-	mut buffer := Buffer.new('', .legacy)
-	lines := ['This is a doc', '', '1. first line', '2. second line', '3. third line', '',
-		'5. fifth line']
-	buffer.lines = lines
-
-	assert buffer.clamp_cursor_x_pos_new(Position.new(line: 0, offset: 20), true) == Position.new(
-		line:   0
-		offset: 13
-	)
-}
-
-fn test_buffer_clamp_cursor_pos_x_same_length_of_line_new_insert_mode() {
-	mut buffer := Buffer.new('', .legacy)
-	lines := ['This is a doc', '', '1. first line', '2. second line', '3. third line', '',
-		'5. fifth line']
-	buffer.lines = lines
-
-	// assert buffer.clamp_cursor_x_pos_new(Pos{ x: 13, y: 0 }, true) == Pos{ x: 13, y: 0 }
-	assert buffer.clamp_cursor_x_pos_new(Position.new(line: 0, offset: 13), true) == Position.new(
-		line:   0
-		offset: 13
-	)
-}
-
-fn test_buffer_clamp_cursor_pos_x_within_line_not_insert_mode() {
-	mut buffer := Buffer.new('', .legacy)
-	lines := ['This is a doc', '', '1. first line', '2. second line', '3. third line', '',
-		'5. fifth line']
-	buffer.lines = lines
-
-	assert buffer.clamp_cursor_x_pos_old(Pos{ x: 8, y: 0 }, false) == Pos{
-		x: 8
-		y: 0
-	}
-}
-
-fn test_buffer_clamp_cursor_pos_x_longer_than_line_not_insert_mode() {
-	mut buffer := Buffer.new('', .legacy)
-	lines := ['This is a doc', '', '1. first line', '2. second line', '3. third line', '',
-		'5. fifth line']
-	buffer.lines = lines
-
-	assert buffer.clamp_cursor_x_pos_old(Pos{ x: 20, y: 0 }, false) == Pos{
-		x: 12
-		y: 0
-	}
-}
-
-fn test_buffer_clamp_cursor_pos_x_same_length_of_line_not_insert_mode() {
-	mut buffer := Buffer.new('', .legacy)
-	lines := ['This is a doc', '', '1. first line', '2. second line', '3. third line', '',
-		'5. fifth line']
-	buffer.lines = lines
-
-	assert buffer.clamp_cursor_x_pos_old(Pos{ x: 12, y: 0 }, true) == Pos{
-		x: 12
-		y: 0
-	}
 }
 
 fn test_buffer_clamp_cursor_pos_x_within_line_insert_mode() {
@@ -855,10 +782,10 @@ fn test_buffer_clamp_cursor_pos_x_within_line_insert_mode() {
 		'5. fifth line']
 	buffer.lines = lines
 
-	assert buffer.clamp_cursor_x_pos_old(Pos{ x: 8, y: 0 }, true) == Pos{
-		x: 8
-		y: 0
-	}
+	assert buffer.clamp_cursor_x_pos(Position.new(line: 0, offset: 8), true) == Position.new(
+		line:   0
+		offset: 8
+	)
 }
 
 fn test_buffer_clamp_cursor_pos_x_longer_than_line_insert_mode() {
@@ -867,10 +794,10 @@ fn test_buffer_clamp_cursor_pos_x_longer_than_line_insert_mode() {
 		'5. fifth line']
 	buffer.lines = lines
 
-	assert buffer.clamp_cursor_x_pos_old(Pos{ x: 20, y: 0 }, true) == Pos{
-		x: 13
-		y: 0
-	}
+	assert buffer.clamp_cursor_x_pos(Position.new(line: 0, offset: 20), true) == Position.new(
+		line:   0
+		offset: 13
+	)
 }
 
 fn test_buffer_clamp_cursor_pos_x_same_length_of_line_insert_mode() {
@@ -879,8 +806,9 @@ fn test_buffer_clamp_cursor_pos_x_same_length_of_line_insert_mode() {
 		'5. fifth line']
 	buffer.lines = lines
 
-	assert buffer.clamp_cursor_x_pos_old(Pos{ x: 13, y: 0 }, true) == Pos{
-		x: 13
-		y: 0
-	}
+	assert buffer.clamp_cursor_x_pos(Position.new(line: 0, offset: 13), true) == Position.new(
+		line:   0
+		offset: 13
+	)
 }
+

@@ -284,7 +284,7 @@ pub fn (mut buffer Buffer) x(pos Position) ?Position {
 			start := line[..cursor.x]
 			end := line[cursor.x + 1..]
 			buffer.lines[cursor.y] = '${start.string()}${end.string()}'
-			return buffer.clamp_cursor_x_pos_new(buffer.clamp_cursor_within_document_bounds_new(pos_to_position(cursor)), false)
+			return buffer.clamp_cursor_x_pos(buffer.clamp_cursor_within_document_bounds_new(pos_to_position(cursor)), false)
 		}
 	}
 }
@@ -470,7 +470,7 @@ pub fn (buffer Buffer) left(pos Position, insert_mode bool) ?Position {
 			return buffer.l_buffer.left(pos)
 		}
 		.legacy {
-			return buffer.clamp_cursor_x_pos_new(pos.add(Distance{ offset: -1 }), insert_mode)
+			return buffer.clamp_cursor_x_pos(pos.add(Distance{ offset: -1 }), insert_mode)
 		}
 	}
 }
@@ -488,7 +488,7 @@ pub fn (buffer Buffer) right(pos Position, insert_mode bool) ?Position {
 			return buffer.l_buffer.right(pos, insert_mode)
 		}
 		.legacy {
-			return buffer.clamp_cursor_x_pos_new(pos.add(Distance{ offset: 1 }), insert_mode)
+			return buffer.clamp_cursor_x_pos(pos.add(Distance{ offset: 1 }), insert_mode)
 		}
 	}
 }
@@ -506,7 +506,7 @@ pub fn (buffer Buffer) down(pos Position, insert_mode bool) ?Position {
 			return buffer.l_buffer.down(pos, insert_mode)
 		}
 		.legacy {
-			return buffer.clamp_cursor_x_pos_new(buffer.clamp_cursor_within_document_bounds_new(pos.add(Distance{
+			return buffer.clamp_cursor_x_pos(buffer.clamp_cursor_within_document_bounds_new(pos.add(Distance{
 				lines: 1
 			})), insert_mode)
 		}
@@ -526,7 +526,7 @@ pub fn (buffer Buffer) up(pos Position, insert_mode bool) ?Position {
 			return buffer.l_buffer.up(pos, insert_mode)
 		}
 		.legacy {
-			return buffer.clamp_cursor_x_pos_new(pos.add(Distance{ lines: -1 }), insert_mode)
+			return buffer.clamp_cursor_x_pos(pos.add(Distance{ lines: -1 }), insert_mode)
 		}
 	}
 }
@@ -657,37 +657,11 @@ pub fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Pos) Pos {
 	return cursor
 }
 
-pub fn (buffer Buffer) clamp_cursor_x_pos_new(pos Position, insert_mode bool) Position {
+pub fn (buffer Buffer) clamp_cursor_x_pos(pos Position, insert_mode bool) Position {
 	current_line_len := buffer.lines[pos.line].runes().len - if insert_mode { 0 } else { 1 }
 	return pos.add(Distance{
 		offset: if pos.offset > current_line_len { (pos.offset - current_line_len) * -1 } else { 0 }
 	})
-}
-
-pub fn (buffer Buffer) clamp_cursor_x_pos_old(pos Pos, insert_mode bool) Pos {
-	// pub fn (buffer Buffer) clamp_cursor_x_pos_old(pos Pos, insert_mode bool) Pos {
-	// mut clamped := buffer.clamp_cursor_within_document_bounds(pos)
-	mut clamped := pos
-	if clamped.x < 0 {
-		clamped.x = 0
-	}
-
-	current_line_len := buffer.lines[pos.y].runes().len
-
-	if insert_mode {
-		if clamped.x > current_line_len {
-			clamped.x = current_line_len
-		}
-	} else {
-		diff := pos.x - (current_line_len - 1)
-		if diff > 0 {
-			clamped.x = current_line_len - 1
-		}
-	}
-	if clamped.x < 0 {
-		clamped.x = 0
-	}
-	return clamped
 }
 
 pub interface PatternMatchIterator {
