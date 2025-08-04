@@ -1445,6 +1445,14 @@ fn test_find_end_of_line() {
 	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 0
 
+	/*
+	new_pos := fake_view.buffer.find_end_of_line(buffer.Position.new(line: fake_view.cursor.pos.y)) or {
+		buffer.Position.new(line: fake_view.cursor.pos.y, offset: 0)
+	}
+	fake_view.cursor.pos.y = new_pos.line
+	fake_view.cursor.pos.x = new_pos.offset
+	*/
+
 	mut x_pos := fake_view.buffer.find_end_of_line(buffer.Pos{ y: fake_view.cursor.pos.y }) or { 0 }
 	assert x_pos == 13
 
