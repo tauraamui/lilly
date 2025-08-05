@@ -1445,18 +1445,14 @@ fn test_find_end_of_line() {
 	fake_view.cursor.pos.x = 0
 	fake_view.cursor.pos.y = 0
 
-	/*
-	new_pos := fake_view.buffer.find_end_of_line(buffer.Position.new(line: fake_view.cursor.pos.y)) or {
+	mut new_pos := fake_view.buffer.find_end_of_line(buffer.Position.new(line: fake_view.cursor.pos.y)) or {
 		buffer.Position.new(line: fake_view.cursor.pos.y, offset: 0)
 	}
-	fake_view.cursor.pos.y = new_pos.line
-	fake_view.cursor.pos.x = new_pos.offset
-	*/
-
-	mut x_pos := fake_view.buffer.find_end_of_line(buffer.Pos{ y: fake_view.cursor.pos.y }) or { 0 }
-	assert x_pos == 13
+	assert new_pos.offset == 13
 
 	fake_view.cursor.pos.y = 1
-	x_pos = fake_view.buffer.find_end_of_line(buffer.Pos{ y: fake_view.cursor.pos.y }) or { 0 }
-	assert x_pos == 35
+	new_pos = fake_view.buffer.find_end_of_line(buffer.Position.new(line: fake_view.cursor.pos.y)) or {
+		buffer.Position.new(line: fake_view.cursor.pos.y, offset: 0)
+	}
+	assert new_pos.offset == 35
 }
