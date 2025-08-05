@@ -718,7 +718,10 @@ fn test_buffer_gap_buffer_find_end_of_line() {
 	mut buffer := Buffer.new('', .gap_buffer)
 	buffer.load_contents_into_gap('1. first line\n2. second line\n3. third line')
 
-	assert buffer.find_end_of_line(Position.new(line: 1, offset: 3))? == Position.new(line: 1, offset: 14)
+	assert buffer.find_end_of_line(Position.new(line: 1, offset: 3))? == Position.new(
+		line:   1
+		offset: 14
+	)
 }
 
 fn test_buffer_clamp_cursor_pos_x_within_line_not_insert_mode() {

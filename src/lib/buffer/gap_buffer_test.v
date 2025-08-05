@@ -203,9 +203,18 @@ fn test_find_end_of_line_no_starting_offset() {
 
 fn test_find_end_of_line2_no_starting_offset() {
 	mut gb := GapBuffer.new('1. First line\n2. Second line!\n3. Third line :3')
-	assert gb.find_end_of_line2(Position.new(line: 0, offset: 0))! == Position.new(line: 0, offset: 13)
-	assert gb.find_end_of_line2(Position.new(line: 1, offset: 0))! == Position.new(line: 1, offset: 15)
-	assert gb.find_end_of_line2(Position.new(line: 2, offset: 0))! == Position.new(line: 2, offset: 16)
+	assert gb.find_end_of_line2(Position.new(line: 0, offset: 0))! == Position.new(
+		line:   0
+		offset: 13
+	)
+	assert gb.find_end_of_line2(Position.new(line: 1, offset: 0))! == Position.new(
+		line:   1
+		offset: 15
+	)
+	assert gb.find_end_of_line2(Position.new(line: 2, offset: 0))! == Position.new(
+		line:   2
+		offset: 16
+	)
 }
 
 fn test_find_end_of_line_with_starting_offset() {
@@ -217,11 +226,19 @@ fn test_find_end_of_line_with_starting_offset() {
 
 fn test_find_end_of_line2_with_starting_offset() {
 	mut gb := GapBuffer.new('1. First line\n2. Second line!\n3. Third line :3')
-	assert gb.find_end_of_line2(Position.new(line: 0, offset: 5))! == Position.new(line: 0, offset: 13)
-	assert gb.find_end_of_line2(Position.new(line: 1, offset: 9))! == Position.new(line: 1, offset: 15)
-	assert gb.find_end_of_line2(Position.new(line: 2, offset: 4))! == Position.new(line: 2, offset: 16)
+	assert gb.find_end_of_line2(Position.new(line: 0, offset: 5))! == Position.new(
+		line:   0
+		offset: 13
+	)
+	assert gb.find_end_of_line2(Position.new(line: 1, offset: 9))! == Position.new(
+		line:   1
+		offset: 15
+	)
+	assert gb.find_end_of_line2(Position.new(line: 2, offset: 4))! == Position.new(
+		line:   2
+		offset: 16
+	)
 }
-
 
 fn test_line_iterator() {
 	mut gb := GapBuffer.new('1. This is the first line.\n2. This is the second line.\n3. This is the third line.')
