@@ -235,18 +235,20 @@ pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) ?Pos {
 	return gap_buffer.find_next_word_start_old(pos)
 }
 
-pub fn (gap_buffer GapBuffer) find_next_word_start_new(pos Pos) ?Pos {
-	mut cursor_loc := pos
-	mut offset := gap_buffer.find_offset(Position.new(line: cursor_loc.y, offset: cursor_loc.x)) or {
+pub fn (gap_buffer GapBuffer) find_next_word_start_new(pos Position) ?Position {
+	mut offset := gap_buffer.find_offset(pos) or {
 		return none
 	}
 
 	mut scanner := WordStartScanner{
-		start_pos: cursor_loc
+		start_pos: position_to_pos(pos)
 	}
 
-	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset, gap_buffer.gap_start,
-		gap_buffer.gap_end)
+	return if resolved_pos := resolve_cursor_pos(mut scanner, gap_buffer.data, offset, gap_buffer.gap_start, gap_buffer.gap_end) {
+		pos_to_position(resolved_pos)
+	} else {
+		none
+	}
 }
 
 pub fn (gap_buffer GapBuffer) find_next_word_start_old(pos Pos) ?Pos {
