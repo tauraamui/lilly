@@ -443,7 +443,17 @@ pub fn (buffer Buffer) find_end_of_line(pos Position) ?Position {
 }
 
 pub fn (buffer Buffer) find_next_word_start(pos Pos) ?Pos {
+	return buffer.find_next_word_start_old(pos)
+	// return position_to_pos(buffer.find_next_word_start_new(pos_to_position(pos)))
+}
+
+pub fn (buffer Buffer) find_next_word_start_old(pos Pos) ?Pos {
 	return buffer.c_buffer.find_next_word_start(pos)
+}
+
+pub fn (buffer Buffer) find_next_word_start_new(pos Position) ?Position {
+	// return buffer.c_buffer.find_next_word_start(pos)
+	return none
 }
 
 pub fn (buffer Buffer) find_next_word_end(pos Pos) ?Pos {
