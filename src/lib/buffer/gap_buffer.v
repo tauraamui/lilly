@@ -175,6 +175,8 @@ pub fn (gap_buffer GapBuffer) in_bounds(pos Pos) bool {
 
 // NOTE(tauraamui) [15/07/2025]: keep this around until we get around to migrating all of the buffer types
 //                               to use the new Position type
+// GapBuffer.find_end_of_line2 returns a position with line and offset data to represent the end position
+// of the starting line.
 pub fn (gap_buffer GapBuffer) find_end_of_line2(pos Position) ?Position {
 	offset := gap_buffer.find_offset(pos) or { return none }
 
@@ -191,6 +193,8 @@ pub fn (gap_buffer GapBuffer) find_end_of_line2(pos Position) ?Position {
 	return pos.add(Distance{ offset: gap_buffer.data[offset..].len })
 }
 
+// GapBuffer.find_end_of_line returns the distance between the current position's offset
+// and the end of the line.
 pub fn (gap_buffer GapBuffer) find_end_of_line(pos Pos) ?int {
 	cursor_loc := pos
 	offset := gap_buffer.find_offset(Position.new(line: cursor_loc.y, offset: cursor_loc.x)) or {

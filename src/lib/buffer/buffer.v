@@ -305,9 +305,7 @@ pub fn (mut buffer Buffer) backspace(pos Position) ?Position {
 			if buffer.use_gap_buffer {
 				buffer.move_data_cursor_to(pos)
 				if buffer.c_buffer.backspace() {
-					cursor.y -= 1
-					cursor.x = buffer.find_end_of_line(cursor) or { 0 }
-					return pos_to_position(cursor)
+					return buffer.find_end_of_line(pos.add(Distance{ lines: -1 }))
 				}
 				cursor.x -= 1
 				if cursor.x < 0 {
@@ -440,8 +438,8 @@ pub fn (mut buffer Buffer) raw_str() string {
 
 // *
 // NOTE(tauraamui) [13/07/2025]: pretty sure these are unused, or if they are, we want to get rid
-pub fn (buffer Buffer) find_end_of_line(pos Pos) ?int {
-	return buffer.c_buffer.find_end_of_line(pos)
+pub fn (buffer Buffer) find_end_of_line(pos Position) ?Position {
+	return buffer.c_buffer.find_end_of_line2(pos)
 }
 
 pub fn (buffer Buffer) find_next_word_start(pos Pos) ?Pos {
