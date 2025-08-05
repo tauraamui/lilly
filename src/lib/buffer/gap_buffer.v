@@ -232,6 +232,10 @@ fn resolve_cursor_pos(mut scanner Scanner, data []rune, offset int, gap_start in
 }
 
 pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) ?Pos {
+	return gap_buffer.find_next_word_start_old(pos)
+}
+
+pub fn (gap_buffer GapBuffer) find_next_word_start_new(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(Position.new(line: cursor_loc.y, offset: cursor_loc.x)) or {
 		return none
@@ -244,6 +248,21 @@ pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) ?Pos {
 	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset, gap_buffer.gap_start,
 		gap_buffer.gap_end)
 }
+
+pub fn (gap_buffer GapBuffer) find_next_word_start_old(pos Pos) ?Pos {
+	mut cursor_loc := pos
+	mut offset := gap_buffer.find_offset(Position.new(line: cursor_loc.y, offset: cursor_loc.x)) or {
+		return none
+	}
+
+	mut scanner := WordStartScanner{
+		start_pos: cursor_loc
+	}
+
+	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset, gap_buffer.gap_start,
+		gap_buffer.gap_end)
+}
+
 
 pub fn (gap_buffer GapBuffer) find_next_word_end(pos Pos) ?Pos {
 	mut cursor_loc := pos
