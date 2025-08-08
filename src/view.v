@@ -1042,8 +1042,8 @@ fn (mut view View) w() {
 			line: view.cursor.pos.y
 			offset: view.cursor.pos.x
 		)) or { return }
-		view.cursor.pos.y = pos.y
-		view.cursor.pos.x = pos.x
+		view.cursor.pos.y = pos.line
+		view.cursor.pos.x = pos.offset
 		view.scroll_from_and_to()
 		return
 	}
