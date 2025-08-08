@@ -442,9 +442,9 @@ pub fn (buffer Buffer) find_end_of_line(pos Position) ?Position {
 	return buffer.c_buffer.find_end_of_line2(pos)
 }
 
-pub fn (buffer Buffer) find_next_word_start(pos Pos) ?Pos {
+pub fn (buffer Buffer) find_next_word_start(pos Position) ?Pos {
 	// return buffer.find_next_word_start_old(pos)
-	return position_to_pos(buffer.find_next_word_start_new(pos_to_position(pos)))
+	return position_to_pos(buffer.find_next_word_start_new(pos))
 }
 
 pub fn (buffer Buffer) find_next_word_start_old(pos Pos) ?Pos {

@@ -467,11 +467,6 @@ fn (mut ctx Context) flush() {
 			if c := cell.bg_color {
 				ctx.ref.set_bg_color(tui.Color{c.r, c.g, c.b})
 			} else {
-				/*
-				if default_bg_color := ctx.default_bg_color {
-					ctx.ref.set_bg_color(default_bg_color)
-				}
-				*/
 				if bg_color := ctx.theme().background_color {
 					ctx.ref.set_bg_color(bg_color)
 				}

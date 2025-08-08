@@ -1038,12 +1038,12 @@ fn (mut view View) visual_line_d(overwrite_y_lines bool) {
 
 fn (mut view View) w() {
 	if view.buffer.use_gap_buffer {
-		pos := view.buffer.find_next_word_start(buffer.Pos{
-			x: view.cursor.pos.x
-			y: view.cursor.pos.y
-		}) or { return }
-		view.cursor.pos.x = pos.x
+		pos := view.buffer.find_next_word_start(buffer.Position.new(
+			line: view.cursor.pos.y
+			offset: view.cursor.pos.x
+		)) or { return }
 		view.cursor.pos.y = pos.y
+		view.cursor.pos.x = pos.x
 		view.scroll_from_and_to()
 		return
 	}
