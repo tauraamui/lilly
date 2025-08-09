@@ -444,7 +444,7 @@ pub fn (buffer Buffer) find_end_of_line(pos Position) ?Position {
 
 pub fn (buffer Buffer) find_next_word_start(pos Position) ?Position {
 	return if p := buffer.c_buffer.find_next_word_start(position_to_pos(pos)) {
-		return pos_to_position(p)
+		pos_to_position(p)
 	} else {
 		pos
 	}
@@ -452,7 +452,7 @@ pub fn (buffer Buffer) find_next_word_start(pos Position) ?Position {
 
 pub fn (buffer Buffer) find_next_word_end(pos Position) ?Position {
 	return if p := buffer.c_buffer.find_next_word_end(position_to_pos(pos)) {
-		return pos_to_position(p)
+		pos_to_position(p)
 	} else {
 		pos
 	}
