@@ -1098,12 +1098,12 @@ fn (mut view View) e() {
 
 fn (mut view View) b() {
 	if view.buffer.use_gap_buffer {
-		pos := view.buffer.find_prev_word_start(buffer.Pos{
-			x: view.cursor.pos.x
-			y: view.cursor.pos.y
-		}) or { return }
-		view.cursor.pos.x = pos.x
-		view.cursor.pos.y = pos.y
+		pos := view.buffer.find_prev_word_start(buffer.Position.new(
+			line:   view.cursor.pos.y
+			offset: view.cursor.pos.x
+		)) or { return }
+		view.cursor.pos.y = pos.line
+		view.cursor.pos.x = pos.offset
 		view.scroll_from_and_to()
 		return
 	}
