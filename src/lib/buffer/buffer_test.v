@@ -462,10 +462,10 @@ fn test_replace_char() {
 
 	assert buffer.str() == '1. first line\n2. second line\n3. third line'
 
-	buffer.replace_char(Position.new(line: 0, offset: 7), 113, "q")
+	buffer.replace_char(Position.new(line: 0, offset: 7), 113, 'q')
 	assert buffer.str() == '1. firsq line\n2. second line\n3. third line'
 
-	buffer.replace_char(Position.new(line: 1, offset: 11), 112, "p")
+	buffer.replace_char(Position.new(line: 1, offset: 11), 112, 'p')
 	assert buffer.str() == '1. firsq line\n2. second lpne\n3. third line'
 }
 

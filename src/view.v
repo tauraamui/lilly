@@ -1804,7 +1804,7 @@ fn (mut view View) right_square_bracket() {
 
 fn (mut view View) replace_char(code u8, str string) {
 	view.buffer.replace_char(buffer.Position.new(
-		line: view.cursor.pos.y
+		line:   view.cursor.pos.y
 		offset: view.cursor.pos.x
 	), code, str)
 }
