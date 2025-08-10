@@ -1099,7 +1099,7 @@ fn (mut view View) e() {
 fn (mut view View) b() {
 	if view.buffer.use_gap_buffer {
 		pos := view.buffer.find_prev_word_start(buffer.Position.new(
-			line: view.cursor.pos.y
+			line:   view.cursor.pos.y
 			offset: view.cursor.pos.x
 		)) or { return }
 		view.cursor.pos.y = pos.line
