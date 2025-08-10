@@ -462,24 +462,10 @@ fn test_replace_char() {
 
 	assert buffer.str() == '1. first line\n2. second line\n3. third line'
 
-	buffer.replace_char(Pos{ y: 0, x: 7 }, 113, "q")
+	buffer.replace_char(Position.new(line: 0, offset: 7), 113, "q")
 	assert buffer.str() == '1. firsq line\n2. second line\n3. third line'
 
-	buffer.replace_char(Pos{ y: 1, x: 11 }, 112, "p")
-	assert buffer.str() == '1. firsq line\n2. second lpne\n3. third line'
-}
-
-fn test_replace_char_new() {
-	mut buffer := Buffer.new('', .legacy)
-	lines := ['1. first line', '2. second line', '3. third line']
-	buffer.lines = lines
-
-	assert buffer.str() == '1. first line\n2. second line\n3. third line'
-
-	buffer.replace_char_new(Position.new(line: 0, offset: 7), 113, "q")
-	assert buffer.str() == '1. firsq line\n2. second line\n3. third line'
-
-	buffer.replace_char_new(Position.new(line: 1, offset: 11), 112, "p")
+	buffer.replace_char(Position.new(line: 1, offset: 11), 112, "p")
 	assert buffer.str() == '1. firsq line\n2. second lpne\n3. third line'
 }
 
