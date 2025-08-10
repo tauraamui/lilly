@@ -629,7 +629,7 @@ pub fn (buffer Buffer) down_to_next_blank_line(pos Position) ?Position {
 	}
 }
 
-pub fn (mut buffer Buffer) replace_char(pos Pos, code u8, str string) {
+pub fn (mut buffer Buffer) replace_char(pos Position, code u8, str string) {
 	if buffer.use_gap_buffer {
 		assert true == false
 		return
@@ -638,11 +638,10 @@ pub fn (mut buffer Buffer) replace_char(pos Pos, code u8, str string) {
 	if code < 32 {
 		return
 	}
-	cursor := pos
-	line := buffer.lines[pos.y].runes()
-	start := line[..cursor.x]
-	end := line[cursor.x + 1..]
-	buffer.lines[cursor.y] = '${start.string()}${str}${end.string()}'
+	line := buffer.lines[pos.line].runes()
+	start := line[..pos.offset]
+	end := line[pos.offset + 1..]
+	buffer.lines[pos.line] = '${start.string()}${str}${end.string()}'
 }
 
 pub fn (buffer Buffer) clamp_cursor_within_document_bounds(pos Position) Position {
