@@ -87,7 +87,7 @@ pub fn (mut tc_picker TodoCommentPickerModal) draw_scrollable_list(mut ctx draw.
 			ctx.draw_rect(0, iter_y_offset, ctx.window_width(), 1)
 		}
 
-		list_item_file_path := '${match_item.file_path}:${match_item.pos.y}:${match_item.pos.x} '
+		list_item_file_path := '${match_item.file_path}:${match_item.pos.line}:${match_item.pos.offset} '
 		ctx.draw_text(1, iter_y_offset, list_item_file_path)
 
 		mut x_offset := utf8_str_visible_length(list_item_file_path)
@@ -163,6 +163,6 @@ fn (mut tc_picker TodoCommentPickerModal) match_selected() Action {
 	selected_match := matches[tc_picker.current_sel_id]
 	return Action{
 		op:        .open_file_op
-		file_path: '${selected_match.file_path}:${selected_match.pos.y}:${selected_match.pos.x}'
+		file_path: '${selected_match.file_path}:${selected_match.pos.line}:${selected_match.pos.offset}'
 	}
 }
