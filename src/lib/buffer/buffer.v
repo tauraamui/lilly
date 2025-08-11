@@ -708,8 +708,8 @@ pub fn (mut iter PatternMatchIteratorFromLinesList) next() ?Match {
 
 	mut found_match := Match{
 		file_path:   iter.file_path
-		pos: Position.new(
-			line: iter.idx
+		pos:         Position.new(
+			line:   iter.idx
 			offset: found_index
 		)
 		contents:    line_to_search[found_index..].string()
