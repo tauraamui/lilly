@@ -160,23 +160,23 @@ fn test_lilly_resolve_matches_across_all_open_file_buffers_only_loaded_file_has_
 	assert lilly.file_buffers.len == 1
 	assert lilly.buffer_views.len == 1
 
-	assert lilly.resolve_todo_comments_matches().sorted(a.pos.x < b.pos.x) == [// make the test output deterministic, prevent random out of order assert failures
+	assert lilly.resolve_todo_comments_matches().sorted(a.pos.offset < b.pos.offset) == [// make the test output deterministic, prevent random out of order assert failures
 		buffer.Match{
 			contents:    'TODO(tauraamui) [26/02/2025]: become a real boy, I mean file!'
 			file_path:   'loaded-test-file.txt'
-			pos:         buffer.Pos{
-				x: 3
-				y: 0
-			}
+			pos: buffer.Position.new(
+				line: 0,
+				offset: 3
+			)
 			keyword_len: 4
 		},
 		buffer.Match{
 			contents:    'TODO(tauraamui) [26/02/2025]: finish writing lin..'
 			file_path:   'unopened-file-as-yet.txt'
-			pos:         buffer.Pos{
-				x: 35
-				y: 1
-			}
+			pos: buffer.Position.new(
+				line: 1,
+				offset: 35
+			)
 			keyword_len: 4
 		},
 	]
