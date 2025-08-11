@@ -869,10 +869,10 @@ pub fn (mut iter PatternMatchIteratorFromGapBuffer) next() ?Match {
 		}
 
 		return Match{
-			pos:      Pos{
-				x: found_index
-				y: current_line_id
-			}
+			pos: Position.new(
+				offset: found_index
+				line: current_line_id
+			)
 			contents: line_to_search.runes()[found_index..found_index + iter.pattern.len].string()
 		}
 	}
