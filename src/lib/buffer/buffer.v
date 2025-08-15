@@ -566,22 +566,19 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Position) ?Position {
 				return none
 			}
 
-			mut compound_y := 0
-			for i := clamped_pos.line; i >= 0; i-- {
-				if i == clamped_pos.line {
-					continue
+			distance_to_next_blank_line := fn [buffer, clamped_pos] () ?Distance {
+				for i := clamped_pos.line; i >= 0; i-- {
+					if i == clamped_pos.line { continue } // skip counting from the first iteration
+					if buffer.lines[i].len == 0 || i == 0 {
+						return clamped_pos.distance(Position.new(line: i, offset: 0))
+					}
 				}
-				compound_y += 1
-				if buffer.lines[i].len == 0 {
-					break
-				}
-			}
-
-			if compound_y == 0 {
 				return none
 			}
 
-			return clamped_pos.add(Distance{ lines: compound_y * -1, offset: clamped_pos.offset * -1 })
+			return if distance := distance_to_next_blank_line() {
+				return clamped_pos.sub(distance)
+			} else { none }
 		}
 	}
 	return none
