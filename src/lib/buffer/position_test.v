@@ -65,6 +65,54 @@ fn test_add_with_some_line_distance() {
 	}
 }
 
+fn test_sub_with_zero_line_distance() {
+	mut pos := Position{
+		line:   1
+		offset: 3
+	}
+	dist := Distance{
+		lines:  0
+		offset: 4
+	}
+
+	assert pos.sub(dist) == Position{
+		line:   1
+		offset: 0
+	}
+}
+
+fn test_sub_with_zero_line_distance_diff_offset() {
+	mut pos := Position{
+		line:   1
+		offset: 19
+	}
+	dist := Distance{
+		lines:  0
+		offset: 3
+	}
+
+	assert pos.sub(dist) == Position{
+		line:   1
+		offset: 16
+	}
+}
+
+fn test_sub_with_some_line_distance() {
+	mut pos := Position{
+		line:   12
+		offset: 4
+	}
+	dist := Distance{
+		lines:  1
+		offset: 3
+	}
+
+	assert pos.sub(dist) == Position{
+		line:   11
+		offset: 1
+	}
+}
+
 fn test_less_than_works_when_position_a_less_then_b() {
 	earlier_position := Position{
 		line:   2
