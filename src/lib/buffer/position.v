@@ -30,11 +30,13 @@ pub fn (p Position) add(d Distance) Position {
 	return Position.new(line: p.line + d.lines, offset: p.offset + d.offset)
 }
 
+pub fn (p Position) sub(d Distance) Position {
+	return Position.new(line: p.line - d.lines, offset: p.offset - d.offset)
 }
 
 pub fn (a Position) distance(b Position) Distance {
 	return Distance{
-		lines:  if a < b { b.line - a.line } else { a.line - b.line }
+		lines: if a < b { b.line - a.line } else { a.line - b.line }
 		offset: if a < b { b.offset - a.offset } else { a.offset - b.offset }
 	}
 }
