@@ -155,8 +155,12 @@ fn test_distance_between_a_lines_larger() {
 		offset: 3
 	}
 
-	assert position_a.distance(position_b) == Distance{ lines: 3 }
-	assert position_b.distance(position_a) == Distance{ lines: 3 }
+	assert position_a.distance(position_b) == Distance{
+		lines: 3
+	}
+	assert position_b.distance(position_a) == Distance{
+		lines: 3
+	}
 }
 
 fn test_distance_between_b_lines_larger() {
@@ -169,8 +173,12 @@ fn test_distance_between_b_lines_larger() {
 		offset: 9
 	}
 
-	assert position_a.distance(position_b) == Distance{ lines: 74, offset: 6 }
-	assert position_b.distance(position_a) == Distance{ lines: 74, offset: 6 }
+	assert position_a.distance(position_b) == Distance{
+		lines:  74
+		offset: 6
+	}
+	assert position_b.distance(position_a) == Distance{
+		lines:  74
+		offset: 6
+	}
 }
-
-

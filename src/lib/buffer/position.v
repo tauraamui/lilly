@@ -39,7 +39,7 @@ pub fn (p Position) add(d Distance) Position {
 
 pub fn (a Position) distance(b Position) Distance {
 	return Distance{
-		lines: if a < b { b.line - a.line } else { a.line - b.line }
+		lines:  if a < b { b.line - a.line } else { a.line - b.line }
 		offset: if a < b { b.offset - a.offset } else { a.offset - b.offset }
 	}
 }
