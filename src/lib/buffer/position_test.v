@@ -144,3 +144,41 @@ fn test_compare_works_when_lines_and_offsets_are_not_equal() {
 
 	assert position_a != position_b
 }
+
+fn test_distance_between_a_lines_larger() {
+	position_a := Position{
+		line:   11
+		offset: 3
+	}
+	position_b := Position{
+		line:   8
+		offset: 3
+	}
+
+	assert position_a.distance(position_b) == Distance{
+		lines: 3
+	}
+	assert position_b.distance(position_a) == Distance{
+		lines: 3
+	}
+}
+
+fn test_distance_between_b_lines_larger() {
+	position_a := Position{
+		line:   11
+		offset: 3
+	}
+	position_b := Position{
+		line:   85
+		offset: 9
+	}
+
+	assert position_a.distance(position_b) == Distance{
+		lines:  74
+		offset: 6
+	}
+	assert position_b.distance(position_a) == Distance{
+		lines:  74
+		offset: 6
+	}
+}
