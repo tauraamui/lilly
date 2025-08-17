@@ -2159,6 +2159,7 @@ fn test_jump_cursor_up_to_next_blank_line() {
 	fake_view.jump_cursor_up_to_next_blank_line()
 	assert '' == fake_view.buffer.lines[fake_view.cursor.pos.y]
 	fake_view.jump_cursor_up_to_next_blank_line()
+	assert fake_view.cursor.pos.y == 0
 	assert '# Top of the file' == fake_view.buffer.lines[fake_view.cursor.pos.y]
 }
 
