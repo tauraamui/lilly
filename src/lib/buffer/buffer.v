@@ -546,7 +546,10 @@ pub fn (buffer Buffer) up(pos Position, insert_mode bool) ?Position {
 
 fn (buffer Buffer) legacy_distance_to_next_blank_line_above(start_pos Position) ?Distance {
 	for i := start_pos.line; i >= 0; i-- {
-		if i == start_pos.line { continue } // skip counting from the first iteration
+		if i == start_pos.line {
+			continue
+		}
+		// skip counting from the first iteration
 		if buffer.lines[i].len == 0 || i == 0 {
 			return start_pos.distance(Position.new(line: i, offset: 0))
 		}
@@ -578,7 +581,9 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Position) ?Position {
 
 			return if distance := buffer.legacy_distance_to_next_blank_line_above(clamped_pos) {
 				return clamped_pos.sub(distance)
-			} else { none }
+			} else {
+				none
+			}
 		}
 	}
 	return none
