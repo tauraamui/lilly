@@ -557,6 +557,23 @@ fn (buffer Buffer) legacy_distance_to_next_blank_line_above(start_pos Position) 
 	return none
 }
 
+fn (buffer Buffer) legacy_distance_to_next_blank_line_below(start_pos Position) ?Distance {
+	mut compound_y := 0
+	for i := start_pos.line; i < buffer.lines.len; i++ {
+		if i == start_pos.line {
+			continue
+		}
+		if buffer.lines[i].len == 0 || i + 1 == buffer.lines.len {
+			return start_pos.distance(Position.new(line: i, offset: 0))
+		}
+	}
+
+	return Distance{
+		lines:  compound_y
+		offset: start_pos.offset * -1
+	}
+}
+
 pub fn (buffer Buffer) up_to_next_blank_line(pos Position) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
@@ -611,22 +628,11 @@ pub fn (buffer Buffer) down_to_next_blank_line(pos Position) ?Position {
 				return none
 			}
 
-			mut compound_y := 0
-			for i := clamped_pos.line; i < buffer.lines.len; i++ {
-				if i == clamped_pos.line {
-					continue
-				}
-				compound_y += 1
-				if buffer.lines[i].len == 0 {
-					break
-				}
+			return if distance := buffer.legacy_distance_to_next_blank_line_below(clamped_pos) {
+				return clamped_pos.add(distance)
+			} else {
+				none
 			}
-
-			if compound_y == 0 {
-				return none
-			}
-
-			return clamped_pos.add(Distance{ lines: compound_y, offset: clamped_pos.offset * -1 })
 		}
 	}
 }
