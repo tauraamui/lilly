@@ -568,10 +568,7 @@ fn (buffer Buffer) legacy_distance_to_next_blank_line_below(start_pos Position) 
 		}
 	}
 
-	return Distance{
-		lines:  compound_y
-		offset: start_pos.offset * -1
-	}
+	return none
 }
 
 pub fn (buffer Buffer) up_to_next_blank_line(pos Position) ?Position {
