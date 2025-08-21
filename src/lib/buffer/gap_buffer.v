@@ -214,6 +214,23 @@ pub fn (gap_buffer GapBuffer) find_end_of_line(pos Pos) ?int {
 	return gap_buffer.data[offset..].len
 }
 
+fn resolve_cursor_pos2(mut scanner Scanner, data []rune, offset int, gap_start int, gap_end int) ?Position {
+	mut gap_count := 0
+	for index, c in data[offset..] {
+		cc := (index + offset)
+		if cc > gap_start && cc < gap_end {
+			gap_count += 1
+			continue
+		}
+		scanner.consume(index - gap_count, c)
+		if scanner.done() {
+			return scanner.result2()
+		}
+	}
+
+	return none
+}
+
 fn resolve_cursor_pos(mut scanner Scanner, data []rune, offset int, gap_start int, gap_end int) ?Pos {
 	mut gap_count := 0
 	for index, c in data[offset..] {
@@ -240,15 +257,11 @@ pub fn (gap_buffer GapBuffer) find_next_word_start_new(pos Position) ?Position {
 
 	mut scanner := WordStartScanner{
 		start_pos: position_to_pos(pos)
+		start_position: pos
 	}
 
-	return if resolved_pos := resolve_cursor_pos(mut scanner, gap_buffer.data, offset,
+	return resolve_cursor_pos2(mut scanner, gap_buffer.data, offset,
 		gap_buffer.gap_start, gap_buffer.gap_end)
-	{
-		pos_to_position(resolved_pos)
-	} else {
-		none
-	}
 }
 
 pub fn (gap_buffer GapBuffer) find_next_word_start_old(pos Pos) ?Pos {
@@ -630,11 +643,13 @@ mut:
 	consume(index int, c rune)
 	done() bool
 	result() Pos
+	result2() Position
 }
 
 struct WordStartScanner {
 mut:
 	start_pos         Pos
+	start_position    Position
 	compound_x        int
 	compound_y        int
 	previous          rune
@@ -674,6 +689,10 @@ fn (s WordStartScanner) done() bool {
 	return s.done
 }
 
+fn (mut s WordStartScanner) result2() Position {
+	return s.start_position.add(Distance{ lines: s.compound_y, offset: s.compound_x })
+}
+
 fn (mut s WordStartScanner) result() Pos {
 	return Pos{
 		x: s.start_pos.x + s.compound_x
@@ -684,6 +703,7 @@ fn (mut s WordStartScanner) result() Pos {
 struct WordEndScanner {
 mut:
 	start_pos  Pos
+	start_position Position
 	compound_x int
 	compound_y int
 	previous   rune
@@ -719,6 +739,10 @@ fn (mut s WordEndScanner) consume(index int, c rune) {
 
 fn (mut s WordEndScanner) done() bool {
 	return s.done
+}
+
+fn (mut s WordEndScanner) result2() Position {
+	return s.start_position.add(Distance{ lines: s.compound_y, offset: s.compound_x })
 }
 
 fn (mut s WordEndScanner) result() Pos {
