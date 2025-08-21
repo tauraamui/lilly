@@ -679,7 +679,7 @@ fn (mut s WordStartScanner) consume(index int, c rune) {
 		if c == lf {
 			s.compound_x = 0
 			s.start_pos.x = 0
-			s.start_position = s.start_position.sub(Distance{ offset: s.start_position.offset })
+			s.start_position = Position.new(line: s.start_position.line, offset: 0)
 			if s.previous == lf {
 				s.done = true
 				return
