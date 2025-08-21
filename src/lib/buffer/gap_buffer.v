@@ -249,7 +249,11 @@ fn resolve_cursor_pos(mut scanner Scanner, data []rune, offset int, gap_start in
 }
 
 pub fn (gap_buffer GapBuffer) find_next_word_start(pos Pos) ?Pos {
-	return gap_buffer.find_next_word_start_old(pos)
+	return if unwrapped_pos := gap_buffer.find_next_word_start_new(pos_to_position(pos)) {
+		position_to_pos(unwrapped_pos)
+	} else {
+		none
+	}
 }
 
 pub fn (gap_buffer GapBuffer) find_next_word_start_new(pos Position) ?Position {
@@ -675,6 +679,7 @@ fn (mut s WordStartScanner) consume(index int, c rune) {
 		if c == lf {
 			s.compound_x = 0
 			s.start_pos.x = 0
+			s.start_position = s.start_position.sub(Distance{ offset: s.start_position.offset })
 			if s.previous == lf {
 				s.done = true
 				return
