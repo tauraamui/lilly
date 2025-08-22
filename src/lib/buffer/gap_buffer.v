@@ -294,6 +294,9 @@ pub fn (gap_buffer GapBuffer) find_next_word_end(pos Pos) ?Pos {
 		gap_buffer.gap_end)
 }
 
+pub fn (gap_buffer GapBuffer) find_prev_word_start2(pos Position) ?Position {
+}
+
 pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(Position.new(line: cursor_loc.y, offset: cursor_loc.x)) or {
