@@ -272,6 +272,17 @@ fn test_find_start_of_previous_word_with_starting_offset() {
 	}
 }
 
+fn test_down_to_next_blank_line() {
+	mut gb := GapBuffer.new('This is a doc\n1. first line\n\n2. second line\n3. third line\n5. fifth line')
+
+	assert gb.down_to_next_blank_line(Pos{ y: 0, x: 0 })! == Pos{
+		y: 2
+		x: 0
+	}
+
+	assert gb.str() == 'This is a doc\n1. first line\n\n2. second line\n3. third line\n5. fifth line'
+}
+
 fn test_line_iterator() {
 	mut gb := GapBuffer.new('1. This is the first line.\n2. This is the second line.\n3. This is the third line.')
 
