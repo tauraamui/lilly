@@ -595,12 +595,8 @@ pub fn (gap_buffer GapBuffer) down_to_next_blank_line2(pos Position) ?Position {
 	mut compound_y := 0
 	for i in offset .. data.len - 1 {
 		if data[i] == lf {
+			if i > 0 && data[i - 1] == lf { break }
 			compound_y += 1
-			if i + 1 <= data.len - 1 {
-				if data[i + 1] == lf {
-					break
-				}
-			}
 		}
 	}
 
