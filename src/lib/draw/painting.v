@@ -14,14 +14,36 @@
 
 module draw
 
+@[params]
+pub struct PaintShapeTextArgs {
+pub:
+	x        int
+	y        int
+	fg_color Color
+	text     string
+}
+
 pub fn paint_shape_text(mut ctx Contextable, x int, y int, color Color, text string) {
 	ctx.set_color(r: color.r, g: color.g, b: color.b)
 	ctx.reset_bg_color()
 	ctx.draw_text(x, y, text)
 }
 
-pub fn paint_text_on_background(mut ctx Contextable, x int, y int, bg_color Color, fg_color Color, text string) {
+@[params]
+pub struct PaintTextOnBackgroundArgs {
+pub:
+	x int
+	y int
+	bg_color Color
+	fg_color Color
+	text     string
+}
+
+pub fn paint_text_on_background(mut ctx Contextable, args PaintTextOnBackgroundArgs) {
+// pub fn paint_text_on_background(mut ctx Contextable, x int, y int, bg_color Color, fg_color Color, text string) {
+	bg_color := args.bg_color
+	fg_color := args.fg_color
 	ctx.set_bg_color(r: bg_color.r, g: bg_color.g, b: bg_color.b)
 	ctx.set_color(r: fg_color.r, g: fg_color.g, b: fg_color.b)
-	ctx.draw_text(x, y, text)
+	ctx.draw_text(args.x, args.y, args.text)
 }
