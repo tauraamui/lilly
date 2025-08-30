@@ -58,16 +58,36 @@ fn test_read_range_of_each_full_line_from_document_with_content() {
 	assert gb.read(Range.new(start_pos, end_pos))? == '3. Third line :3'
 }
 
-fn test_up_to_next_blank_line_in_document_with_no_blank_line_given_cursor_at_top() {
+/*
+fn test_up_to_next_blank_line_in_document_with_no_blank_line_given_cursor_at_top2() {
 	mut gb := GapBuffer.new('1. First line\n2. Second line!\n3. Third line :3')
+	new_pos := gb.up_to_next_blank_line2(Pos{ x: 0, y: 0 })
+	assert new_pos == none
+}
+
+fn test_up_to_next_blank_line_in_document_with_blank_line_below_the_cursor_at_top2() {
+	mut gb := GapBuffer.new('1. First line\n\n2. Second line!\n3. Third line :3')
 	new_pos := gb.up_to_next_blank_line(Pos{ x: 0, y: 0 })
 	assert new_pos == none
 }
 
+fn test_up_to_next_blank_line_in_document_with_blank_line_above_the_cursor_in_middle2() {
+	mut gb := GapBuffer.new('1. First line\n\n2. Second line!\n3. Third line :3')
+	assert gb.up_to_next_blank_line(Pos{ x: 0, y: 3 })? == Pos{
+		x: 0
+		y: 1
+	}
+}
+*/
+
+fn test_up_to_next_blank_line_in_document_with_no_blank_line_given_cursor_at_top() {
+	mut gb := GapBuffer.new('1. First line\n2. Second line!\n3. Third line :3')
+	assert gb.up_to_next_blank_line(Pos{ x: 0, y: 0 }) == none
+}
+
 fn test_up_to_next_blank_line_in_document_with_blank_line_below_the_cursor_at_top() {
 	mut gb := GapBuffer.new('1. First line\n\n2. Second line!\n3. Third line :3')
-	new_pos := gb.up_to_next_blank_line(Pos{ x: 0, y: 0 })
-	assert new_pos == none
+	assert gb.up_to_next_blank_line(Pos{ x: 0, y: 0 }) == none
 }
 
 fn test_up_to_next_blank_line_in_document_with_blank_line_above_the_cursor_in_middle() {

@@ -531,6 +531,28 @@ pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 	return cursor_loc
 }
 
+pub fn (gap_buffer GapBuffer) up_to_next_blank_line2(pos Position) ?Position {
+	mut offset := gap_buffer.find_offset(pos) or { return none }
+	offset -= gap_buffer.empty_gap_space_size()
+
+	// NOTE(tauraamui) [10/01/25]:
+	// this copying of the two sides of the buffer might be worth
+	// it for this kind of long distance movement of the cursor
+	// but I would still much prefer iteration that can ignore the
+	// gap without making the maths all wacky for tracking how far
+	// we've actually elapsed in the data as opposed to how much
+	// was the gap size. Should probably benchmark and alloc profile
+	// the two different options.
+	data_pre_gap := gap_buffer.data[..gap_buffer.gap_start]
+	data_post_gap := gap_buffer.data[gap_buffer.gap_end..]
+	data := arrays.merge(data_pre_gap, data_post_gap)
+
+	// TODO(tauraamui) [31/08/2025]: populate this method with the equivilant but using the new position type
+	//                               and associated mechanisms compared to the existing pos type
+
+	return none
+}
+
 // up_to_next_blank_line returns cursor position at start of next blank line above current cursor.
 // If no blank line is found above the given cursor position `none` is returned instead.
 pub fn (gap_buffer GapBuffer) up_to_next_blank_line(pos Pos) ?Pos {
