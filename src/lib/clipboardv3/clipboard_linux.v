@@ -17,13 +17,54 @@ module clipboardv3
 import os
 import time
 
+const xdg_session_type_env_name = 'XDG_SESSION_TYPE'
+const xclip_path = '/usr/bin/xclip'
+const xclip_paste_args = ['-selection', 'clipboard', '-out']
+const xclip_copy_args = ['-selection', 'clipboard', '-in']
+const wayland_copy_path = '/usr/bin/wl-copy'
+const wayland_paste_path = '/usr/bin/wl-paste'
+const wayland_copy_args = ['--type', 'text/plain']
+const wayland_paste_args = ['--type', 'text/plain']
+
+type Getenv = fn (key string) string
+
+struct Proc {
+    copy_proc_path  string
+    paste_proc_path string
+    paste_args      []string
+    copy_args       []string
+}
+
+fn resolve_copy_proc(os_getenv Getenv) Proc {
+    if is_x11(os_getenv) {
+        return Proc{
+            copy_proc_path: xclip_path
+            paste_proc_path: xclip_path // on x11 we use the same util for copy and paste
+            paste_args: xclip_paste_args
+            copy_args: xclip_copy_args
+        }
+    }
+    return Proc{
+        copy_proc_path: wayland_copy_path
+        paste_proc_path: wayland_paste_path
+        paste_args: wayland_paste_args
+        copy_args: wayland_copy_args
+    }
+}
+
+fn is_x11(os_getenv Getenv) bool {
+    return os_getenv(xdg_session_type_env_name) == "x11"
+}
+
 struct LinuxClipboard {
 mut:
+    copy_proc Proc
 	last_type ContentType
 }
 
 fn new_linux_clipboard() Clipboard {
 	return LinuxClipboard{
+	    copy_proc: resolve_copy_proc(os.getenv)
 		last_type: .block
 	}
 }
