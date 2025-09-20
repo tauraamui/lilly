@@ -35,7 +35,7 @@ struct Proc {
     copy_args       []string
 }
 
-fn resolve_copy_proc(os_getenv Getenv) Proc {
+fn resolve_clipboard_proc(os_getenv Getenv) Proc {
     if is_x11(os_getenv) {
         return Proc{
             copy_proc_path: xclip_path
@@ -58,13 +58,13 @@ fn is_x11(os_getenv Getenv) bool {
 
 struct LinuxClipboard {
 mut:
-    copy_proc Proc
+    proc Proc
 	last_type ContentType
 }
 
 fn new_linux_clipboard() Clipboard {
 	return LinuxClipboard{
-	    copy_proc: resolve_copy_proc(os.getenv)
+	    proc: resolve_clipboard_proc(os.getenv)
 		last_type: .block
 	}
 }
@@ -73,8 +73,10 @@ fn (c LinuxClipboard) get_content() ?ClipboardContent {
 	mut out := []string{}
 	mut er := []string{}
 
-	mut p := os.new_process('/usr/bin/xclip')
-	p.set_args(['-selection', 'clipboard', '-out'])
+	// mut p := os.new_process('/usr/bin/xclip')
+	// p.set_args(['-selection', 'clipboard', '-out'])
+	mut p := os.new_process(c.proc.paste_proc_path)
+	p.set_args(c.proc.paste_args)
 	p.set_redirect_stdio()
 	p.run()
 
@@ -100,8 +102,10 @@ fn (c LinuxClipboard) get_content() ?ClipboardContent {
 }
 
 fn (mut c LinuxClipboard) set_content(content ClipboardContent) {
-	mut p := os.new_process('/usr/bin/xclip')
-	p.set_args(['-selection', 'clipboard', '-in'])
+	// mut p := os.new_process('/usr/bin/xclip')
+	// p.set_args(['-selection', 'clipboard', '-in'])
+	mut p := os.new_process(c.proc.copy_proc_path)
+	p.set_args(c.proc.copy_args)
 	p.set_redirect_stdio()
 	p.run()
 
