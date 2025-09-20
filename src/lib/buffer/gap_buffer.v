@@ -334,6 +334,9 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 	return cursor_loc
 }
 
+pub fn (gap_buffer GapBuffer) left_new_pos(pos Position) ?Position {
+}
+
 // TODO(tauraamui) [20/01/25]: Need to adjust movement behaviour based on mode,
 //                             so basically when we're in insert mode do the thing.
 pub fn (gap_buffer GapBuffer) left(pos Pos) ?Pos {
