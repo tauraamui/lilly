@@ -30,6 +30,18 @@ fn test_clipboard_native_implementation_sets_type_to_block() ! {
 	} == ClipboardContent{ data: "This is copied text!", type: .block }
 }
 
+@[if linux ?]
+fn test_linux_clipboard_chooses_proc_to_invoke_depending_on_window_server() {
+	mock_get_env_x11 := fn (key string) string {
+		return 'x11'
+	}
+	mock_get_env_wayland := fn (key string) string {
+		return 'wayland'
+	}
+	assert is_x11(mock_get_env_x11)
+	assert is_x11(mock_get_env_wayland) == false
+}
+
 @[if darwin ?]
 fn test_clipboard_native_implementation_returns_no_content_type_from_plaintext_data() {
 	$if darwin {
