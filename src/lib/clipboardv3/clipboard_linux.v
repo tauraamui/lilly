@@ -73,8 +73,6 @@ fn (c LinuxClipboard) get_content() ?ClipboardContent {
 	mut out := []string{}
 	mut er := []string{}
 
-	// mut p := os.new_process('/usr/bin/xclip')
-	// p.set_args(['-selection', 'clipboard', '-out'])
 	mut p := os.new_process(c.proc.paste_proc_path)
 	p.set_args(c.proc.paste_args)
 	p.set_redirect_stdio()
@@ -102,8 +100,6 @@ fn (c LinuxClipboard) get_content() ?ClipboardContent {
 }
 
 fn (mut c LinuxClipboard) set_content(content ClipboardContent) {
-	// mut p := os.new_process('/usr/bin/xclip')
-	// p.set_args(['-selection', 'clipboard', '-in'])
 	mut p := os.new_process(c.proc.copy_proc_path)
 	p.set_args(c.proc.copy_args)
 	p.set_redirect_stdio()
