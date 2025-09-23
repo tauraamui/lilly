@@ -513,6 +513,8 @@ pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 	return cursor_loc
 }
 
+// up_to_next_blank_line returns cursor position at start of next blank line above current cursor.
+// If no blank line is found above the given cursor position `none` is returned instead.
 pub fn (gap_buffer GapBuffer) up_to_next_blank_line2(pos Position) ?Position {
 	mut offset := gap_buffer.find_offset(pos) or { return none }
 	offset -= gap_buffer.empty_gap_space_size()
