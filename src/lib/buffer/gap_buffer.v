@@ -531,6 +531,22 @@ pub fn (gap_buffer GapBuffer) up_to_next_blank_line2(pos Position) ?Position {
 
 	// TODO(tauraamui) [31/08/2025]: populate this method with the equivilant but using the new position type
 	//                               and associated mechanisms compared to the existing pos type
+    mut newline_count := 0
+    mut last_rune_was_newline := false
+    for i := offset; i >= 0; i-- {
+        c := data[i]
+		// we may have started on an existing blank line,
+		// so the first newline encountered should be ignored
+        if i != offset && c == lf {
+            if last_rune_was_newline {
+                return pos.sub(Distance{ lines: newline_count })
+            }
+            newline_count += 1
+            last_rune_was_newline = true
+            continue
+        }
+        last_rune_was_newline = false
+    }
 
 	return none
 }
