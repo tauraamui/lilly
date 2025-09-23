@@ -334,7 +334,8 @@ pub fn (gap_buffer GapBuffer) find_prev_word_start(pos Pos) ?Pos {
 	return cursor_loc
 }
 
-pub fn (gap_buffer GapBuffer) left_new_pos(pos Position) ?Position {
+pub fn (gap_buffer GapBuffer) left2(pos Position) ?Position {
+    return none
 }
 
 // TODO(tauraamui) [20/01/25]: Need to adjust movement behaviour based on mode,
@@ -598,8 +599,12 @@ pub fn (gap_buffer GapBuffer) down_to_next_blank_line2(pos Position) ?Position {
 	mut compound_y := 0
 	for i in offset .. data.len - 1 {
 		if data[i] == lf {
-			if i > 0 && data[i - 1] == lf { break }
 			compound_y += 1
+			if i + 1 <= data.len - 1 {
+				if data[i + 1] == lf {
+					break
+				}
+			}
 		}
 	}
 

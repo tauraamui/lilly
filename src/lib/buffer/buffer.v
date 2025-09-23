@@ -598,11 +598,7 @@ pub fn (buffer Buffer) up_to_next_blank_line(pos Position) ?Position {
 pub fn (buffer Buffer) down_to_next_blank_line(pos Position) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
-			return if p := buffer.c_buffer.down_to_next_blank_line(position_to_pos(pos)) {
-				pos_to_position(p)
-			} else {
-				none
-			}
+			return buffer.c_buffer.down_to_next_blank_line2(pos)
 		}
 		.line_buffer {
 			return buffer.l_buffer.down_to_next_blank_line(pos)
