@@ -157,7 +157,7 @@ pub fn Theme.new(name string) !Theme {
 		}
 		"space" {
 			Theme{
-				pallete: petal_pallete,
+				pallete: black_astra_pallete,
 				cursor_line_color: tui.Color{ 53, 53, 53 },
 				selection_highlight_color: tui.Color{ 96, 138, 143 },
 				line_number_color: petal_pallete[.number]
