@@ -231,23 +231,6 @@ fn resolve_cursor_pos2(mut scanner Scanner, data []rune, offset int, gap_start i
 	return none
 }
 
-fn resolve_cursor_pos(mut scanner Scanner, data []rune, offset int, gap_start int, gap_end int) ?Pos {
-	mut gap_count := 0
-	for index, c in data[offset..] {
-		cc := (index + offset)
-		if cc > gap_start && cc < gap_end {
-			gap_count += 1
-			continue
-		}
-		scanner.consume(index - gap_count, c)
-		if scanner.done() {
-			return scanner.result()
-		}
-	}
-
-	return none
-}
-
 pub fn (gap_buffer GapBuffer) find_next_word_start(pos Position) ?Position {
 	mut offset := gap_buffer.find_offset(pos) or { return none }
 
@@ -661,7 +644,6 @@ interface Scanner {
 mut:
 	consume(index int, c rune)
 	done() bool
-	result() Pos
 	result2() Position
 }
 
