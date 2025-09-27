@@ -444,6 +444,17 @@ pub fn (gap_buffer GapBuffer) down(pos Pos) ?Pos {
 	return cursor_loc
 }
 
+pub fn (gap_buffer GapBuffer) up2(pos Position) ?Position {
+    mut cursor_loc := pos
+	mut offset := gap_buffer.find_offset(cursor_loc) or { return none }
+
+    if offset > gap_buffer.gap_end {
+		offset -= gap_buffer.gap_end - gap_buffer.gap_start
+    }
+
+    return none
+}
+
 pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 	mut cursor_loc := pos
 	mut offset := gap_buffer.find_offset(Position.new(line: cursor_loc.y, offset: cursor_loc.x)) or {
