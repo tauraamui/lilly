@@ -70,24 +70,10 @@ fn test_up_to_next_blank_line2_in_document_with_blank_line_below_the_cursor_at_t
 
 fn test_up_to_next_blank_line2_in_document_with_blank_line_above_the_cursor_in_middle() {
 	mut gb := GapBuffer.new('1. First line\n\n2. Second line!\n3. Third line :3')
-	/*
-	assert gb.up_to_next_blank_line(Pos{ x: 0, y: 3 })? == Pos{
-		x: 0
-		y: 1
-	}
-	*/
 	assert gb.up_to_next_blank_line2(Position.new(line: 3, offset: 0))? == Position.new(line: 1, offset: 0)
 }
 
 /*
-fn test_up_to_next_blank_line2_in_document_with_blank_line_above_the_cursor_in_middle() {
-	mut gb := GapBuffer.new('1. First line\n\n2. Second line!\n3. Third line :3')
-	assert gb.up_to_next_blank_line(Pos{ x: 0, y: 3 })? == Pos{
-		x: 0
-		y: 1
-	}
-}
-*/
 
 fn test_up_to_next_blank_line_in_document_with_no_blank_line_given_cursor_at_top() {
 	mut gb := GapBuffer.new('1. First line\n2. Second line!\n3. Third line :3')
@@ -106,6 +92,7 @@ fn test_up_to_next_blank_line_in_document_with_blank_line_above_the_cursor_in_mi
 		y: 1
 	}
 }
+*/
 
 fn test_inserting_into_gap_buffer() {
 	mut gb := GapBuffer.new('12345')

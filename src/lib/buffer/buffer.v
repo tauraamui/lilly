@@ -566,11 +566,14 @@ fn (buffer Buffer) legacy_distance_to_next_blank_line_below(start_pos Position) 
 pub fn (buffer Buffer) up_to_next_blank_line(pos Position) ?Position {
 	match buffer.buffer_kind {
 		.gap_buffer {
+		    return buffer.c_buffer.up_to_next_blank_line2(pos)
+		    /*
 			return if p := buffer.c_buffer.up_to_next_blank_line(position_to_pos(pos)) {
 				pos_to_position(p)
 			} else {
 				none
 			}
+			*/
 		}
 		.line_buffer {
 			return buffer.l_buffer.up_to_next_blank_line(pos)
