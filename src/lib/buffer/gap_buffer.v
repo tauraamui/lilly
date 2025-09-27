@@ -214,7 +214,7 @@ pub fn (gap_buffer GapBuffer) find_end_of_line(pos Pos) ?int {
 	return gap_buffer.data[offset..].len
 }
 
-fn resolve_cursor_pos2(mut scanner Scanner, data []rune, offset int, gap_start int, gap_end int) ?Position {
+fn resolve_cursor_pos(mut scanner Scanner, data []rune, offset int, gap_start int, gap_end int) ?Position {
 	mut gap_count := 0
 	for index, c in data[offset..] {
 		cc := (index + offset)
@@ -239,7 +239,7 @@ pub fn (gap_buffer GapBuffer) find_next_word_start(pos Position) ?Position {
 		start_position: pos
 	}
 
-	return resolve_cursor_pos2(mut scanner, gap_buffer.data, offset,
+	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset,
 		gap_buffer.gap_start, gap_buffer.gap_end)
 }
 
@@ -251,7 +251,7 @@ pub fn (gap_buffer GapBuffer) find_next_word_end(pos Position) ?Position {
 		start_position: pos
 	}
 
-	return resolve_cursor_pos2(mut scanner, gap_buffer.data, offset,
+	return resolve_cursor_pos(mut scanner, gap_buffer.data, offset,
 		gap_buffer.gap_start, gap_buffer.gap_end)
 }
 
