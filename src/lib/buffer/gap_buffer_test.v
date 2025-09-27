@@ -75,7 +75,9 @@ fn test_up_to_next_blank_line_in_document_with_blank_line_above_the_cursor_in_mi
 
 fn test_up_moves_cursor_up_to_next_line() {
 	mut gb := GapBuffer.new('1. First line\n2. Second line!\n3. Third line :3')
-	assert gb.up(Pos{ y: 1, x: 8 })? == Pos{ y: 0, x: 8 }
+	assert gb.up(Pos{ y: 0, x: 8 })? == Pos{ y: 0, x: 8 }
+	assert gb.up(Pos{ y: 1, x: 10 })? == Pos{ y: 0, x: 10 }
+	assert gb.up(Pos{ y: 2, x: 16 })? == Pos{ y: 1, x: 14 }
 }
 
 fn test_inserting_into_gap_buffer() {
