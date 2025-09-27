@@ -73,6 +73,11 @@ fn test_up_to_next_blank_line_in_document_with_blank_line_above_the_cursor_in_mi
 	assert gb.up_to_next_blank_line(Position.new(line: 3, offset: 0))? == Position.new(line: 1, offset: 0)
 }
 
+fn test_up_moves_cursor_up_to_next_line() {
+	mut gb := GapBuffer.new('1. First line\n2. Second line!\n3. Third line :3')
+	assert gb.up(Pos{ y: 1, x: 8 })? == Pos{ y: 0, x: 8 }
+}
+
 fn test_inserting_into_gap_buffer() {
 	mut gb := GapBuffer.new('12345')
 
