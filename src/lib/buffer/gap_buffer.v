@@ -522,7 +522,7 @@ pub fn (gap_buffer GapBuffer) up_to_next_blank_line2(pos Position) ?Position {
 		// so the first newline encountered should be ignored
         if i != offset && c == lf {
             if last_rune_was_newline {
-                return pos.sub(Distance{ lines: newline_count })
+                return pos.sub(Distance{ lines: newline_count, offset: pos.offset })
             }
             newline_count += 1
             last_rune_was_newline = true
@@ -654,7 +654,6 @@ mut:
 	set_previous      bool
 	set_x_to_line_end bool
 	done              bool
-	res               ?Pos
 }
 
 fn (mut s WordStartScanner) consume(index int, c rune) {
