@@ -224,7 +224,7 @@ fn resolve_cursor_pos(mut scanner Scanner, data []rune, offset int, gap_start in
 		}
 		scanner.consume(index - gap_count, c)
 		if scanner.done() {
-			return scanner.result2()
+			return scanner.result()
 		}
 	}
 
@@ -644,7 +644,7 @@ interface Scanner {
 mut:
 	consume(index int, c rune)
 	done() bool
-	result2() Position
+	result() Position
 }
 
 struct WordStartScanner {
@@ -691,15 +691,8 @@ fn (s WordStartScanner) done() bool {
 	return s.done
 }
 
-fn (mut s WordStartScanner) result2() Position {
+fn (mut s WordStartScanner) result() Position {
 	return s.start_position.add(Distance{ lines: s.compound_y, offset: s.compound_x })
-}
-
-fn (mut s WordStartScanner) result() Pos {
-	return Pos{
-		x: s.start_pos.x + s.compound_x
-		y: s.start_pos.y + s.compound_y
-	}
 }
 
 struct WordEndScanner {
@@ -744,15 +737,8 @@ fn (mut s WordEndScanner) done() bool {
 	return s.done
 }
 
-fn (mut s WordEndScanner) result2() Position {
+fn (mut s WordEndScanner) result() Position {
 	return s.start_position.add(Distance{ lines: s.compound_y, offset: s.compound_x })
-}
-
-fn (mut s WordEndScanner) result() Pos {
-	return Pos{
-		x: s.start_pos.x + s.compound_x
-		y: s.start_pos.y + s.compound_y
-	}
 }
 
 // FIXME(tauraamui): I think this function doesn't need to include the gap as part of the offset'
