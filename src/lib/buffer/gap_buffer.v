@@ -487,6 +487,10 @@ pub fn (gap_buffer GapBuffer) up(pos Pos) ?Pos {
 		}
 	}
 
+    if cursor_loc.y < 0 {
+        cursor_loc.y = 0
+    }
+
 	if cursor_loc.x < 0 {
 		cursor_loc.x = 0
 	}
