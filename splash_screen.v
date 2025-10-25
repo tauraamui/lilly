@@ -64,6 +64,7 @@ fn render_logo(mut ctx tea.Context, logo SplashLogo) {
 	offset_x := 0
 	mut offset_y := 0 + f64(ctx.window_height()) * 0.1
 	assert offset_y >= 1
+	ctx.push_offset(tea.Offset{ y: int(math.floor(offset_y)) })
 	ctx.set_color(r: 245, g: 191, b: 243)
 	for i, l in logo.data {
 		start_x := offset_x + (ctx.window_width() / 2) - (l.runes().len / 2)
@@ -79,12 +80,11 @@ fn render_logo(mut ctx tea.Context, logo SplashLogo) {
 					to_draw = ' '
 					ctx.set_color(r: 245, g: 191, b: 243)
 				}
-				ctx.draw_text(start_x + j, int(math.floor(offset_y)) + i, to_draw)
+				ctx.draw_text(start_x + j, i, to_draw)
 			}
 			continue
 		}
-		ctx.draw_text(offset_x + (ctx.window_width() / 2) - (l.runes().len / 2),
-			int(math.floor(offset_y)) + i, l)
+		ctx.draw_text(offset_x + (ctx.window_width() / 2) - (l.runes().len / 2), i, l)
 	}
 	ctx.reset_color()
 }
