@@ -44,7 +44,20 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 }
 
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
+    defer { ctx.clear_offset() }
+    // NOTE(tauraamui) [25/10/2025]: all following contents to be padded from top of window
+	base_offset_y := f64(ctx.window_height()) * 0.1
+    ctx.push_offset(tea.Offset{ y: int(math.floor(base_offset_y)) })
     render_logo(mut ctx, m.logo)
+    render_version(mut ctx)
+    render_keybinds_list(mut ctx)
+}
+
+fn render_keybinds_list(mut ctx tea.Context) {
+}
+
+fn render_version(mut ctx tea.Context) {
+    ctx.draw_text(0, 0, "lilly (project petal)")
 }
 
 fn render_logo(mut ctx tea.Context, logo SplashLogo) {
