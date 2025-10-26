@@ -68,29 +68,37 @@ fn render_logo(mut ctx tea.Context, logo SplashLogo) tea.Offset {
 	base_offset_y := f64(ctx.window_height()) * 0.1
     ctx.push_offset(tea.Offset{ y: int(math.floor(base_offset_y)) })
 
+	// NOTE(tauraamui) [25/10/25]: basically each logo line by default renders as the full string per
+	//                             line at once with the light pink color set, but some lines of the logo
+	//                             contain both green and pink, so they need to be rendered per character
+	//                             with the correct palette option/fg set
 	ctx.set_color(r: 245, g: 191, b: 243)
 	for i, l in logo.data {
 		start_x := (ctx.window_width() / 2) - (l.runes().len / 2)
 		assert start_x > 2
 		if has_colouring_directives(l) {
-			for j, c in l.runes() {
-				mut to_draw := '${c}'
-				if to_draw == 'g' {
-					to_draw = ' '
-					ctx.set_color(r: 97, g: 242, b: 136)
-				}
-				if to_draw == 'p' {
-					to_draw = ' '
-					ctx.set_color(r: 245, g: 191, b: 243)
-				}
-				ctx.draw_text(start_x + j, i, to_draw)
-			}
-			continue
+		    render_logo_line_char_by_char(mut ctx, l, start_x, i)
+		    continue
 		}
 		ctx.draw_text((ctx.window_width() / 2) - (l.runes().len / 2), i, l)
 	}
 	ctx.reset_color()
 	return ctx.compact_offsets()
+}
+
+fn render_logo_line_char_by_char(mut ctx tea.Context, line string, x int, y int) {
+    for j, c in line.runes() {
+        mut to_draw := '${c}'
+        if to_draw == 'g' {
+            to_draw = ' '
+            ctx.set_color(r: 97, g: 242, b: 136)
+        }
+        if to_draw == 'p' {
+            to_draw = ' '
+            ctx.set_color(r: 245, g: 191, b: 243)
+        }
+        ctx.draw_text(x + j, y, to_draw)
+    }
 }
 
 fn has_colouring_directives(line string) bool {
