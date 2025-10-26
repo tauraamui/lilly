@@ -77,10 +77,12 @@ fn render_logo(mut ctx tea.Context, logo SplashLogo) tea.Offset {
 		start_x := (ctx.window_width() / 2) - (l.runes().len / 2)
 		assert start_x > 2
 		if has_colouring_directives(l) {
+		    ctx.push_offset(tea.Offset{ x: start_x, y: i })
 		    render_logo_line_char_by_char(mut ctx, l, start_x, i)
-		    continue
+		    ctx.pop_offset()
+		} else {
+		    ctx.draw_text(start_x, i, l)
 		}
-		ctx.draw_text((ctx.window_width() / 2) - (l.runes().len / 2), i, l)
 	}
 	ctx.reset_color()
 	return ctx.compact_offsets()
@@ -97,7 +99,7 @@ fn render_logo_line_char_by_char(mut ctx tea.Context, line string, x int, y int)
             to_draw = ' '
             ctx.set_color(r: 245, g: 191, b: 243)
         }
-        ctx.draw_text(x + j, y, to_draw)
+        ctx.draw_text(j, 0, to_draw)
     }
 }
 
