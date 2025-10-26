@@ -44,7 +44,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 }
 
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
-    defer { ctx.clear_offset() }
+    defer { ctx.clear_offsets() }
     // NOTE(tauraamui) [25/10/2025]: all following contents to be padded from top of window
     offset := render_logo(mut ctx, m.logo)
     render_version(mut ctx, offset)
@@ -55,13 +55,13 @@ fn render_keybinds_list(mut ctx tea.Context) {
 }
 
 fn render_version(mut ctx tea.Context, offset tea.Offset) {
-    defer { ctx.clear_offset() }
+    defer { ctx.clear_offsets() }
     ctx.push_offset(offset)
     ctx.draw_text(0, 0, "lilly (project petal)")
 }
 
 fn render_logo(mut ctx tea.Context, logo SplashLogo) tea.Offset {
-    defer { ctx.clear_offset() }
+    defer { ctx.clear_offsets() }
     // NOTE(tauraamui) [25/10/25]: this can be reduced to a style container which basically
     //                  makes the y offset be down by 10% of the parent. in this
     //                  case the parent is just the window itself, but could be anything
