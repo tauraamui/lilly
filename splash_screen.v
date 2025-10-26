@@ -61,7 +61,8 @@ fn render_keybinds_list(mut ctx tea.Context) {
 fn render_version(mut ctx tea.Context, offset tea.Offset) {
     defer { ctx.clear_offsets() }
     ctx.push_offset(offset)
-    ctx.draw_text(0, 0, "lilly (project petal)")
+    version_label := "lilly (project petal)"
+    ctx.draw_text((ctx.window_width() / 2) - (version_label.len / 2), 1, version_label)
 }
 
 fn render_logo(mut ctx tea.Context, logo SplashLogo) tea.Offset {
@@ -69,17 +70,20 @@ fn render_logo(mut ctx tea.Context, logo SplashLogo) tea.Offset {
     //                  makes the y offset be down by 10% of the parent. in this
     //                  case the parent is just the window itself, but could be anything
 
-	// NOTE(tauraamui) [25/10/25]: basically each logo line by default renders as the full string per
+	// NOTE(tauraamui) [26/10/25]: basically each logo line by default renders as the full string per
 	//                             line at once with the light pink color set, but some lines of the logo
 	//                             contain both green and pink, so they need to be rendered per character
 	//                             with the correct palette option/fg set
 	ctx.set_color(r: 245, g: 191, b: 243)
 	for _, l in logo.data {
-		// TODO(tauraamui): add the x offset once at start, then add another - offset which is cleared per loop
 		start_x := (ctx.window_width() / 2) - (l.runes().len / 2)
 		assert start_x > 2
+		// NOTE(tauraamui) [26/10/25] by splitting these offset pushes into two separate calls
+		//                            we're only continuously removing the offset for the X position
+		//                            each loop iter, so by the end `compact_offsets` is a combination of
+		//                            the full height of the logo once its been completely rendered
 		ctx.push_offset(tea.Offset{ y: 1 })
-	    ctx.push_offset(tea.Offset{ x: start_x })
+	    ctx.push_offset(tea.Offset{ x: (ctx.window_width() / 2) - (l.runes().len / 2) })
 	    render_logo_line(mut ctx, l)
 	    ctx.pop_offset()
 	}
