@@ -37,6 +37,11 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				.q {
 					return SplashScreenModel{}, tea.quit
 				}
+				.c {
+					if msg.modifiers == .ctrl {
+						return SplashScreenModel{}, tea.quit
+					}
+				}
 				else {}
 			}
 		}
