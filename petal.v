@@ -27,12 +27,6 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 
 	match msg {
 		tea.KeyMsg {
-			match msg.code {
-				.q {
-					return PetalModel{}, tea.quit
-				}
-				else {}
-			}
 			match m.state {
 			    .splash_screen {
 			        s, cmd := m.splash_screen.update(msg)

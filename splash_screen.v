@@ -31,7 +31,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	match msg {
 		tea.KeyMsg {
 			match msg.code {
-				.x {
+				.escape {
 					return SplashScreenModel{}, tea.quit
 				}
 				else {}
@@ -44,24 +44,85 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 }
 
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
-    defer { ctx.clear_all_offsets() }
+	render_logo_and_help_centered_and_stacked(mut ctx, m.logo)
+    render_help_keybinds(mut ctx)
+}
+
+fn render_logo_and_help_centered_and_stacked(mut ctx tea.Context, logo SplashLogo) {
     // NOTE(tauraamui) [25/10/2025]: all following contents to be padded from top of window
 	base_offset_y := f64(ctx.window_height()) * 0.1
-    ctx.push_offset(tea.Offset{ y: int(math.floor(base_offset_y)) })
-    offset := render_logo(mut ctx, m.logo)
-    ctx.clear_all_offsets()
-    render_version(mut ctx, offset)
-    render_keybinds_list(mut ctx)
+    offset_from_id := ctx.push_offset(tea.Offset{ x: ctx.window_width() / 2 y: int(math.floor(base_offset_y)) })
+    defer { ctx.clear_offsets_from(offset_from_id) }
+
+    ctx.push_offset(render_logo(mut ctx, logo))
+    ctx.push_offset(render_version(mut ctx))
+    ctx.push_offset(render_keybinds_list(mut ctx))
+    render_copyright_footer(mut ctx)
 }
 
-fn render_keybinds_list(mut ctx tea.Context) {
+fn render_help_keybinds(mut ctx tea.Context) {}
+
+const petal_pink_color = tea.Color{ r: 245, g: 191, b: 243 }
+const copyright_footer_label := 'the lilly editor authors ©'
+fn render_copyright_footer(mut ctx tea.Context) {
+	offset_from_id := ctx.push_offset(tea.Offset{ x: -(copyright_footer_label.len / 2), y: 1 })
+	defer { ctx.clear_offsets_from(offset_from_id) }
+	ctx.set_color(petal_pink_color)
+	ctx.draw_text(0, 0, copyright_footer_label)
+	ctx.reset_color()
 }
 
-fn render_version(mut ctx tea.Context, offset tea.Offset) {
-    defer { ctx.clear_all_offsets() }
-    ctx.push_offset(offset)
+const help_fg_color = tea.Color.ansi(241)
+
+const basic_command_help := [
+	' Find File                   <leader>ff',
+]
+
+const disabled_command_help := [
+	' Find Word                   <leader>fg',
+	' Recent Files                <leader>fo',
+	' File Browser                <leader>fv',
+	' Colorschemes                <leader>cs',
+	' New File                    <leader>nf',
+]
+
+fn render_keybinds_list(mut ctx tea.Context) tea.Offset {
+	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
+	defer { ctx.clear_offsets_from(offset_from_id) }
+
+	for l in basic_command_help {
+		ctx.push_offset(tea.Offset{ y: 1 })
+		ctx.push_offset(tea.Offset{ x: -(l.runes().len / 2) })
+		ctx.draw_text(0, 0, l)
+		ctx.pop_offset()
+		ctx.push_offset(tea.Offset{ y: 1 })
+	}
+
+	for l in disabled_command_help {
+		ctx.push_offset(tea.Offset{ y: 1 })
+		ctx.push_offset(tea.Offset{ x: -(l.runes().len / 2) })
+		ctx.set_style(.strikethrough)
+		ctx.set_color(help_fg_color)
+		ctx.draw_text(0, 0, l)
+		ctx.reset_color()
+		ctx.clear_style()
+		ctx.pop_offset()
+		ctx.push_offset(tea.Offset{ y: 1 })
+	}
+	return ctx.compact_offsets_from(offset_from_id)
+}
+
+fn render_version(mut ctx tea.Context) tea.Offset {
     version_label := "lilly (project petal)"
-    ctx.draw_text((ctx.window_width() / 2) - (version_label.len / 2), 1, version_label)
+
+	offset_from_id := ctx.push_offset(tea.Offset{})
+	defer { ctx.clear_offsets_from(offset_from_id) }
+
+	ctx.push_offset(tea.Offset{ y: 1 })
+	ctx.push_offset(tea.Offset{ x: -(version_label.runes().len / 2) })
+    ctx.draw_text(0, 0, version_label)
+    ctx.pop_offset()
+    return ctx.compact_offsets_from(offset_from_id)
 }
 
 fn render_logo(mut ctx tea.Context, logo SplashLogo) tea.Offset {
@@ -74,20 +135,20 @@ fn render_logo(mut ctx tea.Context, logo SplashLogo) tea.Offset {
 	//                             contain both green and pink, so they need to be rendered per character
 	//                             with the correct palette option/fg set
 	ctx.set_color(r: 245, g: 191, b: 243)
+	offset_from_id := ctx.push_offset(tea.Offset{})
+	defer { ctx.clear_offsets_from(offset_from_id) }
 	for _, l in logo.data {
-		start_x := (ctx.window_width() / 2) - (l.runes().len / 2)
-		assert start_x > 2
 		// NOTE(tauraamui) [26/10/25] by splitting these offset pushes into two separate calls
 		//                            we're only continuously removing the offset for the X position
 		//                            each loop iter, so by the end `compact_offsets` is a combination of
 		//                            the full height of the logo once its been completely rendered
 		ctx.push_offset(tea.Offset{ y: 1 })
-	    ctx.push_offset(tea.Offset{ x: (ctx.window_width() / 2) - (l.runes().len / 2) })
+	    ctx.push_offset(tea.Offset{ x: -(l.runes().len / 2) })
 	    render_logo_line(mut ctx, l)
 	    ctx.pop_offset()
 	}
 	ctx.reset_color()
-	return ctx.compact_offsets()
+	return ctx.compact_offsets_from(offset_from_id)
 }
 
 fn render_logo_line(mut ctx tea.Context, line string) {
@@ -107,7 +168,7 @@ fn render_logo_line_char_by_char(mut ctx tea.Context, line string) {
         }
         if to_draw == 'p' {
             to_draw = ' '
-            ctx.set_color(r: 245, g: 191, b: 243)
+            ctx.set_color(petal_pink_color)
         }
         ctx.draw_text(j, 0, to_draw)
     }
