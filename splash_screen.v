@@ -30,17 +30,21 @@ fn (mut m SplashScreenModel) init() ?tea.Cmd {
 fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	match msg {
 		tea.KeyMsg {
+			match msg.modifiers {
+				.ctrl {
+					match msg.code {
+						.c { return SplashScreenModel{}, tea.quit }
+						else {}
+					}
+				}
+				else {}
+			}
 			match msg.code {
 				.escape {
 					return SplashScreenModel{}, tea.quit
 				}
 				.q {
 					return SplashScreenModel{}, tea.quit
-				}
-				.c {
-					if msg.modifiers == .ctrl {
-						return SplashScreenModel{}, tea.quit
-					}
 				}
 				else {}
 			}
