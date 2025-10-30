@@ -12,11 +12,13 @@ mut:
 }
 
 struct SplashScreenModel {
+	leader_key string
     logo SplashLogo
 }
 
 fn new_splash_screen_model() SplashScreenModel {
     return SplashScreenModel{
+        leader_key: ";"
         logo: SplashLogo{
             data: logo_contents.to_string().split_into_lines()
         }
@@ -30,20 +32,14 @@ fn (mut m SplashScreenModel) init() ?tea.Cmd {
 fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	match msg {
 		tea.KeyMsg {
-			match msg.modifiers {
-				.ctrl {
-					match msg.code {
-						.c { return SplashScreenModel{}, tea.quit }
-						else {}
-					}
-				}
-				else {}
-			}
-			match msg.code {
-				.escape {
+			match msg.string() {
+				"escape" {
 					return SplashScreenModel{}, tea.quit
 				}
-				.q {
+				"q" {
+					return SplashScreenModel{}, tea.quit
+				}
+				"ctrl+c" {
 					return SplashScreenModel{}, tea.quit
 				}
 				else {}
