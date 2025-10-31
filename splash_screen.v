@@ -105,7 +105,7 @@ fn (m SplashScreenModel) view(mut ctx tea.Context) {
 	offset_from_id := ctx.push_offset(tea.Offset{ y: ctx.window_height() - 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
 	ctx.set_color(tea.Color.ansi(249))
-    ctx.draw_text(ctx.window_width() - tea.visible_len(m.leader_data), 0, m.leader_data)
+    ctx.draw_text(ctx.window_width() - tea.visible_len(m.leader_data) - 1, 0, m.leader_data)
     ctx.reset_color()
 
 	ctx.clear_all_offsets()

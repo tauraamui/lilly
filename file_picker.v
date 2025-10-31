@@ -3,6 +3,7 @@ module main
 import tauraamui.bobatea as tea
 
 struct FilePickerModel {
+mut:
 	width int
 	height int
 }
@@ -38,6 +39,10 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				"ctrl+c" { return FilePickerModel{}, close_file_picker }
 				else {}
 			}
+		}
+		tea.ResizedMsg {
+			m.width = msg.window_width / 2
+			m.height = msg.window_height / 2
 		}
 		else {}
 	}
