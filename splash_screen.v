@@ -14,6 +14,8 @@ mut:
 struct SplashScreenModel {
 	leader_key string
     logo SplashLogo
+mut:
+    leader_mode bool
 }
 
 fn new_splash_screen_model() SplashScreenModel {
@@ -32,17 +34,38 @@ fn (mut m SplashScreenModel) init() ?tea.Cmd {
 fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	match msg {
 		tea.KeyMsg {
-			match msg.string() {
-				"escape" {
-					return SplashScreenModel{}, tea.quit
+			match msg.k_type {
+				.special {
+					match msg.string() {
+						"escape" {
+							if m.leader_mode {
+								m.leader_mode = false
+								return m.clone(), none
+							}
+							return SplashScreenModel{}, tea.quit
+						}
+						"ctrl+c" {
+							return SplashScreenModel{}, tea.quit
+						}
+						else {}
+					}
 				}
-				"q" {
-					return SplashScreenModel{}, tea.quit
+				.runes {
+					match msg.string() {
+						"q" {
+							if !m.leader_mode {
+								return SplashScreenModel{}, tea.quit
+							}
+						}
+						m.leader_key {
+							if !m.leader_mode {
+								m.leader_mode = true
+								return m.clone(), none
+							}
+						}
+						else {}
+					}
 				}
-				"ctrl+c" {
-					return SplashScreenModel{}, tea.quit
-				}
-				else {}
 			}
 		}
 		else {}
