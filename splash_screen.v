@@ -73,7 +73,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 }
 
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
-	render_logo_and_help_centered_and_stacked(mut ctx, m.logo)
+	render_logo_and_help_centered_and_stacked(mut ctx, m.logo, m.leader_mode)
     render_help_keybinds(mut ctx)
 }
 
@@ -85,7 +85,7 @@ fn render_help_keybinds(mut ctx tea.Context) {
 	ctx.reset_color()
 }
 
-fn render_logo_and_help_centered_and_stacked(mut ctx tea.Context, logo SplashLogo) {
+fn render_logo_and_help_centered_and_stacked(mut ctx tea.Context, logo SplashLogo, in_leader_mode bool) {
     // NOTE(tauraamui) [25/10/2025]: all following contents to be padded from top of window
 	base_offset_y := f64(ctx.window_height()) * 0.1
     offset_from_id := ctx.push_offset(tea.Offset{ x: ctx.window_width() / 2 y: int(math.floor(base_offset_y)) })
@@ -93,7 +93,7 @@ fn render_logo_and_help_centered_and_stacked(mut ctx tea.Context, logo SplashLog
 
     ctx.push_offset(render_logo(mut ctx, logo))
     ctx.push_offset(render_version(mut ctx))
-    ctx.push_offset(render_keybinds_list(mut ctx))
+    ctx.push_offset(render_keybinds_list(mut ctx, in_leader_mode))
     render_copyright_footer(mut ctx)
 }
 
@@ -122,14 +122,18 @@ const disabled_command_help := [
 	' New File                    <leader>nf',
 ]
 
-fn render_keybinds_list(mut ctx tea.Context) tea.Offset {
+const pending_match_color = tea.Color.ansi(244)
+
+fn render_keybinds_list(mut ctx tea.Context, in_leader_mode bool) tea.Offset {
 	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
 	for l in basic_command_help {
 		ctx.push_offset(tea.Offset{ y: 1 })
 		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(l) / 2) })
+		if in_leader_mode { ctx.set_color(pending_match_color) }
 		ctx.draw_text(0, 0, l)
+		if in_leader_mode { ctx.reset_color() }
 		ctx.pop_offset()
 		ctx.push_offset(tea.Offset{ y: 1 })
 	}
