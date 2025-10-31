@@ -34,6 +34,15 @@ fn (mut m SplashScreenModel) init() ?tea.Cmd {
 }
 
 fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+	// Handle dialog messages first
+	match msg {
+		CloseDialogMsg {
+			m.dialog_model = none
+			return m.clone(), none
+		}
+		else {}
+	}
+
 	if mut open_model := m.dialog_model {
         d, cmd := open_model.update(msg)
 		m.dialog_model = d
@@ -75,9 +84,6 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		OpenDialogMsg {
 			m.dialog_model = msg.model
-		}
-		CloseDialogMsg {
-			m.dialog_model = none
 		}
 		else {}
 	}
