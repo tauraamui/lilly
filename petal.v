@@ -3,6 +3,7 @@ module main
 import tauraamui.bobatea as tea
 
 enum State as u8 {
+    root
     splash_screen
 }
 
@@ -14,6 +15,7 @@ mut:
 
 fn new_petal_model() PetalModel {
     return PetalModel{
+        state: .splash_screen
         splash_screen: new_splash_screen_model()
     }
 }
@@ -36,6 +38,9 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			        u_cmd := cmd or { tea.noop_cmd }
                     cmds << u_cmd
 			    }
+			    .root {
+					return PetalModel{}, tea.quit
+			    }
 			}
 		}
 		else {}
@@ -54,7 +59,7 @@ fn (m PetalModel) view(mut ctx tea.Context) {
 
     title := "Petal Text Editor"
 
-    ctx.draw_text((window_width / 2) - title.len / 2, window_height / 2, title)
+    ctx.draw_text((window_width / 2) - tea.visible_len(title) / 2, window_height / 2, title)
 }
 
 fn (m PetalModel) clone() tea.Model {

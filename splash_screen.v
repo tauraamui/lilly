@@ -128,7 +128,7 @@ fn render_keybinds_list(mut ctx tea.Context) tea.Offset {
 
 	for l in basic_command_help {
 		ctx.push_offset(tea.Offset{ y: 1 })
-		ctx.push_offset(tea.Offset{ x: -(l.runes().len / 2) })
+		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(l) / 2) })
 		ctx.draw_text(0, 0, l)
 		ctx.pop_offset()
 		ctx.push_offset(tea.Offset{ y: 1 })
@@ -136,7 +136,7 @@ fn render_keybinds_list(mut ctx tea.Context) tea.Offset {
 
 	for l in disabled_command_help {
 		ctx.push_offset(tea.Offset{ y: 1 })
-		ctx.push_offset(tea.Offset{ x: -(l.runes().len / 2) })
+		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(l) / 2) })
 		ctx.set_style(.strikethrough)
 		ctx.set_color(help_fg_color)
 		ctx.draw_text(0, 0, l)
@@ -155,7 +155,7 @@ fn render_version(mut ctx tea.Context) tea.Offset {
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
 	ctx.push_offset(tea.Offset{ y: 1 })
-	ctx.push_offset(tea.Offset{ x: -(version_label.runes().len / 2) })
+	ctx.push_offset(tea.Offset{ x: -(tea.visible_len(version_label) / 2) })
     ctx.draw_text(0, 0, version_label)
     ctx.pop_offset()
     return ctx.compact_offsets_from(offset_from_id)
@@ -179,7 +179,7 @@ fn render_logo(mut ctx tea.Context, logo SplashLogo) tea.Offset {
 		//                            each loop iter, so by the end `compact_offsets` is a combination of
 		//                            the full height of the logo once its been completely rendered
 		ctx.push_offset(tea.Offset{ y: 1 })
-	    ctx.push_offset(tea.Offset{ x: -(l.runes().len / 2) })
+	    ctx.push_offset(tea.Offset{ x: -(tea.visible_len(l) / 2) })
 	    render_logo_line(mut ctx, l)
 	    ctx.pop_offset()
 	}
