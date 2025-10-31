@@ -57,12 +57,15 @@ const bordered_layout = tea.new_layout()
 fn (m FilePickerModel) view(mut ctx tea.Context) {
 	id := ctx.push_offset(tea.Offset{ x: (ctx.window_width() / 2) - m.width / 2, y: (ctx.window_height() / 2) - m.height / 2 })
 	defer { ctx.clear_offsets_from(id) }
-	bordered_layout.size(m.width, m.height).render(mut ctx, fn [m] (mut ctx tea.Context) {
-		model_content := "FILE PICKER"
-		ctx.set_bg_color(tea.Color.ansi(55))
-		ctx.draw_text(0, 0, model_content)
-		ctx.reset_bg_color()
-	})
+	ctx.set_bg_color(tea.Color{ r: 200, g: 0, b: 0 })
+	ctx.draw_rect((ctx.window_width() / 2) - m.width / 2, (ctx.window_height() / 2) - m.height / 2, m.width, m.height)
+	// bordered_layout.size(m.width, m.height).render(mut ctx, fn [m] (mut ctx tea.Context) {
+	model_content := "FILE PICKER XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+	ctx.set_clip_area(tea.ClipArea{ 0, 0, m.width - 1, m.height - 1 })
+	defer { ctx.clear_clip_area() }
+	ctx.draw_text(0, 0, model_content)
+	ctx.reset_bg_color()
+	// })
 }
 
 fn (m FilePickerModel) clone() tea.Model {
