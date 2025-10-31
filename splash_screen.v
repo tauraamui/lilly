@@ -48,6 +48,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		m.dialog_model = d
         return m.clone(), cmd
 	}
+
 	match msg {
 		tea.KeyMsg {
 			match msg.k_type {

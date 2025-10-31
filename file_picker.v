@@ -30,7 +30,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		tea.KeyMsg {
 			match msg.string() {
 				"escape" { return FilePickerModel{}, close_file_picker }
-				"ctrl+c" { return FilePickerModel{}, tea.quit }
+				"ctrl+c" { return FilePickerModel{}, close_file_picker }
 				else {}
 			}
 		}
