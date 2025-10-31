@@ -38,11 +38,10 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				.special {
 					match msg.string() {
 						"escape" {
-							if m.leader_mode {
-								m.leader_mode = false
-								return m.clone(), none
+							if !m.leader_mode {
+								return SplashScreenModel{}, tea.quit
 							}
-							return SplashScreenModel{}, tea.quit
+							m.leader_mode = false
 						}
 						"ctrl+c" {
 							return SplashScreenModel{}, tea.quit
@@ -60,7 +59,6 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						m.leader_key {
 							if !m.leader_mode {
 								m.leader_mode = true
-								return m.clone(), none
 							}
 						}
 						else {}
