@@ -98,9 +98,10 @@ fn render_logo_and_help_centered_and_stacked(mut ctx tea.Context, logo SplashLog
 }
 
 const petal_pink_color = tea.Color{ r: 245, g: 191, b: 243 }
-const copyright_footer_label := 'the lilly editor authors ©'
+const copyright_footer_label := 'the lilly editor authors © (made with ${[u8(0xf0), 0x9f, 0x92, 0x95].bytestr()})'
+
 fn render_copyright_footer(mut ctx tea.Context) {
-	offset_from_id := ctx.push_offset(tea.Offset{ x: -(copyright_footer_label.len / 2), y: 1 })
+	offset_from_id := ctx.push_offset(tea.Offset{ x: -(tea.visible_len(copyright_footer_label) / 2), y: 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
 	ctx.set_color(petal_pink_color)
 	ctx.draw_text(0, 0, copyright_footer_label)
@@ -148,7 +149,7 @@ fn render_keybinds_list(mut ctx tea.Context) tea.Offset {
 }
 
 fn render_version(mut ctx tea.Context) tea.Offset {
-    version_label := "lilly (project petal)"
+    version_label := "lilly (project petal) ${[u8(0xf0), 0x9f, 0x8c, 0xb8].bytestr()}"
 
 	offset_from_id := ctx.push_offset(tea.Offset{})
 	defer { ctx.clear_offsets_from(offset_from_id) }
