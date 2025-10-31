@@ -16,6 +16,8 @@ struct SplashScreenModel {
     logo SplashLogo
 mut:
     leader_mode bool
+    leader_data string
+    dialog_model ?tea.Model
 }
 
 fn new_splash_screen_model() SplashScreenModel {
@@ -32,6 +34,11 @@ fn (mut m SplashScreenModel) init() ?tea.Cmd {
 }
 
 fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+	if mut open_model := m.dialog_model {
+        d, cmd := open_model.update(msg)
+		m.dialog_model = d
+        return m.clone(), cmd
+	}
 	match msg {
 		tea.KeyMsg {
 			match msg.k_type {
@@ -42,6 +49,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								return SplashScreenModel{}, tea.quit
 							}
 							m.leader_mode = false
+							m.leader_data = ""
 						}
 						"ctrl+c" {
 							return SplashScreenModel{}, tea.quit
@@ -50,23 +58,34 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 				}
 				.runes {
-					match msg.string() {
-						"q" {
-							if !m.leader_mode {
-								return SplashScreenModel{}, tea.quit
+					match m.leader_mode {
+						true {
+							m.leader_data += msg.string()
+						}
+						else {
+							match msg.string() {
+								"q" { return SplashScreenModel{}, tea.quit }
+								m.leader_key { if !m.leader_mode { m.leader_mode = true } }
+								else {}
 							}
 						}
-						m.leader_key {
-							if !m.leader_mode {
-								m.leader_mode = true
-							}
-						}
-						else {}
 					}
 				}
 			}
 		}
+		OpenDialogMsg {
+			m.dialog_model = msg.model
+		}
+		CloseDialogMsg {
+			m.dialog_model = none
+		}
 		else {}
+	}
+
+	if m.leader_data == "ff" {
+		m.leader_mode = false
+		m.leader_data = ""
+		return m.clone(), open_file_picker
 	}
 
 	return m.clone(), none
@@ -75,11 +94,23 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
 	render_logo_and_help_centered_and_stacked(mut ctx, m.logo, m.leader_mode)
     render_help_keybinds(mut ctx)
+
+	offset_from_id := ctx.push_offset(tea.Offset{ y: ctx.window_height() - 1 })
+	defer { ctx.clear_offsets_from(offset_from_id) }
+	ctx.set_color(tea.Color.ansi(249))
+    ctx.draw_text(ctx.window_width() - tea.visible_len(m.leader_data), 0, m.leader_data)
+    ctx.reset_color()
+
+	ctx.clear_all_offsets()
+	if mut open_model := m.dialog_model {
+		open_model.view(mut ctx)
+	}
 }
 
 fn render_help_keybinds(mut ctx tea.Context) {
 	offset_from_id := ctx.push_offset(tea.Offset{ x: 1, y: ctx.window_height() - 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
+
 	ctx.set_color(help_fg_color)
 	ctx.draw_text(0, 0, "q: quit • esc: exit")
 	ctx.reset_color()

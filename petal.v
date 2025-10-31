@@ -26,24 +26,23 @@ fn (mut m PetalModel) init() ?tea.Cmd {
 
 fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	mut cmds := []tea.Cmd{}
-
-	match msg {
-		tea.KeyMsg {
-			match m.state {
-			    .splash_screen {
-			        s, cmd := m.splash_screen.update(msg)
-			        if s is SplashScreenModel {
-			            m.splash_screen = s
-			        }
-			        u_cmd := cmd or { tea.noop_cmd }
-                    cmds << u_cmd
-			    }
-			    .root {
-					return PetalModel{}, tea.quit
-			    }
-			}
-		}
-		else {}
+	match m.state {
+	    .splash_screen {
+	        s, cmd := m.splash_screen.update(msg)
+	        if s is SplashScreenModel {
+	            m.splash_screen = s
+	        }
+	        u_cmd := cmd or { tea.noop_cmd }
+			cmds << u_cmd
+	    }
+	    .root {
+	    	match msg {
+	    		tea.KeyMsg {
+					cmds << tea.quit
+	    		}
+	    		else {}
+	    	}
+	    }
 	}
 
 	return m.clone(), tea.batch_array(cmds)
