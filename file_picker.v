@@ -16,10 +16,7 @@ struct CloseDialogMsg {}
 
 fn open_file_picker() tea.Msg {
 	return OpenDialogMsg{
-		model: FilePickerModel{
-			width: 80
-			height: 30
-		}
+		model: FilePickerModel{}
 	}
 }
 
@@ -28,7 +25,7 @@ fn close_file_picker() tea.Msg {
 }
 
 fn (mut m FilePickerModel) init() ?tea.Cmd {
-	return none
+	return tea.emit_resize
 }
 
 fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
@@ -63,9 +60,8 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 		// > manually clear all content below model to effectfully make it opaque
 		ctx.draw_rect(0, 0, m.width, m.height)
 		// >
-		model_content := "FILE PICKER XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+		model_content := "FILE PICKER"
 		ctx.draw_text(0, 0, model_content)
-		ctx.reset_bg_color()
 	})
 }
 

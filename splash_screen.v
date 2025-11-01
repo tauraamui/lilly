@@ -30,11 +30,13 @@ fn new_splash_screen_model() SplashScreenModel {
 }
 
 fn (mut m SplashScreenModel) init() ?tea.Cmd {
-    return none
+    return tea.emit_resize
 }
 
+// TODO(tauraamui) [01/11/25]: handle command propegation from this method
+//                             by using tea.batch to reduce number of return paths
 fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
-	// Handle dialog messages first
+	// handle dialog messages first
 	match msg {
 		CloseDialogMsg {
 			m.dialog_model = none
@@ -84,7 +86,10 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			}
 		}
 		OpenDialogMsg {
-			m.dialog_model = msg.model
+			mut d_model := msg.model
+			cmd := d_model.init()
+			m.dialog_model = d_model
+	        return m.clone(), cmd
 		}
 		else {}
 	}

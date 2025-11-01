@@ -21,7 +21,7 @@ fn new_petal_model() PetalModel {
 }
 
 fn (mut m PetalModel) init() ?tea.Cmd {
-    return none
+	return tea.emit_resize
 }
 
 fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
@@ -45,7 +45,7 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	    }
 	}
 
-	return m.clone(), tea.batch_array(cmds)
+	return m.splash_screen.clone(), tea.batch_array(cmds)
 }
 
 fn (m PetalModel) view(mut ctx tea.Context) {
