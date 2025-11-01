@@ -33,14 +33,12 @@ fn (mut m SplashScreenModel) init() ?tea.Cmd {
     return tea.emit_resize
 }
 
-// TODO(tauraamui) [01/11/25]: handle command propegation from this method
-//                             by using tea.batch to reduce number of return paths
 fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+	mut cmds := []tea.Cmd{}
 	// handle dialog messages first
 	match msg {
 		CloseDialogMsg {
 			m.dialog_model = none
-			return m.clone(), none
 		}
 		else {}
 	}
@@ -89,7 +87,8 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			mut d_model := msg.model
 			cmd := d_model.init()
 			m.dialog_model = d_model
-	        return m.clone(), cmd
+			u_cmd := cmd or { tea.noop_cmd }
+			cmds << u_cmd
 		}
 		else {}
 	}
@@ -97,10 +96,10 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	if m.leader_data == "ff" {
 		m.leader_mode = false
 		m.leader_data = ""
-		return m.clone(), open_file_picker
+		cmds << open_file_picker
 	}
 
-	return m.clone(), none
+	return m.clone(), tea.batch_array(cmds)
 }
 
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
