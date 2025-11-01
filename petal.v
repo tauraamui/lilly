@@ -2,9 +2,11 @@ module main
 
 import tauraamui.bobatea as tea
 
+const dot = "•"
+
 struct PetalModel {
 mut:
-    active_screen tea.Model
+    active_screen DebuggableModel
 }
 
 fn new_petal_model() PetalModel {
@@ -22,18 +24,23 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		tea.KeyMsg {
 			if msg.k_type == .special && msg.string() == "f12" {
 				if !(m.active_screen is DebugScreenModel) {
-					m.active_screen = new_debug_screen_model(m.active_screen.clone())
+					m.active_screen = new_debug_screen_model(m.active_screen)
 					return m.clone(), none
 				}
 			}
 		}
 		CloseDebugScreenMsg {
-			m.active_screen = msg.prev_model
+			screen := msg.prev_model
+			if screen is DebuggableModel {
+				m.active_screen = screen
+			}
 		}
 		else {}
 	}
 	screen, cmds := m.active_screen.update(msg)
-	m.active_screen = screen
+	if screen is DebuggableModel {
+		m.active_screen = screen
+	}
 	return m.clone(), cmds
 }
 

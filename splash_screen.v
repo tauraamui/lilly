@@ -1,6 +1,7 @@
 module main
 
 import math
+import time
 import tauraamui.bobatea as tea
 
 const logo_contents = $embed_file('./splash-logo.txt')
@@ -20,7 +21,7 @@ mut:
     dialog_model ?tea.Model
 }
 
-fn new_splash_screen_model() SplashScreenModel {
+fn new_splash_screen_model() DebuggableModel {
     return SplashScreenModel{
         leader_key: ";"
         logo: SplashLogo{
@@ -123,7 +124,7 @@ fn render_help_keybinds(mut ctx tea.Context) {
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
 	ctx.set_color(help_fg_color)
-	ctx.draw_text(0, 0, "q: quit • esc: exit")
+	ctx.draw_text(0, 0, "q: quit ${dot} esc: exit")
 	ctx.reset_color()
 }
 
@@ -263,6 +264,12 @@ fn has_colouring_directives(line string) bool {
 		}
 	}
 	return false
+}
+
+fn (m SplashScreenModel) debug_data() []string {
+	return [
+		"SPLASH SCREEN, time.now()"
+	]
 }
 
 fn (m SplashScreenModel) clone() tea.Model {
