@@ -18,9 +18,23 @@ fn (mut m PetalModel) init() ?tea.Cmd {
 }
 
 fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+	match msg {
+		tea.KeyMsg {
+			if msg.k_type == .special && msg.string() == "f12" {
+				if !(m.active_screen is DebugScreenModel) {
+					m.active_screen = new_debug_screen_model(m.active_screen.clone())
+					return m.clone(), none
+				}
+			}
+		}
+		CloseDebugScreenMsg {
+			m.active_screen = msg.prev_model
+		}
+		else {}
+	}
 	screen, cmds := m.active_screen.update(msg)
 	m.active_screen = screen
-	return m.active_screen.clone(), cmds
+	return m.clone(), cmds
 }
 
 fn (m PetalModel) view(mut ctx tea.Context) {
