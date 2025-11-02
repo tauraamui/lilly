@@ -3,6 +3,8 @@ module main
 import math
 import tauraamui.bobatea as tea
 
+const version = "pre-alpha-v0.0.0"
+const built_from_commit_hash = ""
 const logo_contents = $embed_file('./splash-logo.txt')
 
 struct SplashLogo {
