@@ -4,81 +4,32 @@ import build
 import strconv
 import math
 
-const app_name = 'lilly'
+const app_name = 'petal'
 
 mut context := build.context(
 	default: 'run'
 )
 
 // BUILD TASKS
-context.task(name: 'build', depends: ['_generate-git-hash'], run: |self| system('v ./src -o lilly'))
-context.task(
-	name:    'build-prod'
-	depends: ['_generate-git-hash']
-	run:     |self| system('v ./src -o ${app_name}')
-)
-context.task(name: 'run', depends: ['_generate-git-hash'], run: |self| system('v -g run ./src .'))
-context.task(
-	name:    'run-with-gap'
-	depends: ['_generate-git-hash']
-	run:     |self| system('v -g run ./src -ugb .')
-)
-context.task(
-	name:    'run-debug-log'
-	depends: ['_generate-git-hash']
-	run:     |self| system('v -g run ./src --log-level debug .')
-)
-context.task(
-	name:    'run-gui'
-	depends: ['_generate-git-hash']
-	run:     |self| system('v -g -d gui run ./src .')
-)
+context.task(name: 'build', depends: ['_generate-git-hash'], run: |self| system('v . -o petal'))
+context.task(name: 'run', depends: ['_generate-git-hash'], run: |self| system('v -g run .'))
 context.task(name: 'compile-make', run: |self| system('v -prod -skip-running make.vsh'))
 
 // TEST TASKS
 context.task(
 	name:    'test'
 	depends: ['_generate-git-hash']
-	run:     |self| exit(system('v -g test ./src'))
+	run:     |self| exit(system('v -g test .'))
 )
+
 context.task(
 	name:    'verbose-test'
 	depends: ['_generate-git-hash']
 	run:     |self| exit(system('v -g -stats test ./src'))
 )
 
-// EXPERIMENTS
-context.task(
-	name: 'linux-clipboard'
-	help: 'runs experiment to test linux C code clipboard integration'
-	run:  fn (self build.Task) ! {
-		system('v -g run ./experiment/clipboard/x11.c.v')
-	}
-)
-
-context.task(
-	name:    'emoji-grid'
-	help:    'runs experiment to test emoji grid rendering'
-	depends: ['_copy-emoji-grid-code']
-	run:     fn (self build.Task) ! {
-		system('v -g run ./src/emoji_grid.v')
-		rm('./src/emoji_grid.v')!
-	}
-)
-
-context.task(
-	name:    'immediate-grid'
-	help:    'runs experiment to test immediate grid rendering'
-	depends: ['_copy-immediate-grid-code']
-	run:     fn (self build.Task) ! {
-		system('v -g run ./src/immediate_grid.v')
-		rm('./src/immediate_grid.v')!
-	}
-)
-
 // UTIL TASKS
 context.task(name: 'format', run: |self| system('v fmt -w .'))
-
 context.task(name: 'git', depends: ['format'], run: |self| system('lazygit'))
 
 context.task(
@@ -105,6 +56,7 @@ context.task(
 		println('')
 	}
 )
+
 context.task(
 	name: 'ansi-to-rgb'
 	help: 'prompts for single ansi colour code and outputs the RGB components'
@@ -163,16 +115,15 @@ context.task(
 		println('RGB(${rr}, ${gg}, ${bb}) -> ${16 + (36 * r) + (6 * g) + b}')
 	}
 )
+
 context.task(name: 'git-prune', run: |self| system('git remote prune origin'))
-// NOTE(tauraamui) [27/05/2025]: unsure whether this util should really live here
-//                               since it's only really for me as it's unlikely
-//                               anyone else will be using radical but oh well?'
-context.task(name: 'rad-push', run: |self| system('git push rad master'))
+
 context.task(
 	name: 'apply-license-header'
 	help: 'executes addlicense tool to insert license headers into files without one'
-	run:  |self| system('addlicense -v -c "The Lilly Edtior contributors" -y "2025" ./src/*')
+	run:  |self| system('addlicense -v -c "The Lilly Edtior contributors" -y "2025" ./*')
 )
+
 context.task(
 	name: 'install-license-tool'
 	help: 'REQUIRES GO: installs a tool used to insert the license header into source files'
@@ -183,17 +134,7 @@ context.task(
 context.artifact(
 	name: '_generate-git-hash'
 	help: 'generate .githash to contain latest commit of current branch to embed in builds'
-	run:  |self| system('git log -n 1 --pretty=format:"%h" | tee ./src/.githash')
-)
-context.artifact(
-	name: '_copy-emoji-grid-code'
-	help: 'internal tool, do not run this directly'
-	run:  |self| cp('./experiment/tui_render/emoji_grid.v', './src/emoji_grid.v')!
-)
-context.artifact(
-	name: '_copy-immediate-grid-code'
-	help: 'internal tool, do not run this directly'
-	run:  |self| cp('./experiment/tui_render/immediate_grid.v', './src/immediate_grid.v')!
+	run:  |self| system('git log -n 1 --pretty=format:"%h" | tee ./.githash')
 )
 
 context.run()

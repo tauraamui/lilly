@@ -27,3 +27,4 @@ bin/
 lilly.panic.log
 lilly
 src/.githash
+.githash
