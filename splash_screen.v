@@ -19,6 +19,7 @@ mut:
     leader_mode bool
     leader_data string
     dialog_model ?tea.Model
+    last_time time.Time
 }
 
 fn new_splash_screen_model() DebuggableModel {
@@ -35,6 +36,7 @@ fn (mut m SplashScreenModel) init() ?tea.Cmd {
 }
 
 fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+	m.last_time = time.now()
 	mut cmds := []tea.Cmd{}
 	// handle dialog messages first
 	match msg {
@@ -268,7 +270,7 @@ fn has_colouring_directives(line string) bool {
 
 fn (m SplashScreenModel) debug_data() []string {
 	return [
-		"SPLASH SCREEN, ${time.now()}"
+		"SPLASH SCREEN, ${m.last_time}"
 	]
 }
 
