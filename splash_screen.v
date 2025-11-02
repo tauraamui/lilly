@@ -1,7 +1,6 @@
 module main
 
 import math
-import time
 import tauraamui.bobatea as tea
 
 const logo_contents = $embed_file('./splash-logo.txt')
@@ -19,7 +18,6 @@ mut:
     leader_mode bool
     leader_data string
     dialog_model ?tea.Model
-    last_time time.Time
 }
 
 fn new_splash_screen_model() DebuggableModel {
@@ -36,7 +34,6 @@ fn (mut m SplashScreenModel) init() ?tea.Cmd {
 }
 
 fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
-	m.last_time = time.now()
 	mut cmds := []tea.Cmd{}
 	// handle dialog messages first
 	match msg {
@@ -269,9 +266,10 @@ fn has_colouring_directives(line string) bool {
 }
 
 fn (m SplashScreenModel) debug_data() map[string]string {
+	active_model_name := if _ := m.dialog_model { "file_picker" } else { "splash_screen" }
 	return {
-		"ACTIVE MODEL": "splash screen"
-		"last_time": "${m.last_time}"
+		"ACTIVE MODEL": active_model_name
+		"leader_key": m.leader_key
 	}
 }
 
