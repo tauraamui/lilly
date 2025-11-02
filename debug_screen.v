@@ -9,7 +9,7 @@ interface DebuggableModel {
 }
 
 interface Debuggable {
-	debug_data() []string
+	debug_data() map[string]string
 }
 
 struct DebugScreenModel {
@@ -92,10 +92,17 @@ fn (mut m DebugScreenModel) view(mut ctx tea.Context) {
 	katakana := "${generate_random_katakana()}"
 	ctx.draw_text(0, 0, katakana)
 
-	ctx.draw_text(0, 1, "${m.wrapped_model.debug_data()}")
+	ctx.draw_text(0, 2, "debug data: {")
+	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
+	for k, v in m.wrapped_model.debug_data() {
+		ctx.draw_text(4, 2, "${k}: ${v}")
+		ctx.push_offset(tea.Offset{ y: 1 })
+	}
+	ctx.draw_text(0, 2, "}")
+	ctx.clear_offsets_from(offset_from_id)
 
-	offset_from_id := ctx.push_offset(tea.Offset{ x: 1, y: ctx.window_height() - 1 })
-	defer { ctx.clear_offsets_from(offset_from_id) }
+	top_to_bottom_offset_id := ctx.push_offset(tea.Offset{ x: 1, y: ctx.window_height() - 1 })
+	defer { ctx.clear_offsets_from(top_to_bottom_offset_id) }
 
 	ctx.set_color(help_fg_color)
 	ctx.draw_text(0, 0, "q ${dot} esc ${dot} f12: close")
@@ -118,8 +125,8 @@ fn generate_random_katakana() rune {
 }
 
 
-fn (m DebugScreenModel) debug_data() []string {
-	return []
+fn (m DebugScreenModel) debug_data() map[string]string {
+	return {}
 }
 
 fn (m DebugScreenModel) clone() tea.Model {

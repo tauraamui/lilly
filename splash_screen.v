@@ -268,10 +268,11 @@ fn has_colouring_directives(line string) bool {
 	return false
 }
 
-fn (m SplashScreenModel) debug_data() []string {
-	return [
-		"SPLASH SCREEN, ${m.last_time}"
-	]
+fn (m SplashScreenModel) debug_data() map[string]string {
+	return {
+		"ACTIVE MODEL": "splash screen"
+		"last_time": "${m.last_time}"
+	}
 }
 
 fn (m SplashScreenModel) clone() tea.Model {
