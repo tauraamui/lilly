@@ -3,8 +3,11 @@ module main
 import math
 import tauraamui.bobatea as tea
 
+const gitcommit_hash = $embed_file('./src/.githash').to_string()
+
 const version = "pre-alpha-v0.0.0"
-const built_from_commit_hash = ""
+const build_id = gitcommit_hash
+
 const logo_contents = $embed_file('./splash-logo.txt')
 
 struct SplashLogo {
@@ -198,14 +201,23 @@ fn render_keybinds_list(mut ctx tea.Context, in_leader_mode bool) tea.Offset {
 
 fn render_version(mut ctx tea.Context) tea.Offset {
     version_label := "lilly (project petal) ${[u8(0xf0), 0x9f, 0x8c, 0xb8].bytestr()}"
+    build_id_label := "(${build_id})"
 
 	offset_from_id := ctx.push_offset(tea.Offset{})
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
 	ctx.push_offset(tea.Offset{ y: 1 })
-	ctx.push_offset(tea.Offset{ x: -(tea.visible_len(version_label) / 2) })
+	// NOTE(tauraamui) [02/11/25]: an attempt to explain what this offset code is doing:
+	// make 0,0 now represent the location which is to the left of the middle of the screen by 50% of the total length of the labels to
+	// to be rendered next to each other
+	first_version_label_offset_id := ctx.push_offset(tea.Offset{ x: -((tea.visible_len(version_label) + tea.visible_len(build_id_label)) / 2) })
     ctx.draw_text(0, 0, version_label)
-    ctx.pop_offset()
+    ctx.push_offset(tea.Offset{ x: tea.visible_len(version_label) + 1 }) // add the width to the current offset so further paints are relative to just after the version label
+    																	 // segment we just rendered, which is only the first out of two we're drawing
+    ctx.set_color(petal_pink_color)
+    ctx.draw_text(0, 0, "(${build_id})")
+    ctx.reset_color()
+    ctx.clear_offsets_from(first_version_label_offset_id)
     return ctx.compact_offsets_from(offset_from_id)
 }
 
