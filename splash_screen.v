@@ -3,7 +3,7 @@ module main
 import math
 import tauraamui.bobatea as tea
 
-const gitcommit_hash = $embed_file('./src/.githash').to_string()
+const gitcommit_hash = $embed_file('.githash').to_string()
 
 const version = "pre-alpha-v0.0.0"
 const build_id = gitcommit_hash
@@ -201,7 +201,7 @@ fn render_keybinds_list(mut ctx tea.Context, in_leader_mode bool) tea.Offset {
 
 fn render_version(mut ctx tea.Context) tea.Offset {
     version_label := "lilly (project petal) ${[u8(0xf0), 0x9f, 0x8c, 0xb8].bytestr()}"
-    build_id_label := "(${build_id})"
+    build_id_label := "(#${build_id})"
 
 	offset_from_id := ctx.push_offset(tea.Offset{})
 	defer { ctx.clear_offsets_from(offset_from_id) }
@@ -215,7 +215,7 @@ fn render_version(mut ctx tea.Context) tea.Offset {
     ctx.push_offset(tea.Offset{ x: tea.visible_len(version_label) + 1 }) // add the width to the current offset so further paints are relative to just after the version label
     																	 // segment we just rendered, which is only the first out of two we're drawing
     ctx.set_color(petal_pink_color)
-    ctx.draw_text(0, 0, "(${build_id})")
+    ctx.draw_text(0, 0, build_id_label)
     ctx.reset_color()
     ctx.clear_offsets_from(first_version_label_offset_id)
     return ctx.compact_offsets_from(offset_from_id)
