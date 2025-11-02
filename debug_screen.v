@@ -1,5 +1,6 @@
 module main
 
+import rand
 import tauraamui.bobatea as tea
 
 interface DebuggableModel {
@@ -43,7 +44,10 @@ fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				.special {
 					match msg.string() {
 						"escape" {
-							return m.clone(), tea.quit
+							w_model := m.wrapped_model
+							if w_model is tea.Model {
+								return m.clone(), close_debug(w_model)
+							}
 						}
 						"ctrl+c" {
 							w_model := m.wrapped_model
@@ -60,7 +64,17 @@ fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						else {}
 					}
 				}
-				else {}
+				.runes {
+					match msg.string() {
+						"q" {
+							w_model := m.wrapped_model
+							if w_model is tea.Model {
+								return m.clone(), close_debug(w_model)
+							}
+						}
+						else {}
+					}
+				}
 			}
 		}
 		else {}
@@ -75,7 +89,8 @@ fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 }
 
 fn (mut m DebugScreenModel) view(mut ctx tea.Context) {
-	ctx.draw_text(0, 0, "DEBUG MODE, 世界")
+	katakana := "${generate_random_katakana()}"
+	ctx.draw_text(0, 0, katakana)
 
 	ctx.draw_text(0, 1, "${m.wrapped_model.debug_data()}")
 
@@ -83,9 +98,25 @@ fn (mut m DebugScreenModel) view(mut ctx tea.Context) {
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
 	ctx.set_color(help_fg_color)
-	ctx.draw_text(0, 0, "esc ${dot} f12: close")
+	ctx.draw_text(0, 0, "q ${dot} esc ${dot} f12: close")
 	ctx.reset_color()
 }
+
+// generate_random_katakana generates a random Katakana character.
+fn generate_random_katakana() rune {
+	// Katakana block in Unicode ranges from U+30A0 to U+30FF.
+	// We'll focus on the main range U+30A1 to U+30F6 (ァ to ヶ)
+	// and exclude some less common/combining characters for simplicity.
+	min_katakana := 0x30A1 // ァ
+	max_katakana := 0x30F6 // ヶ
+
+	// Generate a random integer within the Katakana range.
+	// rand.int_in_range(min, max) includes both min and max.
+	random_unicode_value := rand.int_in_range(min_katakana, max_katakana) or { min_katakana }
+
+	return rune(random_unicode_value)
+}
+
 
 fn (m DebugScreenModel) debug_data() []string {
 	return []
