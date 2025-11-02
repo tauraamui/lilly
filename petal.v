@@ -6,7 +6,7 @@ const dot = "•"
 
 struct PetalModel {
 mut:
-    active_screen DebuggableModel
+    active_screen DebuggableModel // all screens are debuggable to help with live, well... debugging
 }
 
 fn new_petal_model() PetalModel {

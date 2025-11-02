@@ -268,8 +268,8 @@ fn has_colouring_directives(line string) bool {
 fn (m SplashScreenModel) debug_data() map[string]string {
 	active_model_name := if _ := m.dialog_model { "file_picker" } else { "splash_screen" }
 	return {
-		"ACTIVE MODEL": active_model_name
-		"leader_key": m.leader_key
+		"active model": active_model_name
+		"leader key": m.leader_key
 	}
 }
 

@@ -1,6 +1,7 @@
 module main
 
 import rand
+import strings
 import tauraamui.bobatea as tea
 
 interface DebuggableModel {
@@ -89,13 +90,20 @@ fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 }
 
 fn (mut m DebugScreenModel) view(mut ctx tea.Context) {
-	katakana := "${generate_random_katakana()}"
+	katakana := generate_decorator_label(ctx.window_width() / 6)
+	ctx.set_color(help_fg_color)
 	ctx.draw_text(0, 0, katakana)
+	ctx.draw_text(ctx.window_width() - tea.visible_len(katakana), 0, katakana)
+	ctx.reset_color()
+	ctx.set_color(tea.Color.ansi(69))
+	debug_label := "*********** debug screen ***********"
+	ctx.draw_text((ctx.window_width() / 2) - tea.visible_len(debug_label) / 2, 0, debug_label)
+	ctx.reset_color()
 
 	ctx.draw_text(0, 2, "debug data: {")
 	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
 	for k, v in m.wrapped_model.debug_data() {
-		ctx.draw_text(4, 2, "${k}: ${v}")
+		ctx.draw_text(4, 2, "${k}: '${v}'")
 		ctx.push_offset(tea.Offset{ y: 1 })
 	}
 	ctx.draw_text(0, 2, "}")
@@ -107,6 +115,12 @@ fn (mut m DebugScreenModel) view(mut ctx tea.Context) {
 	ctx.set_color(help_fg_color)
 	ctx.draw_text(0, 0, "q ${dot} esc ${dot} f12: close")
 	ctx.reset_color()
+}
+
+fn generate_decorator_label(length int) string {
+	mut sb := strings.new_builder(length)
+	for _ in 0..length { sb.write_rune(generate_random_katakana()) }
+	return sb.str()
 }
 
 // generate_random_katakana generates a random Katakana character.
