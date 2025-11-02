@@ -268,7 +268,7 @@ fn has_colouring_directives(line string) bool {
 
 fn (m SplashScreenModel) debug_data() []string {
 	return [
-		"SPLASH SCREEN, time.now()"
+		"SPLASH SCREEN, ${time.now()}"
 	]
 }
 

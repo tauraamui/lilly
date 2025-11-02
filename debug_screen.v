@@ -12,6 +12,7 @@ interface Debuggable {
 }
 
 struct DebugScreenModel {
+mut:
 	wrapped_model DebuggableModel
 }
 
@@ -65,6 +66,11 @@ fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		else {}
 	}
 
+	mut wrapped_model := m.wrapped_model
+	wm, _ := wrapped_model.update(tea.NoopMsg{})
+	if wm is DebuggableModel {
+		m.wrapped_model = wm
+	}
 	return m.clone(), none
 }
 
