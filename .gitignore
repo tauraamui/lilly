@@ -25,3 +25,5 @@ bin/
 .editorconfig
 .gitattributes
 lilly.panic.log
+lilly
+src/.githash
