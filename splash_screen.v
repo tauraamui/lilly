@@ -5,7 +5,7 @@ import tauraamui.bobatea as tea
 
 const gitcommit_hash = $embed_file('.githash').to_string()
 
-const version = "pre-alpha-v0.0.0"
+const version = 'pre-alpha-v0.0.0'
 const build_id = gitcommit_hash
 
 const logo_contents = $embed_file('./splash-logo.txt')
@@ -18,24 +18,24 @@ mut:
 
 struct SplashScreenModel {
 	leader_key string
-    logo SplashLogo
+	logo       SplashLogo
 mut:
-    leader_mode bool
-    leader_data string
-    dialog_model ?tea.Model
+	leader_mode  bool
+	leader_data  string
+	dialog_model ?tea.Model
 }
 
 fn new_splash_screen_model() DebuggableModel {
-    return SplashScreenModel{
-        leader_key: ";"
-        logo: SplashLogo{
-            data: logo_contents.to_string().split_into_lines()
-        }
-    }
+	return SplashScreenModel{
+		leader_key: ';'
+		logo:       SplashLogo{
+			data: logo_contents.to_string().split_into_lines()
+		}
+	}
 }
 
 fn (mut m SplashScreenModel) init() ?tea.Cmd {
-    return tea.emit_resize
+	return none
 }
 
 fn (mut m SplashScreenModel) handle_escape() (tea.Model, ?tea.Cmd) {
@@ -43,7 +43,7 @@ fn (mut m SplashScreenModel) handle_escape() (tea.Model, ?tea.Cmd) {
 		return SplashScreenModel{}, tea.quit
 	}
 	m.leader_mode = false
-	m.leader_data = ""
+	m.leader_data = ''
 	return m.clone(), none
 }
 
@@ -58,9 +58,9 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	}
 
 	if mut open_model := m.dialog_model {
-        d, cmd := open_model.update(msg)
+		d, cmd := open_model.update(msg)
 		m.dialog_model = d
-        return m.clone(), cmd
+		return m.clone(), cmd
 	}
 
 	match msg {
@@ -68,10 +68,10 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			match msg.k_type {
 				.special {
 					match msg.string() {
-						"escape" {
+						'escape' {
 							return m.handle_escape()
 						}
-						"ctrl+c" {
+						'ctrl+c' {
 							return m.handle_escape()
 						}
 						else {}
@@ -84,8 +84,14 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						}
 						else {
 							match msg.string() {
-								"q" { return SplashScreenModel{}, tea.quit }
-								m.leader_key { if !m.leader_mode { m.leader_mode = true } }
+								'q' {
+									return SplashScreenModel{}, tea.quit
+								}
+								m.leader_key {
+									if !m.leader_mode {
+										m.leader_mode = true
+									}
+								}
 								else {}
 							}
 						}
@@ -103,9 +109,9 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		else {}
 	}
 
-	if m.leader_data == "ff" {
+	if m.leader_data == 'ff' {
 		m.leader_mode = false
-		m.leader_data = ""
+		m.leader_data = ''
 		cmds << open_file_picker
 	}
 
@@ -119,8 +125,8 @@ fn (m SplashScreenModel) view(mut ctx tea.Context) {
 	offset_from_id := ctx.push_offset(tea.Offset{ y: ctx.window_height() - 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
 	ctx.set_color(tea.Color.ansi(249))
-    ctx.draw_text(ctx.window_width() - tea.visible_len(m.leader_data) - 1, 0, m.leader_data)
-    ctx.reset_color()
+	ctx.draw_text(ctx.window_width() - tea.visible_len(m.leader_data) - 1, 0, m.leader_data)
+	ctx.reset_color()
 
 	ctx.clear_all_offsets()
 	if mut open_model := m.dialog_model {
@@ -133,15 +139,18 @@ fn render_help_keybinds(mut ctx tea.Context) {
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
 	ctx.set_color(help_fg_color)
-	ctx.draw_text(0, 0, "q: quit ${dot} esc: exit")
+	ctx.draw_text(0, 0, 'q: quit ${dot} esc: exit')
 	ctx.reset_color()
 }
 
 fn render_logo_and_help_centered_and_stacked(mut ctx tea.Context, logo SplashLogo, in_leader_mode bool, leader_data string) {
 	// NOTE(tauraamui) [25/10/2025]: all following contents to be padded from top of window
 	base_offset_y := f64(ctx.window_height()) * 0.1
-    offset_from_id := ctx.push_offset(tea.Offset{ x: ctx.window_width() / 2 y: int(math.floor(base_offset_y)) })
-    defer { ctx.clear_offsets_from(offset_from_id) }
+	offset_from_id := ctx.push_offset(tea.Offset{
+		x: ctx.window_width() / 2
+		y: int(math.floor(base_offset_y))
+	})
+	defer { ctx.clear_offsets_from(offset_from_id) }
 
 	ctx.push_offset(render_logo(mut ctx, logo))
 	ctx.push_offset(render_version(mut ctx))
@@ -165,7 +174,10 @@ const copyright_footer_label = 'the lilly editor authors © (made with ${[u8(0xf
 	0x95].bytestr()})'
 
 fn render_copyright_footer(mut ctx tea.Context) {
-	offset_from_id := ctx.push_offset(tea.Offset{ x: -(tea.visible_len(copyright_footer_label) / 2), y: 1 })
+	offset_from_id := ctx.push_offset(tea.Offset{
+		x: -(tea.visible_len(copyright_footer_label) / 2)
+		y: 1
+	})
 	defer { ctx.clear_offsets_from(offset_from_id) }
 	ctx.set_color(petal_pink_color)
 	ctx.draw_text(0, 0, copyright_footer_label)
@@ -174,11 +186,11 @@ fn render_copyright_footer(mut ctx tea.Context) {
 
 const help_fg_color = tea.Color.ansi(241)
 
-const basic_command_help := [
+const basic_command_help = [
 	' Find File                   <leader>ff',
 ]
 
-const disabled_command_help := [
+const disabled_command_help = [
 	' Find Word                   <leader>fg',
 	' Recent Files                <leader>fo',
 	' File Browser                <leader>fv',
@@ -201,7 +213,9 @@ fn render_keybinds_list(mut ctx tea.Context, in_leader_mode bool, leader_data st
 			ctx.set_color(fg_color)
 		}
 		ctx.draw_text(0, 0, l)
-		if in_leader_mode { ctx.reset_color() }
+		if in_leader_mode {
+			ctx.reset_color()
+		}
 		ctx.pop_offset()
 		ctx.push_offset(tea.Offset{ y: 1 })
 	}
@@ -221,8 +235,8 @@ fn render_keybinds_list(mut ctx tea.Context, in_leader_mode bool, leader_data st
 }
 
 fn render_version(mut ctx tea.Context) tea.Offset {
-    version_label := "lilly (project petal) ${[u8(0xf0), 0x9f, 0x8c, 0xb8].bytestr()}"
-    build_id_label := "(#${build_id})"
+	version_label := 'lilly (project petal) ${[u8(0xf0), 0x9f, 0x8c, 0xb8].bytestr()}'
+	build_id_label := '(#${build_id})'
 
 	offset_from_id := ctx.push_offset(tea.Offset{})
 	defer { ctx.clear_offsets_from(offset_from_id) }
@@ -231,21 +245,23 @@ fn render_version(mut ctx tea.Context) tea.Offset {
 	// NOTE(tauraamui) [02/11/25]: an attempt to explain what this offset code is doing:
 	// make 0,0 now represent the location which is to the left of the middle of the screen by 50% of the total length of the labels to
 	// to be rendered next to each other
-	first_version_label_offset_id := ctx.push_offset(tea.Offset{ x: -((tea.visible_len(version_label) + tea.visible_len(build_id_label)) / 2) })
-    ctx.draw_text(0, 0, version_label)
-    ctx.push_offset(tea.Offset{ x: tea.visible_len(version_label) + 1 }) // add the width to the current offset so further paints are relative to just after the version label
-    																	 // segment we just rendered, which is only the first out of two we're drawing
-    ctx.set_color(petal_pink_color)
-    ctx.draw_text(0, 0, build_id_label)
-    ctx.reset_color()
-    ctx.clear_offsets_from(first_version_label_offset_id)
-    return ctx.compact_offsets_from(offset_from_id)
+	first_version_label_offset_id := ctx.push_offset(tea.Offset{
+		x: -((tea.visible_len(version_label) + tea.visible_len(build_id_label)) / 2)
+	})
+	ctx.draw_text(0, 0, version_label)
+	ctx.push_offset(tea.Offset{ x: tea.visible_len(version_label) + 1 }) // add the width to the current offset so further paints are relative to just after the version label
+	// segment we just rendered, which is only the first out of two we're drawing
+	ctx.set_color(petal_pink_color)
+	ctx.draw_text(0, 0, build_id_label)
+	ctx.reset_color()
+	ctx.clear_offsets_from(first_version_label_offset_id)
+	return ctx.compact_offsets_from(offset_from_id)
 }
 
 fn render_logo(mut ctx tea.Context, logo SplashLogo) tea.Offset {
-    // NOTE(tauraamui) [25/10/25]: this can be reduced to a style container which basically
-    //                  makes the y offset be down by 10% of the parent. in this
-    //                  case the parent is just the window itself, but could be anything
+	// NOTE(tauraamui) [25/10/25]: this can be reduced to a style container which basically
+	//                  makes the y offset be down by 10% of the parent. in this
+	//                  case the parent is just the window itself, but could be anything
 
 	// NOTE(tauraamui) [26/10/25]: basically each logo line by default renders as the full string per
 	//                             line at once with the light pink color set, but some lines of the logo
@@ -260,9 +276,9 @@ fn render_logo(mut ctx tea.Context, logo SplashLogo) tea.Offset {
 		//                            each loop iter, so by the end `compact_offsets` is a combination of
 		//                            the full height of the logo once its been completely rendered
 		ctx.push_offset(tea.Offset{ y: 1 })
-	    ctx.push_offset(tea.Offset{ x: -(tea.visible_len(l) / 2) })
-	    render_logo_line(mut ctx, l)
-	    ctx.pop_offset()
+		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(l) / 2) })
+		render_logo_line(mut ctx, l)
+		ctx.pop_offset()
 	}
 	ctx.reset_color()
 	return ctx.compact_offsets_from(offset_from_id)
@@ -270,10 +286,10 @@ fn render_logo(mut ctx tea.Context, logo SplashLogo) tea.Offset {
 
 fn render_logo_line(mut ctx tea.Context, line string) {
 	if has_colouring_directives(line) {
-	    render_logo_line_char_by_char(mut ctx, line)
-	    return
+		render_logo_line_char_by_char(mut ctx, line)
+		return
 	}
-    ctx.draw_text(0, 0, line)
+	ctx.draw_text(0, 0, line)
 }
 
 fn render_logo_line_char_by_char(mut ctx tea.Context, line string) {
@@ -301,16 +317,15 @@ fn has_colouring_directives(line string) bool {
 }
 
 fn (m SplashScreenModel) debug_data() map[string]string {
-	active_model_name := if _ := m.dialog_model { "file_picker" } else { "splash_screen" }
+	active_model_name := if _ := m.dialog_model { 'file_picker' } else { 'splash_screen' }
 	return {
-		"active model": active_model_name
-		"leader key": m.leader_key
+		'active model': active_model_name
+		'leader key':   m.leader_key
 	}
 }
 
 fn (m SplashScreenModel) clone() tea.Model {
-    return SplashScreenModel{
-        ...m
-    }
+	return SplashScreenModel{
+		...m
+	}
 }
-

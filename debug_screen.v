@@ -24,7 +24,7 @@ struct CloseDebugScreenMsg {
 
 fn close_debug(prev_model tea.Model) tea.Cmd {
 	return fn [prev_model] () tea.Msg {
-		return CloseDebugScreenMsg{ prev_model }
+		return CloseDebugScreenMsg{prev_model}
 	}
 }
 
@@ -35,7 +35,7 @@ fn new_debug_screen_model(wrapped_model DebuggableModel) DebugScreenModel {
 }
 
 fn (mut m DebugScreenModel) init() ?tea.Cmd {
-    return none
+	return none
 }
 
 fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
@@ -44,19 +44,19 @@ fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			match msg.k_type {
 				.special {
 					match msg.string() {
-						"escape" {
+						'escape' {
 							w_model := m.wrapped_model
 							if w_model is tea.Model {
 								return m.clone(), close_debug(w_model)
 							}
 						}
-						"ctrl+c" {
+						'ctrl+c' {
 							w_model := m.wrapped_model
 							if w_model is tea.Model {
 								return m.clone(), close_debug(w_model)
 							}
 						}
-						"f12" {
+						'f12' {
 							w_model := m.wrapped_model
 							if w_model is tea.Model {
 								return m.clone(), close_debug(w_model)
@@ -67,7 +67,7 @@ fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				}
 				.runes {
 					match msg.string() {
-						"q" {
+						'q' {
 							w_model := m.wrapped_model
 							if w_model is tea.Model {
 								return m.clone(), close_debug(w_model)
@@ -96,30 +96,32 @@ fn (mut m DebugScreenModel) view(mut ctx tea.Context) {
 	ctx.draw_text(ctx.window_width() - tea.visible_len(katakana), 0, katakana)
 	ctx.reset_color()
 	ctx.set_color(tea.Color.ansi(69))
-	debug_label := "*********** debug screen ***********"
+	debug_label := '*********** debug screen ***********'
 	ctx.draw_text((ctx.window_width() / 2) - tea.visible_len(debug_label) / 2, 0, debug_label)
 	ctx.reset_color()
 
-	ctx.draw_text(0, 2, "debug data: {")
+	ctx.draw_text(0, 2, 'debug data: {')
 	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
 	for k, v in m.wrapped_model.debug_data() {
 		ctx.draw_text(4, 2, "${k}: '${v}'")
 		ctx.push_offset(tea.Offset{ y: 1 })
 	}
-	ctx.draw_text(0, 2, "}")
+	ctx.draw_text(0, 2, '}')
 	ctx.clear_offsets_from(offset_from_id)
 
 	top_to_bottom_offset_id := ctx.push_offset(tea.Offset{ x: 1, y: ctx.window_height() - 1 })
 	defer { ctx.clear_offsets_from(top_to_bottom_offset_id) }
 
 	ctx.set_color(help_fg_color)
-	ctx.draw_text(0, 0, "q ${dot} esc ${dot} f12: close")
+	ctx.draw_text(0, 0, 'q ${dot} esc ${dot} f12: close')
 	ctx.reset_color()
 }
 
 fn generate_decorator_label(length int) string {
 	mut sb := strings.new_builder(length)
-	for _ in 0..length { sb.write_rune(generate_random_katakana()) }
+	for _ in 0 .. length {
+		sb.write_rune(generate_random_katakana())
+	}
 	return sb.str()
 }
 
@@ -138,7 +140,6 @@ fn generate_random_katakana() rune {
 	return rune(random_unicode_value)
 }
 
-
 fn (m DebugScreenModel) debug_data() map[string]string {
 	return {}
 }
@@ -148,4 +149,3 @@ fn (m DebugScreenModel) clone() tea.Model {
 		...m
 	}
 }
-
