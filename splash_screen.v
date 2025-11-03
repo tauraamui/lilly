@@ -38,6 +38,15 @@ fn (mut m SplashScreenModel) init() ?tea.Cmd {
     return tea.emit_resize
 }
 
+fn (mut m SplashScreenModel) handle_escape() (tea.Model, ?tea.Cmd) {
+	if !m.leader_mode {
+		return SplashScreenModel{}, tea.quit
+	}
+	m.leader_mode = false
+	m.leader_data = ""
+	return m.clone(), none
+}
+
 fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	mut cmds := []tea.Cmd{}
 	// handle dialog messages first
@@ -60,14 +69,10 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				.special {
 					match msg.string() {
 						"escape" {
-							if !m.leader_mode {
-								return SplashScreenModel{}, tea.quit
-							}
-							m.leader_mode = false
-							m.leader_data = ""
+							return m.handle_escape()
 						}
 						"ctrl+c" {
-							return SplashScreenModel{}, tea.quit
+							return m.handle_escape()
 						}
 						else {}
 					}
