@@ -12,11 +12,14 @@ mut:
 	selected_index int
 	query          string
 	loading        bool
+	needs_loading  bool
 }
 
 struct OpenDialogMsg {
 	model tea.Model
 }
+
+struct LoadFilesMsg {}
 
 struct CloseDialogMsg {}
 
@@ -32,11 +35,14 @@ fn close_file_picker() tea.Msg {
 
 fn (mut m FilePickerModel) init() ?tea.Cmd {
 	m.loading = true
-	// Load files immediately in init
-	m.files = find_files_efficiently()
-	m.filtered_files = filter_files(m.files, m.query)
-	m.loading = false
+	m.needs_loading = true
 	return tea.emit_resize
+}
+
+fn load_files_cmd() tea.Cmd {
+	return fn () tea.Msg {
+		return LoadFilesMsg{}
+	}
 }
 
 fn find_files_efficiently() []string {
@@ -131,9 +137,19 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				}
 			}
 		}
+		LoadFilesMsg {
+			m.files = find_files_efficiently()
+			m.filtered_files = filter_files(m.files, m.query)
+			m.loading = false
+		}
 		tea.ResizedMsg {
 			m.width = msg.window_width / 2
 			m.height = msg.window_height / 2
+			// Trigger file loading after first resize
+			if m.needs_loading {
+				m.needs_loading = false
+				return m.clone(), load_files_cmd()
+			}
 		}
 		else {}
 	}
