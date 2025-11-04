@@ -195,6 +195,18 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 			return
 		}
 
+		max_items := height
+		display_count := if m.filtered_files.len > max_items { max_items } else { m.filtered_files.len }
+		list_offset_id := ctx.push_offset(tea.Offset{})
+		for i in 0..display_count {
+			file_index := m.filtered_files.len - 1 - i
+			prefix := if file_index == m.selected_index { ">" } else { "" }
+			file := prefix + m.filtered_files[file_index]
+			ctx.draw_text(0, height - 3, file)
+			ctx.push_offset(tea.Offset{ y: -1 })
+		}
+		ctx.clear_offsets_from(list_offset_id)
+
 		/*
 		// File list (reversed order, shrinking downwards)
 		max_items := m.height - 6
