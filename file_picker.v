@@ -160,13 +160,21 @@ const file_results_layout = tea.new_layout()
 	.border(.normal)
 	.border_color(tea.Color.ansi(218))
 
-fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int, height int) {
-	file_results_layout.size(width, height).render(mut r_ctx, fn [m] (mut layout_ctx tea.Context) {
-		if m.loading {
-			layout_ctx.draw_text(1, 4, 'Loading files...')
-			return
-		}
+const file_search_field_layout = tea.new_layout()
+	.border(.normal)
+	.border_color(tea.Color.ansi(189))
 
+fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int, height int) {
+	file_results_layout.size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
+		ctx.draw_rect(0, 0, width - 2, height - 2) // force clear cells behind modal
+
+		// if m.loading {
+			loading_label := "Loading files…"
+			ctx.draw_text((width / 2) - tea.visible_len(loading_label) / 2, height / 2, loading_label)
+			return
+		// }
+
+		/*
 		// File list (reversed order, shrinking downwards)
 		max_items := m.height - 6
 		display_count := if m.filtered_files.len > max_items { max_items } else { m.filtered_files.len }
@@ -179,21 +187,21 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 			y := start_y + display_count - 1 - i
 			if file_index == m.selected_index {
 				// Highlight selected item
-				layout_ctx.draw_text(1, y, '> ${file}')
+				ctx.draw_text(1, y, '> ${file}')
 			} else {
-				layout_ctx.draw_text(3, y, file)
+				ctx.draw_text(3, y, file)
 			}
 		}
 
 		// Status line
 		if m.filtered_files.len > 0 {
 			status := '${m.filtered_files.len} files'
-			layout_ctx.draw_text(1, m.height - 2, status)
+			ctx.draw_text(1, m.height - 2, status)
 		} else if !m.loading {
-			layout_ctx.draw_text(1, m.height - 2, 'No files found')
+			ctx.draw_text(1, m.height - 2, 'No files found')
 		}
+		*/
 	})
-
 }
 
 fn (m FilePickerModel) view(mut ctx tea.Context) {
@@ -208,7 +216,14 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 	})
 	defer { ctx.clear_offsets_from(id) }
 
-	m.render_file_results_pane(mut ctx, layout_width, layout_height)
+	m.render_file_results_pane(mut ctx, root_layout_width, root_layout_height - 4)
+	ctx.push_offset(tea.Offset{ y: root_layout_height - 4})
+	query := m.query
+	file_search_field_layout.size(root_layout_width, 3).render(mut ctx, fn [query, root_layout_width] (mut l_ctx tea.Context) {
+		l_ctx.draw_rect(0, 0, root_layout_width - 2, 1) // force clear cells behind
+		l_ctx.draw_text(0, 0, query)
+	})
+	ctx.pop_offset()
 }
 
 fn (m FilePickerModel) clone() tea.Model {
