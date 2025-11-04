@@ -144,12 +144,9 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 				}
 				else {
-					// Add character to query
-					if msg.string().len == 1 && msg.string().is_ascii() {
-						m.query += msg.string()
-						m.selected_index = 0
-						return m.clone(), filter_files_cmd(m.query)
-					}
+					m.query += msg.string()
+					m.selected_index = 0
+					return m.clone(), filter_files_cmd(m.query)
 				}
 			}
 		}
