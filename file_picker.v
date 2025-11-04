@@ -11,6 +11,7 @@ mut:
 	filtered_files []string
 	selected_index int
 	query          string
+	last_filtered_query string
 	loading        bool
 	needs_loading  bool
 }
@@ -20,6 +21,10 @@ struct OpenDialogMsg {
 }
 
 struct LoadFilesMsg {}
+
+struct FilterFilesMsg {
+	query string
+}
 
 struct CloseDialogMsg {}
 
@@ -42,6 +47,12 @@ fn (mut m FilePickerModel) init() ?tea.Cmd {
 fn load_files_cmd() tea.Cmd {
 	return fn () tea.Msg {
 		return LoadFilesMsg{}
+	}
+}
+
+fn filter_files_cmd(query string) tea.Cmd {
+	return fn [query] () tea.Msg {
+		return FilterFilesMsg{ query: query }
 	}
 }
 
@@ -123,16 +134,16 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				'backspace' {
 					if m.query.len > 0 {
 						m.query = m.query[..m.query.len - 1]
-						m.filtered_files = filter_files(m.files, m.query)
 						m.selected_index = 0
+						return m.clone(), filter_files_cmd(m.query)
 					}
 				}
 				else {
 					// Add character to query
 					if msg.string().len == 1 && msg.string().is_ascii() {
 						m.query += msg.string()
-						m.filtered_files = filter_files(m.files, m.query)
 						m.selected_index = 0
+						return m.clone(), filter_files_cmd(m.query)
 					}
 				}
 			}
@@ -140,7 +151,15 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		LoadFilesMsg {
 			m.files = find_files_efficiently()
 			m.filtered_files = filter_files(m.files, m.query)
+			m.last_filtered_query = m.query
 			m.loading = false
+		}
+		FilterFilesMsg {
+			// only update if this is the most recent query
+			if msg.query == m.query {
+				m.filtered_files = filter_files(m.files, msg.query)
+				m.last_filtered_query = msg.query
+			}
 		}
 		tea.ResizedMsg {
 			m.width = int(f64(msg.window_width) * 0.8)
