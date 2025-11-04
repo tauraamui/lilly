@@ -220,6 +220,8 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 	ctx.push_offset(tea.Offset{ y: root_layout_height - 4})
 	query := m.query
 	file_search_field_layout.size(root_layout_width, 3).render(mut ctx, fn [query, root_layout_width] (mut l_ctx tea.Context) {
+		l_ctx.set_clip_area(tea.ClipArea{ 0, 0, root_layout_width - 3, 1 })
+		defer { l_ctx.clear_clip_area() }
 		l_ctx.draw_rect(0, 0, root_layout_width - 2, 1) // force clear cells behind
 		l_ctx.draw_text(0, 0, query)
 	})
