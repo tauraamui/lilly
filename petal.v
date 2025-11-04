@@ -7,6 +7,7 @@ const dot = '•'
 struct PetalModel {
 mut:
 	active_screen DebuggableModel // all screens are debuggable to help with live, well... debugging
+	clear_screen_next_frame bool
 }
 
 fn new_petal_model() PetalModel {
@@ -35,6 +36,7 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				m.active_screen = screen
 			}
 		}
+		tea.ResizedMsg { m.clear_screen_next_frame = true }
 		else {}
 	}
 	screen, cmds := m.active_screen.update(msg)
@@ -44,7 +46,12 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	return m.clone(), cmds
 }
 
-fn (m PetalModel) view(mut ctx tea.Context) {
+fn (mut m PetalModel) view(mut ctx tea.Context) {
+	if m.clear_screen_next_frame {
+		ctx.reset_bg_color()
+		ctx.draw_rect(0, 0, ctx.window_width(), ctx.window_height())
+		m.clear_screen_next_frame = false
+	}
 	mut screen := m.active_screen
 	screen.view(mut ctx)
 }
