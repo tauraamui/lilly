@@ -160,19 +160,8 @@ const file_results_layout = tea.new_layout()
 	.border(.normal)
 	.border_color(tea.Color.ansi(218))
 
-fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context) {
-	ten_percent_width := int(f64(r_ctx.window_width()) * 0.1)
-	ten_percent_height := int(f64(r_ctx.window_height()) * 0.1)
-	layout_width := r_ctx.window_width() - (ten_percent_width * 2)
-	layout_height := r_ctx.window_height() - (ten_percent_height * 2)
-
-	id := r_ctx.push_offset(tea.Offset{
-		x: ten_percent_width
-		y: ten_percent_height
-	})
-	defer { r_ctx.clear_offsets_from(id) }
-
-	file_results_layout.size(layout_width, layout_height).render(mut r_ctx, fn [m] (mut layout_ctx tea.Context) {
+fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int, height int) {
+	file_results_layout.size(width, height).render(mut r_ctx, fn [m] (mut layout_ctx tea.Context) {
 		if m.loading {
 			layout_ctx.draw_text(1, 4, 'Loading files...')
 			return
@@ -208,14 +197,18 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context) {
 }
 
 fn (m FilePickerModel) view(mut ctx tea.Context) {
-	/*
+	ten_percent_width := int(f64(ctx.window_width()) * 0.1)
+	ten_percent_height := int(f64(ctx.window_height()) * 0.1)
+	root_layout_width := ctx.window_width() - (ten_percent_width * 2)
+	root_layout_height := ctx.window_height() - (ten_percent_height * 2)
+
 	id := ctx.push_offset(tea.Offset{
-		x: int(f64(ctx.window_width()) * 0.1)
-		y: int(f64(ctx.window_height()) * 0.1)
+		x: ten_percent_width
+		y: ten_percent_height
 	})
 	defer { ctx.clear_offsets_from(id) }
-	*/
-	m.render_file_results_pane(mut ctx)
+
+	m.render_file_results_pane(mut ctx, layout_width, layout_height)
 }
 
 fn (m FilePickerModel) clone() tea.Model {
