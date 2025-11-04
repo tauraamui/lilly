@@ -106,36 +106,41 @@ fn filter_files(files []string, query string) []string {
 fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	match msg {
 		tea.KeyMsg {
-			match msg.string() {
-				'escape' {
-					return FilePickerModel{}, close_file_picker
-				}
-				'ctrl+c' {
-					return FilePickerModel{}, close_file_picker
-				}
-				'enter' {
-					if m.filtered_files.len > 0 && m.selected_index < m.filtered_files.len {
-						// TODO: Open selected file
-						selected_file := m.filtered_files[m.selected_index]
-						println('Selected: ${selected_file}')
-						return FilePickerModel{}, close_file_picker
-					}
-				}
-				'up', 'ctrl+k' {
-					if m.selected_index > 0 {
-						m.selected_index--
-					}
-				}
-				'down', 'ctrl+j' {
-					if m.selected_index < m.filtered_files.len - 1 {
-						m.selected_index++
-					}
-				}
-				'backspace' {
-					if m.query.len > 0 {
-						m.query = m.query[..m.query.len - 1]
-						m.selected_index = 0
-						return m.clone(), filter_files_cmd(m.query)
+			match msg.k_type {
+				.special {
+					match msg.string() {
+						'escape' {
+							return FilePickerModel{}, close_file_picker
+						}
+						'ctrl+c' {
+							return FilePickerModel{}, close_file_picker
+						}
+						'enter' {
+							if m.filtered_files.len > 0 && m.selected_index < m.filtered_files.len {
+								// TODO: Open selected file
+								selected_file := m.filtered_files[m.selected_index]
+								println('Selected: ${selected_file}')
+								return FilePickerModel{}, close_file_picker
+							}
+						}
+						'up', 'ctrl+k' {
+							if m.selected_index > 0 {
+								m.selected_index--
+							}
+						}
+						'down', 'ctrl+j' {
+							if m.selected_index < m.filtered_files.len - 1 {
+								m.selected_index++
+							}
+						}
+						'backspace' {
+							if m.query.len > 0 {
+								m.query = m.query[..m.query.len - 1]
+								m.selected_index = 0
+								return m.clone(), filter_files_cmd(m.query)
+							}
+						}
+						else {}
 					}
 				}
 				else {
