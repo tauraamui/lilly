@@ -156,99 +156,66 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	return m.clone(), none
 }
 
-const root_layout = tea.new_layout()
+const file_results_layout = tea.new_layout()
 	.border(.normal)
-	.border_color(tea.Color.ansi(236))
+	.border_color(tea.Color.ansi(218))
 
-fn (m FilePickerModel) render_file_results_pane(mut ctx tea.Context) {
-	if m.loading {
-		ctx.draw_text(1, 4, 'Loading files...')
-		return
-	}
+fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context) {
+	ten_percent_width := int(f64(r_ctx.window_width()) * 0.1)
+	ten_percent_height := int(f64(r_ctx.window_height()) * 0.1)
+	layout_width := r_ctx.window_width() - (ten_percent_width * 2)
+	layout_height := r_ctx.window_height() - (ten_percent_height * 2)
 
-	// File list
-	start_y := 4
-	max_items := m.height - 6
-
-	for i, file in m.filtered_files {
-		if i >= max_items {
-			break
-		}
-
-		y := start_y + i
-		if i == m.selected_index {
-			// Highlight selected item
-			ctx.draw_text(1, y, '> ${file}')
-		} else {
-			ctx.draw_text(3, y, file)
-		}
-	}
-
-	// Status line
-	if m.filtered_files.len > 0 {
-		status := '${m.filtered_files.len} files'
-		ctx.draw_text(1, m.height - 2, status)
-	} else if !m.loading {
-		ctx.draw_text(1, m.height - 2, 'No files found')
-	}
-}
-
-fn (m FilePickerModel) view(mut ctx tea.Context) {
-	id := ctx.push_offset(tea.Offset{
-		x: int(f64(ctx.window_width()) * 0.1)
-		y: int(f64(ctx.window_height()) * 0.1)
+	id := r_ctx.push_offset(tea.Offset{
+		x: ten_percent_width
+		y: ten_percent_height
 	})
-	defer { ctx.clear_offsets_from(id) }
+	defer { r_ctx.clear_offsets_from(id) }
 
-	root_layout.size(m.width, m.height).render(mut ctx, fn [m] (mut ctx tea.Context) {
-		ctx.set_clip_area(tea.ClipArea{0, 0, m.width - 3, m.height - 3})
-		defer { ctx.clear_clip_area() }
-		ctx.draw_rect(0, 0, m.width, m.height)
-
-
-		// Title
-		title := 'Find Files'
-		ctx.draw_text((m.width - title.len) / 2, 0, title)
-
-		m.render_file_results_pane(mut ctx)
-
-		/*
-		// Query input
-		query_prompt := '> ${m.query}'
-		ctx.draw_text(1, 2, query_prompt)
-
+	file_results_layout.size(layout_width, layout_height).render(mut r_ctx, fn [m] (mut layout_ctx tea.Context) {
 		if m.loading {
-			ctx.draw_text(1, 4, 'Loading files...')
+			layout_ctx.draw_text(1, 4, 'Loading files...')
 			return
 		}
 
-		// File list
-		start_y := 4
+		// File list (reversed order, shrinking downwards)
 		max_items := m.height - 6
+		display_count := if m.filtered_files.len > max_items { max_items } else { m.filtered_files.len }
+		start_y := 4 + max_items - display_count
 
-		for i, file in m.filtered_files {
-			if i >= max_items {
-				break
-			}
+		for i in 0 .. display_count {
+			file_index := m.filtered_files.len - 1 - i
+			file := m.filtered_files[file_index]
 
-			y := start_y + i
-			if i == m.selected_index {
+			y := start_y + display_count - 1 - i
+			if file_index == m.selected_index {
 				// Highlight selected item
-				ctx.draw_text(1, y, '> ${file}')
+				layout_ctx.draw_text(1, y, '> ${file}')
 			} else {
-				ctx.draw_text(3, y, file)
+				layout_ctx.draw_text(3, y, file)
 			}
 		}
 
 		// Status line
 		if m.filtered_files.len > 0 {
 			status := '${m.filtered_files.len} files'
-			ctx.draw_text(1, m.height - 2, status)
+			layout_ctx.draw_text(1, m.height - 2, status)
 		} else if !m.loading {
-			ctx.draw_text(1, m.height - 2, 'No files found')
+			layout_ctx.draw_text(1, m.height - 2, 'No files found')
 		}
-		*/
 	})
+
+}
+
+fn (m FilePickerModel) view(mut ctx tea.Context) {
+	/*
+	id := ctx.push_offset(tea.Offset{
+		x: int(f64(ctx.window_width()) * 0.1)
+		y: int(f64(ctx.window_height()) * 0.1)
+	})
+	defer { ctx.clear_offsets_from(id) }
+	*/
+	m.render_file_results_pane(mut ctx)
 }
 
 fn (m FilePickerModel) clone() tea.Model {
