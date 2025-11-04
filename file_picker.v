@@ -143,8 +143,8 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			m.loading = false
 		}
 		tea.ResizedMsg {
-			m.width = msg.window_width / 2
-			m.height = msg.window_height / 2
+			m.width = int(f64(msg.window_width) * 0.8)
+			m.height = int(f64(msg.window_height) * 0.8)
 			// Trigger file loading after first resize
 			if m.needs_loading {
 				m.needs_loading = false
@@ -156,18 +156,21 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	return m.clone(), none
 }
 
-const bordered_layout = tea.new_layout()
+const root_layout = tea.new_layout()
 	.border(.normal)
-	.border_color(tea.Color.ansi(69))
+	.border_color(tea.Color.ansi(236))
+
+fn render_file_results_pane(mut ctx tea.Context) {
+}
 
 fn (m FilePickerModel) view(mut ctx tea.Context) {
 	id := ctx.push_offset(tea.Offset{
-		x: (ctx.window_width() / 2) - m.width / 2
-		y: (ctx.window_height() / 2) - m.height / 2
+		x: int(f64(ctx.window_width()) * 0.1)
+		y: int(f64(ctx.window_height()) * 0.1)
 	})
 	defer { ctx.clear_offsets_from(id) }
 
-	bordered_layout.size(m.width, m.height).render(mut ctx, fn [m] (mut ctx tea.Context) {
+	root_layout.size(m.width, m.height).render(mut ctx, fn [m] (mut ctx tea.Context) {
 		ctx.set_clip_area(tea.ClipArea{0, 0, m.width - 3, m.height - 3})
 		defer { ctx.clear_clip_area() }
 		ctx.draw_rect(0, 0, m.width, m.height)
