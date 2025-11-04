@@ -168,11 +168,11 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 	file_results_layout.size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
 		ctx.draw_rect(0, 0, width - 2, height - 2) // force clear cells behind modal
 
-		// if m.loading {
+		if m.loading {
 			loading_label := "Loading files…"
 			ctx.draw_text((width / 2) - tea.visible_len(loading_label) / 2, height / 2, loading_label)
 			return
-		// }
+		}
 
 		/*
 		// File list (reversed order, shrinking downwards)
