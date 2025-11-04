@@ -160,7 +160,37 @@ const root_layout = tea.new_layout()
 	.border(.normal)
 	.border_color(tea.Color.ansi(236))
 
-fn render_file_results_pane(mut ctx tea.Context) {
+fn (m FilePickerModel) render_file_results_pane(mut ctx tea.Context) {
+	if m.loading {
+		ctx.draw_text(1, 4, 'Loading files...')
+		return
+	}
+
+	// File list
+	start_y := 4
+	max_items := m.height - 6
+
+	for i, file in m.filtered_files {
+		if i >= max_items {
+			break
+		}
+
+		y := start_y + i
+		if i == m.selected_index {
+			// Highlight selected item
+			ctx.draw_text(1, y, '> ${file}')
+		} else {
+			ctx.draw_text(3, y, file)
+		}
+	}
+
+	// Status line
+	if m.filtered_files.len > 0 {
+		status := '${m.filtered_files.len} files'
+		ctx.draw_text(1, m.height - 2, status)
+	} else if !m.loading {
+		ctx.draw_text(1, m.height - 2, 'No files found')
+	}
 }
 
 fn (m FilePickerModel) view(mut ctx tea.Context) {
@@ -175,10 +205,14 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 		defer { ctx.clear_clip_area() }
 		ctx.draw_rect(0, 0, m.width, m.height)
 
+
 		// Title
 		title := 'Find Files'
 		ctx.draw_text((m.width - title.len) / 2, 0, title)
 
+		m.render_file_results_pane(mut ctx)
+
+		/*
 		// Query input
 		query_prompt := '> ${m.query}'
 		ctx.draw_text(1, 2, query_prompt)
@@ -213,6 +247,7 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 		} else if !m.loading {
 			ctx.draw_text(1, m.height - 2, 'No files found')
 		}
+		*/
 	})
 }
 
