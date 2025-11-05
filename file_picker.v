@@ -204,7 +204,7 @@ const file_search_field_layout = tea.new_layout()
 fn render_file_path_line(mut ctx tea.Context, file_path string, width int, height int, is_selected bool) {
 	mut prefix := "  "
 	if is_selected {
-		prefix = "> "
+		prefix = "» "
 		ctx.set_bg_color(selected_file_bg_color)
 		ctx.draw_rect(0, height - 3, width, 1)
 		defer { ctx.reset_bg_color() }
