@@ -103,6 +103,17 @@ fn filter_files(files []string, query string) []string {
 	return filtered
 }
 
+struct ClearQueryFieldMsg {}
+
+fn clear_query_field() tea.Msg {
+	return ClearQueryFieldMsg{}
+}
+
+fn (mut m FilePickerModel) on_cancel() (tea.Model, ?tea.Cmd) {
+	cmd := if m.query.len == 0 { close_file_picker } else { clear_query_field }
+	return m.clone(), cmd
+}
+
 fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	match msg {
 		tea.KeyMsg {
@@ -110,10 +121,10 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				.special {
 					match msg.string() {
 						'escape' {
-							return FilePickerModel{}, close_file_picker
+							return m.on_cancel()
 						}
 						'ctrl+c' {
-							return FilePickerModel{}, close_file_picker
+							return m.on_cancel()
 						}
 						'enter' {
 							if m.filtered_files.len > 0 && m.selected_index < m.filtered_files.len {
@@ -162,6 +173,9 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				m.filtered_files = filter_files(m.files, msg.query)
 				m.last_filtered_query = msg.query
 			}
+		}
+		ClearQueryFieldMsg {
+			m.query = ""
 		}
 		tea.ResizedMsg {
 			m.width = int(f64(msg.window_width) * 0.8)
