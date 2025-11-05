@@ -191,6 +191,8 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	return m.clone(), none
 }
 
+const selected_file_bg_color = tea.Color.ansi(239)
+
 const file_results_layout = tea.new_layout()
 	.border(.normal)
 	.border_color(tea.Color.ansi(218))
@@ -199,8 +201,23 @@ const file_search_field_layout = tea.new_layout()
 	.border(.normal)
 	.border_color(tea.Color.ansi(189))
 
+fn render_file_path_line(mut ctx tea.Context, file_path string, width int, height int, is_selected bool) {
+	mut prefix := "  "
+	if is_selected {
+		prefix = "> "
+		ctx.set_bg_color(selected_file_bg_color)
+		ctx.draw_rect(0, height - 3, width, 1)
+		defer { ctx.reset_bg_color() }
+	}
+	ctx.draw_text(0, height - 3, prefix + file_path)
+	ctx.push_offset(tea.Offset{ y: -1 })
+}
+
 fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int, height int) {
 	file_results_layout.size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
+		ctx.set_clip_area(tea.ClipArea{ 0, 0, width - 3, height - 2 })
+		defer { ctx.clear_clip_area() }
+
 		ctx.draw_rect(0, 0, width - 2, height - 2) // force clear cells behind modal
 
 		if m.loading {
@@ -214,40 +231,11 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 		list_offset_id := ctx.push_offset(tea.Offset{})
 		for i in 0..display_count {
 			file_index := m.filtered_files.len - 1 - i
-			prefix := if file_index == m.selected_index { "> " } else { "  " }
-			file := prefix + m.filtered_files[file_index]
-			ctx.draw_text(0, height - 3, file)
-			ctx.push_offset(tea.Offset{ y: -1 })
+			file_path := m.filtered_files[file_index]
+			is_selected := file_index == m.selected_index
+			render_file_path_line(mut ctx, file_path, width, height, is_selected)
 		}
 		ctx.clear_offsets_from(list_offset_id)
-
-		/*
-		// File list (reversed order, shrinking downwards)
-		max_items := m.height - 6
-		display_count := if m.filtered_files.len > max_items { max_items } else { m.filtered_files.len }
-		start_y := 4 + max_items - display_count
-
-		for i in 0 .. display_count {
-			file_index := m.filtered_files.len - 1 - i
-			file := m.filtered_files[file_index]
-
-			y := start_y + display_count - 1 - i
-			if file_index == m.selected_index {
-				// Highlight selected item
-				ctx.draw_text(1, y, '> ${file}')
-			} else {
-				ctx.draw_text(3, y, file)
-			}
-		}
-
-		// Status line
-		if m.filtered_files.len > 0 {
-			status := '${m.filtered_files.len} files'
-			ctx.draw_text(1, m.height - 2, status)
-		} else if !m.loading {
-			ctx.draw_text(1, m.height - 2, 'No files found')
-		}
-		*/
 	})
 }
 
