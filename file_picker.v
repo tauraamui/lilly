@@ -200,7 +200,7 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 		list_offset_id := ctx.push_offset(tea.Offset{})
 		for i in 0..display_count {
 			file_index := m.filtered_files.len - 1 - i
-			prefix := if file_index == m.selected_index { ">" } else { "" }
+			prefix := if file_index == m.selected_index { "> " } else { "  " }
 			file := prefix + m.filtered_files[file_index]
 			ctx.draw_text(0, height - 3, file)
 			ctx.push_offset(tea.Offset{ y: -1 })
@@ -256,7 +256,8 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 		l_ctx.set_clip_area(tea.ClipArea{ 0, 0, root_layout_width - 3, 1 })
 		defer { l_ctx.clear_clip_area() }
 		l_ctx.draw_rect(0, 0, root_layout_width - 2, 1) // force clear cells behind
-		l_ctx.draw_text(0, 0, query)
+		l_ctx.draw_text(0, 0, ">")
+		l_ctx.draw_text(2, 0, query)
 	})
 	ctx.pop_offset()
 }
