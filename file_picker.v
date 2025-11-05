@@ -135,13 +135,13 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							}
 						}
 						'up', 'ctrl+k' {
-							if m.selected_index > 0 {
-								m.selected_index--
+							if m.selected_index < m.filtered_files.len - 1 {
+								m.selected_index++
 							}
 						}
 						'down', 'ctrl+j' {
-							if m.selected_index < m.filtered_files.len - 1 {
-								m.selected_index++
+							if m.selected_index > 0 {
+								m.selected_index--
 							}
 						}
 						'backspace' {
@@ -231,7 +231,7 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 		display_count := if m.filtered_files.len > max_items { max_items } else { m.filtered_files.len }
 		list_offset_id := ctx.push_offset(tea.Offset{})
 		for i in 0..display_count {
-			file_index := m.filtered_files.len - 1 - i
+			file_index := i
 			file_path := m.filtered_files[file_index]
 			is_selected := file_index == m.selected_index
 			render_file_path_line(mut ctx, file_path, width, height, is_selected)
