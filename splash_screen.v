@@ -113,8 +113,8 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 }
 
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
-	render_logo_and_help_centered_and_stacked(mut ctx, m.logo, m.leader_mode)
-    render_help_keybinds(mut ctx)
+	render_logo_and_help_centered_and_stacked(mut ctx, m.logo, m.leader_mode, m.leader_data)
+	render_help_keybinds(mut ctx)
 
 	offset_from_id := ctx.push_offset(tea.Offset{ y: ctx.window_height() - 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
@@ -137,20 +137,32 @@ fn render_help_keybinds(mut ctx tea.Context) {
 	ctx.reset_color()
 }
 
-fn render_logo_and_help_centered_and_stacked(mut ctx tea.Context, logo SplashLogo, in_leader_mode bool) {
-    // NOTE(tauraamui) [25/10/2025]: all following contents to be padded from top of window
+fn render_logo_and_help_centered_and_stacked(mut ctx tea.Context, logo SplashLogo, in_leader_mode bool, leader_data string) {
+	// NOTE(tauraamui) [25/10/2025]: all following contents to be padded from top of window
 	base_offset_y := f64(ctx.window_height()) * 0.1
     offset_from_id := ctx.push_offset(tea.Offset{ x: ctx.window_width() / 2 y: int(math.floor(base_offset_y)) })
     defer { ctx.clear_offsets_from(offset_from_id) }
 
-    ctx.push_offset(render_logo(mut ctx, logo))
-    ctx.push_offset(render_version(mut ctx))
-    ctx.push_offset(render_keybinds_list(mut ctx, in_leader_mode))
-    render_copyright_footer(mut ctx)
+	ctx.push_offset(render_logo(mut ctx, logo))
+	ctx.push_offset(render_version(mut ctx))
+	ctx.push_offset(render_keybinds_list(mut ctx, in_leader_mode, leader_data))
+	render_copyright_footer(mut ctx)
 }
 
-const petal_pink_color = tea.Color{ r: 245, g: 191, b: 243 }
-const copyright_footer_label := 'the lilly editor authors © (made with ${[u8(0xf0), 0x9f, 0x92, 0x95].bytestr()})'
+const petal_pink_color = tea.Color{
+	r: 245
+	g: 191
+	b: 243
+}
+
+const petal_green_color = tea.Color{
+	r: 97
+	g: 242
+	b: 136
+}
+
+const copyright_footer_label = 'the lilly editor authors © (made with ${[u8(0xf0), 0x9f, 0x92,
+	0x95].bytestr()})'
 
 fn render_copyright_footer(mut ctx tea.Context) {
 	offset_from_id := ctx.push_offset(tea.Offset{ x: -(tea.visible_len(copyright_footer_label) / 2), y: 1 })
@@ -175,15 +187,19 @@ const disabled_command_help := [
 ]
 
 const pending_match_color = tea.Color.ansi(244)
+const closest_match_color = petal_green_color
 
-fn render_keybinds_list(mut ctx tea.Context, in_leader_mode bool) tea.Offset {
+fn render_keybinds_list(mut ctx tea.Context, in_leader_mode bool, leader_data string) tea.Offset {
 	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
 	for l in basic_command_help {
 		ctx.push_offset(tea.Offset{ y: 1 })
 		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(l) / 2) })
-		if in_leader_mode { ctx.set_color(pending_match_color) }
+		if in_leader_mode {
+			fg_color := if leader_data == 'f' { closest_match_color } else { pending_match_color }
+			ctx.set_color(fg_color)
+		}
 		ctx.draw_text(0, 0, l)
 		if in_leader_mode { ctx.reset_color() }
 		ctx.pop_offset()
@@ -235,7 +251,7 @@ fn render_logo(mut ctx tea.Context, logo SplashLogo) tea.Offset {
 	//                             line at once with the light pink color set, but some lines of the logo
 	//                             contain both green and pink, so they need to be rendered per character
 	//                             with the correct palette option/fg set
-	ctx.set_color(r: 245, g: 191, b: 243)
+	ctx.set_color(petal_pink_color)
 	offset_from_id := ctx.push_offset(tea.Offset{})
 	defer { ctx.clear_offsets_from(offset_from_id) }
 	for _, l in logo.data {
@@ -261,18 +277,18 @@ fn render_logo_line(mut ctx tea.Context, line string) {
 }
 
 fn render_logo_line_char_by_char(mut ctx tea.Context, line string) {
-    for j, c in line.runes() {
-        mut to_draw := '${c}'
-        if to_draw == 'g' {
-            to_draw = ' '
-            ctx.set_color(r: 97, g: 242, b: 136)
-        }
-        if to_draw == 'p' {
-            to_draw = ' '
-            ctx.set_color(petal_pink_color)
-        }
-        ctx.draw_text(j, 0, to_draw)
-    }
+	for j, c in line.runes() {
+		mut to_draw := '${c}'
+		if to_draw == 'g' {
+			to_draw = ' '
+			ctx.set_color(petal_green_color)
+		}
+		if to_draw == 'p' {
+			to_draw = ' '
+			ctx.set_color(petal_pink_color)
+		}
+		ctx.draw_text(j, 0, to_draw)
+	}
 }
 
 fn has_colouring_directives(line string) bool {
