@@ -176,6 +176,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		ClearQueryFieldMsg {
 			m.query = ""
+			return m.clone(), filter_files_cmd(m.query)
 		}
 		tea.ResizedMsg {
 			m.width = int(f64(msg.window_width) * 0.8)
