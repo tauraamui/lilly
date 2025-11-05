@@ -176,6 +176,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		ClearQueryFieldMsg {
 			m.query = ""
+			m.selected_index = 0
 			return m.clone(), filter_files_cmd(m.query)
 		}
 		tea.ResizedMsg {
@@ -227,7 +228,7 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 			return
 		}
 
-		max_items := height
+		max_items := height - 2
 		display_count := if m.filtered_files.len > max_items { max_items } else { m.filtered_files.len }
 		list_offset_id := ctx.push_offset(tea.Offset{})
 		for i in 0..display_count {
