@@ -22,7 +22,7 @@ struct DebugData {
 
 const debug_data_indent_amount := 4
 
-fn (d DebugData) draw(mut ctx tea.Context, x int, y int) {
+fn (d DebugData) draw(mut ctx tea.Context, x int, y int, clear_offsets bool) {
 	ctx.draw_text(x, y, '${d.name}: {')
 	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
 	for k, v in d.data {
@@ -34,12 +34,15 @@ fn (d DebugData) draw(mut ctx tea.Context, x int, y int) {
 				}
 			}
 			DebugData {
-				v.draw(mut ctx, x + debug_data_indent_amount, y)
+				v.draw(mut ctx, x + debug_data_indent_amount, y, false)
+				ctx.push_offset(tea.Offset{ y: 1 })
 			}
 		}
 	}
 	ctx.draw_text(x, y, '}')
-	ctx.clear_offsets_from(offset_from_id)
+	if clear_offsets {
+		ctx.clear_offsets_from(offset_from_id)
+	}
 }
 
 struct DebugScreenModel {
@@ -129,17 +132,7 @@ fn (mut m DebugScreenModel) view(mut ctx tea.Context) {
 	ctx.draw_text((ctx.window_width() / 2) - tea.visible_len(debug_label) / 2, 0, debug_label)
 	ctx.reset_color()
 
-	m.wrapped_model.debug_data().draw(mut ctx, 0, 2)
-	/*
-	ctx.draw_text(0, 2, 'debug data: {')
-	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
-	for k, v in m.wrapped_model.debug_data() {
-		ctx.draw_text(4, 2, "${k}: '${v}'")
-		ctx.push_offset(tea.Offset{ y: 1 })
-	}
-	ctx.draw_text(0, 2, '}')
-	ctx.clear_offsets_from(offset_from_id)
-	*/
+	m.wrapped_model.debug_data().draw(mut ctx, 0, 2, true)
 
 	top_to_bottom_offset_id := ctx.push_offset(tea.Offset{ x: 1, y: ctx.window_height() - 1 })
 	defer { ctx.clear_offsets_from(top_to_bottom_offset_id) }
