@@ -322,6 +322,10 @@ fn (m SplashScreenModel) debug_data() DebugData {
 		data: {
 			'active model': active_model_name
 			'leader key':   m.leader_key
+			'filepickerdata': DebugData{
+				name: 'file_picker data'
+				data: { 'some field': 'some value' }
+			}
 		}
 	}
 }

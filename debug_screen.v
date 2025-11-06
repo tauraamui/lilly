@@ -31,7 +31,9 @@ fn (d DebugData) draw(mut ctx tea.Context, x int, y int) {
 				ctx.draw_text(x + debug_data_indent_amount, y, "${k}: ${v}")
 				ctx.push_offset(tea.Offset{ y: 1 })
 			}
-			DebugData {}
+			DebugData {
+				v.draw(mut ctx, x + debug_data_indent_amount, y)
+			}
 		}
 	}
 	ctx.draw_text(x, y, '}')
