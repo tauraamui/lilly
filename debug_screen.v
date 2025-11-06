@@ -45,8 +45,25 @@ fn (d DebugData) draw(mut ctx tea.Context, x int, y int, clear_offsets bool) {
 	}
 }
 
+struct DebugLogMsg {
+	message string
+}
+
+fn debug_log(message string) tea.Cmd {
+	return fn [message] () tea.Msg {
+		return DebugLogMsg{ message }
+	}
+}
+
+enum ScreenState as u8 {
+	data
+	logs
+}
+
 struct DebugScreenModel {
+	logs []string
 mut:
+	state ScreenState
 	wrapped_model DebuggableModel
 }
 
@@ -60,9 +77,10 @@ fn close_debug(prev_model tea.Model) tea.Cmd {
 	}
 }
 
-fn new_debug_screen_model(wrapped_model DebuggableModel) DebugScreenModel {
+fn new_debug_screen_model(wrapped_model DebuggableModel, logs []string) DebugScreenModel {
 	return DebugScreenModel{
 		wrapped_model: wrapped_model
+		logs: logs
 	}
 }
 
@@ -105,6 +123,12 @@ fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								return m.clone(), close_debug(w_model)
 							}
 						}
+						'1' {
+							m.state = .data
+						}
+						'2' {
+							m.state = .logs
+						}
 						else {}
 					}
 				}
@@ -132,14 +156,27 @@ fn (mut m DebugScreenModel) view(mut ctx tea.Context) {
 	ctx.draw_text((ctx.window_width() / 2) - tea.visible_len(debug_label) / 2, 0, debug_label)
 	ctx.reset_color()
 
-	m.wrapped_model.debug_data().draw(mut ctx, 0, 2, true)
+	match m.state {
+		.data {
+			m.wrapped_model.debug_data().draw(mut ctx, 0, 2, true)
+		}
+		.logs {
+			ctx.draw_text((ctx.window_width() / 2) - tea.visible_len("LOGS") / 2, 2, "LOGS")
+			render_logs(mut ctx, 0, 4, m.logs)
+		}
+	}
 
 	top_to_bottom_offset_id := ctx.push_offset(tea.Offset{ x: 1, y: ctx.window_height() - 1 })
 	defer { ctx.clear_offsets_from(top_to_bottom_offset_id) }
-
 	ctx.set_color(help_fg_color)
 	ctx.draw_text(0, 0, 'q ${dot} esc ${dot} f12: close')
 	ctx.reset_color()
+}
+
+fn render_logs(mut ctx tea.Context, x int, y int, logs []string) {
+	for i, l in logs {
+		ctx.draw_text(x, y + i, l)
+	}
 }
 
 fn generate_decorator_label(length int) string {
