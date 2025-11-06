@@ -1,6 +1,7 @@
 module main
 
 import os
+import math
 import tauraamui.bobatea as tea
 
 struct FilePickerModel {
@@ -12,6 +13,7 @@ mut:
 	selected_index      int
 	query               string
 	cursor_pos          int
+	cursor_blink_frame  int
 	last_filtered_query string
 	loading             bool
 	needs_loading       bool
@@ -28,6 +30,8 @@ struct FilterFilesMsg {
 }
 
 struct CloseDialogMsg {}
+
+// Remove the cursor blink command since bobatea doesn't have tick function
 
 fn open_file_picker() tea.Msg {
 	return OpenDialogMsg{
@@ -118,6 +122,14 @@ fn (mut m FilePickerModel) on_cancel() (tea.Model, ?tea.Cmd) {
 }
 
 fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+	// Increment cursor blink frame every few updates for slower animation
+	// Only increment every 5th update to slow down the animation by ~40%
+	if m.cursor_blink_frame % 5 == 0 {
+		m.cursor_blink_frame = (m.cursor_blink_frame + 1) % 840 // Increased cycle length by 40%
+	} else {
+		m.cursor_blink_frame++
+	}
+
 	match msg {
 		tea.KeyMsg {
 			match msg.k_type {
@@ -223,6 +235,23 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	return m.clone(), none
 }
 
+fn calculate_cursor_color(blink_frame int) tea.Color {
+	// Create a smooth sine wave animation between 235 (darkest) and 255 (brightest)
+	// blink_frame cycles from 0 to 839 (840 frames total for 40% slower animation)
+
+	// Convert frame to radians (0 to 2π)
+	angle := f64(blink_frame) * 2.0 * math.pi / 840.0
+
+	// Use sine wave to oscillate between -1 and 1
+	sine_value := math.sin(angle)
+
+	// Map sine wave (-1 to 1) to color range (235 to 255)
+	color_range := 255 - 235
+	color_value := 235 + int((sine_value + 1.0) * f64(color_range) / 2.0)
+
+	return tea.Color.ansi(color_value)
+}
+
 const selected_file_bg_color = tea.Color.ansi(239)
 
 const file_results_layout = tea.new_layout()
@@ -292,17 +321,18 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 	ctx.push_offset(tea.Offset{ y: root_layout_height - 4 })
 	query := m.query
 	cursor_pos := m.cursor_pos
-	file_search_field_layout.size(root_layout_width, 3).render(mut ctx, fn [query, cursor_pos, root_layout_width] (mut l_ctx tea.Context) {
+	cursor_color := calculate_cursor_color(m.cursor_blink_frame)
+	file_search_field_layout.size(root_layout_width, 3).render(mut ctx, fn [query, cursor_pos, cursor_color, root_layout_width] (mut l_ctx tea.Context) {
 		l_ctx.set_clip_area(tea.ClipArea{0, 0, root_layout_width - 3, 1})
 		defer { l_ctx.clear_clip_area() }
 		l_ctx.draw_rect(0, 0, root_layout_width - 2, 1) // force clear cells behind
 		l_ctx.draw_text(0, 0, '>')
 		l_ctx.draw_text(2, 0, query)
-		
-		// Draw cursor
+
+		// Draw animated cursor
 		cursor_x := 2 + cursor_pos
 		if cursor_x < root_layout_width - 3 {
-			l_ctx.set_bg_color(tea.Color.ansi(255))
+			l_ctx.set_bg_color(cursor_color)
 			l_ctx.draw_rect(cursor_x, 0, 1, 1)
 			l_ctx.reset_bg_color()
 		}
@@ -323,6 +353,7 @@ fn (m FilePickerModel) debug_data() DebugData {
 			'selected path':  selected_path
 			'search query':   if m.query.len == 0 { '<empty>' } else { m.query }
 			'cursor pos':     '${m.cursor_pos}'
+			'blink frame':    '${m.cursor_blink_frame}'
 		}
 	}
 }
