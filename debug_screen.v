@@ -65,6 +65,10 @@ struct DebugScreenModel {
 mut:
 	state         ScreenState
 	wrapped_model DebuggableModel
+	window_width int
+	window_height int
+	last_resize_width int
+	last_resize_height int
 }
 
 struct CloseDebugScreenMsg {
@@ -134,6 +138,10 @@ fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				}
 			}
 		}
+		tea.ResizedMsg {
+			m.last_resize_width = msg.window_width
+			m.last_resize_height = msg.window_height
+		}
 		else {}
 	}
 
@@ -146,6 +154,8 @@ fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 }
 
 fn (mut m DebugScreenModel) view(mut ctx tea.Context) {
+	m.window_width = ctx.window_width()
+	m.window_height = ctx.window_height()
 	katakana := generate_decorator_label(ctx.window_width() / 6)
 	ctx.set_color(help_fg_color)
 	ctx.draw_text(0, 0, katakana)
@@ -158,7 +168,7 @@ fn (mut m DebugScreenModel) view(mut ctx tea.Context) {
 
 	match m.state {
 		.data {
-			m.wrapped_model.debug_data().draw(mut ctx, 0, 2, true)
+			m.debug_data().draw(mut ctx, 0, 2, true)
 		}
 		.logs {
 			ctx.draw_text((ctx.window_width() / 2) - tea.visible_len('LOGS') / 2, 2, 'LOGS')
@@ -203,7 +213,17 @@ fn generate_random_katakana() rune {
 }
 
 fn (m DebugScreenModel) debug_data() DebugData {
-	return DebugData{}
+	return DebugData{
+		name: 'debug_screen data'
+		data: {
+			'current width': '${m.window_width}'
+			'current height': '${m.window_height}'
+			'last resized msg width': '${m.last_resize_width}'
+			'last resized msg height': '${m.last_resize_height}'
+			'': m.wrapped_model.debug_data()
+		}
+	}
+
 }
 
 fn (m DebugScreenModel) clone() tea.Model {
