@@ -6,9 +6,9 @@ const dot = '•'
 
 struct PetalModel {
 mut:
-	active_screen DebuggableModel // all screens are debuggable to help with live, well... debugging
+	active_screen           DebuggableModel // all screens are debuggable to help with live, well... debugging
 	clear_screen_next_frame bool
-	logs []string
+	logs                    []string
 }
 
 fn new_petal_model() PetalModel {
@@ -18,10 +18,11 @@ fn new_petal_model() PetalModel {
 }
 
 fn (mut m PetalModel) init() ?tea.Cmd {
-	return tea.emit_resize
+	return none
 }
 
 fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+	mut cmds := []tea.Cmd{}
 	match msg {
 		tea.KeyMsg {
 			if msg.k_type == .special && msg.string() == 'f12' {
@@ -37,25 +38,22 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				m.active_screen = screen
 			}
 		}
-		tea.ResizedMsg { m.clear_screen_next_frame = true }
 		DebugLogMsg {
 			m.logs << msg.message
 		}
 		else {}
 	}
-	screen, cmds := m.active_screen.update(msg)
+	screen, active_cmds := m.active_screen.update(msg)
 	if screen is DebuggableModel {
 		m.active_screen = screen
 	}
-	return m.clone(), cmds
+	if a_cmds := active_cmds {
+		cmds << a_cmds
+	}
+	return m.clone(), tea.batch_array(cmds)
 }
 
 fn (mut m PetalModel) view(mut ctx tea.Context) {
-	if m.clear_screen_next_frame {
-		ctx.reset_bg_color()
-		ctx.draw_rect(0, 0, ctx.window_width(), ctx.window_height())
-		m.clear_screen_next_frame = false
-	}
 	mut screen := m.active_screen
 	screen.view(mut ctx)
 }

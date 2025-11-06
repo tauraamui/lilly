@@ -121,7 +121,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 }
 
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
-	render_version_label(mut ctx, "${version} - (#${build_id})")
+	render_version_label(mut ctx, '${version} - (#${build_id})')
 	render_logo_and_help_centered_and_stacked(mut ctx, m.logo, m.leader_mode, m.leader_data)
 	render_help_keybinds(mut ctx)
 
@@ -321,9 +321,9 @@ fn (m SplashScreenModel) debug_data() DebugData {
 	return DebugData{
 		name: 'splash_screen data'
 		data: {
-			'leader key':   m.leader_key
-			'': if d := m.dialog_model { d.debug_data() } else { 'null' }
-			'version': "${version} - (${build_id})"
+			'leader key': m.leader_key
+			'':           if d := m.dialog_model { d.debug_data() } else { 'null' }
+			'version':    '${version} - (${build_id})'
 		}
 	}
 }

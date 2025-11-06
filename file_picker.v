@@ -5,15 +5,15 @@ import tauraamui.bobatea as tea
 
 struct FilePickerModel {
 mut:
-	width          int
-	height         int
-	files          []string
-	filtered_files []string
-	selected_index int
-	query          string
+	width               int
+	height              int
+	files               []string
+	filtered_files      []string
+	selected_index      int
+	query               string
 	last_filtered_query string
-	loading        bool
-	needs_loading  bool
+	loading             bool
+	needs_loading       bool
 }
 
 struct OpenDialogMsg {
@@ -52,7 +52,9 @@ fn load_files_cmd() tea.Cmd {
 
 fn filter_files_cmd(query string) tea.Cmd {
 	return fn [query] () tea.Msg {
-		return FilterFilesMsg{ query: query }
+		return FilterFilesMsg{
+			query: query
+		}
 	}
 }
 
@@ -175,7 +177,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			}
 		}
 		ClearQueryFieldMsg {
-			m.query = ""
+			m.query = ''
 			m.selected_index = 0
 			return m.clone(), filter_files_cmd(m.query)
 		}
@@ -204,9 +206,9 @@ const file_search_field_layout = tea.new_layout()
 	.border_color(tea.Color.ansi(189))
 
 fn render_file_path_line(mut ctx tea.Context, file_path string, width int, height int, is_selected bool) {
-	mut prefix := "  "
+	mut prefix := '  '
 	if is_selected {
-		prefix = "» "
+		prefix = '» '
 		ctx.set_bg_color(selected_file_bg_color)
 		ctx.draw_rect(0, height - 3, width, 1)
 		defer { ctx.reset_bg_color() }
@@ -217,21 +219,26 @@ fn render_file_path_line(mut ctx tea.Context, file_path string, width int, heigh
 
 fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int, height int) {
 	file_results_layout.size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
-		ctx.set_clip_area(tea.ClipArea{ 0, 0, width - 3, height - 2 })
+		ctx.set_clip_area(tea.ClipArea{0, 0, width - 3, height - 2})
 		defer { ctx.clear_clip_area() }
 
 		ctx.draw_rect(0, 0, width - 2, height - 2) // force clear cells behind modal
 
 		if m.loading {
-			loading_label := "Loading files…"
-			ctx.draw_text((width / 2) - tea.visible_len(loading_label) / 2, height / 2, loading_label)
+			loading_label := 'Loading files…'
+			ctx.draw_text((width / 2) - tea.visible_len(loading_label) / 2, height / 2,
+				loading_label)
 			return
 		}
 
 		max_items := height - 2
-		display_count := if m.filtered_files.len > max_items { max_items } else { m.filtered_files.len }
+		display_count := if m.filtered_files.len > max_items {
+			max_items
+		} else {
+			m.filtered_files.len
+		}
 		list_offset_id := ctx.push_offset(tea.Offset{})
-		for i in 0..display_count {
+		for i in 0 .. display_count {
 			file_index := i
 			file_path := m.filtered_files[file_index]
 			is_selected := file_index == m.selected_index
@@ -254,26 +261,30 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 	defer { ctx.clear_offsets_from(id) }
 
 	m.render_file_results_pane(mut ctx, root_layout_width, root_layout_height - 4)
-	ctx.push_offset(tea.Offset{ y: root_layout_height - 4})
+	ctx.push_offset(tea.Offset{ y: root_layout_height - 4 })
 	query := m.query
 	file_search_field_layout.size(root_layout_width, 3).render(mut ctx, fn [query, root_layout_width] (mut l_ctx tea.Context) {
-		l_ctx.set_clip_area(tea.ClipArea{ 0, 0, root_layout_width - 3, 1 })
+		l_ctx.set_clip_area(tea.ClipArea{0, 0, root_layout_width - 3, 1})
 		defer { l_ctx.clear_clip_area() }
 		l_ctx.draw_rect(0, 0, root_layout_width - 2, 1) // force clear cells behind
-		l_ctx.draw_text(0, 0, ">")
+		l_ctx.draw_text(0, 0, '>')
 		l_ctx.draw_text(2, 0, query)
 	})
 	ctx.pop_offset()
 }
 
 fn (m FilePickerModel) debug_data() DebugData {
-	selected_path := if m.filtered_files.len == 0 { '<no files>' } else { m.filtered_files[m.selected_index] }
+	selected_path := if m.filtered_files.len == 0 {
+		'<no files>'
+	} else {
+		m.filtered_files[m.selected_index]
+	}
 	return DebugData{
 		name: 'file_picker data'
 		data: {
 			'selected index': '${m.selected_index}'
-			'selected path': selected_path
-			'search query': if m.query.len == 0 { '<empty>' } else { m.query }
+			'selected path':  selected_path
+			'search query':   if m.query.len == 0 { '<empty>' } else { m.query }
 		}
 	}
 }

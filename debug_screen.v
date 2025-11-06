@@ -20,7 +20,7 @@ struct DebugData {
 	data map[string]DebugValue
 }
 
-const debug_data_indent_amount := 4
+const debug_data_indent_amount = 4
 
 fn (d DebugData) draw(mut ctx tea.Context, x int, y int, clear_offsets bool) {
 	ctx.draw_text(x, y, '${d.name}: {')
@@ -29,7 +29,7 @@ fn (d DebugData) draw(mut ctx tea.Context, x int, y int, clear_offsets bool) {
 		match v {
 			string {
 				if k.len > 0 {
-					ctx.draw_text(x + debug_data_indent_amount, y, "${k}: ${v}")
+					ctx.draw_text(x + debug_data_indent_amount, y, '${k}: ${v}')
 					ctx.push_offset(tea.Offset{ y: 1 })
 				}
 			}
@@ -51,7 +51,7 @@ struct DebugLogMsg {
 
 fn debug_log(message string) tea.Cmd {
 	return fn [message] () tea.Msg {
-		return DebugLogMsg{ message }
+		return DebugLogMsg{message}
 	}
 }
 
@@ -63,7 +63,7 @@ enum ScreenState as u8 {
 struct DebugScreenModel {
 	logs []string
 mut:
-	state ScreenState
+	state         ScreenState
 	wrapped_model DebuggableModel
 }
 
@@ -80,7 +80,7 @@ fn close_debug(prev_model tea.Model) tea.Cmd {
 fn new_debug_screen_model(wrapped_model DebuggableModel, logs []string) DebugScreenModel {
 	return DebugScreenModel{
 		wrapped_model: wrapped_model
-		logs: logs
+		logs:          logs
 	}
 }
 
@@ -161,7 +161,7 @@ fn (mut m DebugScreenModel) view(mut ctx tea.Context) {
 			m.wrapped_model.debug_data().draw(mut ctx, 0, 2, true)
 		}
 		.logs {
-			ctx.draw_text((ctx.window_width() / 2) - tea.visible_len("LOGS") / 2, 2, "LOGS")
+			ctx.draw_text((ctx.window_width() / 2) - tea.visible_len('LOGS') / 2, 2, 'LOGS')
 			render_logs(mut ctx, 0, 4, m.logs)
 		}
 	}
