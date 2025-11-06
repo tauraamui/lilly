@@ -28,8 +28,10 @@ fn (d DebugData) draw(mut ctx tea.Context, x int, y int) {
 	for k, v in d.data {
 		match v {
 			string {
-				ctx.draw_text(x + debug_data_indent_amount, y, "${k}: ${v}")
-				ctx.push_offset(tea.Offset{ y: 1 })
+				if k.len > 0 {
+					ctx.draw_text(x + debug_data_indent_amount, y, "${k}: ${v}")
+					ctx.push_offset(tea.Offset{ y: 1 })
+				}
 			}
 			DebugData {
 				v.draw(mut ctx, x + debug_data_indent_amount, y)

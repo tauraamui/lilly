@@ -17,7 +17,7 @@ mut:
 }
 
 struct OpenDialogMsg {
-	model tea.Model
+	model DebuggableModel
 }
 
 struct LoadFilesMsg {}
@@ -264,6 +264,15 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 		l_ctx.draw_text(2, 0, query)
 	})
 	ctx.pop_offset()
+}
+
+fn (m FilePickerModel) debug_data() DebugData {
+	return DebugData{
+		name: 'file_picker data'
+		data: {
+			'selected index': '${m.selected_index}'
+		}
+	}
 }
 
 fn (m FilePickerModel) clone() tea.Model {

@@ -22,7 +22,7 @@ struct SplashScreenModel {
 mut:
 	leader_mode  bool
 	leader_data  string
-	dialog_model ?tea.Model
+	dialog_model ?DebuggableModel
 }
 
 fn new_splash_screen_model() DebuggableModel {
@@ -59,7 +59,9 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 
 	if mut open_model := m.dialog_model {
 		d, cmd := open_model.update(msg)
-		m.dialog_model = d
+		if d is DebuggableModel {
+			m.dialog_model = d
+		}
 		return m.clone(), cmd
 	}
 
@@ -316,16 +318,11 @@ fn has_colouring_directives(line string) bool {
 }
 
 fn (m SplashScreenModel) debug_data() DebugData {
-	active_model_name := if _ := m.dialog_model { 'file_picker' } else { 'splash_screen' }
 	return DebugData{
 		name: 'splash_screen data'
 		data: {
-			'active model': active_model_name
 			'leader key':   m.leader_key
-			'filepickerdata': DebugData{
-				name: 'file_picker data'
-				data: { 'some field': 'some value' }
-			}
+			'': if d := m.dialog_model { d.debug_data() } else { 'null' }
 		}
 	}
 }
