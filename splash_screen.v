@@ -119,6 +119,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 }
 
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
+	render_version_label(mut ctx, "${version} - (#${build_id})")
 	render_logo_and_help_centered_and_stacked(mut ctx, m.logo, m.leader_mode, m.leader_data)
 	render_help_keybinds(mut ctx)
 
@@ -132,6 +133,12 @@ fn (m SplashScreenModel) view(mut ctx tea.Context) {
 	if mut open_model := m.dialog_model {
 		open_model.view(mut ctx)
 	}
+}
+
+fn render_version_label(mut ctx tea.Context, version_label string) {
+	ctx.set_color(help_fg_color)
+	ctx.draw_text(1, 0, version_label)
+	ctx.reset_color()
 }
 
 fn render_help_keybinds(mut ctx tea.Context) {
@@ -153,7 +160,7 @@ fn render_logo_and_help_centered_and_stacked(mut ctx tea.Context, logo SplashLog
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
 	ctx.push_offset(render_logo(mut ctx, logo))
-	ctx.push_offset(render_version(mut ctx))
+	ctx.push_offset(render_lilly_name(mut ctx))
 	ctx.push_offset(render_keybinds_list(mut ctx, in_leader_mode, leader_data))
 	render_copyright_footer(mut ctx)
 }
@@ -234,26 +241,18 @@ fn render_keybinds_list(mut ctx tea.Context, in_leader_mode bool, leader_data st
 	return ctx.compact_offsets_from(offset_from_id)
 }
 
-fn render_version(mut ctx tea.Context) tea.Offset {
-	version_label := 'lilly (project petal) ${[u8(0xf0), 0x9f, 0x8c, 0xb8].bytestr()}'
-	build_id_label := '(#${build_id})'
-
+fn render_lilly_name(mut ctx tea.Context) tea.Offset {
 	offset_from_id := ctx.push_offset(tea.Offset{})
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
 	ctx.push_offset(tea.Offset{ y: 1 })
-	// NOTE(tauraamui) [02/11/25]: an attempt to explain what this offset code is doing:
-	// make 0,0 now represent the location which is to the left of the middle of the screen by 50% of the total length of the labels to
-	// to be rendered next to each other
+	version_label := 'lilly (project petal) ${[u8(0xf0), 0x9f, 0x8c, 0xb8].bytestr()}'
+
 	first_version_label_offset_id := ctx.push_offset(tea.Offset{
-		x: -((tea.visible_len(version_label) + tea.visible_len(build_id_label)) / 2)
+		x: -(tea.visible_len(version_label) / 2)
 	})
 	ctx.draw_text(0, 0, version_label)
-	ctx.push_offset(tea.Offset{ x: tea.visible_len(version_label) + 1 }) // add the width to the current offset so further paints are relative to just after the version label
-	// segment we just rendered, which is only the first out of two we're drawing
-	ctx.set_color(petal_pink_color)
-	ctx.draw_text(0, 0, build_id_label)
-	ctx.reset_color()
+
 	ctx.clear_offsets_from(first_version_label_offset_id)
 	return ctx.compact_offsets_from(offset_from_id)
 }
