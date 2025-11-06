@@ -267,11 +267,13 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 }
 
 fn (m FilePickerModel) debug_data() DebugData {
+	selected_path := if m.filtered_files.len == 0 { '<no files>' } else { m.filtered_files[m.selected_index] }
 	return DebugData{
 		name: 'file_picker data'
 		data: {
 			'selected index': '${m.selected_index}'
-			'selected path': '${if m.filtered_files.len == 0 { '' } else { m.filtered_files[m.selected_index] }}'
+			'selected path': selected_path
+			'search query': if m.query.len == 0 { '<empty>' } else { m.query }
 		}
 	}
 }
