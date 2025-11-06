@@ -13,19 +13,26 @@ interface Debuggable {
 	debug_data() DebugData
 }
 
+type DebugValue = string | DebugData
+
 struct DebugData {
-	data map[string]string
-	child ?&DebugData
+	name string
+	data map[string]DebugValue
 }
 
 const debug_data_indent_amount := 4
 
 fn (d DebugData) draw(mut ctx tea.Context, x int, y int) {
-	ctx.draw_text(x, y, 'debug data: {')
+	ctx.draw_text(x, y, '${d.name}: {')
 	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
 	for k, v in d.data {
-		ctx.draw_text(x + debug_data_indent_amount, y, "${k}: '${v}'")
-		ctx.push_offset(tea.Offset{ y: 1 })
+		match v {
+			string {
+				ctx.draw_text(x + debug_data_indent_amount, y, "${k}: ${v}")
+				ctx.push_offset(tea.Offset{ y: 1 })
+			}
+			DebugData {}
+		}
 	}
 	ctx.draw_text(x, y, '}')
 	ctx.clear_offsets_from(offset_from_id)

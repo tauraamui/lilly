@@ -317,10 +317,13 @@ fn has_colouring_directives(line string) bool {
 
 fn (m SplashScreenModel) debug_data() DebugData {
 	active_model_name := if _ := m.dialog_model { 'file_picker' } else { 'splash_screen' }
-	return DebugData{ data: {
-		'active model': active_model_name
-		'leader key':   m.leader_key
-	}}
+	return DebugData{
+		name: 'splash_screen data'
+		data: {
+			'active model': active_model_name
+			'leader key':   m.leader_key
+		}
+	}
 }
 
 fn (m SplashScreenModel) clone() tea.Model {
