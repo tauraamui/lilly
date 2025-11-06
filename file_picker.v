@@ -271,6 +271,7 @@ fn (m FilePickerModel) debug_data() DebugData {
 		name: 'file_picker data'
 		data: {
 			'selected index': '${m.selected_index}'
+			'selected path': '${if m.filtered_files.len == 0 { '' } else { m.filtered_files[m.selected_index] }}'
 		}
 	}
 }

@@ -323,6 +323,7 @@ fn (m SplashScreenModel) debug_data() DebugData {
 		data: {
 			'leader key':   m.leader_key
 			'': if d := m.dialog_model { d.debug_data() } else { 'null' }
+			'version': "${version} - (${build_id})"
 		}
 	}
 }
