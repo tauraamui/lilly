@@ -81,10 +81,12 @@ fn close_debug(prev_model tea.Model) tea.Cmd {
 	}
 }
 
-fn new_debug_screen_model(wrapped_model DebuggableModel, logs []string) DebugScreenModel {
+fn new_debug_screen_model(wrapped_model DebuggableModel, logs []string, last_resize_width int, last_resize_height int) DebugScreenModel {
 	return DebugScreenModel{
 		wrapped_model: wrapped_model
 		logs:          logs
+		last_resize_width: last_resize_width
+		last_resize_height: last_resize_height
 	}
 }
 
