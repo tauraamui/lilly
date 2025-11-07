@@ -235,7 +235,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		CursorBlinkMsg {
 			// Update cursor blink frame and schedule next blink
-			m.cursor_blink_frame = (m.cursor_blink_frame + 1) % 840
+			m.cursor_blink_frame = (m.cursor_blink_frame + 1) % int(frames_per_cycle)
 			cmds << cursor_blink_cmd()
 		}
 		else {}
@@ -243,12 +243,14 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	return m.clone(), tea.batch_array(cmds)
 }
 
+const frames_per_cycle = 840.0
+
 fn calculate_cursor_color(blink_frame int) tea.Color {
 	// Create a smooth sine wave animation between 235 (darkest) and 255 (brightest)
 	// blink_frame cycles from 0 to 839 (840 frames total for 40% slower animation)
 
 	// Convert frame to radians (0 to 2π)
-	angle := f64(blink_frame) * 2.0 * math.pi
+	angle := f64(blink_frame) * 2.0 * math.pi / frames_per_cycle
 
 	// Use sine wave to oscillate between -1 and 1
 	sine_value := math.sin(angle)
