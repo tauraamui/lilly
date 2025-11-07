@@ -45,6 +45,7 @@ fn close_file_picker() tea.Msg {
 
 fn (mut m FilePickerModel) init() ?tea.Cmd {
 	m.loading = true
+
 	return tea.batch(tea.emit_resize, load_files, tick_cmd())
 }
 
@@ -53,7 +54,7 @@ fn load_files() tea.Msg {
 }
 
 fn tick_cmd() tea.Cmd {
-	return tea.tick(time.second, fn (t time.Time) tea.Msg {
+	return tea.every(time.second, fn (t time.Time) tea.Msg {
 		return tea.TickMsg{
 			time: t
 		}
@@ -137,9 +138,6 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	}
 
 	match msg {
-		tea.TickMsg {
-			cmds << tick_cmd()
-		}
 		tea.KeyMsg {
 			match msg.k_type {
 				.special {
@@ -238,6 +236,9 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		tea.ResizedMsg {
 			m.width = int(f64(msg.window_width) * 0.8)
 			m.height = int(f64(msg.window_height) * 0.8)
+		}
+		tea.TickMsg {
+			cmds << tick_cmd()
 		}
 		else {}
 	}
