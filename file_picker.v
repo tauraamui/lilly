@@ -2,6 +2,7 @@ module main
 
 import os
 import math
+import time
 import tauraamui.bobatea as tea
 
 struct FilePickerModel {
@@ -44,11 +45,19 @@ fn close_file_picker() tea.Msg {
 
 fn (mut m FilePickerModel) init() ?tea.Cmd {
 	m.loading = true
-	return tea.batch(tea.emit_resize, load_files_cmd)
+	return tea.batch(tea.emit_resize, load_files, tick_cmd())
 }
 
-fn load_files_cmd() tea.Msg {
+fn load_files() tea.Msg {
 	return LoadFilesMsg{}
+}
+
+fn tick_cmd() tea.Cmd {
+	return tea.tick(time.second, fn (t time.Time) tea.Msg {
+		return tea.TickMsg{
+			time: t
+		}
+	})
 }
 
 fn filter_files_cmd(query string) tea.Cmd {
@@ -118,6 +127,7 @@ fn (mut m FilePickerModel) on_cancel() (tea.Model, ?tea.Cmd) {
 }
 
 fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+	mut cmds := []tea.Cmd{}
 	// Increment cursor blink frame every few updates for slower animation
 	// Only increment every 5th update to slow down the animation by ~40%
 	if m.cursor_blink_frame % 5 == 0 {
@@ -127,6 +137,9 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	}
 
 	match msg {
+		tea.TickMsg {
+			cmds << tea.quit
+		}
 		tea.KeyMsg {
 			match msg.k_type {
 				.special {
@@ -142,7 +155,8 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								// TODO: Open selected file
 								selected_file := m.filtered_files[m.selected_index]
 								println('Selected: ${selected_file}')
-								return FilePickerModel{}, close_file_picker
+								// return FilePickerModel{}, close_file_picker
+								cmds << close_file_picker
 							}
 						}
 						'up', 'ctrl+k' {
@@ -176,14 +190,16 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								m.query = m.query[..m.cursor_pos - 1] + m.query[m.cursor_pos..]
 								m.cursor_pos--
 								m.selected_index = 0
-								return m.clone(), filter_files_cmd(m.query)
+								cmds << filter_files_cmd(m.query)
+								// return m.clone(), filter_files_cmd(m.query)
 							}
 						}
 						'delete', 'ctrl+d' {
 							if m.cursor_pos < m.query.len {
 								m.query = m.query[..m.cursor_pos] + m.query[m.cursor_pos + 1..]
 								m.selected_index = 0
-								return m.clone(), filter_files_cmd(m.query)
+								cmds << filter_files_cmd(m.query)
+								// return m.clone(), filter_files_cmd(m.query)
 							}
 						}
 						else {}
@@ -194,7 +210,8 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					m.query = m.query[..m.cursor_pos] + input_char + m.query[m.cursor_pos..]
 					m.cursor_pos += input_char.len
 					m.selected_index = 0
-					return m.clone(), filter_files_cmd(m.query)
+					cmds << filter_files_cmd(m.query)
+					// return m.clone(), filter_files_cmd(m.query)
 				}
 			}
 		}
@@ -215,7 +232,8 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			m.query = ''
 			m.cursor_pos = 0
 			m.selected_index = 0
-			return m.clone(), filter_files_cmd(m.query)
+			cmds << filter_files_cmd(m.query)
+			// return m.clone(), filter_files_cmd(m.query)
 		}
 		tea.ResizedMsg {
 			m.width = int(f64(msg.window_width) * 0.8)
@@ -223,7 +241,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		else {}
 	}
-	return m.clone(), none
+	return m.clone(), tea.batch_array(cmds)
 }
 
 fn calculate_cursor_color(blink_frame int) tea.Color {
