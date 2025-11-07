@@ -205,7 +205,6 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					m.cursor_pos += input_char.len
 					m.selected_index = 0
 					cmds << filter_files_cmd(m.query)
-					// return m.clone(), filter_files_cmd(m.query)
 				}
 			}
 		}
@@ -227,14 +226,13 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			m.cursor_pos = 0
 			m.selected_index = 0
 			cmds << filter_files_cmd(m.query)
-			// return m.clone(), filter_files_cmd(m.query)
 		}
 		tea.ResizedMsg {
 			m.width = int(f64(msg.window_width) * 0.8)
 			m.height = int(f64(msg.window_height) * 0.8)
 		}
 		CursorBlinkMsg {
-			// Update cursor blink frame and schedule next blink
+			// update cursor blink frame and schedule next blink
 			m.cursor_blink_frame = (m.cursor_blink_frame + 1) % int(frames_per_cycle)
 			cmds << cursor_blink_cmd()
 		}
@@ -243,7 +241,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	return m.clone(), tea.batch_array(cmds)
 }
 
-const frames_per_cycle = 840.0
+const frames_per_cycle = 50.0
 
 fn calculate_cursor_color(blink_frame int) tea.Color {
 	// Create a smooth sine wave animation between 235 (darkest) and 255 (brightest)
