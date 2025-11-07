@@ -138,7 +138,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 
 	match msg {
 		tea.TickMsg {
-			cmds << tea.quit
+			cmds << tick_cmd()
 		}
 		tea.KeyMsg {
 			match msg.k_type {
@@ -317,8 +317,6 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 fn (m FilePickerModel) view(mut ctx tea.Context) {
 	ten_percent_width := int(f64(ctx.window_width()) * 0.1)
 	ten_percent_height := int(f64(ctx.window_height()) * 0.1)
-	// root_layout_width := ctx.window_width() - (ten_percent_width * 2)
-	// root_layout_height := ctx.window_height() - (ten_percent_height * 2)
 	root_layout_width := m.width
 	root_layout_height := m.height
 
