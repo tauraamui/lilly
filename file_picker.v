@@ -16,7 +16,6 @@ mut:
 	cursor_blink_frame  int
 	last_filtered_query string
 	loading             bool
-	needs_loading       bool
 }
 
 struct OpenDialogMsg {
@@ -45,14 +44,11 @@ fn close_file_picker() tea.Msg {
 
 fn (mut m FilePickerModel) init() ?tea.Cmd {
 	m.loading = true
-	m.needs_loading = true
-	return tea.emit_resize
+	return tea.batch(tea.emit_resize, load_files_cmd)
 }
 
-fn load_files_cmd() tea.Cmd {
-	return fn () tea.Msg {
-		return LoadFilesMsg{}
-	}
+fn load_files_cmd() tea.Msg {
+	return LoadFilesMsg{}
 }
 
 fn filter_files_cmd(query string) tea.Cmd {
@@ -224,11 +220,6 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		tea.ResizedMsg {
 			m.width = int(f64(msg.window_width) * 0.8)
 			m.height = int(f64(msg.window_height) * 0.8)
-			// Trigger file loading after first resize
-			if m.needs_loading {
-				m.needs_loading = false
-				return m.clone(), load_files_cmd()
-			}
 		}
 		else {}
 	}
@@ -308,8 +299,10 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 fn (m FilePickerModel) view(mut ctx tea.Context) {
 	ten_percent_width := int(f64(ctx.window_width()) * 0.1)
 	ten_percent_height := int(f64(ctx.window_height()) * 0.1)
-	root_layout_width := ctx.window_width() - (ten_percent_width * 2)
-	root_layout_height := ctx.window_height() - (ten_percent_height * 2)
+	// root_layout_width := ctx.window_width() - (ten_percent_width * 2)
+	// root_layout_height := ctx.window_height() - (ten_percent_height * 2)
+	root_layout_width := m.width
+	root_layout_height := m.height
 
 	id := ctx.push_offset(tea.Offset{
 		x: ten_percent_width
