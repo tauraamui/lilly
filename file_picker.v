@@ -31,7 +31,9 @@ struct FilterFilesMsg {
 
 struct CloseDialogMsg {}
 
-// Remove the cursor blink command since bobatea doesn't have tick function
+struct CursorBlinkMsg {
+	time time.Time
+}
 
 fn open_file_picker() tea.Msg {
 	return OpenDialogMsg{
@@ -46,16 +48,17 @@ fn close_file_picker() tea.Msg {
 fn (mut m FilePickerModel) init() ?tea.Cmd {
 	m.loading = true
 
-	return tea.batch(tea.emit_resize, load_files, tick_cmd())
+	return tea.batch(tea.emit_resize, load_files, cursor_blink_cmd())
 }
 
 fn load_files() tea.Msg {
 	return LoadFilesMsg{}
 }
 
-fn tick_cmd() tea.Cmd {
-	return tea.every(time.second, fn (t time.Time) tea.Msg {
-		return tea.TickMsg{
+fn cursor_blink_cmd() tea.Cmd {
+	// Blink every ~33ms for smooth animation (30 FPS)
+	return tea.tick(33 * time.millisecond, fn (t time.Time) tea.Msg {
+		return CursorBlinkMsg{
 			time: t
 		}
 	})
@@ -129,13 +132,6 @@ fn (mut m FilePickerModel) on_cancel() (tea.Model, ?tea.Cmd) {
 
 fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	mut cmds := []tea.Cmd{}
-	// Increment cursor blink frame every few updates for slower animation
-	// Only increment every 5th update to slow down the animation by ~40%
-	if m.cursor_blink_frame % 5 == 0 {
-		m.cursor_blink_frame = (m.cursor_blink_frame + 1) % 840 // Increased cycle length by 40%
-	} else {
-		m.cursor_blink_frame++
-	}
 
 	match msg {
 		tea.KeyMsg {
@@ -237,8 +233,10 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			m.width = int(f64(msg.window_width) * 0.8)
 			m.height = int(f64(msg.window_height) * 0.8)
 		}
-		tea.TickMsg {
-			cmds << tick_cmd()
+		CursorBlinkMsg {
+			// Update cursor blink frame and schedule next blink
+			m.cursor_blink_frame = (m.cursor_blink_frame + 1) % 840
+			cmds << cursor_blink_cmd()
 		}
 		else {}
 	}
@@ -250,7 +248,7 @@ fn calculate_cursor_color(blink_frame int) tea.Color {
 	// blink_frame cycles from 0 to 839 (840 frames total for 40% slower animation)
 
 	// Convert frame to radians (0 to 2π)
-	angle := f64(blink_frame) * 2.0 * math.pi / 840.0
+	angle := f64(blink_frame) * 2.0 * math.pi
 
 	// Use sine wave to oscillate between -1 and 1
 	sine_value := math.sin(angle)
