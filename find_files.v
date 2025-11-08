@@ -32,6 +32,6 @@ fn find_files() []string {
 }
 
 fn macos_find_files() []string {
-	return []
+	return os.ls(os.getwd()) or { [] }
 }
 
