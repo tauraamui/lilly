@@ -1,6 +1,5 @@
 module main
 
-import os
 import math
 import time
 import tauraamui.bobatea as tea
@@ -70,32 +69,6 @@ fn filter_files_cmd(query string) tea.Cmd {
 			query: query
 		}
 	}
-}
-
-fn find_files_efficiently() []string {
-	// Use external tools for efficient file discovery, similar to telescope
-	// Priority: rg > fd > find
-	if os.exists_in_system_path('rg') {
-		result := os.execute('rg --files --color never')
-		if result.exit_code == 0 {
-			return result.output.split_into_lines().filter(it.len > 0)
-		}
-	}
-
-	if os.exists_in_system_path('fd') {
-		result := os.execute('fd --type f --color never')
-		if result.exit_code == 0 {
-			return result.output.split_into_lines().filter(it.len > 0)
-		}
-	}
-
-	// Fallback to basic find command
-	result := os.execute('find . -type f')
-	if result.exit_code == 0 {
-		return result.output.split_into_lines().filter(it.len > 0)
-	}
-
-	return []
 }
 
 fn filter_files(files []string, query string) []string {
@@ -209,7 +182,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			}
 		}
 		LoadFilesMsg {
-			m.files = find_files_efficiently()
+			m.files = find_files()
 			m.filtered_files = filter_files(m.files, m.query)
 			m.last_filtered_query = m.query
 			m.loading = false
