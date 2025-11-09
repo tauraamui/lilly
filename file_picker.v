@@ -47,7 +47,7 @@ fn close_file_picker() tea.Msg {
 fn (mut m FilePickerModel) init() ?tea.Cmd {
 	m.loading = true
 
-	return tea.batch(tea.emit_resize, load_files, cursor_blink_cmd())
+	return tea.batch(load_files, cursor_blink_cmd())
 }
 
 fn load_files() tea.Msg {
@@ -289,8 +289,9 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 fn (m FilePickerModel) view(mut ctx tea.Context) {
 	ten_percent_width := int(f64(ctx.window_width()) * 0.1)
 	ten_percent_height := int(f64(ctx.window_height()) * 0.1)
-	root_layout_width := m.width
-	root_layout_height := m.height
+
+	root_layout_width := int(f64(ctx.window_width()) * 0.8)
+	root_layout_height := int(f64(ctx.window_height()) * 0.8)
 
 	id := ctx.push_offset(tea.Offset{
 		x: ten_percent_width
