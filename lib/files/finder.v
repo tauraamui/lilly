@@ -8,7 +8,10 @@ mut:
 	search(root string)!
 }
 
-struct MacosFinder {
+type Lister = fn (path string) ![]string
+
+struct StdlibBasedFinder {
+	ls Lister @[required]
 mut:
 	files []string
 }
@@ -19,8 +22,8 @@ mut:
 }
 
 pub fn new_finder() Finder {
-	$if darwin {
-		return MacosFinder{}
+	$if darwin || stdfinder ? {
+		return StdlibBasedFinder{ ls: os.ls }
 	}
 	return ToolBasedFinder{}
 }
@@ -58,11 +61,11 @@ fn (tf ToolBasedFinder) files() []string {
 	return tf.files
 }
 
-fn (mut tf MacosFinder) search(root string) ! {
-	return
+fn (mut sf StdlibBasedFinder) search(root string) ! {
+	sf.files = sf.ls(root) or { []string{} }
 }
 
-fn (mf MacosFinder) files() []string {
-	return mf.files
+fn (sf StdlibBasedFinder) files() []string {
+	return sf.files
 }
 
