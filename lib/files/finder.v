@@ -2,6 +2,39 @@ module files
 
 import os
 
+
+@[params]
+pub struct WalkParams {
+pub:
+	ls Lister
+	hidden bool
+}
+
+pub fn walk(path string, opts WalkParams) []string {
+	mut res := []string{}
+	impl_walk(path, mut res, opts)
+	return res
+}
+
+fn impl_walk(path string, mut out []string, opts WalkParams) {
+	if !os.is_dir(path) {
+		return
+	}
+	mut files := os.ls(path) or { return }
+	separator := if path.ends_with(os.path_separator) { '' } else { os.path_separator }
+	for file in files {
+		if !opts.hidden && file.starts_with('.') {
+			continue
+		}
+		p := path + separator + file
+		if os.is_dir(p) && !os.is_link(p) {
+			impl_walk(p, mut out, opts)
+		} else {
+			out << p
+		}
+	}
+}
+
 pub interface Finder {
 	files() []string
 mut:
