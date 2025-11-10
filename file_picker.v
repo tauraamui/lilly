@@ -186,7 +186,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			}
 		}
 		LoadFilesMsg {
-			m.finder.search(os.getwd()) or {}
+			m.finder.search(os.getwd())
 			// m.files = m.finder.files()
 			m.filtered_files = filter_file_paths(m.finder.files(), m.query)
 			m.last_filtered_query = m.query
