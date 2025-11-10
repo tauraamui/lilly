@@ -2,13 +2,15 @@ module main
 
 import math
 import time
+import os
+import lib.files
 import tauraamui.bobatea as tea
 
 struct FilePickerModel {
 mut:
 	width               int
 	height              int
-	files               []string
+	finder              files.Finder
 	filtered_files      []string
 	selected_index      int
 	query               string
@@ -36,7 +38,9 @@ struct CursorBlinkMsg {
 
 fn open_file_picker() tea.Msg {
 	return OpenDialogMsg{
-		model: FilePickerModel{}
+		model: FilePickerModel{
+			finder: files.new_finder()
+		}
 	}
 }
 
@@ -71,17 +75,17 @@ fn filter_files_cmd(query string) tea.Cmd {
 	}
 }
 
-fn filter_files(files []string, query string) []string {
+fn filter_file_paths(file_paths []string, query string) []string {
 	if query.len == 0 {
-		return files[..if files.len > 100 {
+		return file_paths[..if file_paths.len > 100 {
 			100
 		} else {
-			files.len
+			file_paths.len
 		}]
 	}
 
 	mut filtered := []string{}
-	for file in files {
+	for file in file_paths {
 		if file.to_lower().contains(query.to_lower()) {
 			filtered << file
 			if filtered.len >= 100 {
@@ -182,15 +186,16 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			}
 		}
 		LoadFilesMsg {
-			m.files = find_files()
-			m.filtered_files = filter_files(m.files, m.query)
+			m.finder.search(os.getwd()) or {}
+			// m.files = m.finder.files()
+			m.filtered_files = filter_file_paths(m.finder.files(), m.query)
 			m.last_filtered_query = m.query
 			m.loading = false
 		}
 		FilterFilesMsg {
 			// only update if this is the most recent query
 			if msg.query == m.query {
-				m.filtered_files = filter_files(m.files, msg.query)
+				m.filtered_files = filter_file_paths(m.finder.files(), msg.query)
 				m.last_filtered_query = msg.query
 			}
 		}
