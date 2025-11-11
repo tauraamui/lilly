@@ -13,7 +13,7 @@ pub:
 pub fn walk(path string, opts WalkParams) []string {
 	ch := chan []string{cap: 100}
 
-	spawn walk_worker(path, ch, opts)
+	go walk_worker(path, ch, opts)
 
 	mut res := []string{}
 	for {
@@ -61,7 +61,7 @@ fn impl_walk_concurrent(path string, ch chan []string, opts WalkParams) {
 	if should_parallelize {
 		mut threads := []thread{}
 		for subdir in subdirs {
-			threads << spawn impl_walk_concurrent(subdir, ch, opts)
+			threads << go impl_walk_concurrent(subdir, ch, opts)
 		}
 		threads.wait()
 	} else {
