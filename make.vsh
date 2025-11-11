@@ -17,7 +17,6 @@ context.task(
 	run:     |self| system('v . -o ${app_name}')
 )
 context.task(name: 'run', depends: ['_generate-git-hash'], run: |self| system('v -g run .'))
-context.task(name: 'run-ls', depends: ['_generate-git-hash'], run: |self| system('v -g -d stdfinder run .'))
 context.task(name: 'compile-make', run: |self| system('v -prod -skip-running make.vsh'))
 
 // TEST TASKS
