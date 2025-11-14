@@ -40,7 +40,8 @@ to whatever target FPS you want (Lilly asks for 60fps by default).
 The libraries API has been intentionally designed to be a as close as possible experience to using the Go
 based [bubbletea](https://github.com/charmbracelet/bubbletea), from both end users and the devs building with it.
 
-tldr; Lilly is being re-written from scratch in conjunction with a new TUI library intended to bring bubbletea to
+### tldr:
+Lilly is being re-written from scratch in conjunction with a new TUI library intended to bring bubbletea to
 the V community. If you would like to track this new implementation all the work is happening on the `petal` branch.
 
 ## Milestone 1: A pre-alpha release
