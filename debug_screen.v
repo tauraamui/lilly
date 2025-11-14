@@ -144,6 +144,14 @@ fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			m.last_resize_width = msg.window_width
 			m.last_resize_height = msg.window_height
 		}
+		CursorBlinkMsg {
+			mut wrapped_model := m.wrapped_model
+			wm, cmd := wrapped_model.update(msg)
+			if wm is DebuggableModel {
+				m.wrapped_model = wm
+			}
+			return m.clone(), cmd
+		}
 		else {}
 	}
 
