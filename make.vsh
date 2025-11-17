@@ -29,7 +29,7 @@ context.task(
 context.task(
 	name:    'verbose-test'
 	depends: ['_generate-git-hash']
-	run:     |self| exit(system('v -g -stats test ./src'))
+	run:     |self| exit(system('v -g -stats test .'))
 )
 
 // UTIL TASKS
