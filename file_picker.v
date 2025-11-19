@@ -12,6 +12,7 @@ mut:
 	height              int
 	finder              files.Finder
 	filtered_files      []string
+	start_index         int
 	selected_index      int
 	query               string
 	cursor_pos          int
@@ -20,23 +21,28 @@ mut:
 	loading             bool
 }
 
-struct OpenDialogMsg {
+pub struct OpenDialogMsg {
+pub:
 	model DebuggableModel
 }
 
-struct LoadFilesMsg {}
+pub struct LoadFilesMsg {
+	root string
+}
 
-struct FilterFilesMsg {
+pub struct FilterFilesMsg {
+pub:
 	query string
 }
 
-struct CloseDialogMsg {}
+pub struct CloseDialogMsg {}
 
-struct CursorBlinkMsg {
+pub struct CursorBlinkMsg {
+pub:
 	time time.Time
 }
 
-fn open_file_picker() tea.Msg {
+pub fn open_file_picker() tea.Msg {
 	return OpenDialogMsg{
 		model: FilePickerModel{
 			finder: files.new_finder()
@@ -44,21 +50,23 @@ fn open_file_picker() tea.Msg {
 	}
 }
 
-fn close_file_picker() tea.Msg {
+pub fn close_file_picker() tea.Msg {
 	return CloseDialogMsg{}
 }
 
-fn (mut m FilePickerModel) init() ?tea.Cmd {
+pub fn (mut m FilePickerModel) init() ?tea.Cmd {
 	m.loading = true
 
-	return tea.batch(load_files, cursor_blink_cmd())
+	return tea.batch(tea.emit_resize, load_files(os.getwd()), cursor_blink_cmd())
 }
 
-fn load_files() tea.Msg {
-	return LoadFilesMsg{}
+pub fn load_files(root string) tea.Cmd {
+	return fn [root] () tea.Msg {
+		return LoadFilesMsg{ root: root }
+	}
 }
 
-fn cursor_blink_cmd() tea.Cmd {
+pub fn cursor_blink_cmd() tea.Cmd {
 	// Blink every ~33ms for smooth animation (30 FPS)
 	return tea.tick(33 * time.millisecond, fn (t time.Time) tea.Msg {
 		return CursorBlinkMsg{
@@ -67,7 +75,7 @@ fn cursor_blink_cmd() tea.Cmd {
 	})
 }
 
-fn filter_files_cmd(query string) tea.Cmd {
+pub fn filter_files_cmd(query string) tea.Cmd {
 	return fn [query] () tea.Msg {
 		return FilterFilesMsg{
 			query: query
@@ -96,7 +104,7 @@ fn filter_file_paths(file_paths []string, query string) []string {
 	return filtered
 }
 
-struct ClearQueryFieldMsg {}
+pub struct ClearQueryFieldMsg {}
 
 fn clear_query_field() tea.Msg {
 	return ClearQueryFieldMsg{}
@@ -131,13 +139,25 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							}
 						}
 						'up', 'ctrl+k' {
-							if m.selected_index < m.filtered_files.len - 1 {
-								m.selected_index++
+							m.selected_index++
+							max_visible := m.max_visible_items()
+							if max_visible > 0 && m.selected_index >= m.start_index + max_visible {
+								m.start_index++
+								max_start := m.filtered_files.len - max_visible
+								if m.start_index > max_start {
+									m.start_index = max_start
+								}
+							}
+							if m.selected_index >= m.filtered_files.len {
+								m.selected_index = m.filtered_files.len - 1
 							}
 						}
 						'down', 'ctrl+j' {
-							if m.selected_index > 0 {
-								m.selected_index--
+							m.selected_index--
+							if m.selected_index < m.start_index {
+								m.start_index--
+								if m.start_index < 0 { m.start_index = 0 }
+								m.selected_index = m.start_index
 							}
 						}
 						'left', 'ctrl+b' {
@@ -161,6 +181,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								m.query = m.query[..m.cursor_pos - 1] + m.query[m.cursor_pos..]
 								m.cursor_pos--
 								m.selected_index = 0
+								m.start_index = 0
 								cmds << filter_files_cmd(m.query)
 								// return m.clone(), filter_files_cmd(m.query)
 							}
@@ -169,6 +190,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							if m.cursor_pos < m.query.len {
 								m.query = m.query[..m.cursor_pos] + m.query[m.cursor_pos + 1..]
 								m.selected_index = 0
+								m.start_index = 0
 								cmds << filter_files_cmd(m.query)
 								// return m.clone(), filter_files_cmd(m.query)
 							}
@@ -181,13 +203,13 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					m.query = m.query[..m.cursor_pos] + input_char + m.query[m.cursor_pos..]
 					m.cursor_pos += input_char.len
 					m.selected_index = 0
+					m.start_index = 0
 					cmds << filter_files_cmd(m.query)
 				}
 			}
 		}
 		LoadFilesMsg {
-			m.finder.search(os.getwd())
-			// m.files = m.finder.files()
+			m.finder.search(msg.root)
 			m.filtered_files = filter_file_paths(m.finder.files(), m.query)
 			m.last_filtered_query = m.query
 			m.loading = false
@@ -203,6 +225,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			m.query = ''
 			m.cursor_pos = 0
 			m.selected_index = 0
+			m.start_index = 0
 			cmds << filter_files_cmd(m.query)
 		}
 		tea.ResizedMsg {
@@ -253,19 +276,24 @@ fn render_file_path_line(mut ctx tea.Context, file_path string, width int, heigh
 	if is_selected {
 		prefix = '» '
 		ctx.set_bg_color(selected_file_bg_color)
-		ctx.draw_rect(0, height - 3, width, 1)
+		ctx.draw_rect(0, height - 3, width - 2, 1)
 		defer { ctx.reset_bg_color() }
 	}
-	ctx.draw_text(0, height - 3, prefix + file_path)
+	ctx.draw_text(0, height - 3, prefix + file_path.replace(os.getwd(), "."))
 	ctx.push_offset(tea.Offset{ y: -1 })
+}
+
+fn (m FilePickerModel) max_visible_items() int {
+	file_results_height := m.height - 4
+	max_height := file_results_height - 2
+	return if max_height > 0 { max_height } else { 0 }
 }
 
 fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int, height int) {
 	file_results_layout.size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
-		ctx.set_clip_area(tea.ClipArea{0, 0, width - 3, height - 2})
-		defer { ctx.clear_clip_area() }
-
-		ctx.draw_rect(0, 0, width - 2, height - 2) // force clear cells behind modal
+		max_width  :=  width - 2
+		max_height := height - 2
+		ctx.draw_rect(0, 0, max_width, max_height) // force clear cells behind modal
 
 		if m.loading {
 			loading_label := 'Loading files…'
@@ -274,21 +302,40 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 			return
 		}
 
-		max_items := height - 2
-		display_count := if m.filtered_files.len > max_items {
-			max_items
-		} else {
-			m.filtered_files.len
-		}
+		max_items := max_height
 		list_offset_id := ctx.push_offset(tea.Offset{})
-		for i in 0 .. display_count {
-			file_index := i
-			file_path := m.filtered_files[file_index]
-			is_selected := file_index == m.selected_index
+		for i, file_path in clamp_files_list_to_scrolled(m.start_index, max_items, m.filtered_files) {
+			is_selected := (i + m.start_index) == m.selected_index
 			render_file_path_line(mut ctx, file_path, width, height, is_selected)
 		}
 		ctx.clear_offsets_from(list_offset_id)
 	})
+}
+
+fn clamp_files_list_to_scrolled(start int, max_items int, initial_files_list []string) []string {
+	if initial_files_list.len == 0 || max_items <= 0 {
+		return []
+	}
+
+	clamped_start := if start < 0 {
+		0
+	} else if start >= initial_files_list.len {
+		initial_files_list.len - 1
+	} else {
+		start
+	}
+
+	end := if clamped_start + max_items > initial_files_list.len {
+		initial_files_list.len
+	} else {
+		clamped_start + max_items
+	}
+
+	if end <= clamped_start {
+		return []
+	}
+
+	return initial_files_list[clamped_start..end]
 }
 
 fn (m FilePickerModel) view(mut ctx tea.Context) {
@@ -336,9 +383,12 @@ fn (m FilePickerModel) debug_data() DebugData {
 	return DebugData{
 		name: 'file_picker data'
 		data: {
+			'start index':    '${m.start_index}'
 			'selected index': '${m.selected_index}'
 			'selected path':  selected_path
 			'search query':   if m.query.len == 0 { '<empty>' } else { m.query }
+			'filtered files size': '${m.filtered_files.len}'
+			'maximum visible files': '${m.max_visible_items()}'
 			'cursor pos':     '${m.cursor_pos}'
 			'blink frame':    '${m.cursor_blink_frame}'
 		}

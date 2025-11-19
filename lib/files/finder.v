@@ -85,17 +85,12 @@ mut:
 	files []string
 }
 
-struct ToolBasedFinder {
-mut:
-	files []string
-}
-
 pub fn new_finder() Finder {
 	return StdlibBasedFinder{ ls: os.ls }
 }
 
 fn (mut sf StdlibBasedFinder) search(root string) {
-	sf.files = walk(root, ls: os.ls)
+	sf.files = walk(root, ls: sf.ls)
 }
 
 fn (sf StdlibBasedFinder) files() []string {
