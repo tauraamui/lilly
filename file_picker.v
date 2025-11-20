@@ -21,6 +21,14 @@ mut:
 	loading             bool
 }
 
+fn (m &FilePickerModel) query_runes() []rune {
+	return m.query.runes()
+}
+
+fn (m &FilePickerModel) rune_len() int {
+	return m.query.runes().len
+}
+
 pub struct OpenDialogMsg {
 pub:
 	model DebuggableModel
@@ -69,7 +77,6 @@ pub fn load_files(root string) tea.Cmd {
 }
 
 pub fn cursor_blink_cmd() tea.Cmd {
-	// Blink every ~33ms for smooth animation (30 FPS)
 	return tea.tick(33 * time.millisecond, fn (t time.Time) tea.Msg {
 		return CursorBlinkMsg{
 			time: t
@@ -133,10 +140,8 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						}
 						'enter' {
 							if m.filtered_files.len > 0 && m.selected_index < m.filtered_files.len {
-								// TODO: Open selected file
 								selected_file := m.filtered_files[m.selected_index]
 								println('Selected: ${selected_file}')
-								// return FilePickerModel{}, close_file_picker
 								cmds << close_file_picker
 							}
 						}
@@ -170,7 +175,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							}
 						}
 						'right', 'ctrl+f' {
-							if m.cursor_pos < m.query.len {
+							if m.cursor_pos < m.rune_len() {
 								m.cursor_pos++
 							}
 						}
@@ -178,25 +183,27 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							m.cursor_pos = 0
 						}
 						'end', 'ctrl+e' {
-							m.cursor_pos = m.query.len
+							m.cursor_pos = m.rune_len()
 						}
 						'backspace' {
 							if m.cursor_pos > 0 {
-								m.query = m.query[..m.cursor_pos - 1] + m.query[m.cursor_pos..]
+								runes := m.query_runes()
+								m.query = (runes[..m.cursor_pos - 1].string()) +
+									(runes[m.cursor_pos..].string())
 								m.cursor_pos--
 								m.selected_index = 0
 								m.start_index = 0
 								cmds << filter_files_cmd(m.query)
-								// return m.clone(), filter_files_cmd(m.query)
 							}
 						}
 						'delete', 'ctrl+d' {
-							if m.cursor_pos < m.query.len {
-								m.query = m.query[..m.cursor_pos] + m.query[m.cursor_pos + 1..]
+							if m.cursor_pos < m.rune_len() {
+								runes := m.query_runes()
+								m.query = (runes[..m.cursor_pos].string()) + (runes[m.cursor_pos +
+									1..].string())
 								m.selected_index = 0
 								m.start_index = 0
 								cmds << filter_files_cmd(m.query)
-								// return m.clone(), filter_files_cmd(m.query)
 							}
 						}
 						else {}
@@ -204,8 +211,10 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				}
 				else {
 					input_char := msg.string()
-					m.query = m.query[..m.cursor_pos] + input_char + m.query[m.cursor_pos..]
-					m.cursor_pos += input_char.len
+					runes := m.query_runes()
+					m.query = (runes[..m.cursor_pos].string()) + input_char +
+						(runes[m.cursor_pos..].string())
+					m.cursor_pos += input_char.runes().len
 					m.selected_index = 0
 					m.start_index = 0
 					cmds << filter_files_cmd(m.query)
@@ -219,7 +228,6 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			m.loading = false
 		}
 		FilterFilesMsg {
-			// only update if this is the most recent query
 			if msg.query == m.query {
 				m.filtered_files = filter_file_paths(m.finder.files(), msg.query)
 				m.last_filtered_query = msg.query
@@ -248,19 +256,10 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 const frames_per_cycle = 50.0
 
 fn calculate_cursor_color(blink_frame int) tea.Color {
-	// Create a smooth sine wave animation between 235 (darkest) and 255 (brightest)
-	// blink_frame cycles from 0 to 839 (840 frames total for 40% slower animation)
-
-	// Convert frame to radians (0 to 2π)
 	angle := f64(blink_frame) * 2.0 * math.pi / frames_per_cycle
-
-	// Use sine wave to oscillate between -1 and 1
 	sine_value := math.sin(angle)
-
-	// Map sine wave (-1 to 1) to color range (235 to 255)
 	color_range := 255 - 235
 	color_value := 235 + int((sine_value + 1.0) * f64(color_range) / 2.0)
-
 	return tea.Color.ansi(color_value)
 }
 
@@ -298,7 +297,7 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 	file_results_layout.size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
 		max_width := width - 2
 		max_height := height - 2
-		ctx.draw_rect(0, 0, max_width, max_height) // force clear cells behind modal
+		ctx.draw_rect(0, 0, max_width, max_height)
 
 		if m.loading {
 			loading_label := 'Loading files…'
@@ -363,15 +362,16 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 	query := m.query
 	cursor_pos := m.cursor_pos
 	cursor_color := calculate_cursor_color(m.cursor_blink_frame)
-	file_search_field_layout.size(root_layout_width, 3).render(mut ctx, fn [query, cursor_pos, cursor_color, root_layout_width] (mut l_ctx tea.Context) {
+	query_runes := m.query_runes()
+	file_search_field_layout.size(root_layout_width, 3).render(mut ctx, fn [query, cursor_pos, cursor_color, root_layout_width, query_runes] (mut l_ctx tea.Context) {
 		l_ctx.set_clip_area(tea.ClipArea{0, 0, root_layout_width - 3, 1})
 		defer { l_ctx.clear_clip_area() }
-		l_ctx.draw_rect(0, 0, root_layout_width - 2, 1) // force clear cells behind
+		l_ctx.draw_rect(0, 0, root_layout_width - 2, 1)
 		l_ctx.draw_text(0, 0, '>')
 		l_ctx.draw_text(2, 0, query)
 
-		// Draw animated cursor
-		cursor_x := 2 + cursor_pos
+		visual_cursor_pos := tea.visible_len(query_runes[..cursor_pos].string())
+		cursor_x := 2 + visual_cursor_pos
 		if cursor_x < root_layout_width - 3 {
 			l_ctx.set_bg_color(cursor_color)
 			l_ctx.draw_rect(cursor_x, 0, 1, 1)
