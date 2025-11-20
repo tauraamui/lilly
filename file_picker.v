@@ -276,10 +276,12 @@ fn render_file_path_line(mut ctx tea.Context, file_path string, width int, heigh
 	if is_selected {
 		prefix = '» '
 		ctx.set_bg_color(selected_file_bg_color)
-		ctx.draw_rect(0, height - 3, width - 2, 1)
-		defer { ctx.reset_bg_color() }
 	}
+	ctx.draw_rect(0, height - 3, width - 2, 1)
 	ctx.draw_text(0, height - 3, prefix + file_path.replace(os.getwd(), "."))
+	if is_selected {
+		ctx.reset_bg_color()
+	}
 	ctx.push_offset(tea.Offset{ y: -1 })
 }
 
@@ -350,6 +352,8 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 		y: ten_percent_height
 	})
 	defer { ctx.clear_offsets_from(id) }
+
+	ctx.draw_rect(0, 0, root_layout_width, root_layout_height)
 
 	m.render_file_results_pane(mut ctx, root_layout_width, root_layout_height - 4)
 	ctx.push_offset(tea.Offset{ y: root_layout_height - 4 })
