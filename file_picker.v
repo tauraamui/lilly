@@ -62,7 +62,9 @@ pub fn (mut m FilePickerModel) init() ?tea.Cmd {
 
 pub fn load_files(root string) tea.Cmd {
 	return fn [root] () tea.Msg {
-		return LoadFilesMsg{ root: root }
+		return LoadFilesMsg{
+			root: root
+		}
 	}
 }
 
@@ -156,7 +158,9 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							m.selected_index--
 							if m.selected_index < m.start_index {
 								m.start_index--
-								if m.start_index < 0 { m.start_index = 0 }
+								if m.start_index < 0 {
+									m.start_index = 0
+								}
 								m.selected_index = m.start_index
 							}
 						}
@@ -233,7 +237,6 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			m.height = int(f64(msg.window_height) * 0.8)
 		}
 		CursorBlinkMsg {
-			// update cursor blink frame and schedule next blink
 			m.cursor_blink_frame = (m.cursor_blink_frame + 1) % int(frames_per_cycle)
 			cmds << cursor_blink_cmd()
 		}
@@ -278,7 +281,7 @@ fn render_file_path_line(mut ctx tea.Context, file_path string, width int, heigh
 		ctx.set_bg_color(selected_file_bg_color)
 	}
 	ctx.draw_rect(0, height - 3, width - 2, 1)
-	ctx.draw_text(0, height - 3, prefix + file_path.replace(os.getwd(), "."))
+	ctx.draw_text(0, height - 3, prefix + file_path.replace(os.getwd(), '.'))
 	if is_selected {
 		ctx.reset_bg_color()
 	}
@@ -293,7 +296,7 @@ fn (m FilePickerModel) max_visible_items() int {
 
 fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int, height int) {
 	file_results_layout.size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
-		max_width  :=  width - 2
+		max_width := width - 2
 		max_height := height - 2
 		ctx.draw_rect(0, 0, max_width, max_height) // force clear cells behind modal
 
@@ -387,14 +390,14 @@ fn (m FilePickerModel) debug_data() DebugData {
 	return DebugData{
 		name: 'file_picker data'
 		data: {
-			'start index':    '${m.start_index}'
-			'selected index': '${m.selected_index}'
-			'selected path':  selected_path
-			'search query':   if m.query.len == 0 { '<empty>' } else { m.query }
-			'filtered files size': '${m.filtered_files.len}'
+			'start index':           '${m.start_index}'
+			'selected index':        '${m.selected_index}'
+			'selected path':         selected_path
+			'search query':          if m.query.len == 0 { '<empty>' } else { m.query }
+			'filtered files size':   '${m.filtered_files.len}'
 			'maximum visible files': '${m.max_visible_items()}'
-			'cursor pos':     '${m.cursor_pos}'
-			'blink frame':    '${m.cursor_blink_frame}'
+			'cursor pos':            '${m.cursor_pos}'
+			'blink frame':           '${m.cursor_blink_frame}'
 		}
 	}
 }
