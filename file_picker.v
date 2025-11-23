@@ -3,6 +3,7 @@ module main
 import math
 import time
 import os
+import strings
 import lib.files
 import tauraamui.bobatea as tea
 
@@ -92,25 +93,43 @@ pub fn filter_files_cmd(query string) tea.Cmd {
 	}
 }
 
+@[inline]
+fn score_value_by_query(query string, value string) f32 {
+	return f32(int(strings.dice_coefficient(query, value) * 1000)) / 1000
+}
+
+fn fuzzy_match(query string, value string) bool {
+	query_lower := query.to_lower()
+	value_lower := value.to_lower()
+	mut query_idx := 0
+	for charr in value_lower {
+		if query_idx < query_lower.len && charr == query_lower[query_idx] {
+			query_idx++
+		}
+	}
+	return query_idx == query_lower.len
+}
+
+const max_path_entries = 500
+
 fn filter_file_paths(file_paths []string, query string) []string {
 	if query.len == 0 {
-		return file_paths[..if file_paths.len > 100 {
-			100
+		return file_paths[..if file_paths.len > max_path_entries {
+			max_path_entries
 		} else {
 			file_paths.len
 		}]
 	}
 
-	mut filtered := []string{}
-	for file in file_paths {
-		if file.to_lower().contains(query.to_lower()) {
-			filtered << file
-			if filtered.len >= 100 {
-				break
-			}
-		}
-	}
-	return filtered
+	mut files_to_sort := file_paths.clone()
+	files_to_sort.sort_with_compare(fn [query] (a &string, b &string) int {
+		a_score := score_value_by_query(a, query)
+		b_score := score_value_by_query(b, query)
+		if b_score > a_score { return 1 }
+		if a_score == b_score { 0 }
+		return -1
+	})
+	return files_to_sort.filter(fuzzy_match(query, string(it)))
 }
 
 pub struct ClearQueryFieldMsg {}
@@ -297,6 +316,8 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 	file_results_layout.size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
 		max_width := width - 2
 		max_height := height - 2
+		ctx.set_clip_area(tea.ClipArea{ 0, 0, max_width - 1, max_height })
+		defer { ctx.clear_clip_area() }
 		ctx.draw_rect(0, 0, max_width, max_height)
 
 		if m.loading {
