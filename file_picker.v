@@ -342,6 +342,38 @@ fn clamp_files_list_to_scrolled(start int, max_items int, initial_files_list []s
 	return initial_files_list[clamped_start..end]
 }
 
+fn (m FilePickerModel) render_file_search_input_field(mut r_ctx tea.Context, width int) {
+	cursor_pos := m.cursor_pos
+	cursor_color := calculate_cursor_color(m.cursor_blink_frame)
+	query_runes := m.query_runes()
+
+	file_search_field_layout.size(width, 3).render(mut r_ctx, fn [cursor_pos, cursor_color, width, query_runes] (mut l_ctx tea.Context) {
+		l_ctx.set_clip_area(tea.ClipArea{0, 0, width - 3, 1})
+		defer { l_ctx.clear_clip_area() }
+		l_ctx.draw_rect(0, 0, width - 2, 1)
+		l_ctx.draw_text(0, 0, '>')
+
+		input_text_offset := l_ctx.push_offset(tea.Offset{ x: 2 })
+		cursor_within_content := cursor_pos < query_runes.len
+		for i, r in query_runes {
+			r_str := r.str()
+			if cursor_within_content && i == cursor_pos {
+				l_ctx.set_bg_color(cursor_color)
+			}
+			l_ctx.draw_text(0, 0, r_str)
+			l_ctx.push_offset(tea.Offset{ x: tea.visible_len(r_str) })
+			l_ctx.reset_bg_color()
+		}
+
+		if !cursor_within_content {
+			l_ctx.set_bg_color(cursor_color)
+			l_ctx.draw_rect(0, 0, 1, 1)
+			l_ctx.reset_bg_color()
+		}
+		l_ctx.clear_from_offset(input_text_offset)
+	})
+}
+
 fn (m FilePickerModel) view(mut ctx tea.Context) {
 	ten_percent_width := int(f64(ctx.window_width()) * 0.1)
 	ten_percent_height := int(f64(ctx.window_height()) * 0.1)
@@ -358,26 +390,9 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 	ctx.draw_rect(0, 0, root_layout_width, root_layout_height)
 
 	m.render_file_results_pane(mut ctx, root_layout_width, root_layout_height - 4)
-	ctx.push_offset(tea.Offset{ y: root_layout_height - 4 })
-	query := m.query
-	cursor_pos := m.cursor_pos
-	cursor_color := calculate_cursor_color(m.cursor_blink_frame)
-	query_runes := m.query_runes()
-	file_search_field_layout.size(root_layout_width, 3).render(mut ctx, fn [query, cursor_pos, cursor_color, root_layout_width, query_runes] (mut l_ctx tea.Context) {
-		l_ctx.set_clip_area(tea.ClipArea{0, 0, root_layout_width - 3, 1})
-		defer { l_ctx.clear_clip_area() }
-		l_ctx.draw_rect(0, 0, root_layout_width - 2, 1)
-		l_ctx.draw_text(0, 0, '>')
-		l_ctx.draw_text(2, 0, query)
 
-		visual_cursor_pos := tea.visible_len(query_runes[..cursor_pos].string())
-		cursor_x := 2 + visual_cursor_pos
-		if cursor_x < root_layout_width - 3 {
-			l_ctx.set_bg_color(cursor_color)
-			l_ctx.draw_rect(cursor_x, 0, 1, 1)
-			l_ctx.reset_bg_color()
-		}
-	})
+	ctx.push_offset(tea.Offset{ y: root_layout_height - 4 })
+	m.render_file_search_input_field(mut ctx, root_layout_width)
 	ctx.pop_offset()
 }
 
