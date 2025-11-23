@@ -9,8 +9,8 @@ mut:
 	active_screen           DebuggableModel // all screens are debuggable to help with live, well... debugging
 	clear_screen_next_frame bool
 	logs                    []string
-	last_resize_width int
-	last_resize_height int
+	last_resize_width       int
+	last_resize_height      int
 }
 
 fn new_petal_model() PetalModel {
@@ -31,7 +31,8 @@ fn toggle_debug_screen() tea.Msg {
 
 fn (mut m PetalModel) on_toggle_debug_screen() (tea.Model, ?tea.Cmd) {
 	if m.active_screen !is DebugScreenModel {
-		m.active_screen = new_debug_screen_model(m.active_screen, m.logs, m.last_resize_width, m.last_resize_height)
+		m.active_screen = new_debug_screen_model(m.active_screen, m.logs, m.last_resize_width,
+			m.last_resize_height)
 	}
 	return m.clone(), none
 }

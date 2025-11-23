@@ -5,8 +5,8 @@ import os
 @[params]
 pub struct WalkParams {
 pub:
-	ls Lister @[required]
-	hidden bool
+	ls        Lister @[required]
+	hidden    bool
 	threshold int = 100
 }
 
@@ -86,7 +86,9 @@ mut:
 }
 
 pub fn new_finder() Finder {
-	return StdlibBasedFinder{ ls: os.ls }
+	return StdlibBasedFinder{
+		ls: os.ls
+	}
 }
 
 fn (mut sf StdlibBasedFinder) search(root string) {
@@ -96,4 +98,3 @@ fn (mut sf StdlibBasedFinder) search(root string) {
 fn (sf StdlibBasedFinder) files() []string {
 	return sf.files
 }
-

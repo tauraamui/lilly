@@ -110,9 +110,14 @@ fn fuzzy_match(query string, value string) bool {
 	return query_idx == query_lower.len
 }
 
+struct ScoredFile {
+	path  string
+	score f32
+}
+
 const max_path_entries = 500
 
-fn filter_file_paths(file_paths []string, query string) []string {
+fn filter_file_paths(file_paths []string, query string, last_query string, last_results []string) []string {
 	if query.len == 0 {
 		return file_paths[..if file_paths.len > max_path_entries {
 			max_path_entries
@@ -121,15 +126,52 @@ fn filter_file_paths(file_paths []string, query string) []string {
 		}]
 	}
 
-	mut files_to_sort := file_paths.clone()
-	files_to_sort.sort_with_compare(fn [query] (a &string, b &string) int {
-		a_score := score_value_by_query(a, query)
-		b_score := score_value_by_query(b, query)
-		if b_score > a_score { return 1 }
-		if a_score == b_score { 0 }
-		return -1
-	})
-	return files_to_sort.filter(fuzzy_match(query, string(it)))
+	can_use_incremental := last_query.len > 0 && query.len > last_query.len
+		&& query.starts_with(last_query)
+	paths_to_filter := if can_use_incremental && last_results.len > 0 {
+		last_results
+	} else {
+		file_paths
+	}
+
+	num_workers := 8
+	chunk_size := (paths_to_filter.len + num_workers - 1) / num_workers
+	mut threads := []thread []ScoredFile{cap: num_workers}
+
+	for i := 0; i < num_workers; i++ {
+		start := i * chunk_size
+		if start >= paths_to_filter.len {
+			break
+		}
+		end := if start + chunk_size > paths_to_filter.len {
+			paths_to_filter.len
+		} else {
+			start + chunk_size
+		}
+		chunk := paths_to_filter[start..end].clone()
+
+		threads << spawn fn (paths []string, q string) []ScoredFile {
+			mut results := []ScoredFile{cap: paths.len}
+			for path in paths {
+				if fuzzy_match(q, path) {
+					results << ScoredFile{
+						path:  path
+						score: score_value_by_query(q, path)
+					}
+				}
+			}
+			return results
+		}(chunk, query)
+	}
+
+	mut all_scored := []ScoredFile{cap: paths_to_filter.len}
+	for t in threads {
+		all_scored << t.wait()
+	}
+
+	all_scored.sort(a.score > b.score)
+
+	return all_scored.map(it.path)
 }
 
 pub struct ClearQueryFieldMsg {}
@@ -242,13 +284,14 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		LoadFilesMsg {
 			m.finder.search(msg.root)
-			m.filtered_files = filter_file_paths(m.finder.files(), m.query)
+			m.filtered_files = filter_file_paths(m.finder.files(), m.query, '', [])
 			m.last_filtered_query = m.query
 			m.loading = false
 		}
 		FilterFilesMsg {
 			if msg.query == m.query {
-				m.filtered_files = filter_file_paths(m.finder.files(), msg.query)
+				m.filtered_files = filter_file_paths(m.finder.files(), msg.query, m.last_filtered_query,
+					m.filtered_files)
 				m.last_filtered_query = msg.query
 			}
 		}
@@ -316,7 +359,7 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 	file_results_layout.size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
 		max_width := width - 2
 		max_height := height - 2
-		ctx.set_clip_area(tea.ClipArea{ 0, 0, max_width - 1, max_height })
+		ctx.set_clip_area(tea.ClipArea{0, 0, max_width - 1, max_height})
 		defer { ctx.clear_clip_area() }
 		ctx.draw_rect(0, 0, max_width, max_height)
 

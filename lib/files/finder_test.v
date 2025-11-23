@@ -1,12 +1,12 @@
 module files
 
 const mock_small_list = [
-	"test-file.txt"
-	"main.v"
-	"main_test.v"
-	"foo.v"
-	"bar.v"
-	".gitignore"
+	'test-file.txt',
+	'main.v',
+	'main_test.v',
+	'foo.v',
+	'bar.v',
+	'.gitignore',
 ]
 
 fn mock_lister(root string) ![]string {
@@ -14,8 +14,10 @@ fn mock_lister(root string) ![]string {
 }
 
 fn test_stdlib_search() {
-	stdlib_finder := StdlibBasedFinder{ ls: mock_lister, files: mock_small_list.clone() }
+	stdlib_finder := StdlibBasedFinder{
+		ls:    mock_lister
+		files: mock_small_list.clone()
+	}
 	// stdlib_finder.search("./dev/null")
 	assert stdlib_finder.files() == mock_small_list
 }
-

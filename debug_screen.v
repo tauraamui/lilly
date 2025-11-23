@@ -63,11 +63,11 @@ enum ScreenState as u8 {
 struct DebugScreenModel {
 	logs []string
 mut:
-	state         ScreenState
-	wrapped_model DebuggableModel
-	window_width int
-	window_height int
-	last_resize_width int
+	state              ScreenState
+	wrapped_model      DebuggableModel
+	window_width       int
+	window_height      int
+	last_resize_width  int
 	last_resize_height int
 }
 
@@ -83,9 +83,9 @@ fn close_debug(prev_model tea.Model) tea.Cmd {
 
 fn new_debug_screen_model(wrapped_model DebuggableModel, logs []string, last_resize_width int, last_resize_height int) DebugScreenModel {
 	return DebugScreenModel{
-		wrapped_model: wrapped_model
-		logs:          logs
-		last_resize_width: last_resize_width
+		wrapped_model:      wrapped_model
+		logs:               logs
+		last_resize_width:  last_resize_width
 		last_resize_height: last_resize_height
 	}
 }
@@ -226,14 +226,13 @@ fn (m DebugScreenModel) debug_data() DebugData {
 	return DebugData{
 		name: 'debug_screen data'
 		data: {
-			'current width': '${m.window_width}'
-			'current height': '${m.window_height}'
-			'last resized msg width': '${m.last_resize_width}'
+			'current width':           '${m.window_width}'
+			'current height':          '${m.window_height}'
+			'last resized msg width':  '${m.last_resize_width}'
 			'last resized msg height': '${m.last_resize_height}'
-			'': m.wrapped_model.debug_data()
+			'':                        m.wrapped_model.debug_data()
 		}
 	}
-
 }
 
 fn (m DebugScreenModel) clone() tea.Model {
