@@ -111,13 +111,24 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		else {}
 	}
 
-	if m.leader_data == 'ff' {
-		m.leader_mode = false
-		m.leader_data = ''
-		cmds << open_file_picker
+	match m.leader_data {
+		'ff' {
+			m.reset_leader_mode()
+			cmds << open_file_picker
+		}
+		'xx' {
+			m.reset_leader_mode()
+			cmds << toggle_debug_screen
+		}
+		else {}
 	}
 
 	return m.clone(), tea.batch_array(cmds)
+}
+
+fn (mut m SplashScreenModel) reset_leader_mode() {
+	m.leader_mode = false
+	m.leader_data = ''
 }
 
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
