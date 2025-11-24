@@ -13,9 +13,9 @@ mut:
 	last_resize_height      int
 }
 
-fn new_petal_model() PetalModel {
+fn PetalModel.new() PetalModel {
 	return PetalModel{
-		active_screen: new_splash_screen_model()
+		active_screen: SplashScreenModel.new()
 	}
 }
 
@@ -31,7 +31,7 @@ fn toggle_debug_screen() tea.Msg {
 
 fn (mut m PetalModel) on_toggle_debug_screen() (tea.Model, ?tea.Cmd) {
 	if m.active_screen !is DebugScreenModel {
-		m.active_screen = new_debug_screen_model(m.active_screen, m.logs, m.last_resize_width,
+		m.active_screen = DebugScreenModel.new(m.active_screen, m.logs, m.last_resize_width,
 			m.last_resize_height)
 	}
 	return m.clone(), none

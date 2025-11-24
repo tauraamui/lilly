@@ -25,7 +25,7 @@ mut:
 	dialog_model ?DebuggableModel
 }
 
-fn new_splash_screen_model() DebuggableModel {
+fn SplashScreenModel.new() SplashScreenModel {
 	return SplashScreenModel{
 		leader_key: ';'
 		logo:       SplashLogo{
@@ -107,6 +107,13 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			m.dialog_model = d_model
 			u_cmd := cmd or { tea.noop_cmd }
 			cmds << u_cmd
+		}
+		OpenEditorWorkspaceMsg {
+			mut workspace := EditorWorkspaceModel.new(msg.initial_file_path)
+			cmd := workspace.init()
+			u_cmd := cmd or { tea.noop_cmd }
+			cmds << u_cmd
+			return workspace, tea.batch_array(cmds)
 		}
 		else {}
 	}
