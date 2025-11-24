@@ -108,6 +108,9 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			u_cmd := cmd or { tea.noop_cmd }
 			cmds << u_cmd
 		}
+		OpenFileMsg {
+			cmds << open_editor_workspace(msg.file_path)
+		}
 		OpenEditorWorkspaceMsg {
 			mut workspace := EditorWorkspaceModel.new(msg.initial_file_path)
 			cmd := workspace.init()
@@ -145,9 +148,12 @@ fn (m SplashScreenModel) view(mut ctx tea.Context) {
 
 	offset_from_id := ctx.push_offset(tea.Offset{ y: ctx.window_height() - 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
-	ctx.set_color(tea.Color.ansi(249))
-	ctx.draw_text(ctx.window_width() - tea.visible_len(m.leader_data) - 1, 0, m.leader_data)
-	ctx.reset_color()
+	if m.leader_mode {
+		ctx.set_color(tea.Color.ansi(249))
+		leader_data := ";" + m.leader_data
+		ctx.draw_text(ctx.window_width() - tea.visible_len(leader_data) - 1, 0, leader_data)
+		ctx.reset_color()
+	}
 
 	ctx.clear_all_offsets()
 	if mut open_model := m.dialog_model {

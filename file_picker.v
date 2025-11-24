@@ -203,7 +203,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							if m.filtered_files.len > 0 && m.selected_index < m.filtered_files.len {
 								selected_file := m.filtered_files[m.selected_index]
 								cmds << close_file_picker
-								cmds << open_editor_workspace(selected_file)
+								cmds << open_file(selected_file)
 							}
 						}
 						'up', 'ctrl+k' {

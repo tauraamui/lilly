@@ -26,29 +26,6 @@ fn (mut m EditorModel) init() ?tea.Cmd {
 }
 
 fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
-	match msg {
-		tea.KeyMsg {
-			match msg.k_type {
-				.special {
-					match msg.string() {
-						'escape' {
-							return m.clone(), tea.quit
-						}
-						else {}
-					}
-				}
-				.runes {
-					match msg.string() {
-						';' {
-							return m.clone(), toggle_leader_mode
-						}
-						else {}
-					}
-				}
-			}
-		}
-		else {}
-	}
 	return m.clone(), none
 }
 
@@ -61,7 +38,7 @@ fn (m EditorModel) view(mut ctx tea.Context) {
 
 fn (m EditorModel) debug_data() DebugData {
 	return DebugData{
-		name: 'editor_workspace data'
+		name: 'active editor data'
 		data: {
 			'file path': m.file_path
 		}
