@@ -2,6 +2,7 @@ module main
 
 import math
 import tauraamui.bobatea as tea
+import palette
 
 const gitcommit_hash = $embed_file('.githash').to_string()
 
@@ -149,7 +150,7 @@ fn (m SplashScreenModel) view(mut ctx tea.Context) {
 	offset_from_id := ctx.push_offset(tea.Offset{ y: ctx.window_height() - 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
 	if m.leader_mode {
-		ctx.set_color(tea.Color.ansi(249))
+		ctx.set_color(palette.subtle_text_fg_color)
 		leader_data := ";" + m.leader_data
 		ctx.draw_text(ctx.window_width() - tea.visible_len(leader_data) - 1, 0, leader_data)
 		ctx.reset_color()
@@ -162,7 +163,7 @@ fn (m SplashScreenModel) view(mut ctx tea.Context) {
 }
 
 fn render_version_label(mut ctx tea.Context, version_label string) {
-	ctx.set_color(help_fg_color)
+	ctx.set_color(palette.help_fg_color)
 	ctx.draw_text(1, 0, version_label)
 	ctx.reset_color()
 }
@@ -171,7 +172,7 @@ fn render_help_keybinds(mut ctx tea.Context) {
 	offset_from_id := ctx.push_offset(tea.Offset{ x: 1, y: ctx.window_height() - 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
-	ctx.set_color(help_fg_color)
+	ctx.set_color(palette.help_fg_color)
 	ctx.draw_text(0, 0, 'q: quit ${dot} esc: exit')
 	ctx.reset_color()
 }
@@ -191,18 +192,6 @@ fn render_logo_and_help_centered_and_stacked(mut ctx tea.Context, logo SplashLog
 	render_copyright_footer(mut ctx)
 }
 
-const petal_pink_color = tea.Color{
-	r: 245
-	g: 191
-	b: 243
-}
-
-const petal_green_color = tea.Color{
-	r: 97
-	g: 242
-	b: 136
-}
-
 const copyright_footer_label = 'the lilly editor authors © (made with ${[u8(0xf0), 0x9f, 0x92,
 	0x95].bytestr()})'
 
@@ -212,12 +201,10 @@ fn render_copyright_footer(mut ctx tea.Context) {
 		y: 1
 	})
 	defer { ctx.clear_offsets_from(offset_from_id) }
-	ctx.set_color(petal_pink_color)
+	ctx.set_color(palette.petal_pink_color)
 	ctx.draw_text(0, 0, copyright_footer_label)
 	ctx.reset_color()
 }
-
-const help_fg_color = tea.Color.ansi(241)
 
 const basic_command_help = [
 	' Find File                   <leader>ff',
@@ -232,7 +219,7 @@ const disabled_command_help = [
 ]
 
 const pending_match_color = tea.Color.ansi(244)
-const closest_match_color = petal_green_color
+const closest_match_color = palette.petal_green_color
 
 fn render_keybinds_list(mut ctx tea.Context, in_leader_mode bool, leader_data string) tea.Offset {
 	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
@@ -257,7 +244,7 @@ fn render_keybinds_list(mut ctx tea.Context, in_leader_mode bool, leader_data st
 		ctx.push_offset(tea.Offset{ y: 1 })
 		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(l) / 2) })
 		ctx.set_style(.strikethrough)
-		ctx.set_color(help_fg_color)
+		ctx.set_color(palette.help_fg_color)
 		ctx.draw_text(0, 0, l)
 		ctx.reset_color()
 		ctx.clear_style()
@@ -292,7 +279,7 @@ fn render_logo(mut ctx tea.Context, logo SplashLogo) tea.Offset {
 	//                             line at once with the light pink color set, but some lines of the logo
 	//                             contain both green and pink, so they need to be rendered per character
 	//                             with the correct palette option/fg set
-	ctx.set_color(petal_pink_color)
+	ctx.set_color(palette.petal_pink_color)
 	offset_from_id := ctx.push_offset(tea.Offset{})
 	defer { ctx.clear_offsets_from(offset_from_id) }
 	for _, l in logo.data {
@@ -322,11 +309,11 @@ fn render_logo_line_char_by_char(mut ctx tea.Context, line string) {
 		mut to_draw := '${c}'
 		if to_draw == 'g' {
 			to_draw = ' '
-			ctx.set_color(petal_green_color)
+			ctx.set_color(palette.petal_green_color)
 		}
 		if to_draw == 'p' {
 			to_draw = ' '
-			ctx.set_color(petal_pink_color)
+			ctx.set_color(palette.petal_pink_color)
 		}
 		ctx.draw_text(j, 0, to_draw)
 	}

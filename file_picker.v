@@ -6,6 +6,7 @@ import os
 import strings
 import lib.files
 import tauraamui.bobatea as tea
+import palette
 
 struct FilePickerModel {
 mut:
@@ -325,21 +326,11 @@ fn calculate_cursor_color(blink_frame int) tea.Color {
 	return tea.Color.ansi(color_value)
 }
 
-const selected_file_bg_color = tea.Color.ansi(239)
-
-const file_results_layout = tea.new_layout()
-	.border(.normal)
-	.border_color(tea.Color.ansi(218))
-
-const file_search_field_layout = tea.new_layout()
-	.border(.normal)
-	.border_color(tea.Color.ansi(189))
-
 fn render_file_path_line(mut ctx tea.Context, file_path string, width int, height int, is_selected bool) {
 	mut prefix := '  '
 	if is_selected {
 		prefix = '» '
-		ctx.set_bg_color(selected_file_bg_color)
+		ctx.set_bg_color(palette.selected_highlight_bg_color)
 	}
 	ctx.draw_rect(0, height - 3, width - 2, 1)
 	ctx.draw_text(0, height - 3, prefix + file_path.replace(os.getwd(), '.'))
@@ -355,8 +346,12 @@ fn (m FilePickerModel) max_visible_items() int {
 	return if max_height > 0 { max_height } else { 0 }
 }
 
+const subtle_bordered_layout = tea.new_layout()
+	.border(.normal)
+	.border_color(palette.subtle_border_fg_color)
+
 fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int, height int) {
-	file_results_layout.size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
+	subtle_bordered_layout.size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
 		max_width := width - 2
 		max_height := height - 2
 		ctx.set_clip_area(tea.ClipArea{0, 0, max_width - 1, max_height})
@@ -364,9 +359,11 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 		ctx.draw_rect(0, 0, max_width, max_height)
 
 		if m.loading {
+			ctx.set_color(palette.subtle_text_fg_color)
 			loading_label := 'Loading files…'
 			ctx.draw_text((width / 2) - tea.visible_len(loading_label) / 2, height / 2,
 				loading_label)
+			ctx.reset_color()
 			return
 		}
 
@@ -411,7 +408,7 @@ fn (m FilePickerModel) render_file_search_input_field(mut r_ctx tea.Context, wid
 	cursor_color := calculate_cursor_color(m.cursor_blink_frame)
 	query_runes := m.query_runes()
 
-	file_search_field_layout.size(width, 3).render(mut r_ctx, fn [cursor_pos, cursor_color, width, query_runes] (mut l_ctx tea.Context) {
+	subtle_bordered_layout.size(width, 3).render(mut r_ctx, fn [cursor_pos, cursor_color, width, query_runes] (mut l_ctx tea.Context) {
 		l_ctx.set_clip_area(tea.ClipArea{0, 0, width - 3, 1})
 		defer { l_ctx.clear_clip_area() }
 		l_ctx.draw_rect(0, 0, width - 2, 1)

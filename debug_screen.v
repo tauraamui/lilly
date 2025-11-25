@@ -3,6 +3,7 @@ module main
 import rand
 import strings
 import tauraamui.bobatea as tea
+import palette
 
 interface DebuggableModel {
 	tea.Model
@@ -167,11 +168,13 @@ fn (mut m DebugScreenModel) view(mut ctx tea.Context) {
 	m.window_width = ctx.window_width()
 	m.window_height = ctx.window_height()
 	katakana := generate_decorator_label(ctx.window_width() / 6)
-	ctx.set_color(help_fg_color)
+
+	ctx.set_color(palette.subtle_text_fg_color)
 	ctx.draw_text(0, 0, katakana)
 	ctx.draw_text(ctx.window_width() - tea.visible_len(katakana), 0, katakana)
 	ctx.reset_color()
-	ctx.set_color(tea.Color.ansi(69))
+
+	ctx.set_color(palette.debug_header_color)
 	debug_label := '*********** debug screen ***********'
 	ctx.draw_text((ctx.window_width() / 2) - tea.visible_len(debug_label) / 2, 0, debug_label)
 	ctx.reset_color()
@@ -188,7 +191,7 @@ fn (mut m DebugScreenModel) view(mut ctx tea.Context) {
 
 	top_to_bottom_offset_id := ctx.push_offset(tea.Offset{ x: 1, y: ctx.window_height() - 1 })
 	defer { ctx.clear_offsets_from(top_to_bottom_offset_id) }
-	ctx.set_color(help_fg_color)
+	ctx.set_color(palette.help_fg_color)
 	ctx.draw_text(0, 0, 'q ${dot} esc ${dot} f12: close')
 	ctx.reset_color()
 }
