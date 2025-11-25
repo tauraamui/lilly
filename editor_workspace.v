@@ -112,6 +112,14 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							'enter' {
 								m.mode = .normal
 								// TODO(tauraamui): emit action msg with command contents instead
+								match m.pending_command {
+									'q' { return m.clone(), tea.quit }
+									'debug' {
+										m.pending_command = ''
+										return m.clone(), toggle_debug_screen
+									}
+									else {}
+								}
 								if m.pending_command == 'q' {
 									return m.clone(), tea.quit
 								}

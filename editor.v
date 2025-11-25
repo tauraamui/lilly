@@ -30,9 +30,6 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 }
 
 fn (m EditorModel) view(mut ctx tea.Context) {
-	ctx.set_bg_color(tea.Color{ 20, 20, 20 })
-	defer { ctx.reset_color() }
-	ctx.draw_rect(0, 0, ctx.window_width(), ctx.window_height())
 	ctx.draw_text(0, 0, "editing ${m.file_path}")
 }
 
