@@ -1,15 +1,8 @@
 module main
 
 import tauraamui.bobatea as tea
-
-enum Mode as u8 {
-	normal
-	leader
-	command
-	insert
-	visual
-	visual_line
-}
+import palette
+import glyphs
 
 struct EditorWorkspaceModel {
 	initial_file_path string
@@ -189,33 +182,131 @@ fn (m EditorWorkspaceModel) view(mut ctx tea.Context) {
 		active_editor.view(mut ctx)
 	}
 
-	color := match m.mode {
-		.leader { 127 }
-		.command { 45 }
-		else { 234 }
+	m.render_status_bar(mut ctx)
+
+	if mut open_model := m.dialog_model {
+		open_model.view(mut ctx)
 	}
-	ctx.set_bg_color(tea.Color.ansi(color))
+}
+
+fn (m EditorWorkspaceModel) render_status_bar(mut ctx tea.Context) {
+	ctx.set_bg_color(palette.status_bar_bg_color)
 	ctx.draw_rect(0, ctx.window_height() - 2, ctx.window_width(), 1)
 	ctx.reset_bg_color()
 
+	m.render_status_blocks(mut ctx)
+	m.render_leader_or_command_user_input_text(mut ctx)
+}
+
+fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
+	status_bar_offset := ctx.push_offset(tea.Offset{ y: ctx.window_height() - 2 })
+	defer { ctx.clear_offsets_from(status_bar_offset) }
+
+	ctx.set_color(m.mode.color())
+	ctx.draw_text(0, 0, "${glyphs.left_rounded}${glyphs.block}")
+	ctx.reset_color()
+	blocks_offset := ctx.push_offset(tea.Offset{ x: 2 })
+
+	mode_label := m.mode.str()
+	ctx.set_color(palette.matte_black_fg_color)
+	ctx.set_bg_color(m.mode.color())
+	ctx.draw_text(0, 0, mode_label)
+	ctx.reset_bg_color()
+	ctx.reset_color()
+
+	ctx.push_offset(tea.Offset{ x: tea.visible_len(mode_label) })
+
+	ctx.set_color(m.mode.color())
+	ctx.draw_text(0, 0, "${glyphs.block}${glyphs.slant_right_flat_bottom}")
+	ctx.reset_color()
+	ctx.push_offset(tea.Offset{ x: 2 })
+
+	ctx.set_color(palette.status_file_name_bg_color)
+	ctx.draw_text(0, 0, "${glyphs.slant_left_flat_top}${glyphs.block}")
+	ctx.reset_color()
+	ctx.push_offset(tea.Offset{ x: 2 })
+
+	file_name_label := m.active_file_name()
+	ctx.set_color(palette.matte_white_fg_color)
+	ctx.set_bg_color(palette.status_file_name_bg_color)
+	ctx.draw_text(0, 0, file_name_label)
+	ctx.reset_bg_color()
+	ctx.reset_color()
+
+	ctx.push_offset(tea.Offset{ x: tea.visible_len(file_name_label) })
+
+	ctx.set_color(palette.status_file_name_bg_color)
+	ctx.draw_text(0, 0, "${glyphs.block}${glyphs.slant_right_flat_bottom}")
+	ctx.reset_color()
+	ctx.push_offset(tea.Offset{ x: 2 })
+
+	ctx.set_color(palette.status_branch_name_bg_color)
+	ctx.draw_text(0, 0, "${glyphs.slant_left_flat_top}${glyphs.block}")
+	ctx.reset_color()
+	ctx.push_offset(tea.Offset{ x: 2 })
+
+	branch_name_label := m.active_branch_name()
+	ctx.set_color(palette.matte_white_fg_color)
+	ctx.set_bg_color(palette.status_branch_name_bg_color)
+	ctx.draw_text(0, 0, branch_name_label)
+	ctx.reset_bg_color()
+	ctx.reset_color()
+
+	ctx.push_offset(tea.Offset{ x: tea.visible_len(branch_name_label) })
+
+	ctx.set_color(palette.status_branch_name_bg_color)
+	ctx.draw_text(0, 0, "${glyphs.block}${glyphs.slant_right_flat_bottom}")
+	ctx.reset_color()
+
+	ctx.clear_offsets_from(blocks_offset)
+
+	cursor_pos_label := m.active_cursor_pos()
+	ctx.push_offset(tea.Offset{ x: ctx.window_width() - tea.visible_len(cursor_pos_label) - 3 })
+
+	ctx.set_color(palette.status_cursor_pos_bg_color)
+	ctx.draw_text(0, 0, "${glyphs.slant_left_flat_bottom}${glyphs.block}")
+	ctx.reset_color()
+	ctx.push_offset(tea.Offset{ x: 2 })
+
+	ctx.set_color(palette.bright_off_white_fg_color)
+	ctx.set_bg_color(palette.status_cursor_pos_bg_color)
+	ctx.draw_text(0, 0, cursor_pos_label)
+	ctx.reset_bg_color()
+	ctx.reset_color()
+	ctx.push_offset(tea.Offset{ x: tea.visible_len(cursor_pos_label) })
+
+	ctx.set_color(palette.status_cursor_pos_bg_color)
+	ctx.draw_text(0, 0, glyphs.block)
+	ctx.reset_color()
+}
+
+fn (m EditorWorkspaceModel) render_leader_or_command_user_input_text(mut ctx tea.Context) {
 	match m.mode {
 		.leader {
-			ctx.set_color(tea.Color.ansi(249))
+			ctx.set_color(palette.subtle_text_fg_color)
 			leader_data := ";" + m.leader_suffix
 			ctx.draw_text(ctx.window_width() - tea.visible_len(leader_data) - 1, ctx.window_height() - 1, leader_data)
 			ctx.reset_color()
 		}
 		.command {
-			ctx.set_color(tea.Color.ansi(249))
+			ctx.set_color(palette.subtle_text_fg_color)
 			command_data := ":" + m.pending_command
 			ctx.draw_text(0, ctx.window_height() - 1, command_data)
 		}
 		else {}
 	}
+}
 
-	if mut open_model := m.dialog_model {
-		open_model.view(mut ctx)
-	}
+fn (m EditorWorkspaceModel) active_file_name() string {
+	return "fwifiowefiwef.v"
+}
+
+fn (m EditorWorkspaceModel) active_branch_name() string {
+	return "feat/petal/jfwfoeifei"
+}
+
+fn (m EditorWorkspaceModel) active_cursor_pos() string {
+	return "231:89"
 }
 
 fn (m EditorWorkspaceModel) debug_data() DebugData {
