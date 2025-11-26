@@ -1,11 +1,13 @@
 module main
 
+import os
 import tauraamui.bobatea as tea
 
 const dot = '•'
 
 struct PetalModel {
 mut:
+	app_send                ?fn (tea.Msg)
 	theme_bg_color          ?tea.Color
 	first_frame             bool
 	active_screen           DebuggableModel // all screens are debuggable to help with live, well... debugging
@@ -64,6 +66,16 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		tea.ResizedMsg {
 			m.last_resize_width = msg.window_width
 			m.last_resize_height = msg.window_height
+		}
+		QueryPWDGitBranchMsg {
+			if send := m.app_send {
+				spawn fn [send] () {
+					branch := resolve_git_branch_name(os.execute)
+					send(PWDGitBranchResultMsg{
+						branch_name: branch
+					})
+				}()
+			}
 		}
 		else {}
 	}
