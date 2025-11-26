@@ -2,6 +2,9 @@ module palette
 
 import tauraamui.bobatea as tea
 
+pub const theme_bg_color = matte_black_bg_color
+pub const matte_black_bg_color = tea.Color{ 20, 20, 20 }
+
 pub const matte_black_fg_color      = tea.Color.ansi(232)
 pub const matte_white_fg_color      = tea.Color{ 230, 230, 230 }
 pub const bright_off_white_fg_color = tea.Color{ 255, 255, 255 }
