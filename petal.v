@@ -6,6 +6,7 @@ const dot = '•'
 
 struct PetalModel {
 mut:
+	first_frame             bool
 	active_screen           DebuggableModel // all screens are debuggable to help with live, well... debugging
 	clear_screen_next_frame bool
 	logs                    []string
@@ -15,6 +16,7 @@ mut:
 
 fn PetalModel.new() PetalModel {
 	return PetalModel{
+		first_frame: true
 		active_screen: SplashScreenModel.new()
 	}
 }
@@ -74,6 +76,10 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 }
 
 fn (mut m PetalModel) view(mut ctx tea.Context) {
+	if m.first_frame {
+		ctx.set_default_bg_color(tea.Color.ansi(54))
+		m.first_frame = false
+	}
 	mut screen := m.active_screen
 	screen.view(mut ctx)
 }
