@@ -190,6 +190,9 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	}
 
 	match msg {
+		tea.FocusedMsg {
+			cmds << query_pwd_git_branch
+		}
 		OpenDialogMsg {
 			mut d_model := msg.model
 			cmd := d_model.init()
