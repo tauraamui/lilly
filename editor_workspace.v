@@ -1,5 +1,6 @@
 module main
 
+import os
 import tauraamui.bobatea as tea
 import palette
 import glyphs
@@ -7,11 +8,12 @@ import glyphs
 struct EditorWorkspaceModel {
 	initial_file_path string
 mut:
-	mode              Mode
-	dialog_model      ?DebuggableModel
-	active_editor     ?DebuggableModel
-	leader_suffix     string
-	pending_command   string
+	mode               Mode
+	dialog_model       ?DebuggableModel
+	active_editor      ?DebuggableModel
+	active_editor_data ?EditorData
+	leader_suffix      string
+	pending_command    string
 }
 
 struct OpenFileMsg {
@@ -39,7 +41,7 @@ fn EditorWorkspaceModel.new(initial_file_path string) EditorWorkspaceModel {
 }
 
 fn (mut m EditorWorkspaceModel) init() ?tea.Cmd {
-	return open_editor(m.initial_file_path)
+	return tea.batch(open_editor(m.initial_file_path), query_editor_data)
 }
 
 struct ToggleLeaderModeMsg {}
@@ -115,16 +117,11 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								match m.pending_command {
 									'q' { return m.clone(), tea.quit }
 									'debug' {
-										m.pending_command = ''
-										return m.clone(), toggle_debug_screen
+										cmds << toggle_debug_screen
 									}
 									else {}
 								}
-								if m.pending_command == 'q' {
-									return m.clone(), tea.quit
-								}
-								m.pending_command = ""
-								return m.clone(), none
+								m.pending_command = ''
 							}
 							else {}
 						}
@@ -159,6 +156,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		OpenFileMsg {
 			cmds << open_editor(msg.file_path)
+			cmds << query_editor_data
 		}
 		OpenEditorMsg {
 			mut e_model := EditorModel.new(msg.file_path)
@@ -166,6 +164,9 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			m.active_editor = e_model
 			u_cmd := cmd or { tea.noop_cmd }
 			cmds << u_cmd
+		}
+		EditorDataResultMsg {
+			m.active_editor_data = msg.data
 		}
 		ToggleLeaderModeMsg {
 			m.mode = .leader
@@ -266,10 +267,23 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 	ctx.draw_text(0, 0, "${glyphs.block}${glyphs.slant_right_flat_bottom}")
 	ctx.reset_color()
 
+	// status bar spacer left end cap
+	ctx.set_color(palette.status_bar_bg_color)
+	ctx.draw_text(2, 0, glyphs.slant_left_flat_top)
+	ctx.reset_color()
+	//
+
 	ctx.clear_offsets_from(blocks_offset)
 
 	cursor_pos_label := m.active_cursor_pos()
-	ctx.push_offset(tea.Offset{ x: ctx.window_width() - tea.visible_len(cursor_pos_label) - 3 })
+	cursor_pos_segment_start := (ctx.window_width() - tea.visible_len(cursor_pos_label)) - 3
+	ctx.push_offset(tea.Offset{ x: cursor_pos_segment_start })
+
+	// status bar spacer right end cap
+	ctx.set_color(palette.status_bar_bg_color)
+	ctx.draw_text(-1, 0, glyphs.slant_right_flat_top)
+	ctx.reset_color()
+	//
 
 	ctx.set_color(palette.status_cursor_pos_bg_color)
 	ctx.draw_text(0, 0, "${glyphs.slant_left_flat_bottom}${glyphs.block}")
@@ -306,7 +320,10 @@ fn (m EditorWorkspaceModel) render_leader_or_command_user_input_text(mut ctx tea
 }
 
 fn (m EditorWorkspaceModel) active_file_name() string {
-	return "fwifiowefiwef.v"
+	if d := m.active_editor_data {
+		return os.base(d.file_path)
+	}
+	return "???"
 }
 
 fn (m EditorWorkspaceModel) active_branch_name() string {
@@ -314,7 +331,10 @@ fn (m EditorWorkspaceModel) active_branch_name() string {
 }
 
 fn (m EditorWorkspaceModel) active_cursor_pos() string {
-	return "231:89"
+	if d := m.active_editor_data {
+		return "${d.cursor_row}:${d.cursor_col}"
+	}
+	return "???"
 }
 
 fn (m EditorWorkspaceModel) debug_data() DebugData {

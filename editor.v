@@ -2,8 +2,17 @@ module main
 
 import tauraamui.bobatea as tea
 
+struct EditorData {
+	file_path  string
+	cursor_row int
+	cursor_col int
+}
+
 struct EditorModel {
-	file_path string // NOTE(tauraamui): this will eventually be a buffer reference
+	file_path string
+mut:
+	cursor_row int
+	cursor_col int
 }
 
 struct OpenEditorMsg {
@@ -16,9 +25,25 @@ fn open_editor(file_path string) tea.Cmd {
 	}
 }
 
+struct QueryEditorDataMsg {}
+
+fn query_editor_data() tea.Msg {
+	return QueryEditorDataMsg{}
+}
+
+struct EditorDataResultMsg {
+	data EditorData
+}
+
+fn editor_data(data EditorData) tea.Cmd {
+	return fn [data] () tea.Msg {
+		return EditorDataResultMsg{ data }
+	}
+}
+
 fn EditorModel.new(file_path string) EditorModel {
 	assert file_path.len != 0
-	return EditorModel{ file_path }
+	return EditorModel{ file_path: file_path }
 }
 
 fn (mut m EditorModel) init() ?tea.Cmd {
@@ -26,12 +51,16 @@ fn (mut m EditorModel) init() ?tea.Cmd {
 }
 
 fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+	match msg {
+		QueryEditorDataMsg {
+			return m.clone(), editor_data(m.data())
+		}
+		else {}
+	}
 	return m.clone(), none
 }
 
-fn (m EditorModel) view(mut ctx tea.Context) {
-	ctx.draw_text(0, 0, "editing ${m.file_path}")
-}
+fn (m EditorModel) view(mut ctx tea.Context) {}
 
 fn (m EditorModel) debug_data() DebugData {
 	return DebugData{
@@ -39,6 +68,14 @@ fn (m EditorModel) debug_data() DebugData {
 		data: {
 			'file path': m.file_path
 		}
+	}
+}
+
+fn (m EditorModel) data() EditorData {
+	return EditorData{
+		file_path:  m.file_path
+		cursor_row: m.cursor_row
+		cursor_col: m.cursor_col
 	}
 }
 
