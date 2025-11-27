@@ -396,7 +396,8 @@ fn (m EditorWorkspaceModel) debug_data() DebugData {
 		name: 'editor_workspace data'
 		data: {
 			'initial file path': m.initial_file_path
-			'':                  if e := m.active_editor { e.debug_data() } else { 'null' }
+			'x':                  if e := m.active_editor { e.debug_data() } else { 'null' }
+			'xx':                  if d := m.dialog_model { d.debug_data() } else { 'null' }
 		}
 	}
 }
