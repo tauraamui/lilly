@@ -304,8 +304,8 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			cmds << filter_files_cmd(m.query)
 		}
 		tea.ResizedMsg {
-			m.width = int(f64(msg.window_width) * 0.8)
-			m.height = int(f64(msg.window_height) * 0.8)
+			m.width = msg.window_width
+			m.height = msg.window_height
 		}
 		CursorBlinkMsg {
 			m.cursor_blink_frame = (m.cursor_blink_frame + 1) % int(frames_per_cycle)
@@ -436,24 +436,13 @@ fn (m FilePickerModel) render_file_search_input_field(mut r_ctx tea.Context, wid
 }
 
 fn (m FilePickerModel) view(mut ctx tea.Context) {
-	ten_percent_width := int(f64(ctx.window_width()) * 0.1)
-	ten_percent_height := int(f64(ctx.window_height()) * 0.1)
+	// wipe existing rendered cells "behind" the modal
+	ctx.draw_rect(0, 0, m.width, m.height)
 
-	root_layout_width := int(f64(ctx.window_width()) * 0.8)
-	root_layout_height := int(f64(ctx.window_height()) * 0.8)
+	m.render_file_results_pane(mut ctx, m.width, m.height - 4)
 
-	id := ctx.push_offset(tea.Offset{
-		x: ten_percent_width
-		y: ten_percent_height
-	})
-	defer { ctx.clear_offsets_from(id) }
-
-	ctx.draw_rect(0, 0, root_layout_width, root_layout_height)
-
-	m.render_file_results_pane(mut ctx, root_layout_width, root_layout_height - 4)
-
-	ctx.push_offset(tea.Offset{ y: root_layout_height - 4 })
-	m.render_file_search_input_field(mut ctx, root_layout_width)
+	ctx.push_offset(tea.Offset{ y: m.height - 4 })
+	m.render_file_search_input_field(mut ctx, m.width)
 	ctx.pop_offset()
 }
 
@@ -466,6 +455,8 @@ fn (m FilePickerModel) debug_data() DebugData {
 	return DebugData{
 		name: 'file_picker data'
 		data: {
+			'width':                 '${m.width}'
+			'height':                '${m.height}'
 			'start index':           '${m.start_index}'
 			'selected index':        '${m.selected_index}'
 			'selected path':         selected_path
