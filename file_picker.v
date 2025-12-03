@@ -166,6 +166,8 @@ fn (mut m FilePickerModel) on_cancel() (tea.Model, ?tea.Cmd) {
 	return m.clone(), cmd
 }
 
+const filter_trigger_special_keys = ["backspace", "delete"]
+
 fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	mut cmds := []tea.Cmd{}
 
@@ -217,7 +219,14 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								m.selected_index = m.start_index
 							}
 						}
-						else {}
+						else {
+							if filter_trigger_special_keys.contains(msg.string()) {
+								m.selected_index = 0
+								m.start_index = 0
+								query := m.input_field.value()
+								cmds << filter_files_cmd(query)
+							}
+						}
 					}
 				}
 				else {
