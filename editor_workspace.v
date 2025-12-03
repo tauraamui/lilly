@@ -59,6 +59,16 @@ fn switch_mode(mode Mode) tea.Cmd {
 	}
 }
 
+struct CommandMsg {
+	command string
+}
+
+fn run_command(command string) tea.Cmd {
+	return fn [command] () tea.Msg {
+		return CommandMsg{ command }
+	}
+}
+
 struct QueryPWDGitBranchMsg {}
 
 fn query_pwd_git_branch() tea.Msg {
@@ -168,17 +178,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							}
 							'enter' {
 								cmds << switch_mode(.normal)
-								// TODO(tauraamui): emit action msg with command contents instead
-								pending_command := m.input_field.value()
-								match pending_command {
-									'q' {
-										return m.clone(), tea.quit
-									}
-									'debug' {
-										cmds << toggle_debug_screen
-									}
-									else {}
-								}
+								cmds << run_command(m.input_field.value())
 								return m.clone(), tea.batch_array(cmds)
 							}
 							else {}
@@ -230,6 +230,13 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		PWDGitBranchResultMsg {
 			m.branch_name = msg.branch_name
+		}
+		CommandMsg {
+			match msg.command {
+				"q"     { cmds << tea.quit }
+				"debug" { cmds << toggle_debug_screen }
+				else    {}
+			}
 		}
 		SwitchModeMsg {
 			match msg.mode {
@@ -398,8 +405,6 @@ fn (m EditorWorkspaceModel) render_leader_or_command_user_input_text(mut ctx tea
 		}
 		.command {
 			ctx.set_color(palette.subtle_text_fg_color)
-			// command_data := ':' + m.pending_command
-			// ctx.draw_text(0, ctx.window_height() - 1, command_data)
 			ctx.push_offset(tea.Offset{ y: ctx.window_height() - 1 })
 			m.input_field.view(mut ctx)
 			ctx.pop_offset()

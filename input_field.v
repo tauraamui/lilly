@@ -67,6 +67,7 @@ pub fn (mut m InputField) update(msg tea.Msg) (InputField, ?tea.Cmd) {
 	mut cmds := []tea.Cmd{}
 	match msg {
 		tea.KeyMsg {
+			m.cursor_blink_frame = 0
 			match msg.k_type {
 				.special {
 					match msg.string() {
