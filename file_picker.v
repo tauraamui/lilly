@@ -356,6 +356,7 @@ fn clamp_files_list_to_scrolled(start int, max_items int, initial_files_list []s
 }
 
 fn (m FilePickerModel) view(mut ctx tea.Context) {
+	if m.width == 0 || m.height == 0 { return }
 	// wipe existing rendered cells "behind" the modal
 	ctx.draw_rect(0, 0, m.width, m.height)
 
@@ -390,6 +391,10 @@ fn (m FilePickerModel) debug_data() DebugData {
 		}
 	}
 }
+
+fn (m FilePickerModel) width() int { return m.width }
+
+fn (m FilePickerModel) height() int { return m.height }
 
 fn (m FilePickerModel) clone() tea.Model {
 	return FilePickerModel{

@@ -166,13 +166,12 @@ fn (m SplashScreenModel) view(mut ctx tea.Context) {
 
 	ctx.clear_all_offsets()
 	if mut open_model := m.dialog_model {
-		ten_percent_width := int(f64(ctx.window_width()) * 0.1)
-		ten_percent_height := int(f64(ctx.window_height()) * 0.1)
-
-		id := ctx.push_offset(tea.Offset{
-			x: ten_percent_width
-			y: ten_percent_height
-		})
+		id := ctx.push_offset(
+			tea.Offset{
+				x: int(f64(ctx.window_width() / 2)) - int(f64(open_model.width() / 2))
+				y: int (f64(ctx.window_height() / 2)) - int(f64(open_model.height() / 2))
+			}
+		)
 		defer { ctx.clear_offsets_from(id) }
 
 		open_model.view(mut ctx)
@@ -355,6 +354,10 @@ fn (m SplashScreenModel) debug_data() DebugData {
 		}
 	}
 }
+
+fn (m SplashScreenModel) width() int { return 0 }
+
+fn (m SplashScreenModel) height() int { return 0 }
 
 fn (m SplashScreenModel) clone() tea.Model {
 	return SplashScreenModel{

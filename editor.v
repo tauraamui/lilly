@@ -79,6 +79,10 @@ fn (m EditorModel) data() EditorData {
 	}
 }
 
+fn (m EditorModel) width() int { return 0 }
+
+fn (m EditorModel) height() int { return 0 }
+
 fn (m EditorModel) clone() tea.Model {
 	assert m.file_path.len != 0
 	return EditorModel{

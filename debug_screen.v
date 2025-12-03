@@ -9,6 +9,8 @@ import palette
 interface DebuggableModel {
 	tea.Model
 	Debuggable
+	width()  int
+	height() int
 }
 
 interface Debuggable {
@@ -238,6 +240,10 @@ fn (m DebugScreenModel) debug_data() DebugData {
 		}
 	}
 }
+
+fn (m DebugScreenModel) width() int { return m.window_width }
+
+fn (m DebugScreenModel) height() int { return m.window_height }
 
 fn (m DebugScreenModel) clone() tea.Model {
 	return DebugScreenModel{

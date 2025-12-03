@@ -147,7 +147,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	}
 
 	if mut open_model := m.dialog_model {
-		intercepted_msg := if msg is tea.ResizedMsg { tea.Msg(
+		intercepted_msg := if msg is tea.ResizedMsg && mut open_model is FilePickerModel { tea.Msg(
 			// force forward a 80% of the actual window size down to moddal model
 			tea.ResizedMsg{
 				window_width: int(f64(msg.window_width) * 0.8)
@@ -270,9 +270,10 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		CommandMsg {
 			match msg.command {
-				"q"     { cmds << tea.quit }
-				"debug" { cmds << toggle_debug_screen }
-				else    { cmds << raise_error("unknown command '${msg.command}'") }
+				"q"       { cmds << tea.quit }
+				"debug"   { cmds << toggle_debug_screen }
+				"version" { cmds << open_version_dialog }
+				else      { cmds << raise_error("unknown command '${msg.command}'") }
 			}
 		}
 		DisplayErrorMsg {
@@ -323,13 +324,12 @@ fn (m EditorWorkspaceModel) view(mut ctx tea.Context) {
 	m.render_status_bar(mut ctx)
 
 	if mut open_model := m.dialog_model {
-		ten_percent_width := int(f64(ctx.window_width()) * 0.1)
-		ten_percent_height := int(f64(ctx.window_height()) * 0.1)
-
-		id := ctx.push_offset(tea.Offset{
-			x: ten_percent_width
-			y: ten_percent_height
-		})
+		id := ctx.push_offset(
+			tea.Offset{
+				x: int(f64(ctx.window_width() / 2)) - int(f64(open_model.width() / 2))
+				y: int (f64(ctx.window_height() / 2)) - int(f64(open_model.height() / 2))
+			}
+		)
 		defer { ctx.clear_offsets_from(id) }
 
 		open_model.view(mut ctx)
@@ -496,6 +496,10 @@ fn (m EditorWorkspaceModel) debug_data() DebugData {
 		}
 	}
 }
+
+fn (m EditorWorkspaceModel) width() int { return 0 }
+
+fn (m EditorWorkspaceModel) height() int { return 0 }
 
 fn (mut m EditorWorkspaceModel) clone() tea.Model {
 	return EditorWorkspaceModel{
