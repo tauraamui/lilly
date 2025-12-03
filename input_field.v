@@ -131,7 +131,8 @@ pub fn (m InputField) view(mut r_ctx tea.Context) {
 	cursor_color := calculate_cursor_color(m.cursor_blink_frame)
 	value_runes := m.value_runes()
 
-	m.layout.size(width, 3).render(mut r_ctx, fn [cursor_pos, cursor_color, width, value_runes] (mut l_ctx tea.Context) {
+	height := if m.layout.border == .none { 1 } else { 3 }
+	m.layout.size(width, height).render(mut r_ctx, fn [cursor_pos, cursor_color, width, value_runes] (mut l_ctx tea.Context) {
 		l_ctx.set_clip_area(tea.ClipArea{0, 0, width - 3, 1})
 		defer { l_ctx.clear_clip_area() }
 		l_ctx.draw_rect(0, 0, width - 2, 1)

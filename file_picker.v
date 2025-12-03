@@ -350,9 +350,10 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 	// wipe existing rendered cells "behind" the modal
 	ctx.draw_rect(0, 0, m.width, m.height)
 
-	m.render_file_results_pane(mut ctx, m.width, m.height - 4)
+	max_results_height := m.height - 3
+	m.render_file_results_pane(mut ctx, m.width, max_results_height)
 
-	ctx.push_offset(tea.Offset{ y: m.height - 4 })
+	ctx.push_offset(tea.Offset{ y: max_results_height })
 	m.input_field.view(mut ctx)
 
 	ctx.pop_offset()
