@@ -8,6 +8,7 @@ pub const matte_black_bg_color = tea.Color{ 20, 20, 20 }
 pub const matte_black_fg_color      = tea.Color.ansi(232)
 pub const matte_white_fg_color      = tea.Color{ 230, 230, 230 }
 pub const bright_off_white_fg_color = tea.Color{ 255, 255, 255 }
+pub const bright_red_fg_color       = tea.Color{ 245, 42, 42 }
 
 pub const subtle_text_fg_color = tea.Color.ansi(249)
 pub const help_fg_color = tea.Color.ansi(241)

@@ -1,6 +1,7 @@
 module main
 
 import os
+import time
 import tauraamui.bobatea as tea
 import boba
 import palette
@@ -16,6 +17,7 @@ mut:
 	branch_name        string
 	leader_suffix      string
 	input_field        boba.InputField
+	error_msg          ?string
 }
 
 struct OpenFileMsg {
@@ -67,6 +69,32 @@ fn run_command(command string) tea.Cmd {
 	return fn [command] () tea.Msg {
 		return CommandMsg{ command }
 	}
+}
+
+fn raise_error(error string) tea.Cmd {
+	return tea.sequence(display_error(error), hide_error_after(6 * time.second))
+}
+
+struct DisplayErrorMsg {
+	error string
+}
+
+fn display_error(error string) tea.Cmd {
+	return fn [error] () tea.Msg {
+		return DisplayErrorMsg { error }
+	}
+}
+
+struct HideErrorMsg {
+	time time.Time
+}
+
+fn hide_error_after(duration time.Duration) tea.Cmd {
+	return tea.tick(duration, fn (t time.Time) tea.Msg {
+		return HideErrorMsg{
+			time: t
+		}
+	})
 }
 
 struct QueryPWDGitBranchMsg {}
@@ -151,15 +179,24 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			}
 		}
 		.normal {
-			if msg is tea.KeyMsg && msg.k_type == .runes {
-				match msg.string() {
-					';' {
-						return m.clone(), switch_mode(.leader)
+			if msg is tea.KeyMsg {
+				match msg.k_type {
+					.special {
+						if msg.string() == "escape" {
+							cmds << hide_error_after(0 * time.second)
+						}
 					}
-					':' {
-						return m.clone(), switch_mode(.command)
+					.runes {
+						match msg.string() {
+							';' {
+								return m.clone(), switch_mode(.leader)
+							}
+							':' {
+								return m.clone(), switch_mode(.command)
+							}
+							else {}
+						}
 					}
-					else {}
 				}
 			}
 		}
@@ -235,8 +272,14 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			match msg.command {
 				"q"     { cmds << tea.quit }
 				"debug" { cmds << toggle_debug_screen }
-				else    {}
+				else    { cmds << raise_error("unknown command '${msg.command}'") }
 			}
+		}
+		DisplayErrorMsg {
+			m.error_msg = msg.error
+		}
+		HideErrorMsg {
+			m.error_msg = none
 		}
 		SwitchModeMsg {
 			match msg.mode {
@@ -245,8 +288,11 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					input_init_cmd := m.input_field.init() or { tea.noop_cmd }
 					cmds << input_init_cmd
 					cmds << tea.emit_resize
+					cmds << hide_error_after(0 * time.second)
 				}
-				.leader {}
+				.leader {
+					cmds << hide_error_after(0 * time.second)
+				}
 				else {
 					m.leader_suffix = ''
 					m.input_field.reset()
@@ -395,6 +441,12 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 }
 
 fn (m EditorWorkspaceModel) render_leader_or_command_user_input_text(mut ctx tea.Context) {
+	if err_msg := m.error_msg {
+		ctx.set_color(palette.bright_red_fg_color)
+		ctx.draw_text(1, ctx.window_height() - 1, err_msg)
+		ctx.reset_color()
+		return
+	}
 	match m.mode {
 		.leader {
 			ctx.set_color(palette.subtle_text_fg_color)
