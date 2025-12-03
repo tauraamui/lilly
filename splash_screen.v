@@ -66,6 +66,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				window_height: int(f64(msg.window_height) * 0.8)
 			}
 		) } else { msg }
+
 		d, cmd := open_model.update(intercepted_msg)
 		if d is DebuggableModel {
 			m.dialog_model = d

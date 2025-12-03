@@ -103,7 +103,15 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	}
 
 	if mut open_model := m.dialog_model {
-		d, cmd := open_model.update(msg)
+		intercepted_msg := if msg is tea.ResizedMsg { tea.Msg(
+			// force forward a 80% of the actual window size down to moddal model
+			tea.ResizedMsg{
+				window_width: int(f64(msg.window_width) * 0.8)
+				window_height: int(f64(msg.window_height) * 0.8)
+			}
+		) } else { msg }
+
+		d, cmd := open_model.update(intercepted_msg)
 		if d is DebuggableModel {
 			m.dialog_model = d
 		}
@@ -244,6 +252,15 @@ fn (m EditorWorkspaceModel) view(mut ctx tea.Context) {
 	m.render_status_bar(mut ctx)
 
 	if mut open_model := m.dialog_model {
+		ten_percent_width := int(f64(ctx.window_width()) * 0.1)
+		ten_percent_height := int(f64(ctx.window_height()) * 0.1)
+
+		id := ctx.push_offset(tea.Offset{
+			x: ten_percent_width
+			y: ten_percent_height
+		})
+		defer { ctx.clear_offsets_from(id) }
+
 		open_model.view(mut ctx)
 	}
 }

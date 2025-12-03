@@ -1,0 +1,199 @@
+module boba
+
+import math
+import time
+import tauraamui.bobatea as tea
+import palette
+
+const frames_per_cycle = 50.0
+
+pub type BorderedInputField = InputField
+
+pub struct InputField {
+mut:
+	value              string
+	width              int
+	layout             tea.Layout = no_bordered_layout
+	cursor_pos         int
+	cursor_blink_frame int
+	focused            bool
+}
+
+const subtle_bordered_layout = tea.new_layout()
+	.border(.normal)
+	.border_color(palette.subtle_border_fg_color)
+
+const no_bordered_layout = tea.new_layout()
+	.border(.none)
+
+pub fn BorderedInputField.new() InputField {
+	return InputField{
+		layout: subtle_bordered_layout
+	}
+}
+
+fn InputField.new() InputField {
+	return InputField{}
+}
+
+pub fn (mut i InputField) init() ?tea.Cmd {
+	return cursor_blink_cmd()
+}
+
+pub struct CursorBlinkMsg {
+pub:
+	time time.Time
+}
+
+pub fn cursor_blink_cmd() tea.Cmd {
+	return tea.tick(33 * time.millisecond, fn (t time.Time) tea.Msg {
+		return CursorBlinkMsg{
+			time: t
+		}
+	})
+}
+
+pub fn (mut m InputField) update(msg tea.Msg) (InputField, ?tea.Cmd) {
+	if !m.focused {
+		return m.clone(), none
+	}
+
+	mut cmds := []tea.Cmd{}
+	match msg {
+		tea.KeyMsg {
+			match msg.k_type {
+				.special {
+					match msg.string() {
+						'left', 'ctrl+b' {
+							if m.cursor_pos > 0 {
+								m.cursor_pos--
+							}
+						}
+						'right', 'ctrl+f' {
+							if m.cursor_pos < m.rune_len() {
+								m.cursor_pos++
+							}
+						}
+						'home', 'ctrl+a' {
+							m.cursor_pos = 0
+						}
+						'end', 'ctrl+e' {
+							m.cursor_pos = m.rune_len()
+						}
+						'backspace' {
+							if m.cursor_pos > 0 {
+								runes := m.value_runes()
+								m.value = (runes[..m.cursor_pos - 1].string()) +
+									(runes[m.cursor_pos..].string())
+								m.cursor_pos--
+							}
+						}
+						'delete', 'ctrl+d' {
+							if m.cursor_pos < m.rune_len() {
+								runes := m.value_runes()
+								m.value = (runes[..m.cursor_pos].string()) + (runes[m.cursor_pos +
+									1..].string())
+							}
+						}
+						else {}
+					}
+				}
+				else {
+					input_char := msg.string()
+					runes := m.value_runes()
+					m.value = (runes[..m.cursor_pos].string()) + input_char +
+						(runes[m.cursor_pos..].string())
+					m.cursor_pos += input_char.runes().len
+				}
+			}
+		}
+		CursorBlinkMsg {
+			m.cursor_blink_frame = (m.cursor_blink_frame + 1) % int(frames_per_cycle)
+			cmds << cursor_blink_cmd()
+		}
+		tea.ResizedMsg {
+			m.width = msg.window_width
+		}
+		else {}
+	}
+	return m.clone(), tea.batch_array(cmds)
+}
+
+pub fn (m InputField) view(mut r_ctx tea.Context) {
+	width := m.width
+	// NOTE(tauraamui) [03/12/25]: don't render if has no width
+	// let's also make sure we notice if width is ever negative
+	// because that's a bug signifier
+	assert !(width < 0)
+	if width <= 0 { return }
+
+	cursor_pos := m.cursor_pos
+	cursor_color := calculate_cursor_color(m.cursor_blink_frame)
+	value_runes := m.value_runes()
+
+	m.layout.size(width, 3).render(mut r_ctx, fn [cursor_pos, cursor_color, width, value_runes] (mut l_ctx tea.Context) {
+		l_ctx.set_clip_area(tea.ClipArea{0, 0, width - 3, 1})
+		defer { l_ctx.clear_clip_area() }
+		l_ctx.draw_rect(0, 0, width - 2, 1)
+		l_ctx.draw_text(0, 0, '>')
+
+		input_text_offset := l_ctx.push_offset(tea.Offset{ x: 2 })
+		cursor_within_content := cursor_pos < value_runes.len
+		for i, r in value_runes {
+			r_str := r.str()
+			if cursor_within_content && i == cursor_pos {
+				l_ctx.set_bg_color(cursor_color)
+			}
+			l_ctx.draw_text(0, 0, r_str)
+			l_ctx.push_offset(tea.Offset{ x: tea.visible_len(r_str) })
+			l_ctx.reset_bg_color()
+		}
+
+		if !cursor_within_content {
+			l_ctx.set_bg_color(cursor_color)
+			l_ctx.draw_rect(0, 0, 1, 1)
+			l_ctx.reset_bg_color()
+		}
+		l_ctx.clear_from_offset(input_text_offset)
+	})
+}
+
+fn calculate_cursor_color(blink_frame int) tea.Color {
+	angle := f64(blink_frame) * 2.0 * math.pi / frames_per_cycle
+	sine_value := math.sin(angle)
+	color_range := 255 - 235
+	color_value := 235 + int((sine_value + 1.0) * f64(color_range) / 2.0)
+	return tea.Color.ansi(color_value)
+}
+
+pub fn (m &InputField) value() string {
+	return m.value
+}
+
+pub fn (m &InputField) value_runes() []rune {
+	return m.value.runes()
+}
+
+pub fn (m &InputField) rune_len() int {
+	return m.value.runes().len
+}
+
+pub fn (mut m InputField) reset() {
+	m.value      = ''
+	m.cursor_pos = 0
+}
+
+pub fn (mut m InputField) focus() {
+	m.focused = true
+}
+
+pub fn (m &InputField) focused() bool {
+	return m.focused
+}
+
+fn (m InputField) clone() InputField {
+	return InputField{
+		...m
+	}
+}
+
