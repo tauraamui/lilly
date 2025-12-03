@@ -2,19 +2,20 @@ module main
 
 import os
 import tauraamui.bobatea as tea
+import boba
 import palette
 import glyphs
 
 struct EditorWorkspaceModel {
 	initial_file_path string
-mut:
 	mode               Mode
+mut:
 	dialog_model       ?DebuggableModel
 	active_editor      ?DebuggableModel
 	active_editor_data ?EditorData
 	branch_name        string
 	leader_suffix      string
-	pending_command    string
+	input_field        boba.InputField
 }
 
 struct OpenFileMsg {
@@ -44,13 +45,18 @@ fn EditorWorkspaceModel.new(initial_file_path string) EditorWorkspaceModel {
 }
 
 fn (mut m EditorWorkspaceModel) init() ?tea.Cmd {
+	m.input_field = boba.InputField.new_with_prefix(":", 0)
 	return tea.batch(open_editor(m.initial_file_path), query_editor_data, query_pwd_git_branch)
 }
 
-struct ToggleLeaderModeMsg {}
+struct SwitchModeMsg {
+	mode Mode
+}
 
-fn toggle_leader_mode() tea.Msg {
-	return ToggleLeaderModeMsg{}
+fn switch_mode(mode Mode) tea.Cmd {
+	return fn [mode] () tea.Msg {
+		return SwitchModeMsg{ mode }
+	}
 }
 
 struct QueryPWDGitBranchMsg {}
@@ -125,8 +131,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				match msg.k_type {
 					.special {
 						if msg.string() == 'escape' {
-							m.mode = .normal
-							m.leader_suffix = ''
+							cmds << switch_mode(.normal)
 						}
 					}
 					.runes {
@@ -139,31 +144,33 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			if msg is tea.KeyMsg && msg.k_type == .runes {
 				match msg.string() {
 					';' {
-						m.mode = .leader
-						return m.clone(), none
+						return m.clone(), switch_mode(.leader)
 					}
 					':' {
-						m.mode = .command
-						return m.clone(), none
+						return m.clone(), switch_mode(.command)
 					}
 					else {}
 				}
 			}
 		}
 		.command {
+			i_field, i_cmd := m.input_field.update(msg)
+			i_u_cmd := i_cmd or { tea.noop_cmd }
+			cmds << i_u_cmd
+			m.input_field = i_field
+
 			if msg is tea.KeyMsg {
 				match msg.k_type {
 					.special {
 						match msg.string() {
 							'escape' {
-								m.mode = .normal
-								m.pending_command = ''
-								return m.clone(), none
+								return m.clone(), switch_mode(.normal)
 							}
 							'enter' {
-								m.mode = .normal
+								cmds << switch_mode(.normal)
 								// TODO(tauraamui): emit action msg with command contents instead
-								match m.pending_command {
+								pending_command := m.input_field.value()
+								match pending_command {
 									'q' {
 										return m.clone(), tea.quit
 									}
@@ -172,14 +179,12 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 									}
 									else {}
 								}
-								m.pending_command = ''
+								return m.clone(), tea.batch_array(cmds)
 							}
 							else {}
 						}
 					}
-					.runes {
-						m.pending_command += msg.string()
-					}
+					else {}
 				}
 			}
 		}
@@ -226,16 +231,29 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		PWDGitBranchResultMsg {
 			m.branch_name = msg.branch_name
 		}
-		ToggleLeaderModeMsg {
-			m.mode = .leader
+		SwitchModeMsg {
+			match msg.mode {
+				.command {
+					m.input_field.focus()
+					input_init_cmd := m.input_field.init() or { tea.noop_cmd }
+					cmds << input_init_cmd
+					cmds << tea.emit_resize
+				}
+				.leader {}
+				else {
+					m.leader_suffix = ''
+					m.input_field.reset()
+					m.input_field.blur()
+				}
+			}
+			return m.clone_with_mode(msg.mode), tea.batch_array(cmds)
 		}
 		else {}
 	}
 
 	match m.leader_suffix {
 		'ff' {
-			m.leader_suffix = ''
-			m.mode = .normal
+			cmds << switch_mode(.normal)
 			cmds << open_file_picker
 		}
 		else {}
@@ -380,8 +398,11 @@ fn (m EditorWorkspaceModel) render_leader_or_command_user_input_text(mut ctx tea
 		}
 		.command {
 			ctx.set_color(palette.subtle_text_fg_color)
-			command_data := ':' + m.pending_command
-			ctx.draw_text(0, ctx.window_height() - 1, command_data)
+			// command_data := ':' + m.pending_command
+			// ctx.draw_text(0, ctx.window_height() - 1, command_data)
+			ctx.push_offset(tea.Offset{ y: ctx.window_height() - 1 })
+			m.input_field.view(mut ctx)
+			ctx.pop_offset()
 		}
 		else {}
 	}
@@ -422,5 +443,12 @@ fn (m EditorWorkspaceModel) debug_data() DebugData {
 fn (mut m EditorWorkspaceModel) clone() tea.Model {
 	return EditorWorkspaceModel{
 		...m
+	}
+}
+
+fn (mut m EditorWorkspaceModel) clone_with_mode(mode Mode) tea.Model {
+	return EditorWorkspaceModel{
+		...m
+		mode: mode
 	}
 }

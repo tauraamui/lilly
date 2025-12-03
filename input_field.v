@@ -14,6 +14,8 @@ mut:
 	value              string
 	width              int
 	layout             tea.Layout = no_bordered_layout
+	input_prefix       string = ">"
+	prefix_padding     int    = 1
 	cursor_pos         int
 	cursor_blink_frame int
 	focused            bool
@@ -32,8 +34,12 @@ pub fn BorderedInputField.new() InputField {
 	}
 }
 
-fn InputField.new() InputField {
+pub fn InputField.new() InputField {
 	return InputField{}
+}
+
+pub fn InputField.new_with_prefix(input_prefix string, prefix_padding int) InputField {
+	return InputField{ input_prefix: input_prefix, prefix_padding: prefix_padding }
 }
 
 pub fn (mut i InputField) init() ?tea.Cmd {
@@ -54,7 +60,7 @@ pub fn cursor_blink_cmd() tea.Cmd {
 }
 
 pub fn (mut m InputField) update(msg tea.Msg) (InputField, ?tea.Cmd) {
-	if !m.focused {
+	if !m.focused && msg is tea.KeyMsg {
 		return m.clone(), none
 	}
 
@@ -130,15 +136,19 @@ pub fn (m InputField) view(mut r_ctx tea.Context) {
 	cursor_pos := m.cursor_pos
 	cursor_color := calculate_cursor_color(m.cursor_blink_frame)
 	value_runes := m.value_runes()
+	input_prefix := m.input_prefix
+	prefix_padding := m.prefix_padding
 
 	height := if m.layout.border == .none { 1 } else { 3 }
-	m.layout.size(width, height).render(mut r_ctx, fn [cursor_pos, cursor_color, width, value_runes] (mut l_ctx tea.Context) {
+	m.layout.size(width, height).render(mut r_ctx, fn [
+		cursor_pos, cursor_color, width, value_runes, input_prefix, prefix_padding
+	] (mut l_ctx tea.Context) {
 		l_ctx.set_clip_area(tea.ClipArea{0, 0, width - 3, 1})
 		defer { l_ctx.clear_clip_area() }
 		l_ctx.draw_rect(0, 0, width - 2, 1)
-		l_ctx.draw_text(0, 0, '>')
+		l_ctx.draw_text(0, 0, input_prefix)
 
-		input_text_offset := l_ctx.push_offset(tea.Offset{ x: 2 })
+		input_text_offset := l_ctx.push_offset(tea.Offset{ x: prefix_padding + tea.visible_len(input_prefix) })
 		cursor_within_content := cursor_pos < value_runes.len
 		for i, r in value_runes {
 			r_str := r.str()
@@ -186,6 +196,10 @@ pub fn (mut m InputField) reset() {
 
 pub fn (mut m InputField) focus() {
 	m.focused = true
+}
+
+pub fn (mut m InputField) blur() {
+	m.focused = false
 }
 
 pub fn (m &InputField) focused() bool {
