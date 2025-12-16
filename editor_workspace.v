@@ -118,6 +118,9 @@ fn pwd_git_branch_name(branch_name string) tea.Cmd {
 }
 
 fn resolve_git_branch_name(execute fn (cmd string) os.Result) string {
+	$if darwin {
+		return "(not supported on macos)"
+	}
 	prefix := '\uE0A0'
 	wt := spawn currently_in_worktree(execute)
 	in_wt := wt.wait()
