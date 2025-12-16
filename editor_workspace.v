@@ -89,6 +89,10 @@ struct HideErrorMsg {
 	time time.Time
 }
 
+fn hide_error() tea.Msg {
+	return HideErrorMsg{}
+}
+
 fn hide_error_after(duration time.Duration) tea.Cmd {
 	return tea.tick(duration, fn (t time.Time) tea.Msg {
 		return HideErrorMsg{
@@ -289,10 +293,10 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					input_init_cmd := m.input_field.init() or { tea.noop_cmd }
 					cmds << input_init_cmd
 					cmds << tea.emit_resize
-					cmds << hide_error_after(0 * time.second)
+					cmds << hide_error
 				}
 				.leader {
-					cmds << hide_error_after(0 * time.second)
+					cmds << hide_error
 				}
 				else {
 					m.leader_suffix = ''
