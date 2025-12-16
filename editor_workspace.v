@@ -309,6 +309,12 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			}
 			return m.clone_with_mode(msg.mode), tea.batch_array(cmds)
 		}
+		tea.ResizedMsg {
+			i_field, i_cmd := m.input_field.update(msg)
+			i_u_cmd := i_cmd or { tea.noop_cmd }
+			cmds << i_u_cmd
+			m.input_field = i_field
+		}
 		else {}
 	}
 
