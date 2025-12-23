@@ -114,8 +114,9 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			mut d_model := msg.model
 			cmd := d_model.init()
 			m.dialog_model = d_model
-			u_cmd := cmd or { tea.noop_cmd }
-			cmds << u_cmd
+			if u_cmd := cmd {
+				cmds << u_cmd
+			}
 		}
 		OpenFileMsg {
 			cmds << open_editor_workspace(msg.file_path)
@@ -123,8 +124,9 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		OpenEditorWorkspaceMsg {
 			mut workspace := EditorWorkspaceModel.new(msg.initial_file_path)
 			cmd := workspace.init()
-			u_cmd := cmd or { tea.noop_cmd }
-			cmds << u_cmd
+			if u_cmd := cmd {
+				cmds << u_cmd
+			}
 			return workspace, tea.batch_array(cmds)
 		}
 		else {}

@@ -299,8 +299,9 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			}
 			.command {
 				i_field, i_cmd := m.input_field.update(msg)
-				i_u_cmd := i_cmd or { tea.noop_cmd }
-				cmds << i_u_cmd
+				if i_u_cmd := i_cmd {
+					cmds << i_u_cmd
+				}
 				m.input_field = i_field
 
 				match msg.k_type {
@@ -332,8 +333,9 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			mut d_model := msg.model
 			cmd := d_model.init()
 			m.dialog_model = d_model
-			u_cmd := cmd or { tea.noop_cmd }
-			cmds << u_cmd
+			if u_cmd := cmd {
+				cmds << u_cmd
+			}
 		}
 		OpenFileMsg {
 			cmds << open_editor(msg.file_path)
@@ -354,8 +356,11 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			m.editors[editor_id] = e_model
 			m.active_editor_id = m.split_tree.active_editor_id
 
-			u_cmd := cmd or { tea.noop_cmd }
-			cmds << tea.sequence(u_cmd, focus_editor(editor_id), query_editor_data(editor_id), query_pwd_git_branch)
+			if u_cmd := cmd {
+				cmds << u_cmd
+			}
+
+			cmds << tea.sequence(focus_editor(editor_id), query_editor_data(editor_id), query_pwd_git_branch)
 			cmds << debug_log("opened file ${msg.file_path} into model of id ${editor_id}")
 		}
 		VerticalSplitMsg {
@@ -363,7 +368,9 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				old_id := info.id  // get the old ID before inserting
 				new_id := m.next_editor_id()
 				mut new_editor := EditorModel.new(new_id, info.file_path)
-				init_cmd := new_editor.init() or { tea.noop_cmd }
+				if init_cmd := new_editor.init() {
+					cmds << init_cmd
+				}
 
 				m.split_tree.insert_vertical_split(new_id, info.file_path)
 				m.editors[new_id] = new_editor
@@ -375,7 +382,6 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					unfocus_editor(old_id),  // Unfocus the old editor
 					focus_editor(new_id),
 					query_editor_data(new_id),
-					init_cmd,
 					tea.emit_resize
 				)
 			}
@@ -424,8 +430,9 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			match msg.mode {
 				.command {
 					m.input_field.focus()
-					input_init_cmd := m.input_field.init() or { tea.noop_cmd }
-					cmds << input_init_cmd
+					if input_init_cmd := m.input_field.init() {
+						cmds << input_init_cmd
+					}
 					cmds << tea.emit_resize
 					cmds << hide_error
 				}
@@ -442,8 +449,9 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		tea.ResizedMsg {
 			i_field, i_cmd := m.input_field.update(msg)
-			i_u_cmd := i_cmd or { tea.noop_cmd }
-			cmds << i_u_cmd
+			if i_u_cmd := i_cmd {
+				cmds << i_u_cmd
+			}
 			m.input_field = i_field
 		}
 		else {}

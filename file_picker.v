@@ -54,8 +54,13 @@ pub fn (mut m FilePickerModel) init() ?tea.Cmd {
 	m.loading = true
 	m.input_field = boba.BorderedInputField.new()
 	m.input_field.focus()
-	input_init_cmd := m.input_field.init() or { tea.noop_cmd }
-	return tea.batch(tea.emit_resize, input_init_cmd, load_files(os.getwd()))
+	mut cmds := []tea.Cmd{}
+	if input_init_cmd := m.input_field.init() {
+		cmds << input_init_cmd
+	}
+	cmds << [tea.emit_resize, load_files(os.getwd())]
+	// return tea.batch(tea.emit_resize, input_init_cmd, load_files(os.getwd()))
+	return tea.batch_array(cmds)
 }
 
 pub fn load_files(root string) tea.Cmd {
