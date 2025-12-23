@@ -49,13 +49,61 @@ fn (d DebugData) draw(mut ctx tea.Context, x int, y int, clear_offsets bool) {
 	}
 }
 
-struct DebugLogMsg {
+enum LogLevel {
+	debug
+	info
+	warn
+	error
+}
+
+fn (l LogLevel) str() string {
+	return match l {
+		.debug { "DEBU" }
+		.info  { "INFO" }
+		.warn  { "WARN" }
+		.error { "ERRO" }
+	}
+}
+
+fn (l LogLevel) fg() tea.Color {
+	return match l {
+		.debug { tea.Color.ansi(62) }
+		.info  { tea.Color.ansi(183) }
+		.warn  { tea.Color.ansi(220) }
+		.error { tea.Color.ansi(162) }
+	}
+}
+
+struct LogMsg {
+	level   LogLevel
 	message string
+}
+
+fn log(message string, level LogLevel) tea.Msg {
+	return LogMsg{ level, message }
 }
 
 fn debug_log(message string) tea.Cmd {
 	return fn [message] () tea.Msg {
-		return DebugLogMsg{message}
+		return log(message, .debug)
+	}
+}
+
+fn info_log(message string) tea.Cmd {
+	return fn [message] () tea.Msg {
+		return log(message, .info)
+	}
+}
+
+fn warn_log(message string) tea.Cmd {
+	return fn [message] () tea.Msg {
+		return log(message, .warn)
+	}
+}
+
+fn error_log(message string) tea.Cmd {
+	return fn [message] () tea.Msg {
+		return log(message, .error)
 	}
 }
 
@@ -65,7 +113,7 @@ enum ScreenState as u8 {
 }
 
 struct DebugScreenModel {
-	logs []string
+	logs []LogMsg
 mut:
 	state              ScreenState
 	wrapped_model      DebuggableModel
@@ -85,7 +133,7 @@ fn close_debug(prev_model tea.Model) tea.Cmd {
 	}
 }
 
-fn DebugScreenModel.new(wrapped_model DebuggableModel, logs []string, last_resize_width int, last_resize_height int) DebugScreenModel {
+fn DebugScreenModel.new(wrapped_model DebuggableModel, logs []LogMsg, last_resize_width int, last_resize_height int) DebugScreenModel {
 	return DebugScreenModel{
 		wrapped_model:      wrapped_model
 		logs:               logs
@@ -199,9 +247,21 @@ fn (mut m DebugScreenModel) view(mut ctx tea.Context) {
 	ctx.reset_color()
 }
 
-fn render_logs(mut ctx tea.Context, x int, y int, logs []string) {
+fn render_logs(mut ctx tea.Context, x int, y int, logs []LogMsg) {
 	for i, l in logs {
-		ctx.draw_text(x, y + i, l)
+		level_label := l.level.str()
+		ctx.set_color(l.level.fg())
+
+		mut label_x_offset := 0
+		ctx.draw_text(x + label_x_offset, y + i, "[")
+		label_x_offset += 1
+		ctx.draw_text(x + label_x_offset, y + i, level_label)
+		label_x_offset += tea.visible_len(level_label)
+		ctx.draw_text(x + label_x_offset, y + i, "]")
+		label_x_offset += 1
+		ctx.reset_color()
+		label_x_offset += 1 // single space padding
+		ctx.draw_text(x + label_x_offset, y + i, l.message)
 	}
 }
 

@@ -12,7 +12,7 @@ mut:
 	first_frame             bool
 	active_screen           DebuggableModel // all screens are debuggable to help with live, well... debugging
 	clear_screen_next_frame bool
-	logs                    []string
+	logs                    []LogMsg
 	last_resize_width       int
 	last_resize_height      int
 }
@@ -60,8 +60,8 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				m.active_screen = screen
 			}
 		}
-		DebugLogMsg {
-			m.logs << msg.message
+		LogMsg {
+			m.logs << msg
 		}
 		tea.ResizedMsg {
 			m.last_resize_width = msg.window_width

@@ -2,6 +2,7 @@ module main
 
 import os
 import time
+import math
 import tauraamui.bobatea as tea
 import boba
 import palette
@@ -9,15 +10,24 @@ import glyphs
 
 struct EditorWorkspaceModel {
 	initial_file_path string
+	// NOTE(tauraamui): forced mode to be immutable, this ensures we cannot randomly
+	// accidentally set the mode state without accounting for necessary checks and state changes,
+	// the only way we can change the mode is by exiting the current scope with a command to do so
 	mode               Mode
 mut:
 	dialog_model       ?DebuggableModel
-	active_editor      ?DebuggableModel
+
+	active_editor_id   int
+
+	split_tree         boba.SplitTree
+	editors            map[int]DebuggableModel
+
 	active_editor_data ?EditorData
 	branch_name        string
 	leader_suffix      string
 	input_field        boba.InputField
 	error_msg          ?string
+	editor_id_count    int
 }
 
 struct OpenFileMsg {
@@ -43,12 +53,13 @@ fn open_editor_workspace(initial_file_path string) tea.Cmd {
 fn EditorWorkspaceModel.new(initial_file_path string) EditorWorkspaceModel {
 	return EditorWorkspaceModel{
 		initial_file_path: initial_file_path
+		split_tree: boba.SplitTree.new()
 	}
 }
 
 fn (mut m EditorWorkspaceModel) init() ?tea.Cmd {
 	m.input_field = boba.InputField.new_with_prefix(":", 0)
-	return tea.batch(open_editor(m.initial_file_path), query_editor_data, query_pwd_git_branch)
+	return tea.batch(open_editor(m.initial_file_path))
 }
 
 struct SwitchModeMsg {
@@ -71,8 +82,27 @@ fn run_command(command string) tea.Cmd {
 	}
 }
 
+fn focus_editor(editor_id int) tea.Cmd {
+	return fn [editor_id] () tea.Msg {
+		return EditorModelMsg{
+			id: editor_id
+			msg: tea.FocusedMsg{}
+		}
+	}
+}
+
+fn unfocus_editor(editor_id int) tea.Cmd {
+	return fn [editor_id] () tea.Msg {
+		return EditorModelMsg{
+			id: editor_id
+			msg: tea.BlurredMsg{}
+		}
+	}
+}
+
+
 fn raise_error(error string) tea.Cmd {
-	return tea.sequence(display_error(error), hide_error_after(6 * time.second))
+	return tea.sequence(display_error(error), error_log(error), hide_error_after(6 * time.second))
 }
 
 struct DisplayErrorMsg {
@@ -142,15 +172,23 @@ fn get_branch(execute fn (cmd string) os.Result) string {
 	return res.output
 }
 
-fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
-	mut cmds := []tea.Cmd{}
+pub struct VerticalSplitMsg {}
 
-	// ***** dialog related state *****
-	match msg {
-		CloseDialogMsg {
-			m.dialog_model = none
-		}
-		else {}
+pub fn split_vertically() tea.Msg {
+	return VerticalSplitMsg{}
+}
+
+pub struct CloseActiveSplitMsg {}
+
+pub fn close_active_split() tea.Msg {
+	return CloseActiveSplitMsg{}
+}
+
+
+fn (mut m EditorWorkspaceModel) update_dialog(msg tea.Msg) (?tea.Model, ?tea.Cmd) {
+	if msg is CloseDialogMsg {
+		m.dialog_model = none
+		return m.clone(), none
 	}
 
 	if mut open_model := m.dialog_model {
@@ -168,11 +206,23 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		return m.clone(), cmd
 	}
+
+	return none, none
+}
+
+fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+	mut cmds := []tea.Cmd{}
+
+	// ***** dialog related state *****
+	d_editor, d_cmd := m.update_dialog(msg)
+	if cloned_editor := d_editor {
+		return cloned_editor, d_cmd
+	}
 	// ********
 
-	match m.mode {
-		.leader {
-			if msg is tea.KeyMsg {
+	if msg is tea.KeyMsg {
+		match m.mode {
+			.leader {
 				match msg.k_type {
 					.special {
 						if msg.string() == 'escape' {
@@ -181,16 +231,57 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 					.runes {
 						m.leader_suffix += msg.string()
+						match m.leader_suffix {
+							'ff' {
+								cmds << switch_mode(.normal)
+								cmds << open_file_picker
+							}
+							else {}
+						}
+						return m.clone(), tea.batch_array(cmds)
 					}
 				}
 			}
-		}
-		.normal {
-			if msg is tea.KeyMsg {
+			.normal {
 				match msg.k_type {
 					.special {
-						if msg.string() == "escape" {
-							cmds << hide_error_after(0 * time.second)
+						match msg.string() {
+							"escape" {
+								cmds << hide_error
+							}
+							"ctrl+w+h" {
+								// move to previous split (left)
+								if m.split_tree.count() > 1 {
+									old_id := m.split_tree.active_editor_id
+									m.split_tree.navigate_prev()
+									new_id := m.split_tree.active_editor_id
+									m.active_editor_id = new_id
+
+									cmds << tea.sequence(
+										unfocus_editor(old_id),
+										focus_editor(new_id),
+										query_editor_data(new_id),
+										query_pwd_git_branch
+									)
+								}
+							}
+							"ctrl+w+l" {
+								// move to next split (right)
+								if m.split_tree.count() > 1 {
+									old_id := m.split_tree.active_editor_id
+									m.split_tree.navigate_next()
+									new_id := m.split_tree.active_editor_id
+									m.active_editor_id = new_id
+
+									cmds << tea.sequence(
+										unfocus_editor(old_id),
+										focus_editor(new_id),
+										query_editor_data(new_id),
+										query_pwd_git_branch
+									)
+								}
+							}
+							else {}
 						}
 					}
 					.runes {
@@ -206,14 +297,12 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 				}
 			}
-		}
-		.command {
-			i_field, i_cmd := m.input_field.update(msg)
-			i_u_cmd := i_cmd or { tea.noop_cmd }
-			cmds << i_u_cmd
-			m.input_field = i_field
+			.command {
+				i_field, i_cmd := m.input_field.update(msg)
+				i_u_cmd := i_cmd or { tea.noop_cmd }
+				cmds << i_u_cmd
+				m.input_field = i_field
 
-			if msg is tea.KeyMsg {
 				match msg.k_type {
 					.special {
 						match msg.string() {
@@ -231,18 +320,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					else {}
 				}
 			}
-		}
-		else {}
-	}
-
-	if !(m.mode == .leader || m.mode == .command) {
-		if mut active_editor := m.active_editor {
-			e, cmd := active_editor.update(msg)
-			if e is DebuggableModel {
-				m.active_editor = e
-			}
-			u_cmd := cmd or { tea.noop_cmd }
-			cmds << u_cmd
+			else {}
 		}
 	}
 
@@ -259,15 +337,66 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		OpenFileMsg {
 			cmds << open_editor(msg.file_path)
-			cmds << query_editor_data
-			cmds << query_pwd_git_branch
 		}
 		OpenEditorMsg {
-			mut e_model := EditorModel.new(msg.file_path)
+			editor_id := m.next_editor_id()
+			mut e_model := EditorModel.new(editor_id, msg.file_path)
 			cmd := e_model.init()
-			m.active_editor = e_model
+
+			if m.split_tree.is_empty() {
+				m.split_tree.init_with_editor(editor_id, msg.file_path)
+			} else {
+				old_id := m.split_tree.active_editor_id
+				m.split_tree.replace_active_editor(editor_id, msg.file_path)
+				m.editors.delete(old_id)
+			}
+
+			m.editors[editor_id] = e_model
+			m.active_editor_id = m.split_tree.active_editor_id
+
 			u_cmd := cmd or { tea.noop_cmd }
-			cmds << u_cmd
+			cmds << tea.sequence(u_cmd, focus_editor(editor_id), query_editor_data(editor_id), query_pwd_git_branch)
+			cmds << debug_log("opened file ${msg.file_path} into model of id ${editor_id}")
+		}
+		VerticalSplitMsg {
+			if info := m.split_tree.get_active_editor() {
+				old_id := info.id  // get the old ID before inserting
+				new_id := m.next_editor_id()
+				mut new_editor := EditorModel.new(new_id, info.file_path)
+				init_cmd := new_editor.init() or { tea.noop_cmd }
+
+				m.split_tree.insert_vertical_split(new_id, info.file_path)
+				m.editors[new_id] = new_editor
+
+				// sync active_editor_id with split_tree
+				m.active_editor_id = m.split_tree.active_editor_id
+
+				cmds << tea.sequence(
+					unfocus_editor(old_id),  // Unfocus the old editor
+					focus_editor(new_id),
+					query_editor_data(new_id),
+					init_cmd,
+					tea.emit_resize
+				)
+			}
+		}
+		CloseActiveSplitMsg {
+			old_id := m.split_tree.active_editor_id
+			if m.split_tree.close_active_split() {
+				m.editors.delete(old_id)
+				// sync the new active editor after closing
+				m.active_editor_id = m.split_tree.active_editor_id
+				if m.split_tree.count() == 0 {
+					cmds << tea.quit
+				} else {
+					// focus the new active editor
+					cmds << tea.sequence(
+						focus_editor(m.active_editor_id),
+						query_editor_data(m.active_editor_id),
+						query_pwd_git_branch
+					)
+				}
+			}
 		}
 		EditorDataResultMsg {
 			m.active_editor_data = msg.data
@@ -277,10 +406,12 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		CommandMsg {
 			match msg.command {
-				"q"       { cmds << tea.quit }
+				"q"       { cmds << close_active_split }
+				"qa"      { cmds << tea.quit }
 				"debug"   { cmds << toggle_debug_screen }
 				"version" { cmds << open_version_dialog }
-				else      { cmds << raise_error("unknown command '${msg.command}'") }
+				"vs"      { cmds << split_vertically }
+				else { cmds << raise_error("unknown command '${msg.command}'") }
 			}
 		}
 		DisplayErrorMsg {
@@ -318,20 +449,42 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		else {}
 	}
 
-	match m.leader_suffix {
-		'ff' {
-			cmds << switch_mode(.normal)
-			cmds << open_file_picker
+	for id, mut editor in m.editors {
+		e, cmd := editor.update(msg)
+		if e is DebuggableModel {
+			m.editors[id] = e
 		}
-		else {}
+		if u_cmd := cmd {
+			cmds << u_cmd
+		}
 	}
 
 	return m.clone(), tea.batch_array(cmds)
 }
 
 fn (m EditorWorkspaceModel) view(mut ctx tea.Context) {
-	if mut active_editor := m.active_editor {
-		active_editor.view(mut ctx)
+	editor_area_height := ctx.window_height() - 2
+	ctx.set_clip_area(tea.ClipArea{ 0, 0, ctx.window_width(), editor_area_height })
+	layout := m.split_tree.get_layout(ctx.window_width(), editor_area_height)
+	for rect in layout {
+		if mut editor := m.editors[rect.editor_id] {
+			// set clip area for this specific split
+			ctx.set_clip_area(tea.ClipArea{ rect.x, rect.y, rect.width, rect.height })
+
+			offset_id := ctx.push_offset(tea.Offset{ x: rect.x, y: rect.y })
+
+			resized, _ := editor.update(tea.ResizedMsg{
+				window_width: rect.width
+				window_height: rect.height
+			})
+			if resized is DebuggableModel {
+				mut renderable := resized
+				renderable.view(mut ctx)
+			}
+
+			ctx.clear_offsets_from(offset_id)
+			ctx.clear_clip_area()  // clear after each split
+		}
 	}
 
 	m.render_status_bar(mut ctx)
@@ -503,9 +656,7 @@ fn (m EditorWorkspaceModel) debug_data() DebugData {
 	return DebugData{
 		name: 'editor_workspace data'
 		data: {
-			'initial file path': m.initial_file_path
-			'x':                  if e := m.active_editor { e.debug_data() } else { 'null' }
-			'xx':                  if d := m.dialog_model { d.debug_data() } else { 'null' }
+			'initial file path':  m.initial_file_path
 		}
 	}
 }
@@ -518,6 +669,21 @@ fn (mut m EditorWorkspaceModel) clone() tea.Model {
 	return EditorWorkspaceModel{
 		...m
 	}
+}
+
+fn (mut m EditorWorkspaceModel) prev_editor_id() int {
+	return hash_id(m.editor_id_count - 1)
+}
+
+fn (mut m EditorWorkspaceModel) next_editor_id() int {
+	m.editor_id_count += 1
+	return hash_id(m.editor_id_count)
+}
+
+fn hash_id(id int) int {
+	// constant is from Knuth's multiplicative hash
+	hash := (id * 2654435761) % 1000000
+	return math.abs(hash)
 }
 
 fn (mut m EditorWorkspaceModel) clone_with_mode(mode Mode) tea.Model {
