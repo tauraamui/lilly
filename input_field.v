@@ -116,7 +116,16 @@ pub fn (mut m InputField) update(msg tea.Msg) (InputField, ?tea.Cmd) {
 		}
 		CursorBlinkMsg {
 			m.cursor_blink_frame = (m.cursor_blink_frame + 1) % int(frames_per_cycle)
+			if m.focused {
+				cmds << cursor_blink_cmd()
+			}
+		}
+		tea.FocusedMsg {
+			m.focused = true
 			cmds << cursor_blink_cmd()
+		}
+		tea.BlurredMsg {
+			m.focused = false
 		}
 		tea.ResizedMsg {
 			m.width = msg.window_width
