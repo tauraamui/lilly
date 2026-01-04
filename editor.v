@@ -2,6 +2,36 @@ module main
 
 import os
 import tauraamui.bobatea as tea
+import palette
+
+struct ModelCursorPos {
+	x int
+	y int
+}
+
+fn (c ModelCursorPos) up() ModelCursorPos {
+	yy := c.y - 1
+	if yy < 0 { return c }
+	return ModelCursorPos{ y: yy, x: 0 }
+}
+
+fn (c ModelCursorPos) down(max int) ModelCursorPos {
+	yy := c.y + 1
+	if yy >= max { return c }
+	return ModelCursorPos{ y: yy, x: 0 }
+}
+
+fn (c ModelCursorPos) left() ModelCursorPos {
+	xx := c.x - 1
+	if xx < 0 { return c }
+	return ModelCursorPos{ y: c.y, x: xx }
+}
+
+fn (c ModelCursorPos) right(max int) ModelCursorPos {
+	yy := c.y + 1
+	if yy >= max { return c }
+	return ModelCursorPos{ y: yy, x: 0 }
+}
 
 struct EditorData {
 	id         int
@@ -15,8 +45,7 @@ struct EditorModel {
 	file_path string
 mut:
 	focused    bool
-	cursor_row int
-	cursor_col int
+	cursor_pos ModelCursorPos
 
 	width  int
 	height int
@@ -73,7 +102,48 @@ struct EditorModelMsg {
 	msg tea.Msg
 }
 
+// this is physically painful to implement, but it'll do for now
+struct EditorCursorDownMsg {
+	editor_id int
+}
+
+fn move_cursor_down() tea.Msg {
+	return EditorCursorDownMsg{}
+}
+
+// ugh - vom
+struct EditorCursorUpMsg {
+	editor_id int
+}
+
+fn move_cursor_up() tea.Msg {
+	return EditorCursorUpMsg{}
+}
+
+
 fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+	mut cmds := []tea.Cmd{}
+
+	if msg is tea.KeyMsg && m.focused {
+		match msg.k_type {
+			.runes {
+				match msg.string() {
+					"j" {
+						cmds << move_cursor_down
+						return m.clone(), tea.batch_array(cmds)
+					}
+					"k" {
+						cmds << move_cursor_up
+						return m.clone(), tea.batch_array(cmds)
+
+					}
+					else {}
+				}
+			}
+			else {}
+		}
+	}
+
 	match msg {
 		tea.ResizedMsg {
 			m.width  = msg.window_width
@@ -91,29 +161,42 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				}
 				QueryEditorDataMsg {
 					if msg.id == m.id {
-						return m.clone(), editor_data(m.data())
+						cmds << editor_data(m.data())
 					}
 				}
 				else {}
 			}
 		}
+		EditorCursorUpMsg {
+			if m.focused {
+				m.cursor_pos = m.cursor_pos.up()
+			}
+		}
+		EditorCursorDownMsg {
+			if m.focused {
+				m.cursor_pos = m.cursor_pos.down(m.height)
+			}
+		}
 		else {}
 	}
-	return m.clone(), none
+	return m.clone(), tea.batch_array(cmds)
 }
 
 fn (m EditorModel) view(mut ctx tea.Context) {
 	ctx.set_clip_area(tea.ClipArea{ 0, 0, m.width, m.height })
 	defer { ctx.clear_clip_area() }
 
-	bg_color := if m.focused { tea.Color{ 20, 120, 20 } } else { tea.Color{ 120, 20, 20 } }
-	ctx.set_bg_color(bg_color)
-	ctx.draw_rect(0, 0, m.width, m.height)
-	ctx.reset_bg_color()
-
 	for y, l in m.lines {
 		ctx.draw_text(0, y, l.replace('\t', '    '))
 	}
+
+	if m.focused { m.render_cursor(mut ctx) }
+}
+
+fn (m EditorModel) render_cursor(mut ctx tea.Context) {
+	ctx.set_bg_color(palette.matte_white_fg_color)
+	ctx.draw_rect(m.cursor_pos.x, m.cursor_pos.y, 1, 1)
+	ctx.reset_bg_color()
 }
 
 fn (m EditorModel) debug_data() DebugData {
@@ -122,8 +205,8 @@ fn (m EditorModel) debug_data() DebugData {
 		data: {
 			'id': '${m.id}'
 			'file path': m.file_path
-			'cursor_row': '${m.cursor_row}'
-			'cursor_col': '${m.cursor_col}'
+			'cursor_row': '${m.cursor_pos.y}'
+			'cursor_col': '${m.cursor_pos.x}'
 		}
 	}
 }
@@ -132,8 +215,8 @@ fn (m EditorModel) data() EditorData {
 	return EditorData{
 		id:         m.id
 		file_path:  m.file_path
-		cursor_row: m.cursor_row
-		cursor_col: m.cursor_col
+		cursor_row: m.cursor_pos.y
+		cursor_col: m.cursor_pos.x
 	}
 }
 
