@@ -41,3 +41,13 @@ pub const status_dark_lilac = tea.Color{ 154, 119, 209 }
 pub const status_cyan       = tea.Color{ 138, 222, 237 }
 pub const status_purple     = tea.Color{ 130, 144, 250 }
 
+pub fn fg_color(background_color tea.Color) tea.Color {
+	s_r := f32(background_color.r) / 255
+	s_g := f32(background_color.g) / 255
+	s_b := f32(background_color.b) / 255
+
+	luminance := 0.2126 * s_r + 0.7152 * s_g + 0.0722 * s_b
+
+	return if luminance > 0.5 { matte_black_fg_color } else { matte_white_fg_color }
+}
+
