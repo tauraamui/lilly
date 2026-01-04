@@ -194,7 +194,8 @@ fn (m EditorModel) view(mut ctx tea.Context) {
 }
 
 fn (m EditorModel) render_cursor(mut ctx tea.Context) {
-	ctx.set_bg_color(palette.matte_white_fg_color)
+	default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
+	ctx.set_bg_color(palette.fg_color(default_bg_color))
 	ctx.draw_rect(m.cursor_pos.x, m.cursor_pos.y, 1, 1)
 	ctx.reset_bg_color()
 }
