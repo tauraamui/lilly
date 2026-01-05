@@ -15,6 +15,7 @@ struct EditorWorkspaceModel {
 	// the only way we can change the mode is by exiting the current scope with a command to do so
 	mode               Mode
 mut:
+	tmux_wrapped       bool
 	dialog_model       ?DebuggableModel
 
 	active_editor_id   int
@@ -59,7 +60,7 @@ fn EditorWorkspaceModel.new(initial_file_path string) EditorWorkspaceModel {
 
 fn (mut m EditorWorkspaceModel) init() ?tea.Cmd {
 	m.input_field = boba.InputField.new_with_prefix(":", 0)
-	return tea.batch(open_editor(m.initial_file_path))
+	return tea.batch(open_editor(m.initial_file_path), check_if_tmux_wrapped)
 }
 
 struct SwitchModeMsg {
@@ -328,6 +329,10 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	match msg {
 		tea.FocusedMsg {
 			cmds << query_pwd_git_branch
+		}
+		CheckIfTMUXWrappedMsg {
+			m.tmux_wrapped = os.getenv("TMUX").len > 0
+			assert m.tmux_wrapped
 		}
 		OpenDialogMsg {
 			mut d_model := msg.model
