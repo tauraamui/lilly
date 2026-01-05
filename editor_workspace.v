@@ -548,7 +548,7 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 	ctx.push_offset(tea.Offset{ x: 2 })
 
 	file_name_label := m.active_file_name()
-	ctx.set_color(palette.matte_white_fg_color)
+	ctx.set_color(palette.fg_color(palette.status_file_name_bg_color))
 	ctx.set_bg_color(palette.status_file_name_bg_color)
 	ctx.draw_text(0, 0, file_name_label)
 	ctx.reset_bg_color()
