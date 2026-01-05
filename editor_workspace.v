@@ -254,32 +254,49 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								// move to previous split (left)
 								if m.split_tree.count() > 1 {
 									old_id := m.split_tree.active_editor_id
-									m.split_tree.navigate_prev()
-									new_id := m.split_tree.active_editor_id
-									m.active_editor_id = new_id
+									moved := m.split_tree.navigate_prev(m.tmux_wrapped)
 
-									cmds << tea.sequence(
-										unfocus_editor(old_id),
-										focus_editor(new_id),
-										query_editor_data(new_id),
-										query_pwd_git_branch
-									)
+									if moved == false {
+										os.execute('tmux select-pane -L')
+									} else {
+										new_id := m.split_tree.active_editor_id
+										m.active_editor_id = new_id
+
+										cmds << tea.sequence(
+											unfocus_editor(old_id),
+											focus_editor(new_id),
+											query_editor_data(new_id),
+											query_pwd_git_branch
+										)
+									}
+								} else {
+									if m.tmux_wrapped {
+										os.execute('tmux select-pane -L')
+									}
 								}
 							}
 							"ctrl+w+l" {
 								// move to next split (right)
 								if m.split_tree.count() > 1 {
 									old_id := m.split_tree.active_editor_id
-									m.split_tree.navigate_next()
-									new_id := m.split_tree.active_editor_id
-									m.active_editor_id = new_id
+									moved := m.split_tree.navigate_next(m.tmux_wrapped)
+									if moved == false {
+										os.execute('tmux select-pane -R')
+									} else {
+										new_id := m.split_tree.active_editor_id
+										m.active_editor_id = new_id
 
-									cmds << tea.sequence(
-										unfocus_editor(old_id),
-										focus_editor(new_id),
-										query_editor_data(new_id),
-										query_pwd_git_branch
-									)
+										cmds << tea.sequence(
+											unfocus_editor(old_id),
+											focus_editor(new_id),
+											query_editor_data(new_id),
+											query_pwd_git_branch
+										)
+									}
+								} else {
+									if m.tmux_wrapped {
+										os.execute('tmux select-pane -R')
+									}
 								}
 							}
 							else {}
