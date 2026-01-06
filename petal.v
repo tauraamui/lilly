@@ -45,6 +45,12 @@ fn (mut m PetalModel) on_toggle_debug_screen() (tea.Model, ?tea.Cmd) {
 	return m.clone(), none
 }
 
+struct CheckIfTMUXWrappedMsg {}
+
+fn check_if_tmux_wrapped() tea.Msg {
+	return CheckIfTMUXWrappedMsg{}
+}
+
 fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	mut cmds := []tea.Cmd{}
 	match msg {

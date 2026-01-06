@@ -226,7 +226,7 @@ fn (t SplitTree) collect_editor_ids(node SplitNode) []int {
 }
 
 // Navigate to next editor
-pub fn (mut t SplitTree) navigate_next() bool {
+pub fn (mut t SplitTree) navigate_next(do_not_wrap_around bool) bool {
 	all_ids := t.get_all_editor_ids()
 	if all_ids.len <= 1 {
 		return false
@@ -238,13 +238,17 @@ pub fn (mut t SplitTree) navigate_next() bool {
 		return true
 	}
 
-	next_idx := (current_idx + 1) % all_ids.len
+	if do_not_wrap_around && current_idx == all_ids.len - 1 {
+		return false
+	}
+
+	next_idx := if do_not_wrap_around { current_idx + 1 } else { (current_idx + 1) % all_ids.len }
 	t.active_editor_id = all_ids[next_idx]
 	return true
 }
 
 // Navigate to previous editor
-pub fn (mut t SplitTree) navigate_prev() bool {
+pub fn (mut t SplitTree) navigate_prev(do_not_wrap_around bool) bool {
 	all_ids := t.get_all_editor_ids()
 	if all_ids.len <= 1 {
 		return false
@@ -256,7 +260,11 @@ pub fn (mut t SplitTree) navigate_prev() bool {
 		return true
 	}
 
-	prev_idx := (current_idx - 1 + all_ids.len) % all_ids.len
+	if current_idx == 0 {
+		return false
+	}
+
+	prev_idx := if do_not_wrap_around { current_idx - 1 } else { (current_idx - 1 + all_ids.len) % all_ids.len }
 	t.active_editor_id = all_ids[prev_idx]
 	return true
 }
@@ -358,11 +366,11 @@ pub fn (mut t SplitTree) close_active_split() bool {
 
 	if root := t.root {
 		// navigate to next before closing
-		t.navigate_next()
+		t.navigate_next(false)
 
 		// if we're still on the same ID after navigation, try previous
 		if t.active_editor_id == old_active_id {
-			t.navigate_prev()
+			t.navigate_prev(false)
 		}
 
 		t.root = t.remove_editor_from_node(root, old_active_id)

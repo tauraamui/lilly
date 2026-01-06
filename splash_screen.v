@@ -1,6 +1,7 @@
 module main
 
 import math
+import os
 import tauraamui.bobatea as tea
 import palette
 
@@ -21,6 +22,7 @@ struct SplashScreenModel {
 	leader_key string
 	logo       SplashLogo
 mut:
+	tmux_wrapped bool
 	leader_mode  bool
 	leader_data  string
 	dialog_model ?DebuggableModel
@@ -36,7 +38,7 @@ fn SplashScreenModel.new() SplashScreenModel {
 }
 
 fn (mut m SplashScreenModel) init() ?tea.Cmd {
-	return none
+	return check_if_tmux_wrapped
 }
 
 fn (mut m SplashScreenModel) handle_escape() (tea.Model, ?tea.Cmd) {
@@ -75,6 +77,9 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	}
 
 	match msg {
+		CheckIfTMUXWrappedMsg {
+			m.tmux_wrapped = os.getenv("TMUX").len > 0
+		}
 		tea.KeyMsg {
 			match msg.k_type {
 				.special {
@@ -84,6 +89,20 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						}
 						'ctrl+c' {
 							return m.handle_escape()
+						}
+						'ctrl+w+h' {
+							$if !darwin {
+								if m.tmux_wrapped {
+									os.execute('tmux select-pane -L')
+								}
+							}
+						}
+						'ctrl+w+l' {
+							$if !darwin {
+								if m.tmux_wrapped {
+									os.execute('tmux select-pane -R')
+								}
+							}
 						}
 						else {}
 					}
@@ -351,6 +370,7 @@ fn (m SplashScreenModel) debug_data() DebugData {
 		name: 'splash_screen data'
 		data: {
 			'leader key': m.leader_key
+			'tmux wrapped': '${m.tmux_wrapped}'
 			'':           if d := m.dialog_model { d.debug_data() } else { 'null' }
 			'version':    '${version} - (${build_id})'
 		}
