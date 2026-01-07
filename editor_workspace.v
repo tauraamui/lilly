@@ -243,12 +243,86 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 				}
 			}
+			// NOTE(tauraamui):
+			// This whole horrible event handling for 'nav' state is not intended to stay around. I cba to
+			// fully explain, but the reason this is here is, I personally configure my TMUX prefix bind to be
+			// C-w instead of C-b (the default), to allow me to use the same binds for navigating between (n)vim
+			// splits and TMUX splits seemlessly/together. However, I have no current method to distinguish forwarding
+			// C-w + h/j/k/l binds to Lilly or petal (Lilly v2), so for now it helps a lot if there's two methods/binds
+			// for petal to allow navigating between splits. Hope this helps.
+			.navigation {
+				match msg.k_type {
+					.special {
+						if msg.string() == 'escape' {
+							cmds << switch_mode(.normal)
+						}
+					}
+					.runes {
+						match msg.string() {
+							'h' {
+								// move to previous split (left)
+								if m.split_tree.count() > 1 {
+									old_id := m.split_tree.active_editor_id
+									moved := m.split_tree.navigate_prev(m.tmux_wrapped)
+
+									if moved == false {
+										os.execute('tmux select-pane -L')
+									} else {
+										new_id := m.split_tree.active_editor_id
+										m.active_editor_id = new_id
+
+										cmds << tea.sequence(
+											unfocus_editor(old_id),
+											focus_editor(new_id),
+											query_editor_data(new_id),
+											query_pwd_git_branch
+										)
+									}
+								} else {
+									if m.tmux_wrapped {
+										os.execute('tmux select-pane -L')
+									}
+								}
+							}
+							'l' {
+								// move to next split (right)
+								if m.split_tree.count() > 1 {
+									old_id := m.split_tree.active_editor_id
+									moved := m.split_tree.navigate_next(m.tmux_wrapped)
+									if moved == false {
+										os.execute('tmux select-pane -R')
+									} else {
+										new_id := m.split_tree.active_editor_id
+										m.active_editor_id = new_id
+
+										cmds << tea.sequence(
+											unfocus_editor(old_id),
+											focus_editor(new_id),
+											query_editor_data(new_id),
+											query_pwd_git_branch
+										)
+									}
+								} else {
+									if m.tmux_wrapped {
+										os.execute('tmux select-pane -R')
+									}
+								}
+							}
+							else {}
+						}
+					}
+				}
+				cmds << switch_mode(.normal)
+			}
 			.normal {
 				match msg.k_type {
 					.special {
 						match msg.string() {
 							"escape" {
 								cmds << hide_error
+							}
+							"ctrl+b" {
+								cmds << switch_mode(.navigation)
 							}
 							"ctrl+w+h" {
 								// move to previous split (left)
