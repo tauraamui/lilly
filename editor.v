@@ -186,6 +186,13 @@ fn (m EditorModel) view(mut ctx tea.Context) {
 	ctx.set_clip_area(tea.ClipArea{ 0, 0, m.width, m.height })
 	defer { ctx.clear_clip_area() }
 
+
+	for y in 0..m.height {
+		ctx.draw_text(0, y, '│')
+	}
+
+	ctx.push_offset(tea.Offset{ x: 1 })
+
 	for y, l in m.lines {
 		ctx.draw_text(0, y, l.replace('\t', '    '))
 	}
