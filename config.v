@@ -2,6 +2,9 @@ module cfg
 
 import theme
 
+pub const light_theme_name = theme.light_theme_name
+pub const dark_theme_name = theme.dark_theme_name
+
 pub struct Config{
 pub:
 	theme      theme.Theme
