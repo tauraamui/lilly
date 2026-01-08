@@ -44,8 +44,9 @@ struct EditorModel {
 	id        int
 	file_path string
 mut:
-	focused    bool
-	cursor_pos ModelCursorPos
+	focused     bool
+	show_border bool = true
+	cursor_pos  ModelCursorPos
 
 	width  int
 	height int
@@ -167,6 +168,15 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				else {}
 			}
 		}
+		ToggleEditorShowBorderMsg {
+			if msg.id == m.id {
+				m.show_border = msg.show
+			} else {
+				if msg.show == false {
+					m.show_border = true
+				}
+			}
+		}
 		EditorCursorUpMsg {
 			if m.focused {
 				m.cursor_pos = m.cursor_pos.up()
@@ -182,13 +192,20 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	return m.clone(), tea.batch_array(cmds)
 }
 
+const active_editor_border_color = palette.petal_pink_color
+const inactive_editor_border_color = palette.status_dark_lilac
+
 fn (m EditorModel) view(mut ctx tea.Context) {
 	ctx.set_clip_area(tea.ClipArea{ 0, 0, m.width, m.height })
 	defer { ctx.clear_clip_area() }
 
-
-	for y in 0..m.height {
-		ctx.draw_text(0, y, '│')
+	if m.show_border {
+		border_color := if m.focused { active_editor_border_color } else { inactive_editor_border_color }
+		ctx.set_color(border_color)
+		for y in 0..m.height {
+			ctx.draw_text(0, y, '│')
+		}
+		ctx.reset_color()
 	}
 
 	ctx.push_offset(tea.Offset{ x: 1 })
