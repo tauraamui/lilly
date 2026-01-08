@@ -101,6 +101,19 @@ fn unfocus_editor(editor_id int) tea.Cmd {
 	}
 }
 
+struct ToggleEditorShowBorderMsg {
+	id   int
+	show bool
+}
+
+fn toggle_editor_show_border(editor_id int, show bool) tea.Cmd {
+	return fn [editor_id, show] () tea.Msg {
+		return ToggleEditorShowBorderMsg{
+			id:   editor_id
+			show: show
+		}
+	}
+}
 
 fn raise_error(error string) tea.Cmd {
 	return tea.sequence(display_error(error), error_log(error), hide_error_after(6 * time.second))
@@ -275,53 +288,10 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					.runes {
 						match msg.string() {
 							'h' {
-								// move to previous split (left)
-								if m.split_tree.count() > 1 {
-									old_id := m.split_tree.active_editor_id
-									moved := m.split_tree.navigate_prev(m.tmux_wrapped)
-
-									if moved == false {
-										os.execute('tmux select-pane -L')
-									} else {
-										new_id := m.split_tree.active_editor_id
-										m.active_editor_id = new_id
-
-										cmds << tea.sequence(
-											unfocus_editor(old_id),
-											focus_editor(new_id),
-											query_editor_data(new_id),
-											query_pwd_git_branch
-										)
-									}
-								} else {
-									if m.tmux_wrapped {
-										os.execute('tmux select-pane -L')
-									}
-								}
+								cmds << switch_active_split(.left)
 							}
 							'l' {
-								// move to next split (right)
-								if m.split_tree.count() > 1 {
-									old_id := m.split_tree.active_editor_id
-									moved := m.split_tree.navigate_next(m.tmux_wrapped)
-									if moved == false {
-										os.execute('tmux select-pane -R')
-									} else {
-										new_id := m.split_tree.active_editor_id
-										m.active_editor_id = new_id
-
-										cmds << tea.sequence(
-											unfocus_editor(old_id),
-											focus_editor(new_id),
-											query_editor_data(new_id),
-											query_pwd_git_branch
-										)
-									}
-								} else {
-									if m.tmux_wrapped {
-										os.execute('tmux select-pane -R')
-									}
-								}
+								cmds << switch_active_split(.right)
 							}
 							else {}
 						}
@@ -341,54 +311,9 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							}
 							"ctrl+w+h" {
 								cmds << switch_active_split(.left)
-								// move to previous split (left)
-								if m.split_tree.count() > 1 {
-									old_id := m.split_tree.active_editor_id
-									moved := m.split_tree.navigate_prev(m.tmux_wrapped)
-
-									if moved == false {
-										os.execute('tmux select-pane -L')
-									} else {
-										new_id := m.split_tree.active_editor_id
-										m.active_editor_id = new_id
-
-										cmds << tea.sequence(
-											unfocus_editor(old_id),
-											focus_editor(new_id),
-											query_editor_data(new_id),
-											query_pwd_git_branch
-										)
-									}
-								} else {
-									if m.tmux_wrapped {
-										os.execute('tmux select-pane -L')
-									}
-								}
 							}
 							"ctrl+w+l" {
 								cmds << switch_active_split(.right)
-								// move to next split (right)
-								if m.split_tree.count() > 1 {
-									old_id := m.split_tree.active_editor_id
-									moved := m.split_tree.navigate_next(m.tmux_wrapped)
-									if moved == false {
-										os.execute('tmux select-pane -R')
-									} else {
-										new_id := m.split_tree.active_editor_id
-										m.active_editor_id = new_id
-
-										cmds << tea.sequence(
-											unfocus_editor(old_id),
-											focus_editor(new_id),
-											query_editor_data(new_id),
-											query_pwd_git_branch
-										)
-									}
-								} else {
-									if m.tmux_wrapped {
-										os.execute('tmux select-pane -R')
-									}
-								}
 							}
 							else {}
 						}
@@ -473,7 +398,12 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				cmds << u_cmd
 			}
 
-			cmds << tea.sequence(focus_editor(editor_id), query_editor_data(editor_id), query_pwd_git_branch)
+			cmds << tea.sequence(
+				focus_editor(editor_id),
+				toggle_editor_show_border(editor_id, false),
+				query_editor_data(editor_id),
+				query_pwd_git_branch
+			)
 			cmds << debug_log("opened file ${msg.file_path} into model of id ${editor_id}")
 		}
 		VerticalSplitMsg {
@@ -492,9 +422,11 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				m.active_editor_id = m.split_tree.active_editor_id
 
 				cmds << tea.sequence(
-					unfocus_editor(old_id),  // Unfocus the old editor
+					unfocus_editor(old_id),
+					toggle_editor_show_border(m.split_tree.get_leftmost_id(), false),
 					focus_editor(new_id),
 					query_editor_data(new_id),
+					query_pwd_git_branch,
 					tea.emit_resize
 				)
 			}
@@ -511,9 +443,64 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					// focus the new active editor
 					cmds << tea.sequence(
 						focus_editor(m.active_editor_id),
+						toggle_editor_show_border(m.split_tree.get_leftmost_id(), false),
 						query_editor_data(m.active_editor_id),
-						query_pwd_git_branch
+						query_pwd_git_branch,
+						tea.emit_resize
 					)
+				}
+			}
+		}
+		SwitchActiveSplitMsg {
+			match msg.dir {
+				.left {
+					// move to previous split (left)
+					if m.split_tree.count() > 1 {
+						old_id := m.split_tree.active_editor_id
+						moved := m.split_tree.navigate_prev(m.tmux_wrapped)
+
+						if moved == false {
+							os.execute('tmux select-pane -L')
+						} else {
+							new_id := m.split_tree.active_editor_id
+							m.active_editor_id = new_id
+
+							cmds << tea.sequence(
+								unfocus_editor(old_id),
+								focus_editor(new_id),
+								query_editor_data(new_id),
+								query_pwd_git_branch
+							)
+						}
+					} else {
+						if m.tmux_wrapped {
+							os.execute('tmux select-pane -L')
+						}
+					}
+				}
+				.right {
+					// move to next split (right)
+					if m.split_tree.count() > 1 {
+						old_id := m.split_tree.active_editor_id
+						moved := m.split_tree.navigate_next(m.tmux_wrapped)
+						if moved == false {
+							os.execute('tmux select-pane -R')
+						} else {
+							new_id := m.split_tree.active_editor_id
+							m.active_editor_id = new_id
+
+							cmds << tea.sequence(
+								unfocus_editor(old_id),
+								focus_editor(new_id),
+								query_editor_data(new_id),
+								query_pwd_git_branch
+							)
+						}
+					} else {
+						if m.tmux_wrapped {
+							os.execute('tmux select-pane -R')
+						}
+					}
 				}
 			}
 		}
