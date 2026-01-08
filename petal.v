@@ -2,12 +2,14 @@ module main
 
 import os
 import tauraamui.bobatea as tea
+import cfg
 
 const dot = '•'
 
 struct PetalModel {
 mut:
 	app_send                ?fn (tea.Msg)
+	config                  cfg.Config @[required]
 	theme_fg_color          ?tea.Color
 	theme_bg_color          ?tea.Color
 	first_frame             bool
@@ -18,8 +20,9 @@ mut:
 	last_resize_height      int
 }
 
-fn PetalModel.new(theme_bg_color ?tea.Color, theme_fg_color ?tea.Color) PetalModel {
+fn PetalModel.new(theme_bg_color ?tea.Color, theme_fg_color ?tea.Color, config cfg.Config) PetalModel {
 	return PetalModel{
+		config: config
 		theme_bg_color: theme_bg_color
 		theme_fg_color: theme_fg_color
 		first_frame: true
