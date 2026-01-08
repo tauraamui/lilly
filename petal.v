@@ -25,8 +25,6 @@ fn PetalModel.new(theme_bg_color ?tea.Color, theme_fg_color ?tea.Color, config c
 	return PetalModel{
 		config: config
 		theme: config.theme
-		// theme_bg_color: theme_bg_color
-		// theme_fg_color: theme_fg_color
 		first_frame: true
 		active_screen: SplashScreenModel.new()
 	}
