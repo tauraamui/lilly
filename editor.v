@@ -206,9 +206,8 @@ fn (m EditorModel) view(mut ctx tea.Context) {
 			ctx.draw_text(0, y, '│')
 		}
 		ctx.reset_color()
+		ctx.push_offset(tea.Offset{ x: 1 })
 	}
-
-	ctx.push_offset(tea.Offset{ x: 1 })
 
 	for y, l in m.lines {
 		ctx.draw_text(0, y, l.replace('\t', '    '))
