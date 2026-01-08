@@ -189,7 +189,7 @@ fn (m SplashScreenModel) view(mut ctx tea.Context) {
 		leader_data: m.leader_data
 		petal_pink: palette.petal_pink_color
 		petal_green: palette.petal_green_color
-		backdrop_color: if m.theme.name == "dark" { none } else { theme.dark_theme.bg_color }
+		backdrop_color: m.theme.fg_color
 	)
 	render_help_keybinds(mut ctx)
 
