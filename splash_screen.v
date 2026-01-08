@@ -187,9 +187,8 @@ fn (m SplashScreenModel) view(mut ctx tea.Context) {
 		logo: m.logo,
 		in_leader_mode: m.leader_mode,
 		leader_data: m.leader_data
-		petal_pink: palette.petal_pink_color
-		petal_green: palette.petal_green_color
-		backdrop_color: m.theme.fg_color
+		petal_pink: m.theme.petal_pink
+		petal_green: m.theme.petal_green
 	)
 	render_help_keybinds(mut ctx)
 
@@ -371,17 +370,12 @@ fn render_logo(mut ctx tea.Context, opts RenderLogoParams) tea.Offset {
 struct RenderLogoLineParams {
 	petal_pink     tea.Color
 	petal_green    tea.Color
-	backdrop_color ?tea.Color
 }
 
 fn render_logo_line(mut ctx tea.Context, line string, opts RenderLogoLineParams) {
 	if has_colouring_directives(line) {
-		render_logo_line_char_by_char(mut ctx, line, opts.petal_pink, opts.petal_green, opts.backdrop_color)
+		render_logo_line_char_by_char(mut ctx, line, opts.petal_pink, opts.petal_green)
 		return
-	}
-	if bg_color := opts.backdrop_color {
-		ctx.set_bg_color(bg_color)
-		defer { ctx.reset_bg_color() }
 	}
 	ctx.draw_text(0, 0, line)
 }
@@ -391,12 +385,7 @@ fn render_logo_line_char_by_char(
 	line string,
 	petal_pink tea.Color,
 	petal_green tea.Color,
-	backdrop_color ?tea.Color
 ) {
-	if bg_color := backdrop_color {
-		ctx.set_bg_color(bg_color)
-		defer { ctx.reset_bg_color() }
-	}
 	for j, c in line.runes() {
 		mut to_draw := '${c}'
 		if to_draw == 'g' {
