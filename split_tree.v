@@ -279,6 +279,25 @@ pub:
 	height    int
 }
 
+pub fn (t SplitTree) get_leftmost_id() int {
+	if root := t.root {
+		return t.find_leftmost_id(root)
+	}
+	return -1
+}
+
+fn (t SplitTree) find_leftmost_id(node SplitNode) int {
+	match node {
+		EditorLeaf {
+			return node.editor_id
+		}
+		SplitContainer {
+			// the leftmost editor is always in the first child
+			return t.find_leftmost_id(node.children[0])
+		}
+	}
+}
+
 pub fn (t SplitTree) get_layout(total_width int, total_height int) []LayoutRect {
 	mut rects := []LayoutRect{}
 	if root := t.root {
