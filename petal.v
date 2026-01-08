@@ -21,7 +21,7 @@ mut:
 	last_resize_height      int
 }
 
-fn PetalModel.new(theme_bg_color ?tea.Color, theme_fg_color ?tea.Color, config cfg.Config) PetalModel {
+fn PetalModel.new(config cfg.Config) PetalModel {
 	return PetalModel{
 		config: config
 		theme: config.theme
