@@ -3,6 +3,8 @@ module main
 import os
 import tauraamui.bobatea as tea
 import cfg
+import theme
+import palette
 
 const dot = '•'
 
@@ -10,8 +12,7 @@ struct PetalModel {
 mut:
 	app_send                ?fn (tea.Msg)
 	config                  cfg.Config @[required]
-	theme_fg_color          ?tea.Color
-	theme_bg_color          ?tea.Color
+	theme                   theme.Theme
 	first_frame             bool
 	active_screen           DebuggableModel // all screens are debuggable to help with live, well... debugging
 	clear_screen_next_frame bool
@@ -23,8 +24,9 @@ mut:
 fn PetalModel.new(theme_bg_color ?tea.Color, theme_fg_color ?tea.Color, config cfg.Config) PetalModel {
 	return PetalModel{
 		config: config
-		theme_bg_color: theme_bg_color
-		theme_fg_color: theme_fg_color
+		theme: config.theme
+		// theme_bg_color: theme_bg_color
+		// theme_fg_color: theme_fg_color
 		first_frame: true
 		active_screen: SplashScreenModel.new()
 	}
@@ -102,13 +104,9 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 
 fn (mut m PetalModel) view(mut ctx tea.Context) {
 	if m.first_frame {
-		if fg_color := m.theme_fg_color {
-			ctx.set_default_fg_color(fg_color)
-		}
-
-		if bg_color := m.theme_bg_color {
-			ctx.set_default_bg_color(bg_color)
-		}
+		bg_color := m.theme.bg_color
+		ctx.set_default_fg_color(palette.fg_color(bg_color))
+		ctx.set_default_bg_color(bg_color)
 		m.first_frame = false
 	}
 	mut screen := m.active_screen
