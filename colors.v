@@ -2,6 +2,9 @@ module palette
 
 import tauraamui.bobatea as tea
 
+// TODO(tauraamui): consolidate all used colors into a core palette/swatch set
+// and alias reference off of that only in the places/models they are used with
+// alternative names, instead of here. This file is getting messy and out of hand.
 pub const theme_bg_color = matte_black_bg_color
 pub const matte_black_bg_color = tea.Color{ 20, 20, 20 }
 
