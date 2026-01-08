@@ -716,7 +716,7 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 
 fn (m EditorWorkspaceModel) render_leader_or_command_user_input_text(mut ctx tea.Context) {
 	if err_msg := m.error_msg {
-		ctx.set_color(palette.bright_red_fg_color)
+		ctx.set_color(palette.error_color)
 		ctx.draw_text(1, ctx.window_height() - 1, err_msg)
 		ctx.reset_color()
 		return
