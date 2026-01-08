@@ -2,8 +2,8 @@ module main
 
 import os
 import tauraamui.bobatea as tea
-import cfg
 import theme
+import cfg
 import palette
 
 const dot = '•'
@@ -26,7 +26,7 @@ fn PetalModel.new(config cfg.Config) PetalModel {
 		config: config
 		theme: config.theme
 		first_frame: true
-		active_screen: SplashScreenModel.new()
+		active_screen: SplashScreenModel.new(leader_key: config.leader_key, theme: config.theme)
 	}
 }
 
