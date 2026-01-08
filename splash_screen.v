@@ -4,6 +4,7 @@ import math
 import os
 import tauraamui.bobatea as tea
 import palette
+import theme
 
 const gitcommit_hash = $embed_file('.githash').to_string()
 
@@ -18,9 +19,16 @@ mut:
 	width int
 }
 
+@[params]
+struct SplashScreenOptions {
+	leader_key string
+	theme      theme.Theme
+}
+
 struct SplashScreenModel {
 	leader_key string
 	logo       SplashLogo
+	theme      theme.Theme
 mut:
 	tmux_wrapped bool
 	leader_mode  bool
@@ -28,9 +36,10 @@ mut:
 	dialog_model ?DebuggableModel
 }
 
-fn SplashScreenModel.new() SplashScreenModel {
+fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
 	return SplashScreenModel{
-		leader_key: ';'
+		leader_key: opts.leader_key
+		theme:      opts.theme
 		logo:       SplashLogo{
 			data: logo_contents.to_string().split_into_lines()
 		}
@@ -43,7 +52,7 @@ fn (mut m SplashScreenModel) init() ?tea.Cmd {
 
 fn (mut m SplashScreenModel) handle_escape() (tea.Model, ?tea.Cmd) {
 	if !m.leader_mode {
-		return SplashScreenModel{}, tea.quit
+		return m.clone(), tea.quit
 	}
 	m.leader_mode = false
 	m.leader_data = ''
@@ -115,7 +124,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						else {
 							match msg.string() {
 								'q' {
-									return SplashScreenModel{}, tea.quit
+									return m.clone(), tea.quit
 								}
 								m.leader_key {
 									if !m.leader_mode {
@@ -173,14 +182,22 @@ fn (mut m SplashScreenModel) reset_leader_mode() {
 
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
 	render_version_label(mut ctx, '${version} - (#${build_id})')
-	render_logo_and_help_centered_and_stacked(mut ctx, m.logo, m.leader_mode, m.leader_data)
+	render_logo_and_help_centered_and_stacked(
+		mut ctx,
+		logo: m.logo,
+		in_leader_mode: m.leader_mode,
+		leader_data: m.leader_data
+		petal_pink: palette.petal_pink_color
+		petal_green: palette.petal_green_color
+		backdrop_color: if m.theme.name == "dark" { none } else { theme.dark_theme.bg_color }
+	)
 	render_help_keybinds(mut ctx)
 
 	offset_from_id := ctx.push_offset(tea.Offset{ y: ctx.window_height() - 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
 	if m.leader_mode {
 		ctx.set_color(palette.subtle_text_fg_color)
-		leader_data := ";" + m.leader_data
+		leader_data := m.leader_key + m.leader_data
 		ctx.draw_text(ctx.window_width() - tea.visible_len(leader_data) - 1, 0, leader_data)
 		ctx.reset_color()
 	}
@@ -214,7 +231,17 @@ fn render_help_keybinds(mut ctx tea.Context) {
 	ctx.reset_color()
 }
 
-fn render_logo_and_help_centered_and_stacked(mut ctx tea.Context, logo SplashLogo, in_leader_mode bool, leader_data string) {
+@[params]
+struct RenderLogoAndHelpParams {
+	RenderLogoParams
+	in_leader_mode bool
+	leader_data    string
+}
+
+fn render_logo_and_help_centered_and_stacked(
+	mut ctx tea.Context,
+	opts RenderLogoAndHelpParams
+) {
 	// NOTE(tauraamui) [25/10/2025]: all following contents to be padded from top of window
 	base_offset_y := f64(ctx.window_height()) * 0.1
 	offset_from_id := ctx.push_offset(tea.Offset{
@@ -223,22 +250,22 @@ fn render_logo_and_help_centered_and_stacked(mut ctx tea.Context, logo SplashLog
 	})
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
-	ctx.push_offset(render_logo(mut ctx, logo))
+	ctx.push_offset(render_logo(mut ctx, opts.RenderLogoParams))
 	ctx.push_offset(render_lilly_name(mut ctx))
-	ctx.push_offset(render_keybinds_list(mut ctx, in_leader_mode, leader_data))
-	render_copyright_footer(mut ctx)
+	ctx.push_offset(render_keybinds_list(mut ctx, opts.in_leader_mode, opts.leader_data))
+	render_copyright_footer(mut ctx, opts.petal_pink)
 }
 
 const copyright_footer_label = 'the lilly editor authors © (made with ${[u8(0xf0), 0x9f, 0x92,
 	0x95].bytestr()})'
 
-fn render_copyright_footer(mut ctx tea.Context) {
+fn render_copyright_footer(mut ctx tea.Context, petal_pink tea.Color) {
 	offset_from_id := ctx.push_offset(tea.Offset{
 		x: -(tea.visible_len(copyright_footer_label) / 2)
 		y: 1
 	})
 	defer { ctx.clear_offsets_from(offset_from_id) }
-	ctx.set_color(palette.petal_pink_color)
+	ctx.set_color(petal_pink)
 	ctx.draw_text(0, 0, copyright_footer_label)
 	ctx.reset_color()
 }
@@ -307,7 +334,13 @@ fn render_lilly_name(mut ctx tea.Context) tea.Offset {
 	return ctx.compact_offsets_from(offset_from_id)
 }
 
-fn render_logo(mut ctx tea.Context, logo SplashLogo) tea.Offset {
+@[params]
+struct RenderLogoParams {
+	RenderLogoLineParams
+	logo SplashLogo
+}
+
+fn render_logo(mut ctx tea.Context, opts RenderLogoParams) tea.Offset {
 	// NOTE(tauraamui) [25/10/25]: this can be reduced to a style container which basically
 	//                  makes the y offset be down by 10% of the parent. in this
 	//                  case the parent is just the window itself, but could be anything
@@ -316,41 +349,63 @@ fn render_logo(mut ctx tea.Context, logo SplashLogo) tea.Offset {
 	//                             line at once with the light pink color set, but some lines of the logo
 	//                             contain both green and pink, so they need to be rendered per character
 	//                             with the correct palette option/fg set
-	ctx.set_color(palette.petal_pink_color)
+	// ctx.set_color(palette.petal_pink_color)
+	ctx.set_color(opts.petal_pink)
 	offset_from_id := ctx.push_offset(tea.Offset{})
 	defer { ctx.clear_offsets_from(offset_from_id) }
-	for _, l in logo.data {
+	for _, l in opts.logo.data {
 		// NOTE(tauraamui) [26/10/25] by splitting these offset pushes into two separate calls
 		//                            we're only continuously removing the offset for the X position
 		//                            each loop iter, so by the end `compact_offsets` is a combination of
 		//                            the full height of the logo once its been completely rendered
 		ctx.push_offset(tea.Offset{ y: 1 })
 		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(l) / 2) })
-		render_logo_line(mut ctx, l)
+		render_logo_line(mut ctx, l, opts.RenderLogoLineParams)
 		ctx.pop_offset()
 	}
 	ctx.reset_color()
 	return ctx.compact_offsets_from(offset_from_id)
 }
 
-fn render_logo_line(mut ctx tea.Context, line string) {
+@[params]
+struct RenderLogoLineParams {
+	petal_pink     tea.Color
+	petal_green    tea.Color
+	backdrop_color ?tea.Color
+}
+
+fn render_logo_line(mut ctx tea.Context, line string, opts RenderLogoLineParams) {
 	if has_colouring_directives(line) {
-		render_logo_line_char_by_char(mut ctx, line)
+		render_logo_line_char_by_char(mut ctx, line, opts.petal_pink, opts.petal_green, opts.backdrop_color)
 		return
+	}
+	if bg_color := opts.backdrop_color {
+		ctx.set_bg_color(bg_color)
+		defer { ctx.reset_bg_color() }
 	}
 	ctx.draw_text(0, 0, line)
 }
 
-fn render_logo_line_char_by_char(mut ctx tea.Context, line string) {
+fn render_logo_line_char_by_char(
+	mut ctx tea.Context,
+	line string,
+	petal_pink tea.Color,
+	petal_green tea.Color,
+	backdrop_color ?tea.Color
+) {
+	if bg_color := backdrop_color {
+		ctx.set_bg_color(bg_color)
+		defer { ctx.reset_bg_color() }
+	}
 	for j, c in line.runes() {
 		mut to_draw := '${c}'
 		if to_draw == 'g' {
 			to_draw = ' '
-			ctx.set_color(palette.petal_green_color)
+			ctx.set_color(petal_green)
 		}
 		if to_draw == 'p' {
 			to_draw = ' '
-			ctx.set_color(palette.petal_pink_color)
+			ctx.set_color(petal_pink)
 		}
 		ctx.draw_text(j, 0, to_draw)
 	}
