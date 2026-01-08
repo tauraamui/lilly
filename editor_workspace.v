@@ -173,6 +173,7 @@ fn get_branch(execute fn (cmd string) os.Result) string {
 	return res.output
 }
 
+// NOTE(tauraamui) [08/01/26]: do these actually need to be public, not sure, doubt it check when have time
 pub struct VerticalSplitMsg {}
 
 pub fn split_vertically() tea.Msg {
@@ -185,6 +186,20 @@ pub fn close_active_split() tea.Msg {
 	return CloseActiveSplitMsg{}
 }
 
+enum SplitMoveDir {
+	left
+	right
+}
+
+struct SwitchActiveSplitMsg {
+	dir SplitMoveDir
+}
+
+fn switch_active_split(dir SplitMoveDir) tea.Cmd {
+	return fn [dir] () tea.Msg {
+		return SwitchActiveSplitMsg{dir}
+	}
+}
 
 fn (mut m EditorWorkspaceModel) update_dialog(msg tea.Msg) (?tea.Model, ?tea.Cmd) {
 	if msg is CloseDialogMsg {
@@ -325,6 +340,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								cmds << switch_mode(.navigation)
 							}
 							"ctrl+w+h" {
+								cmds << switch_active_split(.left)
 								// move to previous split (left)
 								if m.split_tree.count() > 1 {
 									old_id := m.split_tree.active_editor_id
@@ -350,6 +366,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								}
 							}
 							"ctrl+w+l" {
+								cmds << switch_active_split(.right)
 								// move to next split (right)
 								if m.split_tree.count() > 1 {
 									old_id := m.split_tree.active_editor_id
