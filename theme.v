@@ -32,12 +32,12 @@ pub const dark_theme = Theme{
 
 pub const light_theme = Theme{
 	name: "light"
-	bg_color: palette.matte_white_fg_color
+	bg_color: tea.Color.ansi(231)
 
 	active_split_divider_color: palette.petal_pink_color
 	inactive_split_divider_color: palette.status_bar_bg_color
 
-	petal_pink: tea.Color.ansi(206)
+	petal_pink: tea.Color.ansi(200)
 	petal_green: tea.Color.ansi(76)
 }
 

@@ -365,7 +365,6 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		CheckIfTMUXWrappedMsg {
 			m.tmux_wrapped = os.getenv("TMUX").len > 0
-			assert m.tmux_wrapped
 		}
 		OpenDialogMsg {
 			mut d_model := msg.model
