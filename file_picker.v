@@ -287,11 +287,14 @@ fn render_file_path_line(mut ctx tea.Context, file_path string, width int, heigh
 	mut prefix := '  '
 	if is_selected {
 		prefix = '» '
-		ctx.set_bg_color(palette.selected_highlight_bg_color)
+		selected_path_highlight_bg_color := palette.selected_highlight_bg_color
+		ctx.set_color(palette.fg_color(selected_path_highlight_bg_color))
+		ctx.set_bg_color(selected_path_highlight_bg_color)
 	}
 	ctx.draw_rect(0, height - 3, width - 2, 1)
 	ctx.draw_text(0, height - 3, prefix + file_path.replace(os.getwd(), '.'))
 	if is_selected {
+		ctx.reset_color()
 		ctx.reset_bg_color()
 	}
 	ctx.push_offset(tea.Offset{ y: -1 })
