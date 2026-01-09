@@ -251,7 +251,7 @@ fn render_logo_and_help_centered_and_stacked(
 
 	ctx.push_offset(render_logo(mut ctx, opts.RenderLogoParams))
 	ctx.push_offset(render_lilly_name(mut ctx))
-	ctx.push_offset(render_keybinds_list(mut ctx, opts.in_leader_mode, opts.leader_data))
+	ctx.push_offset(render_keybinds_list(mut ctx, opts.in_leader_mode, opts.leader_data, opts.petal_green))
 	render_copyright_footer(mut ctx, opts.petal_pink)
 }
 
@@ -282,9 +282,9 @@ const disabled_command_help = [
 ]
 
 const pending_match_color = tea.Color.ansi(244)
-const closest_match_color = palette.petal_green_color
+// const closest_match_color = palette.petal_green_color
 
-fn render_keybinds_list(mut ctx tea.Context, in_leader_mode bool, leader_data string) tea.Offset {
+fn render_keybinds_list(mut ctx tea.Context, in_leader_mode bool, leader_data string, closest_match_color tea.Color) tea.Offset {
 	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
