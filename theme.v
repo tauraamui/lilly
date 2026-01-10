@@ -18,7 +18,7 @@ pub:
 	petal_pink                   tea.Color
 	petal_green                  tea.Color
 
-	light_grey                   tea.Color
+	subtle_light_grey            tea.Color
 }
 
 pub const dark_theme = Theme{
@@ -31,7 +31,7 @@ pub const dark_theme = Theme{
 	petal_pink: tea.Color.ansi(219)
 	petal_green: tea.Color.ansi(84)
 
-	light_grey: tea.Color.ansi(241)
+	subtle_light_grey: tea.Color.ansi(241)
 }
 
 pub const light_theme = Theme{
@@ -44,6 +44,6 @@ pub const light_theme = Theme{
 	petal_pink: tea.Color.ansi(200)
 	petal_green: tea.Color.ansi(76)
 
-	light_grey: tea.Color.ansi(241)
+	subtle_light_grey: tea.Color.ansi(248)
 }
 
