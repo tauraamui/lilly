@@ -189,6 +189,7 @@ fn (m SplashScreenModel) view(mut ctx tea.Context) {
 		leader_data: m.leader_data
 		petal_pink: m.theme.petal_pink
 		petal_green: m.theme.petal_green
+		closest_match_color: m.theme.petal_green
 		disabled_help_fg_color: m.theme.subtle_light_grey
 	)
 	render_help_keybinds(mut ctx, m.theme.subtle_light_grey)
@@ -234,9 +235,7 @@ fn render_help_keybinds(mut ctx tea.Context, help_fg_color tea.Color) {
 @[params]
 struct RenderLogoAndHelpParams {
 	RenderLogoParams
-	in_leader_mode bool
-	leader_data    string
-	disabled_help_fg_color tea.Color
+	RenderKeybindsListParams
 }
 
 fn render_logo_and_help_centered_and_stacked(
@@ -253,7 +252,7 @@ fn render_logo_and_help_centered_and_stacked(
 
 	ctx.push_offset(render_logo(mut ctx, opts.RenderLogoParams))
 	ctx.push_offset(render_lilly_name(mut ctx))
-	ctx.push_offset(render_keybinds_list(mut ctx, opts.in_leader_mode, opts.leader_data, opts.petal_green, opts.disabled_help_fg_color))
+	ctx.push_offset(render_keybinds_list(mut ctx, opts.RenderKeybindsListParams))
 	render_copyright_footer(mut ctx, opts.petal_pink)
 }
 
@@ -285,12 +284,17 @@ const disabled_command_help = [
 
 const pending_match_color = tea.Color.ansi(244)
 
+@[params]
+struct RenderKeybindsListParams {
+	in_leader_mode bool
+	leader_data string
+	closest_match_color tea.Color
+	disabled_help_fg_color tea.Color
+}
+
 fn render_keybinds_list(
 	mut ctx tea.Context,
-	in_leader_mode bool,
-	leader_data string,
-	closest_match_color tea.Color,
-	disabled_help_fg_color tea.Color
+	opts RenderKeybindsListParams
 ) tea.Offset {
 	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
@@ -298,12 +302,12 @@ fn render_keybinds_list(
 	for l in basic_command_help {
 		ctx.push_offset(tea.Offset{ y: 1 })
 		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(l) / 2) })
-		if in_leader_mode {
-			fg_color := if leader_data == 'f' { closest_match_color } else { pending_match_color }
+		if opts.in_leader_mode {
+			fg_color := if opts.leader_data == 'f' { opts.closest_match_color } else { pending_match_color }
 			ctx.set_color(fg_color)
 		}
 		ctx.draw_text(0, 0, l)
-		if in_leader_mode {
+		if opts.in_leader_mode {
 			ctx.reset_color()
 		}
 		ctx.pop_offset()
@@ -314,7 +318,7 @@ fn render_keybinds_list(
 		ctx.push_offset(tea.Offset{ y: 1 })
 		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(l) / 2) })
 		ctx.set_style(.strikethrough)
-		ctx.set_color(disabled_help_fg_color)
+		ctx.set_color(opts.disabled_help_fg_color)
 		ctx.draw_text(0, 0, l)
 		ctx.reset_color()
 		ctx.clear_style()
