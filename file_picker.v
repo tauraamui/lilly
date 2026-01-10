@@ -347,7 +347,7 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 		list_offset_id := ctx.push_offset(tea.Offset{})
 		for i, file_path in clamp_files_list_to_scrolled(m.start_index, max_items, m.filtered_files) {
 			is_selected := (i + m.start_index) == m.selected_index
-			render_file_path_line(mut ctx, file_path: file_path, width: width, height: height, is_selected: is_selected, selection_bg_color: m.theme.selection_bg_color)
+			render_file_path_line(mut ctx, file_path: file_path, width: width, height: height, is_selected: is_selected, selection_bg_color: m.theme.highlight_bg_color)
 		}
 		ctx.clear_offsets_from(list_offset_id)
 	})
