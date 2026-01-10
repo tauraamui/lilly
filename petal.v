@@ -23,9 +23,9 @@ mut:
 
 fn PetalModel.new(config cfg.Config) PetalModel {
 	return PetalModel{
-		config: config
-		theme: config.theme
-		first_frame: true
+		config:        config
+		theme:         config.theme
+		first_frame:   true
 		active_screen: SplashScreenModel.new(leader_key: config.leader_key, theme: config.theme)
 	}
 }

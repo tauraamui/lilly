@@ -65,7 +65,7 @@ pub fn (t SplitTree) find_editor_by_id(node SplitNode, target_id int) ?EditorInf
 		EditorLeaf {
 			if node.editor_id == target_id {
 				return EditorInfo{
-					id: node.editor_id
+					id:        node.editor_id
 					file_path: node.file_path
 				}
 			}
@@ -145,8 +145,8 @@ fn (t SplitTree) insert_split_at(node SplitNode, target_id int, new_id int, new_
 				// Found target - wrap both in container
 				return SplitContainer{
 					direction: direction
-					children: [SplitNode(node), SplitNode(new_leaf)]
-					ratios: [0.5, 0.5]
+					children:  [SplitNode(node), SplitNode(new_leaf)]
+					ratios:    [0.5, 0.5]
 				}
 			}
 			return node
@@ -169,14 +169,14 @@ fn (t SplitTree) insert_split_at(node SplitNode, target_id int, new_id int, new_
 							return SplitContainer{
 								...node
 								children: new_children
-								ratios: new_ratios
+								ratios:   new_ratios
 							}
 						} else {
 							// Different direction - wrap target and new in container
 							new_container := SplitContainer{
 								direction: direction
-								children: [child, new_leaf]
-								ratios: [0.5, 0.5]
+								children:  [child, new_leaf]
+								ratios:    [0.5, 0.5]
 							}
 							mut new_children := node.children.clone()
 							new_children[i] = new_container
@@ -192,7 +192,8 @@ fn (t SplitTree) insert_split_at(node SplitNode, target_id int, new_id int, new_
 			// Not a direct child - recurse
 			mut new_children := []SplitNode{}
 			for child in node.children {
-				new_children << t.insert_split_at(child, target_id, new_id, new_file_path, direction)
+				new_children << t.insert_split_at(child, target_id, new_id, new_file_path,
+					direction)
 			}
 			return SplitContainer{
 				...node
@@ -264,7 +265,11 @@ pub fn (mut t SplitTree) navigate_prev(do_not_wrap_around bool) bool {
 		return false
 	}
 
-	prev_idx := if do_not_wrap_around { current_idx - 1 } else { (current_idx - 1 + all_ids.len) % all_ids.len }
+	prev_idx := if do_not_wrap_around {
+		current_idx - 1
+	} else {
+		(current_idx - 1 + all_ids.len) % all_ids.len
+	}
 	t.active_editor_id = all_ids[prev_idx]
 	return true
 }
@@ -311,10 +316,10 @@ fn (t SplitTree) calculate_layout(node SplitNode, x int, y int, width int, heigh
 		EditorLeaf {
 			rects << LayoutRect{
 				editor_id: node.editor_id
-				x: x
-				y: y
-				width: width
-				height: height
+				x:         x
+				y:         y
+				width:     width
+				height:    height
 			}
 		}
 		SplitContainer {
@@ -330,7 +335,8 @@ fn (t SplitTree) calculate_layout(node SplitNode, x int, y int, width int, heigh
 							int(f64(width) * node.ratios[i])
 						}
 
-						t.calculate_layout(child, current_x, y, child_width, height, mut rects)
+						t.calculate_layout(child, current_x, y, child_width, height, mut
+							rects)
 						current_x += child_width
 						remaining_width -= child_width
 					}
@@ -348,7 +354,8 @@ fn (t SplitTree) calculate_layout(node SplitNode, x int, y int, width int, heigh
 							int(f64(height) * node.ratios[i])
 						}
 
-						t.calculate_layout(child, x, current_y, width, child_height, mut rects)
+						t.calculate_layout(child, x, current_y, width, child_height, mut
+							rects)
 						current_y += child_height
 						remaining_height -= child_height
 					}
@@ -415,9 +422,9 @@ fn (t SplitTree) remove_editor_from_node(node SplitNode, target_id int) ?SplitNo
 			}
 
 			if new_children.len == 0 {
-				return none  // container is empty
+				return none // container is empty
 			} else if new_children.len == 1 {
-				return new_children[0]  // collapse container with single child
+				return new_children[0] // collapse container with single child
 			} else {
 				// recalculate ratios
 				mut new_ratios := []f64{}
@@ -428,7 +435,7 @@ fn (t SplitTree) remove_editor_from_node(node SplitNode, target_id int) ?SplitNo
 				return SplitContainer{
 					...node
 					children: new_children
-					ratios: new_ratios
+					ratios:   new_ratios
 				}
 			}
 		}
@@ -438,4 +445,3 @@ fn (t SplitTree) remove_editor_from_node(node SplitNode, target_id int) ?SplitNo
 pub fn (t SplitTree) count() int {
 	return t.get_all_editor_ids().len
 }
-

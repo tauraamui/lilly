@@ -11,26 +11,46 @@ struct ModelCursorPos {
 
 fn (c ModelCursorPos) up() ModelCursorPos {
 	yy := c.y - 1
-	if yy < 0 { return c }
-	return ModelCursorPos{ y: yy, x: 0 }
+	if yy < 0 {
+		return c
+	}
+	return ModelCursorPos{
+		y: yy
+		x: 0
+	}
 }
 
 fn (c ModelCursorPos) down(max int) ModelCursorPos {
 	yy := c.y + 1
-	if yy >= max { return c }
-	return ModelCursorPos{ y: yy, x: 0 }
+	if yy >= max {
+		return c
+	}
+	return ModelCursorPos{
+		y: yy
+		x: 0
+	}
 }
 
 fn (c ModelCursorPos) left() ModelCursorPos {
 	xx := c.x - 1
-	if xx < 0 { return c }
-	return ModelCursorPos{ y: c.y, x: xx }
+	if xx < 0 {
+		return c
+	}
+	return ModelCursorPos{
+		y: c.y
+		x: xx
+	}
 }
 
 fn (c ModelCursorPos) right(max int) ModelCursorPos {
 	yy := c.y + 1
-	if yy >= max { return c }
-	return ModelCursorPos{ y: yy, x: 0 }
+	if yy >= max {
+		return c
+	}
+	return ModelCursorPos{
+		y: yy
+		x: 0
+	}
 }
 
 struct EditorData {
@@ -60,7 +80,7 @@ struct OpenEditorMsg {
 
 fn open_editor(file_path string) tea.Cmd {
 	return fn [file_path] () tea.Msg {
-		return OpenEditorMsg{ file_path }
+		return OpenEditorMsg{file_path}
 	}
 }
 
@@ -68,8 +88,8 @@ struct QueryEditorDataMsg {}
 
 fn query_editor_data(id int) tea.Cmd {
 	return fn [id] () tea.Msg {
-		return EditorModelMsg {
-			id: id
+		return EditorModelMsg{
+			id:  id
 			msg: QueryEditorDataMsg{}
 		}
 	}
@@ -81,16 +101,20 @@ struct EditorDataResultMsg {
 
 fn editor_data(data EditorData) tea.Cmd {
 	return fn [data] () tea.Msg {
-		return EditorDataResultMsg{ data }
+		return EditorDataResultMsg{data}
 	}
 }
 
 fn EditorModel.new(id int, file_path string) EditorModel {
 	assert file_path.len != 0
 	return EditorModel{
-		id: id,
-		file_path: file_path,
-		lines: if content := os.read_lines(file_path) { content } else { []string{ len: 150, init: "This is a line of random text" } }
+		id:        id
+		file_path: file_path
+		lines:     if content := os.read_lines(file_path) {
+			content
+		} else {
+			[]string{len: 150, init: 'This is a line of random text'}
+		}
 	}
 }
 
@@ -121,7 +145,6 @@ fn move_cursor_up() tea.Msg {
 	return EditorCursorUpMsg{}
 }
 
-
 fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	mut cmds := []tea.Cmd{}
 
@@ -129,14 +152,13 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		match msg.k_type {
 			.runes {
 				match msg.string() {
-					"j" {
+					'j' {
 						cmds << move_cursor_down
 						return m.clone(), tea.batch_array(cmds)
 					}
-					"k" {
+					'k' {
 						cmds << move_cursor_up
 						return m.clone(), tea.batch_array(cmds)
-
 					}
 					else {}
 				}
@@ -147,7 +169,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 
 	match msg {
 		tea.ResizedMsg {
-			m.width  = msg.window_width
+			m.width = msg.window_width
 			m.height = msg.window_height
 		}
 		EditorModelMsg {
@@ -196,13 +218,17 @@ const active_editor_border_color = palette.petal_pink_color
 const inactive_editor_border_color = palette.status_dark_lilac
 
 fn (m EditorModel) view(mut ctx tea.Context) {
-	ctx.set_clip_area(tea.ClipArea{ 0, 0, m.width, m.height })
+	ctx.set_clip_area(tea.ClipArea{0, 0, m.width, m.height})
 	defer { ctx.clear_clip_area() }
 
 	if m.show_border {
-		border_color := if m.focused { active_editor_border_color } else { inactive_editor_border_color }
+		border_color := if m.focused {
+			active_editor_border_color
+		} else {
+			inactive_editor_border_color
+		}
 		ctx.set_color(border_color)
-		for y in 0..m.height {
+		for y in 0 .. m.height {
 			ctx.draw_text(0, y, '│')
 		}
 		ctx.reset_color()
@@ -213,7 +239,9 @@ fn (m EditorModel) view(mut ctx tea.Context) {
 		ctx.draw_text(0, y, l.replace('\t', '    '))
 	}
 
-	if m.focused { m.render_cursor(mut ctx) }
+	if m.focused {
+		m.render_cursor(mut ctx)
+	}
 }
 
 fn (m EditorModel) render_cursor(mut ctx tea.Context) {
@@ -227,8 +255,8 @@ fn (m EditorModel) debug_data() DebugData {
 	return DebugData{
 		name: 'active editor data'
 		data: {
-			'id': '${m.id}'
-			'file path': m.file_path
+			'id':         '${m.id}'
+			'file path':  m.file_path
 			'cursor_row': '${m.cursor_pos.y}'
 			'cursor_col': '${m.cursor_pos.x}'
 		}
@@ -244,9 +272,13 @@ fn (m EditorModel) data() EditorData {
 	}
 }
 
-fn (m EditorModel) width() int { return m.width }
+fn (m EditorModel) width() int {
+	return m.width
+}
 
-fn (m EditorModel) height() int { return m.height }
+fn (m EditorModel) height() int {
+	return m.height
+}
 
 fn (m EditorModel) clone() tea.Model {
 	assert m.file_path.len != 0
@@ -254,4 +286,3 @@ fn (m EditorModel) clone() tea.Model {
 		...m
 	}
 }
-

@@ -14,8 +14,8 @@ mut:
 	value              string
 	width              int
 	layout             tea.Layout = no_bordered_layout
-	input_prefix       string = ">"
-	prefix_padding     int    = 1
+	input_prefix       string     = '>'
+	prefix_padding     int        = 1
 	cursor_pos         int
 	cursor_blink_frame int
 	focused            bool
@@ -39,7 +39,10 @@ pub fn InputField.new() InputField {
 }
 
 pub fn InputField.new_with_prefix(input_prefix string, prefix_padding int) InputField {
-	return InputField{ input_prefix: input_prefix, prefix_padding: prefix_padding }
+	return InputField{
+		input_prefix:   input_prefix
+		prefix_padding: prefix_padding
+	}
 }
 
 pub fn (mut i InputField) init() ?tea.Cmd {
@@ -141,7 +144,9 @@ pub fn (m InputField) view(mut r_ctx tea.Context) {
 	// let's also make sure we notice if width is ever negative
 	// because that's a bug signifier
 	assert !(width < 0)
-	if width <= 0 { return }
+	if width <= 0 {
+		return
+	}
 
 	cursor_pos := m.cursor_pos
 	cursor_color := calculate_cursor_color(m.cursor_blink_frame)
@@ -150,15 +155,15 @@ pub fn (m InputField) view(mut r_ctx tea.Context) {
 	prefix_padding := m.prefix_padding
 
 	height := if m.layout.border == .none { 1 } else { 3 }
-	m.layout.size(width, height).render(mut r_ctx, fn [
-		cursor_pos, cursor_color, width, value_runes, input_prefix, prefix_padding
-	] (mut l_ctx tea.Context) {
+	m.layout.size(width, height).render(mut r_ctx, fn [cursor_pos, cursor_color, width, value_runes, input_prefix, prefix_padding] (mut l_ctx tea.Context) {
 		l_ctx.set_clip_area(tea.ClipArea{0, 0, width - 3, 1})
 		defer { l_ctx.clear_clip_area() }
 		l_ctx.draw_rect(0, 0, width - 2, 1)
 		l_ctx.draw_text(0, 0, input_prefix)
 
-		input_text_offset := l_ctx.push_offset(tea.Offset{ x: prefix_padding + tea.visible_len(input_prefix) })
+		input_text_offset := l_ctx.push_offset(tea.Offset{
+			x: prefix_padding + tea.visible_len(input_prefix)
+		})
 		cursor_within_content := cursor_pos < value_runes.len
 		for i, r in value_runes {
 			r_str := r.str()
@@ -200,7 +205,7 @@ pub fn (m &InputField) rune_len() int {
 }
 
 pub fn (mut m InputField) reset() {
-	m.value      = ''
+	m.value = ''
 	m.cursor_pos = 0
 }
 
@@ -221,4 +226,3 @@ fn (m InputField) clone() InputField {
 		...m
 	}
 }
-

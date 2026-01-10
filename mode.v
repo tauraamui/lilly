@@ -15,25 +15,24 @@ enum Mode as u8 {
 
 fn (m Mode) color() tea.Color {
 	return match m {
-		.normal      { palette.status_green }
-		.leader      { palette.status_purple }
-		.command     { palette.status_cyan }
-		.insert      { palette.status_orange }
-		.visual      { palette.status_lilac }
+		.normal { palette.status_green }
+		.leader { palette.status_purple }
+		.command { palette.status_cyan }
+		.insert { palette.status_orange }
+		.visual { palette.status_lilac }
 		.visual_line { palette.status_lilac }
-		.navigation  { palette.status_cyan }
+		.navigation { palette.status_cyan }
 	}
 }
 
 fn (m Mode) str() string {
 	return match m {
-		.normal      { 'NORMAL' }
-		.leader      { 'LEADER' }
-		.command     { 'COMMAND' }
-		.insert      { 'INSERT' }
-		.visual      { 'VISUAL' }
+		.normal { 'NORMAL' }
+		.leader { 'LEADER' }
+		.command { 'COMMAND' }
+		.insert { 'INSERT' }
+		.visual { 'VISUAL' }
 		.visual_line { 'VISUAL LINE' }
-		.navigation  { 'NAVIGATION' }
+		.navigation { 'NAVIGATION' }
 	}
 }
-

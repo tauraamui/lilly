@@ -70,13 +70,11 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	}
 
 	if mut open_model := m.dialog_model {
-		intercepted_msg := if msg is tea.ResizedMsg { tea.Msg(
-			// force forward a 80% of the actual window size down to moddal model
-			tea.ResizedMsg{
-				window_width: int(f64(msg.window_width) * 0.8)
+		// force forward a 80% of the actual window size down to moddal model
+		intercepted_msg := if msg is tea.ResizedMsg { tea.Msg(tea.ResizedMsg{
+				window_width:  int(f64(msg.window_width) * 0.8)
 				window_height: int(f64(msg.window_height) * 0.8)
-			}
-		) } else { msg }
+			}) } else { msg }
 
 		d, cmd := open_model.update(intercepted_msg)
 		if d is DebuggableModel {
@@ -87,7 +85,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 
 	match msg {
 		CheckIfTMUXWrappedMsg {
-			m.tmux_wrapped = os.getenv("TMUX").len > 0
+			m.tmux_wrapped = os.getenv('TMUX').len > 0
 		}
 		tea.KeyMsg {
 			match msg.k_type {
@@ -182,14 +180,13 @@ fn (mut m SplashScreenModel) reset_leader_mode() {
 
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
 	render_version_label(mut ctx, '${version} - (#${build_id})', m.theme.subtle_light_grey)
-	render_logo_and_help_centered_and_stacked(
-		mut ctx,
-		logo: m.logo,
-		in_leader_mode: m.leader_mode,
-		leader_data: m.leader_data
-		petal_pink: m.theme.petal_pink
-		petal_green: m.theme.petal_green
-		closest_match_color: m.theme.petal_green
+	render_logo_and_help_centered_and_stacked(mut ctx,
+		logo:                   m.logo
+		in_leader_mode:         m.leader_mode
+		leader_data:            m.leader_data
+		petal_pink:             m.theme.petal_pink
+		petal_green:            m.theme.petal_green
+		closest_match_color:    m.theme.petal_green
 		disabled_help_fg_color: m.theme.subtle_light_grey
 	)
 	render_help_keybinds(mut ctx, m.theme.subtle_light_grey)
@@ -205,12 +202,10 @@ fn (m SplashScreenModel) view(mut ctx tea.Context) {
 
 	ctx.clear_all_offsets()
 	if mut open_model := m.dialog_model {
-		id := ctx.push_offset(
-			tea.Offset{
-				x: int(f64(ctx.window_width() / 2)) - int(f64(open_model.width() / 2))
-				y: int (f64(ctx.window_height() / 2)) - int(f64(open_model.height() / 2))
-			}
-		)
+		id := ctx.push_offset(tea.Offset{
+			x: int(f64(ctx.window_width() / 2)) - int(f64(open_model.width() / 2))
+			y: int(f64(ctx.window_height() / 2)) - int(f64(open_model.height() / 2))
+		})
 		defer { ctx.clear_offsets_from(id) }
 
 		open_model.view(mut ctx)
@@ -238,10 +233,8 @@ struct RenderLogoAndHelpParams {
 	RenderKeybindsListParams
 }
 
-fn render_logo_and_help_centered_and_stacked(
-	mut ctx tea.Context,
-	opts RenderLogoAndHelpParams
-) {
+fn render_logo_and_help_centered_and_stacked(mut ctx tea.Context,
+	opts RenderLogoAndHelpParams) {
 	// NOTE(tauraamui) [25/10/2025]: all following contents to be padded from top of window
 	base_offset_y := f64(ctx.window_height()) * 0.1
 	offset_from_id := ctx.push_offset(tea.Offset{
@@ -286,16 +279,14 @@ const pending_match_color = tea.Color.ansi(244)
 
 @[params]
 struct RenderKeybindsListParams {
-	in_leader_mode bool
-	leader_data string
-	closest_match_color tea.Color
+	in_leader_mode         bool
+	leader_data            string
+	closest_match_color    tea.Color
 	disabled_help_fg_color tea.Color
 }
 
-fn render_keybinds_list(
-	mut ctx tea.Context,
-	opts RenderKeybindsListParams
-) tea.Offset {
+fn render_keybinds_list(mut ctx tea.Context,
+	opts RenderKeybindsListParams) tea.Offset {
 	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
@@ -303,7 +294,11 @@ fn render_keybinds_list(
 		ctx.push_offset(tea.Offset{ y: 1 })
 		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(l) / 2) })
 		if opts.in_leader_mode {
-			fg_color := if opts.leader_data == 'f' { opts.closest_match_color } else { pending_match_color }
+			fg_color := if opts.leader_data == 'f' {
+				opts.closest_match_color
+			} else {
+				pending_match_color
+			}
 			ctx.set_color(fg_color)
 		}
 		ctx.draw_text(0, 0, l)
@@ -379,8 +374,8 @@ fn render_logo(mut ctx tea.Context, opts RenderLogoParams) tea.Offset {
 
 @[params]
 struct RenderLogoLineParams {
-	petal_pink     tea.Color
-	petal_green    tea.Color
+	petal_pink  tea.Color
+	petal_green tea.Color
 }
 
 fn render_logo_line(mut ctx tea.Context, line string, opts RenderLogoLineParams) {
@@ -391,12 +386,10 @@ fn render_logo_line(mut ctx tea.Context, line string, opts RenderLogoLineParams)
 	ctx.draw_text(0, 0, line)
 }
 
-fn render_logo_line_char_by_char(
-	mut ctx tea.Context,
+fn render_logo_line_char_by_char(mut ctx tea.Context,
 	line string,
 	petal_pink tea.Color,
-	petal_green tea.Color,
-) {
+	petal_green tea.Color) {
 	for j, c in line.runes() {
 		mut to_draw := '${c}'
 		if to_draw == 'g' {
@@ -424,17 +417,21 @@ fn (m SplashScreenModel) debug_data() DebugData {
 	return DebugData{
 		name: 'splash_screen data'
 		data: {
-			'leader key': m.leader_key
+			'leader key':   m.leader_key
 			'tmux wrapped': '${m.tmux_wrapped}'
-			'':           if d := m.dialog_model { d.debug_data() } else { 'null' }
-			'version':    '${version} - (${build_id})'
+			'':             if d := m.dialog_model { d.debug_data() } else { 'null' }
+			'version':      '${version} - (${build_id})'
 		}
 	}
 }
 
-fn (m SplashScreenModel) width() int { return 0 }
+fn (m SplashScreenModel) width() int {
+	return 0
+}
 
-fn (m SplashScreenModel) height() int { return 0 }
+fn (m SplashScreenModel) height() int {
+	return 0
+}
 
 fn (m SplashScreenModel) clone() tea.Model {
 	return SplashScreenModel{
