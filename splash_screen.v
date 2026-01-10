@@ -181,7 +181,7 @@ fn (mut m SplashScreenModel) reset_leader_mode() {
 }
 
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
-	render_version_label(mut ctx, '${version} - (#${build_id})', m.theme.light_grey)
+	render_version_label(mut ctx, '${version} - (#${build_id})', m.theme.subtle_light_grey)
 	render_logo_and_help_centered_and_stacked(
 		mut ctx,
 		logo: m.logo,
@@ -189,8 +189,9 @@ fn (m SplashScreenModel) view(mut ctx tea.Context) {
 		leader_data: m.leader_data
 		petal_pink: m.theme.petal_pink
 		petal_green: m.theme.petal_green
+		disabled_help_fg_color: m.theme.subtle_light_grey
 	)
-	render_help_keybinds(mut ctx)
+	render_help_keybinds(mut ctx, m.theme.subtle_light_grey)
 
 	offset_from_id := ctx.push_offset(tea.Offset{ y: ctx.window_height() - 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
@@ -221,11 +222,11 @@ fn render_version_label(mut ctx tea.Context, version_label string, help_fg_color
 	ctx.reset_color()
 }
 
-fn render_help_keybinds(mut ctx tea.Context) {
+fn render_help_keybinds(mut ctx tea.Context, help_fg_color tea.Color) {
 	offset_from_id := ctx.push_offset(tea.Offset{ x: 1, y: ctx.window_height() - 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
-	ctx.set_color(palette.help_fg_color)
+	ctx.set_color(help_fg_color)
 	ctx.draw_text(0, 0, 'q: quit ${dot} esc: exit')
 	ctx.reset_color()
 }
@@ -235,6 +236,7 @@ struct RenderLogoAndHelpParams {
 	RenderLogoParams
 	in_leader_mode bool
 	leader_data    string
+	disabled_help_fg_color tea.Color
 }
 
 fn render_logo_and_help_centered_and_stacked(
@@ -251,7 +253,7 @@ fn render_logo_and_help_centered_and_stacked(
 
 	ctx.push_offset(render_logo(mut ctx, opts.RenderLogoParams))
 	ctx.push_offset(render_lilly_name(mut ctx))
-	ctx.push_offset(render_keybinds_list(mut ctx, opts.in_leader_mode, opts.leader_data, opts.petal_green))
+	ctx.push_offset(render_keybinds_list(mut ctx, opts.in_leader_mode, opts.leader_data, opts.petal_green, opts.disabled_help_fg_color))
 	render_copyright_footer(mut ctx, opts.petal_pink)
 }
 
@@ -282,9 +284,14 @@ const disabled_command_help = [
 ]
 
 const pending_match_color = tea.Color.ansi(244)
-// const closest_match_color = palette.petal_green_color
 
-fn render_keybinds_list(mut ctx tea.Context, in_leader_mode bool, leader_data string, closest_match_color tea.Color) tea.Offset {
+fn render_keybinds_list(
+	mut ctx tea.Context,
+	in_leader_mode bool,
+	leader_data string,
+	closest_match_color tea.Color,
+	disabled_help_fg_color tea.Color
+) tea.Offset {
 	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
@@ -307,7 +314,7 @@ fn render_keybinds_list(mut ctx tea.Context, in_leader_mode bool, leader_data st
 		ctx.push_offset(tea.Offset{ y: 1 })
 		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(l) / 2) })
 		ctx.set_style(.strikethrough)
-		ctx.set_color(palette.help_fg_color)
+		ctx.set_color(disabled_help_fg_color)
 		ctx.draw_text(0, 0, l)
 		ctx.reset_color()
 		ctx.clear_style()
