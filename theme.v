@@ -17,8 +17,11 @@ pub:
 
 	petal_pink                   tea.Color
 	petal_green                  tea.Color
+	petal_red                    tea.Color
 
 	subtle_light_grey            tea.Color
+
+	selection_bg_color           tea.Color
 }
 
 pub const dark_theme = Theme{
@@ -32,6 +35,8 @@ pub const dark_theme = Theme{
 	petal_green: tea.Color.ansi(84)
 
 	subtle_light_grey: tea.Color.ansi(241)
+
+	selection_bg_color: tea.Color.ansi(239)
 }
 
 pub const light_theme = Theme{
@@ -45,5 +50,7 @@ pub const light_theme = Theme{
 	petal_green: tea.Color.ansi(76)
 
 	subtle_light_grey: tea.Color.ansi(248)
+
+	selection_bg_color: tea.Color.ansi(239)
 }
 

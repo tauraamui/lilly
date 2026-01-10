@@ -6,9 +6,11 @@ import strings
 import lib.files
 import tauraamui.bobatea as tea
 import palette
+import theme
 import boba
 
 struct FilePickerModel {
+	theme               theme.Theme
 mut:
 	width               int
 	height              int
@@ -38,10 +40,13 @@ pub:
 
 pub struct CloseDialogMsg {}
 
-pub fn open_file_picker() tea.Msg {
-	return OpenDialogMsg{
-		model: FilePickerModel{
-			finder: files.new_finder()
+pub fn open_file_picker(ttheme theme.Theme) tea.Cmd {
+	return fn [ttheme] () tea.Msg {
+		return OpenDialogMsg{
+			model: FilePickerModel{
+				theme: ttheme
+				finder: files.new_finder()
+			}
 		}
 	}
 }
@@ -283,17 +288,28 @@ fn calculate_cursor_color(blink_frame int) tea.Color {
 	return tea.Color.ansi(color_value)
 }
 
-fn render_file_path_line(mut ctx tea.Context, file_path string, width int, height int, is_selected bool) {
+@[params]
+struct RenderFilePathLineParams {
+	file_path          string
+	width              int
+	height             int
+	is_selected        bool
+	selection_bg_color tea.Color
+}
+
+fn render_file_path_line(
+	mut ctx tea.Context, opts RenderFilePathLineParams
+) {
 	mut prefix := '  '
-	if is_selected {
+	if opts.is_selected {
 		prefix = '» '
-		selected_path_highlight_bg_color := palette.selected_highlight_bg_color
+		selected_path_highlight_bg_color := opts.selection_bg_color
 		ctx.set_color(palette.fg_color(selected_path_highlight_bg_color))
 		ctx.set_bg_color(selected_path_highlight_bg_color)
 	}
-	ctx.draw_rect(0, height - 3, width - 2, 1)
-	ctx.draw_text(0, height - 3, prefix + file_path.replace(os.getwd(), '.'))
-	if is_selected {
+	ctx.draw_rect(0, opts.height - 3, opts.width - 2, 1)
+	ctx.draw_text(0, opts.height - 3, prefix + opts.file_path.replace(os.getwd(), '.'))
+	if opts.is_selected {
 		ctx.reset_color()
 		ctx.reset_bg_color()
 	}
@@ -319,7 +335,7 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 		ctx.draw_rect(0, 0, max_width, max_height)
 
 		if m.loading {
-			ctx.set_color(palette.subtle_text_fg_color)
+			ctx.set_color(m.theme.subtle_light_grey)
 			loading_label := 'Loading files…'
 			ctx.draw_text((width / 2) - tea.visible_len(loading_label) / 2, height / 2,
 				loading_label)
@@ -331,7 +347,7 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 		list_offset_id := ctx.push_offset(tea.Offset{})
 		for i, file_path in clamp_files_list_to_scrolled(m.start_index, max_items, m.filtered_files) {
 			is_selected := (i + m.start_index) == m.selected_index
-			render_file_path_line(mut ctx, file_path, width, height, is_selected)
+			render_file_path_line(mut ctx, file_path: file_path, width: width, height: height, is_selected: is_selected, selection_bg_color: m.theme.selection_bg_color)
 		}
 		ctx.clear_offsets_from(list_offset_id)
 	})

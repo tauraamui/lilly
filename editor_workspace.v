@@ -5,6 +5,7 @@ import time
 import math
 import tauraamui.bobatea as tea
 import boba
+import theme
 import palette
 import glyphs
 
@@ -14,6 +15,7 @@ struct EditorWorkspaceModel {
 	// accidentally set the mode state without accounting for necessary checks and state changes,
 	// the only way we can change the mode is by exiting the current scope with a command to do so
 	mode               Mode
+	theme              theme.Theme
 mut:
 	tmux_wrapped       bool
 	dialog_model       ?DebuggableModel
@@ -51,8 +53,9 @@ fn open_editor_workspace(initial_file_path string) tea.Cmd {
 	}
 }
 
-fn EditorWorkspaceModel.new(initial_file_path string) EditorWorkspaceModel {
+fn EditorWorkspaceModel.new(ttheme theme.Theme, initial_file_path string) EditorWorkspaceModel {
 	return EditorWorkspaceModel{
+		theme: ttheme
 		initial_file_path: initial_file_path
 		split_tree: boba.SplitTree.new()
 	}
@@ -263,7 +266,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						match m.leader_suffix {
 							'ff' {
 								cmds << switch_mode(.normal)
-								cmds << open_file_picker
+								cmds << open_file_picker(m.theme)
 							}
 							else {}
 						}

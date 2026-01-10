@@ -150,7 +150,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			cmds << open_editor_workspace(msg.file_path)
 		}
 		OpenEditorWorkspaceMsg {
-			mut workspace := EditorWorkspaceModel.new(msg.initial_file_path)
+			mut workspace := EditorWorkspaceModel.new(m.theme, msg.initial_file_path)
 			cmd := workspace.init()
 			if u_cmd := cmd {
 				cmds << u_cmd
@@ -163,7 +163,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	match m.leader_data {
 		'ff' {
 			m.reset_leader_mode()
-			cmds << open_file_picker
+			cmds << open_file_picker(m.theme)
 		}
 		'xx' {
 			m.reset_leader_mode()
