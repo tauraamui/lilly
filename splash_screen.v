@@ -181,7 +181,7 @@ fn (mut m SplashScreenModel) reset_leader_mode() {
 }
 
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
-	render_version_label(mut ctx, '${version} - (#${build_id})')
+	render_version_label(mut ctx, '${version} - (#${build_id})', m.theme.light_grey)
 	render_logo_and_help_centered_and_stacked(
 		mut ctx,
 		logo: m.logo,
@@ -215,8 +215,8 @@ fn (m SplashScreenModel) view(mut ctx tea.Context) {
 	}
 }
 
-fn render_version_label(mut ctx tea.Context, version_label string) {
-	ctx.set_color(palette.help_fg_color)
+fn render_version_label(mut ctx tea.Context, version_label string, help_fg_color tea.Color) {
+	ctx.set_color(help_fg_color)
 	ctx.draw_text(1, 0, version_label)
 	ctx.reset_color()
 }
