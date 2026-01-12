@@ -57,7 +57,7 @@ pub fn close_file_picker() tea.Msg {
 
 pub fn (mut m FilePickerModel) init() ?tea.Cmd {
 	m.loading = true
-	m.input_field = boba.BorderedInputField.new()
+	m.input_field = boba.BorderedInputField.new(m.theme.petal_pink)
 	m.input_field.focus()
 	mut cmds := []tea.Cmd{}
 	if input_init_cmd := m.input_field.init() {
@@ -320,12 +320,8 @@ fn (m FilePickerModel) max_visible_items() int {
 	return if max_height > 0 { max_height } else { 0 }
 }
 
-const subtle_bordered_layout = tea.new_layout()
-	.border(.normal)
-	.border_color(palette.subtle_border_fg_color)
-
-fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int, height int) {
-	subtle_bordered_layout.size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
+fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int, height int, border_color tea.Color) {
+	tea.new_layout().border(.normal).border_color(border_color).size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
 		max_width := width - 2
 		max_height := height - 2
 		ctx.set_clip_area(tea.ClipArea{0, 0, max_width - 1, max_height})
@@ -391,7 +387,7 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 	ctx.draw_rect(0, 0, m.width, m.height)
 
 	max_results_height := m.height - 3
-	m.render_file_results_pane(mut ctx, m.width, max_results_height)
+	m.render_file_results_pane(mut ctx, m.width, max_results_height, m.theme.petal_pink)
 
 	ctx.push_offset(tea.Offset{ y: max_results_height })
 	m.input_field.view(mut ctx)

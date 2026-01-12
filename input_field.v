@@ -3,7 +3,6 @@ module boba
 import math
 import time
 import tauraamui.bobatea as tea
-import palette
 
 const frames_per_cycle = 50.0
 
@@ -21,16 +20,12 @@ mut:
 	focused            bool
 }
 
-const subtle_bordered_layout = tea.new_layout()
-	.border(.normal)
-	.border_color(palette.subtle_border_fg_color)
-
 const no_bordered_layout = tea.new_layout()
 	.border(.none)
 
-pub fn BorderedInputField.new() InputField {
+pub fn BorderedInputField.new(border_color tea.Color) InputField {
 	return InputField{
-		layout: subtle_bordered_layout
+		layout: tea.new_layout().border(.normal).border_color(border_color)
 	}
 }
 

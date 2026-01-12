@@ -494,7 +494,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				'q' { cmds << close_active_split }
 				'qa' { cmds << tea.quit }
 				'debug' { cmds << toggle_debug_screen }
-				'version' { cmds << open_version_dialog }
+				'version' { cmds << open_version_dialog(m.theme) }
 				'vs' { cmds << split_vertically }
 				else { cmds << raise_error("unknown command '${msg.command}'") }
 			}
