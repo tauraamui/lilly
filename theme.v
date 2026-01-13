@@ -37,7 +37,7 @@ const light_subtle_light_grey = tea.Color.ansi(248)
 pub const light_theme = Theme{
 	name: "light"
 	bg_color: tea.Color.ansi(231)
-	highlight_bg_color: tea.Color.ansi(239)
+	highlight_bg_color: tea.Color.ansi(218)
 	petal_pink: light_petal_pink
 	petal_green: light_petal_green
 	petal_red: dark_theme.petal_red
