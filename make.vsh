@@ -17,6 +17,8 @@ context.task(
 	run:     |self| system('v . -o ${app_name}')
 )
 context.task(name: 'run', depends: ['_generate-git-hash'], run: |self| system('v -g run .'))
+context.task(name: 'run-d', depends: ['_generate-git-hash'], run: |self| system('export PETAL_THEME=dark && v -g run .'))
+context.task(name: 'run-l', depends: ['_generate-git-hash'], run: |self| system('export PETAL_THEME=light && v -g run .'))
 context.task(name: 'compile-make', run: |self| system('v -prod -skip-running make.vsh'))
 
 // TEST TASKS
