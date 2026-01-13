@@ -153,7 +153,9 @@ pub fn (m InputField) view(mut r_ctx tea.Context) {
 	m.layout.size(width, height).render(mut r_ctx, fn [cursor_pos, cursor_color, width, value_runes, input_prefix, prefix_padding] (mut l_ctx tea.Context) {
 		l_ctx.set_clip_area(tea.ClipArea{0, 0, width - 3, 1})
 		defer { l_ctx.clear_clip_area() }
-		l_ctx.draw_rect(0, 0, width - 2, 1)
+
+		left_right_border_cells_to_deduct_from_rects_full_width := 2
+		l_ctx.draw_rect(0, 0, width - left_right_border_cells_to_deduct_from_rects_full_width, 1)
 		l_ctx.draw_text(0, 0, input_prefix)
 
 		input_text_offset := l_ctx.push_offset(tea.Offset{
