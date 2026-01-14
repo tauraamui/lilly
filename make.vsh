@@ -64,6 +64,13 @@ context.task(
 )
 
 context.task(
+	name: 'ansi-color-codes',
+	run: fn [mut context] (self build.Task) ! {
+		context.exec('ansi-colour-codes')
+	}
+)
+
+context.task(
 	name: 'ansi-to-rgb'
 	help: 'prompts for single ansi colour code and outputs the RGB components'
 	run:  fn (self build.Task) ! {
