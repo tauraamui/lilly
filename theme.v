@@ -1,7 +1,6 @@
 module theme
 
 import tauraamui.bobatea as tea
-import palette
 
 pub const dark_theme_name  = "dark"
 pub const light_theme_name = "light"
@@ -16,18 +15,20 @@ pub:
 	petal_green                  tea.Color @[required]
 	petal_red                    tea.Color @[required]
 	subtle_light_grey            tea.Color @[required]
+	status_bar_spacer            tea.Color @[required]
 }
 
 const dark_petal_red = tea.Color.ansi(196)
 
 pub const dark_theme = Theme{
 	name: "dark"
-	bg_color: palette.matte_black_bg_color
-	highlight_bg_color: tea.Color.ansi(239)
+	bg_color: tea.Color.ansi(233)
+	highlight_bg_color: tea.Color.ansi(139)
 	petal_pink: tea.Color.ansi(219)
 	petal_green: tea.Color.ansi(84)
 	petal_red: dark_petal_red
 	subtle_light_grey: tea.Color.ansi(241)
+	status_bar_spacer: tea.Color.ansi(234)
 }
 
 const light_petal_pink = tea.Color.ansi(200)
@@ -42,5 +43,6 @@ pub const light_theme = Theme{
 	petal_green: light_petal_green
 	petal_red: dark_theme.petal_red
 	subtle_light_grey: light_subtle_light_grey
+	status_bar_spacer: tea.Color.ansi(255)
 }
 

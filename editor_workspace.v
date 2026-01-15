@@ -588,7 +588,7 @@ fn (m EditorWorkspaceModel) view(mut ctx tea.Context) {
 }
 
 fn (m EditorWorkspaceModel) render_status_bar(mut ctx tea.Context) {
-	ctx.set_bg_color(palette.status_bar_bg_color)
+	ctx.set_bg_color(m.theme.status_bar_spacer)
 	ctx.draw_rect(0, ctx.window_height() - 2, ctx.window_width(), 1)
 	ctx.reset_bg_color()
 
@@ -657,7 +657,7 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 	ctx.reset_color()
 
 	// status bar spacer left end cap
-	ctx.set_color(palette.status_bar_bg_color)
+	ctx.set_color(m.theme.status_bar_spacer)
 	ctx.draw_text(1, 0, glyphs.slant_left_flat_top)
 	ctx.reset_color()
 	//
@@ -669,7 +669,7 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 	ctx.push_offset(tea.Offset{ x: cursor_pos_segment_start })
 
 	// status bar spacer right end cap
-	ctx.set_color(palette.status_bar_bg_color)
+	ctx.set_color(m.theme.status_bar_spacer)
 	ctx.draw_text(-1, 0, glyphs.slant_right_flat_top)
 	ctx.reset_color()
 	//
