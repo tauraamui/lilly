@@ -638,21 +638,22 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 	ctx.reset_color()
 	ctx.push_offset(tea.Offset{ x: 2 })
 
-	ctx.set_color(palette.status_branch_name_bg_color)
+	branch_name_bg_color := m.theme.status_branch_name
+	ctx.set_color(branch_name_bg_color)
 	ctx.draw_text(0, 0, '${glyphs.slant_left_flat_top}${glyphs.block}')
 	ctx.reset_color()
 	ctx.push_offset(tea.Offset{ x: 2 })
 
 	branch_name_label := m.active_branch_name()
-	ctx.set_color(palette.matte_white_fg_color)
-	ctx.set_bg_color(palette.status_branch_name_bg_color)
+	ctx.set_color(palette.fg_color(branch_name_bg_color))
+	ctx.set_bg_color(branch_name_bg_color)
 	ctx.draw_text(0, 0, branch_name_label)
 	ctx.reset_bg_color()
 	ctx.reset_color()
 
 	ctx.push_offset(tea.Offset{ x: tea.visible_len(branch_name_label) })
 
-	ctx.set_color(palette.status_branch_name_bg_color)
+	ctx.set_color(branch_name_bg_color)
 	ctx.draw_text(-1, 0, '${glyphs.block}${glyphs.slant_right_flat_bottom}')
 	ctx.reset_color()
 
