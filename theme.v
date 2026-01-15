@@ -7,17 +7,19 @@ pub const light_theme_name = "light"
 
 pub struct Theme {
 pub:
-	name                         string    @[required]
-	bg_color                     tea.Color @[required]
-	fg_color                     tea.Color
-	highlight_bg_color           tea.Color @[required]
-	petal_pink                   tea.Color @[required]
-	petal_green                  tea.Color @[required]
-	petal_red                    tea.Color @[required]
-	subtle_light_grey            tea.Color @[required]
+	name               string    @[required]
+	bg_color           tea.Color @[required]
+	fg_color           tea.Color
+	highlight_bg_color tea.Color @[required]
+	petal_pink         tea.Color @[required]
+	petal_green        tea.Color @[required]
+	petal_red          tea.Color @[required]
+	subtle_light_grey  tea.Color @[required]
 
-	status_bar_spacer            tea.Color @[required]
-	status_branch_name           tea.Color @[required]
+	status_file_name   tea.Color @[required]
+	status_branch_name tea.Color @[required]
+	status_bar_spacer  tea.Color @[required]
+
 }
 
 const dark_petal_pink = tea.Color.ansi(219)
@@ -31,6 +33,8 @@ pub const dark_theme = Theme{
 	petal_green: tea.Color.ansi(84)
 	petal_red: dark_petal_red
 	subtle_light_grey: tea.Color.ansi(241)
+
+	status_file_name:  tea.Color.ansi(239)
 	status_bar_spacer: tea.Color.ansi(234)
 	status_branch_name: dark_petal_pink
 }
@@ -47,6 +51,8 @@ pub const light_theme = Theme{
 	petal_green: light_petal_green
 	petal_red: dark_theme.petal_red
 	subtle_light_grey: light_subtle_light_grey
+
+	status_file_name:  tea.Color.ansi(242)
 	status_bar_spacer: tea.Color.ansi(255)
 	status_branch_name: tea.Color.ansi(219)
 }

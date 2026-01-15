@@ -619,21 +619,22 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 	ctx.reset_color()
 	ctx.push_offset(tea.Offset{ x: 2 })
 
-	ctx.set_color(palette.status_file_name_bg_color)
+	file_name_bg_color := m.theme.status_file_name
+	ctx.set_color(file_name_bg_color)
 	ctx.draw_text(0, 0, '${glyphs.slant_left_flat_top}${glyphs.block}')
 	ctx.reset_color()
 	ctx.push_offset(tea.Offset{ x: 2 })
 
 	file_name_label := m.active_file_name()
-	ctx.set_color(palette.fg_color(palette.status_file_name_bg_color))
-	ctx.set_bg_color(palette.status_file_name_bg_color)
+	ctx.set_color(palette.fg_color(file_name_bg_color))
+	ctx.set_bg_color(file_name_bg_color)
 	ctx.draw_text(0, 0, file_name_label)
 	ctx.reset_bg_color()
 	ctx.reset_color()
 
 	ctx.push_offset(tea.Offset{ x: tea.visible_len(file_name_label) })
 
-	ctx.set_color(palette.status_file_name_bg_color)
+	ctx.set_color(file_name_bg_color)
 	ctx.draw_text(0, 0, '${glyphs.block}${glyphs.slant_right_flat_bottom}')
 	ctx.reset_color()
 	ctx.push_offset(tea.Offset{ x: 2 })
