@@ -9,7 +9,7 @@ import palette
 interface DebuggableModel {
 	tea.Model
 	Debuggable
-	width()  int
+	width() int
 	height() int
 }
 
@@ -58,18 +58,18 @@ enum LogLevel {
 
 fn (l LogLevel) str() string {
 	return match l {
-		.debug { "DEBU" }
-		.info  { "INFO" }
-		.warn  { "WARN" }
-		.error { "ERRO" }
+		.debug { 'DEBU' }
+		.info { 'INFO' }
+		.warn { 'WARN' }
+		.error { 'ERRO' }
 	}
 }
 
 fn (l LogLevel) fg() tea.Color {
 	return match l {
 		.debug { tea.Color.ansi(62) }
-		.info  { tea.Color.ansi(183) }
-		.warn  { tea.Color.ansi(220) }
+		.info { tea.Color.ansi(183) }
+		.warn { tea.Color.ansi(220) }
 		.error { tea.Color.ansi(162) }
 	}
 }
@@ -80,7 +80,7 @@ struct LogMsg {
 }
 
 fn log(message string, level LogLevel) tea.Msg {
-	return LogMsg{ level, message }
+	return LogMsg{level, message}
 }
 
 fn debug_log(message string) tea.Cmd {
@@ -253,11 +253,11 @@ fn render_logs(mut ctx tea.Context, x int, y int, logs []LogMsg) {
 		ctx.set_color(l.level.fg())
 
 		mut label_x_offset := 0
-		ctx.draw_text(x + label_x_offset, y + i, "[")
+		ctx.draw_text(x + label_x_offset, y + i, '[')
 		label_x_offset += 1
 		ctx.draw_text(x + label_x_offset, y + i, level_label)
 		label_x_offset += tea.visible_len(level_label)
-		ctx.draw_text(x + label_x_offset, y + i, "]")
+		ctx.draw_text(x + label_x_offset, y + i, ']')
 		label_x_offset += 1
 		ctx.reset_color()
 		label_x_offset += 1 // single space padding
@@ -301,9 +301,13 @@ fn (m DebugScreenModel) debug_data() DebugData {
 	}
 }
 
-fn (m DebugScreenModel) width() int { return m.window_width }
+fn (m DebugScreenModel) width() int {
+	return m.window_width
+}
 
-fn (m DebugScreenModel) height() int { return m.window_height }
+fn (m DebugScreenModel) height() int {
+	return m.window_height
+}
 
 fn (m DebugScreenModel) clone() tea.Model {
 	return DebugScreenModel{

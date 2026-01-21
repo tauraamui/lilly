@@ -6,9 +6,11 @@ import strings
 import lib.files
 import tauraamui.bobatea as tea
 import palette
+import theme
 import boba
 
 struct FilePickerModel {
+	theme theme.Theme
 mut:
 	width               int
 	height              int
@@ -38,10 +40,13 @@ pub:
 
 pub struct CloseDialogMsg {}
 
-pub fn open_file_picker() tea.Msg {
-	return OpenDialogMsg{
-		model: FilePickerModel{
-			finder: files.new_finder()
+pub fn open_file_picker(ttheme theme.Theme) tea.Cmd {
+	return fn [ttheme] () tea.Msg {
+		return OpenDialogMsg{
+			model: FilePickerModel{
+				theme:  ttheme
+				finder: files.new_finder()
+			}
 		}
 	}
 }
@@ -52,7 +57,7 @@ pub fn close_file_picker() tea.Msg {
 
 pub fn (mut m FilePickerModel) init() ?tea.Cmd {
 	m.loading = true
-	m.input_field = boba.BorderedInputField.new()
+	m.input_field = boba.BorderedInputField.new(m.theme.petal_pink)
 	m.input_field.focus()
 	mut cmds := []tea.Cmd{}
 	if input_init_cmd := m.input_field.init() {
@@ -171,7 +176,7 @@ fn (mut m FilePickerModel) on_cancel() (tea.Model, ?tea.Cmd) {
 	return m.clone(), cmd
 }
 
-const filter_trigger_special_keys = ["backspace", "delete"]
+const filter_trigger_special_keys = ['backspace', 'delete']
 
 fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	mut cmds := []tea.Cmd{}
@@ -283,15 +288,27 @@ fn calculate_cursor_color(blink_frame int) tea.Color {
 	return tea.Color.ansi(color_value)
 }
 
-fn render_file_path_line(mut ctx tea.Context, file_path string, width int, height int, is_selected bool) {
+@[params]
+struct RenderFilePathLineParams {
+	file_path          string
+	width              int
+	height             int
+	is_selected        bool
+	selection_bg_color tea.Color
+}
+
+fn render_file_path_line(mut ctx tea.Context, opts RenderFilePathLineParams) {
 	mut prefix := '  '
-	if is_selected {
+	if opts.is_selected {
 		prefix = '» '
-		ctx.set_bg_color(palette.selected_highlight_bg_color)
+		selected_path_highlight_bg_color := opts.selection_bg_color
+		ctx.set_color(palette.fg_color(selected_path_highlight_bg_color))
+		ctx.set_bg_color(selected_path_highlight_bg_color)
 	}
-	ctx.draw_rect(0, height - 3, width - 2, 1)
-	ctx.draw_text(0, height - 3, prefix + file_path.replace(os.getwd(), '.'))
-	if is_selected {
+	ctx.draw_rect(0, opts.height - 3, opts.width - 2, 1)
+	ctx.draw_text(0, opts.height - 3, prefix + opts.file_path.replace(os.getwd(), '.'))
+	if opts.is_selected {
+		ctx.reset_color()
 		ctx.reset_bg_color()
 	}
 	ctx.push_offset(tea.Offset{ y: -1 })
@@ -303,12 +320,8 @@ fn (m FilePickerModel) max_visible_items() int {
 	return if max_height > 0 { max_height } else { 0 }
 }
 
-const subtle_bordered_layout = tea.new_layout()
-	.border(.normal)
-	.border_color(palette.subtle_border_fg_color)
-
-fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int, height int) {
-	subtle_bordered_layout.size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
+fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int, height int, border_color tea.Color) {
+	tea.new_layout().border(.normal).border_color(border_color).size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
 		max_width := width - 2
 		max_height := height - 2
 		ctx.set_clip_area(tea.ClipArea{0, 0, max_width - 1, max_height})
@@ -316,7 +329,7 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 		ctx.draw_rect(0, 0, max_width, max_height)
 
 		if m.loading {
-			ctx.set_color(palette.subtle_text_fg_color)
+			ctx.set_color(m.theme.subtle_light_grey)
 			loading_label := 'Loading files…'
 			ctx.draw_text((width / 2) - tea.visible_len(loading_label) / 2, height / 2,
 				loading_label)
@@ -328,7 +341,13 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 		list_offset_id := ctx.push_offset(tea.Offset{})
 		for i, file_path in clamp_files_list_to_scrolled(m.start_index, max_items, m.filtered_files) {
 			is_selected := (i + m.start_index) == m.selected_index
-			render_file_path_line(mut ctx, file_path, width, height, is_selected)
+			render_file_path_line(mut ctx,
+				file_path:          file_path
+				width:              width
+				height:             height
+				is_selected:        is_selected
+				selection_bg_color: m.theme.highlight_bg_color
+			)
 		}
 		ctx.clear_offsets_from(list_offset_id)
 	})
@@ -361,12 +380,14 @@ fn clamp_files_list_to_scrolled(start int, max_items int, initial_files_list []s
 }
 
 fn (m FilePickerModel) view(mut ctx tea.Context) {
-	if m.width == 0 || m.height == 0 { return }
+	if m.width == 0 || m.height == 0 {
+		return
+	}
 	// wipe existing rendered cells "behind" the modal
 	ctx.draw_rect(0, 0, m.width, m.height)
 
 	max_results_height := m.height - 3
-	m.render_file_results_pane(mut ctx, m.width, max_results_height)
+	m.render_file_results_pane(mut ctx, m.width, max_results_height, m.theme.petal_pink)
 
 	ctx.push_offset(tea.Offset{ y: max_results_height })
 	m.input_field.view(mut ctx)
@@ -397,9 +418,13 @@ fn (m FilePickerModel) debug_data() DebugData {
 	}
 }
 
-fn (m FilePickerModel) width() int { return m.width }
+fn (m FilePickerModel) width() int {
+	return m.width
+}
 
-fn (m FilePickerModel) height() int { return m.height }
+fn (m FilePickerModel) height() int {
+	return m.height
+}
 
 fn (m FilePickerModel) clone() tea.Model {
 	return FilePickerModel{

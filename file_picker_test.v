@@ -2,6 +2,7 @@ module main
 
 import tauraamui.bobatea.lib.draw
 import tauraamui.bobatea as tea
+import theme
 import lib.files
 
 struct MockFilesFinder {
@@ -20,6 +21,7 @@ fn (mut f MockFilesFinder) search(root string) {
 
 fn test_file_list_loads_files() {
 	mut fp := FilePickerModel{
+		theme: theme.light_theme
 		finder: MockFilesFinder{}
 	}
 

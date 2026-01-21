@@ -5,6 +5,7 @@ import time
 import math
 import tauraamui.bobatea as tea
 import boba
+import theme
 import palette
 import glyphs
 
@@ -13,15 +14,16 @@ struct EditorWorkspaceModel {
 	// NOTE(tauraamui): forced mode to be immutable, this ensures we cannot randomly
 	// accidentally set the mode state without accounting for necessary checks and state changes,
 	// the only way we can change the mode is by exiting the current scope with a command to do so
-	mode               Mode
+	mode  Mode
+	theme theme.Theme
 mut:
-	tmux_wrapped       bool
-	dialog_model       ?DebuggableModel
+	tmux_wrapped bool
+	dialog_model ?DebuggableModel
 
-	active_editor_id   int
+	active_editor_id int
 
-	split_tree         boba.SplitTree
-	editors            map[int]DebuggableModel
+	split_tree boba.SplitTree
+	editors    map[int]DebuggableModel
 
 	active_editor_data ?EditorData
 	branch_name        string
@@ -51,15 +53,16 @@ fn open_editor_workspace(initial_file_path string) tea.Cmd {
 	}
 }
 
-fn EditorWorkspaceModel.new(initial_file_path string) EditorWorkspaceModel {
+fn EditorWorkspaceModel.new(ttheme theme.Theme, initial_file_path string) EditorWorkspaceModel {
 	return EditorWorkspaceModel{
+		theme:             ttheme
 		initial_file_path: initial_file_path
-		split_tree: boba.SplitTree.new()
+		split_tree:        boba.SplitTree.new()
 	}
 }
 
 fn (mut m EditorWorkspaceModel) init() ?tea.Cmd {
-	m.input_field = boba.InputField.new_with_prefix(":", 0)
+	m.input_field = boba.InputField.new_with_prefix(':', 0)
 	return tea.batch(open_editor(m.initial_file_path), check_if_tmux_wrapped)
 }
 
@@ -69,7 +72,7 @@ struct SwitchModeMsg {
 
 fn switch_mode(mode Mode) tea.Cmd {
 	return fn [mode] () tea.Msg {
-		return SwitchModeMsg{ mode }
+		return SwitchModeMsg{mode}
 	}
 }
 
@@ -79,14 +82,14 @@ struct CommandMsg {
 
 fn run_command(command string) tea.Cmd {
 	return fn [command] () tea.Msg {
-		return CommandMsg{ command }
+		return CommandMsg{command}
 	}
 }
 
 fn focus_editor(editor_id int) tea.Cmd {
 	return fn [editor_id] () tea.Msg {
 		return EditorModelMsg{
-			id: editor_id
+			id:  editor_id
 			msg: tea.FocusedMsg{}
 		}
 	}
@@ -95,7 +98,7 @@ fn focus_editor(editor_id int) tea.Cmd {
 fn unfocus_editor(editor_id int) tea.Cmd {
 	return fn [editor_id] () tea.Msg {
 		return EditorModelMsg{
-			id: editor_id
+			id:  editor_id
 			msg: tea.BlurredMsg{}
 		}
 	}
@@ -125,7 +128,7 @@ struct DisplayErrorMsg {
 
 fn display_error(error string) tea.Cmd {
 	return fn [error] () tea.Msg {
-		return DisplayErrorMsg { error }
+		return DisplayErrorMsg{error}
 	}
 }
 
@@ -163,7 +166,7 @@ fn pwd_git_branch_name(branch_name string) tea.Cmd {
 
 fn resolve_git_branch_name(execute fn (cmd string) os.Result) string {
 	$if darwin {
-		return "(not supported on macos)"
+		return '(not supported on macos)'
 	}
 	prefix := '\uE0A0'
 	wt := spawn currently_in_worktree(execute)
@@ -221,13 +224,11 @@ fn (mut m EditorWorkspaceModel) update_dialog(msg tea.Msg) (?tea.Model, ?tea.Cmd
 	}
 
 	if mut open_model := m.dialog_model {
-		intercepted_msg := if msg is tea.ResizedMsg && mut open_model is FilePickerModel { tea.Msg(
-			// force forward a 80% of the actual window size down to moddal model
-			tea.ResizedMsg{
-				window_width: int(f64(msg.window_width) * 0.8)
+		// force forward a 80% of the actual window size down to moddal model
+		intercepted_msg := if msg is tea.ResizedMsg && mut open_model is FilePickerModel { tea.Msg(tea.ResizedMsg{
+				window_width:  int(f64(msg.window_width) * 0.8)
 				window_height: int(f64(msg.window_height) * 0.8)
-			}
-		) } else { msg }
+			}) } else { msg }
 
 		d, cmd := open_model.update(intercepted_msg)
 		if d is DebuggableModel {
@@ -263,7 +264,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						match m.leader_suffix {
 							'ff' {
 								cmds << switch_mode(.normal)
-								cmds << open_file_picker
+								cmds << open_file_picker(m.theme)
 							}
 							else {}
 						}
@@ -303,16 +304,16 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				match msg.k_type {
 					.special {
 						match msg.string() {
-							"escape" {
+							'escape' {
 								cmds << hide_error
 							}
-							"ctrl+b" {
+							'ctrl+b' {
 								cmds << switch_mode(.navigation)
 							}
-							"ctrl+w+h" {
+							'ctrl+w+h' {
 								cmds << switch_active_split(.left)
 							}
-							"ctrl+w+l" {
+							'ctrl+w+l' {
 								cmds << switch_active_split(.right)
 							}
 							else {}
@@ -364,8 +365,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			cmds << query_pwd_git_branch
 		}
 		CheckIfTMUXWrappedMsg {
-			m.tmux_wrapped = os.getenv("TMUX").len > 0
-			assert m.tmux_wrapped
+			m.tmux_wrapped = os.getenv('TMUX').len > 0
 		}
 		OpenDialogMsg {
 			mut d_model := msg.model
@@ -398,17 +398,13 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				cmds << u_cmd
 			}
 
-			cmds << tea.sequence(
-				focus_editor(editor_id),
-				toggle_editor_show_border(editor_id, false),
-				query_editor_data(editor_id),
-				query_pwd_git_branch
-			)
-			cmds << debug_log("opened file ${msg.file_path} into model of id ${editor_id}")
+			cmds << tea.sequence(focus_editor(editor_id), toggle_editor_show_border(editor_id,
+				false), query_editor_data(editor_id), query_pwd_git_branch)
+			cmds << debug_log('opened file ${msg.file_path} into model of id ${editor_id}')
 		}
 		VerticalSplitMsg {
 			if info := m.split_tree.get_active_editor() {
-				old_id := info.id  // get the old ID before inserting
+				old_id := info.id // get the old ID before inserting
 				new_id := m.next_editor_id()
 				mut new_editor := EditorModel.new(new_id, info.file_path)
 				if init_cmd := new_editor.init() {
@@ -421,14 +417,9 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				// sync active_editor_id with split_tree
 				m.active_editor_id = m.split_tree.active_editor_id
 
-				cmds << tea.sequence(
-					unfocus_editor(old_id),
-					toggle_editor_show_border(m.split_tree.get_leftmost_id(), false),
-					focus_editor(new_id),
-					query_editor_data(new_id),
-					query_pwd_git_branch,
-					tea.emit_resize
-				)
+				cmds << tea.sequence(unfocus_editor(old_id), toggle_editor_show_border(m.split_tree.get_leftmost_id(),
+					false), focus_editor(new_id), query_editor_data(new_id), query_pwd_git_branch,
+					tea.emit_resize)
 			}
 		}
 		CloseActiveSplitMsg {
@@ -441,13 +432,9 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					cmds << tea.quit
 				} else {
 					// focus the new active editor
-					cmds << tea.sequence(
-						focus_editor(m.active_editor_id),
-						toggle_editor_show_border(m.split_tree.get_leftmost_id(), false),
-						query_editor_data(m.active_editor_id),
-						query_pwd_git_branch,
-						tea.emit_resize
-					)
+					cmds << tea.sequence(focus_editor(m.active_editor_id), toggle_editor_show_border(m.split_tree.get_leftmost_id(),
+						false), query_editor_data(m.active_editor_id), query_pwd_git_branch,
+						tea.emit_resize)
 				}
 			}
 		}
@@ -465,12 +452,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							new_id := m.split_tree.active_editor_id
 							m.active_editor_id = new_id
 
-							cmds << tea.sequence(
-								unfocus_editor(old_id),
-								focus_editor(new_id),
-								query_editor_data(new_id),
-								query_pwd_git_branch
-							)
+							cmds << tea.sequence(unfocus_editor(old_id), focus_editor(new_id),
+								query_editor_data(new_id), query_pwd_git_branch)
 						}
 					} else {
 						if m.tmux_wrapped {
@@ -489,12 +472,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							new_id := m.split_tree.active_editor_id
 							m.active_editor_id = new_id
 
-							cmds << tea.sequence(
-								unfocus_editor(old_id),
-								focus_editor(new_id),
-								query_editor_data(new_id),
-								query_pwd_git_branch
-							)
+							cmds << tea.sequence(unfocus_editor(old_id), focus_editor(new_id),
+								query_editor_data(new_id), query_pwd_git_branch)
 						}
 					} else {
 						if m.tmux_wrapped {
@@ -512,11 +491,11 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		CommandMsg {
 			match msg.command {
-				"q"       { cmds << close_active_split }
-				"qa"      { cmds << tea.quit }
-				"debug"   { cmds << toggle_debug_screen }
-				"version" { cmds << open_version_dialog }
-				"vs"      { cmds << split_vertically }
+				'q' { cmds << close_active_split }
+				'qa' { cmds << tea.quit }
+				'debug' { cmds << toggle_debug_screen }
+				'version' { cmds << open_version_dialog(m.theme) }
+				'vs' { cmds << split_vertically }
 				else { cmds << raise_error("unknown command '${msg.command}'") }
 			}
 		}
@@ -572,17 +551,17 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 
 fn (m EditorWorkspaceModel) view(mut ctx tea.Context) {
 	editor_area_height := ctx.window_height() - 2
-	ctx.set_clip_area(tea.ClipArea{ 0, 0, ctx.window_width(), editor_area_height })
+	ctx.set_clip_area(tea.ClipArea{0, 0, ctx.window_width(), editor_area_height})
 	layout := m.split_tree.get_layout(ctx.window_width(), editor_area_height)
 	for rect in layout {
 		if mut editor := m.editors[rect.editor_id] {
 			// set clip area for this specific split
-			ctx.set_clip_area(tea.ClipArea{ rect.x, rect.y, rect.width, rect.height })
+			ctx.set_clip_area(tea.ClipArea{rect.x, rect.y, rect.width, rect.height})
 
 			offset_id := ctx.push_offset(tea.Offset{ x: rect.x, y: rect.y })
 
 			resized, _ := editor.update(tea.ResizedMsg{
-				window_width: rect.width
+				window_width:  rect.width
 				window_height: rect.height
 			})
 			if resized is DebuggableModel {
@@ -591,19 +570,17 @@ fn (m EditorWorkspaceModel) view(mut ctx tea.Context) {
 			}
 
 			ctx.clear_offsets_from(offset_id)
-			ctx.clear_clip_area()  // clear after each split
+			ctx.clear_clip_area() // clear after each split
 		}
 	}
 
 	m.render_status_bar(mut ctx)
 
 	if mut open_model := m.dialog_model {
-		id := ctx.push_offset(
-			tea.Offset{
-				x: int(f64(ctx.window_width() / 2)) - int(f64(open_model.width() / 2))
-				y: int (f64(ctx.window_height() / 2)) - int(f64(open_model.height() / 2))
-			}
-		)
+		id := ctx.push_offset(tea.Offset{
+			x: int(f64(ctx.window_width() / 2)) - int(f64(open_model.width() / 2))
+			y: int(f64(ctx.window_height() / 2)) - int(f64(open_model.height() / 2))
+		})
 		defer { ctx.clear_offsets_from(id) }
 
 		open_model.view(mut ctx)
@@ -611,7 +588,7 @@ fn (m EditorWorkspaceModel) view(mut ctx tea.Context) {
 }
 
 fn (m EditorWorkspaceModel) render_status_bar(mut ctx tea.Context) {
-	ctx.set_bg_color(palette.status_bar_bg_color)
+	ctx.set_bg_color(m.theme.status_bar_spacer)
 	ctx.draw_rect(0, ctx.window_height() - 2, ctx.window_width(), 1)
 	ctx.reset_bg_color()
 
@@ -623,64 +600,67 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 	status_bar_offset := ctx.push_offset(tea.Offset{ y: ctx.window_height() - 2 })
 	defer { ctx.clear_offsets_from(status_bar_offset) }
 
-	ctx.set_color(m.mode.color())
+	mode_color := m.mode.color(m.theme)
+	ctx.set_color(mode_color)
 	ctx.draw_text(0, 0, '${glyphs.left_rounded}${glyphs.block}')
 	ctx.reset_color()
 	blocks_offset := ctx.push_offset(tea.Offset{ x: 2 })
 
 	mode_label := m.mode.str()
 	ctx.set_color(palette.matte_black_fg_color)
-	ctx.set_bg_color(m.mode.color())
+	ctx.set_bg_color(mode_color)
 	ctx.draw_text(0, 0, mode_label)
 	ctx.reset_bg_color()
 	ctx.reset_color()
 
 	ctx.push_offset(tea.Offset{ x: tea.visible_len(mode_label) })
 
-	ctx.set_color(m.mode.color())
+	ctx.set_color(mode_color)
 	ctx.draw_text(0, 0, '${glyphs.block}${glyphs.slant_right_flat_bottom}')
 	ctx.reset_color()
 	ctx.push_offset(tea.Offset{ x: 2 })
 
-	ctx.set_color(palette.status_file_name_bg_color)
+	file_name_bg_color := m.theme.status_file_name
+	ctx.set_color(file_name_bg_color)
 	ctx.draw_text(0, 0, '${glyphs.slant_left_flat_top}${glyphs.block}')
 	ctx.reset_color()
 	ctx.push_offset(tea.Offset{ x: 2 })
 
 	file_name_label := m.active_file_name()
-	ctx.set_color(palette.fg_color(palette.status_file_name_bg_color))
-	ctx.set_bg_color(palette.status_file_name_bg_color)
+	ctx.set_color(palette.fg_color(file_name_bg_color))
+	ctx.set_bg_color(file_name_bg_color)
 	ctx.draw_text(0, 0, file_name_label)
 	ctx.reset_bg_color()
 	ctx.reset_color()
 
 	ctx.push_offset(tea.Offset{ x: tea.visible_len(file_name_label) })
 
-	ctx.set_color(palette.status_file_name_bg_color)
+	ctx.set_color(file_name_bg_color)
 	ctx.draw_text(0, 0, '${glyphs.block}${glyphs.slant_right_flat_bottom}')
 	ctx.reset_color()
 	ctx.push_offset(tea.Offset{ x: 2 })
 
-	ctx.set_color(palette.status_branch_name_bg_color)
+	branch_name_bg_color := m.theme.status_branch_name
+	ctx.set_color(branch_name_bg_color)
 	ctx.draw_text(0, 0, '${glyphs.slant_left_flat_top}${glyphs.block}')
 	ctx.reset_color()
 	ctx.push_offset(tea.Offset{ x: 2 })
 
 	branch_name_label := m.active_branch_name()
-	ctx.set_color(palette.matte_white_fg_color)
-	ctx.set_bg_color(palette.status_branch_name_bg_color)
+	ctx.set_color(palette.fg_color(branch_name_bg_color))
+	ctx.set_bg_color(branch_name_bg_color)
 	ctx.draw_text(0, 0, branch_name_label)
 	ctx.reset_bg_color()
 	ctx.reset_color()
 
 	ctx.push_offset(tea.Offset{ x: tea.visible_len(branch_name_label) })
 
-	ctx.set_color(palette.status_branch_name_bg_color)
+	ctx.set_color(branch_name_bg_color)
 	ctx.draw_text(-1, 0, '${glyphs.block}${glyphs.slant_right_flat_bottom}')
 	ctx.reset_color()
 
 	// status bar spacer left end cap
-	ctx.set_color(palette.status_bar_bg_color)
+	ctx.set_color(m.theme.status_bar_spacer)
 	ctx.draw_text(1, 0, glyphs.slant_left_flat_top)
 	ctx.reset_color()
 	//
@@ -692,7 +672,7 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 	ctx.push_offset(tea.Offset{ x: cursor_pos_segment_start })
 
 	// status bar spacer right end cap
-	ctx.set_color(palette.status_bar_bg_color)
+	ctx.set_color(m.theme.status_bar_spacer)
 	ctx.draw_text(-1, 0, glyphs.slant_right_flat_top)
 	ctx.reset_color()
 	//
@@ -764,14 +744,18 @@ fn (m EditorWorkspaceModel) debug_data() DebugData {
 	return DebugData{
 		name: 'editor_workspace data'
 		data: {
-			'initial file path':  m.initial_file_path
+			'initial file path': m.initial_file_path
 		}
 	}
 }
 
-fn (m EditorWorkspaceModel) width() int { return 0 }
+fn (m EditorWorkspaceModel) width() int {
+	return 0
+}
 
-fn (m EditorWorkspaceModel) height() int { return 0 }
+fn (m EditorWorkspaceModel) height() int {
+	return 0
+}
 
 fn (mut m EditorWorkspaceModel) clone() tea.Model {
 	return EditorWorkspaceModel{
