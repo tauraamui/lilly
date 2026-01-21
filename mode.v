@@ -2,6 +2,7 @@ module main
 
 import tauraamui.bobatea as tea
 import palette
+import theme
 
 enum Mode as u8 {
 	normal
@@ -13,15 +14,15 @@ enum Mode as u8 {
 	navigation
 }
 
-fn (m Mode) color() tea.Color {
+fn (m Mode) color(ttheme theme.Theme) tea.Color {
 	return match m {
-		.normal { palette.status_green }
-		.leader { palette.status_purple }
-		.command { palette.status_cyan }
-		.insert { palette.status_orange }
-		.visual { palette.status_lilac }
-		.visual_line { palette.status_lilac }
-		.navigation { palette.status_cyan }
+		.normal { ttheme.status_green }
+		.leader { ttheme.status_purple }
+		.command { ttheme.status_cyan }
+		.insert { ttheme.status_orange }
+		.visual { ttheme.status_lilac }
+		.visual_line { ttheme.status_lilac }
+		.navigation { ttheme.status_cyan }
 	}
 }
 

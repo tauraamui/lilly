@@ -600,21 +600,22 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 	status_bar_offset := ctx.push_offset(tea.Offset{ y: ctx.window_height() - 2 })
 	defer { ctx.clear_offsets_from(status_bar_offset) }
 
-	ctx.set_color(m.mode.color())
+	mode_color := m.mode.color(m.theme)
+	ctx.set_color(mode_color)
 	ctx.draw_text(0, 0, '${glyphs.left_rounded}${glyphs.block}')
 	ctx.reset_color()
 	blocks_offset := ctx.push_offset(tea.Offset{ x: 2 })
 
 	mode_label := m.mode.str()
 	ctx.set_color(palette.matte_black_fg_color)
-	ctx.set_bg_color(m.mode.color())
+	ctx.set_bg_color(mode_color)
 	ctx.draw_text(0, 0, mode_label)
 	ctx.reset_bg_color()
 	ctx.reset_color()
 
 	ctx.push_offset(tea.Offset{ x: tea.visible_len(mode_label) })
 
-	ctx.set_color(m.mode.color())
+	ctx.set_color(mode_color)
 	ctx.draw_text(0, 0, '${glyphs.block}${glyphs.slant_right_flat_bottom}')
 	ctx.reset_color()
 	ctx.push_offset(tea.Offset{ x: 2 })
