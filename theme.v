@@ -20,6 +20,11 @@ pub:
 	status_branch_name tea.Color @[required]
 	status_bar_spacer  tea.Color @[required]
 
+	status_green       tea.Color @[required]
+	status_purple      tea.Color @[required]
+	status_cyan        tea.Color @[required]
+	status_orange      tea.Color @[required]
+	status_lilac       tea.Color @[required]
 }
 
 const dark_petal_pink = tea.Color.ansi(219)
@@ -37,6 +42,12 @@ pub const dark_theme = Theme{
 	status_file_name:  tea.Color.ansi(239)
 	status_bar_spacer: tea.Color.ansi(234)
 	status_branch_name: dark_petal_pink
+
+	status_green: tea.Color.ansi(120)
+	status_purple: tea.Color.ansi(105)
+	status_cyan: tea.Color.ansi(117)
+	status_orange: tea.Color.ansi(222)
+	status_lilac: tea.Color.ansi(134)
 }
 
 const light_petal_pink = tea.Color.ansi(200)
@@ -55,5 +66,11 @@ pub const light_theme = Theme{
 	status_file_name:  tea.Color.ansi(242)
 	status_bar_spacer: tea.Color.ansi(255)
 	status_branch_name: tea.Color.ansi(219)
+
+	status_green: tea.Color.ansi(120)
+	status_purple: tea.Color.ansi(105)
+	status_cyan: tea.Color.ansi(117)
+	status_orange: tea.Color.ansi(222)
+	status_lilac: tea.Color.ansi(134)
 }
 
