@@ -1,6 +1,7 @@
 module buffers
 
 pub struct GapBuffer {
+mut:
 	data      []rune
 	gap_start u32
 	gap_size  u32
@@ -20,6 +21,9 @@ pub fn GapBuffer.new(content []rune) GapBuffer {
 }
 
 pub fn (mut g GapBuffer) insert(data []rune) {
+	for i, c in data {
+		g.data[int(g.gap_start + g.gap_size) + i] = c
+	}
 }
 
 pub fn (g GapBuffer) content() string {
