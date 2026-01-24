@@ -34,3 +34,7 @@ pub fn (g GapBuffer) raw_content() []rune {
 	return g.data
 }
 
+fn null_code_point_to_str(c rune) rune {
+	return if c == null_code_point { `_` } else { c }
+}
+
