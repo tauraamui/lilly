@@ -30,3 +30,7 @@ pub fn (g GapBuffer) content() string {
 	return g.data[g.gap_start + g.gap_size..].string()
 }
 
+pub fn (g GapBuffer) raw_content() []rune {
+	return g.data
+}
+
