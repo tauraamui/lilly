@@ -1,29 +1,36 @@
 module buffers
 
 fn test_initialise_gap_buffer_with_no_contents() {
-	gb := GapBuffer.new(''.runes())
+	gb := GapBuffer.new(content: ''.runes())
 	assert gb.content() == ''
 	assert gb.raw_content().map(null_code_point_to_str).string() == `_`.repeat(initial_gap_size)
 }
 
 fn test_initialise_gap_buffer_with_content() {
-	gb := GapBuffer.new('abcdef'.runes())
+	gb := GapBuffer.new(content: 'abcdef'.runes())
 	assert gb.content() == 'abcdef'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '${`_`.repeat(initial_gap_size)}abcdef'
 }
 
 fn test_insert_char_into_gap_buffer_with_no_existing_content() {
-	mut gb := GapBuffer.new(''.runes())
+	mut gb := GapBuffer.new(content: ''.runes())
 	gb.insert_char(`z`)
 	assert gb.content() == 'z'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'z${`_`.repeat(initial_gap_size - 1)}'
 }
 
 fn test_insert_char_into_gap_buffer_with_existing_content() {
-	mut gb := GapBuffer.new('abcdef'.runes())
+	mut gb := GapBuffer.new(content: 'abcdef'.runes())
 	gb.insert_char(`z`)
 	assert gb.content() == 'zabcdef'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'z${`_`.repeat(initial_gap_size - 1)}abcdef'
+}
+
+fn test_insert_char_into_gap_buffer_with_existing_content_with_custom_gap_size() {
+	mut gb := GapBuffer.new(content: 'abcdef'.runes(), gap_size: 3)
+	gb.insert_char(`z`)
+	assert gb.content() == 'zabcdef'
+	assert gb.raw_content().map(null_code_point_to_str).string() == 'z__abcdef'
 }
 
 
