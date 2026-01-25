@@ -10,13 +10,19 @@ mut:
 const null_code_point = rune(0xfeff)
 const initial_gap_size = 32
 
-pub fn GapBuffer.new(content []rune) GapBuffer {
+@[params]
+pub struct GapBufferParams {
+	content []rune
+	gap_size        u32 = initial_gap_size
+}
+
+pub fn GapBuffer.new(opts GapBufferParams) GapBuffer {
 	mut gb := GapBuffer{
-		data: []rune{ len: content.len + initial_gap_size, init: null_code_point }
+		data: []rune{ len: opts.content.len + int(opts.gap_size), init: null_code_point }
 		gap_start: 0
-		gap_end: initial_gap_size
+		gap_end: opts.gap_size
 	}
-	gb.initial_fill(content)
+	gb.initial_fill(opts.content)
 	return gb
 }
 
