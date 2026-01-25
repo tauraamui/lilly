@@ -12,3 +12,18 @@ fn test_initialise_gap_buffer_with_content() {
 	assert gb.raw_content().map(null_code_point_to_str).string() == '${`_`.repeat(initial_gap_size)}abcdef'
 }
 
+fn test_insert_char_into_gap_buffer_with_no_existing_content() {
+	mut gb := GapBuffer.new(''.runes())
+	gb.insert_char(`z`)
+	assert gb.content() == 'z'
+	assert gb.raw_content().map(null_code_point_to_str).string() == 'z${`_`.repeat(initial_gap_size - 1)}'
+}
+
+fn test_insert_char_into_gap_buffer_with_existing_content() {
+	mut gb := GapBuffer.new('abcdef'.runes())
+	gb.insert_char(`z`)
+	assert gb.content() == 'zabcdef'
+	assert gb.raw_content().map(null_code_point_to_str).string() == 'z${`_`.repeat(initial_gap_size - 1)}abcdef'
+}
+
+
