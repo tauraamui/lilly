@@ -82,13 +82,17 @@ pub fn (mut g GapBuffer) insert_char(data rune) {
 	g.gap_start += 1
 }
 
-pub fn (g GapBuffer) content() string {
+pub fn (g GapBuffer) iter() LineIterator {
+	return LineIterator.new(g.data)
+}
+
+fn (g GapBuffer) content() string {
 	pre_gap := g.data[..g.gap_start]
 	post_gap := g.data[g.gap_end..]
 	return pre_gap.string() + post_gap.string()
 }
 
-pub fn (g GapBuffer) raw_content() []rune {
+fn (g GapBuffer) raw_content() []rune {
 	return g.data
 }
 
