@@ -85,3 +85,26 @@ fn test_insert_char_into_gap_buffer_with_existing_content_overflow_gap_grows_gap
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'z123456__abcdef'
 }
 
+@[assert_continues]
+fn test_move_gap_buffer_simplest_case() {
+	mut gb := GapBuffer.new(content: 'abcdefghijk'.runes(), gap_size: 3)
+	assert gb.content() == 'abcdefghijk'
+	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
+
+	gb.move_gap(1)
+	assert gb.content() == 'abcdefghijk'
+	assert gb.raw_content().map(null_code_point_to_str).string() == 'a___bcdefghijk'
+}
+
+@[assert_continues]
+fn test_move_gap_buffer_to_middle() {
+	mut gb := GapBuffer.new(content: 'abcdefghijk'.runes(), gap_size: 3)
+	assert gb.content() == 'abcdefghijk'
+	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
+
+	gb.move_gap(5)
+	assert gb.content() == 'abcdefghijk'
+	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcde___fghijk'
+}
+
+
