@@ -3,6 +3,7 @@ module main
 import os
 import tauraamui.bobatea as tea
 import palette
+import documents
 
 struct ModelCursorPos {
 	x int
@@ -71,7 +72,7 @@ mut:
 	width  int
 	height int
 
-	lines []string
+	doc_ref &documents.Document
 }
 
 struct OpenEditorMsg {
@@ -105,16 +106,12 @@ fn editor_data(data EditorData) tea.Cmd {
 	}
 }
 
-fn EditorModel.new(id int, file_path string) EditorModel {
+fn EditorModel.new(id int, file_path string, doc &documents.Document) EditorModel {
 	assert file_path.len != 0
 	return EditorModel{
 		id:        id
 		file_path: file_path
-		lines:     if content := os.read_lines(file_path) {
-			content
-		} else {
-			[]string{len: 150, init: 'This is a line of random text'}
-		}
+		doc_ref: doc
 	}
 }
 
@@ -235,8 +232,10 @@ fn (m EditorModel) view(mut ctx tea.Context) {
 		ctx.push_offset(tea.Offset{ x: 1 })
 	}
 
-	for y, l in m.lines {
-		ctx.draw_text(0, y, l.replace('\t', '    '))
+	if m.doc_ref != unsafe { nil } {
+		for y, l in m.doc_ref.iter() {
+			ctx.draw_text(0, y, l.string().replace('\t', '    '))
+		}
 	}
 
 	if m.focused {
