@@ -145,3 +145,34 @@ fn test_move_gap_buffer_to_middle_end_and_back() {
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
 }
 
+@[assert_continues]
+fn test_move_gap_buffer_to_middle_and_back_alongside_inserts() {
+	mut gb := GapBuffer.new(content: 'abcdefghijk'.runes(), gap_size: 3)
+	assert gb.content() == 'abcdefghijk'
+	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
+
+	gb.move_gap(5)
+	gb.insert_char(`1`)
+	assert gb.content() == 'abcde1fghijk'
+	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcde1__fghijk'
+
+	gb.move_gap(0)
+	gb.insert_char(`2`)
+	assert gb.content() == '2abcde1fghijk'
+	assert gb.raw_content().map(null_code_point_to_str).string() == '2_abcde1fghijk'
+
+	gb.move_gap(gb.content().runes().len)
+	gb.insert_char(`3`)
+	assert gb.content() == '2abcde1fghijk3'
+	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcde1fghijk3'
+
+	gb.insert_char(`4`)
+	assert gb.content() == '2abcde1fghijk34'
+	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcde1fghijk34__'
+
+	gb.move_gap(5)
+	gb.insert_char(`5`)
+	assert gb.content() == '2abcd5e1fghijk34'
+	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcd5_e1fghijk34'
+}
+
