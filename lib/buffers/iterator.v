@@ -11,21 +11,22 @@ pub fn LineIterator.new(data_ref []rune) LineIterator {
 }
 
 fn (mut iter LineIterator) next() ?[]rune {
+	if iter.idx >= iter.data_ref.len { return none }
+
 	for i in iter.idx..iter.data_ref.len {
+		defer { iter.idx = i + 1 }
+
 		if iter.data_ref[i] == `\n` {
-			defer { iter.idx = i + 1 }
 			return iter.data_ref[iter.idx..i]
 		}
 	}
 
+	// no newline was found at all, return all data
 	if iter.idx == 0 {
 		return iter.data_ref
 	}
 
-	if iter.idx > 0 {
-		return iter.data_ref[iter.idx..]
-	}
-
-	return none
+	// between the last found newline and end of the data
+	return iter.data_ref[iter.idx..]
 }
 
