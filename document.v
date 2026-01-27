@@ -8,6 +8,7 @@ pub struct Document {
 }
 
 pub fn Document.new(file_path string) !Document {
+	return error("not implemented")
 }
 
 pub fn (d Document) iter() LineIterator {
