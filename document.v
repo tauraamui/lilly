@@ -18,6 +18,10 @@ pub fn (mut c Controller) open_document(file_path string) !int {
 	return 0
 }
 
+pub fn (mut c Controller) insert_char(doc_id int, data rune) {
+	c.docs[0].insert_char(data)
+}
+
 pub fn (c Controller) get_iterator(doc_id int) LineIterator {
 	return c.docs[0].iter()
 }
@@ -28,6 +32,7 @@ pub fn (mut c Controller) free() {
 
 @[heap]
 pub struct Document {
+mut:
 	data buffers.GapBuffer
 }
 
@@ -35,6 +40,10 @@ fn Document.new(file_path string) !Document {
 	return Document{
 		data: buffers.GapBuffer.new(content: (iconv.read_file_encoding(file_path, "UTF-8") or { return error("failed to read file ${file_path}: ${err}") }).runes())
 	}
+}
+
+fn (mut d Document) insert_char(c rune) {
+	d.data.insert_char(c)
 }
 
 pub fn (d Document) iter() LineIterator {

@@ -61,9 +61,8 @@ struct EditorData {
 }
 
 struct EditorModel {
-	id        int
+	id     int
 	doc_id int
-	doc_controller &documents.Controller
 
 	file_path string
 mut:
@@ -73,6 +72,8 @@ mut:
 
 	width  int
 	height int
+
+	doc_controller &documents.Controller
 }
 
 struct OpenEditorMsg {
@@ -148,6 +149,14 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 
 	if msg is tea.KeyMsg && m.focused {
 		match msg.k_type {
+			.special {
+				match msg.string() {
+					'enter' {
+						m.doc_controller.insert_char(m.doc_id, `\n`)
+					}
+					else {}
+				}
+			}
 			.runes {
 				match msg.string() {
 					'j' {
@@ -158,10 +167,11 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						cmds << move_cursor_up
 						return m.clone(), tea.batch_array(cmds)
 					}
-					else {}
+					else {
+						m.doc_controller.insert_char(m.doc_id, msg.string().runes()[0])
+					}
 				}
 			}
-			else {}
 		}
 	}
 
