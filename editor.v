@@ -214,7 +214,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 const active_editor_border_color = palette.petal_pink_color
 const inactive_editor_border_color = palette.status_dark_lilac
 
-fn (m EditorModel) view(mut ctx tea.Context) {
+fn (mut m EditorModel) view(mut ctx tea.Context) {
 	ctx.set_clip_area(tea.ClipArea{0, 0, m.width, m.height})
 	defer { ctx.clear_clip_area() }
 
@@ -266,6 +266,7 @@ fn (m EditorModel) data() EditorData {
 	return EditorData{
 		id:         m.id
 		file_path:  m.file_path
+
 		cursor_row: m.cursor_pos.y
 		cursor_col: m.cursor_pos.x
 	}

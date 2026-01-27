@@ -26,6 +26,7 @@ mut:
 	split_tree boba.SplitTree
 	editors    map[int]DebuggableModel
 
+	active_document    documents.Document
 	active_editor_data ?EditorData
 	branch_name        string
 	leader_suffix      string
@@ -381,7 +382,13 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		OpenEditorMsg {
 			editor_id := m.next_editor_id()
-			mut e_model := EditorModel.new(editor_id, msg.file_path, unsafe { nil })
+
+			doc := documents.Document.new(msg.file_path) or {
+				cmds << debug_log('failed to open document ${msg.file_path}: ${err}')
+				return m.clone(), tea.batch_array(cmds)
+			}
+			m.active_document = doc
+			mut e_model := EditorModel.new(editor_id, msg.file_path, &m.active_document)
 			cmd := e_model.init()
 
 			if m.split_tree.is_empty() {

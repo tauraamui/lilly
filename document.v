@@ -1,5 +1,6 @@
 module documents
 
+import encoding.iconv
 import lib.buffers
 
 @[heap]
@@ -8,7 +9,9 @@ pub struct Document {
 }
 
 pub fn Document.new(file_path string) !Document {
-	return error("not implemented")
+	return Document{
+		data: buffers.GapBuffer.new(content: (iconv.read_file_encoding(file_path, "UTF-8") or { return error("failed to read file ${file_path}: ${err}") }).runes())
+	}
 }
 
 pub fn (d Document) iter() LineIterator {

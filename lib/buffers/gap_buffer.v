@@ -15,7 +15,8 @@ const initial_gap_size = u32(32)
 
 @[params]
 pub struct GapBufferParams {
-	content  []rune
+pub:
+	content     []rune
 	gap_size u32 = initial_gap_size
 }
 
