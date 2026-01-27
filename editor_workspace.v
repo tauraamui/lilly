@@ -26,6 +26,7 @@ mut:
 	split_tree boba.SplitTree
 	editors    map[int]DebuggableModel
 
+	doc_controller     &documents.Controller
 	active_document    documents.Document
 	active_editor_data ?EditorData
 	branch_name        string
@@ -55,11 +56,12 @@ fn open_editor_workspace(initial_file_path string) tea.Cmd {
 	}
 }
 
-fn EditorWorkspaceModel.new(ttheme theme.Theme, initial_file_path string) EditorWorkspaceModel {
+fn EditorWorkspaceModel.new(ttheme theme.Theme, initial_file_path string, doc_controller &documents.Controller) EditorWorkspaceModel {
 	return EditorWorkspaceModel{
 		theme:             ttheme
 		initial_file_path: initial_file_path
 		split_tree:        boba.SplitTree.new()
+		doc_controller:    doc_controller
 	}
 }
 
@@ -383,16 +385,16 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		OpenEditorMsg {
 			editor_id := m.next_editor_id()
 
-			doc := documents.Document.new(msg.file_path) or {
+			doc_id := m.doc_controller.open_document(msg.file_path) or {
 				cmds << debug_log('failed to open document ${msg.file_path}: ${err}')
 				return m.clone(), tea.batch_array(cmds)
 			}
-			m.active_document = doc
-			mut e_model := EditorModel.new(editor_id, msg.file_path, &m.active_document)
+
+			mut e_model := EditorModel.new(editor_id, msg.file_path, doc_id, m.doc_controller)
 			cmd := e_model.init()
 
 			if m.split_tree.is_empty() {
-				m.split_tree.init_with_editor(editor_id, msg.file_path)
+				m.split_tree.init_with_editor(editor_id, msg.file_path, doc_id)
 			} else {
 				old_id := m.split_tree.active_editor_id
 				m.split_tree.replace_active_editor(editor_id, msg.file_path)
@@ -414,7 +416,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			if info := m.split_tree.get_active_editor() {
 				old_id := info.id // get the old ID before inserting
 				new_id := m.next_editor_id()
-				mut new_editor := EditorModel.new(new_id, info.file_path, unsafe { nil })
+				mut new_editor := EditorModel.new(new_id, info.file_path, info.doc_id, m.doc_controller)
 				if init_cmd := new_editor.init() {
 					cmds << init_cmd
 				}

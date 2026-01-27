@@ -5,6 +5,7 @@ pub type SplitNode = EditorLeaf | SplitContainer
 pub struct EditorLeaf {
 pub mut:
 	editor_id int
+	doc_id    int
 	file_path string
 	user_data voidptr
 }
@@ -31,6 +32,7 @@ pub mut:
 pub struct EditorInfo {
 pub:
 	id        int
+	doc_id    int
 	file_path string
 }
 
@@ -41,9 +43,10 @@ pub fn SplitTree.new() SplitTree {
 	}
 }
 
-pub fn (mut t SplitTree) init_with_editor(id int, file_path string) {
+pub fn (mut t SplitTree) init_with_editor(id int, file_path string, doc_id int) {
 	t.root = EditorLeaf{
 		editor_id: id
+		doc_id: doc_id
 		file_path: file_path
 	}
 	t.active_editor_id = id
@@ -66,6 +69,7 @@ pub fn (t SplitTree) find_editor_by_id(node SplitNode, target_id int) ?EditorInf
 			if node.editor_id == target_id {
 				return EditorInfo{
 					id:        node.editor_id
+					doc_id:    node.doc_id
 					file_path: node.file_path
 				}
 			}

@@ -62,6 +62,9 @@ struct EditorData {
 
 struct EditorModel {
 	id        int
+	doc_id int
+	doc_controller &documents.Controller
+
 	file_path string
 mut:
 	focused     bool
@@ -70,8 +73,6 @@ mut:
 
 	width  int
 	height int
-
-	doc_ref &documents.Document
 }
 
 struct OpenEditorMsg {
@@ -105,12 +106,13 @@ fn editor_data(data EditorData) tea.Cmd {
 	}
 }
 
-fn EditorModel.new(id int, file_path string, doc &documents.Document) EditorModel {
+fn EditorModel.new(id int, file_path string, doc_id int, doc_controller &documents.Controller) EditorModel {
 	assert file_path.len != 0
 	return EditorModel{
 		id:        id
 		file_path: file_path
-		doc_ref: doc
+		doc_id: doc_id
+		doc_controller: doc_controller
 	}
 }
 
@@ -231,10 +233,8 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 		ctx.push_offset(tea.Offset{ x: 1 })
 	}
 
-	if m.doc_ref != unsafe { nil } {
-		for y, l in m.doc_ref.iter() {
-			ctx.draw_text(0, y, l.string().replace('\t', '    '))
-		}
+	for y, l in m.doc_controller.get_iterator(m.doc_id) {
+		ctx.draw_text(0, y, l.string().replace('\t', '    '))
 	}
 
 	if m.focused {

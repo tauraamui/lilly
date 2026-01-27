@@ -5,6 +5,7 @@ import tauraamui.bobatea as tea
 import theme
 import cfg
 import palette
+import documents
 
 const dot = '•'
 
@@ -21,12 +22,12 @@ mut:
 	last_resize_height      int
 }
 
-fn PetalModel.new(config cfg.Config) PetalModel {
+fn PetalModel.new(config cfg.Config, doc_controller &documents.Controller) PetalModel {
 	return PetalModel{
 		config:        config
 		theme:         config.theme
 		first_frame:   true
-		active_screen: SplashScreenModel.new(leader_key: config.leader_key, theme: config.theme)
+		active_screen: SplashScreenModel.new(leader_key: config.leader_key, theme: config.theme, doc_controller: doc_controller)
 	}
 }
 

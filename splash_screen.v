@@ -5,6 +5,7 @@ import os
 import tauraamui.bobatea as tea
 import palette
 import theme
+import documents
 
 const gitcommit_hash = $embed_file('.githash').to_string()
 
@@ -23,12 +24,14 @@ mut:
 struct SplashScreenOptions {
 	leader_key string
 	theme      theme.Theme
+	doc_controller &documents.Controller
 }
 
 struct SplashScreenModel {
 	leader_key string
 	logo       SplashLogo
 	theme      theme.Theme
+	doc_controller &documents.Controller
 mut:
 	tmux_wrapped bool
 	leader_mode  bool
@@ -43,6 +46,7 @@ fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
 		logo:       SplashLogo{
 			data: logo_contents.to_string().split_into_lines()
 		}
+		doc_controller: opts.doc_controller
 	}
 }
 
@@ -148,7 +152,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			cmds << open_editor_workspace(msg.file_path)
 		}
 		OpenEditorWorkspaceMsg {
-			mut workspace := EditorWorkspaceModel.new(m.theme, msg.initial_file_path)
+			mut workspace := EditorWorkspaceModel.new(m.theme, msg.initial_file_path, m.doc_controller)
 			cmd := workspace.init()
 			if u_cmd := cmd {
 				cmds << u_cmd
