@@ -84,7 +84,7 @@ pub fn (mut g GapBuffer) insert_char(data rune) {
 }
 
 pub fn (g GapBuffer) iter() LineIterator {
-	return LineIterator.new(g.data)
+	return LineIterator.new(g.data, int(g.gap_start), int(g.gap_end))
 }
 
 fn (g GapBuffer) content() string {
