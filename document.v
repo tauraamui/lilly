@@ -1,12 +1,15 @@
 module documents
 
+import math
 import encoding.iconv
 import lib.buffers
 
 @[heap]
 pub struct Controller {
 mut:
-	docs map[int]Document
+	loaded_files map[string]int
+	docs         map[int]Document
+	doc_id_count int
 }
 
 pub fn Controller.new() Controller {
@@ -14,20 +17,32 @@ pub fn Controller.new() Controller {
 }
 
 pub fn (mut c Controller) open_document(file_path string) !int {
-	c.docs[0] = Document.new(file_path)!
-	return 0
+	if existing_id := c.loaded_files[file_path] {
+		return existing_id
+	}
+	defer { c.doc_id_count += 1 }
+	id := hash_id(c.doc_id_count)
+	c.loaded_files[file_path] = id
+	c.docs[id] = Document.new(file_path)!
+	return id
 }
 
 pub fn (mut c Controller) insert_char(doc_id int, data rune) {
-	c.docs[0].insert_char(data)
+	c.docs[doc_id].insert_char(data)
 }
 
 pub fn (c Controller) get_iterator(doc_id int) LineIterator {
-	return c.docs[0].iter()
+	return c.docs[doc_id].iter()
 }
 
 pub fn (mut c Controller) free() {
 	unsafe { c.docs.free( )}
+}
+
+fn hash_id(id int) int {
+	// constant is from Knuth's multiplicative hash
+	hash := (id * 2654435761) % 1000000
+	return math.abs(hash)
 }
 
 @[heap]
