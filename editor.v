@@ -1,6 +1,5 @@
 module main
 
-import os
 import tauraamui.bobatea as tea
 import palette
 import documents
