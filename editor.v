@@ -177,39 +177,6 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 	}
 
-	// NOTE(tauraamui): disabled existing 'input handling' for now as this was intentionally
-	// designed to be temporary/non-extendable, whereas now we're at the point of needing a
-	// proper design for forwarding input msgs to editor model instances
-	/*
-	if msg is tea.KeyMsg && m.focused {
-		match msg.k_type {
-			.special {
-				match msg.string() {
-					'enter' {
-						m.doc_controller.insert_char(m.doc_id, `\n`)
-					}
-					else {}
-				}
-			}
-			.runes {
-				match msg.string() {
-					'j' {
-						cmds << move_cursor_down
-						return m.clone(), tea.batch_array(cmds)
-					}
-					'k' {
-						cmds << move_cursor_up
-						return m.clone(), tea.batch_array(cmds)
-					}
-					else {
-						m.doc_controller.insert_char(m.doc_id, msg.string().runes()[0])
-					}
-				}
-			}
-		}
-	}
-	*/
-
 	match msg {
 		tea.ResizedMsg {
 			m.width = msg.window_width
