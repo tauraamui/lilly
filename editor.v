@@ -127,24 +127,6 @@ struct EditorModelMsg {
 	mode Mode
 }
 
-// this is physically painful to implement, but it'll do for now
-struct EditorCursorDownMsg {
-	editor_id int
-}
-
-fn move_cursor_down() tea.Msg {
-	return EditorCursorDownMsg{}
-}
-
-// ugh - vom
-struct EditorCursorUpMsg {
-	editor_id int
-}
-
-fn move_cursor_up() tea.Msg {
-	return EditorCursorUpMsg{}
-}
-
 fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	mut cmds := []tea.Cmd{}
 
@@ -211,16 +193,6 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				if msg.show == false {
 					m.show_border = true
 				}
-			}
-		}
-		EditorCursorUpMsg {
-			if m.focused {
-				m.cursor_pos = m.cursor_pos.up()
-			}
-		}
-		EditorCursorDownMsg {
-			if m.focused {
-				m.cursor_pos = m.cursor_pos.down(m.height)
 			}
 		}
 		else {}
