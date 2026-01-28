@@ -570,6 +570,9 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					m.input_field.blur()
 				}
 			}
+			if u_cmd := m.forward_msg_to_editors(msg) {
+				cmds << u_cmd
+			}
 			return m.clone_with_mode(msg.mode), tea.batch_array(cmds)
 		}
 		tea.ResizedMsg {
@@ -579,20 +582,35 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			}
 			m.input_field = i_field
 		}
-		else {
-			for id, mut editor in m.editors {
-				e, cmd := editor.update(msg)
-				if e is DebuggableModel {
-					m.editors[id] = e
-				}
-				if u_cmd := cmd {
-					cmds << u_cmd
-				}
-			}
+		else {}
+	}
+
+	for id, mut editor in m.editors {
+		e, cmd := editor.update(msg)
+		if e is DebuggableModel {
+			m.editors[id] = e
+		}
+		if u_cmd := cmd {
+			cmds << u_cmd
 		}
 	}
 
 	return m.clone(), tea.batch_array(cmds)
+}
+
+fn (mut m EditorWorkspaceModel) forward_msg_to_editors(msg tea.Msg) ?tea.Cmd {
+	mut cmds := []tea.Cmd{}
+	for id, mut editor in m.editors {
+		e, cmd := editor.update(msg)
+		if e is DebuggableModel {
+			m.editors[id] = e
+		}
+		if u_cmd := cmd {
+			cmds << u_cmd
+		}
+	}
+
+	return tea.batch_array(cmds)
 }
 
 fn (m EditorWorkspaceModel) view(mut ctx tea.Context) {
