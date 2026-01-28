@@ -374,6 +374,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	}
 
 	match msg {
+		// NOTE(tauraamui): focus and blurred respectfully should be where we emit further necessary cmds for
+		// re-querying current git branch names and updating the debug screen's active editor data
 		tea.FocusedMsg {
 			cmds << query_pwd_git_branch
 		}
@@ -451,6 +453,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					cmds << tea.quit
 				} else {
 					// focus the new active editor
+					// TODO(tauraamui): the only cmd emission in this part should be just focus singularly, the "on focus detected",
+					// currently at the top of this match should be where these other cmds are invoked to avoid duplication
 					cmds << tea.sequence(focus_editor(m.active_editor_id), toggle_editor_show_border(m.split_tree.get_leftmost_id(),
 						false), query_editor_data(m.active_editor_id), query_pwd_git_branch,
 						tea.emit_resize)
