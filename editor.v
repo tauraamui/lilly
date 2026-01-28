@@ -9,8 +9,14 @@ struct ModelCursorPos {
 	y int
 }
 
-fn (c ModelCursorPos) up() ModelCursorPos {
-	yy := c.y - 1
+@[params]
+struct ModelCursorPosParams {
+	distance   int = 1
+	max_height int
+}
+
+fn (c ModelCursorPos) up(opts ModelCursorPosParams) ModelCursorPos {
+	yy := c.y - opts.distance
 	if yy < 0 {
 		return c
 	}
@@ -20,9 +26,9 @@ fn (c ModelCursorPos) up() ModelCursorPos {
 	}
 }
 
-fn (c ModelCursorPos) down(max int) ModelCursorPos {
-	yy := c.y + 1
-	if yy >= max {
+fn (c ModelCursorPos) down(opts ModelCursorPosParams) ModelCursorPos {
+	yy := c.y + opts.distance
+	if yy >= opts.max_height {
 		return c
 	}
 	return ModelCursorPos{
@@ -127,8 +133,49 @@ struct EditorModelMsg {
 	mode Mode
 }
 
+struct EditorModelKeyMsg {
+	key_msg  tea.KeyMsg
+	mode     Mode
+}
+
 fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	mut cmds := []tea.Cmd{}
+
+	if msg is EditorModelKeyMsg && m.focused {
+		match msg.mode {
+			.insert {
+				match msg.key_msg.k_type {
+					.runes {
+						char_runes := msg.key_msg.string().runes()
+						for cr in char_runes {
+							m.doc_controller.insert_char(m.doc_id, cr)
+						}
+					}
+					.special {
+						match msg.key_msg.string() {
+							'enter' { m.doc_controller.insert_char(m.doc_id, `\n`) }
+							else {}
+						}
+					}
+				}
+			}
+			.normal {
+				if msg.key_msg.k_type == .runes {
+					match msg.key_msg.string() {
+						'j' {
+							m.cursor_pos = m.cursor_pos.down(max_height: m.height)
+							assert m.cursor_pos.y > 0
+						}
+						'k' {
+							m.cursor_pos = m.cursor_pos.up()
+						}
+						else {}
+					}
+				}
+			}
+			else {}
+		}
+	}
 
 	// NOTE(tauraamui): disabled existing 'input handling' for now as this was intentionally
 	// designed to be temporary/non-extendable, whereas now we're at the point of needing a
