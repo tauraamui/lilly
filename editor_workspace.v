@@ -586,6 +586,10 @@ fn (m EditorWorkspaceModel) view(mut ctx tea.Context) {
 
 			offset_id := ctx.push_offset(tea.Offset{ x: rect.x, y: rect.y })
 
+			// FIXME(tauraamui): I hate this, need to find better way to propogate artifical sizes per rect
+			// <<note to self>>: set daily reminder that AI code has always led to the worst possible design
+			// decisions and caused nasty shit to pile up more than anything else, just like this. this is a
+			// prime example
 			resized, _ := editor.update(tea.ResizedMsg{
 				window_width:  rect.width
 				window_height: rect.height
