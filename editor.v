@@ -148,6 +148,10 @@ fn move_cursor_up() tea.Msg {
 fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	mut cmds := []tea.Cmd{}
 
+	// NOTE(tauraamui): disabled existing 'input handling' for now as this was intentionally
+	// designed to be temporary/non-extendable, whereas now we're at the point of needing a
+	// proper design for forwarding input msgs to editor model instances
+	/*
 	if msg is tea.KeyMsg && m.focused {
 		match msg.k_type {
 			.special {
@@ -175,6 +179,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			}
 		}
 	}
+	*/
 
 	match msg {
 		tea.ResizedMsg {
