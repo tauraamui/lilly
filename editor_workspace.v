@@ -340,9 +340,17 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							':' {
 								return m.clone(), switch_mode(.command)
 							}
+							'i' {
+								return m.clone(), switch_mode(.insert)
+							}
 							else {}
 						}
 					}
+				}
+			}
+			.insert {
+				if msg.k_type == .special && msg.string() == 'escape' {
+					return m.clone(), switch_mode(.normal)
 				}
 			}
 			.command {
@@ -370,6 +378,18 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				}
 			}
 			else {}
+		}
+		for id, mut editor in m.editors {
+			e, cmd := editor.update(EditorModelKeyMsg{
+				key_msg: msg
+				mode: m.mode
+			})
+			if e is DebuggableModel {
+				m.editors[id] = e
+			}
+			if u_cmd := cmd {
+				cmds << u_cmd
+			}
 		}
 	}
 
