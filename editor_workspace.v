@@ -27,7 +27,6 @@ mut:
 	editors    map[int]DebuggableModel
 
 	doc_controller     &documents.Controller
-	active_document    documents.Document
 	active_editor_data ?EditorData
 	branch_name        string
 	leader_suffix      string
