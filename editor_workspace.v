@@ -108,6 +108,16 @@ fn unfocus_editor(editor_id int) tea.Cmd {
 	}
 }
 
+fn forward_msg_to_editor(editor_id, msg tea.Msg, mode Mode) tea.Cmd {
+	return fn [editor_id, msg, mode] () tea.Msg {
+		return EditorModelMsg{
+			id: editor_id
+			msg: msg
+			mode: mode
+		}
+	}
+}
+
 struct ToggleEditorShowBorderMsg {
 	id   int
 	show bool

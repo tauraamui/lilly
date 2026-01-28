@@ -122,8 +122,9 @@ fn (mut m EditorModel) init() ?tea.Cmd {
 }
 
 struct EditorModelMsg {
-	id  int
-	msg tea.Msg
+	id   int
+	msg  tea.Msg
+	mode Mode
 }
 
 // this is physically painful to implement, but it'll do for now
