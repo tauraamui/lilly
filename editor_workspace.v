@@ -296,38 +296,38 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				match msg.k_type {
 					.special {
 						if msg.string() == 'escape' {
-							cmds << switch_mode(.normal)
+							return m.clone(), switch_mode(.normal)
 						}
 					}
 					.runes {
 						match msg.string() {
 							'h' {
-								cmds << switch_active_split(.left)
+								return m.clone(), switch_active_split(.left)
 							}
 							'l' {
-								cmds << switch_active_split(.right)
+								return m.clone(), switch_active_split(.right)
 							}
 							else {}
 						}
 					}
 				}
-				cmds << switch_mode(.normal)
+				return m.clone(), switch_mode(.normal)
 			}
 			.normal {
 				match msg.k_type {
 					.special {
 						match msg.string() {
 							'escape' {
-								cmds << hide_error
+								return m.clone(), hide_error
 							}
 							'ctrl+b' {
-								cmds << switch_mode(.navigation)
+								return m.clone(), switch_mode(.navigation)
 							}
 							'ctrl+w+h' {
-								cmds << switch_active_split(.left)
+								return m.clone(), switch_active_split(.left)
 							}
 							'ctrl+w+l' {
-								cmds << switch_active_split(.right)
+								return m.clone(), switch_active_split(.right)
 							}
 							else {}
 						}
@@ -373,6 +373,9 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 	}
 
+	// TODO(tauraamui): no longer any reason whatsoever that the cases aren't immediately returning
+	// nothing in the scope below them to worry about, in the past I think there was but now it should be
+	// all tidied up
 	match msg {
 		// NOTE(tauraamui): focus and blurred respectfully should be where we emit further necessary cmds for
 		// re-querying current git branch names and updating the debug screen's active editor data
