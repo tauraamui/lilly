@@ -46,7 +46,29 @@ fn (mut g GapBuffer) grow_gap() {
 	g.data = dest
 }
 
-pub fn (mut g GapBuffer) convert_cursor_pos_to_offset(x int, y int) int {
+pub struct CursorPosToOffsetParams {
+pub:
+	x int
+	y int
+}
+
+pub fn (mut g GapBuffer) convert_cursor_pos_to_offset(opts CursorPosToOffsetParams) int {
+	x := opts.x
+	y := opts.y
+	mut offset := 0
+	mut count_of_lines := 0
+	for i, c in g.data {
+		if i >= g.gap_start && i <= g.gap_end {
+			continue
+		}
+		if c == `\n` {
+			count_of_lines += 1
+		}
+		if count_of_lines == y {
+			return offset
+		}
+		offset += 1
+	}
 	return 0
 }
 
