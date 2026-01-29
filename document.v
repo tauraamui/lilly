@@ -68,7 +68,7 @@ fn Document.new(file_path string) !Document {
 }
 
 pub fn (mut d Document) prepare_for_insertion_at(pos CursorPos) {
-	d.data.move_gap(d.data.convert_cursor_pos_to_offset(pos.x, pos.y))
+	d.data.move_gap(d.data.convert_cursor_pos_to_offset(x: pos.x, y: pos.y))
 }
 
 fn (mut d Document) insert_char(c rune) {
