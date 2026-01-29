@@ -585,14 +585,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		else {}
 	}
 
-	for id, mut editor in m.editors {
-		e, cmd := editor.update(msg)
-		if e is DebuggableModel {
-			m.editors[id] = e
-		}
-		if u_cmd := cmd {
-			cmds << u_cmd
-		}
+	if u_cmd := m.forward_msg_to_editors(msg) {
+		cmds << u_cmd
 	}
 
 	return m.clone(), tea.batch_array(cmds)
