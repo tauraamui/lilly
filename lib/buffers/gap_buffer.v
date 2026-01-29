@@ -46,7 +46,11 @@ fn (mut g GapBuffer) grow_gap() {
 	g.data = dest
 }
 
-fn (mut g GapBuffer) move_gap(position int) {
+pub fn (mut g GapBuffer) convert_cursor_pos_to_offset(x int, y int) int {
+	return 0
+}
+
+pub fn (mut g GapBuffer) move_gap(position int) {
 	if position == g.gap_start {
 		return
 	}

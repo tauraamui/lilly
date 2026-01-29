@@ -27,6 +27,10 @@ pub fn (mut c Controller) open_document(file_path string) !int {
 	return id
 }
 
+pub fn (mut c Controller) prepare_for_insertion_at(doc_id int, pos CursorPos) {
+	c.docs[doc_id].prepare_for_insertion_at(pos)
+}
+
 pub fn (mut c Controller) insert_char(doc_id int, data rune) {
 	c.docs[doc_id].insert_char(data)
 }
@@ -45,6 +49,12 @@ fn hash_id(id int) int {
 	return math.abs(hash)
 }
 
+pub struct CursorPos {
+pub:
+	y int
+	x int
+}
+
 @[heap]
 pub struct Document {
 mut:
@@ -55,6 +65,10 @@ fn Document.new(file_path string) !Document {
 	return Document{
 		data: buffers.GapBuffer.new(content: (iconv.read_file_encoding(file_path, "UTF-8") or { return error("failed to read file ${file_path}: ${err}") }).runes())
 	}
+}
+
+pub fn (mut d Document) prepare_for_insertion_at(pos CursorPos) {
+	d.data.move_gap(d.data.convert_cursor_pos_to_offset(pos.x, pos.y))
 }
 
 fn (mut d Document) insert_char(c rune) {
