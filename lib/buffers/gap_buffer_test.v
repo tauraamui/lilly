@@ -178,8 +178,21 @@ fn test_move_gap_buffer_to_middle_and_back_alongside_inserts() {
 
 @[assert_continues]
 fn test_gap_buffer_convert_cursor_to_pos() {
-	mut gb := GapBuffer.new(content: 'import\nlib.buffers\nfn test_function() {\n\tmut iter :='.runes(), gap_size: 3)
-	assert gb.convert_cursor_pos_to_offset(y: 1) == 5
-	assert gb.convert_cursor_pos_to_offset(y: 2) == 17
+	mut gb := GapBuffer.new(content: 'import lib.buffers\nfn test_function() {\n\tmut iter :='.runes(), gap_size: 3)
+	assert gb.convert_cursor_pos_to_offset(y: 1) == 19
+	assert gb.convert_cursor_pos_to_offset(y: 2) == 40
+}
+
+@[assert_continues]
+fn test_gap_buffer_move_gap_to_cursor_pos_for_subsequent_inserts() {
+	mut gb := GapBuffer.new(content: 'import lib.buffers\n\tfn test_function() {\n\tmut iter :='.runes(), gap_size: 3)
+
+	gb.move_gap(gb.convert_cursor_pos_to_offset(y: 1))
+	gb.insert_char(`$`)
+	assert gb.content() == 'import lib.buffers\n$\tfn test_function() {\n\tmut iter :='
+
+	gb.move_gap(gb.convert_cursor_pos_to_offset(y: 2))
+	gb.insert_char(`!`)
+	assert gb.content() == 'import lib.buffers\n$\tfn test_function() {\n!\tmut iter :='
 }
 
