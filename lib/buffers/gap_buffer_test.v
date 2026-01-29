@@ -176,3 +176,10 @@ fn test_move_gap_buffer_to_middle_and_back_alongside_inserts() {
 	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcd5_e1fghijk34'
 }
 
+@[assert_continues]
+fn test_gap_buffer_convert_cursor_to_pos() {
+	mut gb := GapBuffer.new(content: 'import\nlib.buffers\nfn test_function() {\n\tmut iter :='.runes(), gap_size: 3)
+	assert gb.convert_cursor_pos_to_offset(y: 1) == 5
+	assert gb.convert_cursor_pos_to_offset(y: 2) == 17
+}
+
