@@ -64,10 +64,12 @@ pub fn (mut g GapBuffer) convert_cursor_pos_to_offset(opts CursorPosToOffsetPara
 		if c == `\n` {
 			count_of_lines += 1
 		}
+		offset += 1
+
 		if count_of_lines == y {
+			offset += 1
 			return offset
 		}
-		offset += 1
 	}
 	return 0
 }
