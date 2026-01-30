@@ -52,6 +52,37 @@ pub:
 	y int
 }
 
+pub fn (mut g GapBuffer) cursor_to_offset(opts CursorPosToOffsetParams) ?int {
+	mut amount_of_gap_to_deduct := 0
+	mut total_offset := 0
+
+	mut current_y := 0
+	mut current_x := 0
+
+	target_x := opts.x
+	target_y := opts.y
+
+	for i, c in g.data {
+		if i >= g.gap_start && i <= g.gap_end {
+			amount_of_gap_to_deduct += 1
+		}
+
+		total_offset += 1
+		current_x += 1
+
+		if c == `\n` {
+			current_y += 1
+			current_x = 0
+		}
+
+		if current_y == target_y && (current_x - amount_of_gap_to_deduct) == target_x {
+			println(g.data[i])
+			return i - amount_of_gap_to_deduct
+		}
+	}
+	return none
+}
+
 pub fn (mut g GapBuffer) convert_cursor_pos_to_offset(opts CursorPosToOffsetParams) int {
 	x := opts.x
 	y := opts.y
