@@ -150,6 +150,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						char_runes := msg.key_msg.string().runes()
 						for cr in char_runes {
 							m.doc_controller.insert_char(m.doc_id, cr)
+							m.cursor_pos = m.cursor_pos.right(max_width: 100)
 						}
 					}
 					.special {
@@ -172,7 +173,10 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							m.cursor_pos = m.cursor_pos.up()
 						}
 						'l' {
-							m.cursor_pos = m.cursor_pos.right()
+							m.cursor_pos = m.cursor_pos.right(max_width: 100)
+							c_x := m.cursor_pos.x
+							c_y := m.cursor_pos.y
+							m.doc_controller.prepare_for_insertion_at(m.doc_id, documents.CursorPos{ x: c_x, y: c_y})
 						}
 						else {}
 					}
