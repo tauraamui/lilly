@@ -12,6 +12,7 @@ struct ModelCursorPos {
 @[params]
 struct ModelCursorPosParams {
 	distance   int = 1
+	max_width  int
 	max_height int
 }
 
@@ -48,14 +49,14 @@ fn (c ModelCursorPos) left() ModelCursorPos {
 	}
 }
 
-fn (c ModelCursorPos) right(max int) ModelCursorPos {
-	yy := c.y + 1
-	if yy >= max {
+fn (c ModelCursorPos) right(opts ModelCursorPosParams) ModelCursorPos {
+	xx := c.x + opts.distance
+	if xx >= opts.max_width {
 		return c
 	}
 	return ModelCursorPos{
-		y: yy
-		x: 0
+		y: c.y
+		x: xx
 	}
 }
 
@@ -162,12 +163,16 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			.normal {
 				if msg.key_msg.k_type == .runes {
 					match msg.key_msg.string() {
+						'h' {}
 						'j' {
 							m.cursor_pos = m.cursor_pos.down(max_height: m.height)
 							assert m.cursor_pos.y > 0
 						}
 						'k' {
 							m.cursor_pos = m.cursor_pos.up()
+						}
+						'l' {
+							m.cursor_pos = m.cursor_pos.right()
 						}
 						else {}
 					}
