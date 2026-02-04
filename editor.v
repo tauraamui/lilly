@@ -163,6 +163,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			}
 			.normal {
 				if msg.key_msg.k_type == .runes {
+					cmds << editor_data(m.data())
 					match msg.key_msg.string() {
 						'h' {}
 						'j' {
