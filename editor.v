@@ -117,9 +117,9 @@ fn editor_data(data EditorData) tea.Cmd {
 fn EditorModel.new(id int, file_path string, doc_id int, doc_controller &documents.Controller) EditorModel {
 	assert file_path.len != 0
 	return EditorModel{
-		id:        id
-		file_path: file_path
-		doc_id: doc_id
+		id:             id
+		file_path:      file_path
+		doc_id:         doc_id
 		doc_controller: doc_controller
 	}
 }
@@ -135,8 +135,8 @@ struct EditorModelMsg {
 }
 
 struct EditorModelKeyMsg {
-	key_msg  tea.KeyMsg
-	mode     Mode
+	key_msg tea.KeyMsg
+	mode    Mode
 }
 
 fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
@@ -177,7 +177,10 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							m.cursor_pos = m.cursor_pos.right(max_width: 100)
 							c_x := m.cursor_pos.x
 							c_y := m.cursor_pos.y
-							m.doc_controller.prepare_for_insertion_at(m.doc_id, documents.CursorPos{ x: c_x, y: c_y})
+							m.doc_controller.prepare_for_insertion_at(m.doc_id, documents.CursorPos{
+								x: c_x
+								y: c_y
+							})
 						}
 						else {}
 					}
@@ -196,7 +199,10 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			if msg.mode == .insert {
 				c_x := m.cursor_pos.x
 				c_y := m.cursor_pos.y
-				m.doc_controller.prepare_for_insertion_at(m.doc_id, documents.CursorPos{ x: c_x, y: c_y})
+				m.doc_controller.prepare_for_insertion_at(m.doc_id, documents.CursorPos{
+					x: c_x
+					y: c_y
+				})
 			}
 		}
 		EditorModelMsg {
@@ -282,8 +288,8 @@ fn (m EditorModel) debug_data() DebugData {
 
 fn (m EditorModel) data() EditorData {
 	return EditorData{
-		id:         m.id
-		file_path:  m.file_path
+		id:        m.id
+		file_path: m.file_path
 
 		cursor_row: m.cursor_pos.y
 		cursor_col: m.cursor_pos.x

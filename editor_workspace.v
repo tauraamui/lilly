@@ -110,8 +110,8 @@ fn unfocus_editor(editor_id int) tea.Cmd {
 fn forward_msg_to_editor(editor_id int, msg tea.Msg, mode Mode) tea.Cmd {
 	return fn [editor_id, msg, mode] () tea.Msg {
 		return EditorModelMsg{
-			id: editor_id
-			msg: msg
+			id:   editor_id
+			msg:  msg
 			mode: mode
 		}
 	}
@@ -382,7 +382,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		for id, mut editor in m.editors {
 			e, cmd := editor.update(EditorModelKeyMsg{
 				key_msg: msg
-				mode: m.mode
+				mode:    m.mode
 			})
 			if e is DebuggableModel {
 				m.editors[id] = e
@@ -450,7 +450,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			if info := m.split_tree.get_active_editor() {
 				old_id := info.id // get the old ID before inserting
 				new_id := m.next_editor_id()
-				mut new_editor := EditorModel.new(new_id, info.file_path, info.doc_id, m.doc_controller)
+				mut new_editor := EditorModel.new(new_id, info.file_path, info.doc_id,
+					m.doc_controller)
 				if init_cmd := new_editor.init() {
 					cmds << init_cmd
 				}
