@@ -16,16 +16,16 @@ const initial_gap_size = u32(32)
 @[params]
 pub struct GapBufferParams {
 pub:
-	content  []rune
+	content     []rune
 	gap_size u32 = initial_gap_size
 }
 
 pub fn GapBuffer.new(opts GapBufferParams) GapBuffer {
 	mut gb := GapBuffer{
 		initial_gap_size: opts.gap_size
-		data:             []rune{len: opts.content.len + int(opts.gap_size), init: null_code_point}
-		gap_start:        0
-		gap_end:          opts.gap_size
+		data: []rune{ len: opts.content.len + int(opts.gap_size), init: null_code_point }
+		gap_start: 0
+		gap_end: opts.gap_size
 	}
 	gb.initial_fill(opts.content)
 	return gb
@@ -38,7 +38,7 @@ fn (mut g GapBuffer) initial_fill(data []rune) {
 }
 
 fn (mut g GapBuffer) grow_gap() {
-	mut dest := []rune{len: g.data.len + int(g.initial_gap_size), init: null_code_point}
+	mut dest := []rune{ len: g.data.len + int(g.initial_gap_size), init: null_code_point }
 	arrays.copy(mut dest[..g.gap_start], g.data[..g.gap_start])
 	gap_end := g.gap_start + g.initial_gap_size
 	arrays.copy(mut dest[gap_end..], g.data[g.gap_end..])
@@ -111,7 +111,7 @@ pub fn (mut g GapBuffer) move_gap(position int) {
 
 	if position > g.gap_start {
 		chars_to_move := position - int(g.gap_start)
-		for i in 0 .. chars_to_move {
+		for i in 0..chars_to_move {
 			g.data[int(g.gap_start) + i] = g.data[int(g.gap_end) + i]
 			g.data[int(g.gap_end) + i] = null_code_point
 		}
@@ -158,3 +158,4 @@ fn (g GapBuffer) raw_content() []rune {
 fn null_code_point_to_str(c rune) rune {
 	return if c == null_code_point { `_` } else { c }
 }
+

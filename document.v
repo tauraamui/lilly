@@ -47,7 +47,7 @@ pub fn (c Controller) get_iterator(doc_id int) LineIterator {
 }
 
 pub fn (mut c Controller) free() {
-	unsafe { c.docs.free() }
+	unsafe { c.docs.free( )}
 }
 
 fn hash_id(id int) int {
@@ -70,9 +70,7 @@ mut:
 
 fn Document.new(file_path string) !Document {
 	return Document{
-		data: buffers.GapBuffer.new(content: (iconv.read_file_encoding(file_path, 'UTF-8') or {
-			return error('failed to read file ${file_path}: ${err}')
-		}).runes())
+		data: buffers.GapBuffer.new(content: (iconv.read_file_encoding(file_path, "UTF-8") or { return error("failed to read file ${file_path}: ${err}") }).runes())
 	}
 }
 
@@ -94,3 +92,4 @@ pub interface LineIterator {
 mut:
 	next() ?[]rune
 }
+

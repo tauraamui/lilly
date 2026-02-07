@@ -9,11 +9,7 @@ mut:
 }
 
 pub fn LineIterator.new(data_ref []rune, exclusion_range_min int, exclusion_range_max int) LineIterator {
-	return LineIterator{
-		data_ref:            data_ref
-		exclusion_range_min: exclusion_range_min
-		exclusion_range_max: exclusion_range_max
-	}
+	return LineIterator{ data_ref: data_ref, exclusion_range_min: exclusion_range_min, exclusion_range_max: exclusion_range_max }
 }
 
 pub fn (mut iter LineIterator) next() ?[]rune {
@@ -68,3 +64,5 @@ fn (iter LineIterator) build_line(start int, end int) []rune {
 	}
 	return result
 }
+
+

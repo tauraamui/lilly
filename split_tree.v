@@ -46,7 +46,7 @@ pub fn SplitTree.new() SplitTree {
 pub fn (mut t SplitTree) init_with_editor(id int, file_path string, doc_id int) {
 	t.root = EditorLeaf{
 		editor_id: id
-		doc_id:    doc_id
+		doc_id: doc_id
 		file_path: file_path
 	}
 	t.active_editor_id = id

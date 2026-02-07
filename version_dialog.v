@@ -14,7 +14,7 @@ fn open_version_dialog(ttheme theme.Theme) tea.Cmd {
 	return fn [ttheme] () tea.Msg {
 		return OpenDialogMsg{
 			model: VersionModel{
-				theme:  ttheme
+				theme: ttheme
 				width:  52
 				height: 5
 			}
@@ -59,8 +59,7 @@ fn (m VersionModel) view(mut r_ctx tea.Context) {
 	width := m.width - 2
 	height := m.height - 2
 
-	tea.new_layout().border(.normal).border_color(m.theme.petal_pink).size(m.width, m.height).render(mut r_ctx,
-		fn [width, height] (mut ctx tea.Context) {
+	tea.new_layout().border(.normal).border_color(m.theme.petal_pink).size(m.width, m.height).render(mut r_ctx, fn [width, height] (mut ctx tea.Context) {
 		ctx.reset_color()
 		version_label := 'project petal version (${version})'
 		ctx.draw_text((width / 2) - tea.visible_len(version_label) / 2, height / 2, version_label)
