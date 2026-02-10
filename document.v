@@ -1,6 +1,7 @@
 module documents
 
 import math
+import os
 import encoding.iconv
 import lib.buffers
 
@@ -70,7 +71,8 @@ mut:
 
 fn Document.new(file_path string) !Document {
 	return Document{
-		data: buffers.GapBuffer.new(content: (iconv.read_file_encoding(file_path, "UTF-8") or { return error("failed to read file ${file_path}: ${err}") }).runes())
+		data: buffers.GapBuffer.new(content: (os.read_file(file_path) or { return error("failed to read file ${file_path}: ${err}") }).runes())
+		// data: buffers.GapBuffer.new(content: (iconv.read_file_encoding(file_path, "UTF-8") or { return error("failed to read file ${file_path}: ${err}") }).runes())
 	}
 }
 

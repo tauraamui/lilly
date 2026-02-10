@@ -175,9 +175,6 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						}
 						'l' {
 							m.cursor_pos = m.cursor_pos.right(max_width: 100)
-							c_x := m.cursor_pos.x
-							c_y := m.cursor_pos.y
-							m.doc_controller.prepare_for_insertion_at(m.doc_id, documents.CursorPos{ x: c_x, y: c_y})
 						}
 						else {}
 					}
@@ -193,7 +190,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			m.height = msg.window_height
 		}
 		SwitchModeMsg {
-			if msg.mode == .insert {
+			if msg.mode == .insert && m.focused {
 				c_x := m.cursor_pos.x
 				c_y := m.cursor_pos.y
 				m.doc_controller.prepare_for_insertion_at(m.doc_id, documents.CursorPos{ x: c_x, y: c_y})
