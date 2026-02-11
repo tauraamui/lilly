@@ -46,10 +46,33 @@ fn (mut g GapBuffer) grow_gap() {
 	g.data = dest
 }
 
-pub struct CursorPosToOffsetParams {
+pub struct CursorPosParams {
 pub:
 	x int
 	y int
+}
+
+fn (mut g GapBuffer) cursor_to_offset(opts CursorPosParams) ?int {
+	y := opts.y
+	x := opts.x
+
+	if x < 0 { return none }
+
+	mut offset := 0
+	mut amount_of_gap_encountered := -1
+	for index, cchar in g.data {
+		if index >= g.gap_start && index <= g.gap_end { amount_of_gap_encountered += 1 }
+		if index - amount_of_gap_encountered == x {
+			break
+		}
+		offset += 1
+	}
+	return offset
+}
+
+fn (mut g GapBuffer) get_char_at(opts CursorPosParams) ?rune {
+	offset := g.cursor_to_offset(opts) or { return none }
+	return g.data[offset]
 }
 
 pub fn (mut g GapBuffer) move_gap(position int) {

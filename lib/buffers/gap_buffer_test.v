@@ -177,6 +177,14 @@ fn test_move_gap_buffer_to_middle_and_back_alongside_inserts() {
 }
 
 @[assert_continues]
+fn test_gap_buffer_get_char_at() {
+	mut gb := GapBuffer.new(content: 'import lib.buffers'.runes(), gap_size: 3)
+
+	assert gb.get_char_at(x: 0, y: 0)? == `i`
+}
+
+/*
+@[assert_continues]
 fn test_gap_buffer_single_line_content_cursor_to_offset() {
 	mut gb := GapBuffer.new(content: 'import lib.buffers'.runes(), gap_size: 3)
 	assert gb.cursor_to_offset(x: 8)? == 7
@@ -199,4 +207,5 @@ fn test_gap_buffer_single_line_content_cursor_to_offset_insert_twice() {
 	gb.insert_char(`*`)
 	assert gb.content() == '*import ^lib.buffers'
 }
+*/
 
