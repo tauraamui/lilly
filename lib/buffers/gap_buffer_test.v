@@ -181,6 +181,7 @@ fn test_gap_buffer_get_char_at() {
 	mut gb := GapBuffer.new(content: 'import lib.buffers'.runes(), gap_size: 3)
 
 	assert gb.get_char_at(x: 0, y: 0)? == `i`
+	assert gb.get_char_at(x: 1, y: 0)? == `m`
 }
 
 /*
