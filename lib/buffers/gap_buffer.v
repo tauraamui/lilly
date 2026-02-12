@@ -58,16 +58,19 @@ fn (mut g GapBuffer) cursor_to_offset(opts CursorPosParams) ?int {
 
 	if x < 0 { return none }
 
-	mut offset := 0
-	mut amount_of_gap_encountered := -1
-	for index, cchar in g.data {
-		if index >= g.gap_start && index <= g.gap_end { amount_of_gap_encountered += 1 }
-		if index - amount_of_gap_encountered == x {
-			break
+	mut gap_adjustment_offset := 0
+	mut final_offset := 0
+	for i, cchar in g.data {
+		if cchar == null_code_point {
+			gap_adjustment_offset += 1
+			continue
 		}
-		offset += 1
+		if (i - gap_adjustment_offset) == x {
+			return i
+		}
 	}
-	return offset
+
+	return none
 }
 
 fn (mut g GapBuffer) get_char_at(opts CursorPosParams) ?rune {
