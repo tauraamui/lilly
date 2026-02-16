@@ -53,21 +53,35 @@ pub:
 }
 
 fn (mut g GapBuffer) cursor_to_offset(opts CursorPosParams) ?int {
-	y := opts.y
 	x := opts.x
+	y := opts.y
 
-	if x < 0 { return none }
+	if x < 0 || y < 0 {
+		return none
+	}
 
-	mut gap_adjustment_offset := 0
-	mut final_offset := 0
-	for i, cchar in g.data {
-		if cchar == null_code_point {
-			gap_adjustment_offset += 1
+	mut line := 0
+	mut col := 0
+
+	for i, c in g.data {
+		if c == null_code_point {
 			continue
 		}
-		if (i - gap_adjustment_offset) == x {
+
+		if line == y && col == x {
 			return i
 		}
+
+		if c == `\n` {
+			line += 1
+			col = 0
+		} else {
+			col++
+		}
+	}
+
+	if line == y && col == x {
+		return g.data.len
 	}
 
 	return none
