@@ -182,6 +182,11 @@ fn test_gap_buffer_get_char_at() {
 
 	assert gb.get_char_at(x: 0, y: 0)? == `i`
 	assert gb.get_char_at(x: 1, y: 0)? == `m`
+	assert gb.get_char_at(x: 2, y: 0)? == `p`
+	assert gb.get_char_at(x: 3, y: 0)? == `o`
+	assert gb.get_char_at(x: 4, y: 0)? == `r`
+	assert gb.get_char_at(x: 5, y: 0)? == `t`
+	assert gb.get_char_at(x: 6, y: 0)? == ` `
 }
 
 /*
