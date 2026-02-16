@@ -77,11 +77,9 @@ fn Document.new(file_path string) !Document {
 }
 
 pub fn (mut d Document) prepare_for_insertion_at(pos CursorPos) ! {
-	/*
 	if offset := d.data.cursor_to_offset(x: pos.x, y: pos.y) {
 		d.data.move_gap(offset)
 	}
-	*/
 	return error('currently being re-implemented')
 }
 

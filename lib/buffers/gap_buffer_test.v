@@ -199,7 +199,18 @@ fn test_gap_buffer_get_char_at_multi_line_content() {
 	assert gb.get_char_at(x: 3, y: 0)? == `o`
 	assert gb.get_char_at(x: 4, y: 0)? == `r`
 	assert gb.get_char_at(x: 5, y: 0)? == `t`
-	assert gb.get_char_at(x: 6, y: 0)? == `\n`
+
+	assert gb.get_char_at(x: 0, y: 1)? == `l`
+	assert gb.get_char_at(x: 1, y: 1)? == `i`
+	assert gb.get_char_at(x: 2, y: 1)? == `b`
+	assert gb.get_char_at(x: 3, y: 1)? == `.`
+	assert gb.get_char_at(x: 4, y: 1)? == `b`
+	assert gb.get_char_at(x: 5, y: 1)? == `u`
+	assert gb.get_char_at(x: 6, y: 1)? == `f`
+	assert gb.get_char_at(x: 7, y: 1)? == `f`
+	assert gb.get_char_at(x: 8, y: 1)? == `e`
+	assert gb.get_char_at(x: 9, y: 1)? == `r`
+	assert gb.get_char_at(x: 10, y: 1)? == `s`
 }
 
 

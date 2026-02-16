@@ -52,7 +52,7 @@ pub:
 	y int
 }
 
-fn (mut g GapBuffer) cursor_to_offset(opts CursorPosParams) ?int {
+pub fn (mut g GapBuffer) cursor_to_offset(opts CursorPosParams) ?int {
 	x := opts.x
 	y := opts.y
 
