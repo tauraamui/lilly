@@ -213,19 +213,15 @@ fn test_gap_buffer_get_char_at_multi_line_content() {
 	assert gb.get_char_at(x: 10, y: 1)? == `s`
 }
 
-
-/*
 @[assert_continues]
 fn test_gap_buffer_single_line_content_cursor_to_offset() {
 	mut gb := GapBuffer.new(content: 'import lib.buffers'.runes(), gap_size: 3)
-	assert gb.cursor_to_offset(x: 8)? == 7
+	assert gb.cursor_to_offset(x: 0)? == 3
 	// sanity check
-	assert gb.cursor_to_offset(x: 8)? == 7
-
-	gb.move_gap(gb.data.len / 2)
-	assert gb.cursor_to_offset(x: 8)? == 7
+	assert gb.cursor_to_offset(x: 0)? == 3
 }
 
+/*
 @[assert_continues]
 fn test_gap_buffer_single_line_content_cursor_to_offset_insert_twice() {
 	mut gb := GapBuffer.new(content: 'import lib.buffers'.runes(), gap_size: 3)

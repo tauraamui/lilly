@@ -193,7 +193,10 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			if msg.mode == .insert && m.focused {
 				c_x := m.cursor_pos.x
 				c_y := m.cursor_pos.y
-				m.doc_controller.prepare_for_insertion_at(m.doc_id, documents.CursorPos{ x: c_x, y: c_y})
+				m.doc_controller.prepare_for_insertion_at(m.doc_id, documents.CursorPos{ x: c_x, y: c_y}) or {
+					cmds << raise_error('switch mode error: ${err}')
+					return m.clone(), tea.batch_array(cmds)
+				}
 			}
 		}
 		EditorModelMsg {
