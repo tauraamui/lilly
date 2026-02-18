@@ -92,6 +92,9 @@ fn (mut g GapBuffer) get_char_at(opts CursorPosParams) ?rune {
 	return g.data[offset]
 }
 
+pub fn (mut g GapBuffer) move_gap2(offset int) {
+}
+
 // FIXME(tauraamui): account for the fact that the offset is in document space, not data space
 // so the offset '3' (if the gap size is 3) would actually mean '0' for example
 pub fn (mut g GapBuffer) move_gap(position int) {
