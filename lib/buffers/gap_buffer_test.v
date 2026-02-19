@@ -116,6 +116,17 @@ fn test_move_gap_2_buffer_simplest_case_from_cursor_first_char_first_line() {
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'a___bcdefghijk'
 }
 
+fn test_move_gap_2_buffer_simplest_case_from_cursor_second_line() {
+	mut gb := GapBuffer.new(content: 'abcdefghijk\nlmnopq'.runes(), gap_size: 3)
+	assert gb.content() == 'abcdefghijk\nlmnopq'
+	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk\nlmnopq'
+
+	gb.move_gap2(gb.cursor_to_offset(x: 0, y: 1) or { panic('failed to convert: ${err}') })
+	assert gb.content() == 'abcdefghijk\nlmnopq'
+	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcdefghijk\n___lmnopq'
+}
+
+
 
 @[assert_continues]
 fn test_move_gap_buffer_to_middle() {
