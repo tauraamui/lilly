@@ -92,7 +92,33 @@ fn (mut g GapBuffer) get_char_at(opts CursorPosParams) ?rune {
 	return g.data[offset]
 }
 
-pub fn (mut g GapBuffer) move_gap2(offset int) {
+pub fn (mut g GapBuffer) move_gap2(offset_with_gap int) {
+	gap_size := int(g.gap_end - g.gap_start)
+	offset := offset_with_gap - gap_size
+
+	if offset == g.gap_start {
+		return
+	}
+
+	if offset > g.gap_start {
+		chars_to_move := offset - int(g.gap_start)
+		for i in 0..chars_to_move {
+			g.data[int(g.gap_start) + i] = g.data[int(g.gap_end) + i]
+			g.data[int(g.gap_end) + i] = null_code_point
+		}
+		g.gap_start = u32(offset)
+		g.gap_end += u32(chars_to_move)
+		return
+	}
+
+	chars_to_move := int(g.gap_start) - offset
+	for i := chars_to_move - 1; i >= 0; i-- {
+		g.data[int(g.gap_end) - chars_to_move + i] = g.data[offset + i]
+		g.data[offset + i] = null_code_point
+	}
+	g.gap_end -= u32(chars_to_move)
+	g.gap_start = u32(offset)
+
 }
 
 // FIXME(tauraamui): account for the fact that the offset is in document space, not data space
