@@ -94,7 +94,7 @@ fn (mut g GapBuffer) get_char_at(opts CursorPosParams) ?rune {
 
 pub fn (mut g GapBuffer) move_gap2(offset_with_gap int) {
 	gap_size := int(g.gap_end - g.gap_start)
-	offset := offset_with_gap - gap_size
+	offset := if offset_with_gap > g.gap_start { offset_with_gap - gap_size } else { offset_with_gap }
 
 	if offset == g.gap_start {
 		return
