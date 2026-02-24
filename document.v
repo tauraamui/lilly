@@ -3,6 +3,7 @@ module documents
 import math
 import os
 import lib.buffers
+import petal
 
 @[heap]
 pub struct Controller {
@@ -41,34 +42,34 @@ pub fn (c Controller) cursor_pos(doc_id int) CursorPos {
 	return c.cursors[doc_id]
 }
 
-pub fn (mut c Controller) move_cursor_left(doc_id int) {
+pub fn (mut c Controller) move_cursor_left(doc_id int, mode petal.Mode) {
 	pos := c.cursors[doc_id]
-	c.cursors[doc_id] = c.docs[doc_id].move_cursor_left(pos)
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_left(pos, mode)
 }
 
-pub fn (mut c Controller) move_cursor_up(doc_id int) {
+pub fn (mut c Controller) move_cursor_up(doc_id int, mode petal.Mode) {
 	pos := c.cursors[doc_id]
-	c.cursors[doc_id] = c.docs[doc_id].move_cursor_up(pos)
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_up(pos, mode)
 }
 
-pub fn (mut c Controller) move_cursor_down(doc_id int) {
+pub fn (mut c Controller) move_cursor_down(doc_id int, mode petal.Mode) {
 	pos := c.cursors[doc_id]
-	c.cursors[doc_id] = c.docs[doc_id].move_cursor_down(pos)
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_down(pos, mode)
 }
 
-pub fn (mut c Controller) move_cursor_right(doc_id int) {
+pub fn (mut c Controller) move_cursor_right(doc_id int, mode petal.Mode) {
 	pos := c.cursors[doc_id]
-	c.cursors[doc_id] = c.docs[doc_id].move_cursor_right(pos)
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_right(pos, mode)
 }
 
 pub fn (mut c Controller) insert_newline(doc_id int) {
 	c.docs[doc_id].insert_char(`\n`)
-	c.move_cursor_up(doc_id) // will need to have a 'cursor_up_and_start'
+	c.move_cursor_up(doc_id, .insert) // will need to have a 'cursor_up_and_start'
 }
 
 pub fn (mut c Controller) insert_char(doc_id int, data rune) {
 	c.docs[doc_id].insert_char(data)
-	c.move_cursor_right(doc_id)
+	c.move_cursor_right(doc_id, .insert)
 }
 
 pub fn (c Controller) get_iterator(doc_id int) LineIterator {
@@ -117,7 +118,7 @@ fn (mut d Document) prepare_for_insertion_at(pos CursorPos) ! {
 	return error('unable to convert cursor pos to offset')
 }
 
-fn (d Document) move_cursor_left(pos CursorPos) CursorPos {
+fn (d Document) move_cursor_left(pos CursorPos, mode petal.Mode) CursorPos {
 	mut x := pos.x - 1
 	return CursorPos{
 		x: if x < 0 { 0 } else { x }
@@ -125,7 +126,7 @@ fn (d Document) move_cursor_left(pos CursorPos) CursorPos {
 	}
 }
 
-fn (d Document) move_cursor_up(pos CursorPos) CursorPos {
+fn (d Document) move_cursor_up(pos CursorPos, mode petal.Mode) CursorPos {
 	// NOTE(tauraamui): for now just drop x to 0 each
 	mut y := pos.y + 1
 	d.data.get_line_at(y: y) or { return pos }
@@ -135,7 +136,7 @@ fn (d Document) move_cursor_up(pos CursorPos) CursorPos {
 	}
 }
 
-fn (d Document) move_cursor_down(pos CursorPos) CursorPos {
+fn (d Document) move_cursor_down(pos CursorPos, mode petal.Mode) CursorPos {
 	// NOTE(tauraamui): for now just drop x to 0 each
 	mut y := pos.y - 1
 	d.data.get_line_at(y: y) or { return pos }
@@ -145,9 +146,18 @@ fn (d Document) move_cursor_down(pos CursorPos) CursorPos {
 	}
 }
 
-fn (d Document) move_cursor_right(pos CursorPos) CursorPos {
+fn (d Document) move_cursor_right(pos CursorPos, mode petal.Mode) CursorPos {
 	current_line := d.data.get_line_at(y: pos.y) or { return pos }
-	if pos.x + 1 > current_line.runes().len { return pos }
+	match mode {
+		.normal {
+			if pos.x + 1 >= current_line.runes().len { return pos }
+		}
+		.insert {
+			if pos.x + 1 > current_line.runes().len { return pos }
+		}
+		else {
+		}
+	}
 	return CursorPos{
 		x: pos.x + 1
 		y: pos.y

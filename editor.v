@@ -1,6 +1,7 @@
 module main
 
 import tauraamui.bobatea as tea
+import petal
 import palette
 import documents
 
@@ -74,12 +75,12 @@ fn (mut m EditorModel) init() ?tea.Cmd {
 struct EditorModelMsg {
 	id   int
 	msg  tea.Msg
-	mode Mode
+	mode petal.Mode
 }
 
 struct EditorModelKeyMsg {
 	key_msg tea.KeyMsg
-	mode    Mode
+	mode    petal.Mode
 }
 
 fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
@@ -98,6 +99,34 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					.special {
 						match msg.key_msg.string() {
 							'enter' { m.doc_controller.insert_newline(m.doc_id) }
+							'left' {
+								m.doc_controller.move_cursor_left(m.doc_id, .insert)
+								m.doc_controller.prepare_for_insertion(m.doc_id) or {
+									cmds << raise_error('switch mode error: ${err}')
+									return m.clone(), tea.batch_array(cmds)
+								}
+							}
+							'up' {
+								m.doc_controller.move_cursor_up(m.doc_id, .insert)
+								m.doc_controller.prepare_for_insertion(m.doc_id) or {
+									cmds << raise_error('switch mode error: ${err}')
+									return m.clone(), tea.batch_array(cmds)
+								}
+							}
+							'right' {
+								m.doc_controller.move_cursor_right(m.doc_id, .insert)
+								m.doc_controller.prepare_for_insertion(m.doc_id) or {
+									cmds << raise_error('switch mode error: ${err}')
+									return m.clone(), tea.batch_array(cmds)
+								}
+							}
+							'down' {
+								m.doc_controller.move_cursor_down(m.doc_id, .insert)
+								m.doc_controller.prepare_for_insertion(m.doc_id) or {
+									cmds << raise_error('switch mode error: ${err}')
+									return m.clone(), tea.batch_array(cmds)
+								}
+							}
 							else {}
 						}
 					}
@@ -108,16 +137,16 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					cmds << editor_data(m.data())
 					match msg.key_msg.string() {
 						'h' {
-							m.doc_controller.move_cursor_left(m.doc_id)
+							m.doc_controller.move_cursor_left(m.doc_id, .normal)
 						}
 						'j' {
-							m.doc_controller.move_cursor_up(m.doc_id)
+							m.doc_controller.move_cursor_up(m.doc_id, .normal)
 						}
 						'k' {
-							m.doc_controller.move_cursor_down(m.doc_id)
+							m.doc_controller.move_cursor_down(m.doc_id, .normal)
 						}
 						'l' {
-							m.doc_controller.move_cursor_right(m.doc_id)
+							m.doc_controller.move_cursor_right(m.doc_id, .normal)
 						}
 						else {}
 					}

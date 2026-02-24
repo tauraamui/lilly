@@ -1,9 +1,9 @@
-module main
+module petal
 
 import tauraamui.bobatea as tea
 import theme
 
-enum Mode as u8 {
+pub enum Mode as u8 {
 	normal
 	leader
 	command
@@ -13,7 +13,7 @@ enum Mode as u8 {
 	navigation
 }
 
-fn (m Mode) color(ttheme theme.Theme) tea.Color {
+pub fn (m Mode) color(ttheme theme.Theme) tea.Color {
 	return match m {
 		.normal { ttheme.status_green }
 		.leader { ttheme.status_purple }
@@ -25,7 +25,7 @@ fn (m Mode) color(ttheme theme.Theme) tea.Color {
 	}
 }
 
-fn (m Mode) str() string {
+pub fn (m Mode) str() string {
 	return match m {
 		.normal { 'NORMAL' }
 		.leader { 'LEADER' }
