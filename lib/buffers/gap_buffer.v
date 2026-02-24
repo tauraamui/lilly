@@ -110,7 +110,7 @@ fn (g GapBuffer) get_line_at(opts CursorPosParams) ?string {
 }
 
 pub fn (mut g GapBuffer) move_gap2(offset_with_gap int) {
-	gap_size := int(g.gap_end - g.gap_start)
+	gap_size := int(g.current_gap_size())
 	offset := if gap_size > 0 && offset_with_gap > g.gap_start { offset_with_gap - gap_size } else { offset_with_gap }
 
 	if offset == g.gap_start {
