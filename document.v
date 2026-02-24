@@ -62,6 +62,11 @@ pub fn (mut c Controller) move_cursor_right(doc_id int, mode petal.Mode) {
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_right(pos, mode)
 }
 
+pub fn (mut c Controller) move_cursor_to_line_end(doc_id int, mode petal.Mode) {
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_line_end(pos, mode)
+}
+
 pub fn (mut c Controller) insert_newline(doc_id int) {
 	c.docs[doc_id].insert_char(`\n`)
 	c.move_cursor_up(doc_id, .insert) // will need to have a 'cursor_up_and_start'
@@ -164,6 +169,15 @@ fn (d Document) move_cursor_right(pos CursorPos, mode petal.Mode) CursorPos {
 			new_pos
 		}
 	}
+}
+
+fn (d Document) move_cursor_to_line_end(pos CursorPos, mode petal.Mode) CursorPos {
+	current_line := d.data.get_line_at(y: pos.y) or { return pos }
+	new_pos := CursorPos {
+		x: pos.x + (current_line.runes().len - pos.x)
+		y: pos.y
+	}
+	return new_pos
 }
 
 fn (mut d Document) insert_char(c rune) {
