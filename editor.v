@@ -137,6 +137,16 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					.runes {
 						cmds << editor_data(m.data())
 						match msg.key_msg.string() {
+							'o' {
+								m.doc_controller.move_cursor_to_line_end(m.doc_id, .insert)
+								m.doc_controller.prepare_for_insertion(m.doc_id) or {
+									cmds << raise_error('error: ${err}')
+									return m.clone(), tea.batch_array(cmds)
+								}
+								m.doc_controller.insert_newline(m.doc_id)
+								cmds << switch_mode(.insert)
+								return m.clone(), tea.batch_array(cmds)
+							}
 							'h' {
 								m.doc_controller.move_cursor_left(m.doc_id, .normal)
 							}
