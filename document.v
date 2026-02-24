@@ -148,19 +148,21 @@ fn (d Document) move_cursor_down(pos CursorPos, mode petal.Mode) CursorPos {
 
 fn (d Document) move_cursor_right(pos CursorPos, mode petal.Mode) CursorPos {
 	current_line := d.data.get_line_at(y: pos.y) or { return pos }
-	match mode {
-		.normal {
-			if pos.x + 1 >= current_line.runes().len { return pos }
-		}
-		.insert {
-			if pos.x + 1 > current_line.runes().len { return pos }
-		}
-		else {
-		}
-	}
-	return CursorPos{
+	new_pos := CursorPos {
 		x: pos.x + 1
 		y: pos.y
+	}
+
+	return match mode {
+		.normal {
+			if pos.x + 1 >= current_line.runes().len { pos } else { new_pos }
+		}
+		.insert {
+			if pos.x + 1 > current_line.runes().len { pos } else { new_pos }
+		}
+		else {
+			new_pos
+		}
 	}
 }
 
