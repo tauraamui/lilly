@@ -2,7 +2,6 @@ module documents
 
 import math
 import os
-import encoding.iconv
 import lib.buffers
 
 @[heap]

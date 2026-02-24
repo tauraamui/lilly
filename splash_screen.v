@@ -269,7 +269,7 @@ fn render_copyright_footer(mut ctx tea.Context, petal_pink tea.Color) {
 
 const basic_command_help = [
 	' Find File                   <leader>ff',
-]
+]!
 
 const disabled_command_help = [
 	' Find Word                   <leader>fg',
@@ -277,7 +277,7 @@ const disabled_command_help = [
 	' File Browser                <leader>fv',
 	' Colorschemes                <leader>cs',
 	' New File                    <leader>nf',
-]
+]!
 
 const pending_match_color = tea.Color.ansi(244)
 

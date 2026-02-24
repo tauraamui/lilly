@@ -115,7 +115,7 @@ fn editor_data(data EditorData) tea.Cmd {
 }
 
 fn EditorModel.new(id int, file_path string, doc_id int, doc_controller &documents.Controller) EditorModel {
-	assert file_path.len != 0
+	assert file_path != ''
 	return EditorModel{
 		id:        id
 		file_path: file_path
