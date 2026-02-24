@@ -93,7 +93,7 @@ fn (g GapBuffer) get_char_at(opts CursorPosParams) ?rune {
 	return g.data[offset]
 }
 
-fn (g GapBuffer) get_line_at(opts CursorPosParams) ?string {
+pub fn (g GapBuffer) get_line_at(opts CursorPosParams) ?string {
 	start_of_line_offset := g.cursor_to_offset(y: opts.y) or { return none }
 	mut sb := strings.new_builder(g.data.len - start_of_line_offset)
 	data := g.data[start_of_line_offset..]

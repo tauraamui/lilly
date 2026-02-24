@@ -165,16 +165,23 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				if msg.key_msg.k_type == .runes {
 					cmds << editor_data(m.data())
 					match msg.key_msg.string() {
-						'h' { m.cursor_pos = m.cursor_pos.left() }
+						'h' {
+							doc_type_cursor_pos := m.doc_controller.move_cursor_left(m.doc_id, documents.CursorPos{ y: m.cursor_pos.y, x: m.cursor_pos.x })
+							m.cursor_pos = ModelCursorPos{ x: doc_type_cursor_pos.x, y: doc_type_cursor_pos.y }
+						}
 						'j' {
-							m.cursor_pos = m.cursor_pos.down(max_height: m.height)
+							doc_type_cursor_pos := m.doc_controller.move_cursor_up(m.doc_id, documents.CursorPos{ y: m.cursor_pos.y, x: m.cursor_pos.x })
+							m.cursor_pos = ModelCursorPos{ x: doc_type_cursor_pos.x, y: doc_type_cursor_pos.y }
 							assert m.cursor_pos.y > 0
 						}
 						'k' {
-							m.cursor_pos = m.cursor_pos.up()
+							doc_type_cursor_pos := m.doc_controller.move_cursor_down(m.doc_id, documents.CursorPos{ y: m.cursor_pos.y, x: m.cursor_pos.x })
+							m.cursor_pos = ModelCursorPos{ x: doc_type_cursor_pos.x, y: doc_type_cursor_pos.y }
 						}
 						'l' {
-							m.cursor_pos = m.cursor_pos.right(max_width: 100)
+							doc_type_cursor_pos := m.doc_controller.move_cursor_right(m.doc_id, documents.CursorPos{ y: m.cursor_pos.y, x: m.cursor_pos.x })
+							m.cursor_pos = ModelCursorPos{ x: doc_type_cursor_pos.x, y: doc_type_cursor_pos.y }
+
 						}
 						else {}
 					}
