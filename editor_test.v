@@ -32,4 +32,3 @@ fn test_cursor_up_moves_up() {
 	assert cursor.x == 99
 	assert cursor.y == 1
 }
-

@@ -321,7 +321,8 @@ fn (m FilePickerModel) max_visible_items() int {
 }
 
 fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int, height int, border_color tea.Color) {
-	tea.new_layout().border(.normal).border_color(border_color).size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
+	tea.new_layout().border(.normal).border_color(border_color).size(width, height).render(mut r_ctx,
+		fn [m, width, height] (mut ctx tea.Context) {
 		max_width := width - 2
 		max_height := height - 2
 		ctx.set_clip_area(tea.ClipArea{0, 0, max_width - 1, max_height})

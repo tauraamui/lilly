@@ -27,7 +27,11 @@ fn PetalModel.new(config cfg.Config, doc_controller &documents.Controller) Petal
 		config:        config
 		theme:         config.theme
 		first_frame:   true
-		active_screen: SplashScreenModel.new(leader_key: config.leader_key, theme: config.theme, doc_controller: doc_controller)
+		active_screen: SplashScreenModel.new(
+			leader_key:     config.leader_key
+			theme:          config.theme
+			doc_controller: doc_controller
+		)
 	}
 }
 

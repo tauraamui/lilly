@@ -170,7 +170,9 @@ fn test_move_gap_buffer_to_middle_end_and_back() {
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcde___fghijk'
 
-	gb.move_gap(must_cursor_to_offset(gb, x: gb.get_line_at(y: 0) or { panic('failed to get line contents') }.runes().len, y: 0))
+	gb.move_gap(must_cursor_to_offset(gb, x: gb.get_line_at(y: 0) or {
+		panic('failed to get line contents')
+	}.runes().len, y: 0))
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcdefghijk___'
 
@@ -205,7 +207,9 @@ fn test_move_gap_buffer_to_middle_and_back_alongside_inserts() {
 	assert gb.content() == '2abcde1fghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '2_abcde1fghijk'
 
-	gb.move_gap(must_cursor_to_offset(gb, x: gb.get_line_at(y: 0) or { panic('failed to get line contents') }.runes().len, y: 0))
+	gb.move_gap(must_cursor_to_offset(gb, x: gb.get_line_at(y: 0) or {
+		panic('failed to get line contents')
+	}.runes().len, y: 0))
 	gb.insert_char(`3`)
 	assert gb.content() == '2abcde1fghijk3'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcde1fghijk3___'
@@ -295,4 +299,3 @@ fn test_gap_buffer_single_line_content_cursor_to_offset_insert_twice() {
 	assert gb.content() == '*import ^lib.buffers'
 }
 */
-

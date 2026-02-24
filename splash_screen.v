@@ -22,15 +22,15 @@ mut:
 
 @[params]
 struct SplashScreenOptions {
-	leader_key string
-	theme      theme.Theme
+	leader_key     string
+	theme          theme.Theme
 	doc_controller &documents.Controller
 }
 
 struct SplashScreenModel {
-	leader_key string
-	logo       SplashLogo
-	theme      theme.Theme
+	leader_key     string
+	logo           SplashLogo
+	theme          theme.Theme
 	doc_controller &documents.Controller
 mut:
 	tmux_wrapped bool
@@ -41,9 +41,9 @@ mut:
 
 fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
 	return SplashScreenModel{
-		leader_key: opts.leader_key
-		theme:      opts.theme
-		logo:       SplashLogo{
+		leader_key:     opts.leader_key
+		theme:          opts.theme
+		logo:           SplashLogo{
 			data: logo_contents.to_string().split_into_lines()
 		}
 		doc_controller: opts.doc_controller
@@ -152,7 +152,8 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			cmds << open_editor_workspace(msg.file_path)
 		}
 		OpenEditorWorkspaceMsg {
-			mut workspace := EditorWorkspaceModel.new(m.theme, msg.initial_file_path, m.doc_controller)
+			mut workspace := EditorWorkspaceModel.new(m.theme, msg.initial_file_path,
+				m.doc_controller)
 			cmd := workspace.init()
 			if u_cmd := cmd {
 				cmds << u_cmd

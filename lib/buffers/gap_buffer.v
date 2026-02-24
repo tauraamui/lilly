@@ -17,16 +17,16 @@ const initial_gap_size = u32(32)
 @[params]
 pub struct GapBufferParams {
 pub:
-	content     []rune
+	content  []rune
 	gap_size u32 = initial_gap_size
 }
 
 pub fn GapBuffer.new(opts GapBufferParams) GapBuffer {
 	mut gb := GapBuffer{
 		initial_gap_size: opts.gap_size
-		data: []rune{ len: opts.content.len + int(opts.gap_size), init: null_code_point }
-		gap_start: 0
-		gap_end: opts.gap_size
+		data:             []rune{len: opts.content.len + int(opts.gap_size), init: null_code_point}
+		gap_start:        0
+		gap_end:          opts.gap_size
 	}
 	gb.initial_fill(opts.content)
 	return gb
@@ -39,7 +39,7 @@ fn (mut g GapBuffer) initial_fill(data []rune) {
 }
 
 fn (mut g GapBuffer) grow_gap() {
-	mut dest := []rune{ len: g.data.len + int(g.initial_gap_size), init: null_code_point }
+	mut dest := []rune{len: g.data.len + int(g.initial_gap_size), init: null_code_point}
 	arrays.copy(mut dest[..g.gap_start], g.data[..g.gap_start])
 	gap_end := g.gap_start + g.initial_gap_size
 	arrays.copy(mut dest[gap_end..], g.data[g.gap_end..])
@@ -111,7 +111,11 @@ fn (g GapBuffer) get_line_at(opts CursorPosParams) ?string {
 
 pub fn (mut g GapBuffer) move_gap(offset_with_gap int) {
 	gap_size := int(g.current_gap_size())
-	offset := if gap_size > 0 && offset_with_gap > g.gap_start { offset_with_gap - gap_size } else { offset_with_gap }
+	offset := if gap_size > 0 && offset_with_gap > g.gap_start {
+		offset_with_gap - gap_size
+	} else {
+		offset_with_gap
+	}
 
 	if offset == g.gap_start {
 		return
@@ -119,7 +123,7 @@ pub fn (mut g GapBuffer) move_gap(offset_with_gap int) {
 
 	if offset > g.gap_start {
 		chars_to_move := offset - int(g.gap_start)
-		for i in 0..chars_to_move {
+		for i in 0 .. chars_to_move {
 			g.data[int(g.gap_start) + i] = g.data[int(g.gap_end) + i]
 			g.data[int(g.gap_end) + i] = null_code_point
 		}
@@ -135,7 +139,6 @@ pub fn (mut g GapBuffer) move_gap(offset_with_gap int) {
 	}
 	g.gap_end -= u32(chars_to_move)
 	g.gap_start = u32(offset)
-
 }
 
 fn (g GapBuffer) current_gap_size() u32 {
@@ -170,4 +173,3 @@ fn (g GapBuffer) raw_content() []rune {
 fn null_code_point_to_str(c rune) rune {
 	return if c == null_code_point { `_` } else { c }
 }
-
