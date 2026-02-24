@@ -102,28 +102,28 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							'left' {
 								m.doc_controller.move_cursor_left(m.doc_id, .insert)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
-									cmds << raise_error('switch mode error: ${err}')
+									cmds << raise_error('error: ${err}')
 									return m.clone(), tea.batch_array(cmds)
 								}
 							}
 							'up' {
 								m.doc_controller.move_cursor_down(m.doc_id, .insert)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
-									cmds << raise_error('switch mode error: ${err}')
+									cmds << raise_error('error: ${err}')
 									return m.clone(), tea.batch_array(cmds)
 								}
 							}
 							'right' {
 								m.doc_controller.move_cursor_right(m.doc_id, .insert)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
-									cmds << raise_error('switch mode error: ${err}')
+									cmds << raise_error('error: ${err}')
 									return m.clone(), tea.batch_array(cmds)
 								}
 							}
 							'down' {
 								m.doc_controller.move_cursor_up(m.doc_id, .insert)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
-									cmds << raise_error('switch mode error: ${err}')
+									cmds << raise_error('error: ${err}')
 									return m.clone(), tea.batch_array(cmds)
 								}
 							}
