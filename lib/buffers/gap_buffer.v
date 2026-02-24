@@ -1,6 +1,7 @@
 module buffers
 
 import arrays
+import strings
 
 pub struct GapBuffer {
 	initial_gap_size u32
@@ -87,9 +88,25 @@ pub fn (g GapBuffer) cursor_to_offset(opts CursorPosParams) ?int {
 	return none
 }
 
-fn (mut g GapBuffer) get_char_at(opts CursorPosParams) ?rune {
+fn (g GapBuffer) get_char_at(opts CursorPosParams) ?rune {
 	offset := g.cursor_to_offset(opts) or { return none }
 	return g.data[offset]
+}
+
+fn (g GapBuffer) get_line_at(opts CursorPosParams) ?string {
+	start_of_line_offset := g.cursor_to_offset(y: opts.y) or { return none }
+	mut sb := strings.new_builder(g.data.len - start_of_line_offset)
+	data := g.data[start_of_line_offset..]
+	for i, c in data {
+		if c == null_code_point {
+			continue
+		}
+		if c == `\n` {
+			break
+		}
+		sb.write_rune(c)
+	}
+	return sb.str()
 }
 
 pub fn (mut g GapBuffer) move_gap2(offset_with_gap int) {
