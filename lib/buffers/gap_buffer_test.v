@@ -264,6 +264,21 @@ fn test_gap_buffer_get_char_at_multi_line_content() {
 }
 
 @[assert_continues]
+fn test_gap_buffer_get_line_at() {
+	mut gb := GapBuffer.new(content: 'import lib.buffers'.runes(), gap_size: 3)
+
+	assert gb.get_line_at(y: 0)? == 'import lib.buffers'
+}
+
+@[assert_continues]
+fn test_gap_buffer_get_line_at_multi_line_content() {
+	mut gb := GapBuffer.new(content: 'import lib.buffers\nimport bytes'.runes(), gap_size: 3)
+
+	assert gb.get_line_at(y: 0)? == 'import lib.buffers'
+	assert gb.get_line_at(y: 1)? == 'import bytes'
+}
+
+@[assert_continues]
 fn test_gap_buffer_single_line_content_cursor_to_offset() {
 	mut gb := GapBuffer.new(content: 'import lib.buffers'.runes(), gap_size: 3)
 	assert gb.cursor_to_offset(x: 0)? == 3
