@@ -5,6 +5,7 @@ import os
 import tauraamui.bobatea as tea
 import palette
 import theme
+import documents
 
 const gitcommit_hash = $embed_file('.githash').to_string()
 
@@ -21,14 +22,16 @@ mut:
 
 @[params]
 struct SplashScreenOptions {
-	leader_key string
-	theme      theme.Theme
+	leader_key     string
+	theme          theme.Theme
+	doc_controller &documents.Controller
 }
 
 struct SplashScreenModel {
-	leader_key string
-	logo       SplashLogo
-	theme      theme.Theme
+	leader_key     string
+	logo           SplashLogo
+	theme          theme.Theme
+	doc_controller &documents.Controller
 mut:
 	tmux_wrapped bool
 	leader_mode  bool
@@ -38,11 +41,12 @@ mut:
 
 fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
 	return SplashScreenModel{
-		leader_key: opts.leader_key
-		theme:      opts.theme
-		logo:       SplashLogo{
+		leader_key:     opts.leader_key
+		theme:          opts.theme
+		logo:           SplashLogo{
 			data: logo_contents.to_string().split_into_lines()
 		}
+		doc_controller: opts.doc_controller
 	}
 }
 
@@ -148,7 +152,8 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			cmds << open_editor_workspace(msg.file_path)
 		}
 		OpenEditorWorkspaceMsg {
-			mut workspace := EditorWorkspaceModel.new(m.theme, msg.initial_file_path)
+			mut workspace := EditorWorkspaceModel.new(m.theme, msg.initial_file_path,
+				m.doc_controller)
 			cmd := workspace.init()
 			if u_cmd := cmd {
 				cmds << u_cmd
@@ -265,7 +270,7 @@ fn render_copyright_footer(mut ctx tea.Context, petal_pink tea.Color) {
 
 const basic_command_help = [
 	' Find File                   <leader>ff',
-]
+]!
 
 const disabled_command_help = [
 	' Find Word                   <leader>fg',
@@ -273,7 +278,7 @@ const disabled_command_help = [
 	' File Browser                <leader>fv',
 	' Colorschemes                <leader>cs',
 	' New File                    <leader>nf',
-]
+]!
 
 const pending_match_color = tea.Color.ansi(244)
 

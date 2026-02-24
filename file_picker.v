@@ -109,7 +109,7 @@ struct ScoredFile {
 const max_path_entries = 500
 
 fn filter_file_paths(file_paths []string, query string, last_query string, last_results []string) []string {
-	if query.len == 0 {
+	if query == '' {
 		return file_paths[..if file_paths.len > max_path_entries {
 			max_path_entries
 		} else {
@@ -117,7 +117,7 @@ fn filter_file_paths(file_paths []string, query string, last_query string, last_
 		}]
 	}
 
-	can_use_incremental := last_query.len > 0 && query.len > last_query.len
+	can_use_incremental := last_query != '' && query.len > last_query.len
 		&& query.starts_with(last_query)
 	paths_to_filter := if can_use_incremental && last_results.len > 0 {
 		last_results
@@ -176,7 +176,7 @@ fn (mut m FilePickerModel) on_cancel() (tea.Model, ?tea.Cmd) {
 	return m.clone(), cmd
 }
 
-const filter_trigger_special_keys = ['backspace', 'delete']
+const filter_trigger_special_keys = ['backspace', 'delete']! // fixed size array
 
 fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	mut cmds := []tea.Cmd{}
@@ -321,7 +321,8 @@ fn (m FilePickerModel) max_visible_items() int {
 }
 
 fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int, height int, border_color tea.Color) {
-	tea.new_layout().border(.normal).border_color(border_color).size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
+	tea.new_layout().border(.normal).border_color(border_color).size(width, height).render(mut r_ctx,
+		fn [m, width, height] (mut ctx tea.Context) {
 		max_width := width - 2
 		max_height := height - 2
 		ctx.set_clip_area(tea.ClipArea{0, 0, max_width - 1, max_height})

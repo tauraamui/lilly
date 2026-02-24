@@ -1,7 +1,6 @@
 module main
 
 import tauraamui.bobatea as tea
-import palette
 import theme
 
 enum Mode as u8 {

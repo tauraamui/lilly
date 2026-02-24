@@ -21,7 +21,7 @@ fn (mut f MockFilesFinder) search(root string) {
 
 fn test_file_list_loads_files() {
 	mut fp := FilePickerModel{
-		theme: theme.light_theme
+		theme:  theme.light_theme
 		finder: MockFilesFinder{}
 	}
 

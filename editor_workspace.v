@@ -8,6 +8,7 @@ import boba
 import theme
 import palette
 import glyphs
+import documents
 
 struct EditorWorkspaceModel {
 	initial_file_path string
@@ -25,6 +26,7 @@ mut:
 	split_tree boba.SplitTree
 	editors    map[int]DebuggableModel
 
+	doc_controller     &documents.Controller
 	active_editor_data ?EditorData
 	branch_name        string
 	leader_suffix      string
@@ -53,11 +55,12 @@ fn open_editor_workspace(initial_file_path string) tea.Cmd {
 	}
 }
 
-fn EditorWorkspaceModel.new(ttheme theme.Theme, initial_file_path string) EditorWorkspaceModel {
+fn EditorWorkspaceModel.new(ttheme theme.Theme, initial_file_path string, doc_controller &documents.Controller) EditorWorkspaceModel {
 	return EditorWorkspaceModel{
 		theme:             ttheme
 		initial_file_path: initial_file_path
 		split_tree:        boba.SplitTree.new()
+		doc_controller:    doc_controller
 	}
 }
 
@@ -100,6 +103,16 @@ fn unfocus_editor(editor_id int) tea.Cmd {
 		return EditorModelMsg{
 			id:  editor_id
 			msg: tea.BlurredMsg{}
+		}
+	}
+}
+
+fn forward_msg_to_editor(editor_id int, msg tea.Msg, mode Mode) tea.Cmd {
+	return fn [editor_id, msg, mode] () tea.Msg {
+		return EditorModelMsg{
+			id:   editor_id
+			msg:  msg
+			mode: mode
 		}
 	}
 }
@@ -283,38 +296,38 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				match msg.k_type {
 					.special {
 						if msg.string() == 'escape' {
-							cmds << switch_mode(.normal)
+							return m.clone(), switch_mode(.normal)
 						}
 					}
 					.runes {
 						match msg.string() {
 							'h' {
-								cmds << switch_active_split(.left)
+								return m.clone(), switch_active_split(.left)
 							}
 							'l' {
-								cmds << switch_active_split(.right)
+								return m.clone(), switch_active_split(.right)
 							}
 							else {}
 						}
 					}
 				}
-				cmds << switch_mode(.normal)
+				return m.clone(), switch_mode(.normal)
 			}
 			.normal {
 				match msg.k_type {
 					.special {
 						match msg.string() {
 							'escape' {
-								cmds << hide_error
+								return m.clone(), hide_error
 							}
 							'ctrl+b' {
-								cmds << switch_mode(.navigation)
+								return m.clone(), switch_mode(.navigation)
 							}
 							'ctrl+w+h' {
-								cmds << switch_active_split(.left)
+								return m.clone(), switch_active_split(.left)
 							}
 							'ctrl+w+l' {
-								cmds << switch_active_split(.right)
+								return m.clone(), switch_active_split(.right)
 							}
 							else {}
 						}
@@ -327,9 +340,17 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							':' {
 								return m.clone(), switch_mode(.command)
 							}
+							'i' {
+								return m.clone(), switch_mode(.insert)
+							}
 							else {}
 						}
 					}
+				}
+			}
+			.insert {
+				if msg.k_type == .special && msg.string() == 'escape' {
+					return m.clone(), switch_mode(.normal)
 				}
 			}
 			.command {
@@ -358,9 +379,26 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			}
 			else {}
 		}
+		for id, mut editor in m.editors {
+			e, cmd := editor.update(EditorModelKeyMsg{
+				key_msg: msg
+				mode:    m.mode
+			})
+			if e is DebuggableModel {
+				m.editors[id] = e
+			}
+			if u_cmd := cmd {
+				cmds << u_cmd
+			}
+		}
 	}
 
+	// TODO(tauraamui): no longer any reason whatsoever that the cases aren't immediately returning
+	// nothing in the scope below them to worry about, in the past I think there was but now it should be
+	// all tidied up
 	match msg {
+		// NOTE(tauraamui): focus and blurred respectfully should be where we emit further necessary cmds for
+		// re-querying current git branch names and updating the debug screen's active editor data
 		tea.FocusedMsg {
 			cmds << query_pwd_git_branch
 		}
@@ -380,11 +418,17 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		OpenEditorMsg {
 			editor_id := m.next_editor_id()
-			mut e_model := EditorModel.new(editor_id, msg.file_path)
+
+			doc_id := m.doc_controller.open_document(msg.file_path) or {
+				cmds << debug_log('failed to open document ${msg.file_path}: ${err}')
+				return m.clone(), tea.batch_array(cmds)
+			}
+
+			mut e_model := EditorModel.new(editor_id, msg.file_path, doc_id, m.doc_controller)
 			cmd := e_model.init()
 
 			if m.split_tree.is_empty() {
-				m.split_tree.init_with_editor(editor_id, msg.file_path)
+				m.split_tree.init_with_editor(editor_id, msg.file_path, doc_id)
 			} else {
 				old_id := m.split_tree.active_editor_id
 				m.split_tree.replace_active_editor(editor_id, msg.file_path)
@@ -406,7 +450,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			if info := m.split_tree.get_active_editor() {
 				old_id := info.id // get the old ID before inserting
 				new_id := m.next_editor_id()
-				mut new_editor := EditorModel.new(new_id, info.file_path)
+				mut new_editor := EditorModel.new(new_id, info.file_path, info.doc_id,
+					m.doc_controller)
 				if init_cmd := new_editor.init() {
 					cmds << init_cmd
 				}
@@ -432,6 +477,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					cmds << tea.quit
 				} else {
 					// focus the new active editor
+					// TODO(tauraamui): the only cmd emission in this part should be just focus singularly, the "on focus detected",
+					// currently at the top of this match should be where these other cmds are invoked to avoid duplication
 					cmds << tea.sequence(focus_editor(m.active_editor_id), toggle_editor_show_border(m.split_tree.get_leftmost_id(),
 						false), query_editor_data(m.active_editor_id), query_pwd_git_branch,
 						tea.emit_resize)
@@ -524,6 +571,9 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					m.input_field.blur()
 				}
 			}
+			if u_cmd := m.forward_msg_to_editors(msg) {
+				cmds << u_cmd
+			}
 			return m.clone_with_mode(msg.mode), tea.batch_array(cmds)
 		}
 		tea.ResizedMsg {
@@ -533,20 +583,29 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			}
 			m.input_field = i_field
 		}
-		else {
-			for id, mut editor in m.editors {
-				e, cmd := editor.update(msg)
-				if e is DebuggableModel {
-					m.editors[id] = e
-				}
-				if u_cmd := cmd {
-					cmds << u_cmd
-				}
-			}
-		}
+		else {}
+	}
+
+	if u_cmd := m.forward_msg_to_editors(msg) {
+		cmds << u_cmd
 	}
 
 	return m.clone(), tea.batch_array(cmds)
+}
+
+fn (mut m EditorWorkspaceModel) forward_msg_to_editors(msg tea.Msg) ?tea.Cmd {
+	mut cmds := []tea.Cmd{}
+	for id, mut editor in m.editors {
+		e, cmd := editor.update(msg)
+		if e is DebuggableModel {
+			m.editors[id] = e
+		}
+		if u_cmd := cmd {
+			cmds << u_cmd
+		}
+	}
+
+	return tea.batch_array(cmds)
 }
 
 fn (m EditorWorkspaceModel) view(mut ctx tea.Context) {
@@ -560,6 +619,10 @@ fn (m EditorWorkspaceModel) view(mut ctx tea.Context) {
 
 			offset_id := ctx.push_offset(tea.Offset{ x: rect.x, y: rect.y })
 
+			// FIXME(tauraamui): I hate this, need to find better way to propogate artifical sizes per rect
+			// <<note to self>>: set daily reminder that AI code has always led to the worst possible design
+			// decisions and caused nasty shit to pile up more than anything else, just like this. this is a
+			// prime example
 			resized, _ := editor.update(tea.ResizedMsg{
 				window_width:  rect.width
 				window_height: rect.height
