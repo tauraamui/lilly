@@ -9,6 +9,7 @@ pub struct Controller {
 mut:
 	loaded_files map[string]int
 	docs         map[int]Document
+	cursors      map[int]CursorPos
 	doc_id_count int
 }
 
@@ -24,27 +25,40 @@ pub fn (mut c Controller) open_document(file_path string) !int {
 	id := hash_id(c.doc_id_count)
 	c.loaded_files[file_path] = id
 	c.docs[id] = Document.new(file_path)!
+	c.cursors[id] = CursorPos{}
 	return id
+}
+
+pub fn (mut c Controller) prepare_for_insertion(doc_id int) ! {
+	return c.docs[doc_id].prepare_for_insertion_at(c.cursors[doc_id])
 }
 
 pub fn (mut c Controller) prepare_for_insertion_at(doc_id int, pos CursorPos) ! {
 	return c.docs[doc_id].prepare_for_insertion_at(pos)
 }
 
-pub fn (mut c Controller) move_cursor_left(doc_id int, pos CursorPos) CursorPos {
-	return c.docs[doc_id].move_cursor_left(pos)
+pub fn (c Controller) cursor_pos(doc_id int) CursorPos {
+	return c.cursors[doc_id]
 }
 
-pub fn (mut c Controller) move_cursor_up(doc_id int, pos CursorPos) CursorPos {
-	return c.docs[doc_id].move_cursor_up(pos)
+pub fn (mut c Controller) move_cursor_left(doc_id int) {
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_left(pos)
 }
 
-pub fn (mut c Controller) move_cursor_down(doc_id int, pos CursorPos) CursorPos {
-	return c.docs[doc_id].move_cursor_down(pos)
+pub fn (mut c Controller) move_cursor_up(doc_id int) {
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_up(pos)
 }
 
-pub fn (mut c Controller) move_cursor_right(doc_id int, pos CursorPos) CursorPos {
-	return c.docs[doc_id].move_cursor_right(pos)
+pub fn (mut c Controller) move_cursor_down(doc_id int) {
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_down(pos)
+}
+
+pub fn (mut c Controller) move_cursor_right(doc_id int) {
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_right(pos)
 }
 
 pub fn (mut c Controller) insert_char(doc_id int, data rune) {

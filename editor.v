@@ -4,62 +4,6 @@ import tauraamui.bobatea as tea
 import palette
 import documents
 
-struct ModelCursorPos {
-	x int
-	y int
-}
-
-@[params]
-struct ModelCursorPosParams {
-	distance   int = 1
-	max_width  int
-	max_height int
-}
-
-fn (c ModelCursorPos) up(opts ModelCursorPosParams) ModelCursorPos {
-	yy := c.y - opts.distance
-	if yy < 0 {
-		return c
-	}
-	return ModelCursorPos{
-		y: yy
-		x: 0
-	}
-}
-
-fn (c ModelCursorPos) down(opts ModelCursorPosParams) ModelCursorPos {
-	yy := c.y + opts.distance
-	if yy >= opts.max_height {
-		return c
-	}
-	return ModelCursorPos{
-		y: yy
-		x: 0
-	}
-}
-
-fn (c ModelCursorPos) left() ModelCursorPos {
-	xx := c.x - 1
-	if xx < 0 {
-		return c
-	}
-	return ModelCursorPos{
-		y: c.y
-		x: xx
-	}
-}
-
-fn (c ModelCursorPos) right(opts ModelCursorPosParams) ModelCursorPos {
-	xx := c.x + opts.distance
-	if xx >= opts.max_width {
-		return c
-	}
-	return ModelCursorPos{
-		y: c.y
-		x: xx
-	}
-}
-
 struct EditorData {
 	id         int
 	file_path  string
@@ -75,7 +19,6 @@ struct EditorModel {
 mut:
 	focused     bool
 	show_border bool = true
-	cursor_pos  ModelCursorPos
 
 	width  int
 	height int
@@ -150,7 +93,6 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						char_runes := msg.key_msg.string().runes()
 						for cr in char_runes {
 							m.doc_controller.insert_char(m.doc_id, cr)
-							m.cursor_pos = m.cursor_pos.right(max_width: 100)
 						}
 					}
 					.special {
@@ -166,22 +108,16 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					cmds << editor_data(m.data())
 					match msg.key_msg.string() {
 						'h' {
-							doc_type_cursor_pos := m.doc_controller.move_cursor_left(m.doc_id, documents.CursorPos{ y: m.cursor_pos.y, x: m.cursor_pos.x })
-							m.cursor_pos = ModelCursorPos{ x: doc_type_cursor_pos.x, y: doc_type_cursor_pos.y }
+							m.doc_controller.move_cursor_left(m.doc_id)
 						}
 						'j' {
-							doc_type_cursor_pos := m.doc_controller.move_cursor_up(m.doc_id, documents.CursorPos{ y: m.cursor_pos.y, x: m.cursor_pos.x })
-							m.cursor_pos = ModelCursorPos{ x: doc_type_cursor_pos.x, y: doc_type_cursor_pos.y }
-							assert m.cursor_pos.y > 0
+							m.doc_controller.move_cursor_up(m.doc_id)
 						}
 						'k' {
-							doc_type_cursor_pos := m.doc_controller.move_cursor_down(m.doc_id, documents.CursorPos{ y: m.cursor_pos.y, x: m.cursor_pos.x })
-							m.cursor_pos = ModelCursorPos{ x: doc_type_cursor_pos.x, y: doc_type_cursor_pos.y }
+							m.doc_controller.move_cursor_down(m.doc_id)
 						}
 						'l' {
-							doc_type_cursor_pos := m.doc_controller.move_cursor_right(m.doc_id, documents.CursorPos{ y: m.cursor_pos.y, x: m.cursor_pos.x })
-							m.cursor_pos = ModelCursorPos{ x: doc_type_cursor_pos.x, y: doc_type_cursor_pos.y }
-
+							m.doc_controller.move_cursor_right(m.doc_id)
 						}
 						else {}
 					}
@@ -198,8 +134,11 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		SwitchModeMsg {
 			if msg.mode == .insert && m.focused {
-				c_x := m.cursor_pos.x
-				c_y := m.cursor_pos.y
+				m.doc_controller.prepare_for_insertion(m.doc_id) or {
+					cmds << raise_error('switch mode error: ${err}')
+					return m.clone(), tea.batch_array(cmds)
+				}
+				/*
 				m.doc_controller.prepare_for_insertion_at(m.doc_id, documents.CursorPos{
 					x: c_x
 					y: c_y
@@ -207,6 +146,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					cmds << raise_error('switch mode error: ${err}')
 					return m.clone(), tea.batch_array(cmds)
 				}
+				*/
 			}
 		}
 		EditorModelMsg {
@@ -272,31 +212,34 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 }
 
 fn (m EditorModel) render_cursor(mut ctx tea.Context) {
+	cursor_pos := m.doc_controller.cursor_pos(m.doc_id)
 	default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
 	ctx.set_bg_color(palette.fg_color(default_bg_color))
-	ctx.draw_rect(m.cursor_pos.x, m.cursor_pos.y, 1, 1)
+	ctx.draw_rect(cursor_pos.x, cursor_pos.y, 1, 1)
 	ctx.reset_bg_color()
 }
 
 fn (m EditorModel) debug_data() DebugData {
+	cursor_pos := m.doc_controller.cursor_pos(m.doc_id)
 	return DebugData{
 		name: 'active editor data'
 		data: {
 			'id':         '${m.id}'
 			'file path':  m.file_path
-			'cursor_row': '${m.cursor_pos.y}'
-			'cursor_col': '${m.cursor_pos.x}'
+			'cursor_row': '${cursor_pos.y}'
+			'cursor_col': '${cursor_pos.x}'
 		}
 	}
 }
 
 fn (m EditorModel) data() EditorData {
+	cursor_pos := m.doc_controller.cursor_pos(m.doc_id)
 	return EditorData{
 		id:        m.id
 		file_path: m.file_path
 
-		cursor_row: m.cursor_pos.y
-		cursor_col: m.cursor_pos.x
+		cursor_row: cursor_pos.y
+		cursor_col: cursor_pos.x
 	}
 }
 
