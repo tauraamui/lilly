@@ -133,22 +133,41 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				}
 			}
 			.normal {
-				if msg.key_msg.k_type == .runes {
-					cmds << editor_data(m.data())
-					match msg.key_msg.string() {
-						'h' {
-							m.doc_controller.move_cursor_left(m.doc_id, .normal)
+				match msg.key_msg.k_type {
+					.runes {
+						cmds << editor_data(m.data())
+						match msg.key_msg.string() {
+							'h' {
+								m.doc_controller.move_cursor_left(m.doc_id, .normal)
+							}
+							'j' {
+								m.doc_controller.move_cursor_up(m.doc_id, .normal)
+							}
+							'k' {
+								m.doc_controller.move_cursor_down(m.doc_id, .normal)
+							}
+							'l' {
+								m.doc_controller.move_cursor_right(m.doc_id, .normal)
+							}
+							else {}
 						}
-						'j' {
-							m.doc_controller.move_cursor_up(m.doc_id, .normal)
+					}
+					.special {
+						match msg.key_msg.string() {
+							'left' {
+								m.doc_controller.move_cursor_left(m.doc_id, .normal)
+							}
+							'up' {
+								m.doc_controller.move_cursor_down(m.doc_id, .normal)
+							}
+							'right' {
+								m.doc_controller.move_cursor_right(m.doc_id, .normal)
+							}
+							'down' {
+								m.doc_controller.move_cursor_up(m.doc_id, .normal)
+							}
+							else {}
 						}
-						'k' {
-							m.doc_controller.move_cursor_down(m.doc_id, .normal)
-						}
-						'l' {
-							m.doc_controller.move_cursor_right(m.doc_id, .normal)
-						}
-						else {}
 					}
 				}
 			}
