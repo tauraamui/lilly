@@ -97,7 +97,7 @@ fn (g GapBuffer) get_line_at(opts CursorPosParams) ?string {
 	start_of_line_offset := g.cursor_to_offset(y: opts.y) or { return none }
 	mut sb := strings.new_builder(g.data.len - start_of_line_offset)
 	data := g.data[start_of_line_offset..]
-	for i, c in data {
+	for _, c in data {
 		if c == null_code_point {
 			continue
 		}
@@ -109,7 +109,7 @@ fn (g GapBuffer) get_line_at(opts CursorPosParams) ?string {
 	return sb.str()
 }
 
-pub fn (mut g GapBuffer) move_gap2(offset_with_gap int) {
+pub fn (mut g GapBuffer) move_gap(offset_with_gap int) {
 	gap_size := int(g.current_gap_size())
 	offset := if gap_size > 0 && offset_with_gap > g.gap_start { offset_with_gap - gap_size } else { offset_with_gap }
 

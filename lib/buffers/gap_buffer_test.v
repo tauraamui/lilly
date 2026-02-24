@@ -91,45 +91,45 @@ fn test_move_gap_buffer_simplest_case() {
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
 
-	gb.move_gap2(must_cursor_to_offset(gb, x: 1))
+	gb.move_gap(must_cursor_to_offset(gb, x: 1))
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'a___bcdefghijk'
 }
 
-fn test_move_gap_2_buffer_simplest_case_from_cursor() {
+fn test_move_gap_buffer_simplest_case_from_cursor() {
 	mut gb := GapBuffer.new(content: 'abcdefghijk'.runes(), gap_size: 3)
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
 
-	gb.move_gap2(gb.cursor_to_offset(x: 0, y: 0) or { panic('failed to convert: ${err}') })
+	gb.move_gap(gb.cursor_to_offset(x: 0, y: 0) or { panic('failed to convert: ${err}') })
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
 }
 
-fn test_move_gap_2_buffer_simplest_case_from_cursor_first_char_first_line() {
+fn test_move_gap_buffer_simplest_case_from_cursor_first_char_first_line() {
 	mut gb := GapBuffer.new(content: 'abcdefghijk'.runes(), gap_size: 3)
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
 
-	gb.move_gap2(gb.cursor_to_offset(x: 1, y: 0) or { panic('failed to convert: ${err}') })
+	gb.move_gap(gb.cursor_to_offset(x: 1, y: 0) or { panic('failed to convert: ${err}') })
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'a___bcdefghijk'
 }
 
-fn test_move_gap_2_buffer_simplest_case_from_cursor_second_line() {
+fn test_move_gap_buffer_simplest_case_from_cursor_second_line() {
 	mut gb := GapBuffer.new(content: 'abcdefghijk\nlmnopq'.runes(), gap_size: 3)
 	assert gb.content() == 'abcdefghijk\nlmnopq'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk\nlmnopq'
 
-	gb.move_gap2(gb.cursor_to_offset(x: 0, y: 1) or { panic('failed to convert: ${err}') })
+	gb.move_gap(gb.cursor_to_offset(x: 0, y: 1) or { panic('failed to convert: ${err}') })
 	assert gb.content() == 'abcdefghijk\nlmnopq'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcdefghijk\n___lmnopq'
 
-	gb.move_gap2(gb.cursor_to_offset(x: 5, y: 1) or { panic('failed to convert: ${err}') })
+	gb.move_gap(gb.cursor_to_offset(x: 5, y: 1) or { panic('failed to convert: ${err}') })
 	assert gb.content() == 'abcdefghijk\nlmnopq'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcdefghijk\nlmnop___q'
 
-	gb.move_gap2(gb.cursor_to_offset(x: 1, y: 1) or { panic('failed to convert: ${err}') })
+	gb.move_gap(gb.cursor_to_offset(x: 1, y: 1) or { panic('failed to convert: ${err}') })
 	assert gb.content() == 'abcdefghijk\nlmnopq'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcdefghijk\nl___mnopq'
 }
@@ -140,7 +140,7 @@ fn test_move_gap_buffer_to_middle() {
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
 
-	gb.move_gap2(must_cursor_to_offset(gb, x: 5))
+	gb.move_gap(must_cursor_to_offset(gb, x: 5))
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcde___fghijk'
 }
@@ -151,11 +151,11 @@ fn test_move_gap_buffer_to_middle_and_back() {
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
 
-	gb.move_gap2(must_cursor_to_offset(gb, x: 5))
+	gb.move_gap(must_cursor_to_offset(gb, x: 5))
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcde___fghijk'
 
-	gb.move_gap2(must_cursor_to_offset(gb, x: 0))
+	gb.move_gap(must_cursor_to_offset(gb, x: 0))
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
 }
@@ -166,19 +166,19 @@ fn test_move_gap_buffer_to_middle_end_and_back() {
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
 
-	gb.move_gap2(must_cursor_to_offset(gb, x: 5))
+	gb.move_gap(must_cursor_to_offset(gb, x: 5))
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcde___fghijk'
 
-	gb.move_gap2(must_cursor_to_offset(gb, x: gb.get_line_at(y: 0) or { panic('failed to get line contents') }.runes().len, y: 0))
+	gb.move_gap(must_cursor_to_offset(gb, x: gb.get_line_at(y: 0) or { panic('failed to get line contents') }.runes().len, y: 0))
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcdefghijk___'
 
-	gb.move_gap2(must_cursor_to_offset(gb, x: 5))
+	gb.move_gap(must_cursor_to_offset(gb, x: 5))
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcde___fghijk'
 
-	gb.move_gap2(must_cursor_to_offset(gb, x: 0))
+	gb.move_gap(must_cursor_to_offset(gb, x: 0))
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
 }
@@ -194,18 +194,18 @@ fn test_move_gap_buffer_to_middle_and_back_alongside_inserts() {
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
 
-	gb.move_gap2(must_cursor_to_offset(gb, x: 5))
+	gb.move_gap(must_cursor_to_offset(gb, x: 5))
 	gb.insert_char(`1`)
 	assert gb.content() == 'abcde1fghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcde1__fghijk'
 
-	gb.move_gap2(must_cursor_to_offset(gb, x: 0))
+	gb.move_gap(must_cursor_to_offset(gb, x: 0))
 	gb.insert_char(`2`)
 	assert gb.current_gap_size() == 1
 	assert gb.content() == '2abcde1fghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '2_abcde1fghijk'
 
-	gb.move_gap2(must_cursor_to_offset(gb, x: gb.get_line_at(y: 0) or { panic('failed to get line contents') }.runes().len, y: 0))
+	gb.move_gap(must_cursor_to_offset(gb, x: gb.get_line_at(y: 0) or { panic('failed to get line contents') }.runes().len, y: 0))
 	gb.insert_char(`3`)
 	assert gb.content() == '2abcde1fghijk3'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcde1fghijk3___'
@@ -215,7 +215,7 @@ fn test_move_gap_buffer_to_middle_and_back_alongside_inserts() {
 	assert gb.content() == '2abcde1fghijk34'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcde1fghijk34__'
 
-	gb.move_gap2(must_cursor_to_offset(gb, x: 5))
+	gb.move_gap(must_cursor_to_offset(gb, x: 5))
 	gb.insert_char(`5`)
 	assert gb.content() == '2abcd5e1fghijk34'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcd5_e1fghijk34'

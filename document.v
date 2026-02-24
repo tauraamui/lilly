@@ -28,13 +28,6 @@ pub fn (mut c Controller) open_document(file_path string) !int {
 	return id
 }
 
-/*
-pub fn (mut c Controller) distance_to_move(start_pos CursorPos, end_pos CursorPos) ?int {
-	start_offset := d.data.cursor_to_offset(start_pos) or { return none }
-	end_offset := d.data.cursor_to_offset(end_pos) or { return none }
-}
-*/
-
 pub fn (mut c Controller) prepare_for_insertion_at(doc_id int, pos CursorPos) ! {
 	return c.docs[doc_id].prepare_for_insertion_at(pos)
 }
@@ -78,7 +71,7 @@ fn Document.new(file_path string) !Document {
 
 pub fn (mut d Document) prepare_for_insertion_at(pos CursorPos) ! {
 	if offset := d.data.cursor_to_offset(x: pos.x, y: pos.y) {
-		d.data.move_gap2(offset)
+		d.data.move_gap(offset)
 		return
 	}
 	return error('unable to convert cursor pos to offset')
