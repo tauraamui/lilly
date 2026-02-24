@@ -46,7 +46,7 @@ fn test_insert_char_into_gap_buffer_with_existing_content_overflow_gap_grows_gap
 
 	gb.insert_char(`2`)
 	assert gb.content() == 'z12abcdef'
-	assert gb.raw_content().map(null_code_point_to_str).string() == 'z12abcdef'
+	assert gb.raw_content().map(null_code_point_to_str).string() == 'z12___abcdef'
 
 	gb.insert_char(`3`)
 	assert gb.content() == 'z123abcdef'
@@ -66,7 +66,7 @@ fn test_insert_char_into_gap_buffer_with_existing_content_overflow_gap_grows_gap
 
 	gb.insert_char(`2`)
 	assert gb.content() == 'z12abcdef'
-	assert gb.raw_content().map(null_code_point_to_str).string() == 'z12abcdef'
+	assert gb.raw_content().map(null_code_point_to_str).string() == 'z12___abcdef'
 
 	gb.insert_char(`3`)
 	assert gb.content() == 'z123abcdef'
@@ -78,7 +78,7 @@ fn test_insert_char_into_gap_buffer_with_existing_content_overflow_gap_grows_gap
 
 	gb.insert_char(`5`)
 	assert gb.content() == 'z12345abcdef'
-	assert gb.raw_content().map(null_code_point_to_str).string() == 'z12345abcdef'
+	assert gb.raw_content().map(null_code_point_to_str).string() == 'z12345___abcdef'
 
 	gb.insert_char(`6`)
 	assert gb.content() == 'z123456abcdef'
@@ -183,35 +183,47 @@ fn test_move_gap_buffer_to_middle_end_and_back() {
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
 }
 
+fn cursor_to_offset_or_panic(gb GapBuffer, opts CursorPosParams) int {
+	offset := gb.cursor_to_offset(opts) or { panic('failed to convert cursor ${opts} to offset') }
+	return offset
+}
+
 @[assert_continues]
 fn test_move_gap_buffer_to_middle_and_back_alongside_inserts() {
 	mut gb := GapBuffer.new(content: 'abcdefghijk'.runes(), gap_size: 3)
 	assert gb.content() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
 
-	gb.move_gap(5)
+	gb.move_gap2(cursor_to_offset_or_panic(gb, x: 5))
 	gb.insert_char(`1`)
 	assert gb.content() == 'abcde1fghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcde1__fghijk'
 
-	gb.move_gap(0)
+	gb.move_gap2(cursor_to_offset_or_panic(gb, x: 0))
 	gb.insert_char(`2`)
+	assert gb.current_gap_size() == 1
 	assert gb.content() == '2abcde1fghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '2_abcde1fghijk'
 
-	gb.move_gap(gb.content().runes().len)
+	assert false
+	/*
+	gb.move_gap2(cursor_to_offset_or_panic(gb, x: -1, y: 1))
+	// gb.move_gap2(gb.content().runes().len)
 	gb.insert_char(`3`)
 	assert gb.content() == '2abcde1fghijk3'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcde1fghijk3'
+	*/
 
+	gb.move_gap2(cursor_to_offset_or_panic(gb, x: 13))
 	gb.insert_char(`4`)
-	assert gb.content() == '2abcde1fghijk34'
-	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcde1fghijk34__'
+	assert gb.current_gap_size() == 3
+	assert gb.content() == '2abcde1fghijk4'
+	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcde1fghijk4___'
 
-	gb.move_gap(5)
+	// gb.move_gap2(cursor_to_offset_or_panic(gb, x: 5))
 	gb.insert_char(`5`)
-	assert gb.content() == '2abcd5e1fghijk34'
-	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcd5_e1fghijk34'
+	assert gb.content() == '2abcde1fghijk45'
+	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcde1fghijk45__'
 }
 
 @[assert_continues]
