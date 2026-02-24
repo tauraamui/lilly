@@ -97,7 +97,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 					.special {
 						match msg.key_msg.string() {
-							'enter' { m.doc_controller.insert_char(m.doc_id, `\n`) }
+							'enter' { m.doc_controller.insert_newline(m.doc_id) }
 							else {}
 						}
 					}

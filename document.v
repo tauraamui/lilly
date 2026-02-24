@@ -61,8 +61,14 @@ pub fn (mut c Controller) move_cursor_right(doc_id int) {
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_right(pos)
 }
 
+pub fn (mut c Controller) insert_newline(doc_id int) {
+	c.docs[doc_id].insert_char(`\n`)
+	c.move_cursor_up(doc_id) // will need to have a 'cursor_up_and_start'
+}
+
 pub fn (mut c Controller) insert_char(doc_id int, data rune) {
 	c.docs[doc_id].insert_char(data)
+	c.move_cursor_right(doc_id)
 }
 
 pub fn (c Controller) get_iterator(doc_id int) LineIterator {
