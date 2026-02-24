@@ -205,25 +205,20 @@ fn test_move_gap_buffer_to_middle_and_back_alongside_inserts() {
 	assert gb.content() == '2abcde1fghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '2_abcde1fghijk'
 
-	assert false
-	/*
-	gb.move_gap2(cursor_to_offset_or_panic(gb, x: -1, y: 1))
-	// gb.move_gap2(gb.content().runes().len)
+	gb.move_gap2(cursor_to_offset_or_panic(gb, x: gb.get_line_at(y: 0) or { panic('failed to get line contents') }.runes().len, y: 0))
 	gb.insert_char(`3`)
 	assert gb.content() == '2abcde1fghijk3'
-	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcde1fghijk3'
-	*/
+	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcde1fghijk3___'
 
-	gb.move_gap2(cursor_to_offset_or_panic(gb, x: 13))
 	gb.insert_char(`4`)
-	assert gb.current_gap_size() == 3
-	assert gb.content() == '2abcde1fghijk4'
-	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcde1fghijk4___'
+	assert gb.current_gap_size() == 2
+	assert gb.content() == '2abcde1fghijk34'
+	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcde1fghijk34__'
 
-	// gb.move_gap2(cursor_to_offset_or_panic(gb, x: 5))
+	gb.move_gap2(cursor_to_offset_or_panic(gb, x: 5))
 	gb.insert_char(`5`)
-	assert gb.content() == '2abcde1fghijk45'
-	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcde1fghijk45__'
+	assert gb.content() == '2abcd5e1fghijk34'
+	assert gb.raw_content().map(null_code_point_to_str).string() == '2abcd5_e1fghijk34'
 }
 
 @[assert_continues]
