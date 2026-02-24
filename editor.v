@@ -165,7 +165,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				if msg.key_msg.k_type == .runes {
 					cmds << editor_data(m.data())
 					match msg.key_msg.string() {
-						'h' {}
+						'h' { m.cursor_pos = m.cursor_pos.left() }
 						'j' {
 							m.cursor_pos = m.cursor_pos.down(max_height: m.height)
 							assert m.cursor_pos.y > 0
