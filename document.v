@@ -78,7 +78,7 @@ pub fn (c Controller) get_iterator(doc_id int) LineIterator {
 pub fn (mut c Controller) free() {
 	unsafe {
 		c.docs.free()
-		c.cursors.free() }
+		c.cursors.free()
 	}
 }
 
