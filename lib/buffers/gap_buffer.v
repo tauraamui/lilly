@@ -138,33 +138,6 @@ pub fn (mut g GapBuffer) move_gap2(offset_with_gap int) {
 
 }
 
-// FIXME(tauraamui): account for the fact that the offset is in document space, not data space
-// so the offset '3' (if the gap size is 3) would actually mean '0' for example
-pub fn (mut g GapBuffer) move_gap(position int) {
-	if position == g.gap_start {
-		return
-	}
-
-	if position > g.gap_start {
-		chars_to_move := position - int(g.gap_start)
-		for i in 0..chars_to_move {
-			g.data[int(g.gap_start) + i] = g.data[int(g.gap_end) + i]
-			g.data[int(g.gap_end) + i] = null_code_point
-		}
-		g.gap_start = u32(position)
-		g.gap_end += u32(chars_to_move)
-		return
-	}
-
-	chars_to_move := int(g.gap_start) - position
-	for i := chars_to_move - 1; i >= 0; i-- {
-		g.data[int(g.gap_end) - chars_to_move + i] = g.data[position + i]
-		g.data[position + i] = null_code_point
-	}
-	g.gap_end -= u32(chars_to_move)
-	g.gap_start = u32(position)
-}
-
 fn (g GapBuffer) current_gap_size() u32 {
 	return u32(g.gap_end - g.gap_start)
 }
