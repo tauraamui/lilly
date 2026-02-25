@@ -501,7 +501,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							m.active_editor_id = new_id
 
 							cmds << tea.sequence(unfocus_editor(old_id), focus_editor(new_id),
-								query_editor_data(new_id), query_pwd_git_branch)
+								query_editor_data(new_id), query_pwd_git_branch, switch_mode(.normal))
 						}
 					} else {
 						if m.tmux_wrapped {
@@ -521,7 +521,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							m.active_editor_id = new_id
 
 							cmds << tea.sequence(unfocus_editor(old_id), focus_editor(new_id),
-								query_editor_data(new_id), query_pwd_git_branch)
+								query_editor_data(new_id), query_pwd_git_branch, switch_mode(.normal))
 						}
 					} else {
 						if m.tmux_wrapped {
