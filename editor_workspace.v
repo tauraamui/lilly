@@ -162,6 +162,50 @@ fn hide_error_after(duration time.Duration) tea.Cmd {
 	})
 }
 
+enum DisplayMessageType {
+	normal
+	warning
+	error
+}
+
+fn (t DisplayMessageType) color(ttheme theme.Theme) tea.Color {
+	return match t {
+		.normal  { ttheme.petal_green }
+		.warning { ttheme.status_orange }
+		.error   { ttheme.petal_red }
+	}
+}
+
+struct DisplayMessageMsg {
+	contents string
+	m_type   DisplayMessageType
+}
+
+fn display_message(m_type DisplayMessageType, contents string) tea.Cmd {
+	return fn [m_type, contents] () tea.Msg {
+		return DisplayMessageMsg{
+			contents: contents
+			m_type: m_type
+		}
+	}
+}
+
+struct HideMessageMsg {
+	time time.Time
+}
+
+fn hide_message() tea.Msg {
+	return HideMessageMsg{}
+}
+
+fn hide_message_after(duration time.Duration) tea.Cmd {
+	return tea.tick(duration, fn (t time.Time) tea.Msg {
+		return HideMessageMsg{
+			time: t
+		}
+	})
+}
+
 struct QueryPWDGitBranchMsg {}
 
 fn query_pwd_git_branch() tea.Msg {
