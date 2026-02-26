@@ -33,7 +33,6 @@ pub fn (mut c Controller) open_document(file_path string) !int {
 pub fn (mut c Controller) write_document(doc_id int) ! {
 	// TODO(tauraamui): change error message emission to be just generic message emission
 	// with type flags, so the location is the same, but formatting or visual rep is different
-	assert false
 	target_file_path := c.docs[doc_id].file_path
 	temp_file_path := os.join_path(os.temp_dir(), os.base(target_file_path))
 	c.docs[doc_id].write_to(temp_file_path) or { return error('failed to write to temp location: ${temp_file_path}') }

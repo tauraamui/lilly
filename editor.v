@@ -236,10 +236,11 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				WriteToDiskMsg {
 					if msg.id == m.id {
 						m.doc_controller.write_document(m.doc_id) or {
-							cmds << raise_error('failed to write document to file')
+							cmds << raise_error('failed to write to disk')
 							return m.clone(), tea.batch_array(cmds)
 						}
-						cmds << debug_log('written to file')
+						message_text := 'written to disk successfully'
+						cmds << tea.sequence(debug_log(message_text), display_message(.normal, message_text))
 					}
 					return m.clone(), tea.batch_array(cmds)
 				}
