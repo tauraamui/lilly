@@ -31,7 +31,10 @@ pub fn (mut c Controller) open_document(file_path string) !int {
 }
 
 pub fn (mut c Controller) write_document(doc_id int) ! {
-	return c.docs[doc_id].write_to(os.join_path(os.temp_dir(), os.base(c.docs[doc_id].file_path)))
+	target_file_path := c.docs[doc_id].file_path
+	temp_file_path := os.join_path(os.temp_dir(), os.base(target_file_path))
+	c.docs[doc_id].write_to(temp_file_path) or { return error('failed to write to temp location: ${temp_file_path}') }
+	os.mv(temp_file_path, c.docs[doc_id].file_path) or { return error('failed to move temp location: ${temp_file_path} to dest: ${target_file_path}') }
 }
 
 pub fn (mut c Controller) prepare_for_insertion(doc_id int) ! {
@@ -122,14 +125,7 @@ fn Document.new(file_path string) !Document {
 }
 
 fn (mut d Document) write_to(file_path string) ! {
-	mut f := os.create(file_path) or { return error('failed to open file for writing ${file_path}: ${err}') }
-	defer { f.close() }
-	if written := f.write_to(0, d.data.content()) {
-		if written != d.data.content_size() {
-			return error('expected to write: ${d.data.content_size()}, wrote: ${written}')
-		}
-	}
-	// return os.write_bytes(d.file_path, d.data)
+	os.write_file(file_path, d.data.content().string())!
 }
 
 fn (mut d Document) prepare_for_insertion_at(pos CursorPos) ! {
