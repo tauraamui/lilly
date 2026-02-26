@@ -234,7 +234,13 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 				}
 				WriteToDiskMsg {
-					cmds << raise_error("saving to disk is not yet supported")
+					if msg.id == m.id {
+						m.doc_controller.write_document(m.doc_id) or {
+							cmds << raise_error('failed to write document to file')
+							return m.clone(), tea.batch_array(cmds)
+						}
+						cmds << debug_log('written to file')
+					}
 					return m.clone(), tea.batch_array(cmds)
 				}
 				else {}
