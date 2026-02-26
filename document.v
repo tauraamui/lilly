@@ -2,6 +2,7 @@ module documents
 
 import math
 import os
+import encoding.utf8
 import lib.buffers
 import petal
 
@@ -184,6 +185,27 @@ fn (d Document) move_cursor_right(pos CursorPos, mode petal.Mode) CursorPos {
 			new_pos
 		}
 	}
+}
+
+fn (d Document) move_cursor_to_next_word_start(pos CursorPos) CursorPos {
+	current_line := d.data.get_line_at(y: pos.y) or { return pos }
+	at_line_end := pos.x + 1 == current_line.runes().len
+	if at_line_end {
+		return d.move_cursor_to_next_word_start(CursorPos{ x: 0, y: pos.y + 1 })
+	}
+
+	mut started_within_word := true
+	for i, c in current_line.runes() {
+		if i == 0 {
+			started_within_word = utf8.is_space(c)
+			continue
+		}
+
+		if started_within_word && utf8.is_space(c) {
+		}
+	}
+
+	return pos
 }
 
 fn (d Document) move_cursor_to_line_end(pos CursorPos, mode petal.Mode) CursorPos {
