@@ -4,6 +4,7 @@ import os
 import time
 import math
 import tauraamui.bobatea as tea
+import petal
 import boba
 import theme
 import palette
@@ -15,7 +16,7 @@ struct EditorWorkspaceModel {
 	// NOTE(tauraamui): forced mode to be immutable, this ensures we cannot randomly
 	// accidentally set the mode state without accounting for necessary checks and state changes,
 	// the only way we can change the mode is by exiting the current scope with a command to do so
-	mode  Mode
+	mode  petal.Mode
 	theme theme.Theme
 mut:
 	tmux_wrapped bool
@@ -70,10 +71,10 @@ fn (mut m EditorWorkspaceModel) init() ?tea.Cmd {
 }
 
 struct SwitchModeMsg {
-	mode Mode
+	mode petal.Mode
 }
 
-fn switch_mode(mode Mode) tea.Cmd {
+fn switch_mode(mode petal.Mode) tea.Cmd {
 	return fn [mode] () tea.Msg {
 		return SwitchModeMsg{mode}
 	}
@@ -107,7 +108,7 @@ fn unfocus_editor(editor_id int) tea.Cmd {
 	}
 }
 
-fn forward_msg_to_editor(editor_id int, msg tea.Msg, mode Mode) tea.Cmd {
+fn forward_msg_to_editor(editor_id int, msg tea.Msg, mode petal.Mode) tea.Cmd {
 	return fn [editor_id, msg, mode] () tea.Msg {
 		return EditorModelMsg{
 			id:   editor_id
@@ -500,7 +501,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							m.active_editor_id = new_id
 
 							cmds << tea.sequence(unfocus_editor(old_id), focus_editor(new_id),
-								query_editor_data(new_id), query_pwd_git_branch)
+								query_editor_data(new_id), query_pwd_git_branch, switch_mode(.normal))
 						}
 					} else {
 						if m.tmux_wrapped {
@@ -520,7 +521,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							m.active_editor_id = new_id
 
 							cmds << tea.sequence(unfocus_editor(old_id), focus_editor(new_id),
-								query_editor_data(new_id), query_pwd_git_branch)
+								query_editor_data(new_id), query_pwd_git_branch, switch_mode(.normal))
 						}
 					} else {
 						if m.tmux_wrapped {
@@ -841,7 +842,7 @@ fn hash_id(id int) int {
 	return math.abs(hash)
 }
 
-fn (mut m EditorWorkspaceModel) clone_with_mode(mode Mode) tea.Model {
+fn (mut m EditorWorkspaceModel) clone_with_mode(mode petal.Mode) tea.Model {
 	return EditorWorkspaceModel{
 		...m
 		mode: mode
