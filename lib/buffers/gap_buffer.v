@@ -160,10 +160,21 @@ pub fn (g GapBuffer) iter() LineIterator {
 	return LineIterator.new(g.data, int(g.gap_start), int(g.gap_end))
 }
 
-fn (g GapBuffer) content() string {
+pub fn (g GapBuffer) content() []rune {
 	pre_gap := g.data[..g.gap_start]
 	post_gap := g.data[g.gap_end..]
-	return pre_gap.string() + post_gap.string()
+	mut combined := []rune{}
+	combined << pre_gap
+	combined << post_gap
+	return combined
+}
+
+pub fn (g GapBuffer) content_size() int {
+	return int(u32(g.data.len) - g.current_gap_size())
+}
+
+fn (g GapBuffer) content_str() string {
+	return g.content().string()
 }
 
 fn (g GapBuffer) raw_content() []rune {

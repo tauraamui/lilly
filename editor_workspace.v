@@ -539,11 +539,12 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		CommandMsg {
 			match msg.command {
+				'debug' { cmds << toggle_debug_screen }
 				'q' { cmds << close_active_split }
 				'qa' { cmds << tea.quit }
-				'debug' { cmds << toggle_debug_screen }
 				'version' { cmds << open_version_dialog(m.theme) }
 				'vs' { cmds << split_vertically }
+				'w' { cmds << write_to_disk(m.active_editor_id) }
 				else { cmds << raise_error("unknown command '${msg.command}'") }
 			}
 		}

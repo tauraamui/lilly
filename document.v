@@ -30,6 +30,10 @@ pub fn (mut c Controller) open_document(file_path string) !int {
 	return id
 }
 
+pub fn (mut c Controller) write_document(doc_id int) ! {
+	return c.docs[doc_id].write_to(os.join_path(os.temp_dir(), os.base(c.docs[doc_id].file_path)))
+}
+
 pub fn (mut c Controller) prepare_for_insertion(doc_id int) ! {
 	return c.docs[doc_id].prepare_for_insertion_at(c.cursors[doc_id])
 }
@@ -103,16 +107,29 @@ pub:
 @[heap]
 pub struct Document {
 mut:
+	file_path string
 	data buffers.GapBuffer
 }
 
 fn Document.new(file_path string) !Document {
 	return Document{
+		file_path: file_path
 		data: buffers.GapBuffer.new(content: (os.read_file(file_path) or {
 			return error('failed to read file ${file_path}: ${err}')
 		}).runes())
 		// data: buffers.GapBuffer.new(content: (iconv.read_file_encoding(file_path, "UTF-8") or { return error("failed to read file ${file_path}: ${err}") }).runes())
 	}
+}
+
+fn (mut d Document) write_to(file_path string) ! {
+	mut f := os.create(file_path) or { return error('failed to open file for writing ${file_path}: ${err}') }
+	defer { f.close() }
+	if written := f.write_to(0, d.data.content()) {
+		if written != d.data.content_size() {
+			return error('expected to write: ${d.data.content_size()}, wrote: ${written}')
+		}
+	}
+	// return os.write_bytes(d.file_path, d.data)
 }
 
 fn (mut d Document) prepare_for_insertion_at(pos CursorPos) ! {

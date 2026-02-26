@@ -58,6 +58,17 @@ fn editor_data(data EditorData) tea.Cmd {
 	}
 }
 
+struct WriteToDiskMsg {}
+
+fn write_to_disk(id int) tea.Cmd {
+	return fn [id] () tea.Msg {
+		return EditorModelMsg{
+			id: id
+			msg: WriteToDiskMsg{}
+		}
+	}
+}
+
 fn EditorModel.new(id int, file_path string, doc_id int, doc_controller &documents.Controller) EditorModel {
 	assert file_path != ''
 	return EditorModel{
@@ -221,6 +232,10 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					if msg.id == m.id {
 						cmds << editor_data(m.data())
 					}
+				}
+				WriteToDiskMsg {
+					cmds << raise_error("saving to disk is not yet supported")
+					return m.clone(), tea.batch_array(cmds)
 				}
 				else {}
 			}
