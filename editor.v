@@ -202,20 +202,18 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			m.height = msg.window_height
 		}
 		SwitchModeMsg {
-			if msg.mode == .insert && m.focused {
-				m.doc_controller.prepare_for_insertion(m.doc_id) or {
-					cmds << raise_error('switch mode error: ${err}')
-					return m.clone(), tea.batch_array(cmds)
+			if !m.focused { return m.clone(), none }
+			match msg.mode {
+				.insert {
+					m.doc_controller.prepare_for_insertion(m.doc_id) or {
+						cmds << raise_error('switch mode error: ${err}')
+						return m.clone(), tea.batch_array(cmds)
+					}
 				}
-				/*
-				m.doc_controller.prepare_for_insertion_at(m.doc_id, documents.CursorPos{
-					x: c_x
-					y: c_y
-				}) or {
-					cmds << raise_error('switch mode error: ${err}')
-					return m.clone(), tea.batch_array(cmds)
+				.normal {
+					m.doc_controller.move_cursor_left(m.doc_id, .normal)
 				}
-				*/
+				else {}
 			}
 		}
 		EditorModelMsg {
