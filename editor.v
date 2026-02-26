@@ -58,6 +58,17 @@ fn editor_data(data EditorData) tea.Cmd {
 	}
 }
 
+struct WriteToDiskMsg {}
+
+fn write_to_disk(id int) tea.Cmd {
+	return fn [id] () tea.Msg {
+		return EditorModelMsg{
+			id: id
+			msg: WriteToDiskMsg{}
+		}
+	}
+}
+
 fn EditorModel.new(id int, file_path string, doc_id int, doc_controller &documents.Controller) EditorModel {
 	assert file_path != ''
 	return EditorModel{
@@ -191,20 +202,18 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			m.height = msg.window_height
 		}
 		SwitchModeMsg {
-			if msg.mode == .insert && m.focused {
-				m.doc_controller.prepare_for_insertion(m.doc_id) or {
-					cmds << raise_error('switch mode error: ${err}')
-					return m.clone(), tea.batch_array(cmds)
+			if !m.focused { return m.clone(), none }
+			match msg.mode {
+				.insert {
+					m.doc_controller.prepare_for_insertion(m.doc_id) or {
+						cmds << raise_error('switch mode error: ${err}')
+						return m.clone(), tea.batch_array(cmds)
+					}
 				}
-				/*
-				m.doc_controller.prepare_for_insertion_at(m.doc_id, documents.CursorPos{
-					x: c_x
-					y: c_y
-				}) or {
-					cmds << raise_error('switch mode error: ${err}')
-					return m.clone(), tea.batch_array(cmds)
+				.normal {
+					m.doc_controller.move_cursor_left(m.doc_id, .normal)
 				}
-				*/
+				else {}
 			}
 		}
 		EditorModelMsg {
@@ -221,6 +230,17 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					if msg.id == m.id {
 						cmds << editor_data(m.data())
 					}
+				}
+				WriteToDiskMsg {
+					if msg.id == m.id {
+						m.doc_controller.write_document(m.doc_id) or {
+							cmds << raise_error('failed to write to disk')
+							return m.clone(), tea.batch_array(cmds)
+						}
+						message_text := 'written to disk successfully'
+						cmds << tea.sequence(debug_log(message_text), display_message(.normal, message_text))
+					}
+					return m.clone(), tea.batch_array(cmds)
 				}
 				else {}
 			}

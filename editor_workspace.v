@@ -32,8 +32,13 @@ mut:
 	branch_name        string
 	leader_suffix      string
 	input_field        boba.InputField
-	error_msg          ?string
+	message_label      ?MessageLabel
 	editor_id_count    int
+}
+
+struct MessageLabel {
+	contents string
+	ccolor   tea.Color
 }
 
 struct OpenFileMsg {
@@ -133,30 +138,48 @@ fn toggle_editor_show_border(editor_id int, show bool) tea.Cmd {
 }
 
 fn raise_error(error string) tea.Cmd {
-	return tea.sequence(display_error(error), error_log(error), hide_error_after(6 * time.second))
+	return tea.sequence(display_message(.error, error), error_log(error), hide_message_after(6 * time.second))
 }
 
-struct DisplayErrorMsg {
-	error string
+enum DisplayMessageType {
+	normal
+	warning
+	error
 }
 
-fn display_error(error string) tea.Cmd {
-	return fn [error] () tea.Msg {
-		return DisplayErrorMsg{error}
+fn (t DisplayMessageType) color(ttheme theme.Theme) tea.Color {
+	return match t {
+		.normal  { ttheme.petal_green }
+		.warning { ttheme.status_orange }
+		.error   { ttheme.petal_red }
 	}
 }
 
-struct HideErrorMsg {
+struct DisplayMessageMsg {
+	contents string
+	m_type   DisplayMessageType
+}
+
+fn display_message(m_type DisplayMessageType, contents string) tea.Cmd {
+	return fn [m_type, contents] () tea.Msg {
+		return DisplayMessageMsg{
+			contents: contents
+			m_type: m_type
+		}
+	}
+}
+
+struct HideMessageMsg {
 	time time.Time
 }
 
-fn hide_error() tea.Msg {
-	return HideErrorMsg{}
+fn hide_message() tea.Msg {
+	return HideMessageMsg{}
 }
 
-fn hide_error_after(duration time.Duration) tea.Cmd {
+fn hide_message_after(duration time.Duration) tea.Cmd {
 	return tea.tick(duration, fn (t time.Time) tea.Msg {
-		return HideErrorMsg{
+		return HideMessageMsg{
 			time: t
 		}
 	})
@@ -319,7 +342,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					.special {
 						match msg.string() {
 							'escape' {
-								return m.clone(), hide_error
+								return m.clone(), tea.sequence(hide_message, switch_mode(.normal))
 							}
 							'ctrl+b' {
 								return m.clone(), switch_mode(.navigation)
@@ -539,19 +562,23 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		CommandMsg {
 			match msg.command {
+				'debug' { cmds << toggle_debug_screen }
 				'q' { cmds << close_active_split }
 				'qa' { cmds << tea.quit }
-				'debug' { cmds << toggle_debug_screen }
 				'version' { cmds << open_version_dialog(m.theme) }
 				'vs' { cmds << split_vertically }
+				'w' { cmds << write_to_disk(m.active_editor_id) }
 				else { cmds << raise_error("unknown command '${msg.command}'") }
 			}
 		}
-		DisplayErrorMsg {
-			m.error_msg = msg.error
+		DisplayMessageMsg {
+			m.message_label = MessageLabel{
+				contents: msg.contents
+				ccolor: msg.m_type.color(m.theme)
+			}
 		}
-		HideErrorMsg {
-			m.error_msg = none
+		HideMessageMsg {
+			m.message_label = none
 		}
 		SwitchModeMsg {
 			match msg.mode {
@@ -561,10 +588,10 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						cmds << input_init_cmd
 					}
 					cmds << tea.emit_resize
-					cmds << hide_error
+					cmds << hide_message
 				}
 				.leader {
-					cmds << hide_error
+					cmds << hide_message
 				}
 				else {
 					m.leader_suffix = ''
@@ -759,9 +786,9 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 }
 
 fn (m EditorWorkspaceModel) render_leader_or_command_user_input_text(mut ctx tea.Context) {
-	if err_msg := m.error_msg {
-		ctx.set_color(palette.error_color)
-		ctx.draw_text(1, ctx.window_height() - 1, err_msg)
+	if msg_label := m.message_label {
+		ctx.set_color(msg_label.ccolor)
+		ctx.draw_text(1, ctx.window_height() - 1, msg_label.contents)
 		ctx.reset_color()
 		return
 	}

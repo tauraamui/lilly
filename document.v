@@ -30,6 +30,15 @@ pub fn (mut c Controller) open_document(file_path string) !int {
 	return id
 }
 
+pub fn (mut c Controller) write_document(doc_id int) ! {
+	// TODO(tauraamui): change error message emission to be just generic message emission
+	// with type flags, so the location is the same, but formatting or visual rep is different
+	target_file_path := c.docs[doc_id].file_path
+	temp_file_path := os.join_path(os.temp_dir(), os.base(target_file_path))
+	c.docs[doc_id].write_to(temp_file_path) or { return error('failed to write to temp location: ${temp_file_path}') }
+	os.mv(temp_file_path, c.docs[doc_id].file_path) or { return error('failed to move temp location: ${temp_file_path} to dest: ${target_file_path}') }
+}
+
 pub fn (mut c Controller) prepare_for_insertion(doc_id int) ! {
 	return c.docs[doc_id].prepare_for_insertion_at(c.cursors[doc_id])
 }
@@ -103,16 +112,22 @@ pub:
 @[heap]
 pub struct Document {
 mut:
+	file_path string
 	data buffers.GapBuffer
 }
 
 fn Document.new(file_path string) !Document {
 	return Document{
+		file_path: file_path
 		data: buffers.GapBuffer.new(content: (os.read_file(file_path) or {
 			return error('failed to read file ${file_path}: ${err}')
 		}).runes())
 		// data: buffers.GapBuffer.new(content: (iconv.read_file_encoding(file_path, "UTF-8") or { return error("failed to read file ${file_path}: ${err}") }).runes())
 	}
+}
+
+fn (mut d Document) write_to(file_path string) ! {
+	os.write_file(file_path, d.data.content().string())!
 }
 
 fn (mut d Document) prepare_for_insertion_at(pos CursorPos) ! {
