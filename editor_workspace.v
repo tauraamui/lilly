@@ -342,7 +342,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					.special {
 						match msg.string() {
 							'escape' {
-								return m.clone(), hide_message
+								return m.clone(), tea.sequence(hide_message, switch_mode(.normal))
 							}
 							'ctrl+b' {
 								return m.clone(), switch_mode(.navigation)
