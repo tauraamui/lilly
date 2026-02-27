@@ -2,6 +2,7 @@ module documents
 
 import math
 import os
+import arrays
 import encoding.utf8
 import lib.buffers
 import petal
@@ -72,6 +73,11 @@ pub fn (mut c Controller) move_cursor_right(doc_id int, mode petal.Mode) {
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_right(pos, mode)
 }
 
+pub fn (mut c Controller) move_cursor_to_next_word_start(doc_id int) {
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_word_start(pos)
+}
+
 pub fn (mut c Controller) move_cursor_to_line_end(doc_id int, mode petal.Mode) {
 	pos := c.cursors[doc_id]
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_line_end(pos, mode)
@@ -85,6 +91,10 @@ pub fn (mut c Controller) insert_newline(doc_id int) {
 pub fn (mut c Controller) insert_char(doc_id int, data rune) {
 	c.docs[doc_id].insert_char(data)
 	c.move_cursor_right(doc_id, .insert)
+}
+
+pub fn (c Controller) get_line_at(doc_id int, y int) ?string {
+	return c.docs[doc_id].data.get_line_at(y: y)
 }
 
 pub fn (c Controller) get_iterator(doc_id int) LineIterator {
@@ -187,25 +197,31 @@ fn (d Document) move_cursor_right(pos CursorPos, mode petal.Mode) CursorPos {
 	}
 }
 
+enum CursorSituation {
+	within_word
+	within_whitespace
+}
+
 fn (d Document) move_cursor_to_next_word_start(pos CursorPos) CursorPos {
 	current_line := d.data.get_line_at(y: pos.y) or { return pos }
-	at_line_end := pos.x + 1 == current_line.runes().len
-	if at_line_end {
-		return d.move_cursor_to_next_word_start(CursorPos{ x: 0, y: pos.y + 1 })
-	}
+	current_line_data := current_line.runes()
 
-	mut started_within_word := true
-	for i, c in current_line.runes() {
-		if i == 0 {
-			started_within_word = utf8.is_space(c)
-			continue
+	match resolve_cursor_situation(pos.x, current_line_data) {
+		.within_word {
+			whitespace_span_start := arrays.index_of_first(current_line_data, fn [pos] (idx int, c rune) bool { return idx >= pos.x && utf8.is_space(c) })
+			whitespace_span_end   := arrays.index_of_first(current_line_data, fn [whitespace_span_start] (idx int, c rune) bool { return idx >= whitespace_span_start && !utf8.is_space(c) })
+			println("WHITESPACE START: ${whitespace_span_start}, WHITESPACE END: ${whitespace_span_end}")
 		}
-
-		if started_within_word && utf8.is_space(c) {
+		.within_whitespace {
+			println("x: ${pos.x}. WITHIN WHITESPACE")
 		}
 	}
 
 	return pos
+}
+
+fn resolve_cursor_situation(index int, data []rune) CursorSituation {
+	return if utf8.is_space(data[index]) { .within_whitespace } else { .within_word }
 }
 
 fn (d Document) move_cursor_to_line_end(pos CursorPos, mode petal.Mode) CursorPos {
