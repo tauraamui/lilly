@@ -22,8 +22,12 @@ fn test_move_cursor_to_next_word_start() {
 	ctrl.move_cursor_right(meta_doc_id, .normal)
 	ctrl.move_cursor_right(meta_doc_id, .normal)
 
-	// assert 'fn random_function(a int, b int) int {' == ctrl.get_line_at(meta_doc_id, ctrl.cursor_pos(meta_doc_id).y)?
-	ctrl.move_cursor_to_next_word_start(meta_doc_id)
-	assert false
+	current_line := ctrl.get_line_at(meta_doc_id, ctrl.cursor_pos(meta_doc_id).y) or { panic('failed to aquire current line') }
+
+	word_start_chars := ['i', 'a', 'f', 't', 'c', 'f', 'v', 'w', 'j']
+	for c in word_start_chars {
+		ctrl.move_cursor_to_next_word_start(meta_doc_id)
+		assert '${current_line.runes()[ctrl.cursor_pos(meta_doc_id).x]}' == c
+	}
 }
 
