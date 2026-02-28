@@ -53,6 +53,10 @@ pub fn (c Controller) cursor_pos(doc_id int) CursorPos {
 	return c.cursors[doc_id]
 }
 
+pub fn (c Controller) visual_cursor_pos(doc_id int) CursorPos {
+	return c.docs[doc_id].visual_cursor_pos(c.cursors[doc_id])
+}
+
 pub fn (mut c Controller) move_cursor_left(doc_id int, mode petal.Mode) {
 	pos := c.cursors[doc_id]
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_left(pos, mode)
@@ -231,6 +235,11 @@ fn (d Document) move_cursor_to_line_end(pos CursorPos, mode petal.Mode) CursorPo
 		y: pos.y
 	}
 	return new_pos
+}
+
+fn (d Document) visual_cursor_pos(pos CursorPos) CursorPos {
+	current_line_pre_x := d.data.get_line_at(y: pos.y) or { return pos }[..pos.x]
+	return CursorPos{ x: pos.x + (current_line_pre_x.expand_tabs(4).runes().len - current_line_pre_x.runes().len), y: pos.y }
 }
 
 fn (mut d Document) insert_char(c rune) {
