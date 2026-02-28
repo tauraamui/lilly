@@ -226,7 +226,8 @@ fn (d Document) move_cursor_to_next_word_start(pos CursorPos) CursorPos {
 			return CursorPos{ y: pos.y, x: whitespace_span_end }
 		}
 		.within_whitespace {
-			// println("x: ${pos.x}. WITHIN WHITESPACE")
+			whitespace_span_end   := arrays.index_of_first(current_line_data, fn [pos] (idx int, c rune) bool { return idx >= pos.x && !utf8.is_space(c) })
+			return CursorPos{ y: pos.y, x: whitespace_span_end }
 		}
 	}
 
