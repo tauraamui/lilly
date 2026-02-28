@@ -281,7 +281,7 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 	}
 
 	for y, l in m.doc_controller.get_iterator(m.doc_id) {
-		ctx.draw_text(0, y, l.string().replace('\t', '    '))
+		ctx.draw_text(0, y, l.string().expand_tabs(4))
 	}
 
 	if m.focused {
@@ -290,7 +290,7 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 }
 
 fn (m EditorModel) render_cursor(mut ctx tea.Context) {
-	cursor_pos := m.doc_controller.cursor_pos(m.doc_id)
+	cursor_pos := m.doc_controller.visual_cursor_pos(m.doc_id)
 	default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
 	ctx.set_bg_color(palette.fg_color(default_bg_color))
 	ctx.draw_rect(cursor_pos.x, cursor_pos.y, 1, 1)
