@@ -210,7 +210,7 @@ fn (d Document) move_cursor_to_next_word_start(pos CursorPos) CursorPos {
 		.within_word {
 			whitespace_span_start := arrays.index_of_first(current_line_data, fn [pos] (idx int, c rune) bool { return idx >= pos.x && utf8.is_space(c) })
 			whitespace_span_end   := arrays.index_of_first(current_line_data, fn [whitespace_span_start] (idx int, c rune) bool { return idx >= whitespace_span_start && !utf8.is_space(c) })
-			println("WHITESPACE START: ${whitespace_span_start}, WHITESPACE END: ${whitespace_span_end}")
+			return CursorPos{ y: pos.y, x: whitespace_span_end }
 		}
 		.within_whitespace {
 			println("x: ${pos.x}. WITHIN WHITESPACE")
