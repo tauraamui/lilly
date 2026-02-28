@@ -294,10 +294,11 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 fn (m EditorModel) render_cursor(mut ctx tea.Context) {
 	cursor_pos := m.doc_controller.visual_cursor_pos(m.doc_id, tab_width)
 	// basically we want the block cursor to be the inverse of the background shade
+	// and then the text/fg color to be the inverse of that/the same as background
 	default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
 	ctx.set_bg_color(palette.fg_color(default_bg_color))
 	ctx.set_color(default_bg_color)
-	ctx.draw_text(cursor_pos.x, cursor_pos.y, m.doc_controller.get_char_at(m.doc_id) or { '?' })
+	ctx.draw_text(cursor_pos.x, cursor_pos.y, m.doc_controller.get_char_at(m.doc_id) or { ' ' }.expand_tabs(tab_width))
 	ctx.reset_bg_color()
 	ctx.reset_color()
 }
