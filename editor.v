@@ -118,7 +118,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								}
 							}
 							'up' {
-								m.doc_controller.move_cursor_down(m.doc_id, .insert)
+								m.doc_controller.move_cursor_up(m.doc_id, .insert)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
 									cmds << raise_error('error: ${err}')
 									return m.clone(), tea.batch_array(cmds)
@@ -132,7 +132,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								}
 							}
 							'down' {
-								m.doc_controller.move_cursor_up(m.doc_id, .insert)
+								m.doc_controller.move_cursor_down(m.doc_id, .insert)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
 									cmds << raise_error('error: ${err}')
 									return m.clone(), tea.batch_array(cmds)
@@ -162,10 +162,10 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								m.doc_controller.move_cursor_left(m.doc_id, .normal)
 							}
 							'j' {
-								m.doc_controller.move_cursor_up(m.doc_id, .normal)
+								m.doc_controller.move_cursor_down(m.doc_id, .normal)
 							}
 							'k' {
-								m.doc_controller.move_cursor_down(m.doc_id, .normal)
+								m.doc_controller.move_cursor_up(m.doc_id, .normal)
 							}
 							'l' {
 								m.doc_controller.move_cursor_right(m.doc_id, .normal)
@@ -179,13 +179,13 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								m.doc_controller.move_cursor_left(m.doc_id, .normal)
 							}
 							'up' {
-								m.doc_controller.move_cursor_down(m.doc_id, .normal)
+								m.doc_controller.move_cursor_up(m.doc_id, .normal)
 							}
 							'right' {
 								m.doc_controller.move_cursor_right(m.doc_id, .normal)
 							}
 							'down' {
-								m.doc_controller.move_cursor_up(m.doc_id, .normal)
+								m.doc_controller.move_cursor_down(m.doc_id, .normal)
 							}
 							else {}
 						}

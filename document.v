@@ -157,7 +157,7 @@ fn (d Document) move_cursor_left(pos CursorPos, mode petal.Mode) CursorPos {
 	}
 }
 
-fn (d Document) move_cursor_up(pos CursorPos, mode petal.Mode) CursorPos {
+fn (d Document) move_cursor_down(pos CursorPos, mode petal.Mode) CursorPos {
 	// NOTE(tauraamui): for now just drop x to 0 each
 	mut y := pos.y + 1
 	d.data.get_line_at(y: y) or { return pos }
@@ -167,7 +167,7 @@ fn (d Document) move_cursor_up(pos CursorPos, mode petal.Mode) CursorPos {
 	}
 }
 
-fn (d Document) move_cursor_down(pos CursorPos, mode petal.Mode) CursorPos {
+fn (d Document) move_cursor_up(pos CursorPos, mode petal.Mode) CursorPos {
 	// NOTE(tauraamui): for now just drop x to 0 each
 	mut y := pos.y - 1
 	d.data.get_line_at(y: y) or { return pos }
