@@ -226,7 +226,7 @@ fn (d Document) move_cursor_to_next_word_start(pos CursorPos) CursorPos {
 			return CursorPos{ y: pos.y, x: whitespace_span_end }
 		}
 		.within_whitespace {
-			println("x: ${pos.x}. WITHIN WHITESPACE")
+			// println("x: ${pos.x}. WITHIN WHITESPACE")
 		}
 	}
 
@@ -234,7 +234,7 @@ fn (d Document) move_cursor_to_next_word_start(pos CursorPos) CursorPos {
 }
 
 fn resolve_cursor_situation(index int, data []rune) CursorSituation {
-	return if utf8.is_space(data[index]) { .within_whitespace } else { .within_word }
+	return if index < data.len && !utf8.is_space(data[index]) { .within_word } else { .within_whitespace }
 }
 
 fn (d Document) move_cursor_to_line_end(pos CursorPos, mode petal.Mode) CursorPos {
