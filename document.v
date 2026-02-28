@@ -101,6 +101,15 @@ pub fn (c Controller) get_line_at(doc_id int, y int) ?string {
 	return c.docs[doc_id].data.get_line_at(y: y)
 }
 
+pub fn (c Controller) get_char_at(doc_id int) ?string {
+	pos := c.cursors[doc_id]
+	current_line := c.docs[doc_id].data.get_line_at(y: pos.y) or { return none }
+	for i, cc in current_line.runes_iterator() {
+		if i == pos.x { return '${cc}' }
+	}
+	return none
+}
+
 pub fn (c Controller) get_iterator(doc_id int) LineIterator {
 	return c.docs[doc_id].iter()
 }
