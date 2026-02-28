@@ -160,6 +160,9 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								cmds << switch_mode(.insert)
 								return m.clone(), tea.batch_array(cmds)
 							}
+							'w' {
+								m.doc_controller.move_cursor_to_next_word_start(m.doc_id)
+							}
 							'h' {
 								m.doc_controller.move_cursor_left(m.doc_id, .normal)
 							}
