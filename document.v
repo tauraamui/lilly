@@ -265,12 +265,19 @@ fn (d Document) move_cursor_to_next_word_start(pos CursorPos, is_next_line bool,
 				is_symbol(current_line_data[non_punct_start]) {
 					whitespace_span_start := arrays.index_of_first(current_line_data, fn [pos] (idx int, c rune) bool { return idx >= pos.x && utf8.is_space(c) })
 					if whitespace_span_start == -1 {
-						return d.move_cursor_to_next_word_start(CursorPos{ y: pos.y + 1 }, true, .within_word)
+						return d.move_cursor_to_next_word_start(CursorPos{ y: pos.y + 1 }, true, .within_punct)
 					}
 
 					whitespace_span_end := arrays.index_of_first(current_line_data, fn [whitespace_span_start] (idx int, c rune) bool { return idx >= whitespace_span_start && !utf8.is_space(c) })
 					if whitespace_span_end == -1 {
-						return d.move_cursor_to_next_word_start(CursorPos{ y: pos.y + 1 }, true, .within_word)
+						return d.move_cursor_to_next_word_start(CursorPos{ y: pos.y + 1 }, true, .within_punct)
+					}
+					return CursorPos{ y: pos.y, x: whitespace_span_end }
+				}
+				utf8.is_space(current_line_data[non_punct_start]) {
+					whitespace_span_end := arrays.index_of_first(current_line_data, fn [non_punct_start] (idx int, c rune) bool { return idx >= non_punct_start && !utf8.is_space(c) })
+					if whitespace_span_end == -1 {
+						return d.move_cursor_to_next_word_start(CursorPos{ y: pos.y + 1 }, true, .within_punct)
 					}
 					return CursorPos{ y: pos.y, x: whitespace_span_end }
 				}
@@ -278,7 +285,29 @@ fn (d Document) move_cursor_to_next_word_start(pos CursorPos, is_next_line bool,
 				else {}
 			}
 		}
-		.within_symbol {}
+		.within_symbol {
+			non_symbol_start := arrays.index_of_first(current_line_data, fn [pos] (idx int, c rune) bool { return idx >= pos.x && !is_symbol(c) })
+			if non_symbol_start == -1 {
+				return d.move_cursor_to_next_word_start(CursorPos{ y: pos.y + 1 }, true, .within_symbol)
+			}
+			match true {
+				is_alpha_num(current_line_data[non_symbol_start]) {
+					return CursorPos{ y: pos.y, x: non_symbol_start }
+				}
+				else {
+					whitespace_span_start := arrays.index_of_first(current_line_data, fn [pos] (idx int, c rune) bool { return idx >= pos.x && utf8.is_space(c) })
+					if whitespace_span_start == -1 {
+						return d.move_cursor_to_next_word_start(CursorPos{ y: pos.y + 1 }, true, .within_symbol)
+					}
+
+					whitespace_span_end := arrays.index_of_first(current_line_data, fn [whitespace_span_start] (idx int, c rune) bool { return idx >= whitespace_span_start && !utf8.is_space(c) })
+					if whitespace_span_end == -1 {
+						return d.move_cursor_to_next_word_start(CursorPos{ y: pos.y + 1 }, true, .within_symbol)
+					}
+					return CursorPos{ y: pos.y, x: whitespace_span_end }
+				}
+			}
+		}
 		.unknown {
 			return pos
 		}

@@ -70,6 +70,14 @@ fn test_move_cursor_to_next_word_start() {
 
 	ctrl.move_cursor_to_next_word_start(meta_doc_id)
 	current_line = ctrl.get_line_at(meta_doc_id, ctrl.cursor_pos(meta_doc_id).y) or { panic('failed to aquire current line') }
+	assert '${current_line.runes()[ctrl.cursor_pos(meta_doc_id).x]}' == 's'
+
+	ctrl.move_cursor_to_next_word_start(meta_doc_id)
+	current_line = ctrl.get_line_at(meta_doc_id, ctrl.cursor_pos(meta_doc_id).y) or { panic('failed to aquire current line') }
+	assert '${current_line.runes()[ctrl.cursor_pos(meta_doc_id).x]}' == ':'
+
+	ctrl.move_cursor_to_next_word_start(meta_doc_id)
+	current_line = ctrl.get_line_at(meta_doc_id, ctrl.cursor_pos(meta_doc_id).y) or { panic('failed to aquire current line') }
 	assert '${current_line.runes()[ctrl.cursor_pos(meta_doc_id).x]}' == 'b'
 }
 
