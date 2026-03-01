@@ -66,10 +66,10 @@ fn test_move_cursor_to_next_word_start() {
 	ctrl.move_cursor_down(meta_doc_id, .normal)
 
 	word_start_chars = ['x', '_', 's', ':', 'b', '*', 'b', 'd', '{', '}', 'r', 'y', '_', 's', '+', 'x', '_', 's', '}']
-	for c in word_start_chars {
+	for i, c in word_start_chars {
 		ctrl.move_cursor_to_next_word_start(meta_doc_id)
 		current_line = ctrl.get_line_at(meta_doc_id, ctrl.cursor_pos(meta_doc_id).y) or { panic('failed to aquire current line') }
-		assert '${current_line.runes()[ctrl.cursor_pos(meta_doc_id).x]}' == c
+		assert '[${i}]${current_line.runes()[ctrl.cursor_pos(meta_doc_id).x]}' == '[${i}]${c}'
 	}
 }
 
