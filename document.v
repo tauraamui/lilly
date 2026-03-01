@@ -218,6 +218,71 @@ enum CursorSituation {
 	unknown
 }
 
+enum CharType {
+	alpha_num
+	whitespace
+	punctuation
+	symbol
+	unknown
+}
+
+fn CharType.resolve(c rune) CharType {
+	return match true {
+		is_punct(c) { .punctuation }
+		is_symbol(c) { .symbol }
+		utf8.is_space(c) { .whitespace }
+		is_alpha_num(c) { .alpha_num }
+		utf8.is_control(c) { .unknown }
+		else { .unknown }
+	}
+}
+
+fn (d Document) move_cursor_to_next_word_start2(pos CursorPos, is_next_line bool, situation CursorSituation) CursorPos {
+	return scan_to_next_word_start(d.data, pos, false)
+}
+
+fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, is_next_line bool) CursorPos {
+	current_line := data.get_line_at(y: pos.y) or { return pos }
+	current_line_data := current_line.runes()
+
+	start_char_type := CharType.resolve(current_line_data[pos.x])
+
+	next_char, next_char_type := scan_for_differing_type(current_line_data, pos.x, start_char_type)
+	println('START TYPE: ${start_char_type}, NEXT TYPE: ${next_char_type}')
+
+	return pos
+}
+
+fn scan_for_differing_type(data []rune, minimum_index int, current_char_type CharType) (rune, CharType) {
+	next_differing_type_index := arrays.index_of_first(data, fn [minimum_index, current_char_type] (idx int, c rune) bool { return idx >= minimum_index && CharType.resolve(c) != current_char_type })
+	next_differing_char := data[next_differing_type_index]
+	return next_differing_char, CharType.resolve(next_differing_char)
+}
+
+struct CharScanner {
+	data       []rune
+mut:
+	last_index int
+}
+
+struct ScanResult {
+	index      int
+	cchar      rune
+	c_type     CharType
+}
+
+fn (mut s CharScanner) next_diff(start_type CharType) ?ScanResult {
+	for i := s.last_index; i < s.data.len; i++ {
+		c := s.data[i]
+		c_type := CharType.resolve(c)
+		if c_type != start_type {
+			s.last_index = i
+			return ScanResult{ index: i, cchar: c, c_type: c_type }
+		}
+	}
+	return none
+}
+
 fn (d Document) move_cursor_to_next_word_start(pos CursorPos, is_next_line bool, situation CursorSituation) CursorPos {
 	current_line := d.data.get_line_at(y: pos.y) or { return pos }
 	current_line_data := current_line.runes()
