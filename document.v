@@ -214,6 +214,7 @@ enum CursorSituation {
 	within_word
 	within_whitespace
 	within_punct
+	within_symbol
 	unknown
 }
 
@@ -245,6 +246,7 @@ fn (d Document) move_cursor_to_next_word_start(pos CursorPos, is_next_line bool)
 			return CursorPos{ y: pos.y, x: whitespace_span_end }
 		}
 		.within_punct {}
+		.within_symbol {}
 		.unknown {
 			return pos
 		}
@@ -254,13 +256,26 @@ fn (d Document) move_cursor_to_next_word_start(pos CursorPos, is_next_line bool)
 }
 
 fn resolve_cursor_situation(index int, data []rune) CursorSituation {
-	if index < data.len && !utf8.is_space(data[index]) {
-		if utf8.is_rune_punct(data[index]) { return .within_punct }
-		if utf8.is_letter(data[index]) { return .within_word }
-		return .within_punct // it's probably an emoji, treat it as punctuation
+	if data.len == 0 {
+		return .within_whitespace
 	}
-	return .within_whitespace
+
+	if index >= data.len {
+		return .unknown
+	}
+
+	c := data[index]
+
+	return match true {
+		utf8.is_space(c) { .within_whitespace }
+		utf8.is_letter(c) || utf8.is_number(c) { .within_word }
+		utf8.is_rune_punct(c) || utf8.is_rune_global_punct(c) { .within_punct }
+		utf8.is_control(c) { .unknown }
+		else { .within_symbol }
+	}
 }
+
+
 
 fn (d Document) move_cursor_to_line_end(pos CursorPos, mode petal.Mode) CursorPos {
 	current_line := d.data.get_line_at(y: pos.y) or { return pos }
