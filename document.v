@@ -79,7 +79,7 @@ pub fn (mut c Controller) move_cursor_right(doc_id int, mode petal.Mode) {
 
 pub fn (mut c Controller) move_cursor_to_next_word_start(doc_id int) {
 	pos := c.cursors[doc_id]
-	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_word_start(pos, false)
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_word_start(pos, false, .unknown)
 }
 
 pub fn (mut c Controller) move_cursor_to_line_end(doc_id int, mode petal.Mode) {
@@ -218,7 +218,7 @@ enum CursorSituation {
 	unknown
 }
 
-fn (d Document) move_cursor_to_next_word_start(pos CursorPos, is_next_line bool) CursorPos {
+fn (d Document) move_cursor_to_next_word_start(pos CursorPos, is_next_line bool, situation CursorSituation) CursorPos {
 	current_line := d.data.get_line_at(y: pos.y) or { return pos }
 	current_line_data := current_line.runes()
 
@@ -229,23 +229,35 @@ fn (d Document) move_cursor_to_next_word_start(pos CursorPos, is_next_line bool)
 			}
 			whitespace_span_start := arrays.index_of_first(current_line_data, fn [pos] (idx int, c rune) bool { return idx >= pos.x && utf8.is_space(c) })
 			if whitespace_span_start == -1 {
-				return d.move_cursor_to_next_word_start(CursorPos{ y: pos.y + 1 }, true)
+				return d.move_cursor_to_next_word_start(CursorPos{ y: pos.y + 1 }, true, .within_word)
 			}
 
 			whitespace_span_end   := arrays.index_of_first(current_line_data, fn [whitespace_span_start] (idx int, c rune) bool { return idx >= whitespace_span_start && !utf8.is_space(c) })
 			if whitespace_span_end == -1 {
-				return d.move_cursor_to_next_word_start(CursorPos{ y: pos.y + 1 }, true)
+				return d.move_cursor_to_next_word_start(CursorPos{ y: pos.y + 1 }, true, .within_word)
 			}
 			return CursorPos{ y: pos.y, x: whitespace_span_end }
 		}
 		.within_whitespace {
-			whitespace_span_end   := arrays.index_of_first(current_line_data, fn [pos] (idx int, c rune) bool { return idx >= pos.x && !utf8.is_space(c) })
+			whitespace_span_end := arrays.index_of_first(current_line_data, fn [pos] (idx int, c rune) bool { return idx >= pos.x && !utf8.is_space(c) })
 			if whitespace_span_end == -1 {
-				return d.move_cursor_to_next_word_start(CursorPos{ y: pos.y + 1 }, true)
+				return d.move_cursor_to_next_word_start(CursorPos{ y: pos.y + 1 }, true, .within_whitespace)
 			}
 			return CursorPos{ y: pos.y, x: whitespace_span_end }
 		}
-		.within_punct {}
+		.within_punct {
+			non_punct_start := arrays.index_of_first(current_line_data, fn [pos] (idx int, c rune) bool { return idx >= pos.x && !is_punct(c) })
+			if non_punct_start == -1 {
+				return d.move_cursor_to_next_word_start(CursorPos{ y: pos.y + 1 }, true, .within_punct)
+			}
+			match true {
+				is_alpha_num(current_line_data[non_punct_start]) {
+					return CursorPos{ y: pos.y, x: non_punct_start }
+				}
+
+				else {}
+			}
+		}
 		.within_symbol {}
 		.unknown {
 			return pos
@@ -268,14 +280,20 @@ fn resolve_cursor_situation(index int, data []rune) CursorSituation {
 
 	return match true {
 		utf8.is_space(c) { .within_whitespace }
-		utf8.is_letter(c) || utf8.is_number(c) { .within_word }
-		utf8.is_rune_punct(c) || utf8.is_rune_global_punct(c) { .within_punct }
+		is_alpha_num(c) { .within_word }
+		is_punct(c) { .within_punct }
 		utf8.is_control(c) { .unknown }
 		else { .within_symbol }
 	}
 }
 
+fn is_alpha_num(c rune) bool {
+	return utf8.is_letter(c) || utf8.is_number(c)
+}
 
+fn is_punct(c rune) bool {
+	return utf8.is_rune_punct(c) || utf8.is_rune_global_punct(c)
+}
 
 fn (d Document) move_cursor_to_line_end(pos CursorPos, mode petal.Mode) CursorPos {
 	current_line := d.data.get_line_at(y: pos.y) or { return pos }
