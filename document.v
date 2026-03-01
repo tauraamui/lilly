@@ -213,6 +213,8 @@ fn (d Document) move_cursor_right(pos CursorPos, mode petal.Mode) CursorPos {
 enum CursorSituation {
 	within_word
 	within_whitespace
+	within_punct
+	unknown
 }
 
 fn (d Document) move_cursor_to_next_word_start(pos CursorPos, is_next_line bool) CursorPos {
@@ -242,13 +244,22 @@ fn (d Document) move_cursor_to_next_word_start(pos CursorPos, is_next_line bool)
 			}
 			return CursorPos{ y: pos.y, x: whitespace_span_end }
 		}
+		.within_punct {}
+		.unknown {
+			return pos
+		}
 	}
 
 	return pos
 }
 
 fn resolve_cursor_situation(index int, data []rune) CursorSituation {
-	return if index < data.len && !utf8.is_space(data[index]) { .within_word } else { .within_whitespace }
+	if index < data.len && !utf8.is_space(data[index]) {
+		if utf8.is_rune_punct(data[index]) { return .within_punct }
+		if utf8.is_letter(data[index]) { return .within_word }
+		return .within_punct // it's probably an emoji, treat it as punctuation
+	}
+	return .within_whitespace
 }
 
 fn (d Document) move_cursor_to_line_end(pos CursorPos, mode petal.Mode) CursorPos {
