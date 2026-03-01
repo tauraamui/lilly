@@ -286,6 +286,9 @@ fn (d Document) move_cursor_to_next_word_start(pos CursorPos, is_next_line bool,
 			}
 		}
 		.within_symbol {
+			if is_next_line && situation != .within_punct {
+				return pos
+			}
 			non_symbol_start := arrays.index_of_first(current_line_data, fn [pos] (idx int, c rune) bool { return idx >= pos.x && !is_symbol(c) })
 			if non_symbol_start == -1 {
 				return d.move_cursor_to_next_word_start(CursorPos{ y: pos.y + 1 }, true, .within_symbol)
