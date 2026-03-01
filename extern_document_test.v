@@ -3,6 +3,7 @@ module documents_test
 /* TEST BLOCK WHICH SHOULD NEVER CHANGE
 // This is a fake test comment for verifying word jumping
 fn random_function(a int, b int) int {
+
 	y_sum := a * a
 
 
@@ -60,6 +61,7 @@ fn test_move_cursor_to_next_word_start() {
 	current_line = ctrl.get_line_at(meta_doc_id, ctrl.cursor_pos(meta_doc_id).y) or { panic('failed to aquire current line') }
 	assert '${current_line.runes()[ctrl.cursor_pos(meta_doc_id).x]}' == 'r'
 
+	ctrl.move_cursor_down(meta_doc_id, .normal)
 	ctrl.move_cursor_down(meta_doc_id, .normal)
 	ctrl.move_cursor_down(meta_doc_id, .normal)
 

@@ -252,6 +252,13 @@ fn (d Document) move_cursor_to_next_word_start2(pos CursorPos) CursorPos {
 fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) ?CursorPos {
 	current_line := data.get_line_at(y: pos.y) or { return pos }
 
+	if pos.y != source_y && pos.x == 0 {
+		if current_line.len == 0 { return none }
+		if CharType.resolve(current_line[pos.x]) == .alpha_num {
+			return pos
+		}
+	}
+
 	mut c_scanner := CharScanner{ last_index: pos.x, data: current_line.runes() }
 	diff := c_scanner.next_diff() or { return none } {
 		match diff.start_type {
@@ -282,14 +289,14 @@ mut:
 }
 
 struct ScanResult {
-	index        int
-	cchar        rune
+	index      int
+	cchar      rune
 	start_type CharType
 	next_type  CharType
 }
 
 fn (mut s CharScanner) next_diff() ?ScanResult {
-	assert s.last_index < s.data.len
+	if s.data.len == 0 || s.last_index >= s.data.len { return none }
 	start_type := CharType.resolve(s.data[s.last_index])
 	for i := s.last_index; i < s.data.len; i++ {
 		c := s.data[i]
