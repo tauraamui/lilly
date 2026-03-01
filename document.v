@@ -257,6 +257,15 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 		}
 	}
 
+	find_next_diff_if_current_diff_is_whitespace := fn (mut c_scanner CharScanner, pos CursorPos, diff ScanResult) ?CursorPos {
+		post_current_char_diff := c_scanner.next_diff() or { return none }
+		if post_current_char_diff.next_type == .whitespace {
+			post_whitespace_diff := c_scanner.next_diff() or { return none }
+			return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+		}
+		return CursorPos{ y: pos.y, x: diff.index }
+	}
+
 	mut c_scanner := CharScanner{ last_index: pos.x, data: current_line.runes() }
 	diff := c_scanner.next_diff() or { return none } {
 		match diff.start_type {
@@ -267,12 +276,7 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 						return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
 					}
 					.symbol {
-						post_symbol_diff := c_scanner.next_diff() or { return none }
-						if post_symbol_diff.next_type == .whitespace {
-							post_whitespace_diff := c_scanner.next_diff() or { return none }
-							return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
-						}
-						return CursorPos{ y: pos.y, x: diff.index }
+						return find_next_diff_if_current_diff_is_whitespace(mut c_scanner, pos, diff)
 					}
 					else {}
 				}
@@ -283,11 +287,7 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 			.punctuation {
 				match diff.next_type {
 					.symbol {
-						post_symbol_diff := c_scanner.next_diff() or { return none }
-						if post_symbol_diff.next_type == .whitespace {
-							post_whitespace_diff := c_scanner.next_diff() or { return none }
-							return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
-						}
+						return find_next_diff_if_current_diff_is_whitespace(mut c_scanner, pos, diff)
 					}
 					.whitespace {
 						post_whitespace_diff := c_scanner.next_diff() or { return none }
@@ -301,11 +301,7 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 			.symbol {
 				match diff.next_type {
 					.punctuation {
-						post_punctuation_diff := c_scanner.next_diff() or { return none }
-						if post_punctuation_diff.next_type == .whitespace {
-							post_whitespace_diff := c_scanner.next_diff() or { return none }
-							return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
-						}
+						return find_next_diff_if_current_diff_is_whitespace(mut c_scanner, pos, diff)
 					}
 					.whitespace {
 						post_whitespace_diff := c_scanner.next_diff() or { return none }
