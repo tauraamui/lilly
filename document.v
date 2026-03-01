@@ -266,10 +266,24 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 						post_whitespace_diff := c_scanner.next_diff() or { return none }
 						return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
 					}
+					.symbol {
+						post_symbol_diff := c_scanner.next_diff() or { return none }
+						if post_symbol_diff.next_type == .whitespace {
+							post_whitespace_diff := c_scanner.next_diff() or { return none }
+							return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+						}
+						return CursorPos{ y: pos.y, x: diff.index }
+					}
 					else {}
 				}
 			}
 			.whitespace {
+				return CursorPos{ y: pos.y, x: diff.index }
+			}
+			.punctuation {
+				return CursorPos{ y: pos.y, x: diff.index }
+			}
+			.symbol {
 				return CursorPos{ y: pos.y, x: diff.index }
 			}
 			else {}
