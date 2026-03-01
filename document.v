@@ -238,7 +238,15 @@ fn CharType.resolve(c rune) CharType {
 }
 
 fn (d Document) move_cursor_to_next_word_start2(pos CursorPos) CursorPos {
-	return scan_to_next_word_start(d.data, pos, pos.y) or { pos }
+	mut yy := 0
+	mut next_pos := pos
+	for {
+		if next_word_start_pos := scan_to_next_word_start(d.data, next_pos, pos.y) {
+			return next_word_start_pos
+		}
+		next_pos = CursorPos{ y: next_pos.y + 1, x: 0 }
+	}
+	return pos
 }
 
 fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) ?CursorPos {
