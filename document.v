@@ -252,7 +252,7 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 
 	if pos.y != source_y && pos.x == 0 {
 		if current_line.len == 0 { return none }
-		if CharType.resolve(current_line[pos.x]) == .alpha_num {
+		if CharType.resolve(current_line[pos.x]) != .whitespace {
 			return pos
 		}
 	}
