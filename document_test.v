@@ -3,11 +3,11 @@ module documents_test
 /* TEST BLOCK WHICH SHOULD NEVER CHANGE
 // This is a fake test comment for verifying word jumping
 fn random_function(a int, b int) int {
-	a_sum := a * a
+	y_sum := a * a
 
 
-	b_sum := b * b
-	return a_sum + b_sum
+	x_sum := b * b
+	return y_sum + x_sum
 }
 */
 
@@ -19,6 +19,14 @@ fn test_utf8_emoji_classification() {
 	emoji := '${[u8(0xf0), 0x9f, 0x92, 0x95].bytestr()}'
 	assert utf8.is_space(emoji.runes()[0])      == false
 	assert utf8.is_rune_punct(emoji.runes()[0]) == false
+
+	assert documents.is_punct(':'.runes()[0])
+	assert documents.is_punct('='.runes()[0]) == false
+	assert documents.is_punct('_'.runes()[0]) == false
+
+	assert documents.is_symbol(':'.runes()[0]) == false
+	assert documents.is_symbol('='.runes()[0])
+	assert documents.is_symbol('_'.runes()[0])
 }
 
 fn test_move_cursor_to_next_word_start() {
@@ -54,10 +62,14 @@ fn test_move_cursor_to_next_word_start() {
 
 	ctrl.move_cursor_to_next_word_start(meta_doc_id)
 	current_line = ctrl.get_line_at(meta_doc_id, ctrl.cursor_pos(meta_doc_id).y) or { panic('failed to aquire current line') }
-	assert '${current_line.runes()[ctrl.cursor_pos(meta_doc_id).x]}' == 'b'
+	assert '${current_line.runes()[ctrl.cursor_pos(meta_doc_id).x]}' == 'x'
 
 	ctrl.move_cursor_to_next_word_start(meta_doc_id)
 	current_line = ctrl.get_line_at(meta_doc_id, ctrl.cursor_pos(meta_doc_id).y) or { panic('failed to aquire current line') }
-	assert '${current_line.runes()[ctrl.cursor_pos(meta_doc_id).x]}' == ':'
+	assert '${current_line.runes()[ctrl.cursor_pos(meta_doc_id).x]}' == '_'
+
+	ctrl.move_cursor_to_next_word_start(meta_doc_id)
+	current_line = ctrl.get_line_at(meta_doc_id, ctrl.cursor_pos(meta_doc_id).y) or { panic('failed to aquire current line') }
+	assert '${current_line.runes()[ctrl.cursor_pos(meta_doc_id).x]}' == 'b'
 }
 
