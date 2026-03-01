@@ -88,7 +88,7 @@ pub fn (g GapBuffer) cursor_to_offset(opts CursorPosParams) ?int {
 	return none
 }
 
-fn (g GapBuffer) get_char_at(opts CursorPosParams) ?rune {
+pub fn (g GapBuffer) get_char_at(opts CursorPosParams) ?rune {
 	offset := g.cursor_to_offset(opts) or { return none }
 	return g.data[offset]
 }

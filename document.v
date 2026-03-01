@@ -238,13 +238,40 @@ fn CharType.resolve(c rune) CharType {
 }
 
 fn (d Document) move_cursor_to_next_word_start2(pos CursorPos, is_next_line bool, situation CursorSituation) CursorPos {
-	return scan_to_next_word_start(d.data, pos, false)
+	// scan_to_next_word_start(d.data, pos, false)
+	result_pos := pos
+	mut i := 0
+	for {
+		defer { i += 1 }
+		next_word_start_pos := scan_to_next_word_start(d.data, CursorPos{ y: pos.y + i, x: pos.x }, is_next_line) or {
+			continue
+		}
+		return next_word_start_pos
+	}
+	return result_pos
 }
 
-fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, is_next_line bool) CursorPos {
+fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, is_next_line bool) ?CursorPos {
 	current_line := data.get_line_at(y: pos.y) or { return pos }
 
-	c_scanner := CharScanner{ data: current_line.runes() }
+	mut c_scanner := CharScanner{ last_index: pos.x, data: current_line.runes() }
+	diff := c_scanner.next_diff() or { return none } {
+		match diff.start_c_type {
+			.alpha_num {
+				match diff.next_c_type {
+					.whitespace {
+						post_whitespace_diff := c_scanner.next_diff() or { return none }
+						return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+					}
+					else {}
+				}
+			}
+			.whitespace {
+				return CursorPos{ y: pos.y, x: diff.index }
+			}
+			else {}
+		}
+	}
 
 	return pos
 }
@@ -257,18 +284,21 @@ mut:
 }
 
 struct ScanResult {
-	index      int
-	cchar      rune
-	c_type     CharType
+	index        int
+	cchar        rune
+	start_c_type CharType
+	next_c_type  CharType
 }
 
-fn (mut s CharScanner) next_diff(start_type CharType) ?ScanResult {
+fn (mut s CharScanner) next_diff() ?ScanResult {
+	if s.last_index >= s.data.len { return none }
+	start_type := CharType.resolve(s.data[s.last_index])
 	for i := s.last_index; i < s.data.len; i++ {
 		c := s.data[i]
 		c_type := CharType.resolve(c)
 		if c_type != start_type {
 			s.last_index = i
-			return ScanResult{ index: i, cchar: c, c_type: c_type }
+			return ScanResult{ index: i, cchar: c, start_c_type: start_type, next_c_type: c_type }
 		}
 	}
 	return none
