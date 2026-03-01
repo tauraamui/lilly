@@ -79,7 +79,7 @@ pub fn (mut c Controller) move_cursor_right(doc_id int, mode petal.Mode) {
 
 pub fn (mut c Controller) move_cursor_to_next_word_start(doc_id int) {
 	pos := c.cursors[doc_id]
-	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_word_start(pos, false, .unknown)
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_word_start2(pos)
 }
 
 pub fn (mut c Controller) move_cursor_to_line_end(doc_id int, mode petal.Mode) {
@@ -237,21 +237,11 @@ fn CharType.resolve(c rune) CharType {
 	}
 }
 
-fn (d Document) move_cursor_to_next_word_start2(pos CursorPos, is_next_line bool, situation CursorSituation) CursorPos {
-	// scan_to_next_word_start(d.data, pos, false)
-	result_pos := pos
-	mut i := 0
-	for {
-		defer { i += 1 }
-		next_word_start_pos := scan_to_next_word_start(d.data, CursorPos{ y: pos.y + i, x: pos.x }, is_next_line) or {
-			continue
-		}
-		return next_word_start_pos
-	}
-	return result_pos
+fn (d Document) move_cursor_to_next_word_start2(pos CursorPos) CursorPos {
+	return scan_to_next_word_start(d.data, pos) or { pos }
 }
 
-fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, is_next_line bool) ?CursorPos {
+fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos) ?CursorPos {
 	current_line := data.get_line_at(y: pos.y) or { return pos }
 
 	mut c_scanner := CharScanner{ last_index: pos.x, data: current_line.runes() }
