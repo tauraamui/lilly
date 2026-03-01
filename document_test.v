@@ -18,15 +18,15 @@ This is the second line.'
 fn test_scan_to_next_word_start() {
 	gb := buffers.GapBuffer.new(content: mock_content.runes())
 
-	mut next_word_start_pos := scan_to_next_word_start(gb, CursorPos{ y: 0, x: 0 })?
+	mut next_word_start_pos := scan_to_next_word_start(gb, CursorPos{ y: 0, x: 0 }, 0)?
 	assert next_word_start_pos == CursorPos{ y: 0, x: 5 }
 	assert get_char_at(gb, next_word_start_pos) == 'i'
 
-	next_word_start_pos = scan_to_next_word_start(gb, next_word_start_pos)?
+	next_word_start_pos = scan_to_next_word_start(gb, next_word_start_pos, 0)?
 	assert next_word_start_pos == CursorPos{ y: 0, x: 8 }
 	assert get_char_at(gb, next_word_start_pos) == 't'
 
-	next_word_start_pos = scan_to_next_word_start(gb, next_word_start_pos)?
+	next_word_start_pos = scan_to_next_word_start(gb, next_word_start_pos, 0)?
 	assert next_word_start_pos == CursorPos{ y: 0, x: 12 }
 	assert get_char_at(gb, next_word_start_pos) == 'f'
 }
