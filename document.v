@@ -281,9 +281,39 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 				return CursorPos{ y: pos.y, x: diff.index }
 			}
 			.punctuation {
+				match diff.next_type {
+					.symbol {
+						post_symbol_diff := c_scanner.next_diff() or { return none }
+						if post_symbol_diff.next_type == .whitespace {
+							post_whitespace_diff := c_scanner.next_diff() or { return none }
+							return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+						}
+					}
+					.whitespace {
+						post_whitespace_diff := c_scanner.next_diff() or { return none }
+						return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+					}
+					else {}
+				}
+
 				return CursorPos{ y: pos.y, x: diff.index }
 			}
 			.symbol {
+				match diff.next_type {
+					.punctuation {
+						post_punctuation_diff := c_scanner.next_diff() or { return none }
+						if post_punctuation_diff.next_type == .whitespace {
+							post_whitespace_diff := c_scanner.next_diff() or { return none }
+							return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+						}
+					}
+					.whitespace {
+						post_whitespace_diff := c_scanner.next_diff() or { return none }
+						return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+					}
+					else {}
+				}
+
 				return CursorPos{ y: pos.y, x: diff.index }
 			}
 			else {}
