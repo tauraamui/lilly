@@ -243,21 +243,12 @@ fn (d Document) move_cursor_to_next_word_start2(pos CursorPos, is_next_line bool
 
 fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, is_next_line bool) CursorPos {
 	current_line := data.get_line_at(y: pos.y) or { return pos }
-	current_line_data := current_line.runes()
 
-	start_char_type := CharType.resolve(current_line_data[pos.x])
-
-	next_char, next_char_type := scan_for_differing_type(current_line_data, pos.x, start_char_type)
-	println('START TYPE: ${start_char_type}, NEXT TYPE: ${next_char_type}')
+	c_scanner := CharScanner{ data: current_line.runes() }
 
 	return pos
 }
 
-fn scan_for_differing_type(data []rune, minimum_index int, current_char_type CharType) (rune, CharType) {
-	next_differing_type_index := arrays.index_of_first(data, fn [minimum_index, current_char_type] (idx int, c rune) bool { return idx >= minimum_index && CharType.resolve(c) != current_char_type })
-	next_differing_char := data[next_differing_type_index]
-	return next_differing_char, CharType.resolve(next_differing_char)
-}
 
 struct CharScanner {
 	data       []rune
