@@ -281,7 +281,7 @@ struct ScanResult {
 }
 
 fn (mut s CharScanner) next_diff() ?ScanResult {
-	if s.last_index >= s.data.len { return none }
+	assert s.last_index < s.data.len
 	start_type := CharType.resolve(s.data[s.last_index])
 	for i := s.last_index; i < s.data.len; i++ {
 		c := s.data[i]
