@@ -254,9 +254,9 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 
 	mut c_scanner := CharScanner{ last_index: pos.x, data: current_line.runes() }
 	diff := c_scanner.next_diff() or { return none } {
-		match diff.start_c_type {
+		match diff.start_type {
 			.alpha_num {
-				match diff.next_c_type {
+				match diff.next_type {
 					.whitespace {
 						post_whitespace_diff := c_scanner.next_diff() or { return none }
 						return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
@@ -284,8 +284,8 @@ mut:
 struct ScanResult {
 	index        int
 	cchar        rune
-	start_c_type CharType
-	next_c_type  CharType
+	start_type CharType
+	next_type  CharType
 }
 
 fn (mut s CharScanner) next_diff() ?ScanResult {
@@ -296,7 +296,7 @@ fn (mut s CharScanner) next_diff() ?ScanResult {
 		c_type := CharType.resolve(c)
 		if c_type != start_type {
 			s.last_index = i
-			return ScanResult{ index: i, cchar: c, start_c_type: start_type, next_c_type: c_type }
+			return ScanResult{ index: i, cchar: c, start_type: start_type, next_type: c_type }
 		}
 	}
 	return none

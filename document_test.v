@@ -7,9 +7,9 @@ fn test_char_scanner() {
 		data: 'This is some test content'.runes()
 	}
 
-	assert c_scanner.next_diff()? == ScanResult{ index: 4, cchar: ' '.runes()[0], next_c_type: .whitespace }
-	assert c_scanner.next_diff()? == ScanResult{ index: 5, cchar: 'i'.runes()[0], start_c_type: .whitespace, next_c_type: .alpha_num }
-	assert c_scanner.next_diff()? == ScanResult{ index: 7, cchar: ' '.runes()[0], start_c_type: .alpha_num, next_c_type: .whitespace }
+	assert c_scanner.next_diff()? == ScanResult{ index: 4, cchar: ' '.runes()[0], next_type: .whitespace }
+	assert c_scanner.next_diff()? == ScanResult{ index: 5, cchar: 'i'.runes()[0], start_type: .whitespace, next_type: .alpha_num }
+	assert c_scanner.next_diff()? == ScanResult{ index: 7, cchar: ' '.runes()[0], start_type: .alpha_num, next_type: .whitespace }
 }
 
 const mock_content := 'This is the first line
