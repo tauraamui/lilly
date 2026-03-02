@@ -357,7 +357,7 @@ fn (mut s CharScanner) next_diff() ?ScanResult {
 }
 
 pub fn is_alpha_num(c rune) bool {
-	return utf8.is_letter(c) || utf8.is_number(c)
+	return utf8.is_letter(c) || utf8.is_number(c) || c == '_'.runes()[0]
 }
 
 pub fn is_punct(c rune) bool {
