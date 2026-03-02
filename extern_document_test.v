@@ -13,6 +13,10 @@ fn random_function(a int, b int) int {
 	}
 	return y_sum + x_sum
 }
+
+fn second_random_function() {
+	a.thing = 9
+}
 */
 
 import encoding.utf8
@@ -27,10 +31,14 @@ fn test_utf8_emoji_classification() {
 	assert documents.is_punct(':'.runes()[0])
 	assert documents.is_punct('='.runes()[0]) == false
 	assert documents.is_punct('_'.runes()[0]) == false
+	assert documents.is_punct('('.runes()[0]) == false
+
 
 	assert documents.is_symbol(':'.runes()[0]) == false
 	assert documents.is_symbol('='.runes()[0])
 	assert documents.is_symbol('_'.runes()[0])
+	assert documents.is_symbol('('.runes()[0])
+
 }
 
 fn test_move_cursor_to_next_word_start() {
@@ -66,6 +74,13 @@ fn test_move_cursor_to_next_word_start() {
 	ctrl.move_cursor_down(meta_doc_id, .normal)
 
 	word_start_chars = ['x', '_', 's', ':', 'b', '*', 'b', 'd', '{', '}', 'r', 'y', '_', 's', '+', 'x', '_', 's', '}']
+	for i, c in word_start_chars {
+		ctrl.move_cursor_to_next_word_start(meta_doc_id)
+		current_line = ctrl.get_line_at(meta_doc_id, ctrl.cursor_pos(meta_doc_id).y) or { panic('failed to aquire current line') }
+		assert '[${i}]${current_line.runes()[ctrl.cursor_pos(meta_doc_id).x]}' == '[${i}]${c}'
+	}
+
+	word_start_chars = ['f', 's', '_', 'r', '_', 'f', '(', ')', '{', 'a', '.']
 	for i, c in word_start_chars {
 		ctrl.move_cursor_to_next_word_start(meta_doc_id)
 		current_line = ctrl.get_line_at(meta_doc_id, ctrl.cursor_pos(meta_doc_id).y) or { panic('failed to aquire current line') }
