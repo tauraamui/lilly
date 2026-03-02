@@ -346,6 +346,12 @@ fn (mut s CharScanner) next_diff() ?ScanResult {
 			s.last_index = i
 			return ScanResult{ index: i, cchar: c, start_type: start_type, next_type: c_type }
 		}
+		if c_type == .symbol || c_type == .punctuation {
+			if c != s.data[s.last_index] {
+				s.last_index = i
+				return ScanResult{ index: i, cchar: c, start_type: start_type, next_type: c_type }
+			}
+		}
 	}
 	return none
 }
