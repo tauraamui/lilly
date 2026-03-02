@@ -80,7 +80,7 @@ fn test_move_cursor_to_next_word_start() {
 		assert '[${i}]${current_line.runes()[ctrl.cursor_pos(meta_doc_id).x]}' == '[${i}]${c}'
 	}
 
-	word_start_chars = ['f', 's', '_', 'r', '_', 'f', '(', ')', '{', 'a', '.']
+	word_start_chars = ['f', 's', '_', 'r', '_', 'f', '(', ')', '{', 'a', '.', 't', '=', '9', '}']
 	for i, c in word_start_chars {
 		ctrl.move_cursor_to_next_word_start(meta_doc_id)
 		current_line = ctrl.get_line_at(meta_doc_id, ctrl.cursor_pos(meta_doc_id).y) or { panic('failed to aquire current line') }
