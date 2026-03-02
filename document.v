@@ -271,12 +271,15 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 		match diff.start_type {
 			.alpha_num {
 				match diff.next_type {
-					.whitespace {
+					.whitespace { // next char found after alpha numeric was whitespace, so lets keep going
 						post_whitespace_diff := c_scanner.next_diff() or { return none }
 						return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
 					}
 					.symbol {
-						return find_next_diff_if_current_diff_is_whitespace(mut c_scanner, pos, diff)
+						return CursorPos{ y: pos.y, x: diff.index }
+					}
+					.punctuation {
+						return CursorPos{ y: pos.y, x: diff.index }
 					}
 					else {}
 				}
