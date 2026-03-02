@@ -288,6 +288,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	// ********
 
 	if msg is tea.KeyMsg {
+		cmds << query_editor_data(m.active_editor_id)
 		match m.mode {
 			.leader {
 				match msg.k_type {

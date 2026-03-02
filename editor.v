@@ -5,6 +5,8 @@ import petal
 import palette
 import documents
 
+pub const tab_width = 4
+
 struct EditorData {
 	id         int
 	file_path  string
@@ -118,7 +120,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								}
 							}
 							'up' {
-								m.doc_controller.move_cursor_down(m.doc_id, .insert)
+								m.doc_controller.move_cursor_up(m.doc_id, .insert)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
 									cmds << raise_error('error: ${err}')
 									return m.clone(), tea.batch_array(cmds)
@@ -132,7 +134,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								}
 							}
 							'down' {
-								m.doc_controller.move_cursor_up(m.doc_id, .insert)
+								m.doc_controller.move_cursor_down(m.doc_id, .insert)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
 									cmds << raise_error('error: ${err}')
 									return m.clone(), tea.batch_array(cmds)
@@ -158,14 +160,17 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								cmds << switch_mode(.insert)
 								return m.clone(), tea.batch_array(cmds)
 							}
+							'w' {
+								m.doc_controller.move_cursor_to_next_word_start(m.doc_id)
+							}
 							'h' {
 								m.doc_controller.move_cursor_left(m.doc_id, .normal)
 							}
 							'j' {
-								m.doc_controller.move_cursor_up(m.doc_id, .normal)
+								m.doc_controller.move_cursor_down(m.doc_id, .normal)
 							}
 							'k' {
-								m.doc_controller.move_cursor_down(m.doc_id, .normal)
+								m.doc_controller.move_cursor_up(m.doc_id, .normal)
 							}
 							'l' {
 								m.doc_controller.move_cursor_right(m.doc_id, .normal)
@@ -179,13 +184,13 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								m.doc_controller.move_cursor_left(m.doc_id, .normal)
 							}
 							'up' {
-								m.doc_controller.move_cursor_down(m.doc_id, .normal)
+								m.doc_controller.move_cursor_up(m.doc_id, .normal)
 							}
 							'right' {
 								m.doc_controller.move_cursor_right(m.doc_id, .normal)
 							}
 							'down' {
-								m.doc_controller.move_cursor_up(m.doc_id, .normal)
+								m.doc_controller.move_cursor_down(m.doc_id, .normal)
 							}
 							else {}
 						}
@@ -281,7 +286,7 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 	}
 
 	for y, l in m.doc_controller.get_iterator(m.doc_id) {
-		ctx.draw_text(0, y, l.string().replace('\t', '    '))
+		ctx.draw_text(0, y, l.string().expand_tabs(tab_width))
 	}
 
 	if m.focused {
@@ -290,11 +295,15 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 }
 
 fn (m EditorModel) render_cursor(mut ctx tea.Context) {
-	cursor_pos := m.doc_controller.cursor_pos(m.doc_id)
+	cursor_pos := m.doc_controller.visual_cursor_pos(m.doc_id, tab_width)
+	// basically we want the block cursor to be the inverse of the background shade
+	// and then the text/fg color to be the inverse of that/the same as background
 	default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
 	ctx.set_bg_color(palette.fg_color(default_bg_color))
-	ctx.draw_rect(cursor_pos.x, cursor_pos.y, 1, 1)
+	ctx.set_color(default_bg_color)
+	ctx.draw_text(cursor_pos.x, cursor_pos.y, m.doc_controller.get_char_at(m.doc_id) or { ' ' }.expand_tabs(tab_width))
 	ctx.reset_bg_color()
+	ctx.reset_color()
 }
 
 fn (m EditorModel) debug_data() DebugData {

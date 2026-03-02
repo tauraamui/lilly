@@ -2,6 +2,7 @@ module documents
 
 import math
 import os
+import encoding.utf8
 import lib.buffers
 import petal
 
@@ -51,6 +52,10 @@ pub fn (c Controller) cursor_pos(doc_id int) CursorPos {
 	return c.cursors[doc_id]
 }
 
+pub fn (c Controller) visual_cursor_pos(doc_id int, tab_width int) CursorPos {
+	return c.docs[doc_id].visual_cursor_pos(c.cursors[doc_id], tab_width)
+}
+
 pub fn (mut c Controller) move_cursor_left(doc_id int, mode petal.Mode) {
 	pos := c.cursors[doc_id]
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_left(pos, mode)
@@ -71,6 +76,11 @@ pub fn (mut c Controller) move_cursor_right(doc_id int, mode petal.Mode) {
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_right(pos, mode)
 }
 
+pub fn (mut c Controller) move_cursor_to_next_word_start(doc_id int) {
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_word_start(pos)
+}
+
 pub fn (mut c Controller) move_cursor_to_line_end(doc_id int, mode petal.Mode) {
 	pos := c.cursors[doc_id]
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_line_end(pos, mode)
@@ -84,6 +94,19 @@ pub fn (mut c Controller) insert_newline(doc_id int) {
 pub fn (mut c Controller) insert_char(doc_id int, data rune) {
 	c.docs[doc_id].insert_char(data)
 	c.move_cursor_right(doc_id, .insert)
+}
+
+pub fn (c Controller) get_line_at(doc_id int, y int) ?string {
+	return c.docs[doc_id].data.get_line_at(y: y)
+}
+
+pub fn (c Controller) get_char_at(doc_id int) ?string {
+	pos := c.cursors[doc_id]
+	current_line := c.docs[doc_id].data.get_line_at(y: pos.y) or { return none }
+	for i, cc in current_line.runes_iterator() {
+		if i == pos.x { return '${cc}' }
+	}
+	return none
 }
 
 pub fn (c Controller) get_iterator(doc_id int) LineIterator {
@@ -146,7 +169,7 @@ fn (d Document) move_cursor_left(pos CursorPos, mode petal.Mode) CursorPos {
 	}
 }
 
-fn (d Document) move_cursor_up(pos CursorPos, mode petal.Mode) CursorPos {
+fn (d Document) move_cursor_down(pos CursorPos, mode petal.Mode) CursorPos {
 	// NOTE(tauraamui): for now just drop x to 0 each
 	mut y := pos.y + 1
 	d.data.get_line_at(y: y) or { return pos }
@@ -156,7 +179,7 @@ fn (d Document) move_cursor_up(pos CursorPos, mode petal.Mode) CursorPos {
 	}
 }
 
-fn (d Document) move_cursor_down(pos CursorPos, mode petal.Mode) CursorPos {
+fn (d Document) move_cursor_up(pos CursorPos, mode petal.Mode) CursorPos {
 	// NOTE(tauraamui): for now just drop x to 0 each
 	mut y := pos.y - 1
 	d.data.get_line_at(y: y) or { return pos }
@@ -186,6 +209,145 @@ fn (d Document) move_cursor_right(pos CursorPos, mode petal.Mode) CursorPos {
 	}
 }
 
+enum CursorSituation {
+	within_word
+	within_whitespace
+	within_punct
+	within_symbol
+	unknown
+}
+
+enum CharType {
+	alpha_num
+	whitespace
+	punctuation
+	symbol
+	unknown
+}
+
+fn CharType.resolve(c rune) CharType {
+	return match true {
+		is_punct(c) { .punctuation }
+		is_symbol(c) { .symbol }
+		utf8.is_space(c) { .whitespace }
+		is_alpha_num(c) { .alpha_num }
+		utf8.is_control(c) { .unknown }
+		else { .unknown }
+	}
+}
+
+fn (d Document) move_cursor_to_next_word_start(pos CursorPos) CursorPos {
+	mut next_pos := pos
+	for {
+		if next_word_start_pos := scan_to_next_word_start(d.data, next_pos, pos.y) {
+			return next_word_start_pos
+		}
+		next_pos = CursorPos{ y: next_pos.y + 1, x: 0 }
+	}
+	return pos
+}
+
+fn find_next_diff_skip_whitespace(mut c_scanner CharScanner, pos CursorPos, diff ScanResult) ?CursorPos {
+	post_current_char_diff := c_scanner.next_diff() or { return none }
+	if post_current_char_diff.next_type == .whitespace {
+		post_whitespace_diff := c_scanner.next_diff() or { return none }
+		return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+	}
+	return CursorPos{ y: pos.y, x: diff.index }
+}
+
+fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) ?CursorPos {
+	current_line := data.get_line_at(y: pos.y) or { return pos }
+
+	if pos.y != source_y && pos.x == 0 {
+		if current_line.len == 0 { return none }
+		if CharType.resolve(current_line[pos.x]) != .whitespace {
+			return pos
+		}
+	}
+
+	mut c_scanner := CharScanner{ last_index: pos.x, data: current_line.runes() }
+	diff := c_scanner.next_diff() or { return none }
+
+	if diff.start_type == .alpha_num {
+		if diff.next_type == .whitespace {
+			post_whitespace_diff := c_scanner.next_diff() or { return none }
+			return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+		}
+		return CursorPos{ y: pos.y, x: diff.index }
+	}
+
+	if diff.start_type == .whitespace {
+		return CursorPos{ y: pos.y, x: diff.index }
+	}
+
+	if diff.start_type == .punctuation {
+		if diff.next_type == .symbol {
+			return find_next_diff_skip_whitespace(mut c_scanner, pos, diff)
+		}
+		if diff.next_type == .whitespace {
+			post_whitespace_diff := c_scanner.next_diff() or { return none }
+			return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+		}
+		return CursorPos{ y: pos.y, x: diff.index }
+	}
+
+	if diff.start_type == .symbol {
+		if diff.next_type == .whitespace {
+			post_whitespace_diff := c_scanner.next_diff() or { return none }
+			return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+		}
+		return CursorPos{ y: pos.y, x: diff.index }
+	}
+
+	return pos
+}
+
+struct CharScanner {
+	data       []rune
+mut:
+	last_index int
+}
+
+struct ScanResult {
+	index      int
+	cchar      rune
+	start_type CharType
+	next_type  CharType
+}
+
+fn (mut s CharScanner) next_diff() ?ScanResult {
+	if s.data.len == 0 || s.last_index >= s.data.len { return none }
+	start_type := CharType.resolve(s.data[s.last_index])
+	for i := s.last_index; i < s.data.len; i++ {
+		c := s.data[i]
+		c_type := CharType.resolve(c)
+		if c_type != start_type {
+			s.last_index = i
+			return ScanResult{ index: i, cchar: c, start_type: start_type, next_type: c_type }
+		}
+		if c_type == .symbol || c_type == .punctuation {
+			if c != s.data[s.last_index] {
+				s.last_index = i
+				return ScanResult{ index: i, cchar: c, start_type: start_type, next_type: c_type }
+			}
+		}
+	}
+	return none
+}
+
+pub fn is_alpha_num(c rune) bool {
+	return utf8.is_letter(c) || utf8.is_number(c) || c == '_'.runes()[0]
+}
+
+pub fn is_punct(c rune) bool {
+	return utf8.is_rune_punct(c) || utf8.is_rune_global_punct(c)
+}
+
+pub fn is_symbol(c rune) bool {
+	return !(utf8.is_space(c) || is_alpha_num(c) || is_punct(c) || utf8.is_control(c))
+}
+
 fn (d Document) move_cursor_to_line_end(pos CursorPos, mode petal.Mode) CursorPos {
 	current_line := d.data.get_line_at(y: pos.y) or { return pos }
 	new_pos := CursorPos {
@@ -193,6 +355,11 @@ fn (d Document) move_cursor_to_line_end(pos CursorPos, mode petal.Mode) CursorPo
 		y: pos.y
 	}
 	return new_pos
+}
+
+fn (d Document) visual_cursor_pos(pos CursorPos, tab_width int) CursorPos {
+	tab_count := d.data.get_line_at(y: pos.y) or { return pos }[..pos.x].count('\t')
+	return CursorPos{ x: (pos.x - tab_count) + (tab_count * tab_width), y: pos.y }
 }
 
 fn (mut d Document) insert_char(c rune) {
