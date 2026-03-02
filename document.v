@@ -247,6 +247,15 @@ fn (d Document) move_cursor_to_next_word_start(pos CursorPos) CursorPos {
 	return pos
 }
 
+fn find_next_diff_if_current_diff_is_whitespace(mut c_scanner CharScanner, pos CursorPos, diff ScanResult) ?CursorPos {
+	post_current_char_diff := c_scanner.next_diff() or { return none }
+	if post_current_char_diff.next_type == .whitespace {
+		post_whitespace_diff := c_scanner.next_diff() or { return none }
+		return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+	}
+	return CursorPos{ y: pos.y, x: diff.index }
+}
+
 fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) ?CursorPos {
 	current_line := data.get_line_at(y: pos.y) or { return pos }
 
@@ -255,15 +264,6 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 		if CharType.resolve(current_line[pos.x]) != .whitespace {
 			return pos
 		}
-	}
-
-	find_next_diff_if_current_diff_is_whitespace := fn (mut c_scanner CharScanner, pos CursorPos, diff ScanResult) ?CursorPos {
-		post_current_char_diff := c_scanner.next_diff() or { return none }
-		if post_current_char_diff.next_type == .whitespace {
-			post_whitespace_diff := c_scanner.next_diff() or { return none }
-			return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
-		}
-		return CursorPos{ y: pos.y, x: diff.index }
 	}
 
 	mut c_scanner := CharScanner{ last_index: pos.x, data: current_line.runes() }
