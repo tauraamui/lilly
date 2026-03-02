@@ -17,6 +17,11 @@ fn random_function(a int, b int) int {
 fn second_random_function() {
 	a.thing = 9
 }
+
+fn third_random_function() {
+	mut ctrl := documents.Controller.new()
+	meta_doc_id := ctrl.open_document('extern_document_test.v')!
+}
 */
 
 import encoding.utf8
@@ -48,7 +53,13 @@ fn test_move_cursor_to_next_word_start() {
 	ctrl.move_cursor_down(meta_doc_id, .normal)
 	ctrl.move_cursor_down(meta_doc_id, .normal)
 
-	word_start_chars = ['x', ':', 'b', '*', 'b', 'd', '{', '}', 'r', 'y', '+', 'x', '}', 'f', 's', '(', ')', '{', 'a', '.', 't', '=', '9', '}']
+	word_start_chars = [
+		'x', ':', 'b', '*', 'b', 'd', '{', '}', 'r', 'y',
+		'+', 'x', '}', 'f', 's', '(', ')', '{', 'a', '.',
+		't', '=', '9', '}', 'f', 't', '(', ')', '{', 'm',
+		'c', ':', 'd', '.', 'C', '.', 'n', '(', ')',
+	]
+
 	for i, c in word_start_chars {
 		ctrl.move_cursor_to_next_word_start(meta_doc_id)
 		current_line = ctrl.get_line_at(meta_doc_id, ctrl.cursor_pos(meta_doc_id).y) or { panic('failed to aquire current line') }
