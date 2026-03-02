@@ -294,9 +294,6 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 		}
 		.symbol {
 			match diff.next_type {
-				.punctuation { // started on symbol, found punctuation, do not stop here, keep going!
-					find_next_diff_skip_whitespace(mut c_scanner, pos, diff)
-				}
 				.whitespace {
 					post_whitespace_diff := c_scanner.next_diff() or { return none }
 					CursorPos{ y: pos.y, x: post_whitespace_diff.index }
