@@ -247,7 +247,7 @@ fn (d Document) move_cursor_to_next_word_start(pos CursorPos) CursorPos {
 	return pos
 }
 
-fn find_next_diff_if_current_diff_is_whitespace(mut c_scanner CharScanner, pos CursorPos, diff ScanResult) ?CursorPos {
+fn find_next_diff_skip_whitespace(mut c_scanner CharScanner, pos CursorPos, diff ScanResult) ?CursorPos {
 	post_current_char_diff := c_scanner.next_diff() or { return none }
 	if post_current_char_diff.next_type == .whitespace {
 		post_whitespace_diff := c_scanner.next_diff() or { return none }
@@ -290,7 +290,7 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 			.punctuation {
 				match diff.next_type {
 					.symbol {
-						return find_next_diff_if_current_diff_is_whitespace(mut c_scanner, pos, diff)
+						return find_next_diff_skip_whitespace(mut c_scanner, pos, diff)
 					}
 					.whitespace {
 						post_whitespace_diff := c_scanner.next_diff() or { return none }
@@ -303,8 +303,8 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 			}
 			.symbol {
 				match diff.next_type {
-					.punctuation {
-						return find_next_diff_if_current_diff_is_whitespace(mut c_scanner, pos, diff)
+					.punctuation { // started on symbol, found punctuation, do not stop here, keep going!
+						return find_next_diff_skip_whitespace(mut c_scanner, pos, diff)
 					}
 					.whitespace {
 						post_whitespace_diff := c_scanner.next_diff() or { return none }
