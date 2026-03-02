@@ -23,23 +23,6 @@ import encoding.utf8
 import documents
 import petal
 
-fn test_utf8_emoji_classification() {
-	emoji := '${[u8(0xf0), 0x9f, 0x92, 0x95].bytestr()}'
-	assert utf8.is_space(emoji.runes()[0])      == false
-	assert utf8.is_rune_punct(emoji.runes()[0]) == false
-
-	assert documents.is_punct(':'.runes()[0])
-	assert documents.is_punct('='.runes()[0]) == false
-	assert documents.is_punct('_'.runes()[0]) == false
-	assert documents.is_punct('('.runes()[0]) == false
-
-
-	assert documents.is_symbol(':'.runes()[0]) == false
-	assert documents.is_symbol('='.runes()[0])
-	assert documents.is_symbol('_'.runes()[0]) == false
-	assert documents.is_symbol('('.runes()[0])
-}
-
 fn test_move_cursor_to_next_word_start() {
 	mut ctrl := documents.Controller.new()
 	meta_doc_id := ctrl.open_document('extern_document_test.v')!
@@ -88,5 +71,22 @@ fn test_move_cursor_to_next_word_start() {
 }
 
 fn test_move_cursor_to_next_word_start_punctuation_and_quotes() {
+}
+
+fn test_utf8_emoji_classification() {
+	emoji := '${[u8(0xf0), 0x9f, 0x92, 0x95].bytestr()}'
+	assert utf8.is_space(emoji.runes()[0])      == false
+	assert utf8.is_rune_punct(emoji.runes()[0]) == false
+
+	assert documents.is_punct(':'.runes()[0])
+	assert documents.is_punct('='.runes()[0]) == false
+	assert documents.is_punct('_'.runes()[0]) == false
+	assert documents.is_punct('('.runes()[0]) == false
+
+
+	assert documents.is_symbol(':'.runes()[0]) == false
+	assert documents.is_symbol('='.runes()[0])
+	assert documents.is_symbol('_'.runes()[0]) == false
+	assert documents.is_symbol('('.runes()[0])
 }
 
