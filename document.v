@@ -284,7 +284,7 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 					else {}
 				}
 			}
-			.whitespace {
+			.whitespace { // anything other than whitespace is where we want to get off
 				return CursorPos{ y: pos.y, x: diff.index }
 			}
 			.punctuation {
