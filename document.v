@@ -268,43 +268,40 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 
 	mut c_scanner := CharScanner{ last_index: pos.x, data: current_line.runes() }
 	diff := c_scanner.next_diff() or { return none }
-	return match diff.start_type {
-		.alpha_num {
-			if diff.next_type == .whitespace { // next char found after alpha numeric was whitespace, so lets keep going
-				post_whitespace_diff := c_scanner.next_diff() or { return none }
-				CursorPos{ y: pos.y, x: post_whitespace_diff.index }
-			} else {
-				CursorPos{ y: pos.y, x: diff.index }
-			}
-		}
-		.whitespace { // anything other than whitespace is where we want to get off
-			CursorPos{ y: pos.y, x: diff.index }
-		}
-		.punctuation {
-			match diff.next_type {
-				.symbol {
-					find_next_diff_skip_whitespace(mut c_scanner, pos, diff)
-				}
-				.whitespace {
-					post_whitespace_diff := c_scanner.next_diff() or { return none }
-					CursorPos{ y: pos.y, x: post_whitespace_diff.index }
-				}
-				else { CursorPos{ y: pos.y, x: diff.index } }
-			}
-		}
-		.symbol {
-			match diff.next_type {
-				.whitespace {
-					post_whitespace_diff := c_scanner.next_diff() or { return none }
-					CursorPos{ y: pos.y, x: post_whitespace_diff.index }
-				}
-				else { CursorPos{ y: pos.y, x: diff.index } }
-			}
-		}
-		else { pos }
-	}
-}
 
+	if diff.start_type == .alpha_num {
+		if diff.next_type == .whitespace {
+			post_whitespace_diff := c_scanner.next_diff() or { return none }
+			return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+		}
+		return CursorPos{ y: pos.y, x: diff.index }
+	}
+
+	if diff.start_type == .whitespace {
+		return CursorPos{ y: pos.y, x: diff.index }
+	}
+
+	if diff.start_type == .punctuation {
+		if diff.next_type == .symbol {
+			return find_next_diff_skip_whitespace(mut c_scanner, pos, diff)
+		}
+		if diff.next_type == .whitespace {
+			post_whitespace_diff := c_scanner.next_diff() or { return none }
+			return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+		}
+		return CursorPos{ y: pos.y, x: diff.index }
+	}
+
+	if diff.start_type == .symbol {
+		if diff.next_type == .whitespace {
+			post_whitespace_diff := c_scanner.next_diff() or { return none }
+			return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+		}
+		return CursorPos{ y: pos.y, x: diff.index }
+	}
+
+	return pos
+}
 
 struct CharScanner {
 	data       []rune
