@@ -209,6 +209,21 @@ fn (d Document) move_cursor_right(pos CursorPos, mode petal.Mode) CursorPos {
 	}
 }
 
+fn (d Document) move_cursor_to_next_word_start(pos CursorPos) CursorPos {
+	mut next_pos := pos
+	for {
+		if next_word_start_pos := scan_to_next_word_start(d.data, next_pos, pos.y) {
+			return next_word_start_pos
+		}
+		next_pos = CursorPos{ y: next_pos.y + 1, x: 0 }
+	}
+	return pos
+}
+
+fn (d Document) move_cursor_to_previous_word_start(pos CursorPos) CursorPos {
+	return pos
+}
+
 enum CursorSituation {
 	within_word
 	within_whitespace
@@ -234,17 +249,6 @@ pub fn CharType.resolve(c rune) CharType {
 		utf8.is_control(c) { .unknown }
 		else { .unknown }
 	}
-}
-
-fn (d Document) move_cursor_to_next_word_start(pos CursorPos) CursorPos {
-	mut next_pos := pos
-	for {
-		if next_word_start_pos := scan_to_next_word_start(d.data, next_pos, pos.y) {
-			return next_word_start_pos
-		}
-		next_pos = CursorPos{ y: next_pos.y + 1, x: 0 }
-	}
-	return pos
 }
 
 fn find_next_diff_skip_whitespace(mut c_scanner CharScanner, pos CursorPos, diff ScanResult) ?CursorPos {
@@ -304,6 +308,21 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 }
 
 fn scan_to_previous_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) ?CursorPos {
+	current_line := data.get_line_at(y: pos.y) or { return pos }
+
+	mut c_scanner := CharScanner{ last_index: pos.x, data: current_line.runes() }
+	diff := c_scanner.prev_diff() or { return none }
+
+	if diff.start_type == .alpha_num {
+		if diff.next_type == .whitespace {
+			if prev_char := diff.pre_diff {
+				if prev_char.c_type == .alpha_num {
+					return CursorPos{ y: pos.y, x: prev_char.index }
+				}
+			}
+		}
+	}
+
 	return none
 }
 
