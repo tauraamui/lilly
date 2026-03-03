@@ -7,9 +7,20 @@ fn test_char_scanner() {
 		data: 'This is some test content'.runes()
 	}
 
-	assert c_scanner.next_diff()? == ScanResult{ index: 4, cchar: ' '.runes()[0], next_type: .whitespace }
-	assert c_scanner.next_diff()? == ScanResult{ index: 5, cchar: 'i'.runes()[0], start_type: .whitespace, next_type: .alpha_num }
-	assert c_scanner.next_diff()? == ScanResult{ index: 7, cchar: ' '.runes()[0], start_type: .alpha_num, next_type: .whitespace }
+	assert c_scanner.next_diff()? == ScanResult{ index: 4, cchar: ` `, cchar_str: ' ', start_type: .alpha_num, next_type: .whitespace }
+	assert c_scanner.next_diff()? == ScanResult{ index: 5, cchar: `i`, cchar_str: 'i', start_type: .whitespace, next_type: .alpha_num }
+	assert c_scanner.next_diff()? == ScanResult{ index: 7, cchar: ` `, cchar_str: ' ', start_type: .alpha_num, next_type: .whitespace }
+}
+
+fn test_char_scanner_prev() {
+	mut c_scanner := CharScanner{
+		data: 'This is some test content'.runes()
+		last_index: 15
+	}
+
+	assert c_scanner.prev_diff()? == ScanResult{
+		index: 13, cchar: ` `, cchar_str: ' ', next_type: .alpha_num
+	}
 }
 
 const mock_content := 'This is the first line

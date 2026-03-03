@@ -217,7 +217,7 @@ enum CursorSituation {
 	unknown
 }
 
-enum CharType {
+pub enum CharType {
 	alpha_num
 	whitespace
 	punctuation
@@ -225,7 +225,7 @@ enum CharType {
 	unknown
 }
 
-fn CharType.resolve(c rune) CharType {
+pub fn CharType.resolve(c rune) CharType {
 	return match true {
 		is_punct(c) { .punctuation }
 		is_symbol(c) { .symbol }
@@ -303,6 +303,10 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 	return pos
 }
 
+fn scan_to_previous_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) ?CursorPos {
+	return none
+}
+
 struct CharScanner {
 	data       []rune
 mut:
@@ -312,8 +316,41 @@ mut:
 struct ScanResult {
 	index      int
 	cchar      rune
+	cchar_str  string
+	pre_diff   ?PreDiffChar
 	start_type CharType
 	next_type  CharType
+}
+
+struct PreDiffChar {
+	index     int
+	cchar     rune
+	cchar_str string
+	c_type    CharType
+}
+
+fn (mut s CharScanner) prev_diff() ?ScanResult {
+	if s.data.len == 0 || s.last_index <= 0 { return none }
+	start_type := CharType.resolve(s.data[s.last_index])
+	for i := s.last_index; i >= 0; i-- {
+		c := s.data[i]
+		c_type := CharType.resolve(c)
+		pre_diff_char := ?PreDiffChar(
+			if i + 1 < s.last_index { PreDiffChar{ index: i + 1, cchar: s.data[i + 1], cchar_str: s.data[i + 1].str(), c_type: CharType.resolve(s.data[i + 1]) } } else { none }
+		)
+
+		if c_type != start_type {
+			s.last_index = i
+			return ScanResult{ index: i, cchar: c, cchar_str: c.str(), pre_diff: pre_diff_char, start_type: start_type, next_type: c_type }
+		}
+		if c_type == .symbol || c_type == .punctuation {
+			if c != s.data[s.last_index] {
+				s.last_index = i
+				return ScanResult{ index: i, cchar: c, cchar_str: c.str(), pre_diff: pre_diff_char, start_type: start_type, next_type: c_type }
+			}
+		}
+	}
+	return none
 }
 
 fn (mut s CharScanner) next_diff() ?ScanResult {
@@ -324,12 +361,12 @@ fn (mut s CharScanner) next_diff() ?ScanResult {
 		c_type := CharType.resolve(c)
 		if c_type != start_type {
 			s.last_index = i
-			return ScanResult{ index: i, cchar: c, start_type: start_type, next_type: c_type }
+			return ScanResult{ index: i, cchar: c, cchar_str: c.str(), start_type: start_type, next_type: c_type }
 		}
 		if c_type == .symbol || c_type == .punctuation {
 			if c != s.data[s.last_index] {
 				s.last_index = i
-				return ScanResult{ index: i, cchar: c, start_type: start_type, next_type: c_type }
+				return ScanResult{ index: i, cchar: c, cchar_str: c.str(), start_type: start_type, next_type: c_type }
 			}
 		}
 	}
