@@ -44,6 +44,13 @@ fn test_scan_to_next_word_start() {
 	assert get_char_at(gb, next_word_start_pos) == 'f'
 }
 
+fn test_scan_to_previous_word_start() {
+	gb := buffers.GapBuffer.new(content: mock_content.runes())
+	mut previous_word_start_pos := scan_to_previous_word_start(gb, CursorPos{ y: 0, x: 15 }, 0)?
+	assert previous_word_start_pos == CursorPos{ y: 0, x: 12 }
+	assert get_char_at(gb, previous_word_start_pos) == 'f'
+}
+
 fn get_char_at(data buffers.GapBuffer, pos CursorPos) string {
 	return [data.get_char_at(y: pos.y, x: pos.x) or { '?'.runes()[0] }].string()
 }
