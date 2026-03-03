@@ -336,7 +336,9 @@ fn (mut s CharScanner) prev_diff() ?ScanResult {
 		c := s.data[i]
 		c_type := CharType.resolve(c)
 		pre_diff_char := ?PreDiffChar(
-			if i + 1 < s.last_index { PreDiffChar{ index: i + 1, cchar: s.data[i + 1], cchar_str: s.data[i + 1].str(), c_type: CharType.resolve(s.data[i + 1]) } } else { none }
+			if i + 1 < s.last_index {
+				PreDiffChar{ index: i + 1, cchar: s.data[i + 1], cchar_str: s.data[i + 1].str(), c_type: CharType.resolve(s.data[i + 1]) }
+			} else { none }
 		)
 
 		if c_type != start_type {
