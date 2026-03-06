@@ -19,7 +19,9 @@ fn test_char_scanner_prev() {
 	}
 
 	assert c_scanner.prev_diff()? == ScanResult{
-		index: 12, cchar: ` `, cchar_str: ' ', start_type: .alpha_num, next_type: .whitespace, pre_diff: PreDiffChar{
+		index: 12, cchar: ` `, cchar_str: ' ', start_type: .alpha_num,
+		next_type: .whitespace,
+		pre_diff: PreDiffChar{
 			index: 13, cchar: `t`, cchar_str: 't', c_type: .alpha_num
 		}
 	}

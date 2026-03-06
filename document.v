@@ -81,6 +81,11 @@ pub fn (mut c Controller) move_cursor_to_next_word_start(doc_id int) {
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_word_start(pos)
 }
 
+pub fn (mut c Controller) move_cursor_to_previous_word_start(doc_id int) {
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_previous_word_start(pos)
+}
+
 pub fn (mut c Controller) move_cursor_to_line_end(doc_id int, mode petal.Mode) {
 	pos := c.cursors[doc_id]
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_line_end(pos, mode)
@@ -221,7 +226,36 @@ fn (d Document) move_cursor_to_next_word_start(pos CursorPos) CursorPos {
 }
 
 fn (d Document) move_cursor_to_previous_word_start(pos CursorPos) CursorPos {
+	mut next_pos := pos
+	for {
+		if prev_word_start_pos := scan_to_previous_word_start(d.data, next_pos, pos.y) {
+			return prev_word_start_pos
+		}
+		next_pos = CursorPos{ y: next_pos.y - 1, x: 0 }
+	}
 	return pos
+}
+
+fn (d Document) move_cursor_to_line_end(pos CursorPos, mode petal.Mode) CursorPos {
+	current_line := d.data.get_line_at(y: pos.y) or { return pos }
+	new_pos := CursorPos {
+		x: pos.x + (current_line.runes().len - pos.x - if mode == .normal { 1 } else { 0 })
+		y: pos.y
+	}
+	return new_pos
+}
+
+fn (d Document) visual_cursor_pos(pos CursorPos, tab_width int) CursorPos {
+	tab_count := d.data.get_line_at(y: pos.y) or { return pos }[..pos.x].count('\t')
+	return CursorPos{ x: (pos.x - tab_count) + (tab_count * tab_width), y: pos.y }
+}
+
+fn (mut d Document) insert_char(c rune) {
+	d.data.insert_char(c)
+}
+
+pub fn (d Document) iter() LineIterator {
+	return d.data.iter()
 }
 
 enum CursorSituation {
@@ -323,7 +357,7 @@ fn scan_to_previous_word_start(data buffers.GapBuffer, pos CursorPos, source_y i
 		}
 	}
 
-	return none
+	return pos
 }
 
 struct CharScanner {
@@ -404,28 +438,6 @@ pub fn is_punct(c rune) bool {
 
 pub fn is_symbol(c rune) bool {
 	return !(utf8.is_space(c) || is_alpha_num(c) || is_punct(c) || utf8.is_control(c))
-}
-
-fn (d Document) move_cursor_to_line_end(pos CursorPos, mode petal.Mode) CursorPos {
-	current_line := d.data.get_line_at(y: pos.y) or { return pos }
-	new_pos := CursorPos {
-		x: pos.x + (current_line.runes().len - pos.x)
-		y: pos.y
-	}
-	return new_pos
-}
-
-fn (d Document) visual_cursor_pos(pos CursorPos, tab_width int) CursorPos {
-	tab_count := d.data.get_line_at(y: pos.y) or { return pos }[..pos.x].count('\t')
-	return CursorPos{ x: (pos.x - tab_count) + (tab_count * tab_width), y: pos.y }
-}
-
-fn (mut d Document) insert_char(c rune) {
-	d.data.insert_char(c)
-}
-
-pub fn (d Document) iter() LineIterator {
-	return d.data.iter()
 }
 
 pub interface LineIterator {
