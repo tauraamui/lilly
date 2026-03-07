@@ -341,20 +341,56 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 	return pos
 }
 
+fn find_prev_token_start(mut c_scanner CharScanner, y int) ?CursorPos {
+	diff := c_scanner.prev_diff() or { return CursorPos{ y: y, x: 0 } }
+	if pre := diff.pre_diff {
+		return CursorPos{ y: y, x: pre.index }
+	}
+	return CursorPos{ y: y, x: 0 }
+}
+
 fn scan_to_previous_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) ?CursorPos {
 	current_line := data.get_line_at(y: pos.y) or { return pos }
+
+	if pos.y != source_y && pos.x == 0 {
+		if current_line.len == 0 { return none }
+		if CharType.resolve(current_line[pos.x]) != .whitespace {
+			return pos
+		}
+	}
 
 	mut c_scanner := CharScanner{ last_index: pos.x, data: current_line.runes() }
 	diff := c_scanner.prev_diff() or { return none }
 
 	if diff.start_type == .alpha_num {
-		if diff.next_type == .whitespace {
-			if prev_char := diff.pre_diff {
-				if prev_char.c_type == .alpha_num {
-					return CursorPos{ y: pos.y, x: prev_char.index }
-				}
-			}
+		if pre := diff.pre_diff {
+			return CursorPos{ y: pos.y, x: pre.index }
 		}
+		if diff.next_type == .punctuation || diff.next_type == .symbol {
+			return CursorPos{ y: pos.y, x: diff.index }
+		}
+		if diff.next_type == .whitespace {
+			c_scanner.prev_diff() or { return none }
+			return find_prev_token_start(mut c_scanner, pos.y)
+		}
+	}
+
+	if diff.start_type == .punctuation || diff.start_type == .symbol {
+		if pre := diff.pre_diff {
+			return CursorPos{ y: pos.y, x: pre.index }
+		}
+		if diff.next_type == .alpha_num {
+			return find_prev_token_start(mut c_scanner, pos.y)
+		}
+		if diff.next_type == .whitespace {
+			c_scanner.prev_diff() or { return none }
+			return find_prev_token_start(mut c_scanner, pos.y)
+		}
+		return CursorPos{ y: pos.y, x: diff.index }
+	}
+
+	if diff.start_type == .whitespace {
+		return find_prev_token_start(mut c_scanner, pos.y)
 	}
 
 	return pos

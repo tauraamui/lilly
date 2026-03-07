@@ -27,7 +27,7 @@ fn test_char_scanner_prev() {
 	}
 }
 
-const mock_content := 'This is the first line
+const mock_content := 'This is the.first line
 This is the second line.'
 
 fn test_scan_to_next_word_start() {
@@ -42,6 +42,10 @@ fn test_scan_to_next_word_start() {
 	assert get_char_at(gb, next_word_start_pos) == 't'
 
 	next_word_start_pos = scan_to_next_word_start(gb, next_word_start_pos, 0)?
+	assert next_word_start_pos == CursorPos{ y: 0, x: 11 }
+	assert get_char_at(gb, next_word_start_pos) == '.'
+
+	next_word_start_pos = scan_to_next_word_start(gb, next_word_start_pos, 0)?
 	assert next_word_start_pos == CursorPos{ y: 0, x: 12 }
 	assert get_char_at(gb, next_word_start_pos) == 'f'
 }
@@ -53,8 +57,17 @@ fn test_scan_to_previous_word_start() {
 	assert get_char_at(gb, previous_word_start_pos) == 'f'
 
 	previous_word_start_pos = scan_to_previous_word_start(gb, previous_word_start_pos, 0)? // cursor should now be on 't' of word 'the'
+	assert previous_word_start_pos == CursorPos{ y: 0, x: 11 }
+	assert get_char_at(gb, previous_word_start_pos) == '.'
+
+	previous_word_start_pos = scan_to_previous_word_start(gb, previous_word_start_pos, 0)? // cursor should now be on 't' of word 'the'
 	assert previous_word_start_pos == CursorPos{ y: 0, x: 8 }
 	assert get_char_at(gb, previous_word_start_pos) == 't'
+
+	previous_word_start_pos = scan_to_previous_word_start(gb, previous_word_start_pos, 0)? // cursor should now be on 't' of word 'the'
+	assert previous_word_start_pos == CursorPos{ y: 0, x: 5 }
+	assert get_char_at(gb, previous_word_start_pos) == 'i'
+
 }
 
 fn get_char_at(data buffers.GapBuffer, pos CursorPos) string {
