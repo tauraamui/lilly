@@ -48,9 +48,13 @@ fn test_scan_to_next_word_start() {
 
 fn test_scan_to_previous_word_start() {
 	gb := buffers.GapBuffer.new(content: mock_content.runes())
-	mut previous_word_start_pos := scan_to_previous_word_start(gb, CursorPos{ y: 0, x: 15 }, 0)?
+	mut previous_word_start_pos := scan_to_previous_word_start(gb, CursorPos{ y: 0, x: 15 }, 0)? // cursor starting on 's' in word 'first'
 	assert previous_word_start_pos == CursorPos{ y: 0, x: 12 }
 	assert get_char_at(gb, previous_word_start_pos) == 'f'
+
+	previous_word_start_pos = scan_to_previous_word_start(gb, previous_word_start_pos, 0)? // cursor should now be on 't' of word 'the'
+	assert previous_word_start_pos == CursorPos{ y: 0, x: 8 }
+	assert get_char_at(gb, previous_word_start_pos) == 't'
 }
 
 fn get_char_at(data buffers.GapBuffer, pos CursorPos) string {
