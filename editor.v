@@ -112,6 +112,9 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					.special {
 						match msg.key_msg.string() {
 							'enter' { m.doc_controller.insert_newline(m.doc_id) }
+							'backspace' {
+								m.doc_controller.backspace(m.doc_id)
+							}
 							'left' {
 								m.doc_controller.move_cursor_left(m.doc_id, .insert)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {

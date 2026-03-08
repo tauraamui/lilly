@@ -285,17 +285,16 @@ fn test_gap_buffer_single_line_content_cursor_to_offset() {
 	assert gb.cursor_to_offset(x: 0)? == 3
 }
 
-/*
 @[assert_continues]
 fn test_gap_buffer_single_line_content_cursor_to_offset_insert_twice() {
 	mut gb := GapBuffer.new(content: 'import lib.buffers'.runes(), gap_size: 3)
 
 	gb.move_gap(gb.cursor_to_offset(x: 8) or { -1 }) // will panic if -1 is used
 	gb.insert_char(`^`)
-	assert gb.content() == 'import ^lib.buffers'
+	assert gb.content().string() == 'import l^ib.buffers'
 
 	gb.move_gap(gb.cursor_to_offset(x: 1) or { -1 })
 	gb.insert_char(`*`)
-	assert gb.content() == '*import ^lib.buffers'
+	assert gb.content().string() == 'i*mport l^ib.buffers'
 }
-*/
+
