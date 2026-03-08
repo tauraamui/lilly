@@ -103,12 +103,30 @@ pub fn (mut c Controller) move_cursor_to_previous_blank_line(doc_id int) {
 
 pub fn (mut c Controller) insert_newline(doc_id int) {
 	c.docs[doc_id].insert_char(`\n`)
-	c.move_cursor_up(doc_id, .insert) // will need to have a 'cursor_up_and_start'
+	c.move_cursor_down(doc_id, .insert) // will need to have a 'cursor_up_and_start'
 }
 
 pub fn (mut c Controller) insert_char(doc_id int, data rune) {
 	c.docs[doc_id].insert_char(data)
 	c.move_cursor_right(doc_id, .insert)
+}
+
+pub fn (mut c Controller) backspace(doc_id int) {
+	pos := c.cursors[doc_id]
+	if pos.x == 0 && pos.y == 0 {
+		return
+	}
+
+	new_pos := if pos.x > 0 {
+		CursorPos{ y: pos.y, x: pos.x - 1 }
+	} else {
+		prev_line := c.docs[doc_id].data.get_line_at(y: pos.y - 1) or { return }
+		CursorPos{ y: pos.y - 1, x: prev_line.runes().len }
+	}
+
+	c.prepare_for_insertion(doc_id) or { return }
+	c.docs[doc_id].delete_before()
+	c.cursors[doc_id] = new_pos
 }
 
 pub fn (c Controller) get_line_at(doc_id int, y int) ?string {
@@ -306,6 +324,10 @@ fn (d Document) visual_cursor_pos(pos CursorPos, tab_width int) CursorPos {
 
 fn (mut d Document) insert_char(c rune) {
 	d.data.insert_char(c)
+}
+
+fn (mut d Document) delete_before() {
+	d.data.delete_before()
 }
 
 pub fn (d Document) iter() LineIterator {

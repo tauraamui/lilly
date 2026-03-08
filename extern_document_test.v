@@ -67,9 +67,6 @@ fn test_move_cursor_to_next_word_start() {
 	}
 }
 
-fn test_move_cursor_to_next_word_start_punctuation_and_quotes() {
-}
-
 fn test_utf8_emoji_classification() {
 	emoji := '${[u8(0xf0), 0x9f, 0x92, 0x95].bytestr()}'
 	assert utf8.is_space(emoji.runes()[0])      == false
