@@ -231,7 +231,15 @@ fn (d Document) move_cursor_to_previous_word_start(pos CursorPos) CursorPos {
 		if prev_word_start_pos := scan_to_previous_word_start(d.data, next_pos, pos.y) {
 			return prev_word_start_pos
 		}
-		next_pos = CursorPos{ y: if next_pos.y - 1 >= 0 { next_pos.y - 1 } else { return pos }, x: 0 }
+		prev_y := next_pos.y - 1
+		if prev_y < 0 { return pos }
+		prev_line := d.data.get_line_at(y: prev_y) or { return pos }
+		line_len := prev_line.runes().len
+		if line_len == 0 {
+			next_pos = CursorPos{ y: prev_y, x: 0 }
+		} else {
+			next_pos = CursorPos{ y: prev_y, x: line_len - 1 }
+		}
 	}
 	return pos
 }
