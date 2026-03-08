@@ -91,6 +91,11 @@ pub fn (mut c Controller) move_cursor_to_line_end(doc_id int, mode petal.Mode) {
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_line_end(pos, mode)
 }
 
+pub fn (mut c Controller) move_cursor_to_next_blank_line(doc_id int) {
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_blank_line(pos)
+}
+
 pub fn (mut c Controller) insert_newline(doc_id int) {
 	c.docs[doc_id].insert_char(`\n`)
 	c.move_cursor_up(doc_id, .insert) // will need to have a 'cursor_up_and_start'
@@ -251,6 +256,17 @@ fn (d Document) move_cursor_to_line_end(pos CursorPos, mode petal.Mode) CursorPo
 		y: pos.y
 	}
 	return new_pos
+}
+
+fn (d Document) move_cursor_to_next_blank_line(pos CursorPos) CursorPos {
+	// NOTE(tauraamui) [08/03/2026]: for now we don't care about iterating previous lines
+	// skipping them should be fast enough even though it is a waste to retrieve them
+	for i, line in d.data.iter() {
+		if i > pos.y {
+			if line.len == 0 { return CursorPos{ y: i } }
+		}
+	}
+	return pos
 }
 
 fn (d Document) visual_cursor_pos(pos CursorPos, tab_width int) CursorPos {
