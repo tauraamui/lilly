@@ -105,14 +105,19 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			.insert {
 				match msg.key_msg.k_type {
 					.runes {
-						char_runes := msg.key_msg.string().runes()
-						for cr in char_runes {
+						for cr in msg.key_msg.string().runes_iterator() {
 							m.doc_controller.insert_char(m.doc_id, cr)
 						}
 					}
 					.special {
 						match msg.key_msg.string() {
-							'enter' { m.doc_controller.insert_newline(m.doc_id) }
+							'enter' {
+								leading_whitespace := m.doc_controller.leading_whitespace_on_current_line(m.doc_id)
+								m.doc_controller.insert_newline(m.doc_id)
+								for cr in leading_whitespace {
+									m.doc_controller.insert_char(m.doc_id, cr)
+								}
+							}
 							'backspace' { m.doc_controller.backspace(m.doc_id) }
 							'delete' { m.doc_controller.delete(m.doc_id) }
 							'ctrl+i' { m.doc_controller.insert_char(m.doc_id, `\t`) }
@@ -166,6 +171,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 									return m.clone(), tea.batch_array(cmds)
 								}
 								m.doc_controller.insert_newline(m.doc_id)
+								m.doc_controller.insert_char(m.doc_id, `\t`)
 								cmds << switch_mode(.insert)
 								m.ensure_cursor_visible()
 								return m.clone(), tea.batch_array(cmds)
