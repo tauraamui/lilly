@@ -111,6 +111,20 @@ pub fn (mut c Controller) insert_char(doc_id int, data rune) {
 	c.move_cursor_right(doc_id, .insert)
 }
 
+pub fn (c Controller) leading_whitespace_on_current_line(doc_id int) []rune {
+	pos := c.cursors[doc_id]
+	current_line := c.docs[doc_id].data.get_line_at(y: pos.y) or { return [] }
+	mut first_non_whitespace_index := 0
+	for i, cr in current_line.runes_iterator() {
+		if CharType.resolve(cr) != .whitespace {
+			first_non_whitespace_index = i
+			break
+		}
+	}
+	if first_non_whitespace_index == 0 { return [] }
+	return current_line.runes()[..first_non_whitespace_index]
+}
+
 pub fn (mut c Controller) backspace(doc_id int) {
 	pos := c.cursors[doc_id]
 	if pos.x == 0 && pos.y == 0 {
@@ -181,7 +195,7 @@ pub:
 }
 
 @[heap]
-pub struct Document {
+struct Document {
 mut:
 	file_path string
 	data buffers.GapBuffer
