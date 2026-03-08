@@ -114,6 +114,7 @@ pub fn (mut c Controller) insert_char(doc_id int, data rune) {
 pub fn (c Controller) leading_whitespace_on_current_line(doc_id int) []rune {
 	pos := c.cursors[doc_id]
 	current_line := c.docs[doc_id].data.get_line_at(y: pos.y) or { return [] }
+	if current_line == '' { return [] }
 	mut first_non_whitespace_index := 0
 	for i, cr in current_line.runes_iterator() {
 		if CharType.resolve(cr) != .whitespace {
