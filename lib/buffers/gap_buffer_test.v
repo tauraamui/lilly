@@ -354,3 +354,39 @@ fn test_delete_before_insert_delete_round_trip() {
 	assert gb.content_str() == 'adef'
 }
 
+fn test_delete_after_at_end_does_nothing() {
+	mut gb := GapBuffer.new(content: 'abc'.runes(), gap_size: 3)
+	gb.move_gap(must_cursor_to_offset(gb, x: 3))
+	gb.delete_after()
+	assert gb.content_str() == 'abc'
+}
+
+fn test_delete_after_single_char() {
+	mut gb := GapBuffer.new(content: 'abc'.runes(), gap_size: 3)
+	gb.move_gap(must_cursor_to_offset(gb, x: 0))
+	assert gb.raw_content().map(null_code_point_to_str).string() == '___abc'
+
+	gb.delete_after()
+	assert gb.content_str() == 'bc'
+	assert gb.raw_content().map(null_code_point_to_str).string() == '____bc'
+}
+
+fn test_delete_after_middle() {
+	mut gb := GapBuffer.new(content: 'abcdef'.runes(), gap_size: 3)
+	gb.move_gap(must_cursor_to_offset(gb, x: 3))
+	assert gb.raw_content().map(null_code_point_to_str).string() == 'abc___def'
+
+	gb.delete_after()
+	assert gb.content_str() == 'abcef'
+	assert gb.raw_content().map(null_code_point_to_str).string() == 'abc____ef'
+}
+
+fn test_delete_after_joins_lines() {
+	mut gb := GapBuffer.new(content: 'abc\ndef'.runes(), gap_size: 3)
+	gb.move_gap(must_cursor_to_offset(gb, x: 3, y: 0))
+	assert gb.content_str() == 'abc\ndef'
+
+	gb.delete_after()
+	assert gb.content_str() == 'abcdef'
+}
+
