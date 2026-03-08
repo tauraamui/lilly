@@ -277,6 +277,7 @@ fn (d Document) move_cursor_to_next_blank_line(pos CursorPos) CursorPos {
 fn (d Document) move_cursor_to_previous_blank_line(pos CursorPos) CursorPos {
 	// NOTE(tauraamui) [08/03/2026]: for now we don't care about iterating previous lines
 	// skipping them should be fast enough even though it is a waste to retrieve them
+	// needs to use reverse iterator?
 	for i, line in d.data.iter() {
 		if i > pos.y {
 			if line.len == 0 { return CursorPos{ y: i } }
