@@ -93,3 +93,26 @@ fn test_doc_move_cursor_to_next_word_start() {
 	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 0 }) == CursorPos{ y: 0, x: 18 }
 }
 
+const mock_multiline_content_with_blanks = 'This is the first line.
+This is the second line.
+
+This is the forth line.
+This is the fifth line.
+
+This is the seventh line.
+This is the eighth line.
+
+This is the tenth line.'
+
+fn test_doc_move_cursor_to_next_blank_line() {
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_multiline_content_with_blanks.runes())
+	}
+
+	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 0, x: 8 }) == CursorPos{ y: 2, x: 0 }
+	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 2, x: 0 }) == CursorPos{ y: 5, x: 0 }
+	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 5, x: 0 }) == CursorPos{ y: 8, x: 0 }
+	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 8, x: 0 }) == CursorPos{ y: 8, x: 0 }
+}
+
