@@ -231,7 +231,7 @@ fn (d Document) move_cursor_to_previous_word_start(pos CursorPos) CursorPos {
 		if prev_word_start_pos := scan_to_previous_word_start(d.data, next_pos, pos.y) {
 			return prev_word_start_pos
 		}
-		next_pos = CursorPos{ y: next_pos.y - 1, x: 0 }
+		next_pos = CursorPos{ y: if next_pos.y - 1 >= 0 { next_pos.y - 1 } else { return pos }, x: 0 }
 	}
 	return pos
 }
