@@ -103,7 +103,7 @@ pub fn (mut c Controller) move_cursor_to_previous_blank_line(doc_id int) {
 
 pub fn (mut c Controller) insert_newline(doc_id int) {
 	c.docs[doc_id].insert_char(`\n`)
-	c.move_cursor_up(doc_id, .insert) // will need to have a 'cursor_up_and_start'
+	c.move_cursor_down(doc_id, .insert) // will need to have a 'cursor_up_and_start'
 }
 
 pub fn (mut c Controller) insert_char(doc_id int, data rune) {
