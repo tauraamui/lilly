@@ -170,8 +170,11 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 									m.ensure_cursor_visible()
 									return m.clone(), tea.batch_array(cmds)
 								}
+								leading_whitespace := m.doc_controller.leading_whitespace_on_current_line(m.doc_id)
 								m.doc_controller.insert_newline(m.doc_id)
-								m.doc_controller.insert_char(m.doc_id, `\t`)
+								for cr in leading_whitespace {
+									m.doc_controller.insert_char(m.doc_id, cr)
+								}
 								cmds << switch_mode(.insert)
 								m.ensure_cursor_visible()
 								return m.clone(), tea.batch_array(cmds)
