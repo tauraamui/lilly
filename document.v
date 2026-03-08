@@ -129,6 +129,21 @@ pub fn (mut c Controller) backspace(doc_id int) {
 	c.cursors[doc_id] = new_pos
 }
 
+pub fn (mut c Controller) delete(doc_id int) {
+	pos := c.cursors[doc_id]
+	current_line := c.docs[doc_id].data.get_line_at(y: pos.y) or { return }
+	line_len := current_line.runes().len
+
+	if pos.x >= line_len {
+		// at end of line, only delte if there's a next line to join
+		c.docs[doc_id].data.get_line_at(y: pos.y + 1) or { return }
+	}
+
+	c.prepare_for_insertion(doc_id) or { return }
+	c.docs[doc_id].delete_after()
+	// cursor does not move
+}
+
 pub fn (c Controller) get_line_at(doc_id int, y int) ?string {
 	return c.docs[doc_id].data.get_line_at(y: y)
 }
@@ -328,6 +343,10 @@ fn (mut d Document) insert_char(c rune) {
 
 fn (mut d Document) delete_before() {
 	d.data.delete_before()
+}
+
+fn (mut d Document) delete_after() {
+	d.data.delete_after()
 }
 
 pub fn (d Document) iter() LineIterator {
