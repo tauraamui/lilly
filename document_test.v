@@ -67,10 +67,29 @@ fn test_scan_to_previous_word_start() {
 	previous_word_start_pos = scan_to_previous_word_start(gb, previous_word_start_pos, 0)? // cursor should now be on 't' of word 'the'
 	assert previous_word_start_pos == CursorPos{ y: 0, x: 5 }
 	assert get_char_at(gb, previous_word_start_pos) == 'i'
-
 }
 
 fn get_char_at(data buffers.GapBuffer, pos CursorPos) string {
 	return [data.get_char_at(y: pos.y, x: pos.x) or { '?'.runes()[0] }].string()
+}
+
+fn test_doc_move_cursor_to_next_word_start() {
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 15 }) == CursorPos{ y: 0, x: 12 }
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 12 }) == CursorPos{ y: 0, x: 11 }
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 11 }) == CursorPos{ y: 0, x: 8 }
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 8 }) == CursorPos{ y: 0, x: 5 }
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 5 }) == CursorPos{ y: 0, x: 0 }
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 0 }) == CursorPos{ y: 0, x: 0 }
+
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 16 }) == CursorPos{ y: 1, x: 12 }
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 12 }) == CursorPos{ y: 1, x: 8 }
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 8 }) == CursorPos{ y: 1, x: 5 }
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 5 }) == CursorPos{ y: 1, x: 0 }
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 0 }) == CursorPos{ y: 0, x: 18 }
 }
 
