@@ -25,6 +25,7 @@ mut:
 
 	width  int
 	height int
+	min_y  int
 
 	doc_controller &documents.Controller
 }
@@ -119,6 +120,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								m.doc_controller.move_cursor_left(m.doc_id, .insert)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
 									cmds << raise_error('error: ${err}')
+									m.ensure_cursor_visible()
 									return m.clone(), tea.batch_array(cmds)
 								}
 							}
@@ -126,6 +128,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								m.doc_controller.move_cursor_up(m.doc_id, .insert)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
 									cmds << raise_error('error: ${err}')
+									m.ensure_cursor_visible()
 									return m.clone(), tea.batch_array(cmds)
 								}
 							}
@@ -133,6 +136,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								m.doc_controller.move_cursor_right(m.doc_id, .insert)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
 									cmds << raise_error('error: ${err}')
+									m.ensure_cursor_visible()
 									return m.clone(), tea.batch_array(cmds)
 								}
 							}
@@ -140,6 +144,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								m.doc_controller.move_cursor_down(m.doc_id, .insert)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
 									cmds << raise_error('error: ${err}')
+									m.ensure_cursor_visible()
 									return m.clone(), tea.batch_array(cmds)
 								}
 							}
@@ -157,10 +162,12 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								m.doc_controller.move_cursor_to_line_end(m.doc_id, .insert)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
 									cmds << raise_error('error: ${err}')
+									m.ensure_cursor_visible()
 									return m.clone(), tea.batch_array(cmds)
 								}
 								m.doc_controller.insert_newline(m.doc_id)
 								cmds << switch_mode(.insert)
+								m.ensure_cursor_visible()
 								return m.clone(), tea.batch_array(cmds)
 							}
 							'w' {
@@ -198,6 +205,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							'delete' {
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
 									cmds << raise_error('error: ${err}')
+									m.ensure_cursor_visible()
 									return m.clone(), tea.batch_array(cmds)
 								}
 								m.doc_controller.delete(m.doc_id)
@@ -263,11 +271,13 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					if msg.id == m.id {
 						m.doc_controller.write_document(m.doc_id) or {
 							cmds << raise_error('failed to write to disk')
+							m.ensure_cursor_visible()
 							return m.clone(), tea.batch_array(cmds)
 						}
 						message_text := 'written to disk successfully'
 						cmds << tea.sequence(debug_log(message_text), display_message(.normal, message_text))
 					}
+					m.ensure_cursor_visible()
 					return m.clone(), tea.batch_array(cmds)
 				}
 				else {}
@@ -284,6 +294,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		else {}
 	}
+	m.ensure_cursor_visible()
 	return m.clone(), tea.batch_array(cmds)
 }
 
@@ -309,7 +320,9 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 	}
 
 	for y, l in m.doc_controller.get_iterator(m.doc_id) {
-		ctx.draw_text(0, y, l.string().expand_tabs(tab_width))
+		if y >= m.min_y && y < m.min_y + m.height {
+			ctx.draw_text(0, y - m.min_y, l.string().expand_tabs(tab_width))
+		}
 	}
 
 	if m.focused {
@@ -324,9 +337,21 @@ fn (m EditorModel) render_cursor(mut ctx tea.Context) {
 	default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
 	ctx.set_bg_color(palette.fg_color(default_bg_color))
 	ctx.set_color(default_bg_color)
-	ctx.draw_text(cursor_pos.x, cursor_pos.y, m.doc_controller.get_char_at(m.doc_id) or { ' ' }.expand_tabs(tab_width))
+	ctx.draw_text(cursor_pos.x, cursor_pos.y - m.min_y, m.doc_controller.get_char_at(m.doc_id) or { ' ' }.expand_tabs(tab_width))
 	ctx.reset_bg_color()
 	ctx.reset_color()
+}
+
+fn (mut m EditorModel) ensure_cursor_visible() {
+	cursor_pos := m.doc_controller.cursor_pos(m.doc_id)
+	if m.height <= 0 {
+		return
+	}
+	if cursor_pos.y < m.min_y {
+		m.min_y = cursor_pos.y
+	} else if cursor_pos.y >= m.min_y + m.height {
+		m.min_y = cursor_pos.y - m.height + 1
+	}
 }
 
 fn (m EditorModel) debug_data() DebugData {
