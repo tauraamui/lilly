@@ -113,6 +113,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						match msg.key_msg.string() {
 							'enter' { m.doc_controller.insert_newline(m.doc_id) }
 							'backspace' { m.doc_controller.backspace(m.doc_id) }
+							'delete' { m.doc_controller.delete(m.doc_id) }
 							'left' {
 								m.doc_controller.move_cursor_left(m.doc_id, .insert)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
@@ -193,6 +194,14 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 					.special {
 						match msg.key_msg.string() {
+							'delete' {
+								m.doc_controller.prepare_for_insertion(m.doc_id) or {
+									cmds << raise_error('error: ${err}')
+									return m.clone(), tea.batch_array(cmds)
+								}
+								m.doc_controller.delete(m.doc_id)
+								cmds << switch_mode(.insert)
+							}
 							'left' {
 								m.doc_controller.move_cursor_left(m.doc_id, .normal)
 							}
