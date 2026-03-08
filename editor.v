@@ -169,6 +169,12 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							'$' {
 								m.doc_controller.move_cursor_to_line_end(m.doc_id, .normal)
 							}
+							'}' {
+								m.doc_controller.move_cursor_to_next_blank_line(m.doc_id)
+							}
+							'{' {
+								m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id)
+							}
 							'h' {
 								m.doc_controller.move_cursor_left(m.doc_id, .normal)
 							}
