@@ -156,6 +156,12 @@ pub fn (mut g GapBuffer) insert_char(data rune) {
 	g.gap_start += 1
 }
 
+pub fn (mut g GapBuffer) delete_before() {
+	if g.gap_start == 0 { return }
+	g.gap_start -= 1
+	g.data[g.gap_start] = null_code_point
+}
+
 pub fn (g GapBuffer) iter() LineIterator {
 	return LineIterator.new(g.data, int(g.gap_start), int(g.gap_end))
 }
