@@ -163,6 +163,12 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							'w' {
 								m.doc_controller.move_cursor_to_next_word_start(m.doc_id)
 							}
+							'b' {
+								m.doc_controller.move_cursor_to_previous_word_start(m.doc_id)
+							}
+							'$' {
+								m.doc_controller.move_cursor_to_line_end(m.doc_id, .normal)
+							}
 							'h' {
 								m.doc_controller.move_cursor_left(m.doc_id, .normal)
 							}

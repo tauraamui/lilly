@@ -81,6 +81,11 @@ pub fn (mut c Controller) move_cursor_to_next_word_start(doc_id int) {
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_word_start(pos)
 }
 
+pub fn (mut c Controller) move_cursor_to_previous_word_start(doc_id int) {
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_previous_word_start(pos)
+}
+
 pub fn (mut c Controller) move_cursor_to_line_end(doc_id int, mode petal.Mode) {
 	pos := c.cursors[doc_id]
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_line_end(pos, mode)
@@ -209,33 +214,6 @@ fn (d Document) move_cursor_right(pos CursorPos, mode petal.Mode) CursorPos {
 	}
 }
 
-enum CursorSituation {
-	within_word
-	within_whitespace
-	within_punct
-	within_symbol
-	unknown
-}
-
-enum CharType {
-	alpha_num
-	whitespace
-	punctuation
-	symbol
-	unknown
-}
-
-fn CharType.resolve(c rune) CharType {
-	return match true {
-		is_punct(c) { .punctuation }
-		is_symbol(c) { .symbol }
-		utf8.is_space(c) { .whitespace }
-		is_alpha_num(c) { .alpha_num }
-		utf8.is_control(c) { .unknown }
-		else { .unknown }
-	}
-}
-
 fn (d Document) move_cursor_to_next_word_start(pos CursorPos) CursorPos {
 	mut next_pos := pos
 	for {
@@ -245,6 +223,74 @@ fn (d Document) move_cursor_to_next_word_start(pos CursorPos) CursorPos {
 		next_pos = CursorPos{ y: next_pos.y + 1, x: 0 }
 	}
 	return pos
+}
+
+fn (d Document) move_cursor_to_previous_word_start(pos CursorPos) CursorPos {
+	mut next_pos := pos
+	for {
+		if prev_word_start_pos := scan_to_previous_word_start(d.data, next_pos, pos.y) {
+			return prev_word_start_pos
+		}
+		prev_y := next_pos.y - 1
+		if prev_y < 0 { return pos }
+		prev_line := d.data.get_line_at(y: prev_y) or { return pos }
+		line_len := prev_line.runes().len
+		if line_len == 0 {
+			next_pos = CursorPos{ y: prev_y, x: 0 }
+		} else {
+			next_pos = CursorPos{ y: prev_y, x: line_len - 1 }
+		}
+	}
+	return pos
+}
+
+fn (d Document) move_cursor_to_line_end(pos CursorPos, mode petal.Mode) CursorPos {
+	current_line := d.data.get_line_at(y: pos.y) or { return pos }
+	new_pos := CursorPos {
+		x: pos.x + (current_line.runes().len - pos.x - if mode == .normal { 1 } else { 0 })
+		y: pos.y
+	}
+	return new_pos
+}
+
+fn (d Document) visual_cursor_pos(pos CursorPos, tab_width int) CursorPos {
+	tab_count := d.data.get_line_at(y: pos.y) or { return pos }[..pos.x].count('\t')
+	return CursorPos{ x: (pos.x - tab_count) + (tab_count * tab_width), y: pos.y }
+}
+
+fn (mut d Document) insert_char(c rune) {
+	d.data.insert_char(c)
+}
+
+pub fn (d Document) iter() LineIterator {
+	return d.data.iter()
+}
+
+enum CursorSituation {
+	within_word
+	within_whitespace
+	within_punct
+	within_symbol
+	unknown
+}
+
+pub enum CharType {
+	alpha_num
+	whitespace
+	punctuation
+	symbol
+	unknown
+}
+
+pub fn CharType.resolve(c rune) CharType {
+	return match true {
+		is_punct(c) { .punctuation }
+		is_symbol(c) { .symbol }
+		utf8.is_space(c) { .whitespace }
+		is_alpha_num(c) { .alpha_num }
+		utf8.is_control(c) { .unknown }
+		else { .unknown }
+	}
 }
 
 fn find_next_diff_skip_whitespace(mut c_scanner CharScanner, pos CursorPos, diff ScanResult) ?CursorPos {
@@ -303,6 +349,61 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 	return pos
 }
 
+fn find_prev_token_start(mut c_scanner CharScanner, y int) ?CursorPos {
+	diff := c_scanner.prev_diff() or { return CursorPos{ y: y, x: 0 } }
+	if pre := diff.pre_diff {
+		return CursorPos{ y: y, x: pre.index }
+	}
+	return CursorPos{ y: y, x: 0 }
+}
+
+fn scan_to_previous_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) ?CursorPos {
+	current_line := data.get_line_at(y: pos.y) or { return pos }
+
+	if pos.y != source_y && pos.x == 0 {
+		if current_line.len == 0 { return none }
+		if CharType.resolve(current_line[pos.x]) != .whitespace {
+			return pos
+		}
+	}
+
+	mut c_scanner := CharScanner{ last_index: pos.x, data: current_line.runes() }
+	diff := c_scanner.prev_diff() or { return none }
+
+	if diff.start_type == .alpha_num {
+		if pre := diff.pre_diff {
+			return CursorPos{ y: pos.y, x: pre.index }
+		}
+		if diff.next_type == .punctuation || diff.next_type == .symbol {
+			return CursorPos{ y: pos.y, x: diff.index }
+		}
+		if diff.next_type == .whitespace {
+			c_scanner.prev_diff() or { return none }
+			return find_prev_token_start(mut c_scanner, pos.y)
+		}
+	}
+
+	if diff.start_type == .punctuation || diff.start_type == .symbol {
+		if pre := diff.pre_diff {
+			return CursorPos{ y: pos.y, x: pre.index }
+		}
+		if diff.next_type == .alpha_num {
+			return find_prev_token_start(mut c_scanner, pos.y)
+		}
+		if diff.next_type == .whitespace {
+			c_scanner.prev_diff() or { return none }
+			return find_prev_token_start(mut c_scanner, pos.y)
+		}
+		return CursorPos{ y: pos.y, x: diff.index }
+	}
+
+	if diff.start_type == .whitespace {
+		return find_prev_token_start(mut c_scanner, pos.y)
+	}
+
+	return pos
+}
+
 struct CharScanner {
 	data       []rune
 mut:
@@ -312,8 +413,43 @@ mut:
 struct ScanResult {
 	index      int
 	cchar      rune
+	cchar_str  string
+	pre_diff   ?PreDiffChar
 	start_type CharType
 	next_type  CharType
+}
+
+struct PreDiffChar {
+	index     int
+	cchar     rune
+	cchar_str string
+	c_type    CharType
+}
+
+fn (mut s CharScanner) prev_diff() ?ScanResult {
+	if s.data.len == 0 || s.last_index <= 0 { return none }
+	start_type := CharType.resolve(s.data[s.last_index])
+	for i := s.last_index; i >= 0; i-- {
+		c := s.data[i]
+		c_type := CharType.resolve(c)
+		pre_diff_char := ?PreDiffChar(
+			if i + 1 < s.last_index {
+				PreDiffChar{ index: i + 1, cchar: s.data[i + 1], cchar_str: s.data[i + 1].str(), c_type: CharType.resolve(s.data[i + 1]) }
+			} else { none }
+		)
+
+		if c_type != start_type {
+			s.last_index = i
+			return ScanResult{ index: i, cchar: c, cchar_str: c.str(), pre_diff: pre_diff_char, start_type: start_type, next_type: c_type }
+		}
+		if c_type == .symbol || c_type == .punctuation {
+			if c != s.data[s.last_index] {
+				s.last_index = i
+				return ScanResult{ index: i, cchar: c, cchar_str: c.str(), pre_diff: pre_diff_char, start_type: start_type, next_type: c_type }
+			}
+		}
+	}
+	return none
 }
 
 fn (mut s CharScanner) next_diff() ?ScanResult {
@@ -324,12 +460,12 @@ fn (mut s CharScanner) next_diff() ?ScanResult {
 		c_type := CharType.resolve(c)
 		if c_type != start_type {
 			s.last_index = i
-			return ScanResult{ index: i, cchar: c, start_type: start_type, next_type: c_type }
+			return ScanResult{ index: i, cchar: c, cchar_str: c.str(), start_type: start_type, next_type: c_type }
 		}
 		if c_type == .symbol || c_type == .punctuation {
 			if c != s.data[s.last_index] {
 				s.last_index = i
-				return ScanResult{ index: i, cchar: c, start_type: start_type, next_type: c_type }
+				return ScanResult{ index: i, cchar: c, cchar_str: c.str(), start_type: start_type, next_type: c_type }
 			}
 		}
 	}
@@ -346,28 +482,6 @@ pub fn is_punct(c rune) bool {
 
 pub fn is_symbol(c rune) bool {
 	return !(utf8.is_space(c) || is_alpha_num(c) || is_punct(c) || utf8.is_control(c))
-}
-
-fn (d Document) move_cursor_to_line_end(pos CursorPos, mode petal.Mode) CursorPos {
-	current_line := d.data.get_line_at(y: pos.y) or { return pos }
-	new_pos := CursorPos {
-		x: pos.x + (current_line.runes().len - pos.x)
-		y: pos.y
-	}
-	return new_pos
-}
-
-fn (d Document) visual_cursor_pos(pos CursorPos, tab_width int) CursorPos {
-	tab_count := d.data.get_line_at(y: pos.y) or { return pos }[..pos.x].count('\t')
-	return CursorPos{ x: (pos.x - tab_count) + (tab_count * tab_width), y: pos.y }
-}
-
-fn (mut d Document) insert_char(c rune) {
-	d.data.insert_char(c)
-}
-
-pub fn (d Document) iter() LineIterator {
-	return d.data.iter()
 }
 
 pub interface LineIterator {
