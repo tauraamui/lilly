@@ -4,6 +4,7 @@ import math
 import os
 import encoding.utf8
 import lib.buffers
+import lib.documents.cursor
 import petal
 
 @[heap]
@@ -216,12 +217,20 @@ fn (mut d Document) write_to(file_path string) ! {
 	os.write_file(file_path, d.data.content().string())!
 }
 
+fn convert_pos_to_cpos(pos cursor.Pos) CursorPos {
+	return CursorPos{ x: pos.x, y: pos.y }
+}
+
 fn (mut d Document) prepare_for_insertion_at(pos CursorPos) ! {
 	if offset := d.data.cursor_to_offset(x: pos.x, y: pos.y) {
 		d.data.move_gap(offset)
 		return
 	}
 	return error('unable to convert cursor pos to offset')
+}
+
+fn (d Document) move_cursor_left_new(pos cursor.Pos) cursor.Pos {
+	return pos.x(pos.x - 1)
 }
 
 fn (d Document) move_cursor_left(pos CursorPos, mode petal.Mode) CursorPos {
