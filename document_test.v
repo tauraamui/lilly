@@ -1,6 +1,7 @@
 module documents
 
 import lib.buffers
+import lib.documents.cursor
 
 fn test_char_scanner() {
 	mut c_scanner := CharScanner{
@@ -29,6 +30,24 @@ fn test_char_scanner_prev() {
 
 const mock_content := 'This is the.first line
 This is the second line.'
+
+fn test_document_move_cursor_left() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	assert d.move_cursor_left(CursorPos{ x: 8, y: 0 }, .normal) == CursorPos{ x: 7, y: 0 }
+}
+
+fn test_document_move_cursor_left_new() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	assert d.move_cursor_left_new(cursor.Pos.new(8, 0)) == cursor.Pos.new(7, 0)
+}
 
 fn test_scan_to_next_word_start() {
 	gb := buffers.GapBuffer.new(content: mock_content.runes())
