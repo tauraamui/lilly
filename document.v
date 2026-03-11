@@ -241,6 +241,16 @@ fn (d Document) move_cursor_left(pos CursorPos, mode petal.Mode) CursorPos {
 	}
 }
 
+fn (d Document) move_cursor_down_new(pos cursor.Pos, mode petal.Mode) cursor.Pos {
+	yy := pos.y + 1
+	if line_below := d.data.get_line_at(y: yy) {
+		line_below_len := line_below.runes().len
+		// TODO(tauraamui): adjust the clamp check differently if in normal vs insert mode
+		return pos.y(yy).x(if line_below_len <= pos.largest_x { line_below_len } else { pos.largest_x })
+	}
+	return pos
+}
+
 fn (d Document) move_cursor_down(pos CursorPos, mode petal.Mode) CursorPos {
 	// NOTE(tauraamui): for now just drop x to 0 each
 	mut y := pos.y + 1
@@ -259,6 +269,9 @@ fn (d Document) move_cursor_up(pos CursorPos, mode petal.Mode) CursorPos {
 		x: 0
 		y: y
 	}
+}
+
+fn (d Document) move_cursor_up_new(pos cursor.Pos) cursor.Pos {
 }
 
 fn (d Document) move_cursor_right(pos CursorPos, mode petal.Mode) CursorPos {

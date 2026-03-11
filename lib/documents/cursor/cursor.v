@@ -2,8 +2,8 @@ module cursor
 
 @[noinit]
 pub struct Pos {
-	largest_x int // used to track largest x set across struct instance lifetime
 pub:
+	largest_x int // used to track largest x set across struct instance lifetime
 	x int
 	y int
 }
