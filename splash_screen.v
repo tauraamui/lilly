@@ -53,7 +53,7 @@ fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
 }
 
 fn (mut m SplashScreenModel) init() ?tea.Cmd {
-	return tea.sequence(check_if_tmux_wrapped, tea.emit_resize)
+	return check_if_tmux_wrapped
 }
 
 fn (mut m SplashScreenModel) handle_escape() (tea.Model, ?tea.Cmd) {
