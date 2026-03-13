@@ -67,6 +67,73 @@ fn test_document_move_cursor_down_new() {
 	assert d.move_cursor_down_new(cursor.Pos.new(8, 0), .normal) == cursor.Pos.new(8, 1)
 }
 
+fn test_document_move_cursor_down_new_at_bottom_does_not_move() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	assert d.move_cursor_down_new(cursor.Pos.new(8, 1), .normal) == cursor.Pos.new(8, 1)
+}
+
+fn test_document_move_cursor_down_new_clamps_x_to_shorter_line() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: 'This is a longer line\nshort'.runes())
+	}
+
+	// Line 0 is "This is a longer line" (21 chars), line 1 is "short" (5 chars)
+	// Moving down from x=15 on line 0 should clamp x to 5 (length of line 1)
+	assert d.move_cursor_down_new(cursor.Pos.new(15, 0), .normal) == cursor.Pos.new(5, 1)
+}
+
+fn test_document_move_cursor_down_new_retains_largest_x() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: 'This is a long line here\nshort\nAnother long line here too'.runes())
+	}
+
+	pos := cursor.Pos.new(10, 0)
+	// Move down to short line - x should clamp to 5
+	pos2 := d.move_cursor_down_new(pos, .normal)
+	assert pos2 == cursor.Pos.new(5, 1)
+	// Move down again to long line - x should restore to 10
+	pos3 := d.move_cursor_down_new(pos2, .normal)
+	assert pos3 == cursor.Pos.new(10, 2)
+}
+
+fn test_document_move_cursor_right_new() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	assert d.move_cursor_right_new(cursor.Pos.new(8, 0), .normal) == cursor.Pos.new(9, 0)
+}
+
+fn test_document_move_cursor_right_new_normal_stops_before_end() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: 'abc'.runes())
+	}
+
+	// Normal mode: can move to last char (x=2), but not past it
+	assert d.move_cursor_right_new(cursor.Pos.new(1, 0), .normal) == cursor.Pos.new(2, 0)
+	assert d.move_cursor_right_new(cursor.Pos.new(2, 0), .normal) == cursor.Pos.new(2, 0)
+}
+
+fn test_document_move_cursor_right_new_insert_stops_at_end() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: 'abc'.runes())
+	}
+
+	// Insert mode: can go to position after last char (len = 3)
+	assert d.move_cursor_right_new(cursor.Pos.new(2, 0), .insert) == cursor.Pos.new(3, 0)
+	// But can't go past that
+	assert d.move_cursor_right_new(cursor.Pos.new(3, 0), .insert) == cursor.Pos.new(3, 0)
+}
+
 fn test_document_move_cursor_up() {
 	d := Document{
 		file_path: ''
@@ -83,6 +150,41 @@ fn test_document_move_cursor_up_new() {
 	}
 
 	assert d.move_cursor_up_new(cursor.Pos.new(8, 1), .normal) == cursor.Pos.new(8, 0)
+}
+
+fn test_document_move_cursor_up_new_at_top_does_not_move() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	assert d.move_cursor_up_new(cursor.Pos.new(5, 0), .normal) == cursor.Pos.new(5, 0)
+}
+
+fn test_document_move_cursor_up_new_clamps_x_to_shorter_line() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: 'short\nThis is a longer line'.runes())
+	}
+
+	// Line 0 is "short" (5 chars), line 1 is "This is a longer line" (21 chars)
+	// Moving up from x=15 on line 1 should clamp x to 5 (length of line 0)
+	assert d.move_cursor_up_new(cursor.Pos.new(15, 1), .normal) == cursor.Pos.new(5, 0)
+}
+
+fn test_document_move_cursor_up_new_retains_largest_x() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: 'Another long line here too\nshort\nThis is a long line here'.runes())
+	}
+
+	pos := cursor.Pos.new(10, 2)
+	// Move up to short line - x should clamp to 5
+	pos2 := d.move_cursor_up_new(pos, .normal)
+	assert pos2 == cursor.Pos.new(5, 1)
+	// Move up again to long line - x should restore to 10
+	pos3 := d.move_cursor_up_new(pos2, .normal)
+	assert pos3 == cursor.Pos.new(10, 0)
 }
 
 fn test_scan_to_next_word_start() {
