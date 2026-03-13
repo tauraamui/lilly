@@ -261,7 +261,8 @@ fn (d Document) move_cursor_down(pos CursorPos, mode petal.Mode) CursorPos {
 	}
 }
 
-fn (d Document) move_cursor_up_new(pos cursor.Pos) cursor.Pos {
+fn (d Document) move_cursor_up_new(pos cursor.Pos, mode petal.Mode) cursor.Pos {
+	// TODO(tauraamui): adjust the clamp check differently if in normal vs insert mode
 	return pos.y(pos.y - 1)
 }
 
