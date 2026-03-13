@@ -93,7 +93,11 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		tea.ResizedMsg {
 			m.window_width = msg.window_width
 			m.window_height = msg.window_height
-			return m.clone(), none
+			// NOTE(tauraamui): hack to force bobatea re-renders until the terminal has had enough time
+			// to report the size of the "pane" provided to this instance and bobatea makes a note of it
+			if m.window_width == 0 && m.window_height == 0 {
+				cmds << tea.emit_resize
+			}
 		}
 		CheckIfTMUXWrappedMsg {
 			m.tmux_wrapped = os.getenv('TMUX').len > 0
