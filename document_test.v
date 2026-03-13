@@ -67,6 +67,13 @@ fn test_document_move_cursor_down_new() {
 	assert d.move_cursor_down_new(cursor.Pos.new(8, 0), .normal) == cursor.Pos.new(8, 1)
 }
 
+fn test_document_move_cursor_up() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+}
+
 fn test_scan_to_next_word_start() {
 	gb := buffers.GapBuffer.new(content: mock_content.runes())
 

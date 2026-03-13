@@ -261,6 +261,10 @@ fn (d Document) move_cursor_down(pos CursorPos, mode petal.Mode) CursorPos {
 	}
 }
 
+fn (d Document) move_cursor_up_new(pos cursor.Pos) cursor.Pos {
+	return pos.y(pos.y - 1)
+}
+
 fn (d Document) move_cursor_up(pos CursorPos, mode petal.Mode) CursorPos {
 	// NOTE(tauraamui): for now just drop x to 0 each
 	mut y := pos.y - 1
@@ -269,9 +273,6 @@ fn (d Document) move_cursor_up(pos CursorPos, mode petal.Mode) CursorPos {
 		x: 0
 		y: y
 	}
-}
-
-fn (d Document) move_cursor_up_new(pos cursor.Pos) cursor.Pos {
 }
 
 fn (d Document) move_cursor_right(pos CursorPos, mode petal.Mode) CursorPos {
