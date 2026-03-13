@@ -262,8 +262,13 @@ fn (d Document) move_cursor_down(pos CursorPos, mode petal.Mode) CursorPos {
 }
 
 fn (d Document) move_cursor_up_new(pos cursor.Pos, mode petal.Mode) cursor.Pos {
-	// TODO(tauraamui): adjust the clamp check differently if in normal vs insert mode
-	return pos.y(pos.y - 1)
+	yy := pos.y - 1
+	if line_above := d.data.get_line_at(y: yy) {
+		line_above_len := line_above.runes().len
+		// TODO(tauraamui): adjust the clamp check differently if in normal vs insert mode
+		return pos.y(yy).x(if line_above_len <= pos.largest_x { line_above_len } else { pos.largest_x })
+	}
+	return pos
 }
 
 fn (d Document) move_cursor_up(pos CursorPos, mode petal.Mode) CursorPos {
@@ -273,6 +278,22 @@ fn (d Document) move_cursor_up(pos CursorPos, mode petal.Mode) CursorPos {
 	return CursorPos{
 		x: 0
 		y: y
+	}
+}
+
+fn (d Document) move_cursor_right_new(pos cursor.Pos, mode petal.Mode) cursor.Pos {
+	current_line := d.data.get_line_at(y: pos.y) or { return pos }
+	line_len := current_line.runes().len
+	return match mode {
+		.normal {
+			if pos.x + 1 >= line_len { pos } else { pos.x(pos.x + 1) }
+		}
+		.insert {
+			if pos.x + 1 > line_len { pos } else { pos.x(pos.x + 1) }
+		}
+		else {
+			pos.x(pos.x + 1)
+		}
 	}
 }
 
@@ -314,6 +335,7 @@ fn (d Document) move_cursor_to_previous_word_start(pos CursorPos) CursorPos {
 			return prev_word_start_pos
 		}
 		prev_y := next_pos.y - 1
+
 		if prev_y < 0 { return pos }
 		prev_line := d.data.get_line_at(y: prev_y) or { return pos }
 		line_len := prev_line.runes().len
