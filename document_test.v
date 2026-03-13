@@ -72,6 +72,17 @@ fn test_document_move_cursor_up() {
 		file_path: ''
 		data: buffers.GapBuffer.new(content: mock_content.runes())
 	}
+
+	assert d.move_cursor_up(CursorPos{ x: 8, y: 1 }, .normal) == CursorPos{ x: 0, y: 0 }
+}
+
+fn test_document_move_cursor_up_new() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	assert d.move_cursor_up_new(cursor.Pos.new(8, 1), .normal) == cursor.Pos.new(8, 0)
 }
 
 fn test_scan_to_next_word_start() {
