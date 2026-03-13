@@ -36,7 +36,7 @@ fn PetalModel.new(config cfg.Config, doc_controller &documents.Controller) Petal
 }
 
 fn (mut m PetalModel) init() ?tea.Cmd {
-	return none
+	return m.active_screen.init()
 }
 
 struct ToggleDebugScreenMsg {}
