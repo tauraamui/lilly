@@ -33,6 +33,8 @@ struct SplashScreenModel {
 	theme          theme.Theme
 	doc_controller &documents.Controller
 mut:
+	window_width int
+	window_height int
 	tmux_wrapped bool
 	leader_mode  bool
 	leader_data  string
@@ -51,7 +53,7 @@ fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
 }
 
 fn (mut m SplashScreenModel) init() ?tea.Cmd {
-	return check_if_tmux_wrapped
+	return tea.sequence(check_if_tmux_wrapped, tea.emit_resize)
 }
 
 fn (mut m SplashScreenModel) handle_escape() (tea.Model, ?tea.Cmd) {
@@ -88,6 +90,15 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	}
 
 	match msg {
+		tea.ResizedMsg {
+			m.window_width = msg.window_width
+			m.window_height = msg.window_height
+			// NOTE(tauraamui): hack to force bobatea re-renders until the terminal has had enough time
+			// to report the size of the "pane" provided to this instance and bobatea makes a note of it
+			if m.window_width == 0 && m.window_height == 0 {
+				cmds << tea.emit_resize
+			}
+		}
 		CheckIfTMUXWrappedMsg {
 			m.tmux_wrapped = os.getenv('TMUX').len > 0
 		}
@@ -431,11 +442,11 @@ fn (m SplashScreenModel) debug_data() DebugData {
 }
 
 fn (m SplashScreenModel) width() int {
-	return 0
+	return m.window_width
 }
 
 fn (m SplashScreenModel) height() int {
-	return 0
+	return m.window_height
 }
 
 fn (m SplashScreenModel) clone() tea.Model {

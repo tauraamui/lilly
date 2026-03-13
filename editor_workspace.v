@@ -27,6 +27,9 @@ mut:
 	split_tree boba.SplitTree
 	editors    map[int]DebuggableModel
 
+	last_window_width  int
+	last_window_height int
+
 	doc_controller     &documents.Controller
 	active_editor_data ?EditorData
 	branch_name        string
@@ -606,20 +609,49 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			return m.clone_with_mode(msg.mode), tea.batch_array(cmds)
 		}
 		tea.ResizedMsg {
+			m.last_window_width = msg.window_width
+			m.last_window_height = msg.window_height
 			i_field, i_cmd := m.input_field.update(msg)
 			if i_u_cmd := i_cmd {
 				cmds << i_u_cmd
 			}
 			m.input_field = i_field
+			cmds << m.recalculate_editor_layouts()
 		}
 		else {}
 	}
 
-	if u_cmd := m.forward_msg_to_editors(msg) {
-		cmds << u_cmd
+	if msg !is tea.ResizedMsg {
+		if u_cmd := m.forward_msg_to_editors(msg) {
+			cmds << u_cmd
+		}
 	}
 
 	return m.clone(), tea.batch_array(cmds)
+}
+
+fn (mut m EditorWorkspaceModel) recalculate_editor_layouts() []tea.Cmd {
+	editor_area_height := m.last_window_height - 2
+	if editor_area_height <= 0 || m.last_window_width <= 0 {
+		return []tea.Cmd{}
+	}
+	layout := m.split_tree.get_layout(m.last_window_width, editor_area_height)
+	mut cmds := []tea.Cmd{}
+	for rect in layout {
+		if mut editor := m.editors[rect.editor_id] {
+			e, cmd := editor.update(tea.ResizedMsg{
+				window_width:  rect.width
+				window_height: rect.height
+			})
+			if e is DebuggableModel {
+				m.editors[rect.editor_id] = e
+			}
+			if u_cmd := cmd {
+				cmds << u_cmd
+			}
+		}
+	}
+	return cmds
 }
 
 fn (mut m EditorWorkspaceModel) forward_msg_to_editors(msg tea.Msg) ?tea.Cmd {
@@ -648,18 +680,7 @@ fn (m EditorWorkspaceModel) view(mut ctx tea.Context) {
 
 			offset_id := ctx.push_offset(tea.Offset{ x: rect.x, y: rect.y })
 
-			// FIXME(tauraamui): I hate this, need to find better way to propogate artifical sizes per rect
-			// <<note to self>>: set daily reminder that AI code has always led to the worst possible design
-			// decisions and caused nasty shit to pile up more than anything else, just like this. this is a
-			// prime example
-			resized, _ := editor.update(tea.ResizedMsg{
-				window_width:  rect.width
-				window_height: rect.height
-			})
-			if resized is DebuggableModel {
-				mut renderable := resized
-				renderable.view(mut ctx)
-			}
+			editor.view(mut ctx)
 
 			ctx.clear_offsets_from(offset_id)
 			ctx.clear_clip_area() // clear after each split
