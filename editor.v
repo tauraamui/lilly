@@ -256,7 +256,12 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 				}
 				.normal {
-					m.doc_controller.move_cursor_left(m.doc_id, .normal)
+					current_line := m.doc_controller.get_line_at(m.doc_id, m.doc_controller.cursor_pos(m.doc_id).y) or { '' }
+					if current_line.len > 0 && current_line.trim_space().len == 0 {
+						m.doc_controller.clear_line(m.doc_id)
+					} else {
+						m.doc_controller.move_cursor_left(m.doc_id, .normal)
+					}
 				}
 				else {}
 			}

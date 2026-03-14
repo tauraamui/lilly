@@ -112,6 +112,11 @@ pub fn (mut c Controller) insert_char(doc_id int, data rune) {
 	c.move_cursor_right(doc_id, .insert)
 }
 
+pub fn (mut c Controller) clear_line(doc_id int) {
+	line_y := c.cursors[doc_id].y
+	c.cursors[doc_id] = c.docs[doc_id].clear_line(line_y)
+}
+
 pub fn (c Controller) leading_whitespace_on_current_line(doc_id int) []rune {
 	pos := c.cursors[doc_id]
 	current_line := c.docs[doc_id].data.get_line_at(y: pos.y) or { return [] }
@@ -400,6 +405,17 @@ fn (d Document) visual_cursor_pos(pos CursorPos, tab_width int) CursorPos {
 
 fn (mut d Document) insert_char(c rune) {
 	d.data.insert_char(c)
+}
+
+fn (mut d Document) clear_line(line_y int) CursorPos {
+	line := d.data.get_line_at(y: line_y) or { return CursorPos{ y: line_y } }
+	line_len := line.runes().len
+	if line_len == 0 {
+		return CursorPos{ y: line_y }
+	}
+	d.prepare_for_insertion_at(CursorPos{ y: line_y, x: 0 }) or { return CursorPos{ y: line_y } }
+	d.data.delete_after_n(line_len)
+	return CursorPos{ y: line_y }
 }
 
 fn (mut d Document) delete_before() {
