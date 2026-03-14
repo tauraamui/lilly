@@ -170,6 +170,16 @@ pub fn (mut g GapBuffer) delete_after() {
 	g.gap_end += 1
 }
 
+pub fn (mut g GapBuffer) delete_after_n(n int) {
+	for _ in 0 .. n {
+		if g.gap_end >= u32(g.data.len) {
+			break
+		}
+		g.data[g.gap_end] = null_code_point
+		g.gap_end += 1
+	}
+}
+
 pub fn (g GapBuffer) iter() LineIterator {
 	return LineIterator.new(g.data, int(g.gap_start), int(g.gap_end))
 }
