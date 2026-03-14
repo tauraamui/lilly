@@ -3,6 +3,14 @@ module documents
 import lib.buffers
 import lib.documents.cursor
 
+fn test_cursor_pos_from() {
+	assert CursorPos.from(cursor.Pos.new(10, 10)) == CursorPos{ x: 10, y: 10 }
+}
+
+fn test_cursor_pos_to() {
+	assert CursorPos{ x: 10, y: 10 }.to() == cursor.Pos.new(10, 10) 
+}
+
 fn test_char_scanner() {
 	mut c_scanner := CharScanner{
 		data: 'This is some test content'.runes()

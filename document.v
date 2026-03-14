@@ -201,6 +201,14 @@ pub:
 	x int
 }
 
+fn CursorPos.from(pos cursor.Pos) CursorPos {
+	return CursorPos{ x: pos.x, y: pos.y }
+}
+
+fn (pos CursorPos) to() cursor.Pos {
+	return cursor.Pos.new(pos.x, pos.y)
+}
+
 @[heap]
 struct Document {
 mut:
