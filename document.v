@@ -13,6 +13,7 @@ mut:
 	loaded_files map[string]int
 	docs         map[int]Document
 	cursors      map[int]CursorPos
+	cursors_new  map[int]cursor.Pos
 	doc_id_count int
 }
 
@@ -29,6 +30,7 @@ pub fn (mut c Controller) open_document(file_path string) !int {
 	c.loaded_files[file_path] = id
 	c.docs[id] = Document.new(file_path)!
 	c.cursors[id] = CursorPos{}
+	c.cursors_new[id] = cursor.Pos.new(0, 0)
 	return id
 }
 
