@@ -244,10 +244,6 @@ fn (mut d Document) prepare_for_insertion_at(pos CursorPos) ! {
 	return error('unable to convert cursor pos to offset')
 }
 
-fn (d Document) move_cursor_left_new(pos cursor.Pos) cursor.Pos {
-	return pos.x(pos.x - 1)
-}
-
 fn (d Document) move_cursor_left(pos CursorPos, mode petal.Mode) CursorPos {
 	mut x := pos.x - 1
 	return CursorPos{
@@ -256,14 +252,9 @@ fn (d Document) move_cursor_left(pos CursorPos, mode petal.Mode) CursorPos {
 	}
 }
 
-fn (d Document) move_cursor_down_new(pos cursor.Pos, mode petal.Mode) cursor.Pos {
-	yy := pos.y + 1
-	if line_below := d.data.get_line_at(y: yy) {
-		line_below_len := line_below.runes().len
-		// TODO(tauraamui): adjust the clamp check differently if in normal vs insert mode
-		return pos.y(yy).x(if line_below_len <= pos.largest_x { line_below_len } else { pos.largest_x })
-	}
-	return pos
+fn (d Document) move_cursor_left2(pos cursor.Pos, mode petal.Mode) cursor.Pos {
+	mut x := pos.x - 1
+	return cursor.Pos.new(if x < 0 { 0 } else { x }, pos.y)
 }
 
 fn (d Document) move_cursor_down(pos CursorPos, mode petal.Mode) CursorPos {
@@ -276,14 +267,11 @@ fn (d Document) move_cursor_down(pos CursorPos, mode petal.Mode) CursorPos {
 	}
 }
 
-fn (d Document) move_cursor_up_new(pos cursor.Pos, mode petal.Mode) cursor.Pos {
-	yy := pos.y - 1
-	if line_above := d.data.get_line_at(y: yy) {
-		line_above_len := line_above.runes().len
-		// TODO(tauraamui): adjust the clamp check differently if in normal vs insert mode
-		return pos.y(yy).x(if line_above_len <= pos.largest_x { line_above_len } else { pos.largest_x })
-	}
-	return pos
+fn (d Document) move_cursor_down2(pos cursor.Pos, mode petal.Mode) cursor.Pos {
+	// NOTE(tauraamui): for now just drop x to 0 each
+	mut y := pos.y + 1
+	d.data.get_line_at(y: y) or { return pos }
+	return cursor.Pos.new(0, y)
 }
 
 fn (d Document) move_cursor_up(pos CursorPos, mode petal.Mode) CursorPos {
@@ -296,21 +284,13 @@ fn (d Document) move_cursor_up(pos CursorPos, mode petal.Mode) CursorPos {
 	}
 }
 
-fn (d Document) move_cursor_right_new(pos cursor.Pos, mode petal.Mode) cursor.Pos {
-	current_line := d.data.get_line_at(y: pos.y) or { return pos }
-	line_len := current_line.runes().len
-	return match mode {
-		.normal {
-			if pos.x + 1 >= line_len { pos } else { pos.x(pos.x + 1) }
-		}
-		.insert {
-			if pos.x + 1 > line_len { pos } else { pos.x(pos.x + 1) }
-		}
-		else {
-			pos.x(pos.x + 1)
-		}
-	}
+fn (d Document) move_cursor_up2(pos cursor.Pos, mode petal.Mode) cursor.Pos {
+	// NOTE(tauraamui): for now just drop x to 0 each
+	mut y := pos.y - 1
+	d.data.get_line_at(y: y) or { return pos }
+	return cursor.Pos.new(0, y)
 }
+
 
 fn (d Document) move_cursor_right(pos CursorPos, mode petal.Mode) CursorPos {
 	current_line := d.data.get_line_at(y: pos.y) or { return pos }
@@ -318,6 +298,23 @@ fn (d Document) move_cursor_right(pos CursorPos, mode petal.Mode) CursorPos {
 		x: pos.x + 1
 		y: pos.y
 	}
+
+	return match mode {
+		.normal {
+			if pos.x + 1 >= current_line.runes().len { pos } else { new_pos }
+		}
+		.insert {
+			if pos.x + 1 > current_line.runes().len { pos } else { new_pos }
+		}
+		else {
+			new_pos
+		}
+	}
+}
+
+fn (d Document) move_cursor_right2(pos cursor.Pos, mode petal.Mode) cursor.Pos {
+	current_line := d.data.get_line_at(y: pos.y) or { return pos }
+	new_pos := cursor.Pos.new(pos.x + 1, pos.y)
 
 	return match mode {
 		.normal {
