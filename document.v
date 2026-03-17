@@ -12,7 +12,7 @@ pub struct Controller {
 mut:
 	loaded_files map[string]int
 	docs         map[int]Document
-	cursors      map[int]CursorPos
+	cursors      map[int]cursor.Pos
 	doc_id_count int
 }
 
@@ -28,7 +28,7 @@ pub fn (mut c Controller) open_document(file_path string) !int {
 	id := hash_id(c.doc_id_count)
 	c.loaded_files[file_path] = id
 	c.docs[id] = Document.new(file_path)!
-	c.cursors[id] = CursorPos{}
+	c.cursors[id] = cursorPos.new(0, 0)
 	return id
 }
 
@@ -74,33 +74,33 @@ pub fn (mut c Controller) move_cursor_down(doc_id int, mode petal.Mode) {
 }
 
 pub fn (mut c Controller) move_cursor_right(doc_id int, mode petal.Mode) {
-	pos := c.cursors[doc_id].to()
-	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_right2(pos, mode))
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_right2(pos, mode)
 }
 
 pub fn (mut c Controller) move_cursor_to_next_word_start(doc_id int) {
-	pos := c.cursors[doc_id].to()
-	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_to_next_word_start2(pos))
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_word_start2(pos)
 }
 
 pub fn (mut c Controller) move_cursor_to_previous_word_start(doc_id int) {
-	pos := c.cursors[doc_id].to()
-	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_to_previous_word_start2(pos))
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_previous_word_start2(pos)
 }
 
 pub fn (mut c Controller) move_cursor_to_line_end(doc_id int, mode petal.Mode) {
-	pos := c.cursors[doc_id].to()
-	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_to_line_end2(pos, mode))
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_line_end2(pos, mode)
 }
 
 pub fn (mut c Controller) move_cursor_to_next_blank_line(doc_id int) {
-	pos := c.cursors[doc_id].to()
-	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_to_next_blank_line2(pos))
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_blank_line2(pos)
 }
 
 pub fn (mut c Controller) move_cursor_to_previous_blank_line(doc_id int) {
-	pos := c.cursors[doc_id].to()
-	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_to_previous_blank_line2(pos))
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_previous_blank_line2(pos)
 }
 
 pub fn (mut c Controller) insert_newline(doc_id int) {
@@ -134,7 +134,7 @@ pub fn (c Controller) leading_whitespace_on_current_line(doc_id int) []rune {
 }
 
 pub fn (mut c Controller) backspace(doc_id int) {
-	pos := c.cursors[doc_id].to()
+	pos := c.cursors[doc_id]
 	if pos.x == 0 && pos.y == 0 {
 		return
 	}
@@ -148,7 +148,7 @@ pub fn (mut c Controller) backspace(doc_id int) {
 
 	c.prepare_for_insertion(doc_id) or { return }
 	c.docs[doc_id].delete_before()
-	c.cursors[doc_id] = CursorPos.from(new_pos)
+	c.cursors[doc_id] = new_pos
 }
 
 pub fn (mut c Controller) delete(doc_id int) {
@@ -495,15 +495,15 @@ fn (mut d Document) insert_char(c rune) {
 	d.data.insert_char(c)
 }
 
-fn (mut d Document) clear_line(line_y int) CursorPos {
-	line := d.data.get_line_at(y: line_y) or { return CursorPos{ y: line_y } }
+fn (mut d Document) clear_line(line_y int) cursor.Pos {
+	line := d.data.get_line_at(y: line_y) or { return CursorPos{ y: line_y }.to() }
 	line_len := line.runes().len
 	if line_len == 0 {
-		return CursorPos{ y: line_y }
+		return CursorPos{ y: line_y }.to()
 	}
-	d.prepare_for_insertion_at(CursorPos{ y: line_y, x: 0 }) or { return CursorPos{ y: line_y } }
+	d.prepare_for_insertion_at2(CursorPos{ y: line_y, x: 0 }.to()) or { return CursorPos{ y: line_y }.to() }
 	d.data.delete_after_n(line_len)
-	return CursorPos{ y: line_y }
+	return CursorPos{ y: line_y }.to()
 }
 
 fn (mut d Document) delete_before() {
