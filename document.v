@@ -42,11 +42,12 @@ pub fn (mut c Controller) write_document(doc_id int) ! {
 }
 
 pub fn (mut c Controller) prepare_for_insertion(doc_id int) ! {
-	return c.docs[doc_id].prepare_for_insertion_at(c.cursors[doc_id])
+	pos := c.cursors[doc_id].to()
+	return c.docs[doc_id].prepare_for_insertion_at2(pos)
 }
 
 pub fn (mut c Controller) prepare_for_insertion_at(doc_id int, pos CursorPos) ! {
-	return c.docs[doc_id].prepare_for_insertion_at(pos)
+	return c.docs[doc_id].prepare_for_insertion_at2(pos.to())
 }
 
 pub fn (c Controller) cursor_pos(doc_id int) CursorPos {
@@ -83,23 +84,23 @@ pub fn (mut c Controller) move_cursor_to_next_word_start(doc_id int) {
 }
 
 pub fn (mut c Controller) move_cursor_to_previous_word_start(doc_id int) {
-	pos := c.cursors[doc_id]
-	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_previous_word_start(pos)
+	pos := c.cursors[doc_id].to()
+	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_to_previous_word_start2(pos))
 }
 
 pub fn (mut c Controller) move_cursor_to_line_end(doc_id int, mode petal.Mode) {
-	pos := c.cursors[doc_id]
-	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_line_end(pos, mode)
+	pos := c.cursors[doc_id].to()
+	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_to_line_end2(pos, mode))
 }
 
 pub fn (mut c Controller) move_cursor_to_next_blank_line(doc_id int) {
-	pos := c.cursors[doc_id]
-	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_blank_line(pos)
+	pos := c.cursors[doc_id].to()
+	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_to_next_blank_line2(pos))
 }
 
 pub fn (mut c Controller) move_cursor_to_previous_blank_line(doc_id int) {
-	pos := c.cursors[doc_id]
-	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_previous_blank_line(pos)
+	pos := c.cursors[doc_id].to()
+	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_to_previous_blank_line2(pos))
 }
 
 pub fn (mut c Controller) insert_newline(doc_id int) {
@@ -133,21 +134,21 @@ pub fn (c Controller) leading_whitespace_on_current_line(doc_id int) []rune {
 }
 
 pub fn (mut c Controller) backspace(doc_id int) {
-	pos := c.cursors[doc_id]
+	pos := c.cursors[doc_id].to()
 	if pos.x == 0 && pos.y == 0 {
 		return
 	}
 
 	new_pos := if pos.x > 0 {
-		CursorPos{ y: pos.y, x: pos.x - 1 }
+		cursor.Pos.new(pos.x - 1, pos.y)
 	} else {
 		prev_line := c.docs[doc_id].data.get_line_at(y: pos.y - 1) or { return }
-		CursorPos{ y: pos.y - 1, x: prev_line.runes().len }
+		cursor.Pos.new(prev_line.runes().len, pos.y - 1)
 	}
 
 	c.prepare_for_insertion(doc_id) or { return }
 	c.docs[doc_id].delete_before()
-	c.cursors[doc_id] = new_pos
+	c.cursors[doc_id] = CursorPos.from(new_pos)
 }
 
 pub fn (mut c Controller) delete(doc_id int) {
@@ -235,6 +236,14 @@ fn convert_pos_to_cpos(pos cursor.Pos) CursorPos {
 }
 
 fn (mut d Document) prepare_for_insertion_at(pos CursorPos) ! {
+	if offset := d.data.cursor_to_offset(x: pos.x, y: pos.y) {
+		d.data.move_gap(offset)
+		return
+	}
+	return error('unable to convert cursor pos to offset')
+}
+
+fn (mut d Document) prepare_for_insertion_at2(pos cursor.Pos) ! {
 	if offset := d.data.cursor_to_offset(x: pos.x, y: pos.y) {
 		d.data.move_gap(offset)
 		return
@@ -370,6 +379,26 @@ fn (d Document) move_cursor_to_previous_word_start(pos CursorPos) CursorPos {
 	return pos
 }
 
+fn (d Document) move_cursor_to_previous_word_start2(pos cursor.Pos) cursor.Pos {
+	mut next_pos := pos
+	for {
+		if prev_word_start_pos := scan_to_previous_word_start(d.data, CursorPos.from(next_pos), pos.y) {
+			return prev_word_start_pos.to()
+		}
+		prev_y := next_pos.y - 1
+
+		if prev_y < 0 { return pos }
+		prev_line := d.data.get_line_at(y: prev_y) or { return pos }
+		line_len := prev_line.runes().len
+		if line_len == 0 {
+			next_pos = cursor.Pos.new(0, prev_y)
+		} else {
+			next_pos = cursor.Pos.new(line_len - 1, prev_y)
+		}
+	}
+	return pos
+}
+
 fn (d Document) move_cursor_to_line_end(pos CursorPos, mode petal.Mode) CursorPos {
 	current_line := d.data.get_line_at(y: pos.y) or { return pos }
 	new_pos := CursorPos {
@@ -377,6 +406,11 @@ fn (d Document) move_cursor_to_line_end(pos CursorPos, mode petal.Mode) CursorPo
 		y: pos.y
 	}
 	return new_pos
+}
+
+fn (d Document) move_cursor_to_line_end2(pos cursor.Pos, mode petal.Mode) cursor.Pos {
+	current_line := d.data.get_line_at(y: pos.y) or { return pos }
+	return cursor.Pos.new(pos.x + (current_line.runes().len - pos.x - if mode == .normal { 1 } else { 0 }), pos.y)
 }
 
 fn (d Document) move_cursor_to_next_blank_line(pos CursorPos) CursorPos {
@@ -391,6 +425,20 @@ fn (d Document) move_cursor_to_next_blank_line(pos CursorPos) CursorPos {
 	}
 	if last_y > pos.y {
 		return CursorPos{ y: last_y }
+	}
+	return pos
+}
+
+fn (d Document) move_cursor_to_next_blank_line2(pos cursor.Pos) cursor.Pos {
+	mut last_y := pos.y
+	for i, line in d.data.iter() {
+		last_y = i
+		if i > pos.y {
+			if line.len == 0 { return cursor.Pos.new(0, i) }
+		}
+	}
+	if last_y > pos.y {
+		return cursor.Pos.new(0, last_y)
 	}
 	return pos
 }
@@ -411,6 +459,23 @@ fn (d Document) move_cursor_to_previous_blank_line(pos CursorPos) CursorPos {
 	}
 	if pos.y > 0 {
 		return CursorPos{ y: 0 }
+	}
+	return pos
+}
+
+fn (d Document) move_cursor_to_previous_blank_line2(pos cursor.Pos) cursor.Pos {
+	mut last_blank := -1
+	for i, line in d.data.iter() {
+		if i >= pos.y { break }
+		if line.len == 0 {
+			last_blank = i
+		}
+	}
+	if last_blank >= 0 {
+		return cursor.Pos.new(0, last_blank)
+	}
+	if pos.y > 0 {
+		return cursor.Pos.new(0, 0)
 	}
 	return pos
 }
