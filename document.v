@@ -58,23 +58,23 @@ pub fn (c Controller) visual_cursor_pos(doc_id int, tab_width int) CursorPos {
 }
 
 pub fn (mut c Controller) move_cursor_left(doc_id int, mode petal.Mode) {
-	pos := c.cursors[doc_id]
-	c.cursors[doc_id] = c.docs[doc_id].move_cursor_left(pos, mode)
+	pos := c.cursors[doc_id].to()
+	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_left2(pos, mode))
 }
 
 pub fn (mut c Controller) move_cursor_up(doc_id int, mode petal.Mode) {
-	pos := c.cursors[doc_id]
-	c.cursors[doc_id] = c.docs[doc_id].move_cursor_up(pos, mode)
+	pos := c.cursors[doc_id].to()
+	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_up2(pos, mode))
 }
 
 pub fn (mut c Controller) move_cursor_down(doc_id int, mode petal.Mode) {
-	pos := c.cursors[doc_id]
-	c.cursors[doc_id] = c.docs[doc_id].move_cursor_down(pos, mode)
+	pos := c.cursors[doc_id].to()
+	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_down2(pos, mode))
 }
 
 pub fn (mut c Controller) move_cursor_right(doc_id int, mode petal.Mode) {
-	pos := c.cursors[doc_id]
-	c.cursors[doc_id] = c.docs[doc_id].move_cursor_right(pos, mode)
+	pos := c.cursors[doc_id].to()
+	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_right2(pos, mode))
 }
 
 pub fn (mut c Controller) move_cursor_to_next_word_start(doc_id int) {
