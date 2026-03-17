@@ -214,6 +214,26 @@ fn test_doc_move_cursor_to_previous_word_start() {
 	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 0 }) == CursorPos{ y: 0, x: 18 }
 }
 
+fn test_doc_move_cursor_to_previous_word_start2() {
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 0, x: 15 }.to()) == CursorPos{ y: 0, x: 12 }.to()
+	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 0, x: 12 }.to()) == CursorPos{ y: 0, x: 11 }.to()
+	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 0, x: 11 }.to()) == CursorPos{ y: 0, x: 8 }.to()
+	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 0, x: 8 }.to()) == CursorPos{ y: 0, x: 5 }.to()
+	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 0, x: 5 }.to()) == CursorPos{ y: 0, x: 0 }.to()
+	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 0, x: 0 }.to()) == CursorPos{ y: 0, x: 0 }.to()
+
+	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 1, x: 16 }.to()) == CursorPos{ y: 1, x: 12 }.to()
+	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 1, x: 12 }.to()) == CursorPos{ y: 1, x: 8 }.to()
+	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 1, x: 8 }.to()) == CursorPos{ y: 1, x: 5 }.to()
+	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 1, x: 5 }.to()) == CursorPos{ y: 1, x: 0 }.to()
+	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 1, x: 0 }.to()) == CursorPos{ y: 0, x: 18 }.to()
+}
+
 const mock_multiline_content_with_blanks = 'This is the first line.
 This is the second line.
 
@@ -239,6 +259,19 @@ fn test_doc_move_cursor_to_next_blank_line() {
 
 }
 
+fn test_doc_move_cursor_to_next_blank_line2() {
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_multiline_content_with_blanks.runes())
+	}
+
+	assert d.move_cursor_to_next_blank_line2(CursorPos{ y: 0, x: 8 }.to()) == CursorPos{ y: 2, x: 0 }.to()
+	assert d.move_cursor_to_next_blank_line2(CursorPos{ y: 2, x: 0 }.to()) == CursorPos{ y: 5, x: 0 }.to()
+	assert d.move_cursor_to_next_blank_line2(CursorPos{ y: 5, x: 0 }.to()) == CursorPos{ y: 8, x: 0 }.to()
+	assert d.move_cursor_to_next_blank_line2(CursorPos{ y: 8, x: 0 }.to()) == CursorPos{ y: 9, x: 0 }.to()
+	assert d.move_cursor_to_next_blank_line2(CursorPos{ y: 9, x: 0 }.to()) == CursorPos{ y: 9, x: 0 }.to()
+}
+
 fn test_doc_move_cursor_to_previous_blank_line() {
 	mut d := Document{
 		file_path: ''
@@ -250,5 +283,18 @@ fn test_doc_move_cursor_to_previous_blank_line() {
 	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 5, x: 0 }) == CursorPos{ y: 2, x: 0 }
 	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 2, x: 0 }) == CursorPos{ y: 0, x: 0 }
 	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 0, x: 0 }) == CursorPos{ y: 0, x: 0 }
+}
+
+fn test_doc_move_cursor_to_previous_blank_line2() {
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_multiline_content_with_blanks.runes())
+	}
+
+	assert d.move_cursor_to_previous_blank_line2(CursorPos{ y: 9, x: 8 }.to()) == CursorPos{ y: 8, x: 0 }.to()
+	assert d.move_cursor_to_previous_blank_line2(CursorPos{ y: 8, x: 0 }.to()) == CursorPos{ y: 5, x: 0 }.to()
+	assert d.move_cursor_to_previous_blank_line2(CursorPos{ y: 5, x: 0 }.to()) == CursorPos{ y: 2, x: 0 }.to()
+	assert d.move_cursor_to_previous_blank_line2(CursorPos{ y: 2, x: 0 }.to()) == CursorPos{ y: 0, x: 0 }.to()
+	assert d.move_cursor_to_previous_blank_line2(CursorPos{ y: 0, x: 0 }.to()) == CursorPos{ y: 0, x: 0 }.to()
 }
 
