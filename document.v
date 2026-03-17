@@ -78,8 +78,8 @@ pub fn (mut c Controller) move_cursor_right(doc_id int, mode petal.Mode) {
 }
 
 pub fn (mut c Controller) move_cursor_to_next_word_start(doc_id int) {
-	pos := c.cursors[doc_id]
-	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_word_start(pos)
+	pos := c.cursors[doc_id].to()
+	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_to_next_word_start2(pos))
 }
 
 pub fn (mut c Controller) move_cursor_to_previous_word_start(doc_id int) {
