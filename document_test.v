@@ -160,6 +160,26 @@ fn test_doc_move_cursor_to_next_word_start() {
 		data: buffers.GapBuffer.new(content: mock_content.runes())
 	}
 
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 3 }) == CursorPos{ y: 0, x: 5 }
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 5 }) == CursorPos{ y: 0, x: 8 }
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 8 }) == CursorPos{ y: 0, x: 11 }
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 11 }) == CursorPos{ y: 0, x: 12 }
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 12 }) == CursorPos{ y: 0, x: 18 }
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 18 }) == CursorPos{ y: 1, x: 0 }
+
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 1, x: 0 }) == CursorPos{ y: 1, x: 5 }
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 1, x: 5 }) == CursorPos{ y: 1, x: 8 }
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 1, x: 8 }) == CursorPos{ y: 1, x: 12 }
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 1, x: 12 }) == CursorPos{ y: 1, x: 19 }
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 1, x: 19 }) == CursorPos{ y: 1, x: 23 }
+}
+
+fn test_doc_move_cursor_to_previous_word_start() {
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
 	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 15 }) == CursorPos{ y: 0, x: 12 }
 	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 12 }) == CursorPos{ y: 0, x: 11 }
 	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 11 }) == CursorPos{ y: 0, x: 8 }
