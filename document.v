@@ -338,6 +338,18 @@ fn (d Document) move_cursor_to_next_word_start(pos CursorPos) CursorPos {
 	return pos
 }
 
+fn (d Document) move_cursor_to_next_word_start2(pos cursor.Pos) cursor.Pos {
+	mut next_pos := pos
+	for {
+		if next_word_start_pos := scan_to_next_word_start(d.data, CursorPos.from(next_pos), pos.y) {
+			return next_word_start_pos.to()
+		}
+		next_pos = cursor.Pos.new(0, next_pos.y + 1)
+	}
+	return pos
+}
+
+
 fn (d Document) move_cursor_to_previous_word_start(pos CursorPos) CursorPos {
 	mut next_pos := pos
 	for {
