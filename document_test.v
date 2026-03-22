@@ -45,16 +45,7 @@ fn test_document_move_cursor_left() {
 		data: buffers.GapBuffer.new(content: mock_content.runes())
 	}
 
-	assert d.move_cursor_left(CursorPos{ x: 8, y: 0 }, .normal) == CursorPos{ x: 7, y: 0 }
-}
-
-fn test_document_move_cursor_left2() {
-	d := Document{
-		file_path: ''
-		data: buffers.GapBuffer.new(content: mock_content.runes())
-	}
-
-	assert d.move_cursor_left2(cursor.Pos.new(8, 0), .normal) == cursor.Pos.new(7, 0)
+	assert d.move_cursor_left(cursor.Pos.new(8, 0), .normal) == cursor.Pos.new(7, 0)
 }
 
 fn test_document_move_cursor_down() {
@@ -63,16 +54,7 @@ fn test_document_move_cursor_down() {
 		data: buffers.GapBuffer.new(content: mock_content.runes())
 	}
 
-	assert d.move_cursor_down(CursorPos{ x: 8, y: 0 }, .normal) == CursorPos{ x: 0, y: 1 }
-}
-
-fn test_document_move_cursor_down2() {
-	d := Document{
-		file_path: ''
-		data: buffers.GapBuffer.new(content: mock_content.runes())
-	}
-
-	assert d.move_cursor_down2(cursor.Pos.new(0, 0), .normal) == cursor.Pos.new(0, 1)
+	assert d.move_cursor_down(cursor.Pos.new(0, 0), .normal) == cursor.Pos.new(0, 1)
 }
 
 fn test_document_move_cursor_up() {
@@ -81,16 +63,7 @@ fn test_document_move_cursor_up() {
 		data: buffers.GapBuffer.new(content: mock_content.runes())
 	}
 
-	assert d.move_cursor_up(CursorPos{ x: 8, y: 1 }, .normal) == CursorPos{ x: 0, y: 0 }
-}
-
-fn test_document_move_cursor_up2() {
-	d := Document{
-		file_path: ''
-		data: buffers.GapBuffer.new(content: mock_content.runes())
-	}
-
-	assert d.move_cursor_up2(cursor.Pos.new(8, 1), .normal) == cursor.Pos.new(0, 0)
+	assert d.move_cursor_up(cursor.Pos.new(8, 1), .normal) == cursor.Pos.new(0, 0)
 }
 
 fn test_document_move_cursor_right() {
@@ -99,16 +72,7 @@ fn test_document_move_cursor_right() {
 		data: buffers.GapBuffer.new(content: mock_content.runes())
 	}
 
-	assert d.move_cursor_right(CursorPos{ x: 8, y: 1 }, .normal) == CursorPos{ x: 9, y: 1 }
-}
-
-fn test_document_move_cursor_right2() {
-	d := Document{
-		file_path: ''
-		data: buffers.GapBuffer.new(content: mock_content.runes())
-	}
-
-	assert d.move_cursor_right2(cursor.Pos.new(8, 1), .normal) == cursor.Pos.new(9, 1)
+	assert d.move_cursor_right(cursor.Pos.new(8, 1), .normal) == cursor.Pos.new(9, 1)
 }
 
 fn test_scan_to_next_word_start() {
@@ -160,38 +124,18 @@ fn test_doc_move_cursor_to_next_word_start() {
 		data: buffers.GapBuffer.new(content: mock_content.runes())
 	}
 
-	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 3 }) == CursorPos{ y: 0, x: 5 }
-	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 5 }) == CursorPos{ y: 0, x: 8 }
-	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 8 }) == CursorPos{ y: 0, x: 11 }
-	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 11 }) == CursorPos{ y: 0, x: 12 }
-	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 12 }) == CursorPos{ y: 0, x: 18 }
-	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 18 }) == CursorPos{ y: 1, x: 0 }
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 3 }.to()) == CursorPos{ y: 0, x: 5 }.to()
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 5 }.to()) == CursorPos{ y: 0, x: 8 }.to()
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 8 }.to()) == CursorPos{ y: 0, x: 11 }.to()
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 11 }.to()) == CursorPos{ y: 0, x: 12 }.to()
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 12 }.to()) == CursorPos{ y: 0, x: 18 }.to()
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 0, x: 18 }.to()) == CursorPos{ y: 1, x: 0 }.to()
 
-	assert d.move_cursor_to_next_word_start(CursorPos{ y: 1, x: 0 }) == CursorPos{ y: 1, x: 5 }
-	assert d.move_cursor_to_next_word_start(CursorPos{ y: 1, x: 5 }) == CursorPos{ y: 1, x: 8 }
-	assert d.move_cursor_to_next_word_start(CursorPos{ y: 1, x: 8 }) == CursorPos{ y: 1, x: 12 }
-	assert d.move_cursor_to_next_word_start(CursorPos{ y: 1, x: 12 }) == CursorPos{ y: 1, x: 19 }
-	assert d.move_cursor_to_next_word_start(CursorPos{ y: 1, x: 19 }) == CursorPos{ y: 1, x: 23 }
-}
-
-fn test_doc_move_cursor_to_next_word_start2() {
-	mut d := Document{
-		file_path: ''
-		data: buffers.GapBuffer.new(content: mock_content.runes())
-	}
-
-	assert d.move_cursor_to_next_word_start2(CursorPos{ y: 0, x: 3 }.to()) == CursorPos{ y: 0, x: 5 }.to()
-	assert d.move_cursor_to_next_word_start2(CursorPos{ y: 0, x: 5 }.to()) == CursorPos{ y: 0, x: 8 }.to()
-	assert d.move_cursor_to_next_word_start2(CursorPos{ y: 0, x: 8 }.to()) == CursorPos{ y: 0, x: 11 }.to()
-	assert d.move_cursor_to_next_word_start2(CursorPos{ y: 0, x: 11 }.to()) == CursorPos{ y: 0, x: 12 }.to()
-	assert d.move_cursor_to_next_word_start2(CursorPos{ y: 0, x: 12 }.to()) == CursorPos{ y: 0, x: 18 }.to()
-	assert d.move_cursor_to_next_word_start2(CursorPos{ y: 0, x: 18 }.to()) == CursorPos{ y: 1, x: 0 }.to()
-
-	assert d.move_cursor_to_next_word_start2(CursorPos{ y: 1, x: 0 }.to()) == CursorPos{ y: 1, x: 5 }.to()
-	assert d.move_cursor_to_next_word_start2(CursorPos{ y: 1, x: 5 }.to()) == CursorPos{ y: 1, x: 8 }.to()
-	assert d.move_cursor_to_next_word_start2(CursorPos{ y: 1, x: 8 }.to()) == CursorPos{ y: 1, x: 12 }.to()
-	assert d.move_cursor_to_next_word_start2(CursorPos{ y: 1, x: 12 }.to()) == CursorPos{ y: 1, x: 19 }.to()
-	assert d.move_cursor_to_next_word_start2(CursorPos{ y: 1, x: 19 }.to()) == CursorPos{ y: 1, x: 23 }.to()
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 1, x: 0 }.to()) == CursorPos{ y: 1, x: 5 }.to()
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 1, x: 5 }.to()) == CursorPos{ y: 1, x: 8 }.to()
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 1, x: 8 }.to()) == CursorPos{ y: 1, x: 12 }.to()
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 1, x: 12 }.to()) == CursorPos{ y: 1, x: 19 }.to()
+	assert d.move_cursor_to_next_word_start(CursorPos{ y: 1, x: 19 }.to()) == CursorPos{ y: 1, x: 23 }.to()
 }
 
 fn test_doc_move_cursor_to_previous_word_start() {
@@ -200,38 +144,18 @@ fn test_doc_move_cursor_to_previous_word_start() {
 		data: buffers.GapBuffer.new(content: mock_content.runes())
 	}
 
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 15 }) == CursorPos{ y: 0, x: 12 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 12 }) == CursorPos{ y: 0, x: 11 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 11 }) == CursorPos{ y: 0, x: 8 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 8 }) == CursorPos{ y: 0, x: 5 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 5 }) == CursorPos{ y: 0, x: 0 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 0 }) == CursorPos{ y: 0, x: 0 }
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 15 }.to()) == CursorPos{ y: 0, x: 12 }.to()
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 12 }.to()) == CursorPos{ y: 0, x: 11 }.to()
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 11 }.to()) == CursorPos{ y: 0, x: 8 }.to()
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 8 }.to()) == CursorPos{ y: 0, x: 5 }.to()
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 5 }.to()) == CursorPos{ y: 0, x: 0 }.to()
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 0 }.to()) == CursorPos{ y: 0, x: 0 }.to()
 
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 16 }) == CursorPos{ y: 1, x: 12 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 12 }) == CursorPos{ y: 1, x: 8 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 8 }) == CursorPos{ y: 1, x: 5 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 5 }) == CursorPos{ y: 1, x: 0 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 0 }) == CursorPos{ y: 0, x: 18 }
-}
-
-fn test_doc_move_cursor_to_previous_word_start2() {
-	mut d := Document{
-		file_path: ''
-		data: buffers.GapBuffer.new(content: mock_content.runes())
-	}
-
-	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 0, x: 15 }.to()) == CursorPos{ y: 0, x: 12 }.to()
-	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 0, x: 12 }.to()) == CursorPos{ y: 0, x: 11 }.to()
-	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 0, x: 11 }.to()) == CursorPos{ y: 0, x: 8 }.to()
-	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 0, x: 8 }.to()) == CursorPos{ y: 0, x: 5 }.to()
-	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 0, x: 5 }.to()) == CursorPos{ y: 0, x: 0 }.to()
-	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 0, x: 0 }.to()) == CursorPos{ y: 0, x: 0 }.to()
-
-	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 1, x: 16 }.to()) == CursorPos{ y: 1, x: 12 }.to()
-	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 1, x: 12 }.to()) == CursorPos{ y: 1, x: 8 }.to()
-	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 1, x: 8 }.to()) == CursorPos{ y: 1, x: 5 }.to()
-	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 1, x: 5 }.to()) == CursorPos{ y: 1, x: 0 }.to()
-	assert d.move_cursor_to_previous_word_start2(CursorPos{ y: 1, x: 0 }.to()) == CursorPos{ y: 0, x: 18 }.to()
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 16 }.to()) == CursorPos{ y: 1, x: 12 }.to()
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 12 }.to()) == CursorPos{ y: 1, x: 8 }.to()
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 8 }.to()) == CursorPos{ y: 1, x: 5 }.to()
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 5 }.to()) == CursorPos{ y: 1, x: 0 }.to()
+	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 0 }.to()) == CursorPos{ y: 0, x: 18 }.to()
 }
 
 const mock_multiline_content_with_blanks = 'This is the first line.
@@ -251,25 +175,11 @@ fn test_doc_move_cursor_to_next_blank_line() {
 		data: buffers.GapBuffer.new(content: mock_multiline_content_with_blanks.runes())
 	}
 
-	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 0, x: 8 }) == CursorPos{ y: 2, x: 0 }
-	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 2, x: 0 }) == CursorPos{ y: 5, x: 0 }
-	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 5, x: 0 }) == CursorPos{ y: 8, x: 0 }
-	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 8, x: 0 }) == CursorPos{ y: 9, x: 0 }
-	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 9, x: 0 }) == CursorPos{ y: 9, x: 0 }
-
-}
-
-fn test_doc_move_cursor_to_next_blank_line2() {
-	mut d := Document{
-		file_path: ''
-		data: buffers.GapBuffer.new(content: mock_multiline_content_with_blanks.runes())
-	}
-
-	assert d.move_cursor_to_next_blank_line2(CursorPos{ y: 0, x: 8 }.to()) == CursorPos{ y: 2, x: 0 }.to()
-	assert d.move_cursor_to_next_blank_line2(CursorPos{ y: 2, x: 0 }.to()) == CursorPos{ y: 5, x: 0 }.to()
-	assert d.move_cursor_to_next_blank_line2(CursorPos{ y: 5, x: 0 }.to()) == CursorPos{ y: 8, x: 0 }.to()
-	assert d.move_cursor_to_next_blank_line2(CursorPos{ y: 8, x: 0 }.to()) == CursorPos{ y: 9, x: 0 }.to()
-	assert d.move_cursor_to_next_blank_line2(CursorPos{ y: 9, x: 0 }.to()) == CursorPos{ y: 9, x: 0 }.to()
+	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 0, x: 8 }.to()) == CursorPos{ y: 2, x: 0 }.to()
+	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 2, x: 0 }.to()) == CursorPos{ y: 5, x: 0 }.to()
+	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 5, x: 0 }.to()) == CursorPos{ y: 8, x: 0 }.to()
+	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 8, x: 0 }.to()) == CursorPos{ y: 9, x: 0 }.to()
+	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 9, x: 0 }.to()) == CursorPos{ y: 9, x: 0 }.to()
 }
 
 fn test_doc_move_cursor_to_previous_blank_line() {
@@ -278,23 +188,10 @@ fn test_doc_move_cursor_to_previous_blank_line() {
 		data: buffers.GapBuffer.new(content: mock_multiline_content_with_blanks.runes())
 	}
 
-	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 9, x: 8 }) == CursorPos{ y: 8, x: 0 }
-	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 8, x: 0 }) == CursorPos{ y: 5, x: 0 }
-	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 5, x: 0 }) == CursorPos{ y: 2, x: 0 }
-	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 2, x: 0 }) == CursorPos{ y: 0, x: 0 }
-	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 0, x: 0 }) == CursorPos{ y: 0, x: 0 }
-}
-
-fn test_doc_move_cursor_to_previous_blank_line2() {
-	mut d := Document{
-		file_path: ''
-		data: buffers.GapBuffer.new(content: mock_multiline_content_with_blanks.runes())
-	}
-
-	assert d.move_cursor_to_previous_blank_line2(CursorPos{ y: 9, x: 8 }.to()) == CursorPos{ y: 8, x: 0 }.to()
-	assert d.move_cursor_to_previous_blank_line2(CursorPos{ y: 8, x: 0 }.to()) == CursorPos{ y: 5, x: 0 }.to()
-	assert d.move_cursor_to_previous_blank_line2(CursorPos{ y: 5, x: 0 }.to()) == CursorPos{ y: 2, x: 0 }.to()
-	assert d.move_cursor_to_previous_blank_line2(CursorPos{ y: 2, x: 0 }.to()) == CursorPos{ y: 0, x: 0 }.to()
-	assert d.move_cursor_to_previous_blank_line2(CursorPos{ y: 0, x: 0 }.to()) == CursorPos{ y: 0, x: 0 }.to()
+	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 9, x: 8 }.to()) == CursorPos{ y: 8, x: 0 }.to()
+	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 8, x: 0 }.to()) == CursorPos{ y: 5, x: 0 }.to()
+	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 5, x: 0 }.to()) == CursorPos{ y: 2, x: 0 }.to()
+	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 2, x: 0 }.to()) == CursorPos{ y: 0, x: 0 }.to()
+	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 0, x: 0 }.to()) == CursorPos{ y: 0, x: 0 }.to()
 }
 
