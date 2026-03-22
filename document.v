@@ -28,7 +28,7 @@ pub fn (mut c Controller) open_document(file_path string) !int {
 	id := hash_id(c.doc_id_count)
 	c.loaded_files[file_path] = id
 	c.docs[id] = Document.new(file_path)!
-	c.cursors[id] = cursorPos.new(0, 0)
+	c.cursors[id] = cursor.Pos.new(0, 0)
 	return id
 }
 
@@ -42,35 +42,35 @@ pub fn (mut c Controller) write_document(doc_id int) ! {
 }
 
 pub fn (mut c Controller) prepare_for_insertion(doc_id int) ! {
-	pos := c.cursors[doc_id].to()
+	pos := c.cursors[doc_id]
 	return c.docs[doc_id].prepare_for_insertion_at2(pos)
 }
 
-pub fn (mut c Controller) prepare_for_insertion_at(doc_id int, pos CursorPos) ! {
-	return c.docs[doc_id].prepare_for_insertion_at2(pos.to())
+pub fn (mut c Controller) prepare_for_insertion_at(doc_id int, pos cursor.Pos) ! {
+	return c.docs[doc_id].prepare_for_insertion_at2(pos)
 }
 
-pub fn (c Controller) cursor_pos(doc_id int) CursorPos {
+pub fn (c Controller) cursor_pos(doc_id int) cursor.Pos {
 	return c.cursors[doc_id]
 }
 
-pub fn (c Controller) visual_cursor_pos(doc_id int, tab_width int) CursorPos {
-	return CursorPos.from(c.docs[doc_id].visual_cursor_pos2(c.cursors[doc_id].to(), tab_width))
+pub fn (c Controller) visual_cursor_pos(doc_id int, tab_width int) cursor.Pos {
+	return c.docs[doc_id].visual_cursor_pos2(c.cursors[doc_id], tab_width)
 }
 
 pub fn (mut c Controller) move_cursor_left(doc_id int, mode petal.Mode) {
-	pos := c.cursors[doc_id].to()
-	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_left2(pos, mode))
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_left2(pos, mode)
 }
 
 pub fn (mut c Controller) move_cursor_up(doc_id int, mode petal.Mode) {
-	pos := c.cursors[doc_id].to()
-	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_up2(pos, mode))
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_up2(pos, mode)
 }
 
 pub fn (mut c Controller) move_cursor_down(doc_id int, mode petal.Mode) {
-	pos := c.cursors[doc_id].to()
-	c.cursors[doc_id] = CursorPos.from(c.docs[doc_id].move_cursor_down2(pos, mode))
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_down2(pos, mode)
 }
 
 pub fn (mut c Controller) move_cursor_right(doc_id int, mode petal.Mode) {
