@@ -196,19 +196,6 @@ fn hash_id(id int) int {
 	return math.abs(hash)
 }
 
-pub struct CursorPos {
-pub:
-	y int
-	x int
-}
-
-fn CursorPos.from(pos cursor.Pos) CursorPos {
-	return CursorPos{ x: pos.x, y: pos.y }
-}
-
-fn (pos CursorPos) to() cursor.Pos {
-	return cursor.Pos.new(pos.x, pos.y)
-}
 
 @[heap]
 struct Document {
@@ -231,9 +218,6 @@ fn (mut d Document) write_to(file_path string) ! {
 	os.write_file(file_path, d.data.content().string())!
 }
 
-fn convert_pos_to_cpos(pos cursor.Pos) CursorPos {
-	return CursorPos{ x: pos.x, y: pos.y }
-}
 
 fn (mut d Document) prepare_for_insertion_at(pos cursor.Pos) ! {
 	if offset := d.data.cursor_to_offset(x: pos.x, y: pos.y) {
@@ -282,8 +266,8 @@ fn (d Document) move_cursor_right(pos cursor.Pos, mode petal.Mode) cursor.Pos {
 fn (d Document) move_cursor_to_next_word_start(pos cursor.Pos) cursor.Pos {
 	mut next_pos := pos
 	for {
-		if next_word_start_pos := scan_to_next_word_start(d.data, CursorPos.from(next_pos), pos.y) {
-			return next_word_start_pos.to()
+		if next_word_start_pos := scan_to_next_word_start(d.data, next_pos, pos.y) {
+			return next_word_start_pos
 		}
 		next_pos = cursor.Pos.new(0, next_pos.y + 1)
 	}
@@ -293,8 +277,8 @@ fn (d Document) move_cursor_to_next_word_start(pos cursor.Pos) cursor.Pos {
 fn (d Document) move_cursor_to_previous_word_start(pos cursor.Pos) cursor.Pos {
 	mut next_pos := pos
 	for {
-		if prev_word_start_pos := scan_to_previous_word_start(d.data, CursorPos.from(next_pos), pos.y) {
-			return prev_word_start_pos.to()
+		if prev_word_start_pos := scan_to_previous_word_start(d.data, next_pos, pos.y) {
+			return prev_word_start_pos
 		}
 		prev_y := next_pos.y - 1
 
@@ -348,7 +332,7 @@ fn (d Document) move_cursor_to_previous_blank_line(pos cursor.Pos) cursor.Pos {
 
 fn (d Document) visual_cursor_pos2(pos cursor.Pos, tab_width int) cursor.Pos {
 	tab_count := d.data.get_line_at(y: pos.y) or { return pos }[..pos.x].count('\t')
-	return CursorPos{ x: (pos.x - tab_count) + (tab_count * tab_width), y: pos.y }.to()
+	return cursor.Pos.new((pos.x - tab_count) + (tab_count * tab_width), pos.y)
 }
 
 
@@ -357,14 +341,14 @@ fn (mut d Document) insert_char(c rune) {
 }
 
 fn (mut d Document) clear_line(line_y int) cursor.Pos {
-	line := d.data.get_line_at(y: line_y) or { return CursorPos{ y: line_y }.to() }
+	line := d.data.get_line_at(y: line_y) or { return cursor.Pos.new(0, line_y) }
 	line_len := line.runes().len
 	if line_len == 0 {
-		return CursorPos{ y: line_y }.to()
+		return cursor.Pos.new(0, line_y)
 	}
-	d.prepare_for_insertion_at(CursorPos{ y: line_y, x: 0 }.to()) or { return CursorPos{ y: line_y }.to() }
+	d.prepare_for_insertion_at(cursor.Pos.new(0, line_y)) or { return cursor.Pos.new(0, line_y) }
 	d.data.delete_after_n(line_len)
-	return CursorPos{ y: line_y }.to()
+	return cursor.Pos.new(0, line_y)
 }
 
 fn (mut d Document) delete_before() {
@@ -406,16 +390,16 @@ pub fn CharType.resolve(c rune) CharType {
 	}
 }
 
-fn find_next_diff_skip_whitespace(mut c_scanner CharScanner, pos CursorPos, diff ScanResult) ?CursorPos {
+fn find_next_diff_skip_whitespace(mut c_scanner CharScanner, pos cursor.Pos, diff ScanResult) ?cursor.Pos {
 	post_current_char_diff := c_scanner.next_diff() or { return none }
 	if post_current_char_diff.next_type == .whitespace {
 		post_whitespace_diff := c_scanner.next_diff() or { return none }
-		return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+		return cursor.Pos.new(post_whitespace_diff.index, pos.y)
 	}
-	return CursorPos{ y: pos.y, x: diff.index }
+	return cursor.Pos.new(diff.index, pos.y)
 }
 
-fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) ?CursorPos {
+fn scan_to_next_word_start(data buffers.GapBuffer, pos cursor.Pos, source_y int) ?cursor.Pos {
 	current_line := data.get_line_at(y: pos.y) or { return pos }
 
 	if pos.y != source_y && pos.x == 0 {
@@ -431,13 +415,13 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 	if diff.start_type == .alpha_num {
 		if diff.next_type == .whitespace {
 			post_whitespace_diff := c_scanner.next_diff() or { return none }
-			return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+			return cursor.Pos.new(post_whitespace_diff.index, pos.y)
 		}
-		return CursorPos{ y: pos.y, x: diff.index }
+		return cursor.Pos.new(diff.index, pos.y)
 	}
 
 	if diff.start_type == .whitespace {
-		return CursorPos{ y: pos.y, x: diff.index }
+		return cursor.Pos.new(diff.index, pos.y)
 	}
 
 	if diff.start_type == .punctuation {
@@ -446,31 +430,31 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) 
 		}
 		if diff.next_type == .whitespace {
 			post_whitespace_diff := c_scanner.next_diff() or { return none }
-			return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+			return cursor.Pos.new(post_whitespace_diff.index, pos.y)
 		}
-		return CursorPos{ y: pos.y, x: diff.index }
+		return cursor.Pos.new(diff.index, pos.y)
 	}
 
 	if diff.start_type == .symbol {
 		if diff.next_type == .whitespace {
 			post_whitespace_diff := c_scanner.next_diff() or { return none }
-			return CursorPos{ y: pos.y, x: post_whitespace_diff.index }
+			return cursor.Pos.new(post_whitespace_diff.index, pos.y)
 		}
-		return CursorPos{ y: pos.y, x: diff.index }
+		return cursor.Pos.new(diff.index, pos.y)
 	}
 
 	return pos
 }
 
-fn find_prev_token_start(mut c_scanner CharScanner, y int) ?CursorPos {
-	diff := c_scanner.prev_diff() or { return CursorPos{ y: y, x: 0 } }
+fn find_prev_token_start(mut c_scanner CharScanner, y int) ?cursor.Pos {
+	diff := c_scanner.prev_diff() or { return cursor.Pos.new(0, y) }
 	if pre := diff.pre_diff {
-		return CursorPos{ y: y, x: pre.index }
+		return cursor.Pos.new(pre.index, y)
 	}
-	return CursorPos{ y: y, x: 0 }
+	return cursor.Pos.new(0, y)
 }
 
-fn scan_to_previous_word_start(data buffers.GapBuffer, pos CursorPos, source_y int) ?CursorPos {
+fn scan_to_previous_word_start(data buffers.GapBuffer, pos cursor.Pos, source_y int) ?cursor.Pos {
 	current_line := data.get_line_at(y: pos.y) or { return pos }
 
 	if pos.y != source_y && pos.x == 0 {
@@ -485,10 +469,10 @@ fn scan_to_previous_word_start(data buffers.GapBuffer, pos CursorPos, source_y i
 
 	if diff.start_type == .alpha_num {
 		if pre := diff.pre_diff {
-			return CursorPos{ y: pos.y, x: pre.index }
+			return cursor.Pos.new(pre.index, pos.y)
 		}
 		if diff.next_type == .punctuation || diff.next_type == .symbol {
-			return CursorPos{ y: pos.y, x: diff.index }
+			return cursor.Pos.new(diff.index, pos.y)
 		}
 		if diff.next_type == .whitespace {
 			c_scanner.prev_diff() or { return none }
@@ -498,7 +482,7 @@ fn scan_to_previous_word_start(data buffers.GapBuffer, pos CursorPos, source_y i
 
 	if diff.start_type == .punctuation || diff.start_type == .symbol {
 		if pre := diff.pre_diff {
-			return CursorPos{ y: pos.y, x: pre.index }
+			return cursor.Pos.new(pre.index, pos.y)
 		}
 		if diff.next_type == .alpha_num {
 			return find_prev_token_start(mut c_scanner, pos.y)
@@ -507,7 +491,7 @@ fn scan_to_previous_word_start(data buffers.GapBuffer, pos CursorPos, source_y i
 			c_scanner.prev_diff() or { return none }
 			return find_prev_token_start(mut c_scanner, pos.y)
 		}
-		return CursorPos{ y: pos.y, x: diff.index }
+		return cursor.Pos.new(diff.index, pos.y)
 	}
 
 	if diff.start_type == .whitespace {
