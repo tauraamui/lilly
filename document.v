@@ -55,7 +55,7 @@ pub fn (c Controller) cursor_pos(doc_id int) cursor.Pos {
 }
 
 pub fn (c Controller) visual_cursor_pos(doc_id int, tab_width int) cursor.Pos {
-	return c.docs[doc_id].visual_cursor_pos2(c.cursors[doc_id], tab_width)
+	return c.docs[doc_id].visual_cursor_pos(c.cursors[doc_id], tab_width)
 }
 
 pub fn (mut c Controller) move_cursor_left(doc_id int, mode petal.Mode) {
@@ -114,8 +114,7 @@ pub fn (mut c Controller) insert_char(doc_id int, data rune) {
 }
 
 pub fn (mut c Controller) clear_line(doc_id int) {
-	line_y := c.cursors[doc_id].y
-	c.cursors[doc_id] = c.docs[doc_id].clear_line(line_y)
+	c.cursors[doc_id] = c.docs[doc_id].clear_line(c.cursors[doc_id])
 }
 
 pub fn (c Controller) leading_whitespace_on_current_line(doc_id int) []rune {
@@ -218,7 +217,6 @@ fn (mut d Document) write_to(file_path string) ! {
 	os.write_file(file_path, d.data.content().string())!
 }
 
-
 fn (mut d Document) prepare_for_insertion_at(pos cursor.Pos) ! {
 	if offset := d.data.cursor_to_offset(x: pos.x, y: pos.y) {
 		d.data.move_gap(offset)
@@ -228,22 +226,29 @@ fn (mut d Document) prepare_for_insertion_at(pos cursor.Pos) ! {
 }
 
 fn (d Document) move_cursor_left(pos cursor.Pos, mode petal.Mode) cursor.Pos {
-	mut x := pos.x - 1
-	return cursor.Pos.new(if x < 0 { 0 } else { x }, pos.y)
+	return pos.x(if pos.x - 1 < 0 { 0 } else { pos.x - 1 })
 }
 
 fn (d Document) move_cursor_down(pos cursor.Pos, mode petal.Mode) cursor.Pos {
-	// NOTE(tauraamui): for now just drop x to 0 each
-	mut y := pos.y + 1
-	d.data.get_line_at(y: y) or { return pos }
-	return cursor.Pos.new(0, y)
+	// TODO(tauraamui): use the line content to infer if largest x so far or line len should be returned x
+	y := pos.y + 1
+	if line := d.data.get_line_at(y: y) {
+		line_data := line.runes()
+		x := if pos.largest_x >= line_data.len { line_data.len - 1 } else { pos.largest_x }
+		return pos.x(x).y(y)
+	}
+	return pos
 }
 
 fn (d Document) move_cursor_up(pos cursor.Pos, mode petal.Mode) cursor.Pos {
-	// NOTE(tauraamui): for now just drop x to 0 each
-	mut y := pos.y - 1
-	d.data.get_line_at(y: y) or { return pos }
-	return cursor.Pos.new(0, y)
+	// TODO(tauraamui): use the line content to infer if largest x so far or line len should be returned x
+	y := pos.y - 1
+	if line := d.data.get_line_at(y: y) {
+		line_data := line.runes()
+		x := if pos.largest_x >= line_data.len { line_data.len - 1 } else { pos.largest_x }
+		return pos.x(x).y(y)
+	}
+	return pos
 }
 
 fn (d Document) move_cursor_right(pos cursor.Pos, mode petal.Mode) cursor.Pos {
@@ -304,11 +309,11 @@ fn (d Document) move_cursor_to_next_blank_line(pos cursor.Pos) cursor.Pos {
 	for i, line in d.data.iter() {
 		last_y = i
 		if i > pos.y {
-			if line.len == 0 { return cursor.Pos.new(0, i) }
+			if line.len == 0 { return pos.x(0).y(i) }
 		}
 	}
 	if last_y > pos.y {
-		return cursor.Pos.new(0, last_y)
+		return pos.x(0).y(last_y)
 	}
 	return pos
 }
@@ -322,17 +327,17 @@ fn (d Document) move_cursor_to_previous_blank_line(pos cursor.Pos) cursor.Pos {
 		}
 	}
 	if last_blank >= 0 {
-		return cursor.Pos.new(0, last_blank)
+		return pos.x(0).y(last_blank)
 	}
 	if pos.y > 0 {
-		return cursor.Pos.new(0, 0)
+		return pos.x(0).y(0)
 	}
 	return pos
 }
 
-fn (d Document) visual_cursor_pos2(pos cursor.Pos, tab_width int) cursor.Pos {
+fn (d Document) visual_cursor_pos(pos cursor.Pos, tab_width int) cursor.Pos {
 	tab_count := d.data.get_line_at(y: pos.y) or { return pos }[..pos.x].count('\t')
-	return cursor.Pos.new((pos.x - tab_count) + (tab_count * tab_width), pos.y)
+	return pos.x((pos.x - tab_count) + (tab_count * tab_width))
 }
 
 
@@ -340,13 +345,16 @@ fn (mut d Document) insert_char(c rune) {
 	d.data.insert_char(c)
 }
 
-fn (mut d Document) clear_line(line_y int) cursor.Pos {
+fn (mut d Document) clear_line(pos cursor.Pos) cursor.Pos {
+	line_y := pos.y
 	line := d.data.get_line_at(y: line_y) or { return cursor.Pos.new(0, line_y) }
 	line_len := line.runes().len
 	if line_len == 0 {
-		return cursor.Pos.new(0, line_y)
+		return pos.x(0).y(line_y)
 	}
-	d.prepare_for_insertion_at(cursor.Pos.new(0, line_y)) or { return cursor.Pos.new(0, line_y) }
+	d.prepare_for_insertion_at(pos.x(0).y(line_y)) or { return pos.x(0).y(line_y) }
+	// d.prepare_for_insertion_at(cursor.Pos.new(0, line_y)) or { return cursor.Pos.new(0, line_y) }
+
 	d.data.delete_after_n(line_len)
 	return cursor.Pos.new(0, line_y)
 }

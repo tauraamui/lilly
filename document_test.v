@@ -55,7 +55,7 @@ fn test_document_move_cursor_up() {
 		data: buffers.GapBuffer.new(content: mock_content.runes())
 	}
 
-	assert d.move_cursor_up(cursor.Pos.new(8, 1), .normal) == cursor.Pos.new(0, 0)
+	assert d.move_cursor_up(cursor.Pos.new(8, 1), .normal) == cursor.Pos.new(8, 0)
 }
 
 fn test_document_move_cursor_right() {
