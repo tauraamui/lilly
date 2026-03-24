@@ -1,6 +1,7 @@
 module documents
 
 import lib.buffers
+import lib.documents.cursor
 
 fn test_char_scanner() {
 	mut c_scanner := CharScanner{
@@ -30,46 +31,100 @@ fn test_char_scanner_prev() {
 const mock_content := 'This is the.first line
 This is the second line.'
 
+fn test_document_move_cursor_left() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	assert d.move_cursor_left(cursor.Pos.new(8, 0), .normal) == cursor.Pos.new(7, 0)
+}
+
+fn test_document_move_cursor_down() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	assert d.move_cursor_down(cursor.Pos.new(0, 0), .normal) == cursor.Pos.new(0, 1)
+}
+
+fn test_document_move_cursor_down_jumps_to_largest_x() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	assert d.move_cursor_down(cursor.Pos.new_z(0, 0, 11), .normal) == cursor.Pos.new_z(11, 1, 11)
+}
+
+fn test_document_move_cursor_up() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	assert d.move_cursor_up(cursor.Pos.new(8, 1), .normal) == cursor.Pos.new(8, 0)
+}
+
+fn test_document_move_cursor_up_jumps_to_largest_x() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	assert d.move_cursor_up(cursor.Pos.new_z(8, 1, 11), .normal) == cursor.Pos.new_z(11, 0, 11)
+}
+
+fn test_document_move_cursor_right() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	assert d.move_cursor_right(cursor.Pos.new(8, 1), .normal) == cursor.Pos.new(9, 1)
+}
+
 fn test_scan_to_next_word_start() {
 	gb := buffers.GapBuffer.new(content: mock_content.runes())
 
-	mut next_word_start_pos := scan_to_next_word_start(gb, CursorPos{ y: 0, x: 0 }, 0)?
-	assert next_word_start_pos == CursorPos{ y: 0, x: 5 }
+	mut next_word_start_pos := scan_to_next_word_start(gb, cursor.Pos.new(0, 0), 0)?
+	assert next_word_start_pos == cursor.Pos.new(5, 0)
 	assert get_char_at(gb, next_word_start_pos) == 'i'
 
 	next_word_start_pos = scan_to_next_word_start(gb, next_word_start_pos, 0)?
-	assert next_word_start_pos == CursorPos{ y: 0, x: 8 }
+	assert next_word_start_pos == cursor.Pos.new(8, 0)
 	assert get_char_at(gb, next_word_start_pos) == 't'
 
 	next_word_start_pos = scan_to_next_word_start(gb, next_word_start_pos, 0)?
-	assert next_word_start_pos == CursorPos{ y: 0, x: 11 }
+	assert next_word_start_pos == cursor.Pos.new(11, 0)
 	assert get_char_at(gb, next_word_start_pos) == '.'
 
 	next_word_start_pos = scan_to_next_word_start(gb, next_word_start_pos, 0)?
-	assert next_word_start_pos == CursorPos{ y: 0, x: 12 }
+	assert next_word_start_pos == cursor.Pos.new(12, 0)
 	assert get_char_at(gb, next_word_start_pos) == 'f'
 }
 
 fn test_scan_to_previous_word_start() {
 	gb := buffers.GapBuffer.new(content: mock_content.runes())
-	mut previous_word_start_pos := scan_to_previous_word_start(gb, CursorPos{ y: 0, x: 15 }, 0)? // cursor starting on 's' in word 'first'
-	assert previous_word_start_pos == CursorPos{ y: 0, x: 12 }
+	mut previous_word_start_pos := scan_to_previous_word_start(gb, cursor.Pos.new(15, 0), 0)? // cursor starting on 's' in word 'first'
+	assert previous_word_start_pos == cursor.Pos.new(12, 0)
 	assert get_char_at(gb, previous_word_start_pos) == 'f'
 
 	previous_word_start_pos = scan_to_previous_word_start(gb, previous_word_start_pos, 0)? // cursor should now be on 't' of word 'the'
-	assert previous_word_start_pos == CursorPos{ y: 0, x: 11 }
+	assert previous_word_start_pos == cursor.Pos.new(11, 0)
 	assert get_char_at(gb, previous_word_start_pos) == '.'
 
 	previous_word_start_pos = scan_to_previous_word_start(gb, previous_word_start_pos, 0)? // cursor should now be on 't' of word 'the'
-	assert previous_word_start_pos == CursorPos{ y: 0, x: 8 }
+	assert previous_word_start_pos == cursor.Pos.new(8, 0)
 	assert get_char_at(gb, previous_word_start_pos) == 't'
 
 	previous_word_start_pos = scan_to_previous_word_start(gb, previous_word_start_pos, 0)? // cursor should now be on 't' of word 'the'
-	assert previous_word_start_pos == CursorPos{ y: 0, x: 5 }
+	assert previous_word_start_pos == cursor.Pos.new(5, 0)
 	assert get_char_at(gb, previous_word_start_pos) == 'i'
 }
 
-fn get_char_at(data buffers.GapBuffer, pos CursorPos) string {
+fn get_char_at(data buffers.GapBuffer, pos cursor.Pos) string {
 	return [data.get_char_at(y: pos.y, x: pos.x) or { '?'.runes()[0] }].string()
 }
 
@@ -79,18 +134,38 @@ fn test_doc_move_cursor_to_next_word_start() {
 		data: buffers.GapBuffer.new(content: mock_content.runes())
 	}
 
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 15 }) == CursorPos{ y: 0, x: 12 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 12 }) == CursorPos{ y: 0, x: 11 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 11 }) == CursorPos{ y: 0, x: 8 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 8 }) == CursorPos{ y: 0, x: 5 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 5 }) == CursorPos{ y: 0, x: 0 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 0, x: 0 }) == CursorPos{ y: 0, x: 0 }
+	assert d.move_cursor_to_next_word_start(cursor.Pos.new(3, 0)) == cursor.Pos.new(5, 0)
+	assert d.move_cursor_to_next_word_start(cursor.Pos.new(5, 0)) == cursor.Pos.new(8, 0)
+	assert d.move_cursor_to_next_word_start(cursor.Pos.new(8, 0)) == cursor.Pos.new(11, 0)
+	assert d.move_cursor_to_next_word_start(cursor.Pos.new(11, 0)) == cursor.Pos.new(12, 0)
+	assert d.move_cursor_to_next_word_start(cursor.Pos.new(12, 0)) == cursor.Pos.new(18, 0)
+	assert d.move_cursor_to_next_word_start(cursor.Pos.new(18, 0)) == cursor.Pos.new(0, 1)
 
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 16 }) == CursorPos{ y: 1, x: 12 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 12 }) == CursorPos{ y: 1, x: 8 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 8 }) == CursorPos{ y: 1, x: 5 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 5 }) == CursorPos{ y: 1, x: 0 }
-	assert d.move_cursor_to_previous_word_start(CursorPos{ y: 1, x: 0 }) == CursorPos{ y: 0, x: 18 }
+	assert d.move_cursor_to_next_word_start(cursor.Pos.new(0, 1)) == cursor.Pos.new(5, 1)
+	assert d.move_cursor_to_next_word_start(cursor.Pos.new(5, 1)) == cursor.Pos.new(8, 1)
+	assert d.move_cursor_to_next_word_start(cursor.Pos.new(8, 1)) == cursor.Pos.new(12, 1)
+	assert d.move_cursor_to_next_word_start(cursor.Pos.new(12, 1)) == cursor.Pos.new(19, 1)
+	assert d.move_cursor_to_next_word_start(cursor.Pos.new(19, 1)) == cursor.Pos.new(23, 1)
+}
+
+fn test_doc_move_cursor_to_previous_word_start() {
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(15, 0)) == cursor.Pos.new(12, 0)
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(12, 0)) == cursor.Pos.new(11, 0)
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(11, 0)) == cursor.Pos.new(8, 0)
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(8, 0)) == cursor.Pos.new(5, 0)
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(5, 0)) == cursor.Pos.new(0, 0)
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(0, 0)) == cursor.Pos.new(0, 0)
+
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(16, 1)) == cursor.Pos.new(12, 1)
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(12, 1)) == cursor.Pos.new(8, 1)
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(8, 1)) == cursor.Pos.new(5, 1)
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(5, 1)) == cursor.Pos.new(0, 1)
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(0, 1)) == cursor.Pos.new(18, 0)
 }
 
 const mock_multiline_content_with_blanks = 'This is the first line.
@@ -110,12 +185,11 @@ fn test_doc_move_cursor_to_next_blank_line() {
 		data: buffers.GapBuffer.new(content: mock_multiline_content_with_blanks.runes())
 	}
 
-	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 0, x: 8 }) == CursorPos{ y: 2, x: 0 }
-	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 2, x: 0 }) == CursorPos{ y: 5, x: 0 }
-	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 5, x: 0 }) == CursorPos{ y: 8, x: 0 }
-	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 8, x: 0 }) == CursorPos{ y: 9, x: 0 }
-	assert d.move_cursor_to_next_blank_line(CursorPos{ y: 9, x: 0 }) == CursorPos{ y: 9, x: 0 }
-
+	assert d.move_cursor_to_next_blank_line(cursor.Pos.new(8, 0)) == cursor.Pos.new(0, 2)
+	assert d.move_cursor_to_next_blank_line(cursor.Pos.new(0, 2)) == cursor.Pos.new(0, 5)
+	assert d.move_cursor_to_next_blank_line(cursor.Pos.new(0, 5)) == cursor.Pos.new(0, 8)
+	assert d.move_cursor_to_next_blank_line(cursor.Pos.new(0, 8)) == cursor.Pos.new(0, 9)
+	assert d.move_cursor_to_next_blank_line(cursor.Pos.new(0, 9)) == cursor.Pos.new(0, 9)
 }
 
 fn test_doc_move_cursor_to_previous_blank_line() {
@@ -124,10 +198,10 @@ fn test_doc_move_cursor_to_previous_blank_line() {
 		data: buffers.GapBuffer.new(content: mock_multiline_content_with_blanks.runes())
 	}
 
-	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 9, x: 8 }) == CursorPos{ y: 8, x: 0 }
-	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 8, x: 0 }) == CursorPos{ y: 5, x: 0 }
-	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 5, x: 0 }) == CursorPos{ y: 2, x: 0 }
-	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 2, x: 0 }) == CursorPos{ y: 0, x: 0 }
-	assert d.move_cursor_to_previous_blank_line(CursorPos{ y: 0, x: 0 }) == CursorPos{ y: 0, x: 0 }
+	assert d.move_cursor_to_previous_blank_line(cursor.Pos.new(8, 9)) == cursor.Pos.new(0, 8)
+	assert d.move_cursor_to_previous_blank_line(cursor.Pos.new(0, 8)) == cursor.Pos.new(0, 5)
+	assert d.move_cursor_to_previous_blank_line(cursor.Pos.new(0, 5)) == cursor.Pos.new(0, 2)
+	assert d.move_cursor_to_previous_blank_line(cursor.Pos.new(0, 2)) == cursor.Pos.new(0, 0)
+	assert d.move_cursor_to_previous_blank_line(cursor.Pos.new(0, 0)) == cursor.Pos.new(0, 0)
 }
 
