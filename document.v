@@ -226,6 +226,8 @@ fn (mut d Document) prepare_for_insertion_at(pos cursor.Pos) ! {
 }
 
 fn (d Document) move_cursor_left(pos cursor.Pos, mode petal.Mode) cursor.Pos {
+	// NOTE(tauraamui): should continue to clear/reset largest x field data to "re-cap"
+	// to whatever the cursors new x pos becomes on move left
 	return cursor.Pos.new(if pos.x - 1 < 0 { 0 } else { pos.x - 1 }, pos.y)
 }
 
@@ -280,6 +282,9 @@ fn (d Document) move_cursor_to_next_word_start(pos cursor.Pos) cursor.Pos {
 }
 
 fn (d Document) move_cursor_to_previous_word_start(pos cursor.Pos) cursor.Pos {
+	// NOTE(tauraamui): should continue to clear/reset largest x field data to "re-cap"
+	// to whatever the cursors new x pos becomes on move left
+
 	mut next_pos := pos
 	for {
 		if prev_word_start_pos := scan_to_previous_word_start(d.data, next_pos, pos.y) {
@@ -347,16 +352,15 @@ fn (mut d Document) insert_char(c rune) {
 
 fn (mut d Document) clear_line(pos cursor.Pos) cursor.Pos {
 	line_y := pos.y
-	line := d.data.get_line_at(y: line_y) or { return cursor.Pos.new(0, line_y) }
+	line := d.data.get_line_at(y: line_y) or { return pos.x(0).y(line_y) }
 	line_len := line.runes().len
 	if line_len == 0 {
 		return pos.x(0).y(line_y)
 	}
 	d.prepare_for_insertion_at(pos.x(0).y(line_y)) or { return pos.x(0).y(line_y) }
-	// d.prepare_for_insertion_at(cursor.Pos.new(0, line_y)) or { return cursor.Pos.new(0, line_y) }
-
 	d.data.delete_after_n(line_len)
-	return cursor.Pos.new(0, line_y)
+
+	return pos.x(0).y(line_y)
 }
 
 fn (mut d Document) delete_before() {
@@ -462,6 +466,8 @@ fn find_prev_token_start(mut c_scanner CharScanner, y int) ?cursor.Pos {
 	return cursor.Pos.new(0, y)
 }
 
+// NOTE(tauraamui): this method always continue to should destruct the cursor instance on mutation to obliterate
+// the stored largest x state
 fn scan_to_previous_word_start(data buffers.GapBuffer, pos cursor.Pos, source_y int) ?cursor.Pos {
 	current_line := data.get_line_at(y: pos.y) or { return pos }
 
