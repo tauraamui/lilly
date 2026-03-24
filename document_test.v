@@ -49,6 +49,15 @@ fn test_document_move_cursor_down() {
 	assert d.move_cursor_down(cursor.Pos.new(0, 0), .normal) == cursor.Pos.new(0, 1)
 }
 
+fn test_document_move_cursor_down_jumps_to_largest_x() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	assert d.move_cursor_down(cursor.Pos.new_z(0, 0, 11), .normal) == cursor.Pos.new_z(11, 1, 11)
+}
+
 fn test_document_move_cursor_up() {
 	d := Document{
 		file_path: ''
@@ -56,6 +65,15 @@ fn test_document_move_cursor_up() {
 	}
 
 	assert d.move_cursor_up(cursor.Pos.new(8, 1), .normal) == cursor.Pos.new(8, 0)
+}
+
+fn test_document_move_cursor_up_jumps_to_largest_x() {
+	d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	assert d.move_cursor_up(cursor.Pos.new_z(8, 1, 11), .normal) == cursor.Pos.new_z(11, 0, 11)
 }
 
 fn test_document_move_cursor_right() {

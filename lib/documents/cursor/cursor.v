@@ -12,6 +12,10 @@ pub fn Pos.new(x int, y int) Pos {
 	return Pos{ x: x, y: y, largest_x: x }
 }
 
+pub fn Pos.new_z(x int, y int, z int) Pos {
+	return Pos{ x: x, y: y, largest_x: z }
+}
+
 fn (a Pos) == (b Pos) bool {
 	return a.x == b.x && a.y == b.y
 }
