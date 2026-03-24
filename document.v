@@ -226,7 +226,7 @@ fn (mut d Document) prepare_for_insertion_at(pos cursor.Pos) ! {
 }
 
 fn (d Document) move_cursor_left(pos cursor.Pos, mode petal.Mode) cursor.Pos {
-	return pos.x(if pos.x - 1 < 0 { 0 } else { pos.x - 1 })
+	return cursor.Pos.new(if pos.x - 1 < 0 { 0 } else { pos.x - 1 }, pos.y)
 }
 
 fn (d Document) move_cursor_down(pos cursor.Pos, mode petal.Mode) cursor.Pos {
