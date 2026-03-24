@@ -274,7 +274,7 @@ fn (d Document) move_cursor_to_next_word_start(pos cursor.Pos) cursor.Pos {
 		if next_word_start_pos := scan_to_next_word_start(d.data, next_pos, pos.y) {
 			return next_word_start_pos
 		}
-		next_pos = cursor.Pos.new(0, next_pos.y + 1)
+		next_pos = next_pos.x(0).y(next_pos.y + 1)
 	}
 	return pos
 }
