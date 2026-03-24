@@ -253,17 +253,17 @@ fn (d Document) move_cursor_up(pos cursor.Pos, mode petal.Mode) cursor.Pos {
 
 fn (d Document) move_cursor_right(pos cursor.Pos, mode petal.Mode) cursor.Pos {
 	current_line := d.data.get_line_at(y: pos.y) or { return pos }
-	new_pos := cursor.Pos.new(pos.x + 1, pos.y)
+	x := pos.x + 1
 
 	return match mode {
 		.normal {
-			if pos.x + 1 >= current_line.runes().len { pos } else { new_pos }
+			if x >= current_line.runes().len { pos } else { pos.x(x) }
 		}
 		.insert {
-			if pos.x + 1 > current_line.runes().len { pos } else { new_pos }
+			if x > current_line.runes().len { pos } else { pos.x(x) }
 		}
 		else {
-			new_pos
+			pos.x(x)
 		}
 	}
 }
