@@ -1,6 +1,7 @@
 module main
 
 import tauraamui.bobatea as tea
+import theme
 import petal
 import palette
 import documents
@@ -19,6 +20,7 @@ struct EditorModel {
 	id     int
 	doc_id int
 
+	theme     theme.Theme
 	file_path string
 mut:
 	focused     bool
@@ -29,7 +31,8 @@ mut:
 	min_y  int
 
 	doc_controller &documents.Controller
-	syn_parser     syntax.Parser
+	token_parser   syntax.Parser
+	lang_syn       syntax.Syntax
 }
 
 struct OpenEditorMsg {
@@ -74,14 +77,25 @@ fn write_to_disk(id int) tea.Cmd {
 	}
 }
 
-fn EditorModel.new(id int, file_path string, doc_id int, doc_controller &documents.Controller) EditorModel {
-	assert file_path != ''
+@[params]
+struct EditorModelNewParams {
+	theme theme.Theme
+	id int
+	file_path string
+	doc_id int
+	doc_controller &documents.Controller
+}
+
+fn EditorModel.new(opts EditorModelNewParams) EditorModel {
+	assert opts.file_path != ''
 	return EditorModel{
-		id:             id
-		file_path:      file_path
-		doc_id:         doc_id
-		doc_controller: doc_controller
-		syn_parser:     syntax.Parser{}
+		id:             opts.id
+		file_path:      opts.file_path
+		doc_id:         opts.doc_id
+		theme:          opts.theme
+		doc_controller: opts.doc_controller
+		token_parser:   syntax.Parser{}
+		lang_syn:       syntax.v_syntax() or { panic('unable to resolve v language syntax') }
 	}
 }
 
@@ -336,24 +350,39 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 		ctx.push_offset(tea.Offset{ x: 1 })
 	}
 
-	m.syn_parser.reset()
+	m.token_parser.reset()
 	for y, l in m.doc_controller.get_iterator(m.doc_id) {
 		offset_id := ctx.push_offset(tea.Offset{ x: 0 })
 		defer { ctx.clear_offsets_from(offset_id) }
 		line_content := l.string().expand_tabs(tab_width)
-		line_tokens := m.syn_parser.parse_line(y, line_content)
+		line_tokens := m.token_parser.parse_line(y, line_content)
 		if y >= m.min_y && y < m.min_y + m.height {
-			for t in line_tokens {
+			for i, t in line_tokens {
+				token_content := line_content.runes()[t.start()..t.end()]
 				match t.t_type() {
 					.comment {
-						ctx.set_color(tea.Color.ansi(241))
+						ctx.set_color(m.theme.subtle_light_grey)
 					}
 					.string {
-						ctx.set_color(tea.Color.ansi(126))
+						ctx.set_color(m.theme.petal_pink)
 					}
-					else {}
+					else {
+						if token_content.string() in m.lang_syn.keywords {
+							ctx.set_color(m.theme.petal_red)
+
+							prev_token := if i - 1 >= 0 { ?syntax.Token(line_tokens[i - 1]) } else { ?syntax.Token(none) }
+							next_token := if i + 1 < line_tokens.len { ?syntax.Token(line_tokens[i + 1]) } else { ?syntax.Token(none) }
+
+							if pt := prev_token {
+								if pt.t_type() != .whitespace { ctx.reset_color() }
+							} else {
+								if nt := next_token {
+									if nt.t_type() != .whitespace { ctx.reset_color() }
+								}
+							}
+						}
+					}
 				}
-				token_content := line_content.runes()[t.start()..t.end()]
 				ctx.draw_text(0, y - m.min_y, token_content.string())
 				ctx.push_offset(tea.Offset{ x: utf8_str_visible_length(token_content.string()) })
 				ctx.reset_color()
