@@ -11,6 +11,7 @@ pub enum Mode as u8 {
 	visual
 	visual_line
 	navigation
+	pending_delete
 }
 
 pub fn (m Mode) color(ttheme theme.Theme) tea.Color {
@@ -22,6 +23,7 @@ pub fn (m Mode) color(ttheme theme.Theme) tea.Color {
 		.visual { ttheme.status_lilac }
 		.visual_line { ttheme.status_lilac }
 		.navigation { ttheme.status_cyan }
+		.pending_delete { ttheme.status_green }
 	}
 }
 
@@ -34,5 +36,6 @@ pub fn (m Mode) str() string {
 		.visual { 'VISUAL' }
 		.visual_line { 'VISUAL LINE' }
 		.navigation { 'NAVIGATION' }
+		.pending_delete { 'PENDING DEL' }
 	}
 }

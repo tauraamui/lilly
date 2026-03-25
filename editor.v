@@ -177,6 +177,17 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 				}
 			}
+			.pending_delete {
+				match msg.key_msg.k_type {
+					.special {
+						match msg.key_msg.string() {
+							'escape' { cmds << switch_mode(.normal) }
+							else {}
+						}
+					}
+					else {}
+				}
+			}
 			.normal {
 				match msg.key_msg.k_type {
 					.runes {
@@ -224,6 +235,9 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							}
 							'l' {
 								m.doc_controller.move_cursor_right(m.doc_id, .normal)
+							}
+							'd' {
+								cmds << switch_mode(.pending_delete)
 							}
 							else {}
 						}
