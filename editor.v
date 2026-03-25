@@ -33,6 +33,8 @@ mut:
 	doc_controller &documents.Controller
 	token_parser   syntax.Parser
 	lang_syn       syntax.Syntax
+	arena          Arena
+	rune_buf       []rune
 }
 
 struct OpenEditorMsg {
@@ -350,6 +352,11 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 		ctx.push_offset(tea.Offset{ x: 1 })
 	}
 
+	if m.arena.buf == unsafe { nil } {
+		m.arena = Arena.new(512 * 1024)
+	}
+	m.arena.reset()
+
 	m.token_parser.reset()
 	for y, l in m.doc_controller.get_iterator(m.doc_id) {
 		visible := y >= m.min_y && y < m.min_y + m.height
@@ -360,12 +367,16 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 		}
 		offset_id := ctx.push_offset(tea.Offset{ x: 0 })
 		defer { ctx.clear_offsets_from(offset_id) }
-		line_content := l.string().expand_tabs(tab_width)
+		line_str := l.string()
+		line_content := m.arena.expand_tabs(line_str, tab_width)
 		line_tokens := m.token_parser.parse_line(y, line_content)
-		line_runes := line_content.runes()
+		// fill reusable rune buffer instead of allocating via .runes()
+		m.rune_buf.clear()
+		for r in line_content.runes_iterator() {
+			m.rune_buf << r
+		}
 		for i, t in line_tokens {
-			token_content := line_runes[t.start()..t.end()]
-			token_str := token_content.string()
+			token_str := m.arena.runes_to_str(m.rune_buf, t.start(), t.end())
 			match t.t_type() {
 				.comment {
 					ctx.set_color(m.theme.syntax_comment)
@@ -393,10 +404,10 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 					next_token := if i + 1 < line_tokens.len { ?syntax.Token(line_tokens[i + 1]) } else { ?syntax.Token(none) }
 
 					if pt := prev_token {
-						if pt.t_type() != .whitespace && line_runes[pt.start()..pt.end()].string() == '_' { ctx.reset_color() }
+						if pt.t_type() != .whitespace && pt.end() - pt.start() == 1 && m.rune_buf[pt.start()] == `_` { ctx.reset_color() }
 					} else {
 						if nt := next_token {
-							if nt.t_type() != .whitespace && line_runes[nt.start()..nt.end()].string() == '_' { ctx.reset_color() }
+							if nt.t_type() != .whitespace && nt.end() - nt.start() == 1 && m.rune_buf[nt.start()] == `_` { ctx.reset_color() }
 						}
 					}
 
@@ -471,7 +482,11 @@ fn (m EditorModel) height() int {
 
 fn (m EditorModel) clone() tea.Model {
 	assert m.file_path.len != 0
-	return EditorModel{
+	mut c := EditorModel{
 		...m
 	}
+	// each clone gets its own arena, lazily initialized on first view()
+	c.arena = Arena{}
+	c.rune_buf = []rune{}
+	return c
 }
