@@ -374,10 +374,10 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 							next_token := if i + 1 < line_tokens.len { ?syntax.Token(line_tokens[i + 1]) } else { ?syntax.Token(none) }
 
 							if pt := prev_token {
-								if pt.t_type() != .whitespace { ctx.reset_color() }
+								if pt.t_type() != .whitespace && line_content.runes()[pt.start()..pt.end()].string() == '_' { ctx.reset_color() }
 							} else {
 								if nt := next_token {
-									if nt.t_type() != .whitespace { ctx.reset_color() }
+									if nt.t_type() != .whitespace && line_content.runes()[nt.start()..nt.end()].string() == '_' { ctx.reset_color() }
 								}
 							}
 						}
