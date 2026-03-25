@@ -355,7 +355,7 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 				}
 				token_content := line_content.runes()[t.start()..t.end()]
 				ctx.draw_text(0, y - m.min_y, token_content.string())
-				ctx.push_offset(tea.Offset{ x: token_content.len })
+				ctx.push_offset(tea.Offset{ x: utf8_str_visible_length(token_content.string()) })
 				ctx.reset_color()
 			}
 		}
