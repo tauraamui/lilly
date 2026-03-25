@@ -473,7 +473,7 @@ fn find_prev_token_start(mut c_scanner CharScanner, y int) ?cursor.Pos {
 	if pre := diff.pre_diff {
 		return cursor.Pos.new(pre.index, y)
 	}
-	return cursor.Pos.new(0, y)
+	return cursor.Pos.new(diff.index + 1, y)
 }
 
 // NOTE(tauraamui): this method always continue to should destruct the cursor instance on mutation to obliterate
@@ -481,10 +481,24 @@ fn find_prev_token_start(mut c_scanner CharScanner, y int) ?cursor.Pos {
 fn scan_to_previous_word_start(data buffers.GapBuffer, pos cursor.Pos, source_y int) ?cursor.Pos {
 	current_line := data.get_line_at(y: pos.y) or { return pos }
 
-	if pos.y != source_y && pos.x == 0 {
+	if pos.y != source_y {
 		if current_line.len == 0 { return none }
-		if CharType.resolve(current_line[pos.x]) != .whitespace {
-			return pos
+		if pos.x == 0 {
+			if CharType.resolve(current_line[pos.x]) != .whitespace {
+				return pos
+			}
+		} else {
+			c_type := CharType.resolve(current_line[pos.x])
+			if c_type != .whitespace {
+				mut word_start := pos.x
+				for i := pos.x - 1; i >= 0; i-- {
+					ci_type := CharType.resolve(current_line[i])
+					if ci_type != c_type { break }
+					if (c_type == .punctuation || c_type == .symbol) && current_line[i] != current_line[pos.x] { break }
+					word_start = i
+				}
+				return cursor.Pos.new(word_start, pos.y)
+			}
 		}
 	}
 
