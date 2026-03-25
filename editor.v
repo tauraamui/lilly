@@ -33,6 +33,8 @@ mut:
 	doc_controller &documents.Controller
 	token_parser   syntax.Parser
 	lang_syn       syntax.Syntax
+	arena          Arena
+	rune_buf       []rune
 }
 
 struct OpenEditorMsg {
@@ -350,55 +352,70 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 		ctx.push_offset(tea.Offset{ x: 1 })
 	}
 
+	if m.arena.buf == unsafe { nil } {
+		m.arena = Arena.new(512 * 1024)
+	}
+	m.arena.reset()
+
 	m.token_parser.reset()
 	for y, l in m.doc_controller.get_iterator(m.doc_id) {
+		visible := y >= m.min_y && y < m.min_y + m.height
+		if !visible {
+			// still feed the parser for state tracking (block comments, strings spanning lines)
+			m.token_parser.parse_line(y, l.string())
+			continue
+		}
 		offset_id := ctx.push_offset(tea.Offset{ x: 0 })
 		defer { ctx.clear_offsets_from(offset_id) }
-		line_content := l.string().expand_tabs(tab_width)
+		line_str := l.string()
+		line_content := m.arena.expand_tabs(line_str, tab_width)
 		line_tokens := m.token_parser.parse_line(y, line_content)
-		if y >= m.min_y && y < m.min_y + m.height {
-			for i, t in line_tokens {
-				token_content := line_content.runes()[t.start()..t.end()]
-				match t.t_type() {
-					.comment {
-						ctx.set_color(m.theme.syntax_comment)
-					}
-					.string {
-						ctx.set_color(m.theme.syntax_string)
-					}
-					.number {
-						ctx.set_color(tea.Color.ansi(199))
-					}
-					else {
-						match true {
-							token_content.string() in m.lang_syn.keywords {
-								ctx.set_color(m.theme.petal_red)
-							}
-							token_content.string() in m.lang_syn.literals {
-								ctx.set_color(m.theme.syntax_literal)
-							}
-							token_content.string() in m.lang_syn.builtins {
-								ctx.set_color(m.theme.syntax_builtin)
-							}
-							else {}
-						}
-						prev_token := if i - 1 >= 0 { ?syntax.Token(line_tokens[i - 1]) } else { ?syntax.Token(none) }
-						next_token := if i + 1 < line_tokens.len { ?syntax.Token(line_tokens[i + 1]) } else { ?syntax.Token(none) }
-
-						if pt := prev_token {
-							if pt.t_type() != .whitespace && line_content.runes()[pt.start()..pt.end()].string() == '_' { ctx.reset_color() }
-						} else {
-							if nt := next_token {
-								if nt.t_type() != .whitespace && line_content.runes()[nt.start()..nt.end()].string() == '_' { ctx.reset_color() }
-							}
-						}
-
-					}
+		// fill reusable rune buffer instead of allocating via .runes()
+		m.rune_buf.clear()
+		for r in line_content.runes_iterator() {
+			m.rune_buf << r
+		}
+		for i, t in line_tokens {
+			token_str := m.arena.runes_to_str(m.rune_buf, t.start(), t.end())
+			match t.t_type() {
+				.comment {
+					ctx.set_color(m.theme.syntax_comment)
 				}
-				ctx.draw_text(0, y - m.min_y, token_content.string())
-				ctx.push_offset(tea.Offset{ x: utf8_str_visible_length(token_content.string()) })
-				ctx.reset_color()
+				.string {
+					ctx.set_color(m.theme.syntax_string)
+				}
+				.number {
+					ctx.set_color(tea.Color.ansi(199))
+				}
+				else {
+					match true {
+						token_str in m.lang_syn.keywords {
+							ctx.set_color(m.theme.petal_red)
+						}
+						token_str in m.lang_syn.literals {
+							ctx.set_color(m.theme.syntax_literal)
+						}
+						token_str in m.lang_syn.builtins {
+							ctx.set_color(m.theme.syntax_builtin)
+						}
+						else {}
+					}
+					prev_token := if i - 1 >= 0 { ?syntax.Token(line_tokens[i - 1]) } else { ?syntax.Token(none) }
+					next_token := if i + 1 < line_tokens.len { ?syntax.Token(line_tokens[i + 1]) } else { ?syntax.Token(none) }
+
+					if pt := prev_token {
+						if pt.t_type() != .whitespace && pt.end() - pt.start() == 1 && m.rune_buf[pt.start()] == `_` { ctx.reset_color() }
+					} else {
+						if nt := next_token {
+							if nt.t_type() != .whitespace && nt.end() - nt.start() == 1 && m.rune_buf[nt.start()] == `_` { ctx.reset_color() }
+						}
+					}
+
+				}
 			}
+			ctx.draw_text(0, y - m.min_y, token_str)
+			ctx.push_offset(tea.Offset{ x: utf8_str_visible_length(token_str) })
+			ctx.reset_color()
 		}
 	}
 
@@ -465,7 +482,11 @@ fn (m EditorModel) height() int {
 
 fn (m EditorModel) clone() tea.Model {
 	assert m.file_path.len != 0
-	return EditorModel{
+	mut c := EditorModel{
 		...m
 	}
+	// each clone gets its own arena, lazily initialized on first view()
+	c.arena = Arena{}
+	c.rune_buf = []rune{}
+	return c
 }
