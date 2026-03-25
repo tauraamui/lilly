@@ -366,21 +366,33 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 					.string {
 						ctx.set_color(m.theme.syntax_string)
 					}
+					.number {
+						ctx.set_color(tea.Color.ansi(199))
+					}
 					else {
-						if token_content.string() in m.lang_syn.keywords {
-							ctx.set_color(m.theme.petal_red)
+						match true {
+							token_content.string() in m.lang_syn.keywords {
+								ctx.set_color(m.theme.petal_red)
+							}
+							token_content.string() in m.lang_syn.literals {
+								ctx.set_color(m.theme.syntax_literal)
+							}
+							token_content.string() in m.lang_syn.builtins {
+								ctx.set_color(m.theme.syntax_builtin)
+							}
+							else {}
+						}
+						prev_token := if i - 1 >= 0 { ?syntax.Token(line_tokens[i - 1]) } else { ?syntax.Token(none) }
+						next_token := if i + 1 < line_tokens.len { ?syntax.Token(line_tokens[i + 1]) } else { ?syntax.Token(none) }
 
-							prev_token := if i - 1 >= 0 { ?syntax.Token(line_tokens[i - 1]) } else { ?syntax.Token(none) }
-							next_token := if i + 1 < line_tokens.len { ?syntax.Token(line_tokens[i + 1]) } else { ?syntax.Token(none) }
-
-							if pt := prev_token {
-								if pt.t_type() != .whitespace && line_content.runes()[pt.start()..pt.end()].string() == '_' { ctx.reset_color() }
-							} else {
-								if nt := next_token {
-									if nt.t_type() != .whitespace && line_content.runes()[nt.start()..nt.end()].string() == '_' { ctx.reset_color() }
-								}
+						if pt := prev_token {
+							if pt.t_type() != .whitespace && line_content.runes()[pt.start()..pt.end()].string() == '_' { ctx.reset_color() }
+						} else {
+							if nt := next_token {
+								if nt.t_type() != .whitespace && line_content.runes()[nt.start()..nt.end()].string() == '_' { ctx.reset_color() }
 							}
 						}
+
 					}
 				}
 				ctx.draw_text(0, y - m.min_y, token_content.string())

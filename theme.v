@@ -28,6 +28,8 @@ pub:
 
 	syntax_comment tea.Color @[required]
 	syntax_string  tea.Color @[required]
+	syntax_literal tea.Color @[required]
+	syntax_builtin tea.Color @[required]
 }
 
 const dark_petal_pink = tea.Color.ansi(219)
@@ -54,6 +56,8 @@ pub const dark_theme = Theme{
 
 	syntax_comment: tea.Color.ansi(241)
 	syntax_string: dark_petal_pink
+	syntax_literal: tea.Color.ansi(84)
+	syntax_builtin: dark_petal_red
 }
 
 const light_petal_pink = tea.Color.ansi(200)
@@ -81,5 +85,7 @@ pub const light_theme = Theme{
 
 	syntax_comment: light_subtle_light_grey
 	syntax_string: light_petal_pink
-
+	syntax_literal: light_petal_green
+	syntax_builtin: dark_theme.petal_red
 }
+
