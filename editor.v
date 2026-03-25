@@ -336,9 +336,28 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 		ctx.push_offset(tea.Offset{ x: 1 })
 	}
 
+	m.syn_parser.reset()
 	for y, l in m.doc_controller.get_iterator(m.doc_id) {
+		offset_id := ctx.push_offset(tea.Offset{ x: 0 })
+		defer { ctx.clear_offsets_from(offset_id) }
+		line_content := l.string().expand_tabs(tab_width)
+		line_tokens := m.syn_parser.parse_line(y, line_content)
 		if y >= m.min_y && y < m.min_y + m.height {
-			ctx.draw_text(0, y - m.min_y, l.string().expand_tabs(tab_width))
+			for t in line_tokens {
+				match t.t_type() {
+					.comment {
+						ctx.set_color(tea.Color.ansi(241))
+					}
+					.string {
+						ctx.set_color(tea.Color.ansi(126))
+					}
+					else {}
+				}
+				token_content := line_content.runes()[t.start()..t.end()]
+				ctx.draw_text(0, y - m.min_y, token_content.string())
+				ctx.push_offset(tea.Offset{ x: token_content.len })
+				ctx.reset_color()
+			}
 		}
 	}
 
