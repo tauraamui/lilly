@@ -4,6 +4,7 @@ import tauraamui.bobatea as tea
 import petal
 import palette
 import documents
+import lib.syntax
 
 pub const tab_width = 4
 
@@ -28,6 +29,7 @@ mut:
 	min_y  int
 
 	doc_controller &documents.Controller
+	syn_parser     syntax.Parser
 }
 
 struct OpenEditorMsg {
@@ -79,6 +81,7 @@ fn EditorModel.new(id int, file_path string, doc_id int, doc_controller &documen
 		file_path:      file_path
 		doc_id:         doc_id
 		doc_controller: doc_controller
+		syn_parser:     syntax.Parser{}
 	}
 }
 

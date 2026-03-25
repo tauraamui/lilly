@@ -34,6 +34,12 @@ pub:
 	builtins   []string
 }
 
+pub fn v_syntax() !Syntax {
+	return json.decode(Syntax, builtin_v_syntax) or {
+		error('builtin V syntax file failed to decode: ${err}')
+	}
+}
+
 pub fn load_builtin_syntaxes() []Syntax {
 	v_syntax := json.decode(Syntax, builtin_v_syntax) or {
 		panic('builtin V syntax file failed to decode: ${err}')

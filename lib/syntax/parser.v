@@ -64,18 +64,11 @@ struct LineInfo {
 }
 
 pub struct Parser {
-	l_syntax []Syntax
 mut:
 	state         State
 	pending_token ?Token
 	tokens        []Token
 	line_info     []LineInfo
-}
-
-pub fn Parser.new(syn []Syntax) Parser {
-	return Parser{
-		l_syntax: syn
-	}
 }
 
 pub fn (mut parser Parser) reset() {
