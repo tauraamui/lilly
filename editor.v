@@ -361,10 +361,10 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 				token_content := line_content.runes()[t.start()..t.end()]
 				match t.t_type() {
 					.comment {
-						ctx.set_color(m.theme.subtle_light_grey)
+						ctx.set_color(m.theme.syntax_comment)
 					}
 					.string {
-						ctx.set_color(m.theme.petal_pink)
+						ctx.set_color(m.theme.syntax_string)
 					}
 					else {
 						if token_content.string() in m.lang_syn.keywords {
