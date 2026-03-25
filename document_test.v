@@ -168,6 +168,53 @@ fn test_doc_move_cursor_to_previous_word_start() {
 	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(0, 1)) == cursor.Pos.new(18, 0)
 }
 
+const mock_punct_content := 'abc() {'
+
+fn test_doc_move_cursor_to_previous_word_start_with_punct() {
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_punct_content.runes())
+	}
+
+	// backward from { should land on )
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(6, 0)) == cursor.Pos.new(4, 0)
+	// backward from ) should land on (
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(4, 0)) == cursor.Pos.new(3, 0)
+	// backward from ( should land on start of abc
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(3, 0)) == cursor.Pos.new(0, 0)
+}
+
+fn test_doc_move_cursor_to_next_word_start_with_punct() {
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_punct_content.runes())
+	}
+
+	// forward from abc should land on (
+	assert d.move_cursor_to_next_word_start(cursor.Pos.new(0, 0)) == cursor.Pos.new(3, 0)
+	// forward from ( should land on )
+	assert d.move_cursor_to_next_word_start(cursor.Pos.new(3, 0)) == cursor.Pos.new(4, 0)
+	// forward from ) should land on {
+	assert d.move_cursor_to_next_word_start(cursor.Pos.new(4, 0)) == cursor.Pos.new(6, 0)
+}
+
+const mock_crossline_punct_content := 'struct EditorModel {
+	id int'
+
+fn test_doc_move_cursor_to_previous_word_start_cross_line_lands_on_brace() {
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_crossline_punct_content.runes())
+	}
+
+	// backward from start of 'id' on line 1 should land on { on line 0
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(1, 1)) == cursor.Pos.new(19, 0)
+	// backward from { should land on start of EditorModel
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(19, 0)) == cursor.Pos.new(7, 0)
+	// backward from EditorModel should land on start of struct
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(7, 0)) == cursor.Pos.new(0, 0)
+}
+
 const mock_multiline_content_with_blanks = 'This is the first line.
 This is the second line.
 
