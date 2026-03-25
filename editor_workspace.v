@@ -452,7 +452,12 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				return m.clone(), tea.batch_array(cmds)
 			}
 
-			mut e_model := EditorModel.new(editor_id, msg.file_path, doc_id, m.doc_controller)
+			mut e_model := EditorModel.new(
+				id: editor_id,
+				theme: m.theme,
+				file_path: msg.file_path,
+				doc_id: doc_id,
+				doc_controller: m.doc_controller)
 			cmd := e_model.init()
 
 			if m.split_tree.is_empty() {
@@ -478,8 +483,13 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			if info := m.split_tree.get_active_editor() {
 				old_id := info.id // get the old ID before inserting
 				new_id := m.next_editor_id()
-				mut new_editor := EditorModel.new(new_id, info.file_path, info.doc_id,
-					m.doc_controller)
+				mut new_editor := EditorModel.new(
+					id: new_id,
+					theme: m.theme
+					file_path: info.file_path,
+					doc_id: info.doc_id,
+					doc_controller: m.doc_controller
+				)
 				if init_cmd := new_editor.init() {
 					cmds << init_cmd
 				}

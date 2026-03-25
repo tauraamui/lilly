@@ -341,8 +341,18 @@ fn (d Document) move_cursor_to_previous_blank_line(pos cursor.Pos) cursor.Pos {
 }
 
 fn (d Document) visual_cursor_pos(pos cursor.Pos, tab_width int) cursor.Pos {
-	tab_count := d.data.get_line_at(y: pos.y) or { return pos }[..pos.x].count('\t')
-	return pos.x((pos.x - tab_count) + (tab_count * tab_width))
+	line := d.data.get_line_at(y: pos.y) or { return pos }
+	runes := line.runes()
+	prefix := runes[..pos.x]
+	mut visual_x := 0
+	for r in prefix {
+		if r == `\t` {
+			visual_x += tab_width
+		} else {
+			visual_x += utf8_str_visible_length(r.str())
+		}
+	}
+	return pos.x(visual_x)
 }
 
 

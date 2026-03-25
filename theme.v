@@ -25,6 +25,11 @@ pub:
 	status_cyan   tea.Color @[required]
 	status_orange tea.Color @[required]
 	status_lilac  tea.Color @[required]
+
+	syntax_comment tea.Color @[required]
+	syntax_string  tea.Color @[required]
+	syntax_literal tea.Color @[required]
+	syntax_builtin tea.Color @[required]
 }
 
 const dark_petal_pink = tea.Color.ansi(219)
@@ -48,6 +53,11 @@ pub const dark_theme = Theme{
 	status_cyan:   tea.Color.ansi(117)
 	status_orange: tea.Color.ansi(222)
 	status_lilac:  tea.Color.ansi(134)
+
+	syntax_comment: tea.Color.ansi(241)
+	syntax_string: dark_petal_pink
+	syntax_literal: tea.Color.ansi(84)
+	syntax_builtin: dark_petal_red
 }
 
 const light_petal_pink = tea.Color.ansi(200)
@@ -72,4 +82,10 @@ pub const light_theme = Theme{
 	status_cyan:   tea.Color.ansi(117)
 	status_orange: tea.Color.ansi(222)
 	status_lilac:  tea.Color.ansi(134)
+
+	syntax_comment: light_subtle_light_grey
+	syntax_string: light_petal_pink
+	syntax_literal: light_petal_green
+	syntax_builtin: dark_theme.petal_red
 }
+
