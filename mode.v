@@ -36,6 +36,6 @@ pub fn (m Mode) str() string {
 		.visual { 'VISUAL' }
 		.visual_line { 'VISUAL LINE' }
 		.navigation { 'NAVIGATION' }
-		.pending_delete { 'PENDING DEL' }
+		.pending_delete { 'NORMAL' }
 	}
 }

@@ -185,7 +185,17 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							else {}
 						}
 					}
-					else {}
+					.runes {
+						match msg.key_msg.string() {
+							'd' {
+								m.doc_controller.delete_line(m.doc_id)
+								cmds << switch_mode(.normal)
+								m.ensure_cursor_visible()
+								return m.clone(), tea.batch_array(cmds)
+							}
+							else {}
+						}
+					}
 				}
 			}
 			.normal {
