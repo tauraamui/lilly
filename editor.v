@@ -199,6 +199,17 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 				}
 			}
+			.visual_line {
+				match msg.key_msg.k_type {
+					.special {
+						match msg.key_msg.string() {
+							'escape' { cmds << switch_mode(.normal) }
+							else {}
+						}
+					}
+					.runes {}
+				}
+			}
 			.normal {
 				match msg.key_msg.k_type {
 					.runes {
@@ -249,6 +260,9 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							}
 							'd' {
 								cmds << switch_mode(.pending_delete)
+							}
+							'V' {
+								cmds << switch_mode(.visual_line)
 							}
 							else {}
 						}
