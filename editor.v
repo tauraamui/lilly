@@ -291,6 +291,33 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 					.special {
 						match msg.key_msg.string() {
+							'ctrl+u' {
+								half := m.height / 2
+								m.min_y -= half
+								if m.min_y < 0 {
+									m.min_y = 0
+								}
+								target_y := m.min_y + m.height / 4
+								current_y := m.doc_controller.cursor_pos(m.doc_id).y
+								if current_y > target_y {
+									m.doc_controller.move_cursor_up_by(m.doc_id, current_y - target_y, .normal)
+								} else {
+									m.doc_controller.move_cursor_down_by(m.doc_id, target_y - current_y, .normal)
+								}
+								m.ensure_cursor_visible()
+							}
+							'ctrl+d' {
+								half := m.height / 2
+								m.min_y += half
+								target_y := m.min_y + m.height * 3 / 4
+								current_y := m.doc_controller.cursor_pos(m.doc_id).y
+								if current_y < target_y {
+									m.doc_controller.move_cursor_down_by(m.doc_id, target_y - current_y, .normal)
+								} else {
+									m.doc_controller.move_cursor_up_by(m.doc_id, current_y - target_y, .normal)
+								}
+								m.ensure_cursor_visible()
+							}
 							'delete' {
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
 									cmds << raise_error('error: ${err}')

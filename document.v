@@ -73,6 +73,28 @@ pub fn (mut c Controller) move_cursor_down(doc_id int, mode petal.Mode) {
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_down(pos, mode)
 }
 
+pub fn (mut c Controller) move_cursor_up_by(doc_id int, count int, mode petal.Mode) {
+	for _ in 0 .. count {
+		pos := c.cursors[doc_id]
+		new_pos := c.docs[doc_id].move_cursor_up(pos, mode)
+		if new_pos == pos {
+			break
+		}
+		c.cursors[doc_id] = new_pos
+	}
+}
+
+pub fn (mut c Controller) move_cursor_down_by(doc_id int, count int, mode petal.Mode) {
+	for _ in 0 .. count {
+		pos := c.cursors[doc_id]
+		new_pos := c.docs[doc_id].move_cursor_down(pos, mode)
+		if new_pos == pos {
+			break
+		}
+		c.cursors[doc_id] = new_pos
+	}
+}
+
 pub fn (mut c Controller) move_cursor_right(doc_id int, mode petal.Mode) {
 	pos := c.cursors[doc_id]
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_right(pos, mode)
