@@ -395,8 +395,10 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 		m.arena = Arena.new(512 * 1024)
 	}
 	m.arena.reset()
-
 	m.token_parser.reset()
+
+	cursor_pos_y := m.doc_controller.visual_cursor_pos(m.doc_id, tab_width).y
+	m.render_cursor_line_highlight(mut ctx, cursor_pos_y)
 	for y, l in m.doc_controller.get_iterator(m.doc_id) {
 		visible := y >= m.min_y && y < m.min_y + m.height
 		if !visible {
@@ -455,12 +457,19 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 			ctx.draw_text(0, y - m.min_y, token_str)
 			ctx.push_offset(tea.Offset{ x: utf8_str_visible_length(token_str) })
 			ctx.reset_color()
+			ctx.reset_bg_color()
 		}
 	}
 
 	if m.focused {
 		m.render_cursor(mut ctx)
 	}
+}
+
+fn (m EditorModel) render_cursor_line_highlight(mut ctx tea.Context, cursor_pos_y int) {
+	ctx.set_bg_color(m.theme.cursor_line_bg)
+	defer { ctx.reset_bg_color() }
+	ctx.draw_rect(0, cursor_pos_y - m.min_y, m.width, 1)
 }
 
 fn (m EditorModel) render_cursor(mut ctx tea.Context) {
