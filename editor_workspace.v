@@ -79,12 +79,15 @@ fn (mut m EditorWorkspaceModel) init() ?tea.Cmd {
 }
 
 struct SwitchModeMsg {
+	from petal.Mode
 	mode petal.Mode
 }
 
 fn switch_mode(mode petal.Mode) tea.Cmd {
 	return fn [mode] () tea.Msg {
-		return SwitchModeMsg{mode}
+		return SwitchModeMsg{
+			mode: mode
+		}
 	}
 }
 
@@ -613,7 +616,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					m.input_field.blur()
 				}
 			}
-			if u_cmd := m.forward_msg_to_editors(msg) {
+			enriched_msg := SwitchModeMsg{ from: m.mode, mode: msg.mode }
+			if u_cmd := m.forward_msg_to_editors(enriched_msg) {
 				cmds << u_cmd
 			}
 			return m.clone_with_mode(msg.mode), tea.batch_array(cmds)
