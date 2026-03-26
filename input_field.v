@@ -155,7 +155,7 @@ pub fn (m InputField) view(mut r_ctx tea.Context) {
 		defer { l_ctx.clear_clip_area() }
 
 		left_right_border_cells_to_deduct_from_rects_full_width := 2
-		l_ctx.draw_rect(0, 0, width - left_right_border_cells_to_deduct_from_rects_full_width,
+		l_ctx.clear_area(0, 0, width - left_right_border_cells_to_deduct_from_rects_full_width,
 			1)
 		l_ctx.draw_text(0, 0, input_prefix)
 

@@ -55,7 +55,7 @@ fn (mut m VersionModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 }
 
 fn (m VersionModel) view(mut r_ctx tea.Context) {
-	r_ctx.draw_rect(0, 0, m.width, m.height)
+	r_ctx.clear_area(0, 0, m.width, m.height)
 	width := m.width - 2
 	height := m.height - 2
 
