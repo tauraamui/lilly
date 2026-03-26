@@ -5,6 +5,7 @@ import theme
 import petal
 import palette
 import documents
+import lib.documents.cursor
 import lib.syntax
 
 pub const tab_width = 4
@@ -36,6 +37,8 @@ mut:
 	lang_syn       syntax.Syntax
 	arena          Arena
 	rune_buf       []rune
+
+	sel_start_pos  ?cursor.Pos
 }
 
 struct OpenEditorMsg {
@@ -204,10 +207,29 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					.special {
 						match msg.key_msg.string() {
 							'escape' { cmds << switch_mode(.normal) }
+							'up' { m.doc_controller.move_cursor_up(m.doc_id, .visual_line) }
+							'down' { m.doc_controller.move_cursor_down(m.doc_id, .visual_line) }
+							'k' { m.doc_controller.move_cursor_up(m.doc_id, .visual_line) }
+							'j' { m.doc_controller.move_cursor_down(m.doc_id, .visual_line) }
 							else {}
 						}
 					}
-					.runes {}
+					.runes {
+						match msg.key_msg.string() {
+							'k' { m.doc_controller.move_cursor_up(m.doc_id, .visual_line) }
+							'j' { m.doc_controller.move_cursor_down(m.doc_id, .visual_line) }
+							'd' {
+								if sel_start := m.sel_start_pos {
+									m.doc_controller.delete_range(m.doc_id, cursor.Range{
+										start: sel_start
+										end:   m.doc_controller.cursor_pos(m.doc_id)
+									})
+									cmds << switch_mode(.normal)
+								}
+							}
+							else {}
+						}
+					}
 				}
 			}
 			.normal {
@@ -320,6 +342,10 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					} else {
 						m.doc_controller.move_cursor_left(m.doc_id, .normal)
 					}
+					m.sel_start_pos = ?cursor.Pos(none)
+				}
+				.visual_line {
+					m.sel_start_pos = m.doc_controller.cursor_pos(m.doc_id)
 				}
 				else {}
 			}
@@ -398,7 +424,12 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 	m.token_parser.reset()
 
 	cursor_pos_y := m.doc_controller.visual_cursor_pos(m.doc_id, tab_width).y
-	m.render_cursor_line_highlight(mut ctx, cursor_pos_y)
+	if sel_start := m.sel_start_pos {
+		m.render_visual_line_selection(mut ctx, sel_start.y, cursor_pos_y)
+	} else {
+		m.render_cursor_line_highlight(mut ctx, cursor_pos_y)
+	}
+
 	for y, l in m.doc_controller.get_iterator(m.doc_id) {
 		visible := y >= m.min_y && y < m.min_y + m.height
 		if !visible {
@@ -457,7 +488,6 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 			ctx.draw_text(0, y - m.min_y, token_str)
 			ctx.push_offset(tea.Offset{ x: utf8_str_visible_length(token_str) })
 			ctx.reset_color()
-			ctx.reset_bg_color()
 		}
 	}
 
@@ -470,6 +500,19 @@ fn (m EditorModel) render_cursor_line_highlight(mut ctx tea.Context, cursor_pos_
 	ctx.set_bg_color(m.theme.cursor_line_bg)
 	defer { ctx.reset_bg_color() }
 	ctx.draw_rect(0, cursor_pos_y - m.min_y, m.width, 1)
+}
+
+fn (m EditorModel) render_visual_line_selection(mut ctx tea.Context, sel_start_y int, cursor_y int) {
+	start_y := if sel_start_y < cursor_y { sel_start_y } else { cursor_y }
+	end_y := if sel_start_y > cursor_y { sel_start_y } else { cursor_y }
+	ctx.set_bg_color(m.theme.highlight_bg_color)
+	defer { ctx.reset_bg_color() }
+	for y in start_y .. end_y + 1 {
+		screen_y := y - m.min_y
+		if screen_y >= 0 && screen_y < m.height {
+			ctx.draw_rect(0, screen_y, m.width, 1)
+		}
+	}
 }
 
 fn (m EditorModel) render_cursor(mut ctx tea.Context) {

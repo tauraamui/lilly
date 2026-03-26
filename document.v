@@ -121,6 +121,10 @@ pub fn (mut c Controller) delete_line(doc_id int) {
 	c.cursors[doc_id] = c.docs[doc_id].delete_line(c.cursors[doc_id])
 }
 
+pub fn (mut c Controller) delete_range(doc_id int, range cursor.Range) {
+	c.cursors[doc_id] = c.docs[doc_id].delete_range(range)
+}
+
 pub fn (c Controller) leading_whitespace_on_current_line(doc_id int) []rune {
 	pos := c.cursors[doc_id]
 	current_line := c.docs[doc_id].data.get_line_at(y: pos.y) or { return [] }
@@ -404,6 +408,46 @@ fn (mut d Document) delete_line(pos cursor.Pos) cursor.Pos {
 		d.prepare_for_insertion_at(cursor.Pos.new(0, line_y)) or { return pos.x(0).y(line_y) }
 		d.data.delete_after_n(line_len)
 		return cursor.Pos.new(0, line_y)
+	}
+}
+
+fn (mut d Document) delete_range(range cursor.Range) cursor.Pos {
+	start_y := if range.start.y < range.end.y { range.start.y } else { range.end.y }
+	end_y := if range.start.y > range.end.y { range.start.y } else { range.end.y }
+
+	// Calculate total runes to delete: all line contents + newlines between them
+	mut total_len := 0
+	for y in start_y .. end_y + 1 {
+		line := d.data.get_line_at(y: y) or { continue }
+		total_len += line.runes().len
+		if y < end_y {
+			total_len += 1 // newline separator
+		}
+	}
+
+	has_next_line := d.data.get_line_at(y: end_y + 1) != none
+	has_prev_line := start_y > 0
+
+	if has_next_line {
+		// Delete range content + trailing newline
+		d.prepare_for_insertion_at(cursor.Pos.new(0, start_y)) or { return cursor.Pos.new(0, start_y) }
+		d.data.delete_after_n(total_len + 1)
+		return cursor.Pos.new(0, start_y)
+	} else if has_prev_line {
+		// Last lines: delete preceding newline + range content
+		prev_line := d.data.get_line_at(y: start_y - 1) or { return cursor.Pos.new(0, start_y) }
+		prev_line_len := prev_line.runes().len
+		d.prepare_for_insertion_at(cursor.Pos.new(prev_line_len, start_y - 1)) or { return cursor.Pos.new(0, start_y) }
+		d.data.delete_after_n(1 + total_len)
+		return cursor.Pos.new(0, start_y - 1)
+	} else {
+		// Only lines in document: just clear them
+		if total_len == 0 {
+			return cursor.Pos.new(0, 0)
+		}
+		d.prepare_for_insertion_at(cursor.Pos.new(0, 0)) or { return cursor.Pos.new(0, 0) }
+		d.data.delete_after_n(total_len)
+		return cursor.Pos.new(0, 0)
 	}
 }
 

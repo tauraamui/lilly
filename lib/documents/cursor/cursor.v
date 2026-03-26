@@ -36,3 +36,9 @@ pub fn (p Pos) y(y int) Pos {
 		largest_x: p.largest_x
 	}
 }
+
+pub struct Range {
+pub:
+	start Pos
+	end   Pos
+}
