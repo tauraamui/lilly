@@ -23,8 +23,9 @@ struct EditorModel {
 	theme     theme.Theme
 	file_path string
 mut:
-	focused     bool
-	show_border bool = true
+	focused        bool
+	show_border    bool = true
+	cursor_underline bool
 
 	width  int
 	height int
@@ -177,6 +178,27 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 				}
 			}
+			.pending_delete {
+				match msg.key_msg.k_type {
+					.special {
+						match msg.key_msg.string() {
+							'escape' { cmds << switch_mode(.normal) }
+							else {}
+						}
+					}
+					.runes {
+						match msg.key_msg.string() {
+							'd' {
+								m.doc_controller.delete_line(m.doc_id)
+								cmds << switch_mode(.normal)
+								m.ensure_cursor_visible()
+								return m.clone(), tea.batch_array(cmds)
+							}
+							else {}
+						}
+					}
+				}
+			}
 			.normal {
 				match msg.key_msg.k_type {
 					.runes {
@@ -224,6 +246,9 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							}
 							'l' {
 								m.doc_controller.move_cursor_right(m.doc_id, .normal)
+							}
+							'd' {
+								cmds << switch_mode(.pending_delete)
 							}
 							else {}
 						}
@@ -426,14 +451,24 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 
 fn (m EditorModel) render_cursor(mut ctx tea.Context) {
 	cursor_pos := m.doc_controller.visual_cursor_pos(m.doc_id, tab_width)
-	// basically we want the block cursor to be the inverse of the background shade
-	// and then the text/fg color to be the inverse of that/the same as background
-	default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
-	ctx.set_bg_color(palette.fg_color(default_bg_color))
-	ctx.set_color(default_bg_color)
-	ctx.draw_text(cursor_pos.x, cursor_pos.y - m.min_y, m.doc_controller.get_char_at(m.doc_id) or { ' ' }.expand_tabs(tab_width))
-	ctx.reset_bg_color()
-	ctx.reset_color()
+	char_at := m.doc_controller.get_char_at(m.doc_id) or { ' ' }.expand_tabs(tab_width)
+	if m.cursor_underline {
+		default_fg_color := ctx.get_default_fg_color() or { palette.matte_white_fg_color }
+		ctx.set_color(default_fg_color)
+		ctx.set_style(.underline)
+		ctx.draw_text(cursor_pos.x, cursor_pos.y - m.min_y, char_at)
+		ctx.clear_style()
+		ctx.reset_color()
+	} else {
+		// basically we want the block cursor to be the inverse of the background shade
+		// and then the text/fg color to be the inverse of that/the same as background
+		default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
+		ctx.set_bg_color(palette.fg_color(default_bg_color))
+		ctx.set_color(default_bg_color)
+		ctx.draw_text(cursor_pos.x, cursor_pos.y - m.min_y, char_at)
+		ctx.reset_bg_color()
+		ctx.reset_color()
+	}
 }
 
 fn (mut m EditorModel) ensure_cursor_visible() {

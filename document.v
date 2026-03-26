@@ -117,6 +117,10 @@ pub fn (mut c Controller) clear_line(doc_id int) {
 	c.cursors[doc_id] = c.docs[doc_id].clear_line(c.cursors[doc_id])
 }
 
+pub fn (mut c Controller) delete_line(doc_id int) {
+	c.cursors[doc_id] = c.docs[doc_id].delete_line(c.cursors[doc_id])
+}
+
 pub fn (c Controller) leading_whitespace_on_current_line(doc_id int) []rune {
 	pos := c.cursors[doc_id]
 	current_line := c.docs[doc_id].data.get_line_at(y: pos.y) or { return [] }
@@ -371,6 +375,36 @@ fn (mut d Document) clear_line(pos cursor.Pos) cursor.Pos {
 	d.data.delete_after_n(line_len)
 
 	return pos.x(0).y(line_y)
+}
+
+fn (mut d Document) delete_line(pos cursor.Pos) cursor.Pos {
+	line_y := pos.y
+	line := d.data.get_line_at(y: line_y) or { return pos.x(0).y(line_y) }
+	line_len := line.runes().len
+	has_next_line := d.data.get_line_at(y: line_y + 1) != none
+	has_prev_line := line_y > 0
+
+	if has_next_line {
+		// delete line content + trailing newline
+		d.prepare_for_insertion_at(cursor.Pos.new(0, line_y)) or { return pos.x(0).y(line_y) }
+		d.data.delete_after_n(line_len + 1)
+		return cursor.Pos.new(0, line_y)
+	} else if has_prev_line {
+		// last line: delete preceding newline + line content
+		prev_line := d.data.get_line_at(y: line_y - 1) or { return pos.x(0).y(line_y) }
+		prev_line_len := prev_line.runes().len
+		d.prepare_for_insertion_at(cursor.Pos.new(prev_line_len, line_y - 1)) or { return pos.x(0).y(line_y) }
+		d.data.delete_after_n(1 + line_len)
+		return cursor.Pos.new(0, line_y - 1)
+	} else {
+		// only line in document: just clear it
+		if line_len == 0 {
+			return pos.x(0).y(line_y)
+		}
+		d.prepare_for_insertion_at(cursor.Pos.new(0, line_y)) or { return pos.x(0).y(line_y) }
+		d.data.delete_after_n(line_len)
+		return cursor.Pos.new(0, line_y)
+	}
 }
 
 fn (mut d Document) delete_before() {
