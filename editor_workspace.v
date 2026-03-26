@@ -307,8 +307,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						m.leader_suffix += msg.string()
 						match m.leader_suffix {
 							'ff' {
-								cmds << switch_mode(.normal)
-								cmds << open_file_picker(m.theme)
+								return m.clone(), tea.sequence(switch_mode(.normal), open_file_picker(m.theme))
 							}
 							else {}
 						}
