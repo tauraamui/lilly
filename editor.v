@@ -218,6 +218,15 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						match msg.key_msg.string() {
 							'k' { m.doc_controller.move_cursor_up(m.doc_id, .visual_line) }
 							'j' { m.doc_controller.move_cursor_down(m.doc_id, .visual_line) }
+							'd' {
+								if sel_start := m.sel_start_pos {
+									m.doc_controller.delete_range(m.doc_id, cursor.Range{
+										start: sel_start
+										end:   m.doc_controller.cursor_pos(m.doc_id)
+									})
+									cmds << switch_mode(.normal)
+								}
+							}
 							else {}
 						}
 					}
