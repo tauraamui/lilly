@@ -690,6 +690,9 @@ fn (m EditorWorkspaceModel) view(mut ctx tea.Context) {
 
 			offset_id := ctx.push_offset(tea.Offset{ x: rect.x, y: rect.y })
 
+			if mut editor is EditorModel {
+				editor.cursor_underline = m.mode == .pending_delete
+			}
 			editor.view(mut ctx)
 
 			ctx.clear_offsets_from(offset_id)
