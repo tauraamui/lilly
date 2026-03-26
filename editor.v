@@ -399,6 +399,7 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 
 	cursor_pos_y := m.doc_controller.visual_cursor_pos(m.doc_id, tab_width).y
 	m.render_cursor_line_highlight(mut ctx, cursor_pos_y)
+
 	for y, l in m.doc_controller.get_iterator(m.doc_id) {
 		visible := y >= m.min_y && y < m.min_y + m.height
 		if !visible {
@@ -457,7 +458,6 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 			ctx.draw_text(0, y - m.min_y, token_str)
 			ctx.push_offset(tea.Offset{ x: utf8_str_visible_length(token_str) })
 			ctx.reset_color()
-			ctx.reset_bg_color()
 		}
 	}
 
