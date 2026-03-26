@@ -327,7 +327,7 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 		max_height := height - 2
 		ctx.set_clip_area(tea.ClipArea{0, 0, max_width - 1, max_height})
 		defer { ctx.clear_clip_area() }
-		ctx.draw_rect(0, 0, max_width, max_height)
+		ctx.clear_area(0, 0, max_width, max_height)
 
 		if m.loading {
 			ctx.set_color(m.theme.subtle_light_grey)
@@ -385,7 +385,7 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 		return
 	}
 	// wipe existing rendered cells "behind" the modal
-	ctx.draw_rect(0, 0, m.width, m.height)
+	ctx.clear_area(0, 0, m.width, m.height)
 
 	max_results_height := m.height - 3
 	m.render_file_results_pane(mut ctx, m.width, max_results_height, m.theme.petal_pink)
