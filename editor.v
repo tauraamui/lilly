@@ -283,6 +283,9 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							'd' {
 								cmds << switch_mode(.pending_delete)
 							}
+							'x' {
+								m.doc_controller.delete_char_at(m.doc_id)
+							}
 							'V' {
 								cmds << switch_mode(.visual_line)
 							}

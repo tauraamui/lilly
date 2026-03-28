@@ -180,6 +180,10 @@ pub fn (mut c Controller) backspace(doc_id int) {
 	c.cursors[doc_id] = new_pos
 }
 
+pub fn (mut c Controller) delete_char_at(doc_id int) {
+	c.delete(doc_id)
+}
+
 pub fn (mut c Controller) delete(doc_id int) {
 	pos := c.cursors[doc_id]
 	current_line := c.docs[doc_id].data.get_line_at(y: pos.y) or { return }
