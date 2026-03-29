@@ -32,18 +32,32 @@ mut:
 	set_content(content ClipboardContent)
 }
 
-pub fn new() Clipboard {
+@[heap]
+pub struct Manager {
+mut:
+	backend Clipboard
+}
+
+pub fn new() Manager {
 	$if test {
-		return new_fallback_clipboard()
+		return Manager{ backend: new_fallback_clipboard() }
 	}
 
 	$if darwin {
-		return new_darwin_clipboard()
+		return Manager{ backend: new_darwin_clipboard() }
 	}
 
 	$if linux {
-		return new_linux_clipboard()
+		return Manager{ backend: new_linux_clipboard() }
 	}
 
-	return new_osc52_clipboard()
+	return Manager{ backend: new_osc52_clipboard() }
+}
+
+pub fn (mut m Manager) get_content() ?ClipboardContent {
+	return m.backend.get_content()
+}
+
+pub fn (mut m Manager) set_content(content ClipboardContent) {
+	m.backend.set_content(content)
 }

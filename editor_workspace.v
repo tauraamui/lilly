@@ -24,6 +24,7 @@ import lib.petal.theme
 import palette
 import glyphs
 import lib.documents
+import lib.clipboard
 
 struct EditorWorkspaceModel {
 	initial_file_path string
@@ -45,6 +46,7 @@ mut:
 	last_window_height int
 
 	doc_controller     &documents.Controller
+	cb                 &clipboard.Manager
 	active_editor_data ?EditorData
 	branch_name        string
 	leader_suffix      string
@@ -78,12 +80,13 @@ fn open_editor_workspace(initial_file_path string) tea.Cmd {
 	}
 }
 
-fn EditorWorkspaceModel.new(ttheme theme.Theme, initial_file_path string, doc_controller &documents.Controller) EditorWorkspaceModel {
+fn EditorWorkspaceModel.new(ttheme theme.Theme, initial_file_path string, doc_controller &documents.Controller, cb &clipboard.Manager) EditorWorkspaceModel {
 	return EditorWorkspaceModel{
 		theme:             ttheme
 		initial_file_path: initial_file_path
 		split_tree:        boba.SplitTree.new()
 		doc_controller:    doc_controller
+		cb:                cb
 	}
 }
 
@@ -473,7 +476,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				theme: m.theme,
 				file_path: msg.file_path,
 				doc_id: doc_id,
-				doc_controller: m.doc_controller)
+				doc_controller: m.doc_controller,
+				cb: m.cb)
 			cmd := e_model.init()
 
 			if m.split_tree.is_empty() {
@@ -504,7 +508,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					theme: m.theme
 					file_path: info.file_path,
 					doc_id: info.doc_id,
-					doc_controller: m.doc_controller
+					doc_controller: m.doc_controller,
+					cb: m.cb
 				)
 				if init_cmd := new_editor.init() {
 					cmds << init_cmd

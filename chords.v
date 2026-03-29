@@ -173,6 +173,8 @@ fn (c Chord) single_char_motion(ch u8) ?string {
 		`}` { '}' }
 		`x` { 'x' }
 		`V` { 'V' }
+		`p` { 'p' }
+		`P` { 'P' }
 		else { none }
 	}
 }

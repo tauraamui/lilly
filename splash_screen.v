@@ -20,6 +20,7 @@ import tauraamui.bobatea as tea
 import palette
 import lib.petal.theme
 import lib.documents
+import lib.clipboard
 
 const gitcommit_hash = $embed_file('.githash').to_string()
 
@@ -39,6 +40,7 @@ struct SplashScreenOptions {
 	leader_key     string
 	theme          theme.Theme
 	doc_controller &documents.Controller
+	cb             &clipboard.Manager
 }
 
 struct SplashScreenModel {
@@ -46,6 +48,7 @@ struct SplashScreenModel {
 	logo           SplashLogo
 	theme          theme.Theme
 	doc_controller &documents.Controller
+	cb             &clipboard.Manager
 mut:
 	window_width int
 	window_height int
@@ -63,6 +66,7 @@ fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
 			data: logo_contents.to_string().split_into_lines()
 		}
 		doc_controller: opts.doc_controller
+		cb:             opts.cb
 	}
 }
 
@@ -173,7 +177,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		OpenEditorWorkspaceMsg {
 			mut workspace := EditorWorkspaceModel.new(m.theme, msg.initial_file_path,
-				m.doc_controller)
+				m.doc_controller, m.cb)
 			cmd := workspace.init()
 			if u_cmd := cmd {
 				cmds << u_cmd

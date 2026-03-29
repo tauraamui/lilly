@@ -20,6 +20,7 @@ import lib.petal.theme
 import cfg
 import palette
 import lib.documents
+import lib.clipboard
 
 const dot = '•'
 
@@ -36,7 +37,7 @@ mut:
 	last_resize_height      int
 }
 
-fn PetalModel.new(config cfg.Config, doc_controller &documents.Controller) PetalModel {
+fn PetalModel.new(config cfg.Config, doc_controller &documents.Controller, cb &clipboard.Manager) PetalModel {
 	return PetalModel{
 		config:        config
 		theme:         config.theme
@@ -45,6 +46,7 @@ fn PetalModel.new(config cfg.Config, doc_controller &documents.Controller) Petal
 			leader_key:     config.leader_key
 			theme:          config.theme
 			doc_controller: doc_controller
+			cb:             cb
 		)
 	}
 }

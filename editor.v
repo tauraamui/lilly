@@ -21,6 +21,7 @@ import palette
 import lib.documents
 import lib.documents.cursor
 import lib.syntax
+import lib.clipboard
 
 pub const tab_width = 4
 
@@ -48,6 +49,7 @@ mut:
 	min_y  int
 
 	doc_controller &documents.Controller
+	cb             &clipboard.Manager
 	token_parser   syntax.Parser
 	lang_syn       syntax.Syntax
 	arena          Arena
@@ -106,6 +108,7 @@ struct EditorModelNewParams {
 	file_path string
 	doc_id int
 	doc_controller &documents.Controller
+	cb             &clipboard.Manager
 }
 
 fn EditorModel.new(opts EditorModelNewParams) EditorModel {
@@ -116,6 +119,7 @@ fn EditorModel.new(opts EditorModelNewParams) EditorModel {
 		doc_id:         opts.doc_id
 		theme:          opts.theme
 		doc_controller: opts.doc_controller
+		cb:             opts.cb
 		token_parser:   syntax.Parser{}
 		lang_syn:       syntax.v_syntax() or { panic('unable to resolve v language syntax') }
 	}
@@ -215,10 +219,17 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							'j' { m.doc_controller.move_cursor_down(m.doc_id, .visual_line) }
 							'd' {
 								if sel_start := m.sel_start_pos {
+									m.yank_visual_line_selection(sel_start)
 									m.doc_controller.delete_range(m.doc_id, cursor.Range{
 										start: sel_start
 										end:   m.doc_controller.cursor_pos(m.doc_id)
 									})
+									cmds << switch_mode(.normal)
+								}
+							}
+							'y' {
+								if sel_start := m.sel_start_pos {
+									m.yank_visual_line_selection(sel_start)
 									cmds << switch_mode(.normal)
 								}
 							}
@@ -536,6 +547,7 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 			`d` {
 				match action.motion {
 					'line' {
+						m.yank_lines(count)
 						for _ in 0..count {
 							m.doc_controller.delete_line(m.doc_id)
 						}
@@ -543,6 +555,14 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 					'w' {
 						// TODO(tauraamui)
 						// delete word N times
+					}
+					else {}
+				}
+			}
+			`y` {
+				match action.motion {
+					'line' {
+						m.yank_lines(count)
 					}
 					else {}
 				}
@@ -639,7 +659,153 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 			'V' {
 				cmds << switch_mode(.visual_line)
 			}
+			'p' {
+				m.paste_after()
+			}
+			'P' {
+				m.paste_before()
+			}
 			else {}
+		}
+	}
+}
+
+fn (mut m EditorModel) yank_visual_line_selection(sel_start cursor.Pos) {
+	current_pos := m.doc_controller.cursor_pos(m.doc_id)
+	start_y := if sel_start.y < current_pos.y { sel_start.y } else { current_pos.y }
+	end_y := if sel_start.y > current_pos.y { sel_start.y } else { current_pos.y }
+	mut lines := []string{}
+	for y in start_y .. end_y + 1 {
+		if line := m.doc_controller.get_line_at(m.doc_id, y) {
+			lines << line
+		}
+	}
+	if lines.len > 0 {
+		m.cb.set_content(clipboard.ClipboardContent{
+			data: lines.join('\n')
+			@type: .block
+		})
+	}
+}
+
+fn (mut m EditorModel) yank_lines(count int) {
+	cursor_pos := m.doc_controller.cursor_pos(m.doc_id)
+	mut lines := []string{}
+	for i in 0 .. count {
+		if line := m.doc_controller.get_line_at(m.doc_id, cursor_pos.y + i) {
+			lines << line
+		}
+	}
+	if lines.len > 0 {
+		m.cb.set_content(clipboard.ClipboardContent{
+			data: lines.join('\n')
+			@type: .block
+		})
+	}
+}
+
+fn (mut m EditorModel) paste_after() {
+	content := m.cb.get_content() or { return }
+	if content.data.len == 0 { return }
+
+	match content.@type {
+		.block {
+			// Block paste: insert as new lines below current line
+			cursor_pos := m.doc_controller.cursor_pos(m.doc_id)
+			m.doc_controller.move_cursor_to_line_end(m.doc_id, .insert)
+			m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+			for line in content.data.split('\n') {
+				m.doc_controller.insert_newline(m.doc_id)
+				for cr in line.runes() {
+					m.doc_controller.insert_char(m.doc_id, cr)
+				}
+			}
+			// Move cursor to start of first pasted line
+			m.doc_controller.move_cursor_down_by(m.doc_id, 1, .normal)
+			_ = cursor_pos // suppress unused warning
+		}
+		.inline {
+			// Inline paste: insert text after cursor
+			m.doc_controller.move_cursor_right(m.doc_id, .insert)
+			m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+			for cr in content.data.runes() {
+				if cr == `\n` {
+					m.doc_controller.insert_newline(m.doc_id)
+				} else {
+					m.doc_controller.insert_char(m.doc_id, cr)
+				}
+			}
+		}
+		.none {
+			// Treat unknown as inline
+			m.doc_controller.move_cursor_right(m.doc_id, .insert)
+			m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+			for cr in content.data.runes() {
+				if cr == `\n` {
+					m.doc_controller.insert_newline(m.doc_id)
+				} else {
+					m.doc_controller.insert_char(m.doc_id, cr)
+				}
+			}
+		}
+	}
+}
+
+fn (mut m EditorModel) paste_before() {
+	content := m.cb.get_content() or { return }
+	if content.data.len == 0 { return }
+
+	match content.@type {
+		.block {
+			// Block paste: insert as new lines above current line
+			cursor_pos := m.doc_controller.cursor_pos(m.doc_id)
+			if cursor_pos.y == 0 {
+				// At first line: insert newline then move content up
+				m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+				// Move to start of first line, insert content then a newline
+				for line in content.data.split('\n') {
+					for cr in line.runes() {
+						m.doc_controller.insert_char(m.doc_id, cr)
+					}
+					m.doc_controller.insert_newline(m.doc_id)
+				}
+				// Move cursor back to start of first pasted line
+				m.doc_controller.move_cursor_up_by(m.doc_id, content.data.split('\n').len, .normal)
+			} else {
+				// Move to end of previous line and insert new lines
+				m.doc_controller.move_cursor_up(m.doc_id, .normal)
+				m.doc_controller.move_cursor_to_line_end(m.doc_id, .insert)
+				m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+				for line in content.data.split('\n') {
+					m.doc_controller.insert_newline(m.doc_id)
+					for cr in line.runes() {
+						m.doc_controller.insert_char(m.doc_id, cr)
+					}
+				}
+				// Move cursor to start of first pasted line
+				m.doc_controller.move_cursor_up_by(m.doc_id, content.data.split('\n').len - 1, .normal)
+			}
+		}
+		.inline {
+			// Inline paste: insert text before cursor
+			m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+			for cr in content.data.runes() {
+				if cr == `\n` {
+					m.doc_controller.insert_newline(m.doc_id)
+				} else {
+					m.doc_controller.insert_char(m.doc_id, cr)
+				}
+			}
+		}
+		.none {
+			m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+			for cr in content.data.runes() {
+				if cr == `\n` {
+					m.doc_controller.insert_newline(m.doc_id)
+				} else {
+					m.doc_controller.insert_char(m.doc_id, cr)
+				}
+			}
 		}
 	}
 }
