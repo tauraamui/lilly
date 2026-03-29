@@ -526,6 +526,9 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					tea.emit_resize)
 			}
 		}
+		// TODO(tauraamui) [29/03/26]: should query editor data to check for dirty bit and if 1
+		// should ask for user confirmation re: saving and continuing to close or keep
+		// editor pane open instead
 		CloseActiveSplitMsg {
 			old_id := m.split_tree.active_editor_id
 			if m.split_tree.close_active_split() {
