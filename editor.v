@@ -225,6 +225,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						match msg.key_msg.string() {
 							'escape' {
 								m.chord.reset()
+								cmds << editor_data(m.data())
 							}
 							'ctrl+u' {
 								half := m.height / 2
