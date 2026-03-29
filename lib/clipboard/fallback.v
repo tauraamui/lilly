@@ -12,26 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module files
+module clipboard
 
-const mock_small_list = [
-	'test-file.txt',
-	'main.v',
-	'main_test.v',
-	'foo.v',
-	'bar.v',
-	'.gitignore',
-]
-
-fn mock_lister(root string) ![]string {
-	return mock_small_list
+struct FallbackClipboard {
+mut:
+	content ?ClipboardContent
 }
 
-fn test_stdlib_search() {
-	stdlib_finder := StdlibBasedFinder{
-		ls:    mock_lister
-		files: mock_small_list.clone()
-	}
-	// stdlib_finder.search("./dev/null")
-	assert stdlib_finder.files() == mock_small_list
+fn new_fallback_clipboard() Clipboard {
+	return FallbackClipboard{}
+}
+
+fn (mut cb FallbackClipboard) get_content() ?ClipboardContent {
+	return cb.content
+}
+
+fn (mut cb FallbackClipboard) set_content(content ClipboardContent) {
+	cb.content = content
 }

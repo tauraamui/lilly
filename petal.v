@@ -1,3 +1,17 @@
+// Copyright 2026 The Lilly Edtior contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 module main
 
 import os
@@ -6,6 +20,7 @@ import lib.petal.theme
 import cfg
 import palette
 import lib.documents
+import lib.clipboard
 
 const dot = '•'
 
@@ -22,7 +37,7 @@ mut:
 	last_resize_height      int
 }
 
-fn PetalModel.new(config cfg.Config, doc_controller &documents.Controller) PetalModel {
+fn PetalModel.new(config cfg.Config, doc_controller &documents.Controller, cb &clipboard.Manager) PetalModel {
 	return PetalModel{
 		config:        config
 		theme:         config.theme
@@ -31,6 +46,7 @@ fn PetalModel.new(config cfg.Config, doc_controller &documents.Controller) Petal
 			leader_key:     config.leader_key
 			theme:          config.theme
 			doc_controller: doc_controller
+			cb:             cb
 		)
 	}
 }
