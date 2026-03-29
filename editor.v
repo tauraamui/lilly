@@ -202,6 +202,25 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 				}
 			}
+			.pending_g {
+				match msg.key_msg.k_type {
+					.special {
+						match msg.key_msg.string() {
+							'escape' { cmds << switch_mode(.normal) }
+							else {}
+						}
+					}
+					.runes {
+						match msg.key_msg.string() {
+							'e' {
+								m.doc_controller.move_cursor_to_previous_word_end(m.doc_id)
+								cmds << switch_mode(.normal)
+							}
+							else { cmds << switch_mode(.normal) }
+						}
+					}
+				}
+			}
 			.visual_line {
 				match msg.key_msg.k_type {
 					.special {
@@ -256,8 +275,14 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							'w' {
 								m.doc_controller.move_cursor_to_next_word_start(m.doc_id)
 							}
+							'e' {
+								m.doc_controller.move_cursor_to_next_word_end(m.doc_id)
+							}
 							'b' {
 								m.doc_controller.move_cursor_to_previous_word_start(m.doc_id)
+							}
+							'g' {
+								cmds << switch_mode(.pending_g)
 							}
 							'$' {
 								m.doc_controller.move_cursor_to_line_end(m.doc_id, .normal)
@@ -366,7 +391,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 				}
 				.normal {
-					if msg.from != .command {
+					if msg.from != .command && msg.from != .pending_delete && msg.from != .pending_g {
 						current_line := m.doc_controller.get_line_at(m.doc_id, m.doc_controller.cursor_pos(m.doc_id).y) or { '' }
 						if current_line.len > 0 && current_line.trim_space().len == 0 {
 							m.doc_controller.clear_line(m.doc_id)

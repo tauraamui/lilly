@@ -110,6 +110,16 @@ pub fn (mut c Controller) move_cursor_to_previous_word_start(doc_id int) {
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_previous_word_start(pos)
 }
 
+pub fn (mut c Controller) move_cursor_to_next_word_end(doc_id int) {
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_word_end(pos)
+}
+
+pub fn (mut c Controller) move_cursor_to_previous_word_end(doc_id int) {
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_previous_word_end(pos)
+}
+
 pub fn (mut c Controller) move_cursor_to_line_end(doc_id int, mode petal.Mode) {
 	pos := c.cursors[doc_id]
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_line_end(pos, mode)
@@ -328,6 +338,38 @@ fn (d Document) move_cursor_to_previous_word_start(pos cursor.Pos) cursor.Pos {
 		}
 		prev_y := next_pos.y - 1
 
+		if prev_y < 0 { return pos }
+		prev_line := d.data.get_line_at(y: prev_y) or { return pos }
+		line_len := prev_line.runes().len
+		if line_len == 0 {
+			next_pos = cursor.Pos.new(0, prev_y)
+		} else {
+			next_pos = cursor.Pos.new(line_len - 1, prev_y)
+		}
+	}
+	return pos
+}
+
+fn (d Document) move_cursor_to_next_word_end(pos cursor.Pos) cursor.Pos {
+	mut next_pos := pos
+	for {
+		if next_word_end_pos := scan_to_next_word_end(d.data, next_pos, pos.y) {
+			return next_word_end_pos
+		}
+		next_y := next_pos.y + 1
+		_ = d.data.get_line_at(y: next_y) or { return pos }
+		next_pos = next_pos.x(0).y(next_y)
+	}
+	return pos
+}
+
+fn (d Document) move_cursor_to_previous_word_end(pos cursor.Pos) cursor.Pos {
+	mut next_pos := pos
+	for {
+		if prev_word_end_pos := scan_to_previous_word_end(d.data, next_pos, pos.y) {
+			return prev_word_end_pos
+		}
+		prev_y := next_pos.y - 1
 		if prev_y < 0 { return pos }
 		prev_line := d.data.get_line_at(y: prev_y) or { return pos }
 		line_len := prev_line.runes().len
@@ -587,6 +629,73 @@ fn scan_to_previous_word_start(data buffers.GapBuffer, pos cursor.Pos, source_y 
 	}
 
 	return pos
+}
+
+fn scan_to_next_word_end(data buffers.GapBuffer, pos cursor.Pos, source_y int) ?cursor.Pos {
+	current_line := data.get_line_at(y: pos.y) or { return pos }
+	runes := current_line.runes()
+
+	if pos.y != source_y && pos.x == 0 {
+		if runes.len == 0 { return pos }
+	}
+
+	start := if pos.y == source_y { pos.x + 1 } else { pos.x }
+	if start >= runes.len { return none }
+
+	mut x := start
+	// skip whitespace
+	for x < runes.len && CharType.resolve(runes[x]) == .whitespace { x++ }
+	if x >= runes.len { return none }
+
+	// find end of word class
+	word_class := CharType.resolve(runes[x])
+	for x + 1 < runes.len && CharType.resolve(runes[x + 1]) == word_class { x++ }
+
+	return cursor.Pos.new(x, pos.y)
+}
+
+fn scan_to_previous_word_end(data buffers.GapBuffer, pos cursor.Pos, source_y int) ?cursor.Pos {
+	current_line := data.get_line_at(y: pos.y) or { return pos }
+	runes := current_line.runes()
+
+	if pos.y != source_y {
+		if runes.len == 0 { return pos }
+		// cross-line: find last non-whitespace char on this line
+		mut x := runes.len - 1
+		for x >= 0 && CharType.resolve(runes[x]) == .whitespace { x-- }
+		if x < 0 { return none }
+		return cursor.Pos.new(x, pos.y)
+	}
+
+	if pos.x <= 0 { return none }
+
+	mut x := pos.x - 1
+	curr_class := CharType.resolve(runes[x])
+
+	if curr_class == .whitespace {
+		// skip whitespace backward
+		for x >= 0 && CharType.resolve(runes[x]) == .whitespace { x-- }
+		if x < 0 { return none }
+		return cursor.Pos.new(x, pos.y)
+	}
+
+	orig_class := CharType.resolve(runes[pos.x])
+	if curr_class != orig_class {
+		// stepped into different class — x is a word end
+		return cursor.Pos.new(x, pos.y)
+	}
+
+	// same class — skip backward past current word
+	for x >= 0 && CharType.resolve(runes[x]) == curr_class { x-- }
+	if x < 0 { return none }
+
+	// skip whitespace if present
+	if CharType.resolve(runes[x]) == .whitespace {
+		for x >= 0 && CharType.resolve(runes[x]) == .whitespace { x-- }
+		if x < 0 { return none }
+	}
+
+	return cursor.Pos.new(x, pos.y)
 }
 
 struct CharScanner {
