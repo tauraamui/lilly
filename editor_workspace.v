@@ -225,16 +225,45 @@ fn pwd_git_branch_name(branch_name string) tea.Cmd {
 }
 
 fn resolve_git_branch_name(execute fn (cmd string) os.Result) string {
-	$if darwin {
-		return '(not supported on macos)'
-	}
 	prefix := '\uE0A0'
+	$if darwin {
+		// return '(not supported on macos)'
+		branch := read_git_branch_from_head_file()
+		if branch.len == 0 {
+			return ''
+		}
+		return '${prefix} ${branch}'
+	}
 	wt := spawn currently_in_worktree(execute)
 	in_wt := wt.wait()
 	if in_wt {
 		gb := spawn get_branch(execute)
 		branch := gb.wait()
 		return '${prefix} ${branch}'
+	}
+	return ''
+}
+
+fn read_git_branch_from_head_file() string {
+	mut dir := os.getwd()
+	for {
+		head_path := os.join_path(dir, '.git', 'HEAD')
+		if os.exists(head_path) {
+			content := os.read_file(head_path) or { return '' }
+			trimmed := content.trim_space()
+			if trimmed.starts_with('ref: refs/heads/') {
+				return trimmed.all_after('ref: refs/heads/')
+			}
+			if trimmed.len >= 7 {
+				return trimmed[..7]
+			}
+			return trimmed
+		}
+		parent := os.dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
 	}
 	return ''
 }
