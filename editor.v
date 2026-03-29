@@ -25,6 +25,17 @@ import lib.clipboard
 
 pub const tab_width = 4
 
+fn num_digits(n int) int {
+	if n <= 0 { return 1 }
+	mut count := 0
+	mut v := n
+	for v > 0 {
+		count++
+		v /= 10
+	}
+	return count
+}
+
 struct EditorData {
 	id            int
 	file_path     string
@@ -464,6 +475,13 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 	m.arena.reset()
 	m.token_parser.reset()
 
+	// compute fixed gutter width based on the largest visible line number (1-based)
+	max_line_nr := m.min_y + m.height
+	gutter_width := num_digits(max_line_nr) + 1 // +1 for padding after the number
+
+	// push gutter offset so selections, cursor highlight, and cursor are all shifted right
+	ctx.push_offset(tea.Offset{ x: gutter_width })
+
 	cursor_vpos := m.doc_controller.visual_cursor_pos(m.doc_id, tab_width)
 	if sel_start := m.sel_start_pos {
 		if m.sel_mode == .visual {
@@ -483,6 +501,11 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 			m.token_parser.parse_line(y, l.string())
 			continue
 		}
+		// draw right-aligned line number in the gutter area (negative x to draw before the offset)
+		line_nr := '${y + 1}'
+		ctx.set_color(m.theme.syntax_comment)
+		ctx.draw_text(-1 - line_nr.len, y - m.min_y, line_nr)
+		ctx.reset_color()
 		offset_id := ctx.push_offset(tea.Offset{ x: 0 })
 		defer { ctx.clear_offsets_from(offset_id) }
 		line_str := l.string()
