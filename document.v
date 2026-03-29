@@ -310,7 +310,9 @@ fn (d Document) move_cursor_to_next_word_start(pos cursor.Pos) cursor.Pos {
 		if next_word_start_pos := scan_to_next_word_start(d.data, next_pos, pos.y) {
 			return next_word_start_pos
 		}
-		next_pos = next_pos.x(0).y(next_pos.y + 1)
+		next_y := next_pos.y + 1
+		_ = d.data.get_line_at(y: next_y) or { return pos }
+		next_pos = next_pos.x(0).y(next_y)
 	}
 	return pos
 }
@@ -492,44 +494,28 @@ pub fn (d Document) iter() LineIterator {
 enum CursorSituation {
 	within_word
 	within_whitespace
-	within_punct
-	within_symbol
-	unknown
+	within_other
 }
 
 pub enum CharType {
 	alpha_num
 	whitespace
-	punctuation
-	symbol
-	unknown
+	other
 }
 
 pub fn CharType.resolve(c rune) CharType {
 	return match true {
-		is_punct(c) { .punctuation }
-		is_symbol(c) { .symbol }
 		utf8.is_space(c) { .whitespace }
 		is_alpha_num(c) { .alpha_num }
-		utf8.is_control(c) { .unknown }
-		else { .unknown }
+		else { .other }
 	}
-}
-
-fn find_next_diff_skip_whitespace(mut c_scanner CharScanner, pos cursor.Pos, diff ScanResult) ?cursor.Pos {
-	post_current_char_diff := c_scanner.next_diff() or { return none }
-	if post_current_char_diff.next_type == .whitespace {
-		post_whitespace_diff := c_scanner.next_diff() or { return none }
-		return cursor.Pos.new(post_whitespace_diff.index, pos.y)
-	}
-	return cursor.Pos.new(diff.index, pos.y)
 }
 
 fn scan_to_next_word_start(data buffers.GapBuffer, pos cursor.Pos, source_y int) ?cursor.Pos {
 	current_line := data.get_line_at(y: pos.y) or { return pos }
 
 	if pos.y != source_y && pos.x == 0 {
-		if current_line.len == 0 { return none }
+		if current_line.len == 0 { return pos }
 		if CharType.resolve(current_line[pos.x]) != .whitespace {
 			return pos
 		}
@@ -538,38 +524,14 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos cursor.Pos, source_y int)
 	mut c_scanner := CharScanner{ last_index: pos.x, data: current_line.runes() }
 	diff := c_scanner.next_diff() or { return none }
 
-	if diff.start_type == .alpha_num {
-		if diff.next_type == .whitespace {
-			post_whitespace_diff := c_scanner.next_diff() or { return none }
-			return cursor.Pos.new(post_whitespace_diff.index, pos.y)
-		}
-		return cursor.Pos.new(diff.index, pos.y)
+	if diff.next_type == .whitespace {
+		post_whitespace_diff := c_scanner.next_diff() or { return none }
+		return cursor.Pos.new(post_whitespace_diff.index, pos.y)
 	}
-
 	if diff.start_type == .whitespace {
 		return cursor.Pos.new(diff.index, pos.y)
 	}
-
-	if diff.start_type == .punctuation {
-		if diff.next_type == .symbol {
-			return find_next_diff_skip_whitespace(mut c_scanner, pos, diff)
-		}
-		if diff.next_type == .whitespace {
-			post_whitespace_diff := c_scanner.next_diff() or { return none }
-			return cursor.Pos.new(post_whitespace_diff.index, pos.y)
-		}
-		return cursor.Pos.new(diff.index, pos.y)
-	}
-
-	if diff.start_type == .symbol {
-		if diff.next_type == .whitespace {
-			post_whitespace_diff := c_scanner.next_diff() or { return none }
-			return cursor.Pos.new(post_whitespace_diff.index, pos.y)
-		}
-		return cursor.Pos.new(diff.index, pos.y)
-	}
-
-	return pos
+	return cursor.Pos.new(diff.index, pos.y)
 }
 
 fn find_prev_token_start(mut c_scanner CharScanner, y int) ?cursor.Pos {
@@ -586,7 +548,7 @@ fn scan_to_previous_word_start(data buffers.GapBuffer, pos cursor.Pos, source_y 
 	current_line := data.get_line_at(y: pos.y) or { return pos }
 
 	if pos.y != source_y {
-		if current_line.len == 0 { return none }
+		if current_line.len == 0 { return pos }
 		if pos.x == 0 {
 			if CharType.resolve(current_line[pos.x]) != .whitespace {
 				return pos
@@ -598,7 +560,6 @@ fn scan_to_previous_word_start(data buffers.GapBuffer, pos cursor.Pos, source_y 
 				for i := pos.x - 1; i >= 0; i-- {
 					ci_type := CharType.resolve(current_line[i])
 					if ci_type != c_type { break }
-					if (c_type == .punctuation || c_type == .symbol) && current_line[i] != current_line[pos.x] { break }
 					word_start = i
 				}
 				return cursor.Pos.new(word_start, pos.y)
@@ -609,31 +570,16 @@ fn scan_to_previous_word_start(data buffers.GapBuffer, pos cursor.Pos, source_y 
 	mut c_scanner := CharScanner{ last_index: pos.x, data: current_line.runes() }
 	diff := c_scanner.prev_diff() or { return none }
 
-	if diff.start_type == .alpha_num {
+	if diff.start_type == .alpha_num || diff.start_type == .other {
 		if pre := diff.pre_diff {
 			return cursor.Pos.new(pre.index, pos.y)
-		}
-		if diff.next_type == .punctuation || diff.next_type == .symbol {
-			return cursor.Pos.new(diff.index, pos.y)
 		}
 		if diff.next_type == .whitespace {
 			c_scanner.prev_diff() or { return none }
 			return find_prev_token_start(mut c_scanner, pos.y)
 		}
-	}
-
-	if diff.start_type == .punctuation || diff.start_type == .symbol {
-		if pre := diff.pre_diff {
-			return cursor.Pos.new(pre.index, pos.y)
-		}
-		if diff.next_type == .alpha_num {
-			return find_prev_token_start(mut c_scanner, pos.y)
-		}
-		if diff.next_type == .whitespace {
-			c_scanner.prev_diff() or { return none }
-			return find_prev_token_start(mut c_scanner, pos.y)
-		}
-		return cursor.Pos.new(diff.index, pos.y)
+		// crossed to other non-whitespace class — find start of that word
+		return find_prev_token_start(mut c_scanner, pos.y)
 	}
 
 	if diff.start_type == .whitespace {
@@ -681,12 +627,6 @@ fn (mut s CharScanner) prev_diff() ?ScanResult {
 			s.last_index = i
 			return ScanResult{ index: i, cchar: c, cchar_str: c.str(), pre_diff: pre_diff_char, start_type: start_type, next_type: c_type }
 		}
-		if c_type == .symbol || c_type == .punctuation {
-			if c != s.data[s.last_index] {
-				s.last_index = i
-				return ScanResult{ index: i, cchar: c, cchar_str: c.str(), pre_diff: pre_diff_char, start_type: start_type, next_type: c_type }
-			}
-		}
 	}
 	return none
 }
@@ -701,12 +641,6 @@ fn (mut s CharScanner) next_diff() ?ScanResult {
 			s.last_index = i
 			return ScanResult{ index: i, cchar: c, cchar_str: c.str(), start_type: start_type, next_type: c_type }
 		}
-		if c_type == .symbol || c_type == .punctuation {
-			if c != s.data[s.last_index] {
-				s.last_index = i
-				return ScanResult{ index: i, cchar: c, cchar_str: c.str(), start_type: start_type, next_type: c_type }
-			}
-		}
 	}
 	return none
 }
@@ -715,13 +649,6 @@ pub fn is_alpha_num(c rune) bool {
 	return utf8.is_letter(c) || utf8.is_number(c) || c == '_'.runes()[0]
 }
 
-pub fn is_punct(c rune) bool {
-	return utf8.is_rune_punct(c) || utf8.is_rune_global_punct(c)
-}
-
-pub fn is_symbol(c rune) bool {
-	return !(utf8.is_space(c) || is_alpha_num(c) || is_punct(c) || utf8.is_control(c))
-}
 
 pub interface LineIterator {
 mut:
