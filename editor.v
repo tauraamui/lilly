@@ -11,10 +11,11 @@ import lib.syntax
 pub const tab_width = 4
 
 struct EditorData {
-	id         int
-	file_path  string
-	cursor_row int
-	cursor_col int
+	id            int
+	file_path     string
+	cursor_row    int
+	cursor_col    int
+	chord_display string
 }
 
 struct EditorModel {
@@ -144,7 +145,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							}
 							'backspace' { m.doc_controller.backspace(m.doc_id) }
 							'delete' { m.doc_controller.delete(m.doc_id) }
-							'ctrl+i' { m.doc_controller.insert_char(m.doc_id, `\t`) }
+							'ctrl+i' { m.doc_controller.insert_char(m.doc_id, `\t`) } // ctrl+i is apparently equiv to TAB
 							'left' {
 								m.doc_controller.move_cursor_left(m.doc_id, .insert)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
@@ -649,6 +650,8 @@ fn (m EditorModel) data() EditorData {
 
 		cursor_row: cursor_pos.y
 		cursor_col: cursor_pos.x
+
+		chord_display: m.chord.display()
 	}
 }
 

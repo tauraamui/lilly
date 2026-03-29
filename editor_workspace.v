@@ -838,6 +838,19 @@ fn (m EditorWorkspaceModel) render_leader_or_command_user_input_text(mut ctx tea
 			m.input_field.view(mut ctx)
 			ctx.pop_offset()
 		}
+		.normal {
+			if d := m.active_editor_data {
+				if d.chord_display.len > 0 {
+					ctx.set_color(palette.subtle_text_fg_color)
+					ctx.draw_text(
+						ctx.window_width() - tea.visible_len(d.chord_display) - 1,
+						ctx.window_height() - 1,
+						d.chord_display
+					)
+					ctx.reset_color()
+				}
+			}
+		}
 		else {}
 	}
 }
