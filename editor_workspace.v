@@ -690,14 +690,8 @@ fn (m EditorWorkspaceModel) view(mut ctx tea.Context) {
 		if mut editor := m.editors[rect.editor_id] {
 			// set clip area for this specific split
 			ctx.set_clip_area(tea.ClipArea{rect.x, rect.y, rect.width, rect.height})
-
 			offset_id := ctx.push_offset(tea.Offset{ x: rect.x, y: rect.y })
-
-			if mut editor is EditorModel {
-				editor.cursor_underline = m.mode == .pending_delete || m.mode == .pending_g
-			}
 			editor.view(mut ctx)
-
 			ctx.clear_offsets_from(offset_id)
 			ctx.clear_clip_area() // clear after each split
 		}
@@ -843,6 +837,19 @@ fn (m EditorWorkspaceModel) render_leader_or_command_user_input_text(mut ctx tea
 			ctx.push_offset(tea.Offset{ y: ctx.window_height() - 1 })
 			m.input_field.view(mut ctx)
 			ctx.pop_offset()
+		}
+		.normal {
+			if d := m.active_editor_data {
+				if d.chord_display.len > 0 {
+					ctx.set_color(palette.subtle_text_fg_color)
+					ctx.draw_text(
+						ctx.window_width() - tea.visible_len(d.chord_display) - 1,
+						ctx.window_height() - 1,
+						d.chord_display
+					)
+					ctx.reset_color()
+				}
+			}
 		}
 		else {}
 	}
