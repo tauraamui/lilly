@@ -176,11 +176,9 @@ fn test_doc_move_cursor_to_previous_word_start_with_punct() {
 		data: buffers.GapBuffer.new(content: mock_punct_content.runes())
 	}
 
-	// backward from { should land on )
-	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(6, 0)) == cursor.Pos.new(4, 0)
-	// backward from ) should land on (
-	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(4, 0)) == cursor.Pos.new(3, 0)
-	// backward from ( should land on start of abc
+	// backward from { should land on start of ()
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(6, 0)) == cursor.Pos.new(3, 0)
+	// backward from () should land on start of abc
 	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(3, 0)) == cursor.Pos.new(0, 0)
 }
 
@@ -192,10 +190,8 @@ fn test_doc_move_cursor_to_next_word_start_with_punct() {
 
 	// forward from abc should land on (
 	assert d.move_cursor_to_next_word_start(cursor.Pos.new(0, 0)) == cursor.Pos.new(3, 0)
-	// forward from ( should land on )
-	assert d.move_cursor_to_next_word_start(cursor.Pos.new(3, 0)) == cursor.Pos.new(4, 0)
-	// forward from ) should land on {
-	assert d.move_cursor_to_next_word_start(cursor.Pos.new(4, 0)) == cursor.Pos.new(6, 0)
+	// forward from () should land on {
+	assert d.move_cursor_to_next_word_start(cursor.Pos.new(3, 0)) == cursor.Pos.new(6, 0)
 }
 
 const mock_crossline_punct_content := 'struct EditorModel {
