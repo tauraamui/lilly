@@ -19,7 +19,7 @@ import os
 import encoding.utf8
 import lib.buffers
 import lib.documents.cursor
-import petal
+import lib.petal
 
 @[heap]
 pub struct Controller {
