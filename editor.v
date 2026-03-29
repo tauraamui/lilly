@@ -56,6 +56,7 @@ mut:
 	rune_buf       []rune
 
 	sel_start_pos  ?cursor.Pos
+	sel_mode       petal.Mode = .normal // tracks which visual mode (.visual or .visual_line)
 	chord Chord
 }
 
@@ -201,6 +202,50 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 				}
 			}
+			.visual {
+				match msg.key_msg.k_type {
+					.special {
+						match msg.key_msg.string() {
+							'escape' { cmds << switch_mode(.normal) }
+							'left' { m.doc_controller.move_cursor_left(m.doc_id, .visual) }
+							'right' { m.doc_controller.move_cursor_right(m.doc_id, .visual) }
+							'up' { m.doc_controller.move_cursor_up(m.doc_id, .visual) }
+							'down' { m.doc_controller.move_cursor_down(m.doc_id, .visual) }
+							else {}
+						}
+					}
+					.runes {
+						match msg.key_msg.string() {
+							'h' { m.doc_controller.move_cursor_left(m.doc_id, .visual) }
+							'l' { m.doc_controller.move_cursor_right(m.doc_id, .visual) }
+							'k' { m.doc_controller.move_cursor_up(m.doc_id, .visual) }
+							'j' { m.doc_controller.move_cursor_down(m.doc_id, .visual) }
+							'w' { m.doc_controller.move_cursor_to_next_word_start(m.doc_id) }
+							'W' { m.doc_controller.move_cursor_to_next_big_word_start(m.doc_id) }
+							'e' { m.doc_controller.move_cursor_to_next_word_end(m.doc_id) }
+							'b' { m.doc_controller.move_cursor_to_previous_word_start(m.doc_id) }
+							'$' { m.doc_controller.move_cursor_to_line_end(m.doc_id, .normal) }
+							'd' {
+								if sel_start := m.sel_start_pos {
+									m.yank_visual_selection(sel_start)
+									m.doc_controller.delete_visual_range(m.doc_id, cursor.Range{
+										start: sel_start
+										end:   m.doc_controller.cursor_pos(m.doc_id)
+									})
+									cmds << switch_mode(.normal)
+								}
+							}
+							'y' {
+								if sel_start := m.sel_start_pos {
+									m.yank_visual_selection(sel_start)
+									cmds << switch_mode(.normal)
+								}
+							}
+							else {}
+						}
+					}
+				}
+			}
 			.visual_line {
 				match msg.key_msg.k_type {
 					.special {
@@ -333,9 +378,15 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						}
 					}
 					m.sel_start_pos = ?cursor.Pos(none)
+					m.sel_mode = .normal
+				}
+				.visual {
+					m.sel_start_pos = m.doc_controller.cursor_pos(m.doc_id)
+					m.sel_mode = .visual
 				}
 				.visual_line {
 					m.sel_start_pos = m.doc_controller.cursor_pos(m.doc_id)
+					m.sel_mode = .visual_line
 				}
 				else {}
 			}
@@ -413,11 +464,16 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 	m.arena.reset()
 	m.token_parser.reset()
 
-	cursor_pos_y := m.doc_controller.visual_cursor_pos(m.doc_id, tab_width).y
+	cursor_vpos := m.doc_controller.visual_cursor_pos(m.doc_id, tab_width)
 	if sel_start := m.sel_start_pos {
-		m.render_visual_line_selection(mut ctx, sel_start.y, cursor_pos_y)
+		if m.sel_mode == .visual {
+			sel_start_vpos := m.doc_controller.visual_pos_for(m.doc_id, sel_start, tab_width)
+			m.render_visual_selection(mut ctx, sel_start_vpos, cursor_vpos)
+		} else {
+			m.render_visual_line_selection(mut ctx, sel_start.y, cursor_vpos.y)
+		}
 	} else {
-		m.render_cursor_line_highlight(mut ctx, cursor_pos_y)
+		m.render_cursor_line_highlight(mut ctx, cursor_vpos.y)
 	}
 
 	for y, l in m.doc_controller.get_iterator(m.doc_id) {
@@ -501,6 +557,50 @@ fn (m EditorModel) render_visual_line_selection(mut ctx tea.Context, sel_start_y
 		screen_y := y - m.min_y
 		if screen_y >= 0 && screen_y < m.height {
 			ctx.draw_rect(0, screen_y, m.width, 1)
+		}
+	}
+}
+
+fn (m EditorModel) render_visual_selection(mut ctx tea.Context, sel_start cursor.Pos, cursor_pos cursor.Pos) {
+	// Normalize so start is before end
+	start := if sel_start.y < cursor_pos.y || (sel_start.y == cursor_pos.y && sel_start.x <= cursor_pos.x) {
+		sel_start
+	} else {
+		cursor_pos
+	}
+	end := if sel_start.y < cursor_pos.y || (sel_start.y == cursor_pos.y && sel_start.x <= cursor_pos.x) {
+		cursor_pos
+	} else {
+		sel_start
+	}
+
+	ctx.set_bg_color(m.theme.highlight_bg_color)
+	defer { ctx.reset_bg_color() }
+
+	if start.y == end.y {
+		// Single line selection
+		screen_y := start.y - m.min_y
+		if screen_y >= 0 && screen_y < m.height {
+			ctx.draw_rect(start.x, screen_y, end.x - start.x + 1, 1)
+		}
+	} else {
+		// Multi-line selection
+		// First line: from start.x to end of line
+		screen_y := start.y - m.min_y
+		if screen_y >= 0 && screen_y < m.height {
+			ctx.draw_rect(start.x, screen_y, m.width - start.x, 1)
+		}
+		// Middle lines: full width
+		for y in start.y + 1 .. end.y {
+			sy := y - m.min_y
+			if sy >= 0 && sy < m.height {
+				ctx.draw_rect(0, sy, m.width, 1)
+			}
+		}
+		// Last line: from start to end.x
+		last_sy := end.y - m.min_y
+		if last_sy >= 0 && last_sy < m.height {
+			ctx.draw_rect(0, last_sy, end.x + 1, 1)
 		}
 	}
 }
@@ -656,6 +756,9 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 					m.doc_controller.move_cursor_down_by(m.doc_id, target - current_y, .normal)
 				}
 			}
+			'v' {
+				cmds << switch_mode(.visual)
+			}
 			'V' {
 				cmds << switch_mode(.visual_line)
 			}
@@ -685,6 +788,58 @@ fn (mut m EditorModel) yank_visual_line_selection(sel_start cursor.Pos) {
 			data: lines.join('\n')
 			@type: .block
 		})
+	}
+}
+
+fn (mut m EditorModel) yank_visual_selection(sel_start cursor.Pos) {
+	current_pos := m.doc_controller.cursor_pos(m.doc_id)
+	// Normalize so start is before end
+	start := if sel_start.y < current_pos.y || (sel_start.y == current_pos.y && sel_start.x <= current_pos.x) {
+		sel_start
+	} else {
+		current_pos
+	}
+	end := if sel_start.y < current_pos.y || (sel_start.y == current_pos.y && sel_start.x <= current_pos.x) {
+		current_pos
+	} else {
+		sel_start
+	}
+
+	if start.y == end.y {
+		// Single line: extract substring
+		if line := m.doc_controller.get_line_at(m.doc_id, start.y) {
+			runes := line.runes()
+			end_x := if end.x < runes.len { end.x } else { runes.len - 1 }
+			if start.x <= end_x {
+				m.cb.set_content(clipboard.ClipboardContent{
+					data: runes[start.x .. end_x + 1].string()
+					@type: .inline
+				})
+			}
+		}
+	} else {
+		// Multi-line: rest of first line + middle lines + start of last line
+		mut parts := []string{}
+		if first_line := m.doc_controller.get_line_at(m.doc_id, start.y) {
+			runes := first_line.runes()
+			parts << runes[start.x ..].string()
+		}
+		for y in start.y + 1 .. end.y {
+			if mid_line := m.doc_controller.get_line_at(m.doc_id, y) {
+				parts << mid_line
+			}
+		}
+		if last_line := m.doc_controller.get_line_at(m.doc_id, end.y) {
+			runes := last_line.runes()
+			end_x := if end.x < runes.len { end.x } else { runes.len - 1 }
+			parts << runes[.. end_x + 1].string()
+		}
+		if parts.len > 0 {
+			m.cb.set_content(clipboard.ClipboardContent{
+				data: parts.join('\n')
+				@type: .inline
+			})
+		}
 	}
 }
 

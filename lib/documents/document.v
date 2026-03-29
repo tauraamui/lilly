@@ -19,7 +19,7 @@ import os
 import encoding.utf8
 import lib.buffers
 import lib.documents.cursor
-import petal
+import lib.petal
 
 @[heap]
 pub struct Controller {
@@ -70,6 +70,10 @@ pub fn (c Controller) cursor_pos(doc_id int) cursor.Pos {
 
 pub fn (c Controller) visual_cursor_pos(doc_id int, tab_width int) cursor.Pos {
 	return c.docs[doc_id].visual_cursor_pos(c.cursors[doc_id], tab_width)
+}
+
+pub fn (c Controller) visual_pos_for(doc_id int, pos cursor.Pos, tab_width int) cursor.Pos {
+	return c.docs[doc_id].visual_cursor_pos(pos, tab_width)
 }
 
 pub fn (mut c Controller) move_cursor_left(doc_id int, mode petal.Mode) {
@@ -174,6 +178,10 @@ pub fn (mut c Controller) delete_line(doc_id int) {
 
 pub fn (mut c Controller) delete_range(doc_id int, range cursor.Range) {
 	c.cursors[doc_id] = c.docs[doc_id].delete_range(range)
+}
+
+pub fn (mut c Controller) delete_visual_range(doc_id int, range cursor.Range) {
+	c.cursors[doc_id] = c.docs[doc_id].delete_visual_range(range)
 }
 
 pub fn (c Controller) leading_whitespace_on_current_line(doc_id int) []rune {
@@ -551,6 +559,59 @@ fn (mut d Document) delete_range(range cursor.Range) cursor.Pos {
 		d.data.delete_after_n(total_len)
 		return cursor.Pos.new(0, 0)
 	}
+}
+
+fn (mut d Document) delete_visual_range(range cursor.Range) cursor.Pos {
+	// Normalize so start is before end
+	start := if range.start.y < range.end.y || (range.start.y == range.end.y && range.start.x <= range.end.x) {
+		range.start
+	} else {
+		range.end
+	}
+	end := if range.start.y < range.end.y || (range.start.y == range.end.y && range.start.x <= range.end.x) {
+		range.end
+	} else {
+		range.start
+	}
+
+	if start.y == end.y {
+		// Single line: delete from start.x to end.x (inclusive)
+		line := d.data.get_line_at(y: start.y) or { return start }
+		line_len := line.runes().len
+		del_start := if start.x < line_len { start.x } else { line_len }
+		del_end := if end.x < line_len { end.x } else { line_len - 1 }
+		count := del_end - del_start + 1
+		if count <= 0 { return start }
+		d.prepare_for_insertion_at(cursor.Pos.new(del_start, start.y)) or { return start }
+		d.data.delete_after_n(count)
+		return cursor.Pos.new(del_start, start.y)
+	}
+
+	// Multi-line: delete from start pos to end pos (inclusive)
+	// Calculate total runes: rest of start line + newlines + middle lines + start of end line
+	mut total := 0
+
+	// Rest of start line from start.x
+	start_line := d.data.get_line_at(y: start.y) or { return start }
+	start_line_len := start_line.runes().len
+	total += start_line_len - start.x
+	total += 1 // newline after start line
+
+	// Full middle lines
+	for y in start.y + 1 .. end.y {
+		mid_line := d.data.get_line_at(y: y) or { continue }
+		total += mid_line.runes().len + 1 // line content + newline
+	}
+
+	// Start of end line up to and including end.x
+	end_line := d.data.get_line_at(y: end.y) or { return start }
+	end_x := if end.x < end_line.runes().len { end.x } else { end_line.runes().len - 1 }
+	total += end_x + 1
+
+	if total <= 0 { return start }
+	d.prepare_for_insertion_at(cursor.Pos.new(start.x, start.y)) or { return start }
+	d.data.delete_after_n(total)
+	return cursor.Pos.new(start.x, start.y)
 }
 
 fn (mut d Document) delete_before() {
