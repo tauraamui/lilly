@@ -39,6 +39,7 @@ mut:
 	rune_buf       []rune
 
 	sel_start_pos  ?cursor.Pos
+	chord Chord
 }
 
 struct OpenEditorMsg {
@@ -181,46 +182,6 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 				}
 			}
-			.pending_delete {
-				match msg.key_msg.k_type {
-					.special {
-						match msg.key_msg.string() {
-							'escape' { cmds << switch_mode(.normal) }
-							else {}
-						}
-					}
-					.runes {
-						match msg.key_msg.string() {
-							'd' {
-								m.doc_controller.delete_line(m.doc_id)
-								cmds << switch_mode(.normal)
-								m.ensure_cursor_visible()
-								return m.clone(), tea.batch_array(cmds)
-							}
-							else {}
-						}
-					}
-				}
-			}
-			.pending_g {
-				match msg.key_msg.k_type {
-					.special {
-						match msg.key_msg.string() {
-							'escape' { cmds << switch_mode(.normal) }
-							else {}
-						}
-					}
-					.runes {
-						match msg.key_msg.string() {
-							'e' {
-								m.doc_controller.move_cursor_to_previous_word_end(m.doc_id)
-								cmds << switch_mode(.normal)
-							}
-							else { cmds << switch_mode(.normal) }
-						}
-					}
-				}
-			}
 			.visual_line {
 				match msg.key_msg.k_type {
 					.special {
@@ -255,73 +216,15 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				match msg.key_msg.k_type {
 					.runes {
 						cmds << editor_data(m.data())
-						match msg.key_msg.string() {
-							'o' {
-								m.doc_controller.move_cursor_to_line_end(m.doc_id, .insert)
-								m.doc_controller.prepare_for_insertion(m.doc_id) or {
-									cmds << raise_error('error: ${err}')
-									m.ensure_cursor_visible()
-									return m.clone(), tea.batch_array(cmds)
-								}
-								leading_whitespace := m.doc_controller.leading_whitespace_on_current_line(m.doc_id)
-								m.doc_controller.insert_newline(m.doc_id)
-								for cr in leading_whitespace {
-									m.doc_controller.insert_char(m.doc_id, cr)
-								}
-								cmds << switch_mode(.insert)
-								m.ensure_cursor_visible()
-								return m.clone(), tea.batch_array(cmds)
-							}
-							'w' {
-								m.doc_controller.move_cursor_to_next_word_start(m.doc_id)
-							}
-							'W' {
-								m.doc_controller.move_cursor_to_next_big_word_start(m.doc_id)
-							}
-							'e' {
-								m.doc_controller.move_cursor_to_next_word_end(m.doc_id)
-							}
-							'b' {
-								m.doc_controller.move_cursor_to_previous_word_start(m.doc_id)
-							}
-							'g' {
-								cmds << switch_mode(.pending_g)
-							}
-							'$' {
-								m.doc_controller.move_cursor_to_line_end(m.doc_id, .normal)
-							}
-							'}' {
-								m.doc_controller.move_cursor_to_next_blank_line(m.doc_id)
-							}
-							'{' {
-								m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id)
-							}
-							'h' {
-								m.doc_controller.move_cursor_left(m.doc_id, .normal)
-							}
-							'j' {
-								m.doc_controller.move_cursor_down(m.doc_id, .normal)
-							}
-							'k' {
-								m.doc_controller.move_cursor_up(m.doc_id, .normal)
-							}
-							'l' {
-								m.doc_controller.move_cursor_right(m.doc_id, .normal)
-							}
-							'd' {
-								cmds << switch_mode(.pending_delete)
-							}
-							'x' {
-								m.doc_controller.delete_char_at(m.doc_id)
-							}
-							'V' {
-								cmds << switch_mode(.visual_line)
-							}
-							else {}
+						if action := m.chord.feed(msg.key_msg.string()) {
+							m.execute_action(action, mut cmds)
 						}
 					}
 					.special {
 						match msg.key_msg.string() {
+							'escape' {
+								m.chord.reset()
+							}
 							'ctrl+u' {
 								half := m.height / 2
 								m.min_y -= half
@@ -356,7 +259,6 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 									return m.clone(), tea.batch_array(cmds)
 								}
 								m.doc_controller.delete(m.doc_id)
-								cmds << switch_mode(.insert)
 							}
 							'left' {
 								m.doc_controller.move_cursor_left(m.doc_id, .normal)
@@ -607,6 +509,122 @@ fn (mut m EditorModel) ensure_cursor_visible() {
 		m.min_y = cursor_pos.y
 	} else if cursor_pos.y >= m.min_y + m.height {
 		m.min_y = cursor_pos.y - m.height + 1
+	}
+}
+
+fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
+	count := action.count
+
+	if op := action.operator {
+		match op {
+			`d` {
+				match action.motion {
+					'line' {
+						for _ in 0..count {
+							m.doc_controller.delete_line(m.doc_id)
+						}
+					}
+					'w' {
+						// TODO(tauraamui)
+						// delete word N times
+					}
+					else {}
+				}
+			}
+			else {}
+		}
+	} else {
+		// pure motion - no operator
+		match action.motion {
+			'o' {
+				m.doc_controller.move_cursor_to_line_end(m.doc_id, .insert)
+				m.doc_controller.prepare_for_insertion(m.doc_id) or {
+					cmds << raise_error('error: ${err}')
+					m.ensure_cursor_visible()
+					return
+				}
+				leading_whitespace := m.doc_controller.leading_whitespace_on_current_line(m.doc_id)
+				m.doc_controller.insert_newline(m.doc_id)
+				for cr in leading_whitespace {
+					m.doc_controller.insert_char(m.doc_id, cr)
+				}
+				cmds << switch_mode(.insert)
+				m.ensure_cursor_visible()
+			}
+			'w' {
+				for _ in 0..count {
+					m.doc_controller.move_cursor_to_next_word_start(m.doc_id)
+				}
+			}
+			'W' {
+				for _ in 0..count {
+					m.doc_controller.move_cursor_to_next_big_word_start(m.doc_id)
+				}
+			}
+			'e' {
+				for _ in 0..count {
+					m.doc_controller.move_cursor_to_next_word_end(m.doc_id)
+				}
+			}
+			'b' {
+				for _ in 0..count {
+					m.doc_controller.move_cursor_to_previous_word_start(m.doc_id)
+				}
+			}
+			'ge' {
+				for _ in 0..count {
+					m.doc_controller.move_cursor_to_previous_word_end(m.doc_id)
+				}
+			}
+			'h' {
+				for _ in 0..count {
+					m.doc_controller.move_cursor_left(m.doc_id, .normal)
+				}
+			}
+			'j' {
+				m.doc_controller.move_cursor_down_by(m.doc_id, count, .normal)
+			}
+			'k' {
+				m.doc_controller.move_cursor_up_by(m.doc_id, count, .normal)
+			}
+			'l' {
+				m.doc_controller.move_cursor_right(m.doc_id, .normal)
+			}
+			'$' {
+				m.doc_controller.move_cursor_to_line_end(m.doc_id, .normal)
+			}
+			'0' {
+				// m.doc_controller.move_cursor_to_line_start(m.doc_id)
+			}
+			'{' {
+				for _ in 0..count {
+					m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id)
+				}
+			}
+			'}' {
+				for _ in 0..count {
+					m.doc_controller.move_cursor_to_next_blank_line(m.doc_id)
+				}
+			}
+			'x' {
+				for _ in 0..count {
+					m.doc_controller.delete_char_at(m.doc_id)
+				}
+			}
+			'gg' {
+				target := if action.count > 1 { action.count - 1 } else { 0 }
+				current_y := m.doc_controller.cursor_pos(m.doc_id).y
+				if current_y > target {
+					m.doc_controller.move_cursor_up_by(m.doc_id, current_y - target, .normal)
+				} else if current_y < target {
+					m.doc_controller.move_cursor_down_by(m.doc_id, target - current_y, .normal)
+				}
+			}
+			'V' {
+				cmds << switch_mode(.visual_line)
+			}
+			else {}
+		}
 	}
 }
 
