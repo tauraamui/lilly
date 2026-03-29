@@ -779,6 +779,13 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 					m.doc_controller.move_cursor_down_by(m.doc_id, target - current_y, .normal)
 				}
 			}
+			'G' {
+				current_y := m.doc_controller.cursor_pos(m.doc_id).y
+				last_line := m.doc_controller.line_count(m.doc_id) - 1
+				if current_y < last_line {
+					m.doc_controller.move_cursor_down_by(m.doc_id, last_line - current_y, .normal)
+				}
+			}
 			'v' {
 				cmds << switch_mode(.visual)
 			}
