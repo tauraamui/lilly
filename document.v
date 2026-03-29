@@ -120,6 +120,11 @@ pub fn (mut c Controller) move_cursor_to_previous_word_end(doc_id int) {
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_previous_word_end(pos)
 }
 
+pub fn (mut c Controller) move_cursor_to_next_big_word_start(doc_id int) {
+	pos := c.cursors[doc_id]
+	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_big_word_start(pos)
+}
+
 pub fn (mut c Controller) move_cursor_to_line_end(doc_id int, mode petal.Mode) {
 	pos := c.cursors[doc_id]
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_line_end(pos, mode)
@@ -378,6 +383,19 @@ fn (d Document) move_cursor_to_previous_word_end(pos cursor.Pos) cursor.Pos {
 		} else {
 			next_pos = cursor.Pos.new(line_len - 1, prev_y)
 		}
+	}
+	return pos
+}
+
+fn (d Document) move_cursor_to_next_big_word_start(pos cursor.Pos) cursor.Pos {
+	mut next_pos := pos
+	for {
+		if next_word_start_pos := scan_to_next_big_word_start(d.data, next_pos, pos.y) {
+			return next_word_start_pos
+		}
+		next_y := next_pos.y + 1
+		_ = d.data.get_line_at(y: next_y) or { return pos }
+		next_pos = next_pos.x(0).y(next_y)
 	}
 	return pos
 }
@@ -651,6 +669,28 @@ fn scan_to_next_word_end(data buffers.GapBuffer, pos cursor.Pos, source_y int) ?
 	word_class := CharType.resolve(runes[x])
 	for x + 1 < runes.len && CharType.resolve(runes[x + 1]) == word_class { x++ }
 
+	return cursor.Pos.new(x, pos.y)
+}
+
+fn scan_to_next_big_word_start(data buffers.GapBuffer, pos cursor.Pos, source_y int) ?cursor.Pos {
+	current_line := data.get_line_at(y: pos.y) or { return pos }
+	runes := current_line.runes()
+
+	if pos.y != source_y && pos.x == 0 {
+		if runes.len == 0 { return pos }
+		if !utf8.is_space(runes[pos.x]) {
+			return pos
+		}
+	}
+
+	mut x := pos.x
+
+	// skip non-whitespace
+	for x < runes.len && !utf8.is_space(runes[x]) { x++ }
+	// skip whitespace
+	for x < runes.len && utf8.is_space(runes[x]) { x++ }
+
+	if x >= runes.len { return none }
 	return cursor.Pos.new(x, pos.y)
 }
 

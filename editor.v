@@ -275,6 +275,9 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							'w' {
 								m.doc_controller.move_cursor_to_next_word_start(m.doc_id)
 							}
+							'W' {
+								m.doc_controller.move_cursor_to_next_big_word_start(m.doc_id)
+							}
 							'e' {
 								m.doc_controller.move_cursor_to_next_word_end(m.doc_id)
 							}
