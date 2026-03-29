@@ -1,6 +1,6 @@
 module cfg
 
-import theme
+import lib.petal.theme
 
 pub const light_theme_name = theme.light_theme_name
 pub const dark_theme_name = theme.dark_theme_name

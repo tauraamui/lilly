@@ -176,11 +176,9 @@ fn test_doc_move_cursor_to_previous_word_start_with_punct() {
 		data: buffers.GapBuffer.new(content: mock_punct_content.runes())
 	}
 
-	// backward from { should land on )
-	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(6, 0)) == cursor.Pos.new(4, 0)
-	// backward from ) should land on (
-	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(4, 0)) == cursor.Pos.new(3, 0)
-	// backward from ( should land on start of abc
+	// backward from { should land on start of ()
+	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(6, 0)) == cursor.Pos.new(3, 0)
+	// backward from () should land on start of abc
 	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(3, 0)) == cursor.Pos.new(0, 0)
 }
 
@@ -192,10 +190,8 @@ fn test_doc_move_cursor_to_next_word_start_with_punct() {
 
 	// forward from abc should land on (
 	assert d.move_cursor_to_next_word_start(cursor.Pos.new(0, 0)) == cursor.Pos.new(3, 0)
-	// forward from ( should land on )
-	assert d.move_cursor_to_next_word_start(cursor.Pos.new(3, 0)) == cursor.Pos.new(4, 0)
-	// forward from ) should land on {
-	assert d.move_cursor_to_next_word_start(cursor.Pos.new(4, 0)) == cursor.Pos.new(6, 0)
+	// forward from () should land on {
+	assert d.move_cursor_to_next_word_start(cursor.Pos.new(3, 0)) == cursor.Pos.new(6, 0)
 }
 
 const mock_crossline_punct_content := 'struct EditorModel {
@@ -213,6 +209,102 @@ fn test_doc_move_cursor_to_previous_word_start_cross_line_lands_on_brace() {
 	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(19, 0)) == cursor.Pos.new(7, 0)
 	// backward from EditorModel should land on start of struct
 	assert d.move_cursor_to_previous_word_start(cursor.Pos.new(7, 0)) == cursor.Pos.new(0, 0)
+}
+
+fn test_doc_move_cursor_to_next_word_end() {
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	// 'This is the.first line'
+	// e from 'T' of 'This' → 's' (end of 'This')
+	assert d.move_cursor_to_next_word_end(cursor.Pos.new(0, 0)) == cursor.Pos.new(3, 0)
+	// e from 's' of 'This' → 's' (end of 'is')
+	assert d.move_cursor_to_next_word_end(cursor.Pos.new(3, 0)) == cursor.Pos.new(6, 0)
+	// e from 's' of 'is' → 'e' (end of 'the')
+	assert d.move_cursor_to_next_word_end(cursor.Pos.new(6, 0)) == cursor.Pos.new(10, 0)
+	// e from 'e' of 'the' → '.' (end of '.')
+	assert d.move_cursor_to_next_word_end(cursor.Pos.new(10, 0)) == cursor.Pos.new(11, 0)
+	// e from '.' → 't' (end of 'first')
+	assert d.move_cursor_to_next_word_end(cursor.Pos.new(11, 0)) == cursor.Pos.new(16, 0)
+	// e from 't' of 'first' → 'e' (end of 'line')
+	assert d.move_cursor_to_next_word_end(cursor.Pos.new(16, 0)) == cursor.Pos.new(21, 0)
+	// e from 'e' of 'line' (end of line 0) → crosses to line 1
+	// 'This is the second line.'
+	assert d.move_cursor_to_next_word_end(cursor.Pos.new(21, 0)) == cursor.Pos.new(3, 1)
+}
+
+fn test_doc_move_cursor_to_next_word_end_with_punct() {
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_punct_content.runes())
+	}
+
+	// 'abc() {'
+	// e from 'a' → 'c' (end of 'abc')
+	assert d.move_cursor_to_next_word_end(cursor.Pos.new(0, 0)) == cursor.Pos.new(2, 0)
+	// e from 'c' → ')' (end of '()')
+	assert d.move_cursor_to_next_word_end(cursor.Pos.new(2, 0)) == cursor.Pos.new(4, 0)
+	// e from ')' → '{' (end of '{')
+	assert d.move_cursor_to_next_word_end(cursor.Pos.new(4, 0)) == cursor.Pos.new(6, 0)
+}
+
+fn test_doc_move_cursor_to_previous_word_end() {
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	// 'This is the.first line'
+	// ge from 'e' of 'line' → 't' (end of 'first')
+	assert d.move_cursor_to_previous_word_end(cursor.Pos.new(21, 0)) == cursor.Pos.new(16, 0)
+	// ge from 't' of 'first' → '.' (end of '.')
+	assert d.move_cursor_to_previous_word_end(cursor.Pos.new(16, 0)) == cursor.Pos.new(11, 0)
+	// ge from '.' → 'e' (end of 'the')
+	assert d.move_cursor_to_previous_word_end(cursor.Pos.new(11, 0)) == cursor.Pos.new(10, 0)
+	// ge from 'e' of 'the' → 's' (end of 'is')
+	assert d.move_cursor_to_previous_word_end(cursor.Pos.new(10, 0)) == cursor.Pos.new(6, 0)
+	// ge from 's' of 'is' → 's' (end of 'This')
+	assert d.move_cursor_to_previous_word_end(cursor.Pos.new(6, 0)) == cursor.Pos.new(3, 0)
+	// ge from 's' of 'This' at start — stays put
+	assert d.move_cursor_to_previous_word_end(cursor.Pos.new(3, 0)) == cursor.Pos.new(3, 0)
+}
+
+fn test_doc_move_cursor_to_previous_word_end_cross_line() {
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	// 'This is the.first line\nThis is the second line.'
+	// ge from 'T' of 'This' on line 1 → 'e' (end of 'line' on line 0)
+	assert d.move_cursor_to_previous_word_end(cursor.Pos.new(0, 1)) == cursor.Pos.new(21, 0)
+}
+
+fn test_doc_move_cursor_to_next_big_word_start() {
+	// mock_content = 'This is the.first line\nThis is the second line.'
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	// W skips over non-whitespace (the.first is one WORD)
+	assert d.move_cursor_to_next_big_word_start(cursor.Pos.new(0, 0)) == cursor.Pos.new(5, 0)
+	assert d.move_cursor_to_next_big_word_start(cursor.Pos.new(5, 0)) == cursor.Pos.new(8, 0)
+	assert d.move_cursor_to_next_big_word_start(cursor.Pos.new(8, 0)) == cursor.Pos.new(18, 0)
+	assert d.move_cursor_to_next_big_word_start(cursor.Pos.new(18, 0)) == cursor.Pos.new(0, 1)
+}
+
+fn test_doc_move_cursor_to_next_big_word_start_with_punct() {
+	// mock_punct_content = 'abc() {'
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_punct_content.runes())
+	}
+
+	// W from 'a': abc() is one WORD, skip to {
+	assert d.move_cursor_to_next_big_word_start(cursor.Pos.new(0, 0)) == cursor.Pos.new(6, 0)
 }
 
 const mock_multiline_content_with_blanks = 'This is the first line.

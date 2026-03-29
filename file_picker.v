@@ -6,7 +6,7 @@ import strings
 import lib.files
 import tauraamui.bobatea as tea
 import palette
-import theme
+import lib.petal.theme
 import boba
 
 struct FilePickerModel {

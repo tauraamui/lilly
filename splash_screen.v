@@ -4,8 +4,8 @@ import math
 import os
 import tauraamui.bobatea as tea
 import palette
-import theme
-import documents
+import lib.petal.theme
+import lib.documents
 
 const gitcommit_hash = $embed_file('.githash').to_string()
 

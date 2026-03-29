@@ -4,12 +4,12 @@ import os
 import time
 import math
 import tauraamui.bobatea as tea
-import petal
+import lib.petal
 import boba
-import theme
+import lib.petal.theme
 import palette
 import glyphs
-import documents
+import lib.documents
 
 struct EditorWorkspaceModel {
 	initial_file_path string
@@ -694,7 +694,7 @@ fn (m EditorWorkspaceModel) view(mut ctx tea.Context) {
 			offset_id := ctx.push_offset(tea.Offset{ x: rect.x, y: rect.y })
 
 			if mut editor is EditorModel {
-				editor.cursor_underline = m.mode == .pending_delete
+				editor.cursor_underline = m.mode == .pending_delete || m.mode == .pending_g
 			}
 			editor.view(mut ctx)
 
