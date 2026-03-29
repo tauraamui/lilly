@@ -1,6 +1,5 @@
 # Binaries for programs and plugins
 main
-petal
 *.exe
 *.exe~
 *.so
@@ -26,6 +25,7 @@ bin/
 .gitattributes
 lilly.panic.log
 lilly
+/petal
 src/.githash
 .githash
 make
