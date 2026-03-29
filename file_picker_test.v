@@ -2,7 +2,7 @@ module main
 
 import tauraamui.bobatea.lib.draw
 import tauraamui.bobatea as tea
-import theme
+import lib.petal.theme
 import lib.files
 
 struct MockFilesFinder {

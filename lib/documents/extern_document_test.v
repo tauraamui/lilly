@@ -30,7 +30,7 @@ import petal
 
 fn test_move_cursor_to_next_word_start() {
 	mut ctrl := documents.Controller.new()
-	meta_doc_id := ctrl.open_document('extern_document_test.v')!
+	meta_doc_id := ctrl.open_document('./lib/documents/extern_document_test.v')!
 
 	ctrl.move_cursor_down(meta_doc_id, .normal)
 	ctrl.move_cursor_down(meta_doc_id, .normal)
