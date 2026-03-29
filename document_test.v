@@ -282,6 +282,31 @@ fn test_doc_move_cursor_to_previous_word_end_cross_line() {
 	assert d.move_cursor_to_previous_word_end(cursor.Pos.new(0, 1)) == cursor.Pos.new(21, 0)
 }
 
+fn test_doc_move_cursor_to_next_big_word_start() {
+	// mock_content = 'This is the.first line\nThis is the second line.'
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_content.runes())
+	}
+
+	// W skips over non-whitespace (the.first is one WORD)
+	assert d.move_cursor_to_next_big_word_start(cursor.Pos.new(0, 0)) == cursor.Pos.new(5, 0)
+	assert d.move_cursor_to_next_big_word_start(cursor.Pos.new(5, 0)) == cursor.Pos.new(8, 0)
+	assert d.move_cursor_to_next_big_word_start(cursor.Pos.new(8, 0)) == cursor.Pos.new(18, 0)
+	assert d.move_cursor_to_next_big_word_start(cursor.Pos.new(18, 0)) == cursor.Pos.new(0, 1)
+}
+
+fn test_doc_move_cursor_to_next_big_word_start_with_punct() {
+	// mock_punct_content = 'abc() {'
+	mut d := Document{
+		file_path: ''
+		data: buffers.GapBuffer.new(content: mock_punct_content.runes())
+	}
+
+	// W from 'a': abc() is one WORD, skip to {
+	assert d.move_cursor_to_next_big_word_start(cursor.Pos.new(0, 0)) == cursor.Pos.new(6, 0)
+}
+
 const mock_multiline_content_with_blanks = 'This is the first line.
 This is the second line.
 
