@@ -2,10 +2,10 @@ module main
 
 import os
 import tauraamui.bobatea as tea
-import theme
+import lib.petal.theme
 import cfg
 import palette
-import documents
+import lib.documents
 
 const dot = '•'
 

@@ -3,7 +3,7 @@ module main
 import os
 import tauraamui.bobatea as tea
 import cfg
-import documents
+import lib.documents
 
 fn main() {
 	theme_name := os.getenv('PETAL_THEME')

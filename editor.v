@@ -1,10 +1,10 @@
 module main
 
 import tauraamui.bobatea as tea
-import theme
-import petal
+import lib.petal.theme
+import lib.petal
 import palette
-import documents
+import lib.documents
 import lib.documents.cursor
 import lib.syntax
 
@@ -394,7 +394,8 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 				}
 				.normal {
-					if msg.from != .command && msg.from != .pending_delete && msg.from != .pending_g {
+					// if msg.from != .command && msg.from != .pending_delete && msg.from != .pending_g {
+					if msg.from == .normal || msg.from == .insert {
 						current_line := m.doc_controller.get_line_at(m.doc_id, m.doc_controller.cursor_pos(m.doc_id).y) or { '' }
 						if current_line.len > 0 && current_line.trim_space().len == 0 {
 							m.doc_controller.clear_line(m.doc_id)

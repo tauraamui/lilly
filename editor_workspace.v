@@ -4,12 +4,12 @@ import os
 import time
 import math
 import tauraamui.bobatea as tea
-import petal
+import lib.petal
 import boba
-import theme
+import lib.petal.theme
 import palette
 import glyphs
-import documents
+import lib.documents
 
 struct EditorWorkspaceModel {
 	initial_file_path string
