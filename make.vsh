@@ -142,7 +142,7 @@ context.task(name: 'git-prune', run: |self| system('git remote prune origin'))
 context.task(
 	name: 'apply-license-header'
 	help: 'executes addlicense tool to insert license headers into files without one'
-	run:  |self| system('addlicense -v -c "The Lilly Edtior contributors" -y "2025" ./*')
+	run:  |self| system('addlicense -v -c "The Lilly Edtior contributors" -y "2026" ./*')
 )
 
 context.task(
