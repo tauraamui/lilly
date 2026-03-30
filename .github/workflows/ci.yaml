@@ -19,8 +19,8 @@ jobs:
 
       - name: Check formatting
         run: |
-          v fmt -w src/
-          git diff --exit-code src/
+          find . -name '*.v' -not -path './.vmodules/*' | xargs v fmt -w
+          git diff --exit-code
 
   unit_tests:
     runs-on: ubuntu-latest
