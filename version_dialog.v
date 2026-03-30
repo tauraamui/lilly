@@ -29,9 +29,9 @@ fn open_version_dialog(version string, ttheme theme.Theme) tea.Cmd {
 		return OpenDialogMsg{
 			model: VersionModel{
 				version: version
-				theme:  ttheme
-				width:  52
-				height: 5
+				theme:   ttheme
+				width:   52
+				height:  5
 			}
 		}
 	}

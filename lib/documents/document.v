@@ -111,8 +111,12 @@ pub fn (mut c Controller) write_document(doc_id int) ! {
 	// with type flags, so the location is the same, but formatting or visual rep is different
 	target_file_path := c.docs[doc_id].file_path
 	temp_file_path := os.join_path(os.temp_dir(), os.base(target_file_path))
-	c.docs[doc_id].write_to(temp_file_path) or { return error('failed to write to temp location: ${temp_file_path}') }
-	os.mv(temp_file_path, c.docs[doc_id].file_path) or { return error('failed to move temp location: ${temp_file_path} to dest: ${target_file_path}') }
+	c.docs[doc_id].write_to(temp_file_path) or {
+		return error('failed to write to temp location: ${temp_file_path}')
+	}
+	os.mv(temp_file_path, c.docs[doc_id].file_path) or {
+		return error('failed to move temp location: ${temp_file_path} to dest: ${target_file_path}')
+	}
 }
 
 pub fn (mut c Controller) begin_undo_group(doc_id int) {
@@ -273,7 +277,9 @@ pub fn (mut c Controller) delete_visual_range(doc_id int, range cursor.Range) {
 pub fn (c Controller) leading_whitespace_on_current_line(doc_id int) []rune {
 	pos := c.cursors[doc_id]
 	current_line := c.docs[doc_id].data.get_line_at(y: pos.y) or { return [] }
-	if current_line == '' { return [] }
+	if current_line == '' {
+		return []
+	}
 	mut first_non_whitespace_index := 0
 	for i, cr in current_line.runes_iterator() {
 		if CharType.resolve(cr) != .whitespace {
@@ -281,7 +287,9 @@ pub fn (c Controller) leading_whitespace_on_current_line(doc_id int) []rune {
 			break
 		}
 	}
-	if first_non_whitespace_index == 0 { return [] }
+	if first_non_whitespace_index == 0 {
+		return []
+	}
 	return current_line.runes()[..first_non_whitespace_index]
 }
 
@@ -330,7 +338,9 @@ pub fn (c Controller) get_char_at(doc_id int) ?string {
 	pos := c.cursors[doc_id]
 	current_line := c.docs[doc_id].data.get_line_at(y: pos.y) or { return none }
 	for i, cc in current_line.runes_iterator() {
-		if i == pos.x { return '${cc}' }
+		if i == pos.x {
+			return '${cc}'
+		}
 	}
 	return none
 }
@@ -356,20 +366,21 @@ fn hash_id(id int) int {
 	return math.abs(hash)
 }
 
-
 @[heap]
 struct Document {
 mut:
 	file_path string
-	data buffers.GapBuffer
+	data      buffers.GapBuffer
 }
 
 fn Document.new(file_path string) !Document {
 	return Document{
 		file_path: file_path
-		data: buffers.GapBuffer.new(content: (os.read_file(file_path) or {
-			return error('failed to read file ${file_path}: ${err}')
-		}).runes())
+		data:      buffers.GapBuffer.new(
+			content: (os.read_file(file_path) or {
+				return error('failed to read file ${file_path}: ${err}')
+			}).runes()
+		)
 		// data: buffers.GapBuffer.new(content: (iconv.read_file_encoding(file_path, "UTF-8") or { return error("failed to read file ${file_path}: ${err}") }).runes())
 	}
 }
@@ -420,13 +431,25 @@ fn (d Document) move_cursor_right(pos cursor.Pos, mode petal.Mode) cursor.Pos {
 
 	return match mode {
 		.normal {
-			if x >= current_line.runes().len { pos } else { pos.x(x) }
+			if x >= current_line.runes().len {
+				pos
+			} else {
+				pos.x(x)
+			}
 		}
 		.insert {
-			if x > current_line.runes().len { pos } else { pos.x(x) }
+			if x > current_line.runes().len {
+				pos
+			} else {
+				pos.x(x)
+			}
 		}
 		else {
-			if x >= current_line.runes().len { pos } else { pos.x(x) }
+			if x >= current_line.runes().len {
+				pos
+			} else {
+				pos.x(x)
+			}
 		}
 	}
 }
@@ -455,7 +478,9 @@ fn (d Document) move_cursor_to_previous_word_start(pos cursor.Pos) cursor.Pos {
 		}
 		prev_y := next_pos.y - 1
 
-		if prev_y < 0 { return pos }
+		if prev_y < 0 {
+			return pos
+		}
 		prev_line := d.data.get_line_at(y: prev_y) or { return pos }
 		line_len := prev_line.runes().len
 		if line_len == 0 {
@@ -487,7 +512,9 @@ fn (d Document) move_cursor_to_previous_word_end(pos cursor.Pos) cursor.Pos {
 			return prev_word_end_pos
 		}
 		prev_y := next_pos.y - 1
-		if prev_y < 0 { return pos }
+		if prev_y < 0 {
+			return pos
+		}
 		prev_line := d.data.get_line_at(y: prev_y) or { return pos }
 		line_len := prev_line.runes().len
 		if line_len == 0 {
@@ -514,7 +541,8 @@ fn (d Document) move_cursor_to_next_big_word_start(pos cursor.Pos) cursor.Pos {
 
 fn (d Document) move_cursor_to_line_end(pos cursor.Pos, mode petal.Mode) cursor.Pos {
 	current_line := d.data.get_line_at(y: pos.y) or { return pos }
-	return cursor.Pos.new(pos.x + (current_line.runes().len - pos.x - if mode == .normal { 1 } else { 0 }), pos.y)
+	return cursor.Pos.new(pos.x +
+		(current_line.runes().len - pos.x - if mode == .normal { 1 } else { 0 }), pos.y)
 }
 
 fn (d Document) move_cursor_to_next_blank_line(pos cursor.Pos) cursor.Pos {
@@ -522,7 +550,9 @@ fn (d Document) move_cursor_to_next_blank_line(pos cursor.Pos) cursor.Pos {
 	for i, line in d.data.iter() {
 		last_y = i
 		if i > pos.y {
-			if line.len == 0 { return pos.x(0).y(i) }
+			if line.len == 0 {
+				return pos.x(0).y(i)
+			}
 		}
 	}
 	if last_y > pos.y {
@@ -534,7 +564,9 @@ fn (d Document) move_cursor_to_next_blank_line(pos cursor.Pos) cursor.Pos {
 fn (d Document) move_cursor_to_previous_blank_line(pos cursor.Pos) cursor.Pos {
 	mut last_blank := -1
 	for i, line in d.data.iter() {
-		if i >= pos.y { break }
+		if i >= pos.y {
+			break
+		}
 		if line.len == 0 {
 			last_blank = i
 		}
@@ -562,7 +594,6 @@ fn (d Document) visual_cursor_pos(pos cursor.Pos, tab_width int) cursor.Pos {
 	}
 	return pos.x(visual_x)
 }
-
 
 fn (mut d Document) insert_char(c rune) {
 	d.data.insert_char(c)
@@ -597,7 +628,9 @@ fn (mut d Document) delete_line(pos cursor.Pos) cursor.Pos {
 		// last line: delete preceding newline + line content
 		prev_line := d.data.get_line_at(y: line_y - 1) or { return pos.x(0).y(line_y) }
 		prev_line_len := prev_line.runes().len
-		d.prepare_for_insertion_at(cursor.Pos.new(prev_line_len, line_y - 1)) or { return pos.x(0).y(line_y) }
+		d.prepare_for_insertion_at(cursor.Pos.new(prev_line_len, line_y - 1)) or {
+			return pos.x(0).y(line_y)
+		}
 		d.data.delete_after_n(1 + line_len)
 		return cursor.Pos.new(0, line_y - 1)
 	} else {
@@ -630,14 +663,18 @@ fn (mut d Document) delete_range(range cursor.Range) cursor.Pos {
 
 	if has_next_line {
 		// Delete range content + trailing newline
-		d.prepare_for_insertion_at(cursor.Pos.new(0, start_y)) or { return cursor.Pos.new(0, start_y) }
+		d.prepare_for_insertion_at(cursor.Pos.new(0, start_y)) or {
+			return cursor.Pos.new(0, start_y)
+		}
 		d.data.delete_after_n(total_len + 1)
 		return cursor.Pos.new(0, start_y)
 	} else if has_prev_line {
 		// Last lines: delete preceding newline + range content
 		prev_line := d.data.get_line_at(y: start_y - 1) or { return cursor.Pos.new(0, start_y) }
 		prev_line_len := prev_line.runes().len
-		d.prepare_for_insertion_at(cursor.Pos.new(prev_line_len, start_y - 1)) or { return cursor.Pos.new(0, start_y) }
+		d.prepare_for_insertion_at(cursor.Pos.new(prev_line_len, start_y - 1)) or {
+			return cursor.Pos.new(0, start_y)
+		}
 		d.data.delete_after_n(1 + total_len)
 		return cursor.Pos.new(0, start_y - 1)
 	} else {
@@ -653,12 +690,14 @@ fn (mut d Document) delete_range(range cursor.Range) cursor.Pos {
 
 fn (mut d Document) delete_visual_range(range cursor.Range) cursor.Pos {
 	// Normalize so start is before end
-	start := if range.start.y < range.end.y || (range.start.y == range.end.y && range.start.x <= range.end.x) {
+	start := if range.start.y < range.end.y
+		|| (range.start.y == range.end.y && range.start.x <= range.end.x) {
 		range.start
 	} else {
 		range.end
 	}
-	end := if range.start.y < range.end.y || (range.start.y == range.end.y && range.start.x <= range.end.x) {
+	end := if range.start.y < range.end.y
+		|| (range.start.y == range.end.y && range.start.x <= range.end.x) {
 		range.end
 	} else {
 		range.start
@@ -671,7 +710,9 @@ fn (mut d Document) delete_visual_range(range cursor.Range) cursor.Pos {
 		del_start := if start.x < line_len { start.x } else { line_len }
 		del_end := if end.x < line_len { end.x } else { line_len - 1 }
 		count := del_end - del_start + 1
-		if count <= 0 { return start }
+		if count <= 0 {
+			return start
+		}
 		d.prepare_for_insertion_at(cursor.Pos.new(del_start, start.y)) or { return start }
 		d.data.delete_after_n(count)
 		return cursor.Pos.new(del_start, start.y)
@@ -698,7 +739,9 @@ fn (mut d Document) delete_visual_range(range cursor.Range) cursor.Pos {
 	end_x := if end.x < end_line.runes().len { end.x } else { end_line.runes().len - 1 }
 	total += end_x + 1
 
-	if total <= 0 { return start }
+	if total <= 0 {
+		return start
+	}
 	d.prepare_for_insertion_at(cursor.Pos.new(start.x, start.y)) or { return start }
 	d.data.delete_after_n(total)
 	return cursor.Pos.new(start.x, start.y)
@@ -750,13 +793,18 @@ fn scan_to_next_word_start(data buffers.GapBuffer, pos cursor.Pos, source_y int)
 	current_line := data.get_line_at(y: pos.y) or { return pos }
 
 	if pos.y != source_y && pos.x == 0 {
-		if current_line.len == 0 { return pos }
+		if current_line.len == 0 {
+			return pos
+		}
 		if CharType.resolve(current_line[pos.x]) != .whitespace {
 			return pos
 		}
 	}
 
-	mut c_scanner := CharScanner{ last_index: pos.x, data: current_line.runes() }
+	mut c_scanner := CharScanner{
+		last_index: pos.x
+		data:       current_line.runes()
+	}
 	diff := c_scanner.next_diff() or { return none }
 
 	if diff.next_type == .whitespace {
@@ -783,7 +831,9 @@ fn scan_to_previous_word_start(data buffers.GapBuffer, pos cursor.Pos, source_y 
 	current_line := data.get_line_at(y: pos.y) or { return pos }
 
 	if pos.y != source_y {
-		if current_line.len == 0 { return pos }
+		if current_line.len == 0 {
+			return pos
+		}
 		if pos.x == 0 {
 			if CharType.resolve(current_line[pos.x]) != .whitespace {
 				return pos
@@ -794,7 +844,9 @@ fn scan_to_previous_word_start(data buffers.GapBuffer, pos cursor.Pos, source_y 
 				mut word_start := pos.x
 				for i := pos.x - 1; i >= 0; i-- {
 					ci_type := CharType.resolve(current_line[i])
-					if ci_type != c_type { break }
+					if ci_type != c_type {
+						break
+					}
 					word_start = i
 				}
 				return cursor.Pos.new(word_start, pos.y)
@@ -802,7 +854,10 @@ fn scan_to_previous_word_start(data buffers.GapBuffer, pos cursor.Pos, source_y 
 		}
 	}
 
-	mut c_scanner := CharScanner{ last_index: pos.x, data: current_line.runes() }
+	mut c_scanner := CharScanner{
+		last_index: pos.x
+		data:       current_line.runes()
+	}
 	diff := c_scanner.prev_diff() or { return none }
 
 	if diff.start_type == .alpha_num || diff.start_type == .other {
@@ -829,20 +884,30 @@ fn scan_to_next_word_end(data buffers.GapBuffer, pos cursor.Pos, source_y int) ?
 	runes := current_line.runes()
 
 	if pos.y != source_y && pos.x == 0 {
-		if runes.len == 0 { return pos }
+		if runes.len == 0 {
+			return pos
+		}
 	}
 
 	start := if pos.y == source_y { pos.x + 1 } else { pos.x }
-	if start >= runes.len { return none }
+	if start >= runes.len {
+		return none
+	}
 
 	mut x := start
 	// skip whitespace
-	for x < runes.len && CharType.resolve(runes[x]) == .whitespace { x++ }
-	if x >= runes.len { return none }
+	for x < runes.len && CharType.resolve(runes[x]) == .whitespace {
+		x++
+	}
+	if x >= runes.len {
+		return none
+	}
 
 	// find end of word class
 	word_class := CharType.resolve(runes[x])
-	for x + 1 < runes.len && CharType.resolve(runes[x + 1]) == word_class { x++ }
+	for x + 1 < runes.len && CharType.resolve(runes[x + 1]) == word_class {
+		x++
+	}
 
 	return cursor.Pos.new(x, pos.y)
 }
@@ -852,7 +917,9 @@ fn scan_to_next_big_word_start(data buffers.GapBuffer, pos cursor.Pos, source_y 
 	runes := current_line.runes()
 
 	if pos.y != source_y && pos.x == 0 {
-		if runes.len == 0 { return pos }
+		if runes.len == 0 {
+			return pos
+		}
 		if !utf8.is_space(runes[pos.x]) {
 			return pos
 		}
@@ -861,11 +928,17 @@ fn scan_to_next_big_word_start(data buffers.GapBuffer, pos cursor.Pos, source_y 
 	mut x := pos.x
 
 	// skip non-whitespace
-	for x < runes.len && !utf8.is_space(runes[x]) { x++ }
+	for x < runes.len && !utf8.is_space(runes[x]) {
+		x++
+	}
 	// skip whitespace
-	for x < runes.len && utf8.is_space(runes[x]) { x++ }
+	for x < runes.len && utf8.is_space(runes[x]) {
+		x++
+	}
 
-	if x >= runes.len { return none }
+	if x >= runes.len {
+		return none
+	}
 	return cursor.Pos.new(x, pos.y)
 }
 
@@ -874,23 +947,35 @@ fn scan_to_previous_word_end(data buffers.GapBuffer, pos cursor.Pos, source_y in
 	runes := current_line.runes()
 
 	if pos.y != source_y {
-		if runes.len == 0 { return pos }
+		if runes.len == 0 {
+			return pos
+		}
 		// cross-line: find last non-whitespace char on this line
 		mut x := runes.len - 1
-		for x >= 0 && CharType.resolve(runes[x]) == .whitespace { x-- }
-		if x < 0 { return none }
+		for x >= 0 && CharType.resolve(runes[x]) == .whitespace {
+			x--
+		}
+		if x < 0 {
+			return none
+		}
 		return cursor.Pos.new(x, pos.y)
 	}
 
-	if pos.x <= 0 { return none }
+	if pos.x <= 0 {
+		return none
+	}
 
 	mut x := pos.x - 1
 	curr_class := CharType.resolve(runes[x])
 
 	if curr_class == .whitespace {
 		// skip whitespace backward
-		for x >= 0 && CharType.resolve(runes[x]) == .whitespace { x-- }
-		if x < 0 { return none }
+		for x >= 0 && CharType.resolve(runes[x]) == .whitespace {
+			x--
+		}
+		if x < 0 {
+			return none
+		}
 		return cursor.Pos.new(x, pos.y)
 	}
 
@@ -901,20 +986,28 @@ fn scan_to_previous_word_end(data buffers.GapBuffer, pos cursor.Pos, source_y in
 	}
 
 	// same class — skip backward past current word
-	for x >= 0 && CharType.resolve(runes[x]) == curr_class { x-- }
-	if x < 0 { return none }
+	for x >= 0 && CharType.resolve(runes[x]) == curr_class {
+		x--
+	}
+	if x < 0 {
+		return none
+	}
 
 	// skip whitespace if present
 	if CharType.resolve(runes[x]) == .whitespace {
-		for x >= 0 && CharType.resolve(runes[x]) == .whitespace { x-- }
-		if x < 0 { return none }
+		for x >= 0 && CharType.resolve(runes[x]) == .whitespace {
+			x--
+		}
+		if x < 0 {
+			return none
+		}
 	}
 
 	return cursor.Pos.new(x, pos.y)
 }
 
 struct CharScanner {
-	data       []rune
+	data []rune
 mut:
 	last_index int
 }
@@ -936,34 +1029,56 @@ struct PreDiffChar {
 }
 
 fn (mut s CharScanner) prev_diff() ?ScanResult {
-	if s.data.len == 0 || s.last_index <= 0 { return none }
+	if s.data.len == 0 || s.last_index <= 0 {
+		return none
+	}
 	start_type := CharType.resolve(s.data[s.last_index])
 	for i := s.last_index; i >= 0; i-- {
 		c := s.data[i]
 		c_type := CharType.resolve(c)
-		pre_diff_char := ?PreDiffChar(
-			if i + 1 < s.last_index {
-				PreDiffChar{ index: i + 1, cchar: s.data[i + 1], cchar_str: s.data[i + 1].str(), c_type: CharType.resolve(s.data[i + 1]) }
-			} else { none }
-		)
+		pre_diff_char := ?PreDiffChar(if i + 1 < s.last_index {
+			PreDiffChar{
+				index:     i + 1
+				cchar:     s.data[i + 1]
+				cchar_str: s.data[i + 1].str()
+				c_type:    CharType.resolve(s.data[i + 1])
+			}
+		} else {
+			none
+		})
 
 		if c_type != start_type {
 			s.last_index = i
-			return ScanResult{ index: i, cchar: c, cchar_str: c.str(), pre_diff: pre_diff_char, start_type: start_type, next_type: c_type }
+			return ScanResult{
+				index:      i
+				cchar:      c
+				cchar_str:  c.str()
+				pre_diff:   pre_diff_char
+				start_type: start_type
+				next_type:  c_type
+			}
 		}
 	}
 	return none
 }
 
 fn (mut s CharScanner) next_diff() ?ScanResult {
-	if s.data.len == 0 || s.last_index >= s.data.len { return none }
+	if s.data.len == 0 || s.last_index >= s.data.len {
+		return none
+	}
 	start_type := CharType.resolve(s.data[s.last_index])
 	for i := s.last_index; i < s.data.len; i++ {
 		c := s.data[i]
 		c_type := CharType.resolve(c)
 		if c_type != start_type {
 			s.last_index = i
-			return ScanResult{ index: i, cchar: c, cchar_str: c.str(), start_type: start_type, next_type: c_type }
+			return ScanResult{
+				index:      i
+				cchar:      c
+				cchar_str:  c.str()
+				start_type: start_type
+				next_type:  c_type
+			}
 		}
 	}
 	return none
@@ -972,7 +1087,6 @@ fn (mut s CharScanner) next_diff() ?ScanResult {
 pub fn is_alpha_num(c rune) bool {
 	return utf8.is_letter(c) || utf8.is_number(c) || c == '_'.runes()[0]
 }
-
 
 pub interface LineIterator {
 mut:

@@ -71,7 +71,7 @@ pub const dark_theme = Theme{
 	status_lilac:  tea.Color.ansi(134)
 
 	syntax_comment: tea.Color.ansi(241)
-	syntax_string: dark_petal_pink
+	syntax_string:  dark_petal_pink
 	syntax_literal: tea.Color.ansi(84)
 	syntax_builtin: dark_petal_red
 
@@ -102,10 +102,9 @@ pub const light_theme = Theme{
 	status_lilac:  tea.Color.ansi(134)
 
 	syntax_comment: light_subtle_light_grey
-	syntax_string: light_petal_pink
+	syntax_string:  light_petal_pink
 	syntax_literal: light_petal_green
 	syntax_builtin: dark_theme.petal_red
 
 	cursor_line_bg: tea.Color.ansi(254)
 }
-

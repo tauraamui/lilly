@@ -33,7 +33,8 @@ fn main() {
 
 	mut cb := clipboard.new()
 
-	mut petal_model := PetalModel.new(vmod_manifest.version, config, &documents_controller, &cb)
+	mut petal_model := PetalModel.new(vmod_manifest.version, config, &documents_controller,
+		&cb)
 	mut app := tea.new_program(mut petal_model)
 	petal_model.app_send = app.send
 	app.run() or { panic('something went wrong! ${err}') }

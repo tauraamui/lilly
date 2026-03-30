@@ -44,7 +44,7 @@ fn (mut c DarwinClipboard) get_content() ?ClipboardContent {
 	c_content := unsafe { &c_content_ptr }
 
 	mut clipboard_content := ClipboardContent{
-		data: ''
+		data:  ''
 		@type: .block
 	}
 

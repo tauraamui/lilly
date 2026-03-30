@@ -26,7 +26,9 @@ import lib.clipboard
 pub const tab_width = 4
 
 fn num_digits(n int) int {
-	if n <= 0 { return 1 }
+	if n <= 0 {
+		return 1
+	}
 	mut count := 0
 	mut v := n
 	for v > 0 {
@@ -51,8 +53,8 @@ struct EditorModel {
 	theme     theme.Theme
 	file_path string
 mut:
-	focused        bool
-	show_border    bool = true
+	focused          bool
+	show_border      bool = true
 	cursor_underline bool
 
 	width  int
@@ -66,9 +68,9 @@ mut:
 	arena          Arena
 	rune_buf       []rune
 
-	sel_start_pos  ?cursor.Pos
-	sel_mode       petal.Mode = .normal // tracks which visual mode (.visual or .visual_line)
-	chord Chord
+	sel_start_pos ?cursor.Pos
+	sel_mode      petal.Mode = .normal // tracks which visual mode (.visual or .visual_line)
+	chord         Chord
 }
 
 struct OpenEditorMsg {
@@ -107,7 +109,7 @@ struct WriteToDiskMsg {}
 fn write_to_disk(id int) tea.Cmd {
 	return fn [id] () tea.Msg {
 		return EditorModelMsg{
-			id: id
+			id:  id
 			msg: WriteToDiskMsg{}
 		}
 	}
@@ -115,10 +117,10 @@ fn write_to_disk(id int) tea.Cmd {
 
 @[params]
 struct EditorModelNewParams {
-	theme theme.Theme
-	id int
-	file_path string
-	doc_id int
+	theme          theme.Theme
+	id             int
+	file_path      string
+	doc_id         int
 	doc_controller &documents.Controller
 	cb             &clipboard.Manager
 }
@@ -173,9 +175,15 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 									m.doc_controller.insert_char(m.doc_id, cr)
 								}
 							}
-							'backspace' { m.doc_controller.backspace(m.doc_id) }
-							'delete' { m.doc_controller.delete(m.doc_id) }
-							'ctrl+i' { m.doc_controller.insert_char(m.doc_id, `\t`) } // ctrl+i is apparently equiv to TAB
+							'backspace' {
+								m.doc_controller.backspace(m.doc_id)
+							}
+							'delete' {
+								m.doc_controller.delete(m.doc_id)
+							}
+							'ctrl+i' {
+								m.doc_controller.insert_char(m.doc_id, `\t`)
+							} // ctrl+i is apparently equiv to TAB
 							'left' {
 								m.doc_controller.move_cursor_left(m.doc_id, .insert)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
@@ -227,17 +235,39 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 					.runes {
 						match msg.key_msg.string() {
-							'h' { m.doc_controller.move_cursor_left(m.doc_id, .visual) }
-							'l' { m.doc_controller.move_cursor_right(m.doc_id, .visual) }
-							'k' { m.doc_controller.move_cursor_up(m.doc_id, .visual) }
-							'j' { m.doc_controller.move_cursor_down(m.doc_id, .visual) }
-							'w' { m.doc_controller.move_cursor_to_next_word_start(m.doc_id) }
-							'W' { m.doc_controller.move_cursor_to_next_big_word_start(m.doc_id) }
-							'e' { m.doc_controller.move_cursor_to_next_word_end(m.doc_id) }
-							'b' { m.doc_controller.move_cursor_to_previous_word_start(m.doc_id) }
-							'$' { m.doc_controller.move_cursor_to_line_end(m.doc_id, .normal) }
-							'{' { m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id) }
-							'}' { m.doc_controller.move_cursor_to_next_blank_line(m.doc_id) }
+							'h' {
+								m.doc_controller.move_cursor_left(m.doc_id, .visual)
+							}
+							'l' {
+								m.doc_controller.move_cursor_right(m.doc_id, .visual)
+							}
+							'k' {
+								m.doc_controller.move_cursor_up(m.doc_id, .visual)
+							}
+							'j' {
+								m.doc_controller.move_cursor_down(m.doc_id, .visual)
+							}
+							'w' {
+								m.doc_controller.move_cursor_to_next_word_start(m.doc_id)
+							}
+							'W' {
+								m.doc_controller.move_cursor_to_next_big_word_start(m.doc_id)
+							}
+							'e' {
+								m.doc_controller.move_cursor_to_next_word_end(m.doc_id)
+							}
+							'b' {
+								m.doc_controller.move_cursor_to_previous_word_start(m.doc_id)
+							}
+							'$' {
+								m.doc_controller.move_cursor_to_line_end(m.doc_id, .normal)
+							}
+							'{' {
+								m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id)
+							}
+							'}' {
+								m.doc_controller.move_cursor_to_next_blank_line(m.doc_id)
+							}
 							'd' {
 								if sel_start := m.sel_start_pos {
 									m.doc_controller.begin_undo_group(m.doc_id)
@@ -275,10 +305,18 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					}
 					.runes {
 						match msg.key_msg.string() {
-							'k' { m.doc_controller.move_cursor_up(m.doc_id, .visual_line) }
-							'j' { m.doc_controller.move_cursor_down(m.doc_id, .visual_line) }
-							'{' { m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id) }
-							'}' { m.doc_controller.move_cursor_to_next_blank_line(m.doc_id) }
+							'k' {
+								m.doc_controller.move_cursor_up(m.doc_id, .visual_line)
+							}
+							'j' {
+								m.doc_controller.move_cursor_down(m.doc_id, .visual_line)
+							}
+							'{' {
+								m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id)
+							}
+							'}' {
+								m.doc_controller.move_cursor_to_next_blank_line(m.doc_id)
+							}
 							'd' {
 								if sel_start := m.sel_start_pos {
 									m.doc_controller.begin_undo_group(m.doc_id)
@@ -325,24 +363,28 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								target_y := m.min_y + m.height / 4
 								current_y := m.doc_controller.cursor_pos(m.doc_id).y
 								if current_y > target_y {
-									m.doc_controller.move_cursor_up_by(m.doc_id, current_y - target_y, .normal)
+									m.doc_controller.move_cursor_up_by(m.doc_id, current_y - target_y,
+										.normal)
 								} else {
-									m.doc_controller.move_cursor_down_by(m.doc_id, target_y - current_y, .normal)
+									m.doc_controller.move_cursor_down_by(m.doc_id, target_y - current_y,
+										.normal)
 								}
 								m.ensure_cursor_visible()
 							}
 							'ctrl+r' {
-							m.doc_controller.redo(m.doc_id)
-						}
-						'ctrl+d' {
+								m.doc_controller.redo(m.doc_id)
+							}
+							'ctrl+d' {
 								half := m.height / 2
 								m.min_y += half
 								target_y := m.min_y + m.height * 3 / 4
 								current_y := m.doc_controller.cursor_pos(m.doc_id).y
 								if current_y < target_y {
-									m.doc_controller.move_cursor_down_by(m.doc_id, target_y - current_y, .normal)
+									m.doc_controller.move_cursor_down_by(m.doc_id, target_y - current_y,
+										.normal)
 								} else {
-									m.doc_controller.move_cursor_up_by(m.doc_id, current_y - target_y, .normal)
+									m.doc_controller.move_cursor_up_by(m.doc_id, current_y - target_y,
+										.normal)
 								}
 								m.ensure_cursor_visible()
 							}
@@ -383,7 +425,9 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			m.height = msg.window_height
 		}
 		SwitchModeMsg {
-			if !m.focused { return m.clone(), none }
+			if !m.focused {
+				return m.clone(), none
+			}
 			match msg.mode {
 				.insert {
 					m.doc_controller.prepare_for_insertion(m.doc_id) or {
@@ -398,7 +442,9 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						m.doc_controller.commit_undo_group(m.doc_id)
 					}
 					if msg.from == .normal || msg.from == .insert {
-						current_line := m.doc_controller.get_line_at(m.doc_id, m.doc_controller.cursor_pos(m.doc_id).y) or { '' }
+						current_line := m.doc_controller.get_line_at(m.doc_id, m.doc_controller.cursor_pos(m.doc_id).y) or {
+							''
+						}
 						if current_line.len > 0 && current_line.trim_space().len == 0 {
 							m.doc_controller.clear_line(m.doc_id)
 						} else {
@@ -442,7 +488,8 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							return m.clone(), tea.batch_array(cmds)
 						}
 						message_text := 'written to disk successfully'
-						cmds << tea.sequence(debug_log(message_text), display_message(.normal, message_text))
+						cmds << tea.sequence(debug_log(message_text), display_message(.normal,
+							message_text))
 					}
 					m.ensure_cursor_visible()
 					return m.clone(), tea.batch_array(cmds)
@@ -558,17 +605,30 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 						}
 						else {}
 					}
-					prev_token := if i - 1 >= 0 { ?syntax.Token(line_tokens[i - 1]) } else { ?syntax.Token(none) }
-					next_token := if i + 1 < line_tokens.len { ?syntax.Token(line_tokens[i + 1]) } else { ?syntax.Token(none) }
-
-					if pt := prev_token {
-						if pt.t_type() != .whitespace && pt.end() - pt.start() == 1 && m.rune_buf[pt.start()] == `_` { ctx.reset_color() }
+					prev_token := if i - 1 >= 0 {
+						?syntax.Token(line_tokens[i - 1])
 					} else {
-						if nt := next_token {
-							if nt.t_type() != .whitespace && nt.end() - nt.start() == 1 && m.rune_buf[nt.start()] == `_` { ctx.reset_color() }
-						}
+						?syntax.Token(none)
+					}
+					next_token := if i + 1 < line_tokens.len {
+						?syntax.Token(line_tokens[i + 1])
+					} else {
+						?syntax.Token(none)
 					}
 
+					if pt := prev_token {
+						if pt.t_type() != .whitespace && pt.end() - pt.start() == 1
+							&& m.rune_buf[pt.start()] == `_` {
+							ctx.reset_color()
+						}
+					} else {
+						if nt := next_token {
+							if nt.t_type() != .whitespace && nt.end() - nt.start() == 1
+								&& m.rune_buf[nt.start()] == `_` {
+								ctx.reset_color()
+							}
+						}
+					}
 				}
 			}
 			ctx.draw_text(0, y - m.min_y, token_str)
@@ -603,12 +663,14 @@ fn (m EditorModel) render_visual_line_selection(mut ctx tea.Context, sel_start_y
 
 fn (m EditorModel) render_visual_selection(mut ctx tea.Context, sel_start cursor.Pos, cursor_pos cursor.Pos) {
 	// Normalize so start is before end
-	start := if sel_start.y < cursor_pos.y || (sel_start.y == cursor_pos.y && sel_start.x <= cursor_pos.x) {
+	start := if sel_start.y < cursor_pos.y
+		|| (sel_start.y == cursor_pos.y && sel_start.x <= cursor_pos.x) {
 		sel_start
 	} else {
 		cursor_pos
 	}
-	end := if sel_start.y < cursor_pos.y || (sel_start.y == cursor_pos.y && sel_start.x <= cursor_pos.x) {
+	end := if sel_start.y < cursor_pos.y
+		|| (sel_start.y == cursor_pos.y && sel_start.x <= cursor_pos.x) {
 		cursor_pos
 	} else {
 		sel_start
@@ -689,7 +751,7 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 					'line' {
 						m.doc_controller.begin_undo_group(m.doc_id)
 						m.yank_lines(count)
-						for _ in 0..count {
+						for _ in 0 .. count {
 							m.doc_controller.delete_line(m.doc_id)
 						}
 						m.doc_controller.commit_undo_group(m.doc_id)
@@ -715,7 +777,7 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 		// pure motion - no operator
 		match action.motion {
 			'u' {
-				for _ in 0..count {
+				for _ in 0 .. count {
 					m.doc_controller.undo(m.doc_id)
 				}
 			}
@@ -737,32 +799,32 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 				m.ensure_cursor_visible()
 			}
 			'w' {
-				for _ in 0..count {
+				for _ in 0 .. count {
 					m.doc_controller.move_cursor_to_next_word_start(m.doc_id)
 				}
 			}
 			'W' {
-				for _ in 0..count {
+				for _ in 0 .. count {
 					m.doc_controller.move_cursor_to_next_big_word_start(m.doc_id)
 				}
 			}
 			'e' {
-				for _ in 0..count {
+				for _ in 0 .. count {
 					m.doc_controller.move_cursor_to_next_word_end(m.doc_id)
 				}
 			}
 			'b' {
-				for _ in 0..count {
+				for _ in 0 .. count {
 					m.doc_controller.move_cursor_to_previous_word_start(m.doc_id)
 				}
 			}
 			'ge' {
-				for _ in 0..count {
+				for _ in 0 .. count {
 					m.doc_controller.move_cursor_to_previous_word_end(m.doc_id)
 				}
 			}
 			'h' {
-				for _ in 0..count {
+				for _ in 0 .. count {
 					m.doc_controller.move_cursor_left(m.doc_id, .normal)
 				}
 			}
@@ -782,18 +844,18 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 				// m.doc_controller.move_cursor_to_line_start(m.doc_id)
 			}
 			'{' {
-				for _ in 0..count {
+				for _ in 0 .. count {
 					m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id)
 				}
 			}
 			'}' {
-				for _ in 0..count {
+				for _ in 0 .. count {
 					m.doc_controller.move_cursor_to_next_blank_line(m.doc_id)
 				}
 			}
 			'x' {
 				m.doc_controller.begin_undo_group(m.doc_id)
-				for _ in 0..count {
+				for _ in 0 .. count {
 					m.doc_controller.delete_char_at(m.doc_id)
 				}
 				m.doc_controller.commit_undo_group(m.doc_id)
@@ -804,14 +866,16 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 				if current_y > target {
 					m.doc_controller.move_cursor_up_by(m.doc_id, current_y - target, .normal)
 				} else if current_y < target {
-					m.doc_controller.move_cursor_down_by(m.doc_id, target - current_y, .normal)
+					m.doc_controller.move_cursor_down_by(m.doc_id, target - current_y,
+						.normal)
 				}
 			}
 			'G' {
 				current_y := m.doc_controller.cursor_pos(m.doc_id).y
 				last_line := m.doc_controller.line_count(m.doc_id) - 1
 				if current_y < last_line {
-					m.doc_controller.move_cursor_down_by(m.doc_id, last_line - current_y, .normal)
+					m.doc_controller.move_cursor_down_by(m.doc_id, last_line - current_y,
+						.normal)
 				}
 			}
 			'v' {
@@ -847,7 +911,7 @@ fn (mut m EditorModel) yank_visual_line_selection(sel_start cursor.Pos) {
 	}
 	if lines.len > 0 {
 		m.cb.set_content(clipboard.ClipboardContent{
-			data: lines.join('\n')
+			data:  lines.join('\n')
 			@type: .block
 		})
 	}
@@ -856,12 +920,14 @@ fn (mut m EditorModel) yank_visual_line_selection(sel_start cursor.Pos) {
 fn (mut m EditorModel) yank_visual_selection(sel_start cursor.Pos) {
 	current_pos := m.doc_controller.cursor_pos(m.doc_id)
 	// Normalize so start is before end
-	start := if sel_start.y < current_pos.y || (sel_start.y == current_pos.y && sel_start.x <= current_pos.x) {
+	start := if sel_start.y < current_pos.y
+		|| (sel_start.y == current_pos.y && sel_start.x <= current_pos.x) {
 		sel_start
 	} else {
 		current_pos
 	}
-	end := if sel_start.y < current_pos.y || (sel_start.y == current_pos.y && sel_start.x <= current_pos.x) {
+	end := if sel_start.y < current_pos.y
+		|| (sel_start.y == current_pos.y && sel_start.x <= current_pos.x) {
 		current_pos
 	} else {
 		sel_start
@@ -874,7 +940,7 @@ fn (mut m EditorModel) yank_visual_selection(sel_start cursor.Pos) {
 			end_x := if end.x < runes.len { end.x } else { runes.len - 1 }
 			if start.x <= end_x {
 				m.cb.set_content(clipboard.ClipboardContent{
-					data: runes[start.x .. end_x + 1].string()
+					data:  runes[start.x..end_x + 1].string()
 					@type: .inline
 				})
 			}
@@ -884,7 +950,7 @@ fn (mut m EditorModel) yank_visual_selection(sel_start cursor.Pos) {
 		mut parts := []string{}
 		if first_line := m.doc_controller.get_line_at(m.doc_id, start.y) {
 			runes := first_line.runes()
-			parts << runes[start.x ..].string()
+			parts << runes[start.x..].string()
 		}
 		for y in start.y + 1 .. end.y {
 			if mid_line := m.doc_controller.get_line_at(m.doc_id, y) {
@@ -894,11 +960,11 @@ fn (mut m EditorModel) yank_visual_selection(sel_start cursor.Pos) {
 		if last_line := m.doc_controller.get_line_at(m.doc_id, end.y) {
 			runes := last_line.runes()
 			end_x := if end.x < runes.len { end.x } else { runes.len - 1 }
-			parts << runes[.. end_x + 1].string()
+			parts << runes[..end_x + 1].string()
 		}
 		if parts.len > 0 {
 			m.cb.set_content(clipboard.ClipboardContent{
-				data: parts.join('\n')
+				data:  parts.join('\n')
 				@type: .inline
 			})
 		}
@@ -915,7 +981,7 @@ fn (mut m EditorModel) yank_lines(count int) {
 	}
 	if lines.len > 0 {
 		m.cb.set_content(clipboard.ClipboardContent{
-			data: lines.join('\n')
+			data:  lines.join('\n')
 			@type: .block
 		})
 	}
@@ -923,7 +989,9 @@ fn (mut m EditorModel) yank_lines(count int) {
 
 fn (mut m EditorModel) paste_after() {
 	content := m.cb.get_content() or { return }
-	if content.data.len == 0 { return }
+	if content.data.len == 0 {
+		return
+	}
 
 	match content.@type {
 		.block {
@@ -1001,7 +1069,9 @@ fn (mut m EditorModel) paste_after() {
 
 fn (mut m EditorModel) paste_before() {
 	content := m.cb.get_content() or { return }
-	if content.data.len == 0 { return }
+	if content.data.len == 0 {
+		return
+	}
 
 	match content.@type {
 		.block {
@@ -1018,7 +1088,8 @@ fn (mut m EditorModel) paste_before() {
 					m.doc_controller.insert_newline(m.doc_id)
 				}
 				// Move cursor back to start of first pasted line
-				m.doc_controller.move_cursor_up_by(m.doc_id, content.data.split('\n').len, .normal)
+				m.doc_controller.move_cursor_up_by(m.doc_id, content.data.split('\n').len,
+					.normal)
 			} else {
 				// Move to end of previous line and insert new lines
 				m.doc_controller.move_cursor_up(m.doc_id, .normal)
@@ -1031,7 +1102,8 @@ fn (mut m EditorModel) paste_before() {
 					}
 				}
 				// Move cursor to start of first pasted line
-				m.doc_controller.move_cursor_up_by(m.doc_id, content.data.split('\n').len - 1, .normal)
+				m.doc_controller.move_cursor_up_by(m.doc_id, content.data.split('\n').len - 1,
+					.normal)
 			}
 		}
 		.inline {

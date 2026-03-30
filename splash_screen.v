@@ -51,12 +51,12 @@ struct SplashScreenModel {
 	doc_controller &documents.Controller
 	cb             &clipboard.Manager
 mut:
-	window_width int
+	window_width  int
 	window_height int
-	tmux_wrapped bool
-	leader_mode  bool
-	leader_data  string
-	dialog_model ?DebuggableModel
+	tmux_wrapped  bool
+	leader_mode   bool
+	leader_data   string
+	dialog_model  ?DebuggableModel
 }
 
 fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
