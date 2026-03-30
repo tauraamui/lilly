@@ -240,11 +240,13 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							'}' { m.doc_controller.move_cursor_to_next_blank_line(m.doc_id) }
 							'd' {
 								if sel_start := m.sel_start_pos {
+									m.doc_controller.begin_undo_group(m.doc_id)
 									m.yank_visual_selection(sel_start)
 									m.doc_controller.delete_visual_range(m.doc_id, cursor.Range{
 										start: sel_start
 										end:   m.doc_controller.cursor_pos(m.doc_id)
 									})
+									m.doc_controller.commit_undo_group(m.doc_id)
 									cmds << switch_mode(.normal)
 								}
 							}
@@ -279,11 +281,13 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							'}' { m.doc_controller.move_cursor_to_next_blank_line(m.doc_id) }
 							'd' {
 								if sel_start := m.sel_start_pos {
+									m.doc_controller.begin_undo_group(m.doc_id)
 									m.yank_visual_line_selection(sel_start)
 									m.doc_controller.delete_range(m.doc_id, cursor.Range{
 										start: sel_start
 										end:   m.doc_controller.cursor_pos(m.doc_id)
 									})
+									m.doc_controller.commit_undo_group(m.doc_id)
 									cmds << switch_mode(.normal)
 								}
 							}
@@ -327,7 +331,10 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								}
 								m.ensure_cursor_visible()
 							}
-							'ctrl+d' {
+							'ctrl+r' {
+							m.doc_controller.redo(m.doc_id)
+						}
+						'ctrl+d' {
 								half := m.height / 2
 								m.min_y += half
 								target_y := m.min_y + m.height * 3 / 4
@@ -340,12 +347,14 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 								m.ensure_cursor_visible()
 							}
 							'delete' {
+								m.doc_controller.begin_undo_group(m.doc_id)
 								m.doc_controller.prepare_for_insertion(m.doc_id) or {
 									cmds << raise_error('error: ${err}')
 									m.ensure_cursor_visible()
 									return m.clone(), tea.batch_array(cmds)
 								}
 								m.doc_controller.delete(m.doc_id)
+								m.doc_controller.commit_undo_group(m.doc_id)
 							}
 							'left' {
 								m.doc_controller.move_cursor_left(m.doc_id, .normal)
@@ -381,9 +390,13 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						cmds << raise_error('switch mode error: ${err}')
 						return m.clone(), tea.batch_array(cmds)
 					}
+					m.doc_controller.begin_undo_group(m.doc_id)
 				}
 				.normal {
 					// if msg.from != .command && msg.from != .pending_delete && msg.from != .pending_g {
+					if msg.from == .insert {
+						m.doc_controller.commit_undo_group(m.doc_id)
+					}
 					if msg.from == .normal || msg.from == .insert {
 						current_line := m.doc_controller.get_line_at(m.doc_id, m.doc_controller.cursor_pos(m.doc_id).y) or { '' }
 						if current_line.len > 0 && current_line.trim_space().len == 0 {
@@ -674,10 +687,12 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 			`d` {
 				match action.motion {
 					'line' {
+						m.doc_controller.begin_undo_group(m.doc_id)
 						m.yank_lines(count)
 						for _ in 0..count {
 							m.doc_controller.delete_line(m.doc_id)
 						}
+						m.doc_controller.commit_undo_group(m.doc_id)
 					}
 					'w' {
 						// TODO(tauraamui)
@@ -699,7 +714,13 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 	} else {
 		// pure motion - no operator
 		match action.motion {
+			'u' {
+				for _ in 0..count {
+					m.doc_controller.undo(m.doc_id)
+				}
+			}
 			'o' {
+				m.doc_controller.begin_undo_group(m.doc_id)
 				m.doc_controller.move_cursor_to_line_end(m.doc_id, .insert)
 				m.doc_controller.prepare_for_insertion(m.doc_id) or {
 					cmds << raise_error('error: ${err}')
@@ -711,6 +732,7 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 				for cr in leading_whitespace {
 					m.doc_controller.insert_char(m.doc_id, cr)
 				}
+				m.doc_controller.commit_undo_group(m.doc_id)
 				cmds << switch_mode(.insert)
 				m.ensure_cursor_visible()
 			}
@@ -770,9 +792,11 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 				}
 			}
 			'x' {
+				m.doc_controller.begin_undo_group(m.doc_id)
 				for _ in 0..count {
 					m.doc_controller.delete_char_at(m.doc_id)
 				}
+				m.doc_controller.commit_undo_group(m.doc_id)
 			}
 			'gg' {
 				target := if action.count > 1 { action.count - 1 } else { 0 }
@@ -797,10 +821,14 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 				cmds << switch_mode(.visual_line)
 			}
 			'p' {
+				m.doc_controller.begin_undo_group(m.doc_id)
 				m.paste_after()
+				m.doc_controller.commit_undo_group(m.doc_id)
 			}
 			'P' {
+				m.doc_controller.begin_undo_group(m.doc_id)
 				m.paste_before()
+				m.doc_controller.commit_undo_group(m.doc_id)
 			}
 			else {}
 		}
