@@ -68,6 +68,10 @@ pub fn (c Controller) cursor_pos(doc_id int) cursor.Pos {
 	return c.cursors[doc_id]
 }
 
+pub fn (mut c Controller) set_cursor_pos(doc_id int, pos cursor.Pos) {
+	c.cursors[doc_id] = pos
+}
+
 pub fn (c Controller) visual_cursor_pos(doc_id int, tab_width int) cursor.Pos {
 	return c.docs[doc_id].visual_cursor_pos(c.cursors[doc_id], tab_width)
 }
