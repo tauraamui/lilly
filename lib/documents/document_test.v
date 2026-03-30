@@ -217,6 +217,11 @@ fn test_controller_move_cursor_up_by() {
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(0, 2)
 }
 
+fn test_controller_move_cursor_up_by2() {
+	mut ctrl, id := new_controller_with_content(mock_multiline_content_with_blanks)
+	assert ctrl.move_cursor_up_by2(id, cursor.Pos.new(0, 5), 3, .normal) == cursor.Pos.new(0, 2)
+}
+
 fn test_controller_move_cursor_up_by_stops_at_first_line() {
 	mut ctrl, id := new_controller_with_content(mock_content)
 
