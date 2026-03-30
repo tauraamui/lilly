@@ -344,7 +344,7 @@ fn (d Document) move_cursor_right(pos cursor.Pos, mode petal.Mode) cursor.Pos {
 			if x > current_line.runes().len { pos } else { pos.x(x) }
 		}
 		else {
-			pos.x(x)
+			if x >= current_line.runes().len { pos } else { pos.x(x) }
 		}
 	}
 }
