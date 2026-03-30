@@ -207,6 +207,13 @@ pub fn (g GapBuffer) content() []rune {
 	return combined
 }
 
+pub fn (mut g GapBuffer) set_content(content []rune) {
+	g.data = []rune{len: content.len + int(g.initial_gap_size), init: null_code_point}
+	g.gap_start = 0
+	g.gap_end = g.initial_gap_size
+	g.initial_fill(content)
+}
+
 pub fn (g GapBuffer) content_size() int {
 	return int(u32(g.data.len) - g.current_gap_size())
 }
