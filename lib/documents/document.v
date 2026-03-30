@@ -249,6 +249,10 @@ pub fn (c Controller) get_char_at(doc_id int) ?string {
 	return none
 }
 
+pub fn (c Controller) line_count(doc_id int) int {
+	return c.docs[doc_id].line_count()
+}
+
 pub fn (c Controller) get_iterator(doc_id int) LineIterator {
 	return c.docs[doc_id].iter()
 }
@@ -624,6 +628,16 @@ fn (mut d Document) delete_after() {
 
 pub fn (d Document) iter() LineIterator {
 	return d.data.iter()
+}
+
+fn (d Document) line_count() int {
+	mut count := 0
+	mut iter := d.data.iter()
+	for {
+		_ = iter.next() or { break }
+		count += 1
+	}
+	return count
 }
 
 enum CursorSituation {
