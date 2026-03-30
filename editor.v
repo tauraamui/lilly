@@ -273,6 +273,8 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 						match msg.key_msg.string() {
 							'k' { m.doc_controller.move_cursor_up(m.doc_id, .visual_line) }
 							'j' { m.doc_controller.move_cursor_down(m.doc_id, .visual_line) }
+							'{' { m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id) }
+							'}' { m.doc_controller.move_cursor_to_next_blank_line(m.doc_id) }
 							'd' {
 								if sel_start := m.sel_start_pos {
 									m.yank_visual_line_selection(sel_start)
