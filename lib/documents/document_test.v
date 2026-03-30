@@ -252,8 +252,10 @@ fn test_controller_move_cursor_down_by_preserves_x() {
 	mut ctrl, id := new_controller_with_content(mock_multiline_content_with_blanks)
 
 	ctrl.set_cursor_pos(id, cursor.Pos.new(8, 0))
-	ctrl.move_cursor_down_by(id, 1, .normal)
-	assert ctrl.cursor_pos(id) == cursor.Pos.new(8, 1)
+	ctrl.move_cursor_down_by(id, 2, .normal)
+	assert ctrl.cursor_pos(id) == cursor.Pos.new(0, 2)
+	ctrl.move_cursor_down_by(id, 2, .normal)
+	assert ctrl.cursor_pos(id) == cursor.Pos.new(8, 4)
 }
 
 fn test_controller_move_cursor_up_by_preserves_x() {
