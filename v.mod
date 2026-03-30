@@ -1,7 +1,7 @@
 Module {
 	name: 'petal'
 	description: ''
-	version: '0.0.0'
+	version: 'pre-alpha-v0.0.0'
 	license: 'MIT'
 	dependencies: []
 }

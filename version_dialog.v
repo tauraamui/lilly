@@ -18,16 +18,17 @@ import tauraamui.bobatea as tea
 import lib.petal.theme
 
 struct VersionModel {
+	version string
 	theme   theme.Theme
 	width   int
 	height  int
-	version string
 }
 
-fn open_version_dialog(ttheme theme.Theme) tea.Cmd {
-	return fn [ttheme] () tea.Msg {
+fn open_version_dialog(version string, ttheme theme.Theme) tea.Cmd {
+	return fn [version, ttheme] () tea.Msg {
 		return OpenDialogMsg{
 			model: VersionModel{
+				version: version
 				theme:  ttheme
 				width:  52
 				height: 5
@@ -72,9 +73,10 @@ fn (m VersionModel) view(mut r_ctx tea.Context) {
 	r_ctx.clear_area(0, 0, m.width, m.height)
 	width := m.width - 2
 	height := m.height - 2
+	version := m.version
 
 	tea.new_layout().border(.normal).border_color(m.theme.petal_pink).size(m.width, m.height).render(mut r_ctx,
-		fn [width, height] (mut ctx tea.Context) {
+		fn [version, width, height] (mut ctx tea.Context) {
 		ctx.reset_color()
 		version_label := 'project petal version (${version})'
 		ctx.draw_text((width / 2) - tea.visible_len(version_label) / 2, height / 2, version_label)

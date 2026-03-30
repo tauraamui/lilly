@@ -15,12 +15,16 @@
 module main
 
 import os
+import v.vmod
 import tauraamui.bobatea as tea
 import cfg
 import lib.documents
 import lib.clipboard
 
+const mod_file_content = $embed_file('v.mod').to_string()
+
 fn main() {
+	vmod_manifest := vmod.decode(mod_file_content) or { panic('failed to parse v.mod: ${err}') }
 	theme_name := os.getenv('PETAL_THEME')
 	config := cfg.Config.new(load_from_path: none).set_theme(theme_name)
 
@@ -29,7 +33,7 @@ fn main() {
 
 	mut cb := clipboard.new()
 
-	mut petal_model := PetalModel.new(config, &documents_controller, &cb)
+	mut petal_model := PetalModel.new(vmod_manifest.version, config, &documents_controller, &cb)
 	mut app := tea.new_program(mut petal_model)
 	petal_model.app_send = app.send
 	app.run() or { panic('something went wrong! ${err}') }

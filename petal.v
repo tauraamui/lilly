@@ -27,6 +27,7 @@ const dot = '•'
 struct PetalModel {
 mut:
 	app_send                ?fn (tea.Msg)
+	version                 string
 	config                  cfg.Config @[required]
 	theme                   theme.Theme
 	first_frame             bool
@@ -37,12 +38,14 @@ mut:
 	last_resize_height      int
 }
 
-fn PetalModel.new(config cfg.Config, doc_controller &documents.Controller, cb &clipboard.Manager) PetalModel {
+fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.Controller, cb &clipboard.Manager) PetalModel {
 	return PetalModel{
+		version: version
 		config:        config
 		theme:         config.theme
 		first_frame:   true
 		active_screen: SplashScreenModel.new(
+			version:        version
 			leader_key:     config.leader_key
 			theme:          config.theme
 			doc_controller: doc_controller

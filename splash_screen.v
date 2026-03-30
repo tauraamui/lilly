@@ -24,7 +24,6 @@ import lib.clipboard
 
 const gitcommit_hash = $embed_file('.githash').to_string()
 
-const version = 'pre-alpha-v0.0.0'
 const build_id = gitcommit_hash
 
 const logo_contents = $embed_file('./splash-logo.txt')
@@ -37,6 +36,7 @@ mut:
 
 @[params]
 struct SplashScreenOptions {
+	version        string
 	leader_key     string
 	theme          theme.Theme
 	doc_controller &documents.Controller
@@ -44,6 +44,7 @@ struct SplashScreenOptions {
 }
 
 struct SplashScreenModel {
+	version        string
 	leader_key     string
 	logo           SplashLogo
 	theme          theme.Theme
@@ -60,6 +61,7 @@ mut:
 
 fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
 	return SplashScreenModel{
+		version:        opts.version
 		leader_key:     opts.leader_key
 		theme:          opts.theme
 		logo:           SplashLogo{
@@ -176,7 +178,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			cmds << open_editor_workspace(msg.file_path)
 		}
 		OpenEditorWorkspaceMsg {
-			mut workspace := EditorWorkspaceModel.new(m.theme, msg.initial_file_path,
+			mut workspace := EditorWorkspaceModel.new(m.version, m.theme, msg.initial_file_path,
 				m.doc_controller, m.cb)
 			cmd := workspace.init()
 			if u_cmd := cmd {
@@ -208,7 +210,7 @@ fn (mut m SplashScreenModel) reset_leader_mode() {
 }
 
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
-	render_version_label(mut ctx, '${version} - (#${build_id})', m.theme.subtle_light_grey)
+	render_version_label(mut ctx, '${m.version} - (#${build_id})', m.theme.subtle_light_grey)
 	render_logo_and_help_centered_and_stacked(mut ctx,
 		logo:                   m.logo
 		in_leader_mode:         m.leader_mode
@@ -449,7 +451,7 @@ fn (m SplashScreenModel) debug_data() DebugData {
 			'leader key':   m.leader_key
 			'tmux wrapped': '${m.tmux_wrapped}'
 			'':             if d := m.dialog_model { d.debug_data() } else { 'null' }
-			'version':      '${version} - (${build_id})'
+			'version':      '${m.version} - (${build_id})'
 		}
 	}
 }
