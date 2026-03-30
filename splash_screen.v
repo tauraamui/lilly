@@ -275,7 +275,6 @@ fn render_logo_and_help_centered_and_stacked(mut ctx tea.Context,
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
 	ctx.push_offset(render_logo(mut ctx, opts.RenderLogoParams))
-	ctx.push_offset(render_lilly_name(mut ctx))
 	ctx.push_offset(render_keybinds_list(mut ctx, opts.RenderKeybindsListParams))
 	render_copyright_footer(mut ctx, opts.petal_pink)
 }
@@ -351,22 +350,6 @@ fn render_keybinds_list(mut ctx tea.Context,
 		ctx.pop_offset()
 		ctx.push_offset(tea.Offset{ y: 1 })
 	}
-	return ctx.compact_offsets_from(offset_from_id)
-}
-
-fn render_lilly_name(mut ctx tea.Context) tea.Offset {
-	offset_from_id := ctx.push_offset(tea.Offset{})
-	defer { ctx.clear_offsets_from(offset_from_id) }
-
-	ctx.push_offset(tea.Offset{ y: 1 })
-	version_label := 'lilly (project petal) ${[u8(0xf0), 0x9f, 0x8c, 0xb8].bytestr()}'
-
-	first_version_label_offset_id := ctx.push_offset(tea.Offset{
-		x: -(tea.visible_len(version_label) / 2)
-	})
-	ctx.draw_text(0, 0, version_label)
-
-	ctx.clear_offsets_from(first_version_label_offset_id)
 	return ctx.compact_offsets_from(offset_from_id)
 }
 
