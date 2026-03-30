@@ -41,6 +41,9 @@ jobs:
       - name: Install dependencies
         run: v install tauraamui.bobatea
 
+      - name: Remove V source from workspace
+        run: rm -rf vlang/
+
       - run: v run ./make.vsh build
       - name: Run tests
         timeout-minutes: 3
