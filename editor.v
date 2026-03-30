@@ -912,25 +912,56 @@ fn (mut m EditorModel) paste_after() {
 		.inline {
 			// Inline paste: insert text after cursor
 			m.doc_controller.move_cursor_right(m.doc_id, .insert)
+			start_pos := m.doc_controller.cursor_pos(m.doc_id)
 			m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+			mut newline_count := 0
+			mut last_line_char_count := 0
 			for cr in content.data.runes() {
 				if cr == `\n` {
 					m.doc_controller.insert_newline(m.doc_id)
+					newline_count += 1
+					last_line_char_count = 0
 				} else {
 					m.doc_controller.insert_char(m.doc_id, cr)
+					last_line_char_count += 1
 				}
+			}
+			// Reposition cursor on last character of pasted text
+			if newline_count > 0 {
+				final_x := if last_line_char_count > 0 { last_line_char_count - 1 } else { 0 }
+				final_y := start_pos.y + newline_count
+				m.doc_controller.set_cursor_pos(m.doc_id, cursor.Pos.new(final_x, final_y))
+			} else if last_line_char_count > 0 {
+				// Single-line paste: cursor on last pasted character
+				final_x := start_pos.x + last_line_char_count - 1
+				m.doc_controller.set_cursor_pos(m.doc_id, cursor.Pos.new(final_x, start_pos.y))
 			}
 		}
 		.none {
 			// Treat unknown as inline
 			m.doc_controller.move_cursor_right(m.doc_id, .insert)
+			start_pos := m.doc_controller.cursor_pos(m.doc_id)
 			m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+			mut newline_count := 0
+			mut last_line_char_count := 0
 			for cr in content.data.runes() {
 				if cr == `\n` {
 					m.doc_controller.insert_newline(m.doc_id)
+					newline_count += 1
+					last_line_char_count = 0
 				} else {
 					m.doc_controller.insert_char(m.doc_id, cr)
+					last_line_char_count += 1
 				}
+			}
+			// Reposition cursor on last character of pasted text
+			if newline_count > 0 {
+				final_x := if last_line_char_count > 0 { last_line_char_count - 1 } else { 0 }
+				final_y := start_pos.y + newline_count
+				m.doc_controller.set_cursor_pos(m.doc_id, cursor.Pos.new(final_x, final_y))
+			} else if last_line_char_count > 0 {
+				final_x := start_pos.x + last_line_char_count - 1
+				m.doc_controller.set_cursor_pos(m.doc_id, cursor.Pos.new(final_x, start_pos.y))
 			}
 		}
 	}
@@ -973,23 +1004,52 @@ fn (mut m EditorModel) paste_before() {
 		}
 		.inline {
 			// Inline paste: insert text before cursor
+			start_pos := m.doc_controller.cursor_pos(m.doc_id)
 			m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+			mut newline_count := 0
+			mut last_line_char_count := 0
 			for cr in content.data.runes() {
 				if cr == `\n` {
 					m.doc_controller.insert_newline(m.doc_id)
+					newline_count += 1
+					last_line_char_count = 0
 				} else {
 					m.doc_controller.insert_char(m.doc_id, cr)
+					last_line_char_count += 1
 				}
+			}
+			// Reposition cursor on last character of pasted text
+			if newline_count > 0 {
+				final_x := if last_line_char_count > 0 { last_line_char_count - 1 } else { 0 }
+				final_y := start_pos.y + newline_count
+				m.doc_controller.set_cursor_pos(m.doc_id, cursor.Pos.new(final_x, final_y))
+			} else if last_line_char_count > 0 {
+				final_x := start_pos.x + last_line_char_count - 1
+				m.doc_controller.set_cursor_pos(m.doc_id, cursor.Pos.new(final_x, start_pos.y))
 			}
 		}
 		.none {
+			start_pos := m.doc_controller.cursor_pos(m.doc_id)
 			m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+			mut newline_count := 0
+			mut last_line_char_count := 0
 			for cr in content.data.runes() {
 				if cr == `\n` {
 					m.doc_controller.insert_newline(m.doc_id)
+					newline_count += 1
+					last_line_char_count = 0
 				} else {
 					m.doc_controller.insert_char(m.doc_id, cr)
+					last_line_char_count += 1
 				}
+			}
+			if newline_count > 0 {
+				final_x := if last_line_char_count > 0 { last_line_char_count - 1 } else { 0 }
+				final_y := start_pos.y + newline_count
+				m.doc_controller.set_cursor_pos(m.doc_id, cursor.Pos.new(final_x, final_y))
+			} else if last_line_char_count > 0 {
+				final_x := start_pos.x + last_line_char_count - 1
+				m.doc_controller.set_cursor_pos(m.doc_id, cursor.Pos.new(final_x, start_pos.y))
 			}
 		}
 	}
