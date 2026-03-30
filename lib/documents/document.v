@@ -192,6 +192,18 @@ pub fn (mut c Controller) move_cursor_up_by(doc_id int, count int, mode petal.Mo
 	}
 }
 
+pub fn (mut c Controller) move_cursor_up_by2(doc_id int, pos cursor.Pos, count int, mode petal.Mode) cursor.Pos {
+	mut pending_pos := pos
+	for _ in 0 .. count {
+		new_pos := c.docs[doc_id].move_cursor_up(pending_pos, mode)
+		if new_pos == pending_pos {
+			break
+		}
+		pending_pos = new_pos
+	}
+	return pending_pos
+}
+
 pub fn (mut c Controller) move_cursor_down_by(doc_id int, count int, mode petal.Mode) {
 	for _ in 0 .. count {
 		pos := c.cursors[doc_id]
