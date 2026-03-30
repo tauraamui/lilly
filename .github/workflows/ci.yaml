@@ -42,4 +42,6 @@ jobs:
         run: v install tauraamui.bobatea
 
       - run: v run ./make.vsh build
-      - run: v run ./make.vsh verbose-test
+      - name: Run tests
+        timeout-minutes: 3
+        run: v run ./make.vsh verbose-test
