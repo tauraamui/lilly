@@ -21,13 +21,72 @@ import lib.buffers
 import lib.documents.cursor
 import lib.petal
 
+struct UndoEntry {
+	cursor_before  cursor.Pos
+	cursor_after   cursor.Pos
+	content_before []rune
+	content_after  []rune
+}
+
+struct UndoManager {
+mut:
+	undo_stack      []UndoEntry
+	redo_stack      []UndoEntry
+	pending_cursor  ?cursor.Pos
+	pending_content []rune
+	in_group        bool
+}
+
+fn (mut um UndoManager) begin_group(cur cursor.Pos, content []rune) {
+	um.pending_cursor = cur
+	um.pending_content = content
+	um.in_group = true
+}
+
+fn (mut um UndoManager) commit_group(cur cursor.Pos, content []rune) {
+	if !um.in_group {
+		return
+	}
+	um.in_group = false
+	pending_cur := um.pending_cursor or { return }
+	if um.pending_content == content {
+		return
+	}
+	um.undo_stack << UndoEntry{
+		cursor_before:  pending_cur
+		cursor_after:   cur
+		content_before: um.pending_content
+		content_after:  content
+	}
+	um.redo_stack.clear()
+}
+
+fn (mut um UndoManager) undo() ?UndoEntry {
+	if um.undo_stack.len == 0 {
+		return none
+	}
+	entry := um.undo_stack.pop()
+	um.redo_stack << entry
+	return entry
+}
+
+fn (mut um UndoManager) redo() ?UndoEntry {
+	if um.redo_stack.len == 0 {
+		return none
+	}
+	entry := um.redo_stack.pop()
+	um.undo_stack << entry
+	return entry
+}
+
 @[heap]
 pub struct Controller {
 mut:
-	loaded_files map[string]int
-	docs         map[int]Document
-	cursors      map[int]cursor.Pos
-	doc_id_count int
+	loaded_files  map[string]int
+	docs          map[int]Document
+	cursors       map[int]cursor.Pos
+	undo_managers map[int]UndoManager
+	doc_id_count  int
 }
 
 pub fn Controller.new() Controller {
@@ -43,6 +102,7 @@ pub fn (mut c Controller) open_document(file_path string) !int {
 	c.loaded_files[file_path] = id
 	c.docs[id] = Document.new(file_path)!
 	c.cursors[id] = cursor.Pos.new(0, 0)
+	c.undo_managers[id] = UndoManager{}
 	return id
 }
 
@@ -53,6 +113,28 @@ pub fn (mut c Controller) write_document(doc_id int) ! {
 	temp_file_path := os.join_path(os.temp_dir(), os.base(target_file_path))
 	c.docs[doc_id].write_to(temp_file_path) or { return error('failed to write to temp location: ${temp_file_path}') }
 	os.mv(temp_file_path, c.docs[doc_id].file_path) or { return error('failed to move temp location: ${temp_file_path} to dest: ${target_file_path}') }
+}
+
+pub fn (mut c Controller) begin_undo_group(doc_id int) {
+	c.undo_managers[doc_id].begin_group(c.cursors[doc_id], c.docs[doc_id].data.content())
+}
+
+pub fn (mut c Controller) commit_undo_group(doc_id int) {
+	c.undo_managers[doc_id].commit_group(c.cursors[doc_id], c.docs[doc_id].data.content())
+}
+
+pub fn (mut c Controller) undo(doc_id int) {
+	if entry := c.undo_managers[doc_id].undo() {
+		c.docs[doc_id].data.set_content(entry.content_before)
+		c.cursors[doc_id] = entry.cursor_before
+	}
+}
+
+pub fn (mut c Controller) redo(doc_id int) {
+	if entry := c.undo_managers[doc_id].redo() {
+		c.docs[doc_id].data.set_content(entry.content_after)
+		c.cursors[doc_id] = entry.cursor_after
+	}
 }
 
 pub fn (mut c Controller) prepare_for_insertion(doc_id int) ! {
