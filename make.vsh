@@ -4,7 +4,7 @@ import build
 import strconv
 import math
 
-const app_name = 'petal'
+const app_name = 'lilly'
 
 mut context := build.context(
 	default: 'run'
