@@ -1,0 +1,4 @@
+"Scope: Tests Only":
+- changed-files:
+  - any-glob-to-all-files: "**/*_test.v"
+
