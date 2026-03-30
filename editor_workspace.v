@@ -27,6 +27,7 @@ import lib.documents
 import lib.clipboard
 
 struct EditorWorkspaceModel {
+	version           string
 	initial_file_path string
 	// NOTE(tauraamui): forced mode to be immutable, this ensures we cannot randomly
 	// accidentally set the mode state without accounting for necessary checks and state changes,
@@ -80,8 +81,9 @@ fn open_editor_workspace(initial_file_path string) tea.Cmd {
 	}
 }
 
-fn EditorWorkspaceModel.new(ttheme theme.Theme, initial_file_path string, doc_controller &documents.Controller, cb &clipboard.Manager) EditorWorkspaceModel {
+fn EditorWorkspaceModel.new(version string, ttheme theme.Theme, initial_file_path string, doc_controller &documents.Controller, cb &clipboard.Manager) EditorWorkspaceModel {
 	return EditorWorkspaceModel{
+		version:           version
 		theme:             ttheme
 		initial_file_path: initial_file_path
 		split_tree:        boba.SplitTree.new()
@@ -632,7 +634,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				'debug' { cmds << toggle_debug_screen }
 				'q' { cmds << close_active_split }
 				'qa' { cmds << tea.quit }
-				'version' { cmds << open_version_dialog(m.theme) }
+				'version' { cmds << open_version_dialog(m.version, m.theme) }
 				'vs' { cmds << split_vertically }
 				'w' { cmds << write_to_disk(m.active_editor_id) }
 				else { cmds << raise_error("unknown command '${msg.command}'") }
