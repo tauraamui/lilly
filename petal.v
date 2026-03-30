@@ -40,7 +40,7 @@ mut:
 
 fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.Controller, cb &clipboard.Manager) PetalModel {
 	return PetalModel{
-		version: version
+		version:       version
 		config:        config
 		theme:         config.theme
 		first_frame:   true

@@ -171,7 +171,9 @@ pub fn (mut g GapBuffer) insert_char(data rune) {
 }
 
 pub fn (mut g GapBuffer) delete_before() {
-	if g.gap_start == 0 { return }
+	if g.gap_start == 0 {
+		return
+	}
 	g.gap_start -= 1
 	g.data[g.gap_start] = null_code_point
 }

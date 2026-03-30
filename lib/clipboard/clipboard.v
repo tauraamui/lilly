@@ -22,7 +22,7 @@ pub enum ContentType as u8 {
 
 pub struct ClipboardContent {
 pub mut:
-	data string
+	data  string
 	@type ContentType
 }
 
@@ -40,18 +40,26 @@ mut:
 
 pub fn new() Manager {
 	$if test {
-		return Manager{ backend: new_fallback_clipboard() }
+		return Manager{
+			backend: new_fallback_clipboard()
+		}
 	}
 
 	$if darwin {
-		return Manager{ backend: new_darwin_clipboard() }
+		return Manager{
+			backend: new_darwin_clipboard()
+		}
 	}
 
 	$if linux {
-		return Manager{ backend: new_linux_clipboard() }
+		return Manager{
+			backend: new_linux_clipboard()
+		}
 	}
 
-	return Manager{ backend: new_osc52_clipboard() }
+	return Manager{
+		backend: new_osc52_clipboard()
+	}
 }
 
 pub fn (mut m Manager) get_content() ?ClipboardContent {

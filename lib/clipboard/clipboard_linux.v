@@ -65,7 +65,7 @@ fn (mut cb LinuxClipboard) get_content() ?ClipboardContent {
 	}
 
 	return ClipboardContent{
-		data: result.output
+		data:  result.output
 		@type: .block
 	}
 }

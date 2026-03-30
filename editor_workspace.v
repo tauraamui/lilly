@@ -174,9 +174,9 @@ enum DisplayMessageType {
 
 fn (t DisplayMessageType) color(ttheme theme.Theme) tea.Color {
 	return match t {
-		.normal  { ttheme.petal_green }
+		.normal { ttheme.petal_green }
 		.warning { ttheme.status_orange }
-		.error   { ttheme.petal_red }
+		.error { ttheme.petal_red }
 	}
 }
 
@@ -189,7 +189,7 @@ fn display_message(m_type DisplayMessageType, contents string) tea.Cmd {
 	return fn [m_type, contents] () tea.Msg {
 		return DisplayMessageMsg{
 			contents: contents
-			m_type: m_type
+			m_type:   m_type
 		}
 	}
 }
@@ -503,12 +503,13 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			}
 
 			mut e_model := EditorModel.new(
-				id: editor_id,
-				theme: m.theme,
-				file_path: msg.file_path,
-				doc_id: doc_id,
-				doc_controller: m.doc_controller,
-				cb: m.cb)
+				id:             editor_id
+				theme:          m.theme
+				file_path:      msg.file_path
+				doc_id:         doc_id
+				doc_controller: m.doc_controller
+				cb:             m.cb
+			)
 			cmd := e_model.init()
 
 			if m.split_tree.is_empty() {
@@ -535,12 +536,12 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				old_id := info.id // get the old ID before inserting
 				new_id := m.next_editor_id()
 				mut new_editor := EditorModel.new(
-					id: new_id,
-					theme: m.theme
-					file_path: info.file_path,
-					doc_id: info.doc_id,
-					doc_controller: m.doc_controller,
-					cb: m.cb
+					id:             new_id
+					theme:          m.theme
+					file_path:      info.file_path
+					doc_id:         info.doc_id
+					doc_controller: m.doc_controller
+					cb:             m.cb
 				)
 				if init_cmd := new_editor.init() {
 					cmds << init_cmd
@@ -643,7 +644,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		DisplayMessageMsg {
 			m.message_label = MessageLabel{
 				contents: msg.contents
-				ccolor: msg.m_type.color(m.theme)
+				ccolor:   msg.m_type.color(m.theme)
 			}
 		}
 		HideMessageMsg {
@@ -668,7 +669,10 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					m.input_field.blur()
 				}
 			}
-			enriched_msg := SwitchModeMsg{ from: m.mode, mode: msg.mode }
+			enriched_msg := SwitchModeMsg{
+				from: m.mode
+				mode: msg.mode
+			}
 			if u_cmd := m.forward_msg_to_editors(enriched_msg) {
 				cmds << u_cmd
 			}
@@ -895,11 +899,8 @@ fn (m EditorWorkspaceModel) render_leader_or_command_user_input_text(mut ctx tea
 			if d := m.active_editor_data {
 				if d.chord_display.len > 0 {
 					ctx.set_color(palette.subtle_text_fg_color)
-					ctx.draw_text(
-						ctx.window_width() - tea.visible_len(d.chord_display) - 1,
-						ctx.window_height() - 1,
-						d.chord_display
-					)
+					ctx.draw_text(ctx.window_width() - tea.visible_len(d.chord_display) - 1,
+						ctx.window_height() - 1, d.chord_display)
 					ctx.reset_color()
 				}
 			}

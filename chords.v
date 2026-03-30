@@ -61,9 +61,9 @@ fn (mut c Chord) feed(key string) ?ChordAction {
 			if motion := c.single_char_motion(ch) {
 				defer { c.reset() }
 				return ChordAction{
-					count: c.effective_count()
+					count:    c.effective_count()
 					operator: none
-					motion: motion
+					motion:   motion
 				}
 			}
 			// unrecognised key, abort current chord
@@ -81,9 +81,9 @@ fn (mut c Chord) feed(key string) ?ChordAction {
 				if ch == op {
 					defer { c.reset() }
 					return ChordAction{
-						count: c.effective_count()
+						count:    c.effective_count()
 						operator: op
-						motion: 'line'
+						motion:   'line'
 					}
 				}
 			}
@@ -94,9 +94,9 @@ fn (mut c Chord) feed(key string) ?ChordAction {
 			if motion := c.single_char_motion(ch) {
 				defer { c.reset() }
 				return ChordAction{
-					count: c.effective_count()
+					count:    c.effective_count()
 					operator: c.operator
-					motion: motion
+					motion:   motion
 				}
 			}
 			c.reset()
@@ -106,16 +106,16 @@ fn (mut c Chord) feed(key string) ?ChordAction {
 			defer { c.reset() }
 			if ch == `e` {
 				return ChordAction{
-					count: c.effective_count()
+					count:    c.effective_count()
 					operator: none
-					motion: 'ge'
+					motion:   'ge'
 				}
 			}
 			if ch == `g` {
 				return ChordAction{
-					count: c.effective_count()
+					count:    c.effective_count()
 					operator: none
-					motion: 'gg'
+					motion:   'gg'
 				}
 			}
 			// unrecognised g-prefix combo
@@ -125,9 +125,9 @@ fn (mut c Chord) feed(key string) ?ChordAction {
 			defer { c.reset() }
 			if ch == `e` {
 				return ChordAction{
-					count: c.effective_count()
+					count:    c.effective_count()
 					operator: c.operator
-					motion: 'ge'
+					motion:   'ge'
 				}
 			}
 			return none

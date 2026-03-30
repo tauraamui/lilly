@@ -73,7 +73,9 @@ fn (mut a Arena) runes_to_str(runes []rune, start int, end int) string {
 	for i in start .. end {
 		r := u32(runes[i])
 		if r <= 0x7F {
-			unsafe { ptr[pos] = u8(r) }
+			unsafe {
+				ptr[pos] = u8(r)
+			}
 			pos += 1
 		} else if r <= 0x7FF {
 			unsafe {
@@ -132,7 +134,9 @@ fn (mut a Arena) expand_tabs(s string, tw int) string {
 		if b == 0x09 {
 			spaces := tw - (column % tw)
 			for _ in 0 .. spaces {
-				unsafe { ptr[pos] = 0x20 }
+				unsafe {
+					ptr[pos] = 0x20
+				}
 				pos += 1
 			}
 			column += spaces
@@ -149,7 +153,9 @@ fn (mut a Arena) expand_tabs(s string, tw int) string {
 			}
 			for j in 0 .. byte_len {
 				if i + j < s.len {
-					unsafe { ptr[pos] = s.str[i + j] }
+					unsafe {
+						ptr[pos] = s.str[i + j]
+					}
 					pos += 1
 				}
 			}
