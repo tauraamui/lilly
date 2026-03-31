@@ -15,7 +15,7 @@ jobs:
 
       - uses: vlang/setup-v@v1.4
         with:
-          version: '17b5eb5'
+          check-latest: true
 
       - name: Check formatting
         run: |
@@ -29,14 +29,14 @@ jobs:
 
       - uses: vlang/setup-v@v1.4
         with:
-          version: '17b5eb5'
+          check-latest: true
 
       - name: Cache V modules
         uses: actions/cache@v4
         with:
           path: ~/.vmodules
-          key: vmodules-v1-${{ hashFiles('v.mod') }}
-          restore-keys: vmodules-v1-
+          key: vmodules-v2-${{ hashFiles('v.mod') }}
+          restore-keys: vmodules-v2-
 
       - name: Install dependencies
         run: v install tauraamui.bobatea
