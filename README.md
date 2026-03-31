@@ -13,7 +13,7 @@ motions. The end vision is a one to one replacement/equivalent functionality for
 ## How to build (requires the V compiler https://vlang.io)
 
 #### Install Bobatea (TUI library)
-	v install tauraamui.bobatea
+	v install
 
 #### Build lilly by executing
 	./make.vsh build
