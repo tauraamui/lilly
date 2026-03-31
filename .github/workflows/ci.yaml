@@ -15,7 +15,7 @@ jobs:
 
       - uses: vlang/setup-v@v1.4
         with:
-          version: '17b5eb5'
+          check-latest: true
 
       - name: Check formatting
         run: |
@@ -29,7 +29,7 @@ jobs:
 
       - uses: vlang/setup-v@v1.4
         with:
-          version: '17b5eb5'
+          check-latest: true
 
       - name: Cache V modules
         uses: actions/cache@v4
