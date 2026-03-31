@@ -230,6 +230,11 @@ fn test_controller_move_cursor_up_by_stops_at_first_line() {
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(0, 0)
 }
 
+fn test_controller_move_cursor_up_by2_stops_at_first_line() {
+	mut ctrl, id := new_controller_with_content(mock_content)
+	assert ctrl.move_cursor_up_by2(id, cursor.Pos.new(0, 1), 10, .normal) == cursor.Pos.new(0, 0)
+}
+
 fn test_controller_move_cursor_up_by_zero() {
 	mut ctrl, id := new_controller_with_content(mock_content)
 
@@ -238,11 +243,21 @@ fn test_controller_move_cursor_up_by_zero() {
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(5, 1)
 }
 
+fn test_controller_move_cursor_up_by_zero2() {
+	mut ctrl, id := new_controller_with_content(mock_content)
+	assert ctrl.move_cursor_up_by2(id, cursor.Pos.new(5, 1), 0, .normal) == cursor.Pos.new(5, 1)
+}
+
 fn test_controller_move_cursor_up_by_already_at_top() {
 	mut ctrl, id := new_controller_with_content(mock_content)
 
 	ctrl.move_cursor_up_by(id, 3, .normal)
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(0, 0)
+}
+
+fn test_controller_move_cursor_up_by_already_at_top2() {
+	mut ctrl, id := new_controller_with_content(mock_content)
+	assert ctrl.move_cursor_up_by2(id, cursor.Pos.new(0, 0), 3, .normal) == cursor.Pos.new(0, 0)
 }
 
 fn test_controller_move_cursor_down_by_already_at_bottom() {

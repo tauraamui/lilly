@@ -171,14 +171,26 @@ pub fn (mut c Controller) move_cursor_left(doc_id int, mode petal.Mode) {
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_left(pos, mode)
 }
 
+pub fn (mut c Controller) move_cursor_left2(doc_id int, pos cursor.Pos, mode petal.Mode) cursor.Pos {
+	return c.docs[doc_id].move_cursor_left(pos, mode)
+}
+
 pub fn (mut c Controller) move_cursor_up(doc_id int, mode petal.Mode) {
 	pos := c.cursors[doc_id]
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_up(pos, mode)
 }
 
+pub fn (mut c Controller) move_cursor_up2(doc_id int, pos cursor.Pos, mode petal.Mode) cursor.Pos {
+	return c.docs[doc_id].move_cursor_up(pos, mode)
+}
+
 pub fn (mut c Controller) move_cursor_down(doc_id int, mode petal.Mode) {
 	pos := c.cursors[doc_id]
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_down(pos, mode)
+}
+
+pub fn (mut c Controller) move_cursor_down2(doc_id int, pos cursor.Pos, mode petal.Mode) cursor.Pos {
+	return c.docs[doc_id].move_cursor_down(pos, mode)
 }
 
 pub fn (mut c Controller) move_cursor_up_by(doc_id int, count int, mode petal.Mode) {
@@ -215,9 +227,25 @@ pub fn (mut c Controller) move_cursor_down_by(doc_id int, count int, mode petal.
 	}
 }
 
+pub fn (mut c Controller) move_cursor_down_by2(doc_id int, pos cursor.Pos, count int, mode petal.Mode) cursor.Pos {
+	mut pending_pos := pos
+	for _ in 0 .. count {
+		new_pos := c.docs[doc_id].move_cursor_down(pending_pos, mode)
+		if new_pos == pending_pos {
+			break
+		}
+		pending_pos = new_pos
+	}
+	return pending_pos
+}
+
 pub fn (mut c Controller) move_cursor_right(doc_id int, mode petal.Mode) {
 	pos := c.cursors[doc_id]
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_right(pos, mode)
+}
+
+pub fn (mut c Controller) move_cursor_right2(doc_id int, pos cursor.Pos, mode petal.Mode) cursor.Pos {
+	return c.docs[doc_id].move_cursor_right(pos, mode)
 }
 
 pub fn (mut c Controller) move_cursor_to_next_word_start(doc_id int) {
@@ -225,9 +253,17 @@ pub fn (mut c Controller) move_cursor_to_next_word_start(doc_id int) {
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_word_start(pos)
 }
 
+pub fn (mut c Controller) move_cursor_to_next_word_start2(doc_id int, pos cursor.Pos) cursor.Pos {
+	return c.docs[doc_id].move_cursor_to_next_word_start(pos)
+}
+
 pub fn (mut c Controller) move_cursor_to_previous_word_start(doc_id int) {
 	pos := c.cursors[doc_id]
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_previous_word_start(pos)
+}
+
+pub fn (mut c Controller) move_cursor_to_previous_word_start2(doc_id int, pos cursor.Pos) cursor.Pos {
+	return c.docs[doc_id].move_cursor_to_previous_word_start(pos)
 }
 
 pub fn (mut c Controller) move_cursor_to_next_word_end(doc_id int) {
@@ -235,9 +271,17 @@ pub fn (mut c Controller) move_cursor_to_next_word_end(doc_id int) {
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_word_end(pos)
 }
 
+pub fn (mut c Controller) move_cursor_to_next_word_end2(doc_id int, pos cursor.Pos) cursor.Pos {
+	return c.docs[doc_id].move_cursor_to_next_word_end(pos)
+}
+
 pub fn (mut c Controller) move_cursor_to_previous_word_end(doc_id int) {
 	pos := c.cursors[doc_id]
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_previous_word_end(pos)
+}
+
+pub fn (mut c Controller) move_cursor_to_previous_word_end2(doc_id int, pos cursor.Pos) cursor.Pos {
+	return c.docs[doc_id].move_cursor_to_previous_word_end(pos)
 }
 
 pub fn (mut c Controller) move_cursor_to_next_big_word_start(doc_id int) {
@@ -245,9 +289,17 @@ pub fn (mut c Controller) move_cursor_to_next_big_word_start(doc_id int) {
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_big_word_start(pos)
 }
 
+pub fn (mut c Controller) move_cursor_to_next_big_word_start2(doc_id int, pos cursor.Pos) cursor.Pos {
+	return c.docs[doc_id].move_cursor_to_next_big_word_start(pos)
+}
+
 pub fn (mut c Controller) move_cursor_to_line_end(doc_id int, mode petal.Mode) {
 	pos := c.cursors[doc_id]
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_line_end(pos, mode)
+}
+
+pub fn (mut c Controller) move_cursor_to_line_end2(doc_id int, pos cursor.Pos, mode petal.Mode) cursor.Pos {
+	return c.docs[doc_id].move_cursor_to_line_end(pos, mode)
 }
 
 pub fn (mut c Controller) move_cursor_to_next_blank_line(doc_id int) {
@@ -255,9 +307,17 @@ pub fn (mut c Controller) move_cursor_to_next_blank_line(doc_id int) {
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_next_blank_line(pos)
 }
 
+pub fn (mut c Controller) move_cursor_to_next_blank_line2(doc_id int, pos cursor.Pos) cursor.Pos {
+	return c.docs[doc_id].move_cursor_to_next_blank_line(pos)
+}
+
 pub fn (mut c Controller) move_cursor_to_previous_blank_line(doc_id int) {
 	pos := c.cursors[doc_id]
 	c.cursors[doc_id] = c.docs[doc_id].move_cursor_to_previous_blank_line(pos)
+}
+
+pub fn (mut c Controller) move_cursor_to_previous_blank_line2(doc_id int, pos cursor.Pos) cursor.Pos {
+	return c.docs[doc_id].move_cursor_to_previous_blank_line(pos)
 }
 
 pub fn (mut c Controller) insert_newline(doc_id int) {
@@ -265,29 +325,73 @@ pub fn (mut c Controller) insert_newline(doc_id int) {
 	c.move_cursor_down(doc_id, .insert) // will need to have a 'cursor_up_and_start'
 }
 
+pub fn (mut c Controller) insert_newline2(doc_id int, pos cursor.Pos) cursor.Pos {
+	c.docs[doc_id].insert_char(`\n`)
+	return c.docs[doc_id].move_cursor_down(pos, .insert) // will need to have a 'cursor_up_and_start'
+}
+
 pub fn (mut c Controller) insert_char(doc_id int, data rune) {
 	c.docs[doc_id].insert_char(data)
 	c.move_cursor_right(doc_id, .insert)
+}
+
+pub fn (mut c Controller) insert_char2(doc_id int, pos cursor.Pos, data rune) cursor.Pos {
+	c.docs[doc_id].insert_char(data)
+	return c.docs[doc_id].move_cursor_right(pos, .insert)
 }
 
 pub fn (mut c Controller) clear_line(doc_id int) {
 	c.cursors[doc_id] = c.docs[doc_id].clear_line(c.cursors[doc_id])
 }
 
+pub fn (mut c Controller) clear_line2(doc_id int, pos cursor.Pos) cursor.Pos {
+	return c.docs[doc_id].clear_line(pos)
+}
+
 pub fn (mut c Controller) delete_line(doc_id int) {
 	c.cursors[doc_id] = c.docs[doc_id].delete_line(c.cursors[doc_id])
+}
+
+pub fn (mut c Controller) delete_line2(doc_id int, pos cursor.Pos) cursor.Pos {
+	return c.docs[doc_id].delete_line(pos)
 }
 
 pub fn (mut c Controller) delete_range(doc_id int, range cursor.Range) {
 	c.cursors[doc_id] = c.docs[doc_id].delete_range(range)
 }
 
+pub fn (mut c Controller) delete_range2(doc_id int, range cursor.Range) cursor.Pos {
+	return c.docs[doc_id].delete_range(range)
+}
+
 pub fn (mut c Controller) delete_visual_range(doc_id int, range cursor.Range) {
 	c.cursors[doc_id] = c.docs[doc_id].delete_visual_range(range)
 }
 
+pub fn (mut c Controller) delete_visual_range2(doc_id int, range cursor.Range) cursor.Pos {
+	return c.docs[doc_id].delete_visual_range(range)
+}
+
 pub fn (c Controller) leading_whitespace_on_current_line(doc_id int) []rune {
 	pos := c.cursors[doc_id]
+	current_line := c.docs[doc_id].data.get_line_at(y: pos.y) or { return [] }
+	if current_line == '' {
+		return []
+	}
+	mut first_non_whitespace_index := 0
+	for i, cr in current_line.runes_iterator() {
+		if CharType.resolve(cr) != .whitespace {
+			first_non_whitespace_index = i
+			break
+		}
+	}
+	if first_non_whitespace_index == 0 {
+		return []
+	}
+	return current_line.runes()[..first_non_whitespace_index]
+}
+
+pub fn (c Controller) leading_whitespace_on_current_line2(doc_id int, pos cursor.Pos) []rune {
 	current_line := c.docs[doc_id].data.get_line_at(y: pos.y) or { return [] }
 	if current_line == '' {
 		return []
@@ -323,8 +427,29 @@ pub fn (mut c Controller) backspace(doc_id int) {
 	c.cursors[doc_id] = new_pos
 }
 
+pub fn (mut c Controller) backspace2(doc_id int, pos cursor.Pos) ?cursor.Pos {
+	if pos.x == 0 && pos.y == 0 {
+		return pos
+	}
+
+	new_pos := if pos.x > 0 {
+		cursor.Pos.new(pos.x - 1, pos.y)
+	} else {
+		prev_line := c.docs[doc_id].data.get_line_at(y: pos.y - 1) or { return none }
+		cursor.Pos.new(prev_line.runes().len, pos.y - 1)
+	}
+
+	c.prepare_for_insertion_at(doc_id, pos) or { return none }
+	c.docs[doc_id].delete_before()
+	return new_pos
+}
+
 pub fn (mut c Controller) delete_char_at(doc_id int) {
 	c.delete(doc_id)
+}
+
+pub fn (mut c Controller) delete_char_at2(doc_id int, pos cursor.Pos) {
+	c.delete2(doc_id, pos)
 }
 
 pub fn (mut c Controller) delete(doc_id int) {
@@ -342,12 +467,36 @@ pub fn (mut c Controller) delete(doc_id int) {
 	// cursor does not move
 }
 
+pub fn (mut c Controller) delete2(doc_id int, pos cursor.Pos) {
+	current_line := c.docs[doc_id].data.get_line_at(y: pos.y) or { return }
+	line_len := current_line.runes().len
+
+	if pos.x >= line_len {
+		// at end of line, only delte if there's a next line to join
+		c.docs[doc_id].data.get_line_at(y: pos.y + 1) or { return }
+	}
+
+	c.prepare_for_insertion_at(doc_id, pos) or { return }
+	c.docs[doc_id].delete_after()
+	// cursor does not move
+}
+
 pub fn (c Controller) get_line_at(doc_id int, y int) ?string {
 	return c.docs[doc_id].data.get_line_at(y: y)
 }
 
 pub fn (c Controller) get_char_at(doc_id int) ?string {
 	pos := c.cursors[doc_id]
+	current_line := c.docs[doc_id].data.get_line_at(y: pos.y) or { return none }
+	for i, cc in current_line.runes_iterator() {
+		if i == pos.x {
+			return '${cc}'
+		}
+	}
+	return none
+}
+
+pub fn (c Controller) get_char_at2(doc_id int, pos cursor.Pos) ?string {
 	current_line := c.docs[doc_id].data.get_line_at(y: pos.y) or { return none }
 	for i, cc in current_line.runes_iterator() {
 		if i == pos.x {
