@@ -20,8 +20,24 @@ import tauraamui.bobatea as tea
 import cfg
 import lib.documents
 import lib.clipboard
+import lib.telemetry
 
 const mod_file_content = $embed_file('v.mod').to_string()
+
+fn emit_metrics_maybe(manifest vmod.Manifest) {
+	tp := if os.getenv('LILLY_NO_TELEMETRY') != '' {
+		telemetry.Provider(telemetry.NoOpProvider{})
+	} else {
+		telemetry.Provider(telemetry.HttpProvider.new('https://tauraamui.website/api/v1/lilly-ping'))
+	}
+
+	spawn tp.send_event(telemetry.Event{
+		kind:    .launch
+		version: manifest.version
+		os:      os.uname().sysname
+		arch:    os.uname().machine
+	})
+}
 
 fn main() {
 	vmod_manifest := vmod.decode(mod_file_content) or { panic('failed to parse v.mod: ${err}') }
@@ -31,8 +47,9 @@ fn main() {
 	mut documents_controller := documents.Controller.new()
 	defer { documents_controller.free() }
 
-	mut cb := clipboard.new()
+	emit_metrics_maybe(vmod_manifest)
 
+	mut cb := clipboard.new()
 	mut petal_model := PetalModel.new(vmod_manifest.version, config, &documents_controller,
 		&cb)
 	mut app := tea.new_program(mut petal_model)
