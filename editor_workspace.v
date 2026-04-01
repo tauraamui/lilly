@@ -418,9 +418,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 							':' {
 								return m.clone(), switch_mode(.command)
 							}
-              // TODO(Frothy7650): Add a proper .append mode
-              // Keep a and i doing the same thing for now
-							'i', 'a' {
+							'i' {
 								return m.clone(), switch_mode(.insert)
 							}
 							else {}
