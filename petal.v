@@ -38,18 +38,24 @@ mut:
 	last_resize_height      int
 }
 
-fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.Controller, cb &clipboard.Manager) PetalModel {
+@[params]
+struct PetalModelOptions {
+	initial_file_path ?string
+}
+
+fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.Controller, cb &clipboard.Manager, opts PetalModelOptions) PetalModel {
 	return PetalModel{
 		version:       version
 		config:        config
 		theme:         config.theme
 		first_frame:   true
 		active_screen: SplashScreenModel.new(
-			version:        version
-			leader_key:     config.leader_key
-			theme:          config.theme
-			doc_controller: doc_controller
-			cb:             cb
+			version:           version
+			leader_key:        config.leader_key
+			theme:             config.theme
+			doc_controller:    doc_controller
+			cb:                cb
+			initial_file_path: opts.initial_file_path
 		)
 	}
 }
