@@ -100,19 +100,21 @@ pub fn (t SplitTree) find_editor_by_id(node SplitNode, target_id int) ?EditorInf
 }
 
 // Replace the active editor with a new one (for opening files)
-pub fn (mut t SplitTree) replace_active_editor(new_id int, new_file_path string) {
+pub fn (mut t SplitTree) replace_active_editor(new_id int, new_file_path string, new_doc_id int) {
 	if root := t.root {
-		t.root = t.replace_editor_in_node(root, t.active_editor_id, new_id, new_file_path)
+		t.root = t.replace_editor_in_node(root, t.active_editor_id, new_id, new_file_path,
+			new_doc_id)
 		t.active_editor_id = new_id
 	}
 }
 
-fn (t SplitTree) replace_editor_in_node(node SplitNode, target_id int, new_id int, new_file_path string) SplitNode {
+fn (t SplitTree) replace_editor_in_node(node SplitNode, target_id int, new_id int, new_file_path string, new_doc_id int) SplitNode {
 	match node {
 		EditorLeaf {
 			if node.editor_id == target_id {
 				return EditorLeaf{
 					editor_id: new_id
+					doc_id:    new_doc_id
 					file_path: new_file_path
 				}
 			}
@@ -121,7 +123,8 @@ fn (t SplitTree) replace_editor_in_node(node SplitNode, target_id int, new_id in
 		SplitContainer {
 			mut new_children := []SplitNode{}
 			for child in node.children {
-				new_children << t.replace_editor_in_node(child, target_id, new_id, new_file_path)
+				new_children << t.replace_editor_in_node(child, target_id, new_id, new_file_path,
+					new_doc_id)
 			}
 			return SplitContainer{
 				...node
