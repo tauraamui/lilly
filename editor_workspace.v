@@ -516,7 +516,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				m.split_tree.init_with_editor(editor_id, msg.file_path, doc_id)
 			} else {
 				old_id := m.split_tree.active_editor_id
-				m.split_tree.replace_active_editor(editor_id, msg.file_path)
+				m.split_tree.replace_active_editor(editor_id, msg.file_path, doc_id)
 				m.editors.delete(old_id)
 			}
 
@@ -527,7 +527,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				cmds << u_cmd
 			}
 
-			cmds << tea.sequence(focus_editor(editor_id), toggle_editor_show_border(editor_id,
+			cmds << tea.sequence(focus_editor(editor_id), toggle_editor_show_border(m.split_tree.get_leftmost_id(),
 				false), query_editor_data(editor_id), query_pwd_git_branch)
 			cmds << debug_log('opened file ${msg.file_path} into model of id ${editor_id}')
 		}
