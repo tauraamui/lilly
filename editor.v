@@ -61,6 +61,7 @@ mut:
 	height int
 	min_y  int
 
+	cursor_pos     cursor.Pos
 	doc_controller &documents.Controller
 	cb             &clipboard.Manager
 	token_parser   syntax.Parser
@@ -129,6 +130,7 @@ fn EditorModel.new(opts EditorModelNewParams) EditorModel {
 	assert opts.file_path != ''
 	return EditorModel{
 		id:             opts.id
+		cursor_pos:     cursor.Pos.new(0, 0)
 		file_path:      opts.file_path
 		doc_id:         opts.doc_id
 		theme:          opts.theme
@@ -163,54 +165,54 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				match msg.key_msg.k_type {
 					.runes {
 						for cr in msg.key_msg.string().runes_iterator() {
-							m.doc_controller.insert_char(m.doc_id, cr)
+							m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
 						}
 					}
 					.special {
 						match msg.key_msg.string() {
 							'enter' {
-								leading_whitespace := m.doc_controller.leading_whitespace_on_current_line(m.doc_id)
-								m.doc_controller.insert_newline(m.doc_id)
+								leading_whitespace := m.doc_controller.leading_whitespace_on_current_line(m.doc_id, m.cursor_pos)
+								m.cursor_pos = m.doc_controller.insert_newline(m.doc_id, m.cursor_pos)
 								for cr in leading_whitespace {
-									m.doc_controller.insert_char(m.doc_id, cr)
+									m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
 								}
 							}
 							'backspace' {
-								m.doc_controller.backspace(m.doc_id)
+								m.cursor_pos = m.doc_controller.backspace(m.doc_id, m.cursor_pos) or { m.cursor_pos }
 							}
 							'delete' {
-								m.doc_controller.delete(m.doc_id)
+								m.doc_controller.delete(m.doc_id, m.cursor_pos)
 							}
 							'ctrl+i' {
-								m.doc_controller.insert_char(m.doc_id, `\t`)
+								m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, `\t`)
 							} // ctrl+i is apparently equiv to TAB
 							'left' {
-								m.doc_controller.move_cursor_left(m.doc_id, .insert)
-								m.doc_controller.prepare_for_insertion(m.doc_id) or {
+								m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id, m.cursor_pos, .insert)
+								m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {
 									cmds << raise_error('error: ${err}')
 									m.ensure_cursor_visible()
 									return m.clone(), tea.batch_array(cmds)
 								}
 							}
 							'up' {
-								m.doc_controller.move_cursor_up(m.doc_id, .insert)
-								m.doc_controller.prepare_for_insertion(m.doc_id) or {
+								m.cursor_pos = m.doc_controller.move_cursor_up(m.doc_id, m.cursor_pos, .insert)
+								m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {
 									cmds << raise_error('error: ${err}')
 									m.ensure_cursor_visible()
 									return m.clone(), tea.batch_array(cmds)
 								}
 							}
 							'right' {
-								m.doc_controller.move_cursor_right(m.doc_id, .insert)
-								m.doc_controller.prepare_for_insertion(m.doc_id) or {
+								m.cursor_pos = m.doc_controller.move_cursor_right(m.doc_id, m.cursor_pos, .insert)
+								m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {
 									cmds << raise_error('error: ${err}')
 									m.ensure_cursor_visible()
 									return m.clone(), tea.batch_array(cmds)
 								}
 							}
 							'down' {
-								m.doc_controller.move_cursor_down(m.doc_id, .insert)
-								m.doc_controller.prepare_for_insertion(m.doc_id) or {
+								m.cursor_pos = m.doc_controller.move_cursor_down(m.doc_id, m.cursor_pos, .insert)
+								m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {
 									cmds << raise_error('error: ${err}')
 									m.ensure_cursor_visible()
 									return m.clone(), tea.batch_array(cmds)
@@ -226,57 +228,57 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					.special {
 						match msg.key_msg.string() {
 							'escape' { cmds << switch_mode(.normal) }
-							'left' { m.doc_controller.move_cursor_left(m.doc_id, .visual) }
-							'right' { m.doc_controller.move_cursor_right(m.doc_id, .visual) }
-							'up' { m.doc_controller.move_cursor_up(m.doc_id, .visual) }
-							'down' { m.doc_controller.move_cursor_down(m.doc_id, .visual) }
+							'left' { m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id, m.cursor_pos, .visual) }
+							'right' { m.cursor_pos = m.doc_controller.move_cursor_right(m.doc_id, m.cursor_pos, .visual) }
+							'up' { m.cursor_pos = m.doc_controller.move_cursor_up(m.doc_id, m.cursor_pos, .visual) }
+							'down' { m.cursor_pos = m.doc_controller.move_cursor_down(m.doc_id, m.cursor_pos, .visual) }
 							else {}
 						}
 					}
 					.runes {
 						match msg.key_msg.string() {
 							'h' {
-								m.doc_controller.move_cursor_left(m.doc_id, .visual)
+								m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id, m.cursor_pos, .visual)
 							}
 							'l' {
-								m.doc_controller.move_cursor_right(m.doc_id, .visual)
+								m.cursor_pos = m.doc_controller.move_cursor_right(m.doc_id, m.cursor_pos, .visual)
 							}
 							'k' {
-								m.doc_controller.move_cursor_up(m.doc_id, .visual)
+								m.cursor_pos = m.doc_controller.move_cursor_up(m.doc_id, m.cursor_pos, .visual)
 							}
 							'j' {
-								m.doc_controller.move_cursor_down(m.doc_id, .visual)
+								m.cursor_pos = m.doc_controller.move_cursor_down(m.doc_id, m.cursor_pos, .visual)
 							}
 							'w' {
-								m.doc_controller.move_cursor_to_next_word_start(m.doc_id)
+								m.cursor_pos = m.doc_controller.move_cursor_to_next_word_start(m.doc_id, m.cursor_pos)
 							}
 							'W' {
-								m.doc_controller.move_cursor_to_next_big_word_start(m.doc_id)
+								m.cursor_pos = m.doc_controller.move_cursor_to_next_big_word_start(m.doc_id, m.cursor_pos)
 							}
 							'e' {
-								m.doc_controller.move_cursor_to_next_word_end(m.doc_id)
+								m.cursor_pos = m.doc_controller.move_cursor_to_next_word_end(m.doc_id, m.cursor_pos)
 							}
 							'b' {
-								m.doc_controller.move_cursor_to_previous_word_start(m.doc_id)
+								m.cursor_pos = m.doc_controller.move_cursor_to_previous_word_start(m.doc_id, m.cursor_pos)
 							}
 							'$' {
-								m.doc_controller.move_cursor_to_line_end(m.doc_id, .normal)
+								m.cursor_pos = m.doc_controller.move_cursor_to_line_end(m.doc_id, m.cursor_pos, .normal)
 							}
 							'{' {
-								m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id)
+								m.cursor_pos = m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id, m.cursor_pos)
 							}
 							'}' {
-								m.doc_controller.move_cursor_to_next_blank_line(m.doc_id)
+								m.cursor_pos = m.doc_controller.move_cursor_to_next_blank_line(m.doc_id, m.cursor_pos)
 							}
 							'd' {
 								if sel_start := m.sel_start_pos {
-									m.doc_controller.begin_undo_group(m.doc_id)
+									m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
 									m.yank_visual_selection(sel_start)
-									m.doc_controller.delete_visual_range(m.doc_id, cursor.Range{
+									m.cursor_pos = m.doc_controller.delete_visual_range(m.doc_id, cursor.Range{
 										start: sel_start
-										end:   m.doc_controller.cursor_pos(m.doc_id)
+										end:   m.cursor_pos
 									})
-									m.doc_controller.commit_undo_group(m.doc_id)
+									m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
 									cmds << switch_mode(.normal)
 								}
 							}
@@ -296,36 +298,36 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					.special {
 						match msg.key_msg.string() {
 							'escape' { cmds << switch_mode(.normal) }
-							'up' { m.doc_controller.move_cursor_up(m.doc_id, .visual_line) }
-							'down' { m.doc_controller.move_cursor_down(m.doc_id, .visual_line) }
-							'k' { m.doc_controller.move_cursor_up(m.doc_id, .visual_line) }
-							'j' { m.doc_controller.move_cursor_down(m.doc_id, .visual_line) }
+							'up' { m.cursor_pos = m.doc_controller.move_cursor_up(m.doc_id, m.cursor_pos, .visual_line) }
+							'down' { m.cursor_pos = m.doc_controller.move_cursor_down(m.doc_id, m.cursor_pos, .visual_line) }
+							'k' { m.cursor_pos = m.doc_controller.move_cursor_up(m.doc_id, m.cursor_pos, .visual_line) }
+							'j' { m.cursor_pos = m.doc_controller.move_cursor_down(m.doc_id, m.cursor_pos, .visual_line) }
 							else {}
 						}
 					}
 					.runes {
 						match msg.key_msg.string() {
 							'k' {
-								m.doc_controller.move_cursor_up(m.doc_id, .visual_line)
+								m.cursor_pos = m.doc_controller.move_cursor_up(m.doc_id, m.cursor_pos, .visual_line)
 							}
 							'j' {
-								m.doc_controller.move_cursor_down(m.doc_id, .visual_line)
+								m.cursor_pos = m.doc_controller.move_cursor_down(m.doc_id, m.cursor_pos, .visual_line)
 							}
 							'{' {
-								m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id)
+								m.cursor_pos = m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id, m.cursor_pos)
 							}
 							'}' {
-								m.doc_controller.move_cursor_to_next_blank_line(m.doc_id)
+								m.cursor_pos = m.doc_controller.move_cursor_to_next_blank_line(m.doc_id, m.cursor_pos)
 							}
 							'd' {
 								if sel_start := m.sel_start_pos {
-									m.doc_controller.begin_undo_group(m.doc_id)
+									m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
 									m.yank_visual_line_selection(sel_start)
-									m.doc_controller.delete_range(m.doc_id, cursor.Range{
+									m.cursor_pos = m.doc_controller.delete_range(m.doc_id, cursor.Range{
 										start: sel_start
-										end:   m.doc_controller.cursor_pos(m.doc_id)
+										end:   m.cursor_pos
 									})
-									m.doc_controller.commit_undo_group(m.doc_id)
+									m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
 									cmds << switch_mode(.normal)
 								}
 							}
@@ -361,54 +363,56 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 									m.min_y = 0
 								}
 								target_y := m.min_y + m.height / 4
-								current_y := m.doc_controller.cursor_pos(m.doc_id).y
+								current_y := m.cursor_pos.y
 								if current_y > target_y {
-									m.doc_controller.move_cursor_up_by(m.doc_id, current_y - target_y,
+									m.cursor_pos = m.doc_controller.move_cursor_up_by(m.doc_id, m.cursor_pos, current_y - target_y,
 										.normal)
 								} else {
-									m.doc_controller.move_cursor_down_by(m.doc_id, target_y - current_y,
+									m.cursor_pos = m.doc_controller.move_cursor_down_by(m.doc_id, m.cursor_pos, target_y - current_y,
 										.normal)
 								}
 								m.ensure_cursor_visible()
 							}
 							'ctrl+r' {
-								m.doc_controller.redo(m.doc_id)
+								if pos := m.doc_controller.redo(m.doc_id) {
+									m.cursor_pos = pos
+								}
 							}
 							'ctrl+d' {
 								half := m.height / 2
 								m.min_y += half
 								target_y := m.min_y + m.height * 3 / 4
-								current_y := m.doc_controller.cursor_pos(m.doc_id).y
+								current_y := m.cursor_pos.y
 								if current_y < target_y {
-									m.doc_controller.move_cursor_down_by(m.doc_id, target_y - current_y,
+									m.cursor_pos = m.doc_controller.move_cursor_down_by(m.doc_id, m.cursor_pos, target_y - current_y,
 										.normal)
 								} else {
-									m.doc_controller.move_cursor_up_by(m.doc_id, current_y - target_y,
+									m.cursor_pos = m.doc_controller.move_cursor_up_by(m.doc_id, m.cursor_pos, current_y - target_y,
 										.normal)
 								}
 								m.ensure_cursor_visible()
 							}
 							'delete' {
-								m.doc_controller.begin_undo_group(m.doc_id)
-								m.doc_controller.prepare_for_insertion(m.doc_id) or {
+								m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
+								m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {
 									cmds << raise_error('error: ${err}')
 									m.ensure_cursor_visible()
 									return m.clone(), tea.batch_array(cmds)
 								}
-								m.doc_controller.delete(m.doc_id)
-								m.doc_controller.commit_undo_group(m.doc_id)
+								m.doc_controller.delete(m.doc_id, m.cursor_pos)
+								m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
 							}
 							'left' {
-								m.doc_controller.move_cursor_left(m.doc_id, .normal)
+								m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id, m.cursor_pos, .normal)
 							}
 							'up' {
-								m.doc_controller.move_cursor_up(m.doc_id, .normal)
+								m.cursor_pos = m.doc_controller.move_cursor_up(m.doc_id, m.cursor_pos, .normal)
 							}
 							'right' {
-								m.doc_controller.move_cursor_right(m.doc_id, .normal)
+								m.cursor_pos = m.doc_controller.move_cursor_right(m.doc_id, m.cursor_pos, .normal)
 							}
 							'down' {
-								m.doc_controller.move_cursor_down(m.doc_id, .normal)
+								m.cursor_pos = m.doc_controller.move_cursor_down(m.doc_id, m.cursor_pos, .normal)
 							}
 							else {}
 						}
@@ -430,36 +434,36 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			}
 			match msg.mode {
 				.insert {
-					m.doc_controller.prepare_for_insertion(m.doc_id) or {
+					m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {
 						cmds << raise_error('switch mode error: ${err}')
 						return m.clone(), tea.batch_array(cmds)
 					}
-					m.doc_controller.begin_undo_group(m.doc_id)
+					m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
 				}
 				.normal {
 					// if msg.from != .command && msg.from != .pending_delete && msg.from != .pending_g {
 					if msg.from == .insert {
-						m.doc_controller.commit_undo_group(m.doc_id)
+						m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
 					}
 					if msg.from == .normal || msg.from == .insert {
-						current_line := m.doc_controller.get_line_at(m.doc_id, m.doc_controller.cursor_pos(m.doc_id).y) or {
+						current_line := m.doc_controller.get_line_at(m.doc_id, m.cursor_pos.y) or {
 							''
 						}
 						if current_line.len > 0 && current_line.trim_space().len == 0 {
-							m.doc_controller.clear_line(m.doc_id)
+							m.cursor_pos = m.doc_controller.clear_line(m.doc_id, m.cursor_pos)
 						} else {
-							m.doc_controller.move_cursor_left(m.doc_id, .normal)
+							m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id, m.cursor_pos, .normal)
 						}
 					}
 					m.sel_start_pos = ?cursor.Pos(none)
 					m.sel_mode = .normal
 				}
 				.visual {
-					m.sel_start_pos = m.doc_controller.cursor_pos(m.doc_id)
+					m.sel_start_pos = m.cursor_pos
 					m.sel_mode = .visual
 				}
 				.visual_line {
-					m.sel_start_pos = m.doc_controller.cursor_pos(m.doc_id)
+					m.sel_start_pos = m.cursor_pos
 					m.sel_mode = .visual_line
 				}
 				else {}
@@ -546,7 +550,7 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 	// push gutter offset so selections, cursor highlight, and cursor are all shifted right
 	ctx.push_offset(tea.Offset{ x: gutter_width })
 
-	cursor_vpos := m.doc_controller.visual_cursor_pos(m.doc_id, tab_width)
+	cursor_vpos := m.doc_controller.visual_pos_for(m.doc_id, m.cursor_pos, tab_width)
 	if sel_start := m.sel_start_pos {
 		if m.sel_mode == .visual {
 			sel_start_vpos := m.doc_controller.visual_pos_for(m.doc_id, sel_start, tab_width)
@@ -708,8 +712,8 @@ fn (m EditorModel) render_visual_selection(mut ctx tea.Context, sel_start cursor
 }
 
 fn (m EditorModel) render_cursor(mut ctx tea.Context) {
-	cursor_pos := m.doc_controller.visual_cursor_pos(m.doc_id, tab_width)
-	char_at := m.doc_controller.get_char_at(m.doc_id) or { ' ' }.expand_tabs(tab_width)
+	cursor_pos := m.doc_controller.visual_pos_for(m.doc_id, m.cursor_pos, tab_width)
+	char_at := m.doc_controller.get_char_at(m.doc_id, m.cursor_pos) or { ' ' }.expand_tabs(tab_width)
 	if m.cursor_underline {
 		default_fg_color := ctx.get_default_fg_color() or { palette.matte_white_fg_color }
 		ctx.set_color(default_fg_color)
@@ -730,14 +734,13 @@ fn (m EditorModel) render_cursor(mut ctx tea.Context) {
 }
 
 fn (mut m EditorModel) ensure_cursor_visible() {
-	cursor_pos := m.doc_controller.cursor_pos(m.doc_id)
 	if m.height <= 0 {
 		return
 	}
-	if cursor_pos.y < m.min_y {
-		m.min_y = cursor_pos.y
-	} else if cursor_pos.y >= m.min_y + m.height {
-		m.min_y = cursor_pos.y - m.height + 1
+	if m.cursor_pos.y < m.min_y {
+		m.min_y = m.cursor_pos.y
+	} else if m.cursor_pos.y >= m.min_y + m.height {
+		m.min_y = m.cursor_pos.y - m.height + 1
 	}
 }
 
@@ -749,12 +752,12 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 			`d` {
 				match action.motion {
 					'line' {
-						m.doc_controller.begin_undo_group(m.doc_id)
+						m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
 						m.yank_lines(count)
 						for _ in 0 .. count {
-							m.doc_controller.delete_line(m.doc_id)
+							m.cursor_pos = m.doc_controller.delete_line(m.doc_id, m.cursor_pos)
 						}
-						m.doc_controller.commit_undo_group(m.doc_id)
+						m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
 					}
 					'w' {
 						// TODO(tauraamui)
@@ -778,103 +781,105 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 		match action.motion {
 			'u' {
 				for _ in 0 .. count {
-					m.doc_controller.undo(m.doc_id)
+					if pos := m.doc_controller.undo(m.doc_id) {
+						m.cursor_pos = pos
+					}
 				}
 			}
 			'o' {
-				m.doc_controller.begin_undo_group(m.doc_id)
-				m.doc_controller.move_cursor_to_line_end(m.doc_id, .insert)
-				m.doc_controller.prepare_for_insertion(m.doc_id) or {
+				m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
+				m.cursor_pos = m.doc_controller.move_cursor_to_line_end(m.doc_id, m.cursor_pos, .insert)
+				m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {
 					cmds << raise_error('error: ${err}')
 					m.ensure_cursor_visible()
 					return
 				}
-				leading_whitespace := m.doc_controller.leading_whitespace_on_current_line(m.doc_id)
-				m.doc_controller.insert_newline(m.doc_id)
+				leading_whitespace := m.doc_controller.leading_whitespace_on_current_line(m.doc_id, m.cursor_pos)
+				m.cursor_pos = m.doc_controller.insert_newline(m.doc_id, m.cursor_pos)
 				for cr in leading_whitespace {
-					m.doc_controller.insert_char(m.doc_id, cr)
+					m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
 				}
-				m.doc_controller.commit_undo_group(m.doc_id)
+				m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
 				cmds << switch_mode(.insert)
 				m.ensure_cursor_visible()
 			}
 			'w' {
 				for _ in 0 .. count {
-					m.doc_controller.move_cursor_to_next_word_start(m.doc_id)
+					m.cursor_pos = m.doc_controller.move_cursor_to_next_word_start(m.doc_id, m.cursor_pos)
 				}
 			}
 			'W' {
 				for _ in 0 .. count {
-					m.doc_controller.move_cursor_to_next_big_word_start(m.doc_id)
+					m.cursor_pos = m.doc_controller.move_cursor_to_next_big_word_start(m.doc_id, m.cursor_pos)
 				}
 			}
 			'e' {
 				for _ in 0 .. count {
-					m.doc_controller.move_cursor_to_next_word_end(m.doc_id)
+					m.cursor_pos = m.doc_controller.move_cursor_to_next_word_end(m.doc_id, m.cursor_pos)
 				}
 			}
 			'b' {
 				for _ in 0 .. count {
-					m.doc_controller.move_cursor_to_previous_word_start(m.doc_id)
+					m.cursor_pos = m.doc_controller.move_cursor_to_previous_word_start(m.doc_id, m.cursor_pos)
 				}
 			}
 			'ge' {
 				for _ in 0 .. count {
-					m.doc_controller.move_cursor_to_previous_word_end(m.doc_id)
+					m.cursor_pos = m.doc_controller.move_cursor_to_previous_word_end(m.doc_id, m.cursor_pos)
 				}
 			}
 			'h' {
 				for _ in 0 .. count {
-					m.doc_controller.move_cursor_left(m.doc_id, .normal)
+					m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id, m.cursor_pos, .normal)
 				}
 			}
 			'j' {
-				m.doc_controller.move_cursor_down_by(m.doc_id, count, .normal)
+				m.cursor_pos = m.doc_controller.move_cursor_down_by(m.doc_id, m.cursor_pos, count, .normal)
 			}
 			'k' {
-				m.doc_controller.move_cursor_up_by(m.doc_id, count, .normal)
+				m.cursor_pos = m.doc_controller.move_cursor_up_by(m.doc_id, m.cursor_pos, count, .normal)
 			}
 			'l' {
-				m.doc_controller.move_cursor_right(m.doc_id, .normal)
+				m.cursor_pos = m.doc_controller.move_cursor_right(m.doc_id, m.cursor_pos, .normal)
 			}
 			'$' {
-				m.doc_controller.move_cursor_to_line_end(m.doc_id, .normal)
+				m.cursor_pos = m.doc_controller.move_cursor_to_line_end(m.doc_id, m.cursor_pos, .normal)
 			}
 			'0' {
 				// m.doc_controller.move_cursor_to_line_start(m.doc_id)
 			}
 			'{' {
 				for _ in 0 .. count {
-					m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id)
+					m.cursor_pos = m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id, m.cursor_pos)
 				}
 			}
 			'}' {
 				for _ in 0 .. count {
-					m.doc_controller.move_cursor_to_next_blank_line(m.doc_id)
+					m.cursor_pos = m.doc_controller.move_cursor_to_next_blank_line(m.doc_id, m.cursor_pos)
 				}
 			}
 			'x' {
-				m.doc_controller.begin_undo_group(m.doc_id)
+				m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
 				for _ in 0 .. count {
-					m.doc_controller.delete_char_at(m.doc_id)
+					m.doc_controller.delete_char_at(m.doc_id, m.cursor_pos)
 				}
-				m.doc_controller.commit_undo_group(m.doc_id)
+				m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
 			}
 			'gg' {
 				target := if action.count > 1 { action.count - 1 } else { 0 }
-				current_y := m.doc_controller.cursor_pos(m.doc_id).y
+				current_y := m.cursor_pos.y
 				if current_y > target {
-					m.doc_controller.move_cursor_up_by(m.doc_id, current_y - target, .normal)
+					m.cursor_pos = m.doc_controller.move_cursor_up_by(m.doc_id, m.cursor_pos, current_y - target, .normal)
 				} else if current_y < target {
-					m.doc_controller.move_cursor_down_by(m.doc_id, target - current_y,
+					m.cursor_pos = m.doc_controller.move_cursor_down_by(m.doc_id, m.cursor_pos, target - current_y,
 						.normal)
 				}
 			}
 			'G' {
-				current_y := m.doc_controller.cursor_pos(m.doc_id).y
+				current_y := m.cursor_pos.y
 				last_line := m.doc_controller.line_count(m.doc_id) - 1
 				if current_y < last_line {
-					m.doc_controller.move_cursor_down_by(m.doc_id, last_line - current_y,
+					m.cursor_pos = m.doc_controller.move_cursor_down_by(m.doc_id, m.cursor_pos, last_line - current_y,
 						.normal)
 				}
 			}
@@ -885,14 +890,14 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 				cmds << switch_mode(.visual_line)
 			}
 			'p' {
-				m.doc_controller.begin_undo_group(m.doc_id)
+				m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
 				m.paste_after()
-				m.doc_controller.commit_undo_group(m.doc_id)
+				m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
 			}
 			'P' {
-				m.doc_controller.begin_undo_group(m.doc_id)
+				m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
 				m.paste_before()
-				m.doc_controller.commit_undo_group(m.doc_id)
+				m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
 			}
 			else {}
 		}
@@ -900,7 +905,7 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 }
 
 fn (mut m EditorModel) yank_visual_line_selection(sel_start cursor.Pos) {
-	current_pos := m.doc_controller.cursor_pos(m.doc_id)
+	current_pos := m.cursor_pos
 	start_y := if sel_start.y < current_pos.y { sel_start.y } else { current_pos.y }
 	end_y := if sel_start.y > current_pos.y { sel_start.y } else { current_pos.y }
 	mut lines := []string{}
@@ -918,7 +923,7 @@ fn (mut m EditorModel) yank_visual_line_selection(sel_start cursor.Pos) {
 }
 
 fn (mut m EditorModel) yank_visual_selection(sel_start cursor.Pos) {
-	current_pos := m.doc_controller.cursor_pos(m.doc_id)
+	current_pos := m.cursor_pos
 	// Normalize so start is before end
 	start := if sel_start.y < current_pos.y
 		|| (sel_start.y == current_pos.y && sel_start.x <= current_pos.x) {
@@ -972,7 +977,7 @@ fn (mut m EditorModel) yank_visual_selection(sel_start cursor.Pos) {
 }
 
 fn (mut m EditorModel) yank_lines(count int) {
-	cursor_pos := m.doc_controller.cursor_pos(m.doc_id)
+	cursor_pos := m.cursor_pos
 	mut lines := []string{}
 	for i in 0 .. count {
 		if line := m.doc_controller.get_line_at(m.doc_id, cursor_pos.y + i) {
@@ -996,33 +1001,31 @@ fn (mut m EditorModel) paste_after() {
 	match content.@type {
 		.block {
 			// Block paste: insert as new lines below current line
-			cursor_pos := m.doc_controller.cursor_pos(m.doc_id)
-			m.doc_controller.move_cursor_to_line_end(m.doc_id, .insert)
-			m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+			m.cursor_pos = m.doc_controller.move_cursor_to_line_end(m.doc_id, m.cursor_pos, .insert)
+			m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or { return }
 			for line in content.data.split('\n') {
-				m.doc_controller.insert_newline(m.doc_id)
+				m.cursor_pos = m.doc_controller.insert_newline(m.doc_id, m.cursor_pos)
 				for cr in line.runes() {
-					m.doc_controller.insert_char(m.doc_id, cr)
+					m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
 				}
 			}
 			// Move cursor to start of first pasted line
-			m.doc_controller.move_cursor_down_by(m.doc_id, 1, .normal)
-			_ = cursor_pos // suppress unused warning
+			m.cursor_pos = m.doc_controller.move_cursor_down_by(m.doc_id, m.cursor_pos, 1, .normal)
 		}
 		.inline {
 			// Inline paste: insert text after cursor
-			m.doc_controller.move_cursor_right(m.doc_id, .insert)
-			start_pos := m.doc_controller.cursor_pos(m.doc_id)
-			m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+			m.cursor_pos = m.doc_controller.move_cursor_right(m.doc_id, m.cursor_pos, .insert)
+			start_pos := m.cursor_pos
+			m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or { return }
 			mut newline_count := 0
 			mut last_line_char_count := 0
 			for cr in content.data.runes() {
 				if cr == `\n` {
-					m.doc_controller.insert_newline(m.doc_id)
+					m.cursor_pos = m.doc_controller.insert_newline(m.doc_id, m.cursor_pos)
 					newline_count += 1
 					last_line_char_count = 0
 				} else {
-					m.doc_controller.insert_char(m.doc_id, cr)
+					m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
 					last_line_char_count += 1
 				}
 			}
@@ -1030,27 +1033,27 @@ fn (mut m EditorModel) paste_after() {
 			if newline_count > 0 {
 				final_x := if last_line_char_count > 0 { last_line_char_count - 1 } else { 0 }
 				final_y := start_pos.y + newline_count
-				m.doc_controller.set_cursor_pos(m.doc_id, cursor.Pos.new(final_x, final_y))
+				m.cursor_pos = cursor.Pos.new(final_x, final_y)
 			} else if last_line_char_count > 0 {
 				// Single-line paste: cursor on last pasted character
 				final_x := start_pos.x + last_line_char_count - 1
-				m.doc_controller.set_cursor_pos(m.doc_id, cursor.Pos.new(final_x, start_pos.y))
+				m.cursor_pos = cursor.Pos.new(final_x, start_pos.y)
 			}
 		}
 		.none {
 			// Treat unknown as inline
-			m.doc_controller.move_cursor_right(m.doc_id, .insert)
-			start_pos := m.doc_controller.cursor_pos(m.doc_id)
-			m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+			m.cursor_pos = m.doc_controller.move_cursor_right(m.doc_id, m.cursor_pos, .insert)
+			start_pos := m.cursor_pos
+			m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or { return }
 			mut newline_count := 0
 			mut last_line_char_count := 0
 			for cr in content.data.runes() {
 				if cr == `\n` {
-					m.doc_controller.insert_newline(m.doc_id)
+					m.cursor_pos = m.doc_controller.insert_newline(m.doc_id, m.cursor_pos)
 					newline_count += 1
 					last_line_char_count = 0
 				} else {
-					m.doc_controller.insert_char(m.doc_id, cr)
+					m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
 					last_line_char_count += 1
 				}
 			}
@@ -1058,10 +1061,10 @@ fn (mut m EditorModel) paste_after() {
 			if newline_count > 0 {
 				final_x := if last_line_char_count > 0 { last_line_char_count - 1 } else { 0 }
 				final_y := start_pos.y + newline_count
-				m.doc_controller.set_cursor_pos(m.doc_id, cursor.Pos.new(final_x, final_y))
+				m.cursor_pos = cursor.Pos.new(final_x, final_y)
 			} else if last_line_char_count > 0 {
 				final_x := start_pos.x + last_line_char_count - 1
-				m.doc_controller.set_cursor_pos(m.doc_id, cursor.Pos.new(final_x, start_pos.y))
+				m.cursor_pos = cursor.Pos.new(final_x, start_pos.y)
 			}
 		}
 	}
@@ -1076,49 +1079,48 @@ fn (mut m EditorModel) paste_before() {
 	match content.@type {
 		.block {
 			// Block paste: insert as new lines above current line
-			cursor_pos := m.doc_controller.cursor_pos(m.doc_id)
-			if cursor_pos.y == 0 {
+			if m.cursor_pos.y == 0 {
 				// At first line: insert newline then move content up
-				m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+				m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or { return }
 				// Move to start of first line, insert content then a newline
 				for line in content.data.split('\n') {
 					for cr in line.runes() {
-						m.doc_controller.insert_char(m.doc_id, cr)
+						m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
 					}
-					m.doc_controller.insert_newline(m.doc_id)
+					m.cursor_pos = m.doc_controller.insert_newline(m.doc_id, m.cursor_pos)
 				}
 				// Move cursor back to start of first pasted line
-				m.doc_controller.move_cursor_up_by(m.doc_id, content.data.split('\n').len,
+				m.cursor_pos = m.doc_controller.move_cursor_up_by(m.doc_id, m.cursor_pos, content.data.split('\n').len,
 					.normal)
 			} else {
 				// Move to end of previous line and insert new lines
-				m.doc_controller.move_cursor_up(m.doc_id, .normal)
-				m.doc_controller.move_cursor_to_line_end(m.doc_id, .insert)
-				m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+				m.cursor_pos = m.doc_controller.move_cursor_up(m.doc_id, m.cursor_pos, .normal)
+				m.cursor_pos = m.doc_controller.move_cursor_to_line_end(m.doc_id, m.cursor_pos, .insert)
+				m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or { return }
 				for line in content.data.split('\n') {
-					m.doc_controller.insert_newline(m.doc_id)
+					m.cursor_pos = m.doc_controller.insert_newline(m.doc_id, m.cursor_pos)
 					for cr in line.runes() {
-						m.doc_controller.insert_char(m.doc_id, cr)
+						m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
 					}
 				}
 				// Move cursor to start of first pasted line
-				m.doc_controller.move_cursor_up_by(m.doc_id, content.data.split('\n').len - 1,
+				m.cursor_pos = m.doc_controller.move_cursor_up_by(m.doc_id, m.cursor_pos, content.data.split('\n').len - 1,
 					.normal)
 			}
 		}
 		.inline {
 			// Inline paste: insert text before cursor
-			start_pos := m.doc_controller.cursor_pos(m.doc_id)
-			m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+			start_pos := m.cursor_pos
+			m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or { return }
 			mut newline_count := 0
 			mut last_line_char_count := 0
 			for cr in content.data.runes() {
 				if cr == `\n` {
-					m.doc_controller.insert_newline(m.doc_id)
+					m.cursor_pos = m.doc_controller.insert_newline(m.doc_id, m.cursor_pos)
 					newline_count += 1
 					last_line_char_count = 0
 				} else {
-					m.doc_controller.insert_char(m.doc_id, cr)
+					m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
 					last_line_char_count += 1
 				}
 			}
@@ -1126,60 +1128,58 @@ fn (mut m EditorModel) paste_before() {
 			if newline_count > 0 {
 				final_x := if last_line_char_count > 0 { last_line_char_count - 1 } else { 0 }
 				final_y := start_pos.y + newline_count
-				m.doc_controller.set_cursor_pos(m.doc_id, cursor.Pos.new(final_x, final_y))
+				m.cursor_pos = cursor.Pos.new(final_x, final_y)
 			} else if last_line_char_count > 0 {
 				final_x := start_pos.x + last_line_char_count - 1
-				m.doc_controller.set_cursor_pos(m.doc_id, cursor.Pos.new(final_x, start_pos.y))
+				m.cursor_pos = cursor.Pos.new(final_x, start_pos.y)
 			}
 		}
 		.none {
-			start_pos := m.doc_controller.cursor_pos(m.doc_id)
-			m.doc_controller.prepare_for_insertion(m.doc_id) or { return }
+			start_pos := m.cursor_pos
+			m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or { return }
 			mut newline_count := 0
 			mut last_line_char_count := 0
 			for cr in content.data.runes() {
 				if cr == `\n` {
-					m.doc_controller.insert_newline(m.doc_id)
+					m.cursor_pos = m.doc_controller.insert_newline(m.doc_id, m.cursor_pos)
 					newline_count += 1
 					last_line_char_count = 0
 				} else {
-					m.doc_controller.insert_char(m.doc_id, cr)
+					m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
 					last_line_char_count += 1
 				}
 			}
 			if newline_count > 0 {
 				final_x := if last_line_char_count > 0 { last_line_char_count - 1 } else { 0 }
 				final_y := start_pos.y + newline_count
-				m.doc_controller.set_cursor_pos(m.doc_id, cursor.Pos.new(final_x, final_y))
+				m.cursor_pos = cursor.Pos.new(final_x, final_y)
 			} else if last_line_char_count > 0 {
 				final_x := start_pos.x + last_line_char_count - 1
-				m.doc_controller.set_cursor_pos(m.doc_id, cursor.Pos.new(final_x, start_pos.y))
+				m.cursor_pos = cursor.Pos.new(final_x, start_pos.y)
 			}
 		}
 	}
 }
 
 fn (m EditorModel) debug_data() DebugData {
-	cursor_pos := m.doc_controller.cursor_pos(m.doc_id)
 	return DebugData{
 		name: 'active editor data'
 		data: {
 			'id':         '${m.id}'
 			'file path':  m.file_path
-			'cursor_row': '${cursor_pos.y}'
-			'cursor_col': '${cursor_pos.x}'
+			'cursor_row': '${m.cursor_pos.y}'
+			'cursor_col': '${m.cursor_pos.x}'
 		}
 	}
 }
 
 fn (m EditorModel) data() EditorData {
-	cursor_pos := m.doc_controller.cursor_pos(m.doc_id)
 	return EditorData{
 		id:        m.id
 		file_path: m.file_path
 
-		cursor_row: cursor_pos.y
-		cursor_col: cursor_pos.x
+		cursor_row: m.cursor_pos.y
+		cursor_col: m.cursor_pos.x
 
 		chord_display: m.chord.display()
 	}
