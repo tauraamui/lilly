@@ -193,6 +193,11 @@ fn test_controller_move_cursor_down_by() {
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(0, 3)
 }
 
+fn test_controller_move_cursor_down_by2() {
+	mut ctrl, id := new_controller_with_content(mock_multiline_content_with_blanks)
+	assert ctrl.move_cursor_down_by2(id, cursor.Pos.new(0, 0), 3, .normal) == cursor.Pos.new(0, 3)
+}
+
 fn test_controller_move_cursor_down_by_stops_at_last_line() {
 	mut ctrl, id := new_controller_with_content(mock_content)
 
@@ -201,11 +206,21 @@ fn test_controller_move_cursor_down_by_stops_at_last_line() {
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(0, 1)
 }
 
+fn test_controller_move_cursor_down_by2_stops_at_last_line() {
+	mut ctrl, id := new_controller_with_content(mock_content)
+	assert ctrl.move_cursor_down_by2(id, cursor.Pos.new(0, 0), 10, .normal) == cursor.Pos.new(0, 1)
+}
+
 fn test_controller_move_cursor_down_by_zero() {
 	mut ctrl, id := new_controller_with_content(mock_content)
 
 	ctrl.move_cursor_down_by(id, 0, .normal)
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(0, 0)
+}
+
+fn test_controller_move_cursor_down_by2_zero() {
+	mut ctrl, id := new_controller_with_content(mock_content)
+	assert ctrl.move_cursor_down_by2(id, cursor.Pos.new(0, 0), 0, .normal) == cursor.Pos.new(0, 0)
 }
 
 fn test_controller_move_cursor_up_by() {
@@ -268,6 +283,11 @@ fn test_controller_move_cursor_down_by_already_at_bottom() {
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(0, 1)
 }
 
+fn test_controller_move_cursor_down_by2_already_at_bottom() {
+	mut ctrl, id := new_controller_with_content(mock_content)
+	assert ctrl.move_cursor_down_by2(id, cursor.Pos.new(0, 1), 5, .normal) == cursor.Pos.new(0, 1)
+}
+
 fn test_controller_move_cursor_down_by_preserves_x() {
 	mut ctrl, id := new_controller_with_content(mock_multiline_content_with_blanks)
 
@@ -276,6 +296,13 @@ fn test_controller_move_cursor_down_by_preserves_x() {
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(0, 2)
 	ctrl.move_cursor_down_by(id, 2, .normal)
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(8, 4)
+}
+
+fn test_controller_move_cursor_down_by2_preserves_x() {
+	mut ctrl, id := new_controller_with_content(mock_multiline_content_with_blanks)
+	pos := ctrl.move_cursor_down_by2(id, cursor.Pos.new(8, 0), 2, .normal)
+	assert pos == cursor.Pos.new(0, 2)
+	assert ctrl.move_cursor_down_by2(id, pos, 2, .normal) == cursor.Pos.new(8, 4)
 }
 
 fn test_controller_move_cursor_up_by_preserves_x() {
@@ -287,11 +314,23 @@ fn test_controller_move_cursor_up_by_preserves_x() {
 	assert ctrl.cursor_pos(id).y == 2
 }
 
+fn test_controller_move_cursor_up_by2_preserves_x() {
+	mut ctrl, id := new_controller_with_content(mock_multiline_content_with_blanks)
+	pos := ctrl.move_cursor_up_by2(id, cursor.Pos.new(8, 3), 1, .normal)
+	// line 2 is blank, so x clamps; but largest_x should restore on line 1
+	assert pos.y == 2
+}
+
 fn test_controller_move_cursor_down() {
 	mut ctrl, id := new_controller_with_content(mock_content)
 
 	ctrl.move_cursor_down(id, .normal)
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(0, 1)
+}
+
+fn test_controller_move_cursor_down2() {
+	mut ctrl, id := new_controller_with_content(mock_content)
+	assert ctrl.move_cursor_down2(id, cursor.Pos.new(0, 0), .normal) == cursor.Pos.new(0, 1)
 }
 
 fn test_controller_move_cursor_up() {
@@ -302,6 +341,11 @@ fn test_controller_move_cursor_up() {
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(0, 0)
 }
 
+fn test_controller_move_cursor_up2() {
+	mut ctrl, id := new_controller_with_content(mock_content)
+	assert ctrl.move_cursor_up2(id, cursor.Pos.new(0, 1), .normal) == cursor.Pos.new(0, 0)
+}
+
 fn test_controller_move_cursor_left() {
 	mut ctrl, id := new_controller_with_content(mock_content)
 
@@ -310,11 +354,21 @@ fn test_controller_move_cursor_left() {
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(4, 0)
 }
 
+fn test_controller_move_cursor_left2() {
+	mut ctrl, id := new_controller_with_content(mock_content)
+	assert ctrl.move_cursor_left2(id, cursor.Pos.new(5, 0), .normal) == cursor.Pos.new(4, 0)
+}
+
 fn test_controller_move_cursor_right() {
 	mut ctrl, id := new_controller_with_content(mock_content)
 
 	ctrl.move_cursor_right(id, .normal)
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(1, 0)
+}
+
+fn test_controller_move_cursor_right2() {
+	mut ctrl, id := new_controller_with_content(mock_content)
+	assert ctrl.move_cursor_right2(id, cursor.Pos.new(0, 0), .normal) == cursor.Pos.new(1, 0)
 }
 
 fn test_controller_move_cursor_to_line_end() {
@@ -326,6 +380,14 @@ fn test_controller_move_cursor_to_line_end() {
 	assert ctrl.cursor_pos(id).x == 21
 }
 
+fn test_controller_move_cursor_to_line_end2() {
+	mut ctrl, id := new_controller_with_content(mock_content)
+	// mock_content first line: 'This is the.first line' (22 chars, last index 21)
+	pos := ctrl.move_cursor_to_line_end2(id, cursor.Pos.new(0, 0), .normal)
+	assert pos.y == 0
+	assert pos.x == 21
+}
+
 fn test_controller_move_cursor_to_next_blank_line() {
 	mut ctrl, id := new_controller_with_content(mock_multiline_content_with_blanks)
 
@@ -334,6 +396,13 @@ fn test_controller_move_cursor_to_next_blank_line() {
 
 	ctrl.move_cursor_to_next_blank_line(id)
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(0, 5)
+}
+
+fn test_controller_move_cursor_to_next_blank_line2() {
+	mut ctrl, id := new_controller_with_content(mock_multiline_content_with_blanks)
+	pos := ctrl.move_cursor_to_next_blank_line2(id, cursor.Pos.new(0, 0))
+	assert pos == cursor.Pos.new(0, 2)
+	assert ctrl.move_cursor_to_next_blank_line2(id, pos) == cursor.Pos.new(0, 5)
 }
 
 fn test_controller_move_cursor_to_previous_blank_line() {
@@ -347,6 +416,13 @@ fn test_controller_move_cursor_to_previous_blank_line() {
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(0, 5)
 }
 
+fn test_controller_move_cursor_to_previous_blank_line2() {
+	mut ctrl, id := new_controller_with_content(mock_multiline_content_with_blanks)
+	pos := ctrl.move_cursor_to_previous_blank_line2(id, cursor.Pos.new(0, 9))
+	assert pos == cursor.Pos.new(0, 8)
+	assert ctrl.move_cursor_to_previous_blank_line2(id, pos) == cursor.Pos.new(0, 5)
+}
+
 fn test_controller_move_cursor_down_by_then_up_by_roundtrip() {
 	mut ctrl, id := new_controller_with_content(mock_multiline_content_with_blanks)
 
@@ -357,6 +433,13 @@ fn test_controller_move_cursor_down_by_then_up_by_roundtrip() {
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(0, 0)
 }
 
+fn test_controller_move_cursor_down_by2_then_up_by2_roundtrip() {
+	mut ctrl, id := new_controller_with_content(mock_multiline_content_with_blanks)
+	pos := ctrl.move_cursor_down_by2(id, cursor.Pos.new(0, 0), 5, .normal)
+	assert pos == cursor.Pos.new(0, 5)
+	assert ctrl.move_cursor_up_by2(id, pos, 5, .normal) == cursor.Pos.new(0, 0)
+}
+
 fn test_controller_move_cursor_down_by_single_line_doc() {
 	mut ctrl, id := new_controller_with_content('only one line')
 
@@ -364,11 +447,21 @@ fn test_controller_move_cursor_down_by_single_line_doc() {
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(0, 0)
 }
 
+fn test_controller_move_cursor_down_by2_single_line_doc() {
+	mut ctrl, id := new_controller_with_content('only one line')
+	assert ctrl.move_cursor_down_by2(id, cursor.Pos.new(0, 0), 3, .normal) == cursor.Pos.new(0, 0)
+}
+
 fn test_controller_move_cursor_up_by_single_line_doc() {
 	mut ctrl, id := new_controller_with_content('only one line')
 
 	ctrl.move_cursor_up_by(id, 3, .normal)
 	assert ctrl.cursor_pos(id) == cursor.Pos.new(0, 0)
+}
+
+fn test_controller_move_cursor_up_by2_single_line_doc() {
+	mut ctrl, id := new_controller_with_content('only one line')
+	assert ctrl.move_cursor_up_by2(id, cursor.Pos.new(0, 0), 3, .normal) == cursor.Pos.new(0, 0)
 }
 
 fn test_doc_move_cursor_to_next_word_start() {
