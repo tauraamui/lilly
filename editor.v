@@ -925,7 +925,12 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 			}
       'I' {
         m.cursor_pos = m.doc_controller.move_cursor_to_line_start(m.doc_id, m.cursor_pos,
-         .normal)
+          .normal)
+        cmds << switch_mode(.insert)
+      }
+      'A' {
+        m.cursor_pos = m.doc_controller.move_cursor_to_line_end(m.doc_id, m.cursor_pos,
+          .insert)
         cmds << switch_mode(.insert)
       }
 			'{' {
