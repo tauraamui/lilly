@@ -326,6 +326,10 @@ fn render_keybinds_list(mut ctx tea.Context,
 	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
+	leader_key_label := 'leader = ;'
+	ctx.draw_text(-(tea.visible_len(leader_key_label) / 2), 0, leader_key_label)
+	ctx.push_offset(tea.Offset{ y: 1 })
+
 	for l in basic_command_help {
 		ctx.push_offset(tea.Offset{ y: 1 })
 		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(l) / 2) })
