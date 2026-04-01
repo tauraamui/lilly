@@ -854,7 +854,7 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 				m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {
 					cmds << raise_error('error: ${err}')
 					m.ensure_cursor_visible()
-					return
+          return
 				}
 				leading_whitespace := m.doc_controller.leading_whitespace_on_current_line(m.doc_id,
 					m.cursor_pos)
@@ -920,8 +920,14 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 					.normal)
 			}
 			'0' {
-				// m.doc_controller.move_cursor_to_line_start(m.doc_id)
+				m.cursor_pos = m.doc_controller.move_cursor_to_line_start(m.doc_id, m.cursor_pos,
+          .normal)
 			}
+      'I' {
+        m.cursor_pos = m.doc_controller.move_cursor_to_line_start(m.doc_id, m.cursor_pos,
+         .normal)
+        cmds << switch_mode(.insert)
+      }
 			'{' {
 				for _ in 0 .. count {
 					m.cursor_pos = m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id,

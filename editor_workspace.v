@@ -638,6 +638,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				'version' { cmds << open_version_dialog(m.version, m.theme) }
 				'vs' { cmds << split_vertically }
 				'w' { cmds << write_to_disk(m.active_editor_id) }
+        'wq', 'x' { cmds << write_to_disk(m.active_editor_id) cmds << close_active_split }
 				else { cmds << raise_error("unknown command '${msg.command}'") }
 			}
 		}
