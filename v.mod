@@ -1,5 +1,5 @@
 Module {
-	name: 'petal'
+	name: 'lilly'
 	description: ''
 	version: 'pre-alpha-v0.0.0'
 	license: 'MIT'
