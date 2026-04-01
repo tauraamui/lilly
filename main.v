@@ -30,8 +30,8 @@ const mod_file_content = $embed_file('v.mod').to_string()
 @[version: 'unknown']
 @[name: 'lilly']
 struct CfgArgs {
-	show_version     bool @[short: v; xdoc: 'Show version and exit']
-	show_help        bool @[long: help; short: h]
+	show_version bool @[short: v; xdoc: 'Show version and exit']
+	show_help    bool @[long: help; short: h]
 }
 
 fn main() {
