@@ -49,6 +49,18 @@ fn main() {
 		exit(0)
 	}
 
+	mut initial_file_path := ?string(none)
+	if no_matches.len == 1 {
+		provided_path := os.real_path(no_matches[0])
+		if os.is_dir(provided_path) {
+			os.chdir(provided_path) or {}
+		} else {
+			parent_dir := os.dir(provided_path)
+			os.chdir(parent_dir) or {}
+			initial_file_path = provided_path
+		}
+	}
+
 	theme_name := os.getenv('PETAL_THEME')
 	config := cfg.Config.new(load_from_path: none).set_theme(theme_name)
 
@@ -59,7 +71,7 @@ fn main() {
 
 	mut cb := clipboard.new()
 	mut petal_model := PetalModel.new(vmod_manifest.version, config, &documents_controller,
-		&cb)
+		&cb, initial_file_path: initial_file_path)
 	mut app := tea.new_program(mut petal_model)
 	petal_model.app_send = app.send
 	app.run() or { panic('something went wrong! ${err}') }
