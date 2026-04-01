@@ -5,7 +5,10 @@
 
 ## A VIM-Like editor for your terminal (<a href="https://discord.gg/N4UG2TfDfd">chat on Discord</a>)
 
-<img width="1279" height="699" alt="screenshot-2025-11-02_13-17-01" src="https://github.com/user-attachments/assets/a0f5ad48-eb87-4608-9c1f-cd855499e621" />
+<img width="1400" height="826" alt="screenshot-2026-04-01_12-23-26" src="https://github.com/user-attachments/assets/add7e429-f308-4025-809c-ff4510f6e67f" />
+<img width="1404" height="821" alt="screenshot-2026-04-01_12-23-44" src="https://github.com/user-attachments/assets/62f82f83-0d1d-444b-930d-f36e41114dcd" />
+<img width="1381" height="822" alt="screenshot-2026-04-01_12-24-33" src="https://github.com/user-attachments/assets/047e5ea4-0062-499f-9026-29f98a47f4a3" />
+
 
 An editor designed as a batteries included experience, eliminating the need for plugins. So, basically Helix but for VIM
 motions. The end vision is a one to one replacement/equivalent functionality for all VIM features, macros, motions, and more.
