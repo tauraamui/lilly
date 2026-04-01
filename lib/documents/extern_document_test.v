@@ -25,21 +25,22 @@ fn third_random_function() {
 */
 import encoding.utf8
 import documents
+import documents.cursor
 import petal
 
 fn test_move_cursor_to_next_word_start() {
 	mut ctrl := documents.Controller.new()
 	meta_doc_id := ctrl.open_document('./lib/documents/extern_document_test.v')!
 
-	ctrl.move_cursor_down(meta_doc_id, .normal)
-	ctrl.move_cursor_down(meta_doc_id, .normal)
-	ctrl.move_cursor_down(meta_doc_id, .normal)
+	mut pos := ctrl.move_cursor_down(meta_doc_id, cursor.Pos.new(0, 0), .normal)
+	pos = ctrl.move_cursor_down(meta_doc_id, pos, .normal)
+	pos = ctrl.move_cursor_down(meta_doc_id, pos, .normal)
 
-	ctrl.move_cursor_right(meta_doc_id, .normal)
-	ctrl.move_cursor_right(meta_doc_id, .normal)
-	ctrl.move_cursor_right(meta_doc_id, .normal)
+	pos = ctrl.move_cursor_right(meta_doc_id, pos, .normal)
+	pos = ctrl.move_cursor_right(meta_doc_id, pos, .normal)
+	pos = ctrl.move_cursor_right(meta_doc_id, pos, .normal)
 
-	mut current_line := ctrl.get_line_at(meta_doc_id, ctrl.cursor_pos(meta_doc_id).y) or {
+	mut current_line := ctrl.get_line_at(meta_doc_id, pos.y) or {
 		panic('failed to aquire current line')
 	}
 
@@ -48,16 +49,16 @@ fn test_move_cursor_to_next_word_start() {
 	mut word_start_chars := ['i', 'a', 'f', 't', 'c', 'f', 'v', 'w', 'j', 'f', 'r', '(', 'a', 'i',
 		',', 'b', 'i', ')', 'i', '{']
 	for c in word_start_chars {
-		ctrl.move_cursor_to_next_word_start(meta_doc_id)
-		current_line = ctrl.get_line_at(meta_doc_id, ctrl.cursor_pos(meta_doc_id).y) or {
+		pos = ctrl.move_cursor_to_next_word_start(meta_doc_id, pos)
+		current_line = ctrl.get_line_at(meta_doc_id, pos.y) or {
 			panic('failed to aquire current line')
 		}
-		assert '${current_line.runes()[ctrl.cursor_pos(meta_doc_id).x]}' == c
+		assert '${current_line.runes()[pos.x]}' == c
 	}
 
-	ctrl.move_cursor_down(meta_doc_id, .normal)
-	ctrl.move_cursor_down(meta_doc_id, .normal)
-	ctrl.move_cursor_down(meta_doc_id, .normal)
+	pos = ctrl.move_cursor_down(meta_doc_id, pos, .normal)
+	pos = ctrl.move_cursor_down(meta_doc_id, pos, .normal)
+	pos = ctrl.move_cursor_down(meta_doc_id, pos, .normal)
 
 	// second set: navigates through lines with empty lines and merged punct/symbol classes
 	// empty lines are now stop points (Vim-compatible), := and () are single words
@@ -106,8 +107,8 @@ fn test_move_cursor_to_next_word_start() {
 	]
 
 	for i, c in word_start_chars {
-		ctrl.move_cursor_to_next_word_start(meta_doc_id)
-		current_line = ctrl.get_line_at(meta_doc_id, ctrl.cursor_pos(meta_doc_id).y) or {
+		pos = ctrl.move_cursor_to_next_word_start(meta_doc_id, pos)
+		current_line = ctrl.get_line_at(meta_doc_id, pos.y) or {
 			panic('failed to aquire current line')
 		}
 		if c == '' {
@@ -115,7 +116,7 @@ fn test_move_cursor_to_next_word_start() {
 			assert '[${i}] expected empty line stop' == '[${i}] expected empty line stop'
 			assert current_line.len == 0
 		} else {
-			assert '[${i}]${current_line.runes()[ctrl.cursor_pos(meta_doc_id).x]}' == '[${i}]${c}'
+			assert '[${i}]${current_line.runes()[pos.x]}' == '[${i}]${c}'
 		}
 	}
 }
