@@ -214,7 +214,7 @@ pub fn (c Controller) move_cursor_to_line_end(doc_id int, pos cursor.Pos, mode p
 }
 
 pub fn (c Controller) move_cursor_to_line_start(doc_id int, pos cursor.Pos, mode petal.Mode) cursor.Pos {
-  return c.docs[doc_id].move_cursor_to_line_start(pos, mode)
+	return c.docs[doc_id].move_cursor_to_line_start(pos, mode)
 }
 
 pub fn (c Controller) move_cursor_to_next_blank_line(doc_id int, pos cursor.Pos) cursor.Pos {
@@ -518,7 +518,7 @@ fn (d Document) move_cursor_to_line_end(pos cursor.Pos, mode petal.Mode) cursor.
 }
 
 fn (d Document) move_cursor_to_line_start(pos cursor.Pos, mode petal.Mode) cursor.Pos {
-  return cursor.Pos.new(0, pos.y)
+	return cursor.Pos.new(0, pos.y)
 }
 
 fn (d Document) move_cursor_to_next_blank_line(pos cursor.Pos) cursor.Pos {
