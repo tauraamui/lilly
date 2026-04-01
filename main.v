@@ -14,6 +14,7 @@
 
 module main
 
+import flag
 import os
 import v.vmod
 import tauraamui.bobatea as tea
@@ -24,23 +25,30 @@ import lib.telemetry
 
 const mod_file_content = $embed_file('v.mod').to_string()
 
-fn emit_metrics_maybe(manifest vmod.Manifest) {
-	tp := if os.getenv('LILLY_NO_TELEMETRY') != '' {
-		telemetry.Provider(telemetry.NoOpProvider{})
-	} else {
-		telemetry.Provider(telemetry.HttpProvider.new('https://tauraamui.website/api/v1/lilly-ping'))
-	}
-
-	spawn tp.send_event(telemetry.Event{
-		kind:    .launch
-		version: manifest.version
-		os:      os.uname().sysname
-		arch:    os.uname().machine
-	})
+// application help desc and supported flags
+@[xdoc: 'a modern editor for your terminal']
+@[version: 'unknown']
+@[name: 'lilly']
+struct CfgArgs {
+	show_version     bool @[short: v; xdoc: 'Show version and exit']
+	show_help        bool @[long: help; short: h]
 }
 
 fn main() {
 	vmod_manifest := vmod.decode(mod_file_content) or { panic('failed to parse v.mod: ${err}') }
+
+	args_cfg, no_matches := flag.to_struct[CfgArgs](os.args, skip: 1)!
+	if args_cfg.show_help || no_matches.len > 1 {
+		help_doc := flag.to_doc[CfgArgs](version: vmod_manifest.version)!
+		println(help_doc)
+		exit(if no_matches.len > 1 { 1 } else { 0 })
+	}
+
+	if args_cfg.show_version {
+		println('lilly - version ${vmod_manifest.version}')
+		exit(0)
+	}
+
 	theme_name := os.getenv('PETAL_THEME')
 	config := cfg.Config.new(load_from_path: none).set_theme(theme_name)
 
@@ -55,4 +63,19 @@ fn main() {
 	mut app := tea.new_program(mut petal_model)
 	petal_model.app_send = app.send
 	app.run() or { panic('something went wrong! ${err}') }
+}
+
+fn emit_metrics_maybe(manifest vmod.Manifest) {
+	tp := if os.getenv('LILLY_NO_TELEMETRY') != '' {
+		telemetry.Provider(telemetry.NoOpProvider{})
+	} else {
+		telemetry.Provider(telemetry.HttpProvider.new('https://tauraamui.website/api/v1/lilly-ping'))
+	}
+
+	spawn tp.send_event(telemetry.Event{
+		kind:    .launch
+		version: manifest.version
+		os:      os.uname().sysname
+		arch:    os.uname().machine
+	})
 }
