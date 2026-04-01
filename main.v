@@ -35,7 +35,10 @@ struct CfgArgs {
 }
 
 fn main() {
-  $if windows { eprintln("Windows is not supported at this time") return }
+	$if windows {
+		eprintln('Windows is not supported at this time')
+		return
+	}
 	vmod_manifest := vmod.decode(mod_file_content) or { panic('failed to parse v.mod: ${err}') }
 
 	args_cfg, no_matches := flag.to_struct[CfgArgs](os.args, skip: 1)!

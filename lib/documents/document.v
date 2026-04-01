@@ -518,7 +518,9 @@ fn (d Document) move_cursor_to_line_end(pos cursor.Pos, mode petal.Mode) cursor.
 }
 
 fn (d Document) move_cursor_to_line_start(pos cursor.Pos) cursor.Pos {
-  if _ := d.data.get_line_at(y: pos.y) { return pos }
+	if _ := d.data.get_line_at(y: pos.y) {
+		return pos
+	}
 	return cursor.Pos.new(0, pos.y)
 }
 
