@@ -1,0 +1,142 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*v[0-9]*.[0-9]*.[0-9]*'
+
+permissions:
+  contents: write
+
+jobs:
+  validate-version:
+    name: Validate tag vs v.mod version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract v.mod version
+        id: vmod
+        run: |
+          VERSION=$(grep -oP "version: '\K[^']+" v.mod)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check tag matches v.mod version
+        run: |
+          TAG="${{ github.ref_name }}"
+          VMOD_VERSION="${{ steps.vmod.outputs.version }}"
+          echo "Tag:          $TAG"
+          echo "v.mod version: $VMOD_VERSION"
+          if [ "$TAG" != "$VMOD_VERSION" ]; then
+            echo "::error::Tag '$TAG' does not match v.mod version '$VMOD_VERSION'. Update v.mod before tagging."
+            exit 1
+          fi
+
+  build:
+    name: Build (${{ matrix.artifact_suffix }})
+    needs: validate-version
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            artifact_suffix: linux-amd64
+            v_flags: '-cc gcc'
+            extra_packages: ''
+          - runner: ubuntu-22.04-arm
+            artifact_suffix: linux-arm64
+            v_flags: '-cc gcc'
+            extra_packages: ''
+          - runner: macos-15-intel
+            artifact_suffix: darwin-amd64
+            v_flags: '-cc clang'
+            extra_packages: ''
+          - runner: macos-15
+            artifact_suffix: darwin-arm64
+            v_flags: '-cc clang'
+            extra_packages: ''
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup V
+        uses: vlang/setup-v@v1.4
+        with:
+          check-latest: true
+
+      - name: Install extra packages
+        if: matrix.extra_packages != ''
+        run: sudo apt-get install -y ${{ matrix.extra_packages }}
+
+      - name: Cache V modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.vmodules
+          key: vmodules-${{ matrix.artifact_suffix }}-${{ hashFiles('v.mod') }}
+          restore-keys: vmodules-${{ matrix.artifact_suffix }}-
+
+      - name: Install dependencies
+        run: v install tauraamui.bobatea
+
+      - name: Generate git hash
+        run: git log -n 1 --pretty=format:"%h" | tee ./.githash
+
+      - name: Build
+        run: v ${{ matrix.v_flags }} . -o lilly-${{ matrix.artifact_suffix }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lilly-${{ matrix.artifact_suffix }}
+          path: lilly-${{ matrix.artifact_suffix }}
+
+  release:
+    name: Create draft release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          CURRENT_TAG="${{ github.ref_name }}"
+          PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -v "^${CURRENT_TAG}$" | head -1)
+
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "No previous tag found — including all commits."
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" HEAD)
+          else
+            echo "Changelog: $PREVIOUS_TAG → $CURRENT_TAG"
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" "${PREVIOUS_TAG}..HEAD")
+          fi
+
+          {
+            echo "changelog<<CHANGELOG_EOF"
+            echo "$CHANGELOG"
+            echo "CHANGELOG_EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+          merge-multiple: true
+
+      - name: Create draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          name: "${{ github.ref_name }}"
+          tag_name: "${{ github.ref_name }}"
+          body: |
+            ## Changes
+
+            ${{ steps.changelog.outputs.changelog }}
+          files: dist/*
+          fail_on_unmatched_files: true
