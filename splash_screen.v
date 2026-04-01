@@ -36,20 +36,22 @@ mut:
 
 @[params]
 struct SplashScreenOptions {
-	version        string
-	leader_key     string
-	theme          theme.Theme
-	doc_controller &documents.Controller
-	cb             &clipboard.Manager
+	version           string
+	leader_key        string
+	theme             theme.Theme
+	doc_controller    &documents.Controller
+	cb                &clipboard.Manager
+	initial_file_path ?string
 }
 
 struct SplashScreenModel {
-	version        string
-	leader_key     string
-	logo           SplashLogo
-	theme          theme.Theme
-	doc_controller &documents.Controller
-	cb             &clipboard.Manager
+	version           string
+	leader_key        string
+	logo              SplashLogo
+	theme             theme.Theme
+	doc_controller    &documents.Controller
+	cb                &clipboard.Manager
+	initial_file_path ?string
 mut:
 	window_width  int
 	window_height int
@@ -61,18 +63,22 @@ mut:
 
 fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
 	return SplashScreenModel{
-		version:        opts.version
-		leader_key:     opts.leader_key
-		theme:          opts.theme
-		logo:           SplashLogo{
+		version:           opts.version
+		leader_key:        opts.leader_key
+		theme:             opts.theme
+		logo:              SplashLogo{
 			data: logo_contents.to_string().split_into_lines()
 		}
-		doc_controller: opts.doc_controller
-		cb:             opts.cb
+		doc_controller:    opts.doc_controller
+		cb:                opts.cb
+		initial_file_path: opts.initial_file_path
 	}
 }
 
 fn (mut m SplashScreenModel) init() ?tea.Cmd {
+	if file_path := m.initial_file_path {
+		return tea.batch(check_if_tmux_wrapped, open_editor_workspace(file_path))
+	}
 	return check_if_tmux_wrapped
 }
 
