@@ -346,18 +346,31 @@ mut:
 }
 
 fn Document.new(file_path string) !Document {
-	return Document{
-		file_path: file_path
-		data:      buffers.GapBuffer.new(
+	mut data := buffers.GapBuffer{}
+
+	if !os.exists(file_path) {
+		data = buffers.GapBuffer.new(
+			content: ''.runes()
+		)
+	} else {
+		data = buffers.GapBuffer.new(
 			content: (os.read_file(file_path) or {
 				return error('failed to read file ${file_path}: ${err}')
 			}).runes()
 		)
+	}
+
+	return Document{
+		file_path: file_path
+		data:      data
 		// data: buffers.GapBuffer.new(content: (iconv.read_file_encoding(file_path, "UTF-8") or { return error("failed to read file ${file_path}: ${err}") }).runes())
 	}
 }
 
 fn (mut d Document) write_to(file_path string) ! {
+	if !os.exists(file_path) {
+		os.create(file_path)!
+	}
 	os.write_file(file_path, d.data.content().string())!
 }
 
