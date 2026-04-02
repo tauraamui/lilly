@@ -64,7 +64,11 @@ fn impl_walk_concurrent(path string, ch chan []string, opts WalkParams) {
 		if os.is_dir(p) && !os.is_link(p) {
 			subdirs << p
 		} else {
-			local_files << p
+			if !os.is_readable(p) {
+				continue
+			} else {
+				local_files << p
+			}
 		}
 	}
 
@@ -120,31 +124,22 @@ fn ls_human(path string) ![]string {
 	for file in files {
 		p := os.join_path(path, file)
 
-		if !os.exists(p) || !os.is_readable(p) || !os.is_writable(p) {
+		if !os.exists(p) || !os.is_readable(p) {
 			continue
 		}
-
-		// Executable script detection
-		if os.is_executable(p) {
-			data := os.read_file(p) or { continue }
-      // TODO(Frothy7650): add proper script stuff(idk how)
-			if data.starts_with('#!') {
-				output << file
+		if !os.is_dir(p) {
+			// Executable script detection
+			if os.is_executable(p) {
+				data := os.read_file(p) or { continue }
+				// TODO(Frothy7650): add proper script stuff(idk how)
+				if data.starts_with('#!') {
+					output << file
+					continue
+				}
 				continue
 			}
-			continue
 		}
-
-		// Symlinks
-		if os.is_link(p) {
-			target := os.real_path(p)
-			output << target
-			continue
-		}
-
-		// normal readable/writable file
 		output << file
 	}
-
 	return output
 }
