@@ -48,7 +48,7 @@ fn impl_walk_concurrent(path string, ch chan []string, opts WalkParams) {
 		return
 	}
 
-	files := os.ls(path) or { return }
+	files := ls_human(path) or { return }
 
 	should_parallelize := files.len > opts.threshold
 
@@ -101,7 +101,7 @@ mut:
 
 pub fn new_finder() Finder {
 	return StdlibBasedFinder{
-		ls: os.ls
+		ls: ls_human
 	}
 }
 
@@ -111,4 +111,40 @@ fn (mut sf StdlibBasedFinder) search(root string) {
 
 fn (sf StdlibBasedFinder) files() []string {
 	return sf.files
+}
+
+fn ls_human(path string) ![]string {
+	files := os.ls(path)!
+	mut output := []string{}
+
+	for file in files {
+		p := os.join_path(path, file)
+
+		if !os.exists(p) || !os.is_readable(p) || !os.is_writable(p) {
+			continue
+		}
+
+		// Executable script detection
+		if os.is_executable(p) {
+			data := os.read_file(p) or { continue }
+      // TODO(Frothy7650): add proper script stuff(idk how)
+			if data.starts_with('#!') {
+				output << file
+				continue
+			}
+			continue
+		}
+
+		// Symlinks
+		if os.is_link(p) {
+			target := os.real_path(p)
+			output << target
+			continue
+		}
+
+		// normal readable/writable file
+		output << file
+	}
+
+	return output
 }
