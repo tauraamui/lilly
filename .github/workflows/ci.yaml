@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [master]
   push:
@@ -48,3 +49,34 @@ jobs:
       - name: Run tests
         timeout-minutes: 3
         run: v run ./make.vsh verbose-test
+
+  prod_build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: vlang/setup-v@v1.4
+        with:
+          check-latest: true
+
+      - name: Cache V modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.vmodules
+          key: vmodules-prod-${{ hashFiles('v.mod') }}
+          restore-keys: vmodules-prod-
+
+      - name: Install dependencies
+        run: v install tauraamui.bobatea
+
+      - name: Generate git hash
+        run: git log -n 1 --pretty=format:"%h" | tee ./.githash
+
+      - name: Build (prod with debug symbols)
+        run: v -prod -g -cc gcc . -o lilly-prod
+
+      - name: Upload prod binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: lilly-prod-linux-amd64
+          path: lilly-prod
