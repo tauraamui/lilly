@@ -39,6 +39,7 @@ fn main() {
 		eprintln('Windows is not supported at this time')
 		return
 	}
+	persist_stderr_to_disk()
 	vmod_manifest := vmod.decode(mod_file_content) or { panic('failed to parse v.mod: ${err}') }
 
 	args_cfg, no_matches := flag.to_struct[CfgArgs](os.args, skip: 1)!
