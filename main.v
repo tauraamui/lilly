@@ -36,6 +36,17 @@ struct CfgArgs {
 	no_matches   []string
 }
 
+struct OsFns {
+	is_dir     fn (p string) bool              @[required]
+	exists     fn (p string) bool              @[required]
+	mkdir_all  fn (p string) !                 @[required]
+	rm         fn (p string) !                 @[required]
+	symlink    fn (origin string, dest string) ! @[required]
+	executable fn () string                    @[required]
+	home_dir   fn () string                    @[required]
+	getenv_opt fn (key string) ?string         @[required]
+}
+
 fn resolve_cfg_args_from_args[T](args []string, v_manifest vmod.Manifest) !(T, []string) {
 	args_cfg, no_matches := flag.to_struct[T](args, skip: 1) or { return error('unexpected error: ${err}') }
 	if args_cfg.show_help || no_matches.len > 1 {
@@ -46,7 +57,7 @@ fn resolve_cfg_args_from_args[T](args []string, v_manifest vmod.Manifest) !(T, [
 	return args_cfg, no_matches
 }
 
-fn execute_on_flags(args_cfg CfgArgs, version string) ! {
+fn execute_on_flags(args_cfg CfgArgs, version string, os_fns OsFns) ! {
 	match true {
 		args_cfg.show_version {
 			println('lilly - version ${version}')
@@ -57,10 +68,10 @@ fn execute_on_flags(args_cfg CfgArgs, version string) ! {
 				return error('symlink not implemented for Windows yet')
 			}
 			mut link_path := '/data/data/com.termux/files/usr/bin/lilly'
-			if !os.is_dir('/data/data/com.termux/files') {
+			if !os_fns.is_dir('/data/data/com.termux/files') {
 				link_dir := '/usr/local/bin'
-				if !os.exists(link_dir) {
-					os.mkdir_all(link_dir) or {
+				if !os_fns.exists(link_dir) {
+					os_fns.mkdir_all(link_dir) or {
 						eprintln('Failed to create symlink "${link_path}": ${err}')
 						eprintln('Try again with sudo.')
 						exit(1)
@@ -68,32 +79,32 @@ fn execute_on_flags(args_cfg CfgArgs, version string) ! {
 				}
 				link_path = link_dir + '/lilly'
 			}
-			os.rm(link_path) or {}
-			os.symlink(os.executable(), link_path) or {
+			os_fns.rm(link_path) or {}
+			os_fns.symlink(os_fns.executable(), link_path) or {
 				// Try ~/.local/bin as a fallback when /usr/local/bin is not writable.
-				home := os.home_dir()
+				home := os_fns.home_dir()
 				if home == '' {
 					eprintln('Failed to create symlink "${link_path}": ${err}')
 					eprintln('Try again with sudo.')
 					exit(1)
 				}
 				local_bin := os.join_path(home, '.local', 'bin')
-				if !os.exists(local_bin) {
-					os.mkdir_all(local_bin) or {
+				if !os_fns.exists(local_bin) {
+					os_fns.mkdir_all(local_bin) or {
 						eprintln('Failed to create symlink "${link_path}": ${err}')
 						eprintln('Try again with sudo.')
 						exit(1)
 					}
 				}
 				link_path = os.join_path(local_bin, 'lilly')
-				os.rm(link_path) or {}
-				os.symlink(os.executable(), link_path) or {
+				os_fns.rm(link_path) or {}
+				os_fns.symlink(os_fns.executable(), link_path) or {
 					eprintln('Failed to create symlink "${link_path}": ${err}')
 					eprintln('Try again with sudo.')
 					exit(1)
 				}
 				eprintln('Note: Symlink created in "${local_bin}" instead of "/usr/local/bin".')
-				if path := os.getenv_opt('PATH') {
+				if path := os_fns.getenv_opt('PATH') {
 					if !path.contains(local_bin) {
 						eprintln('Make sure "${local_bin}" is in your PATH.')
 					}
@@ -127,7 +138,16 @@ fn main() {
 
 	vmod_manifest := vmod.decode(mod_file_content) or { panic('failed to parse v.mod: ${err}') }
 	args_cfg, no_matches := resolve_cfg_args_from_args[CfgArgs](os.args, vmod_manifest)!
-	execute_on_flags(args_cfg, vmod_manifest.version) or { eprintln('unexpected error: ${err}'); exit(1) }
+	execute_on_flags(args_cfg, vmod_manifest.version, OsFns{
+		is_dir:     os.is_dir
+		exists:     os.exists
+		mkdir_all:  fn (p string) ! { return os.mkdir_all(p) }
+		rm:         os.rm
+		symlink:    os.symlink
+		executable: os.executable
+		home_dir:   os.home_dir
+		getenv_opt: fn (key string) ?string { return os.getenv_opt(key) }
+	}) or { eprintln('unexpected error: ${err}'); exit(1) }
 
 	persist_stderr_to_disk()
 
