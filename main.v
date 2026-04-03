@@ -33,6 +33,47 @@ struct CfgArgs {
 	show_version bool @[short: v; xdoc: 'Show version and exit']
 	show_help    bool @[long: help; short: h]
 	symlink      bool @[long: symlink; short: s]
+	no_matches   []string
+}
+
+fn resolve_cfg_args_from_args[T](args []string, v_manifest vmod.Manifest) !(T, []string) {
+	args_cfg, no_matches := flag.to_struct[T](args, skip: 1) or { return error('unexpected error: ${err}') }
+	if args_cfg.show_help || no_matches.len > 1 {
+		help_doc := flag.to_doc[T](version: v_manifest.version)!
+		println(help_doc)
+		exit(if no_matches.len > 1 { 1 } else { 0 })
+	}
+	return args_cfg, no_matches
+}
+
+fn execute_on_flags(args_cfg CfgArgs, version string) ! {
+	match true {
+		args_cfg.show_version {
+			println('lilly - version ${version}')
+			exit(0)
+		}
+		args_cfg.symlink {
+			$if windows {
+				return error('symlink not implemented for Windows yet')
+			}
+			return error('symlink not implemented yet')
+		}
+		else {}
+	}
+}
+
+fn resolve_initial_file_path_and_chdir(no_matches []string, real_path fn (s string) string, is_dir fn (p string) bool, chdir fn (p string) !) ?string {
+	if no_matches.len == 1 {
+		provided_path := real_path(no_matches[0])
+		if is_dir(provided_path) {
+			chdir(provided_path) or {}
+		} else {
+			parent_dir := os.dir(provided_path)
+			chdir(parent_dir) or {}
+			return provided_path
+		}
+	}
+	return ?string(none)
 }
 
 fn main() {
@@ -40,21 +81,12 @@ fn main() {
 		eprintln('Windows is not supported at this time')
 		return
 	}
-	persist_stderr_to_disk()
+
 	vmod_manifest := vmod.decode(mod_file_content) or { panic('failed to parse v.mod: ${err}') }
+	args_cfg, no_matches := resolve_cfg_args_from_args[CfgArgs](os.args, vmod_manifest)!
+	execute_on_flags(args_cfg, vmod_manifest.version) or { eprintln('unexpected error: ${err}'); exit(1) }
 
-	args_cfg, no_matches := flag.to_struct[CfgArgs](os.args, skip: 1)!
-	if args_cfg.show_help || no_matches.len > 1 {
-		help_doc := flag.to_doc[CfgArgs](version: vmod_manifest.version)!
-		println(help_doc)
-		exit(if no_matches.len > 1 { 1 } else { 0 })
-	}
-
-	if args_cfg.show_version {
-		println('lilly - version ${vmod_manifest.version}')
-		exit(0)
-	}
-
+	/*
 	if args_cfg.symlink {
 		$if windows {
 			return
@@ -80,18 +112,11 @@ fn main() {
 		println('created symlink ${link_path} successfully')
 		exit(0)
 	}
+	*/
 
-	mut initial_file_path := ?string(none)
-	if no_matches.len == 1 {
-		provided_path := os.real_path(no_matches[0])
-		if os.is_dir(provided_path) {
-			os.chdir(provided_path) or {}
-		} else {
-			parent_dir := os.dir(provided_path)
-			os.chdir(parent_dir) or {}
-			initial_file_path = provided_path
-		}
-	}
+	persist_stderr_to_disk()
+
+	initial_file_path := resolve_initial_file_path_and_chdir(no_matches, os.real_path, os.is_dir, os.chdir)
 
 	theme_name := os.getenv('PETAL_THEME')
 	config := cfg.Config.new(load_from_path: none).set_theme(theme_name)
