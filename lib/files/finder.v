@@ -123,17 +123,8 @@ fn ls_human(path string) ![]string {
 		if !os.exists(p) || !os.is_readable(p) {
 			continue
 		}
-		if !os.is_dir(p) {
-			// Executable script detection
-			if os.is_executable(p) {
-				data := os.read_file(p) or { continue }
-				// TODO(Frothy7650): add proper script stuff(idk how)
-				if data.starts_with('#!') {
-					output << file
-					continue
-				}
-				continue
-			}
+		if !os.is_dir(p) && is_binary(p) {
+			continue
 		}
 		output << file
 	}
