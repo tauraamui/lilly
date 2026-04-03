@@ -184,7 +184,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			cmds << open_editor_workspace(msg.file_path)
 		}
 		OpenEditorWorkspaceMsg {
-			mut workspace := EditorWorkspaceModel.new(m.version, m.theme, msg.initial_file_path,
+			mut workspace := EditorWorkspaceModel.new(m.version, m.theme, m.leader_key, msg.initial_file_path,
 				m.doc_controller, m.cb)
 			cmd := workspace.init()
 			if u_cmd := cmd {
@@ -326,7 +326,7 @@ fn render_keybinds_list(mut ctx tea.Context,
 	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
-	leader_key_label := 'leader = ;'
+	leader_key_label := 'default leader = ;'
 	ctx.draw_text(-(tea.visible_len(leader_key_label) / 2), 0, leader_key_label)
 	ctx.push_offset(tea.Offset{ y: 1 })
 
