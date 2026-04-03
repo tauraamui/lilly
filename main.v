@@ -180,8 +180,9 @@ fn main() {
 	emit_metrics_maybe(vmod_manifest)
 
 	mut cb := clipboard.new()
-	mut petal_model := PetalModel.new(version, config, &documents_controller,
-		&cb, initial_file_path: initial_file_path)
+	mut petal_model := PetalModel.new(version, config, &documents_controller, &cb,
+		initial_file_path: initial_file_path
+	)
 	mut app := tea.new_program(mut petal_model)
 	petal_model.app_send = app.send
 	app.run() or { panic('something went wrong! ${err}') }
