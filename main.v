@@ -32,6 +32,7 @@ const mod_file_content = $embed_file('v.mod').to_string()
 struct CfgArgs {
 	show_version bool @[short: v; xdoc: 'Show version and exit']
 	show_help    bool @[long: help; short: h]
+	symlink      bool @[long: symlink; short: s]
 }
 
 fn main() {
@@ -50,6 +51,32 @@ fn main() {
 
 	if args_cfg.show_version {
 		println('lilly - version ${vmod_manifest.version}')
+		exit(0)
+	}
+
+	if args_cfg.symlink {
+		$if windows {
+			return
+		}
+		mut link_path := '/data/data/com.termux/files/usr/bin/lilly'
+
+		if !os.is_dir('/data/data/com.termux/files') {
+			link_dir := os.local_bin_dir()
+			if !os.exists(link_dir) {
+				os.mkdir_all(link_dir) or {
+					eprintln('failed to symlink: ${err}')
+					exit(1)
+				}
+			}
+			link_path = link_dir + '/lilly'
+		}
+
+		os.rm(link_path) or {}
+		os.symlink(os.executable(), link_path) or {
+			eprintln("failed to create symlink '${link_path}'. try again with sudo.")
+		}
+
+		println('created symlink ${link_path} successfully')
 		exit(0)
 	}
 
