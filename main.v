@@ -145,7 +145,9 @@ fn main() {
 
 	vmod_manifest := vmod.decode(mod_file_content) or { panic('failed to parse v.mod: ${err}') }
 	args_cfg, no_matches := resolve_cfg_args_from_args[CfgArgs](os.args, vmod_manifest)!
-	execute_on_flags(args_cfg, vmod_manifest.version, OsFns{
+
+	version := '${vmod_manifest.version} (#${build_id})'
+	execute_on_flags(args_cfg, version, OsFns{
 		is_dir:     os.is_dir
 		exists:     os.exists
 		mkdir_all:  fn (p string) ! {
@@ -178,8 +180,9 @@ fn main() {
 	emit_metrics_maybe(vmod_manifest)
 
 	mut cb := clipboard.new()
-	mut petal_model := PetalModel.new(vmod_manifest.version, config, &documents_controller,
-		&cb, initial_file_path: initial_file_path)
+	mut petal_model := PetalModel.new(version, config, &documents_controller, &cb,
+		initial_file_path: initial_file_path
+	)
 	mut app := tea.new_program(mut petal_model)
 	petal_model.app_send = app.send
 	app.run() or { panic('something went wrong! ${err}') }
