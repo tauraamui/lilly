@@ -43,7 +43,8 @@ context.task(
 )
 
 // UTIL TASKS
-context.task(name: 'format', run: |self| system('v fmt -w .'))
+context.task(name: 'format', run: |self| system('v fmt -w *.v lib/'))
+context.task(name: 'verify-format', run: |self| exit(system('v fmt -inprocess -verify *.v lib/')))
 context.task(name: 'git', depends: ['format'], run: |self| system('lazygit'))
 
 context.task(
