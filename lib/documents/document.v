@@ -356,7 +356,7 @@ fn Document.new(file_path string) !Document {
 		data = buffers.GapBuffer.new(
 			content: (os.read_file(file_path) or {
 				return error('failed to read file ${file_path}: ${err}')
-			}).runes()
+			}).trim_space_right().runes()
 		)
 	}
 
@@ -371,7 +371,12 @@ fn (mut d Document) write_to(file_path string) ! {
 	if !os.exists(file_path) {
 		os.create(file_path)!
 	}
-	os.write_file(file_path, d.data.content().string())!
+
+	mut data := d.data.content().string()
+	if !data.ends_with('\n') {
+		data += '\n'
+	}
+	os.write_file(file_path, data)!
 }
 
 fn (mut d Document) prepare_for_insertion_at(pos cursor.Pos) ! {
