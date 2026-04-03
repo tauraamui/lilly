@@ -66,8 +66,13 @@ fn main() {
 		}
 	}
 
+	mut config := cfg.Config.new()
+
 	theme_name := os.getenv('PETAL_THEME')
-	config := cfg.Config.new(load_from_path: none).set_theme(theme_name)
+
+	if theme_name.len != 0 {
+		config = config.set_theme(theme_name)
+	}
 
 	mut documents_controller := documents.Controller.new()
 	defer { documents_controller.free() }

@@ -14,6 +14,7 @@
 
 module cfg
 
+import os
 import lib.petal.theme
 
 pub const light_theme_name = theme.light_theme_name
@@ -31,11 +32,62 @@ pub:
 	load_from_path ?string = '~/.config/petal/petal.cfg'
 }
 
+fn parse_config_file(file_path string) !Config {
+	mut ttheme := theme.dark_theme
+	mut leader_key := ';'
+
+	file := os.read_file(os.expand_tilde_to_home(file_path))!
+
+	for line in file.split_into_lines() {
+		pair := line.split('=')
+
+		if pair.len != 2 {
+			return error('line does not have a pair')
+		}
+
+		key := pair[0].trim_space()
+		value := pair[1].trim_space()
+
+		match key {
+			'theme' {
+				if value == 'dark' {
+					ttheme = theme.dark_theme
+				} else if value == 'light' {
+					ttheme = theme.light_theme
+				} else {
+					return error('unknown theme')
+				}
+			}
+			'leader' {
+				if value[0] != `"` {
+					return error('expected " at the start')
+				}
+
+				if value[value.len - 1] != `"` {
+					return error('expected " at the end')
+				}
+
+				leader_key = value.trim('"')
+			}
+			else {
+				return error('unknown key')
+			}
+		}
+	}
+
+	return Config{
+		theme:      ttheme
+		leader_key: leader_key
+	}
+}
+
 pub fn Config.new(opts ConfigOptions) Config {
 	if path_to_load := opts.load_from_path {
 		assert path_to_load.len > 0
-		// do some loading from file here
-		// return Config{}
+
+		if parsed_config := parse_config_file(path_to_load) {
+			return parsed_config
+		}
 	}
 
 	return Config{
