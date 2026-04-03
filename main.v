@@ -37,18 +37,21 @@ struct CfgArgs {
 }
 
 struct OsFns {
-	is_dir     fn (p string) bool              @[required]
-	exists     fn (p string) bool              @[required]
-	mkdir_all  fn (p string) !                 @[required]
-	rm         fn (p string) !                 @[required]
+	is_dir     fn (p string) bool                @[required]
+	exists     fn (p string) bool                @[required]
+	mkdir_all  fn (p string) !                   @[required]
+	rm         fn (p string) !                   @[required]
 	symlink    fn (origin string, dest string) ! @[required]
-	executable fn () string                    @[required]
-	home_dir   fn () string                    @[required]
-	getenv_opt fn (key string) ?string         @[required]
+	executable fn () string                      @[required]
+	home_dir   fn () string                      @[required]
+	getenv_opt fn (key string) ?string           @[required]
+	exit       fn (code int)                     @[required]
 }
 
 fn resolve_cfg_args_from_args[T](args []string, v_manifest vmod.Manifest) !(T, []string) {
-	args_cfg, no_matches := flag.to_struct[T](args, skip: 1) or { return error('unexpected error: ${err}') }
+	args_cfg, no_matches := flag.to_struct[T](args, skip: 1) or {
+		return error('unexpected error: ${err}')
+	}
 	if args_cfg.show_help || no_matches.len > 1 {
 		help_doc := flag.to_doc[T](version: v_manifest.version)!
 		println(help_doc)
@@ -61,7 +64,7 @@ fn execute_on_flags(args_cfg CfgArgs, version string, os_fns OsFns) ! {
 	match true {
 		args_cfg.show_version {
 			println('lilly - version ${version}')
-			exit(0)
+			os_fns.exit(0)
 		}
 		args_cfg.symlink {
 			$if windows {
@@ -74,7 +77,8 @@ fn execute_on_flags(args_cfg CfgArgs, version string, os_fns OsFns) ! {
 					os_fns.mkdir_all(link_dir) or {
 						eprintln('Failed to create symlink "${link_path}": ${err}')
 						eprintln('Try again with sudo.')
-						exit(1)
+						os_fns.exit(1)
+						return
 					}
 				}
 				link_path = link_dir + '/lilly'
@@ -86,14 +90,16 @@ fn execute_on_flags(args_cfg CfgArgs, version string, os_fns OsFns) ! {
 				if home == '' {
 					eprintln('Failed to create symlink "${link_path}": ${err}')
 					eprintln('Try again with sudo.')
-					exit(1)
+					os_fns.exit(1)
+					return
 				}
 				local_bin := os.join_path(home, '.local', 'bin')
 				if !os_fns.exists(local_bin) {
 					os_fns.mkdir_all(local_bin) or {
 						eprintln('Failed to create symlink "${link_path}": ${err}')
 						eprintln('Try again with sudo.')
-						exit(1)
+						os_fns.exit(1)
+						return
 					}
 				}
 				link_path = os.join_path(local_bin, 'lilly')
@@ -101,7 +107,8 @@ fn execute_on_flags(args_cfg CfgArgs, version string, os_fns OsFns) ! {
 				os_fns.symlink(os_fns.executable(), link_path) or {
 					eprintln('Failed to create symlink "${link_path}": ${err}')
 					eprintln('Try again with sudo.')
-					exit(1)
+					os_fns.exit(1)
+					return
 				}
 				eprintln('Note: Symlink created in "${local_bin}" instead of "/usr/local/bin".')
 				if path := os_fns.getenv_opt('PATH') {
@@ -110,7 +117,7 @@ fn execute_on_flags(args_cfg CfgArgs, version string, os_fns OsFns) ! {
 					}
 				}
 			}
-			exit(0)
+			os_fns.exit(0)
 		}
 		else {}
 	}
@@ -141,17 +148,26 @@ fn main() {
 	execute_on_flags(args_cfg, vmod_manifest.version, OsFns{
 		is_dir:     os.is_dir
 		exists:     os.exists
-		mkdir_all:  fn (p string) ! { return os.mkdir_all(p) }
+		mkdir_all:  fn (p string) ! {
+			return os.mkdir_all(p)
+		}
 		rm:         os.rm
 		symlink:    os.symlink
 		executable: os.executable
 		home_dir:   os.home_dir
-		getenv_opt: fn (key string) ?string { return os.getenv_opt(key) }
-	}) or { eprintln('unexpected error: ${err}'); exit(1) }
+		getenv_opt: fn (key string) ?string {
+			return os.getenv_opt(key)
+		}
+		exit:       exit
+	}) or {
+		eprintln('unexpected error: ${err}')
+		exit(1)
+	}
 
 	persist_stderr_to_disk()
 
-	initial_file_path := resolve_initial_file_path_and_chdir(no_matches, os.real_path, os.is_dir, os.chdir)
+	initial_file_path := resolve_initial_file_path_and_chdir(no_matches, os.real_path,
+		os.is_dir, os.chdir)
 
 	theme_name := os.getenv('PETAL_THEME')
 	config := cfg.Config.new(load_from_path: none).set_theme(theme_name)
