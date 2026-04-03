@@ -56,7 +56,50 @@ fn execute_on_flags(args_cfg CfgArgs, version string) ! {
 			$if windows {
 				return error('symlink not implemented for Windows yet')
 			}
-			return error('symlink not implemented yet')
+			mut link_path := '/data/data/com.termux/files/usr/bin/lilly'
+			if !os.is_dir('/data/data/com.termux/files') {
+				link_dir := '/usr/local/bin'
+				if !os.exists(link_dir) {
+					os.mkdir_all(link_dir) or {
+						eprintln('Failed to create symlink "${link_path}": ${err}')
+						eprintln('Try again with sudo.')
+						exit(1)
+					}
+				}
+				link_path = link_dir + '/lilly'
+			}
+			os.rm(link_path) or {}
+			os.symlink(os.executable(), link_path) or {
+				// Try ~/.local/bin as a fallback when /usr/local/bin is not writable.
+				home := os.home_dir()
+				if home == '' {
+					eprintln('Failed to create symlink "${link_path}": ${err}')
+					eprintln('Try again with sudo.')
+					exit(1)
+				}
+				local_bin := os.join_path(home, '.local', 'bin')
+				if !os.exists(local_bin) {
+					os.mkdir_all(local_bin) or {
+						eprintln('Failed to create symlink "${link_path}": ${err}')
+						eprintln('Try again with sudo.')
+						exit(1)
+					}
+				}
+				link_path = os.join_path(local_bin, 'lilly')
+				os.rm(link_path) or {}
+				os.symlink(os.executable(), link_path) or {
+					eprintln('Failed to create symlink "${link_path}": ${err}')
+					eprintln('Try again with sudo.')
+					exit(1)
+				}
+				eprintln('Note: Symlink created in "${local_bin}" instead of "/usr/local/bin".')
+				if path := os.getenv_opt('PATH') {
+					if !path.contains(local_bin) {
+						eprintln('Make sure "${local_bin}" is in your PATH.')
+					}
+				}
+			}
+			exit(0)
 		}
 		else {}
 	}
@@ -85,34 +128,6 @@ fn main() {
 	vmod_manifest := vmod.decode(mod_file_content) or { panic('failed to parse v.mod: ${err}') }
 	args_cfg, no_matches := resolve_cfg_args_from_args[CfgArgs](os.args, vmod_manifest)!
 	execute_on_flags(args_cfg, vmod_manifest.version) or { eprintln('unexpected error: ${err}'); exit(1) }
-
-	/*
-	if args_cfg.symlink {
-		$if windows {
-			return
-		}
-		mut link_path := '/data/data/com.termux/files/usr/bin/lilly'
-
-		if !os.is_dir('/data/data/com.termux/files') {
-			link_dir := os.local_bin_dir()
-			if !os.exists(link_dir) {
-				os.mkdir_all(link_dir) or {
-					eprintln('failed to symlink: ${err}')
-					exit(1)
-				}
-			}
-			link_path = link_dir + '/lilly'
-		}
-
-		os.rm(link_path) or {}
-		os.symlink(os.executable(), link_path) or {
-			eprintln("failed to create symlink '${link_path}'. try again with sudo.")
-		}
-
-		println('created symlink ${link_path} successfully')
-		exit(0)
-	}
-	*/
 
 	persist_stderr_to_disk()
 
