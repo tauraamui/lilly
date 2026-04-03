@@ -19,9 +19,7 @@ jobs:
           check-latest: true
 
       - name: Check formatting
-        run: |
-          find . -name '*.v' -not -path './.vmodules/*' | xargs v fmt -w
-          git diff --exit-code
+        run: v run ./make.vsh verify-format
 
   unit_tests:
     runs-on: ubuntu-latest
