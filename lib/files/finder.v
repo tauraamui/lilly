@@ -64,7 +64,7 @@ fn impl_walk_concurrent(path string, ch chan []string, opts WalkParams) {
 		if os.is_dir(p) && !os.is_link(p) {
 			subdirs << p
 		} else {
-      local_files << p
+			local_files << p
 		}
 	}
 
