@@ -19,6 +19,7 @@ import os
 import encoding.utf8
 import lib.buffers
 import lib.documents.cursor
+import lib.files
 import lib.petal
 
 struct UndoEntry {
@@ -347,6 +348,14 @@ mut:
 
 fn Document.new(file_path string) !Document {
 	mut data := buffers.GapBuffer{}
+
+	if !os.is_readable(file_path) {
+		return error('${file_path} is not readable')
+	}
+
+	if files.is_binary(file_path) {
+		return error('${file_path} is a binary file')
+	}
 
 	if !os.exists(file_path) {
 		data = buffers.GapBuffer.new(
