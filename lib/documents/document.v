@@ -349,7 +349,7 @@ mut:
 fn Document.new(file_path string) !Document {
 	mut data := buffers.GapBuffer{}
 
-	if !os.is_readable(file_path) {
+	if os.exists(file_path) && !os.is_readable(file_path) {
 		return error('${file_path} is not readable')
 	}
 
