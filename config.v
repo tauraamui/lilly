@@ -29,48 +29,51 @@ pub:
 @[params]
 pub struct ConfigOptions {
 pub:
-	load_from_path ?string = '~/.config/petal/petal.cfg'
+	// TODO(tauraamui) [03/04/2026]: this works for now, but should do hirarchical searching using the XDG spec
+	// path/locations, local first, and then general system wide config locations.
+	load_from_path ?string = '~/.config/lilly/lilly.cfg'
 }
 
 fn parse_config_file(file_path string) !Config {
 	mut ttheme := theme.dark_theme
 	mut leader_key := ';'
 
-	file := os.read_file(os.expand_tilde_to_home(file_path))!
+	$if !windows {
+		file := os.read_file(os.expand_tilde_to_home(file_path))!
 
-	for line in file.split_into_lines() {
-		pair := line.split('=')
+		for line in file.split_into_lines() {
+			pair := line.split('=')
 
-		if pair.len != 2 {
-			return error('line does not have a pair')
-		}
-
-		key := pair[0].trim_space()
-		value := pair[1].trim_space()
-
-		match key {
-			'theme' {
-				if value == 'dark' {
-					ttheme = theme.dark_theme
-				} else if value == 'light' {
-					ttheme = theme.light_theme
-				} else {
-					return error('unknown theme')
-				}
+			if pair.len != 2 {
+				return error('line does not have a pair')
 			}
-			'leader' {
-				if value[0] != `"` {
-					return error('expected " at the start')
-				}
 
-				if value[value.len - 1] != `"` {
-					return error('expected " at the end')
-				}
+			key := pair[0].trim_space()
+			value := pair[1].trim_space()
 
-				leader_key = value.trim('"')
-			}
-			else {
-				return error('unknown key')
+			match key {
+				'theme' {
+					if value == 'dark' {
+						ttheme = theme.dark_theme
+					} else if value == 'light' {
+						ttheme = theme.light_theme
+					} else {
+						return error('unknown theme')
+					}
+				}
+				'leader' {
+					if value[0] != `"` {
+						return error('expected " at the start')
+					}
+
+					if value[value.len - 1] != `"` {
+						return error('expected " at the end')
+					}
+					leader_key = value.trim('"')
+				}
+				else {
+					return error('unknown key')
+				}
 			}
 		}
 	}
