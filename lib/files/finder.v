@@ -48,7 +48,7 @@ fn impl_walk_concurrent(path string, ch chan []string, opts WalkParams) {
 		return
 	}
 
-	files := os.ls(path) or { return }
+	files := ls_human(path) or { return }
 
 	should_parallelize := files.len > opts.threshold
 
@@ -101,7 +101,7 @@ mut:
 
 pub fn new_finder() Finder {
 	return StdlibBasedFinder{
-		ls: os.ls
+		ls: ls_human
 	}
 }
 
@@ -111,4 +111,22 @@ fn (mut sf StdlibBasedFinder) search(root string) {
 
 fn (sf StdlibBasedFinder) files() []string {
 	return sf.files
+}
+
+fn ls_human(path string) ![]string {
+	files := os.ls(path)!
+	mut output := []string{}
+
+	for file in files {
+		p := os.join_path(path, file)
+
+		if !os.exists(p) || !os.is_readable(p) {
+			continue
+		}
+		if !os.is_dir(p) && is_binary(p) {
+			continue
+		}
+		output << file
+	}
+	return output
 }
