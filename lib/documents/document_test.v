@@ -279,6 +279,13 @@ fn test_controller_move_cursor_to_line_end() {
 	assert pos.x == 21
 }
 
+fn test_controller_move_cursor_to_line_start() {
+	ctrl, id := new_controller_with_content(mock_content)
+	pos := ctrl.move_cursor_to_line_start(id, cursor.Pos.new(21, 0))
+	assert pos.y == 0
+	assert pos.x == 0
+}
+
 fn test_controller_move_cursor_to_next_blank_line() {
 	ctrl, id := new_controller_with_content(mock_multiline_content_with_blanks)
 	pos := ctrl.move_cursor_to_next_blank_line(id, cursor.Pos.new(0, 0))
