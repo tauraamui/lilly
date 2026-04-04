@@ -42,7 +42,13 @@ fn parse_config_file(file_path string) !Config {
 		file := os.read_file(os.expand_tilde_to_home(file_path))!
 
 		for line in file.split_into_lines() {
-			pair := line.split('=')
+			trimmed := line.trim_space()
+
+			if trimmed.starts_with('#') || trimmed.len == 0 {
+				continue
+			}
+
+			pair := trimmed.split('=')
 
 			if pair.len != 2 {
 				return error('line does not have a pair')
