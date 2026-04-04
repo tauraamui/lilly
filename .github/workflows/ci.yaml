@@ -16,7 +16,7 @@ jobs:
 
       - uses: vlang/setup-v@v1.4
         with:
-          version: '17b5eb5'
+          version: '0c3183c'
 
       - name: Check formatting
         run: v run ./make.vsh verify-format
@@ -28,7 +28,7 @@ jobs:
 
       - uses: vlang/setup-v@v1.4
         with:
-          version: '17b5eb5'
+          version: '0c3183c'
 
       - name: Cache V modules
         uses: actions/cache@v4
@@ -55,7 +55,7 @@ jobs:
 
       - uses: vlang/setup-v@v1.4
         with:
-          version: '17b5eb5'
+          version: '0c3183c'
 
       - name: Cache V modules
         uses: actions/cache@v4
