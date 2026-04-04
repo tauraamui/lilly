@@ -353,10 +353,20 @@ fn Document.new(file_path string) !Document {
 			content: ''.runes()
 		)
 	} else {
+		content := os.read_file(file_path) or {
+			return error('failed to read file ${file_path}: ${err}')
+		}
+		mut content_runes := content.runes()
+		if content_runes.len > 0 && content_runes[content_runes.len - 1] == `\n` {
+			if content_runes.len > 1 && content_runes[content_runes.len - 2] == `\r` {
+				content_runes = content_runes.clone()[..content_runes.len - 2]
+			} else {
+				content_runes = content_runes.clone()[..content_runes.len - 1]
+			}
+		}
+
 		data = buffers.GapBuffer.new(
-			content: (os.read_file(file_path) or {
-				return error('failed to read file ${file_path}: ${err}')
-			}).trim_space_right().runes()
+			content: content_runes
 		)
 	}
 
@@ -371,12 +381,7 @@ fn (mut d Document) write_to(file_path string) ! {
 	if !os.exists(file_path) {
 		os.create(file_path)!
 	}
-
-	mut data := d.data.content().string()
-	if !data.ends_with('\n') {
-		data += '\n'
-	}
-	os.write_file(file_path, data)!
+	os.write_file(file_path, d.data.content().string() + '\n')!
 }
 
 fn (mut d Document) prepare_for_insertion_at(pos cursor.Pos) ! {
