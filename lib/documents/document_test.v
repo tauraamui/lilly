@@ -75,7 +75,7 @@ fn test_document_move_cursor_left() {
 		data:      buffers.GapBuffer.new(content: mock_content.runes())
 	}
 
-	assert d.move_cursor_left(cursor.Pos.new(8, 0), .normal) == cursor.Pos.new(7, 0)
+	assert d.move_cursor_left(cursor.Pos.new(8, 0)) == cursor.Pos.new(7, 0)
 }
 
 fn test_document_move_cursor_down() {
@@ -261,8 +261,7 @@ fn test_controller_move_cursor_up() {
 
 fn test_controller_move_cursor_left() {
 	ctrl, id := new_controller_with_content(mock_content)
-	assert ctrl.move_cursor_left(id, cursor.Pos.new(5, 0), .normal) == cursor.Pos.new(4,
-		0)
+	assert ctrl.move_cursor_left(id, cursor.Pos.new(5, 0)) == cursor.Pos.new(4, 0)
 }
 
 fn test_controller_move_cursor_right() {
