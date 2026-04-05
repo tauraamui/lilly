@@ -60,7 +60,7 @@ fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.C
 	}
 }
 
-fn (mut m PetalModel) init() ?tea.Cmd {
+fn (mut m PetalModel) init() fn () tea.Msg {
 	return m.active_screen.init()
 }
 
@@ -70,12 +70,12 @@ fn toggle_debug_screen() tea.Msg {
 	return ToggleDebugScreenMsg{}
 }
 
-fn (mut m PetalModel) on_toggle_debug_screen() (tea.Model, ?tea.Cmd) {
+fn (mut m PetalModel) on_toggle_debug_screen() (tea.Model, fn () tea.Msg) {
 	if m.active_screen !is DebugScreenModel {
 		m.active_screen = DebugScreenModel.new(m.active_screen, m.logs, m.last_resize_width,
 			m.last_resize_height)
 	}
-	return m.clone(), none
+	return m.clone(), tea.noop_cmd
 }
 
 struct CheckIfTMUXWrappedMsg {}
@@ -84,7 +84,7 @@ fn check_if_tmux_wrapped() tea.Msg {
 	return CheckIfTMUXWrappedMsg{}
 }
 
-fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	mut cmds := []tea.Cmd{}
 	match msg {
 		tea.KeyMsg {
@@ -124,9 +124,7 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	if screen is DebuggableModel {
 		m.active_screen = screen
 	}
-	if a_cmds := active_cmds {
-		cmds << a_cmds
-	}
+	cmds << active_cmds
 	return m.clone(), tea.batch_array(cmds)
 }
 
