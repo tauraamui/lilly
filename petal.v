@@ -78,6 +78,16 @@ fn (mut m PetalModel) on_toggle_debug_screen() (tea.Model, fn () tea.Msg) {
 	return m.clone(), tea.noop_cmd
 }
 
+struct SwapActiveScreenMsg {
+	screen DebuggableModel
+}
+
+fn swap_active_screen(screen DebuggableModel) tea.Cmd {
+	return fn [screen] () tea.Msg {
+		return SwapActiveScreenMsg{screen}
+	}
+}
+
 struct CheckIfTMUXWrappedMsg {}
 
 fn check_if_tmux_wrapped() tea.Msg {
@@ -100,6 +110,12 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			if screen is DebuggableModel {
 				m.active_screen = screen
 			}
+		}
+		SwapActiveScreenMsg {
+			mut screen := msg.screen
+			cmds << screen.init()
+			m.active_screen = screen
+			return m.clone(), tea.batch_array(cmds)
 		}
 		LogMsg {
 			m.logs << msg
