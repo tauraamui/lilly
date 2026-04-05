@@ -194,7 +194,8 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 									m.cursor_pos, `\t`)
 							} // ctrl+i is apparently equiv to TAB
 							'left' {
-								m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id, m.cursor_pos)
+								m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id,
+									m.cursor_pos)
 								m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {
 									cmds << raise_error('error: ${err}')
 									m.ensure_cursor_visible()
@@ -241,7 +242,8 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 								cmds << switch_mode(.normal)
 							}
 							'left' {
-								m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id, m.cursor_pos)
+								m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id,
+									m.cursor_pos)
 							}
 							'right' {
 								m.cursor_pos = m.doc_controller.move_cursor_right(m.doc_id,
@@ -261,7 +263,8 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					.runes {
 						match msg.key_msg.string() {
 							'h' {
-								m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id, m.cursor_pos)
+								m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id,
+									m.cursor_pos)
 							}
 							'l' {
 								m.cursor_pos = m.doc_controller.move_cursor_right(m.doc_id,
@@ -456,7 +459,8 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 								m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
 							}
 							'left' {
-								m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id, m.cursor_pos)
+								m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id,
+									m.cursor_pos)
 							}
 							'up' {
 								m.cursor_pos = m.doc_controller.move_cursor_up(m.doc_id,
@@ -508,7 +512,8 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 						if current_line.len > 0 && current_line.trim_space().len == 0 {
 							m.cursor_pos = m.doc_controller.clear_line(m.doc_id, m.cursor_pos)
 						} else {
-							m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id, m.cursor_pos)
+							m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id,
+								m.cursor_pos)
 						}
 					}
 					m.sel_start_pos = ?cursor.Pos(none)

@@ -261,8 +261,7 @@ fn test_controller_move_cursor_up() {
 
 fn test_controller_move_cursor_left() {
 	ctrl, id := new_controller_with_content(mock_content)
-	assert ctrl.move_cursor_left(id, cursor.Pos.new(5, 0)) == cursor.Pos.new(4,
-		0)
+	assert ctrl.move_cursor_left(id, cursor.Pos.new(5, 0)) == cursor.Pos.new(4, 0)
 }
 
 fn test_controller_move_cursor_right() {
