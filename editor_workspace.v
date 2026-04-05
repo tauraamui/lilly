@@ -50,6 +50,7 @@ mut:
 	cb                 &clipboard.Manager
 	active_editor_data ?EditorData
 	branch_name        string
+	leader_key         string
 	leader_suffix      string
 	input_field        boba.InputField
 	message_label      ?MessageLabel
@@ -81,13 +82,14 @@ fn open_editor_workspace(initial_file_path string) tea.Cmd {
 	}
 }
 
-fn EditorWorkspaceModel.new(version string, ttheme theme.Theme, initial_file_path string, doc_controller &documents.Controller, cb &clipboard.Manager) EditorWorkspaceModel {
+fn EditorWorkspaceModel.new(version string, ttheme theme.Theme, leader_key string, initial_file_path string, doc_controller &documents.Controller, cb &clipboard.Manager) EditorWorkspaceModel {
 	return EditorWorkspaceModel{
 		version:           version
 		theme:             ttheme
 		initial_file_path: initial_file_path
 		split_tree:        boba.SplitTree.new()
 		doc_controller:    doc_controller
+		leader_key:        leader_key
 		cb:                cb
 	}
 }
@@ -412,7 +414,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					}
 					.runes {
 						match msg.string() {
-							';' {
+							m.leader_key {
 								return m.clone(), switch_mode(.leader)
 							}
 							':' {
@@ -879,7 +881,7 @@ fn (m EditorWorkspaceModel) render_leader_or_command_user_input_text(mut ctx tea
 	match m.mode {
 		.leader {
 			ctx.set_color(palette.subtle_text_fg_color)
-			leader_data := ';' + m.leader_suffix
+			leader_data := '<leader>' + m.leader_suffix
 			ctx.draw_text(ctx.window_width() - tea.visible_len(leader_data) - 1, ctx.window_height() - 1,
 				leader_data)
 			ctx.reset_color()
