@@ -75,23 +75,23 @@ fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
 	}
 }
 
-fn (mut m SplashScreenModel) init() ?tea.Cmd {
+fn (mut m SplashScreenModel) init() fn () tea.Msg {
 	if file_path := m.initial_file_path {
 		return tea.batch(check_if_tmux_wrapped, open_editor_workspace(file_path))
 	}
 	return check_if_tmux_wrapped
 }
 
-fn (mut m SplashScreenModel) handle_escape() (tea.Model, ?tea.Cmd) {
+fn (mut m SplashScreenModel) handle_escape() (tea.Model, fn () tea.Msg) {
 	if !m.leader_mode {
 		return m.clone(), tea.quit
 	}
 	m.leader_mode = false
 	m.leader_data = ''
-	return m.clone(), none
+	return m.clone(), tea.noop_cmd
 }
 
-fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	mut cmds := []tea.Cmd{}
 	// handle dialog messages first
 	match msg {
@@ -174,23 +174,16 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		OpenDialogMsg {
 			mut d_model := msg.model
-			cmd := d_model.init()
+			cmds << d_model.init()
 			m.dialog_model = d_model
-			if u_cmd := cmd {
-				cmds << u_cmd
-			}
 		}
 		OpenFileMsg {
 			cmds << open_editor_workspace(msg.file_path)
 		}
 		OpenEditorWorkspaceMsg {
-			mut workspace := EditorWorkspaceModel.new(m.version, m.theme, msg.initial_file_path,
+			workspace := EditorWorkspaceModel.new(m.version, m.theme, msg.initial_file_path,
 				m.doc_controller, m.cb)
-			cmd := workspace.init()
-			if u_cmd := cmd {
-				cmds << u_cmd
-			}
-			return workspace, tea.batch_array(cmds)
+			cmds << swap_active_screen(workspace)
 		}
 		else {}
 	}

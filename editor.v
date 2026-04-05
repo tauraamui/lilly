@@ -141,7 +141,7 @@ fn EditorModel.new(opts EditorModelNewParams) EditorModel {
 	}
 }
 
-fn (mut m EditorModel) init() ?tea.Cmd {
+fn (mut m EditorModel) init() fn () tea.Msg {
 	return tea.emit_resize
 }
 
@@ -156,7 +156,7 @@ struct EditorModelKeyMsg {
 	mode    petal.Mode
 }
 
-fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	mut cmds := []tea.Cmd{}
 
 	if msg is EditorModelKeyMsg && m.focused {
@@ -490,7 +490,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		SwitchModeMsg {
 			if !m.focused {
-				return m.clone(), none
+				return m.clone(), tea.noop_cmd
 			}
 			match msg.mode {
 				.insert {
