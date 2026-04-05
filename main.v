@@ -173,7 +173,7 @@ fn main() {
 
 	mut config := cfg.Config.new()
 
-	theme_name := os.getenv('PETAL_THEME')
+	theme_name := os.getenv('LILLY_THEME')
 
 	if theme_name.len != 0 {
 		config = config.set_theme(theme_name)

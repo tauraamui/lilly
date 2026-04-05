@@ -156,11 +156,11 @@ fn DebugScreenModel.new(wrapped_model DebuggableModel, logs []LogMsg, last_resiz
 	}
 }
 
-fn (mut m DebugScreenModel) init() ?tea.Cmd {
-	return none
+fn (mut m DebugScreenModel) init() fn () tea.Msg {
+	return tea.noop_cmd
 }
 
-fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	match msg {
 		tea.KeyMsg {
 			match msg.k_type {
@@ -226,7 +226,7 @@ fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	if wm is DebuggableModel {
 		m.wrapped_model = wm
 	}
-	return m.clone(), none
+	return m.clone(), tea.noop_cmd
 }
 
 fn (mut m DebugScreenModel) view(mut ctx tea.Context) {

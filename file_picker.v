@@ -69,14 +69,12 @@ pub fn close_file_picker() tea.Msg {
 	return CloseDialogMsg{}
 }
 
-pub fn (mut m FilePickerModel) init() ?tea.Cmd {
+pub fn (mut m FilePickerModel) init() fn () tea.Msg {
 	m.loading = true
 	m.input_field = boba.BorderedInputField.new(m.theme.petal_pink)
 	m.input_field.focus()
 	mut cmds := []tea.Cmd{}
-	if input_init_cmd := m.input_field.init() {
-		cmds << input_init_cmd
-	}
+	cmds << m.input_field.init()
 	cmds << [tea.emit_resize, load_files(os.getwd())]
 	// return tea.batch(tea.emit_resize, input_init_cmd, load_files(os.getwd()))
 	return tea.batch_array(cmds)
@@ -185,19 +183,18 @@ fn clear_query_field() tea.Msg {
 	return ClearQueryFieldMsg{}
 }
 
-fn (mut m FilePickerModel) on_cancel() (tea.Model, ?tea.Cmd) {
+fn (mut m FilePickerModel) on_cancel() (tea.Model, fn () tea.Msg) {
 	cmd := if m.input_field.rune_len() == 0 { close_file_picker } else { clear_query_field }
 	return m.clone(), cmd
 }
 
 const filter_trigger_special_keys = ['backspace', 'delete']! // fixed size array
 
-fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	mut cmds := []tea.Cmd{}
 
 	i_field, cmd := m.input_field.update(msg)
-	u_cmd := cmd or { tea.noop_cmd }
-	cmds << u_cmd
+	cmds << cmd
 	m.input_field = i_field
 
 	match msg {

@@ -14,7 +14,6 @@
 
 module main
 
-import tauraamui.bobatea.lib.draw
 import tauraamui.bobatea as tea
 import lib.files
 import lib.petal.theme

@@ -94,7 +94,7 @@ fn EditorWorkspaceModel.new(version string, ttheme theme.Theme, leader_key strin
 	}
 }
 
-fn (mut m EditorWorkspaceModel) init() ?tea.Cmd {
+fn (mut m EditorWorkspaceModel) init() fn () tea.Msg {
 	m.input_field = boba.InputField.new_with_prefix(':', 0)
 	return tea.batch(open_editor(m.initial_file_path), check_if_tmux_wrapped)
 }
@@ -310,10 +310,10 @@ fn switch_active_split(dir SplitMoveDir) tea.Cmd {
 	}
 }
 
-fn (mut m EditorWorkspaceModel) update_dialog(msg tea.Msg) (?tea.Model, ?tea.Cmd) {
+fn (mut m EditorWorkspaceModel) update_dialog(msg tea.Msg) (?tea.Model, fn () tea.Msg) {
 	if msg is CloseDialogMsg {
 		m.dialog_model = none
-		return m.clone(), none
+		return m.clone(), tea.noop_cmd
 	}
 
 	if mut open_model := m.dialog_model {
@@ -330,10 +330,10 @@ fn (mut m EditorWorkspaceModel) update_dialog(msg tea.Msg) (?tea.Model, ?tea.Cmd
 		return m.clone(), cmd
 	}
 
-	return none, none
+	return none, tea.noop_cmd
 }
 
-fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	mut cmds := []tea.Cmd{}
 
 	// ***** dialog related state *****
@@ -435,9 +435,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			}
 			.command {
 				i_field, i_cmd := m.input_field.update(msg)
-				if i_u_cmd := i_cmd {
-					cmds << i_u_cmd
-				}
+				cmds << i_cmd
 				m.input_field = i_field
 
 				match msg.k_type {
@@ -467,9 +465,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			if e is DebuggableModel {
 				m.editors[id] = e
 			}
-			if u_cmd := cmd {
-				cmds << u_cmd
-			}
+			cmds << cmd
 		}
 	}
 
@@ -487,11 +483,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		}
 		OpenDialogMsg {
 			mut d_model := msg.model
-			cmd := d_model.init()
+			cmds << d_model.init()
 			m.dialog_model = d_model
-			if u_cmd := cmd {
-				cmds << u_cmd
-			}
 		}
 		OpenFileMsg {
 			cmds << open_editor(msg.file_path)
@@ -525,9 +518,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			m.editors[editor_id] = e_model
 			m.active_editor_id = m.split_tree.active_editor_id
 
-			if u_cmd := cmd {
-				cmds << u_cmd
-			}
+			cmds << cmd
 
 			cmds << tea.sequence(focus_editor(editor_id), toggle_editor_show_border(m.split_tree.get_leftmost_id(),
 				false), query_editor_data(editor_id), query_pwd_git_branch)
@@ -545,9 +536,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 					doc_controller: m.doc_controller
 					cb:             m.cb
 				)
-				if init_cmd := new_editor.init() {
-					cmds << init_cmd
-				}
+				cmds << new_editor.init()
 
 				m.split_tree.insert_vertical_split(new_id, info.file_path)
 				m.editors[new_id] = new_editor
@@ -674,9 +663,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 			match msg.mode {
 				.command {
 					m.input_field.focus()
-					if input_init_cmd := m.input_field.init() {
-						cmds << input_init_cmd
-					}
+					cmds << m.input_field.init()
 					cmds << tea.emit_resize
 					cmds << hide_message
 				}
@@ -693,18 +680,14 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 				from: m.mode
 				mode: msg.mode
 			}
-			if u_cmd := m.forward_msg_to_editors(enriched_msg) {
-				cmds << u_cmd
-			}
+			cmds << m.forward_msg_to_editors(enriched_msg)
 			return m.clone_with_mode(msg.mode), tea.batch_array(cmds)
 		}
 		tea.ResizedMsg {
 			m.last_window_width = msg.window_width
 			m.last_window_height = msg.window_height
 			i_field, i_cmd := m.input_field.update(msg)
-			if i_u_cmd := i_cmd {
-				cmds << i_u_cmd
-			}
+			cmds << i_cmd
 			m.input_field = i_field
 			cmds << m.recalculate_editor_layouts()
 		}
@@ -712,9 +695,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 	}
 
 	if msg !is tea.ResizedMsg {
-		if u_cmd := m.forward_msg_to_editors(msg) {
-			cmds << u_cmd
-		}
+		cmds << m.forward_msg_to_editors(msg)
 	}
 
 	return m.clone(), tea.batch_array(cmds)
@@ -736,24 +717,20 @@ fn (mut m EditorWorkspaceModel) recalculate_editor_layouts() []tea.Cmd {
 			if e is DebuggableModel {
 				m.editors[rect.editor_id] = e
 			}
-			if u_cmd := cmd {
-				cmds << u_cmd
-			}
+			cmds << cmd
 		}
 	}
 	return cmds
 }
 
-fn (mut m EditorWorkspaceModel) forward_msg_to_editors(msg tea.Msg) ?tea.Cmd {
+fn (mut m EditorWorkspaceModel) forward_msg_to_editors(msg tea.Msg) fn () tea.Msg {
 	mut cmds := []tea.Cmd{}
 	for id, mut editor in m.editors {
 		e, cmd := editor.update(msg)
 		if e is DebuggableModel {
 			m.editors[id] = e
 		}
-		if u_cmd := cmd {
-			cmds << u_cmd
-		}
+		cmds << cmd
 	}
 
 	return tea.batch_array(cmds)

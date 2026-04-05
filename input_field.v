@@ -54,7 +54,7 @@ pub fn InputField.new_with_prefix(input_prefix string, prefix_padding int) Input
 	}
 }
 
-pub fn (mut i InputField) init() ?tea.Cmd {
+pub fn (mut i InputField) init() fn () tea.Msg {
 	return cursor_blink_cmd()
 }
 
@@ -71,9 +71,9 @@ pub fn cursor_blink_cmd() tea.Cmd {
 	})
 }
 
-pub fn (mut m InputField) update(msg tea.Msg) (InputField, ?tea.Cmd) {
+pub fn (mut m InputField) update(msg tea.Msg) (InputField, fn () tea.Msg) {
 	if !m.focused && msg is tea.KeyMsg {
-		return m.clone(), none
+		return m.clone(), tea.noop_cmd
 	}
 
 	mut cmds := []tea.Cmd{}
