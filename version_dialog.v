@@ -41,11 +41,11 @@ fn close_version_dialog() tea.Msg {
 	return CloseDialogMsg{}
 }
 
-fn (mut m VersionModel) init() ?tea.Cmd {
-	return none
+fn (mut m VersionModel) init() fn () tea.Msg {
+	return tea.noop_cmd
 }
 
-fn (mut m VersionModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
+fn (mut m VersionModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	match msg {
 		tea.KeyMsg {
 			match msg.k_type {
@@ -66,7 +66,7 @@ fn (mut m VersionModel) update(msg tea.Msg) (tea.Model, ?tea.Cmd) {
 		else {}
 	}
 
-	return m.clone(), none
+	return m.clone(), tea.noop_cmd
 }
 
 fn (m VersionModel) view(mut r_ctx tea.Context) {
