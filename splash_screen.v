@@ -209,8 +209,7 @@ fn (mut m SplashScreenModel) reset_leader_mode() {
 }
 
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
-	render_version_label(mut ctx, '${m.version}',
-		m.theme.subtle_light_grey)
+	render_version_label(mut ctx, '${m.version}', m.theme.subtle_light_grey)
 	render_logo_and_help_centered_and_stacked(mut ctx,
 		logo:                   m.logo
 		in_leader_mode:         m.leader_mode
