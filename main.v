@@ -202,6 +202,3 @@ fn emit_metrics_maybe(manifest vmod.Manifest) {
 		arch:    os.uname().machine
 	})
 }
-
-
-

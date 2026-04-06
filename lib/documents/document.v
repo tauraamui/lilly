@@ -349,7 +349,6 @@ mut:
 
 fn Document.new(file_path string) !Document {
 	mut data := buffers.GapBuffer{}
-	mut eol := ''
 
 	if os.exists(file_path) && !os.is_readable(file_path) {
 		return error('${file_path} is not readable')
@@ -359,7 +358,23 @@ fn Document.new(file_path string) !Document {
 		return error('${file_path} is a binary file')
 	}
 
+	content, eol := read_file_trim_eol(file_path) or {
+		return error('${file_path} cannot be read and trimmed: ${err}')
+	}
+
+	data = buffers.GapBuffer.new(content: content.runes())
+
+	return Document{
+		file_path: file_path
+		data:      data
+		// data: buffers.GapBuffer.new(content: (iconv.read_file_encoding(file_path, "UTF-8") or { return error("failed to read file ${file_path}: ${err}") }).runes())
+		eol: eol
+	}
+}
+
+fn read_file_trim_eol(file_path string) !(string, string) {
 	mut content := ''
+	mut eol := ''
 	if os.exists(file_path) {
 		content = os.read_file(file_path) or {
 			return error('failed to read file ${file_path}: ${err}')
@@ -375,13 +390,7 @@ fn Document.new(file_path string) !Document {
 		}
 	}
 
-	data = buffers.GapBuffer.new(content: content.runes())
-
-	return Document{
-		file_path: file_path
-		data:      data
-		eol:       eol
-	}
+	return content, eol
 }
 
 fn (mut d Document) write_to(file_path string) ! {

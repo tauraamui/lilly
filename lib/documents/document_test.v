@@ -16,6 +16,7 @@ module documents
 
 import lib.buffers
 import lib.documents.cursor
+import os
 
 fn test_char_scanner() {
 	mut c_scanner := CharScanner{
@@ -348,6 +349,31 @@ fn test_doc_move_cursor_to_next_word_start() {
 		1)
 	assert d.move_cursor_to_next_word_start(cursor.Pos.new(19, 1)) == cursor.Pos.new(23,
 		1)
+}
+
+fn test_read_file_trim_eol_lf() ? {
+	// setup
+	file_path := 'test_LF.txt'
+	os.write_file(file_path, 'hello\n')!
+
+	content, eol := read_file_trim_eol(file_path)!
+
+	assert content == 'hello'
+	assert eol == '\n'
+
+	os.rm(file_path)!
+}
+
+fn test_read_file_trim_eol_crlf() ? {
+	file_path := 'test_CRLF.txt'
+	os.write_file(file_path, 'hello\r\n')!
+
+	content, eol := read_file_trim_eol(file_path)!
+
+	assert content == 'hello'
+	assert eol == '\r\n'
+
+	os.rm(file_path)!
 }
 
 fn test_doc_move_cursor_to_previous_word_start() {
