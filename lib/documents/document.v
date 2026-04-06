@@ -150,8 +150,8 @@ pub fn (c Controller) visual_pos_for(doc_id int, pos cursor.Pos, tab_width int) 
 	return c.docs[doc_id].visual_cursor_pos(pos, tab_width)
 }
 
-pub fn (c Controller) move_cursor_left(doc_id int, pos cursor.Pos, mode petal.Mode) cursor.Pos {
-	return c.docs[doc_id].move_cursor_left(pos, mode)
+pub fn (c Controller) move_cursor_left(doc_id int, pos cursor.Pos) cursor.Pos {
+	return c.docs[doc_id].move_cursor_left(pos)
 }
 
 pub fn (c Controller) move_cursor_up(doc_id int, pos cursor.Pos, mode petal.Mode) cursor.Pos {
@@ -391,29 +391,29 @@ fn (mut d Document) prepare_for_insertion_at(pos cursor.Pos) ! {
 	return error('unable to convert cursor pos to offset')
 }
 
-fn (d Document) move_cursor_left(pos cursor.Pos, mode petal.Mode) cursor.Pos {
+fn (d Document) move_cursor_left(pos cursor.Pos) cursor.Pos {
 	// NOTE(tauraamui): should continue to clear/reset largest x field data to "re-cap"
 	// to whatever the cursors new x pos becomes on move left
 	return cursor.Pos.new(if pos.x - 1 < 0 { 0 } else { pos.x - 1 }, pos.y)
 }
 
 fn (d Document) move_cursor_down(pos cursor.Pos, mode petal.Mode) cursor.Pos {
-	// TODO(tauraamui): use the line content to infer if largest x so far or line len should be returned x
 	y := pos.y + 1
 	if line := d.data.get_line_at(y: y) {
 		line_data := line.runes()
-		x := if pos.largest_x >= line_data.len { line_data.len - 1 } else { pos.largest_x }
+		max_x := if mode == .insert { line_data.len } else { line_data.len - 1 }
+		x := if pos.largest_x >= max_x { max_x } else { pos.largest_x }
 		return pos.x(x).y(y)
 	}
 	return pos
 }
 
 fn (d Document) move_cursor_up(pos cursor.Pos, mode petal.Mode) cursor.Pos {
-	// TODO(tauraamui): use the line content to infer if largest x so far or line len should be returned x
 	y := pos.y - 1
 	if line := d.data.get_line_at(y: y) {
 		line_data := line.runes()
-		x := if pos.largest_x >= line_data.len { line_data.len - 1 } else { pos.largest_x }
+		max_x := if mode == .insert { line_data.len } else { line_data.len - 1 }
+		x := if pos.largest_x >= max_x { max_x } else { pos.largest_x }
 		return pos.x(x).y(y)
 	}
 	return pos
