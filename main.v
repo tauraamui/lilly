@@ -146,7 +146,7 @@ fn main() {
 	vmod_manifest := vmod.decode(mod_file_content) or { panic('failed to parse v.mod: ${err}') }
 	args_cfg, no_matches := resolve_cfg_args_from_args[CfgArgs](os.args, vmod_manifest)!
 
-	version := '${vmod_manifest.version}'
+	version := '${vmod_manifest.version} (#${build_id})'
 	execute_on_flags(args_cfg, version, OsFns{
 		is_dir:     os.is_dir
 		exists:     os.exists
