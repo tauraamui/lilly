@@ -113,8 +113,6 @@ fn parse_config_file(file_path string) !Config {
 
 pub fn Config.new(opts ConfigOptions) Config {
 	if path_to_load := opts.load_from_path {
-		assert path_to_load.len > 0
-
 		if parsed_config := parse_config_file(path_to_load) {
 			return parsed_config
 		}
