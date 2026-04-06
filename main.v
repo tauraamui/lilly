@@ -171,8 +171,13 @@ fn main() {
 	initial_file_path := resolve_initial_file_path_and_chdir(no_matches, os.real_path,
 		os.is_dir, os.chdir)
 
+	mut config := cfg.Config.new()
+
 	theme_name := os.getenv('LILLY_THEME')
-	config := cfg.Config.new(load_from_path: none).set_theme(theme_name)
+
+	if theme_name.len != 0 {
+		config = config.set_theme(theme_name)
+	}
 
 	mut documents_controller := documents.Controller.new()
 	defer { documents_controller.free() }
