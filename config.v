@@ -22,8 +22,10 @@ pub const dark_theme_name = theme.dark_theme_name
 
 pub struct Config {
 pub:
-	theme      theme.Theme
-	leader_key string
+	theme       theme.Theme
+	leader_key  string
+	expand_tabs bool
+	spaces      int
 }
 
 @[params]
@@ -37,6 +39,8 @@ pub:
 fn parse_config_file(file_path string) !Config {
 	mut ttheme := theme.dark_theme
 	mut leader_key := ';'
+	mut expand_tabs := false
+	mut spaces := 2
 
 	$if !windows {
 		file := os.read_file(os.expand_tilde_to_home(file_path))!
@@ -77,6 +81,14 @@ fn parse_config_file(file_path string) !Config {
 					}
 					leader_key = value.trim('"')
 				}
+				'expand_tabs' {
+					expand_tabs = value.bool()
+				}
+				'spaces' {
+					if expand_tabs {
+						spaces = value.int()
+					}
+				}
 				else {
 					return error('unknown key')
 				}
@@ -85,8 +97,10 @@ fn parse_config_file(file_path string) !Config {
 	}
 
 	return Config{
-		theme:      ttheme
-		leader_key: leader_key
+		theme:       ttheme
+		leader_key:  leader_key
+		expand_tabs: expand_tabs
+		spaces:      spaces
 	}
 }
 

@@ -32,8 +32,10 @@ struct EditorWorkspaceModel {
 	// NOTE(tauraamui): forced mode to be immutable, this ensures we cannot randomly
 	// accidentally set the mode state without accounting for necessary checks and state changes,
 	// the only way we can change the mode is by exiting the current scope with a command to do so
-	mode  petal.Mode
-	theme theme.Theme
+	mode        petal.Mode
+	theme       theme.Theme
+	expand_tabs bool
+	spaces      int
 mut:
 	tmux_wrapped bool
 	dialog_model ?DebuggableModel
@@ -82,7 +84,7 @@ fn open_editor_workspace(initial_file_path string) tea.Cmd {
 	}
 }
 
-fn EditorWorkspaceModel.new(version string, ttheme theme.Theme, leader_key string, initial_file_path string, doc_controller &documents.Controller, cb &clipboard.Manager) EditorWorkspaceModel {
+fn EditorWorkspaceModel.new(version string, ttheme theme.Theme, leader_key string, initial_file_path string, doc_controller &documents.Controller, cb &clipboard.Manager, expand_tabs bool, spaces int) EditorWorkspaceModel {
 	return EditorWorkspaceModel{
 		version:           version
 		theme:             ttheme
@@ -91,6 +93,8 @@ fn EditorWorkspaceModel.new(version string, ttheme theme.Theme, leader_key strin
 		doc_controller:    doc_controller
 		leader_key:        leader_key
 		cb:                cb
+		expand_tabs:       expand_tabs
+		spaces:            spaces
 	}
 }
 
@@ -504,6 +508,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 				doc_id:         doc_id
 				doc_controller: m.doc_controller
 				cb:             m.cb
+				expand_tabs:    m.expand_tabs
+				spaces:         m.spaces
 			)
 			cmd := e_model.init()
 
@@ -535,6 +541,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					doc_id:         info.doc_id
 					doc_controller: m.doc_controller
 					cb:             m.cb
+					expand_tabs:    m.expand_tabs
+					spaces:         m.spaces
 				)
 				cmds << new_editor.init()
 

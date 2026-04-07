@@ -56,6 +56,8 @@ fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.C
 			doc_controller:    doc_controller
 			cb:                cb
 			initial_file_path: opts.initial_file_path
+			expand_tabs:       config.expand_tabs
+			spaces:            config.spaces
 		)
 	}
 }
