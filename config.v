@@ -29,9 +29,30 @@ pub:
 @[params]
 pub struct ConfigOptions {
 pub:
-	// TODO(tauraamui) [03/04/2026]: this works for now, but should do hirarchical searching using the XDG spec
-	// path/locations, local first, and then general system wide config locations.
-	load_from_path ?string = '~/.config/lilly/lilly.cfg'
+	// TODO(valxntine) [06/04/2026]: keeping this for now until we discuss potential --config CLI flags
+	// also keeping this in Config.new to allow the provided path to take precendence over everything
+	load_from_path ?string
+}
+
+fn xdg_config_paths() []string {
+	mut paths := []string{}
+
+	cfg_home := os.getenv('XDG_CONFIG_HOME')
+	if cfg_home.len > 0 && os.is_abs_path(cfg_home) {
+		paths << os.join_path(cfg_home, 'lilly', 'lilly.cfg')
+	} else {
+		paths << os.join_path(os.home_dir(), '.config', 'lilly', 'lilly.cfg')
+	}
+
+	cfg_dirs := os.getenv('XDG_CONFIG_DIRS')
+	dirs := if cfg_dirs.len > 0 { cfg_dirs.split(':') } else { ['/etc/xdg'] }
+	for dir in dirs {
+		if os.is_abs_path(dir) {
+			paths << os.join_path(dir, 'lilly', 'lilly.cfg')
+		}
+	}
+
+	return paths
 }
 
 fn parse_config_file(file_path string) !Config {
@@ -92,9 +113,13 @@ fn parse_config_file(file_path string) !Config {
 
 pub fn Config.new(opts ConfigOptions) Config {
 	if path_to_load := opts.load_from_path {
-		assert path_to_load.len > 0
-
 		if parsed_config := parse_config_file(path_to_load) {
+			return parsed_config
+		}
+	}
+
+	for path in xdg_config_paths() {
+		if parsed_config := parse_config_file(path) {
 			return parsed_config
 		}
 	}
