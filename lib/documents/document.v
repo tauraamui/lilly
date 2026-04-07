@@ -344,6 +344,7 @@ struct Document {
 mut:
 	file_path string
 	data      buffers.GapBuffer
+	eol       string
 }
 
 fn Document.new(file_path string) !Document {
@@ -357,30 +358,46 @@ fn Document.new(file_path string) !Document {
 		return error('${file_path} is a binary file')
 	}
 
-	if !os.exists(file_path) {
-		data = buffers.GapBuffer.new(
-			content: ''.runes()
-		)
-	} else {
-		data = buffers.GapBuffer.new(
-			content: (os.read_file(file_path) or {
-				return error('failed to read file ${file_path}: ${err}')
-			}).runes()
-		)
+	content, eol := read_file_trim_eol(file_path) or {
+		return error('${file_path} cannot be read and trimmed: ${err}')
 	}
+
+	data = buffers.GapBuffer.new(content: content.runes())
 
 	return Document{
 		file_path: file_path
 		data:      data
 		// data: buffers.GapBuffer.new(content: (iconv.read_file_encoding(file_path, "UTF-8") or { return error("failed to read file ${file_path}: ${err}") }).runes())
+		eol: eol
 	}
+}
+
+fn read_file_trim_eol(file_path string) !(string, string) {
+	mut content := ''
+	mut eol := ''
+	if os.exists(file_path) {
+		content = os.read_file(file_path) or {
+			return error('failed to read file ${file_path}: ${err}')
+		}
+		// trim trailing newline (handles \n or \r\n)
+		if content.len > 0 && content[content.len - 1] == `\n` {
+			content = content[..content.len - 1]
+			eol = '\n'
+			if content.len > 0 && content[content.len - 1] == `\r` {
+				content = content[..content.len - 1]
+				eol = '\r\n'
+			}
+		}
+	}
+
+	return content, eol
 }
 
 fn (mut d Document) write_to(file_path string) ! {
 	if !os.exists(file_path) {
 		os.create(file_path)!
 	}
-	os.write_file(file_path, d.data.content().string())!
+	os.write_file(file_path, d.data.content().string() + d.eol)!
 }
 
 fn (mut d Document) prepare_for_insertion_at(pos cursor.Pos) ! {
