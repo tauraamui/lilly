@@ -351,8 +351,7 @@ fn test_doc_move_cursor_to_next_word_start() {
 }
 
 fn test_read_file_trim_eol_lf() ? {
-	// setup
-	file_path := 'test_LF.txt'
+	file_path := os.join_path(os.temp_dir(), 'test_LF.txt')
 	os.write_file(file_path, 'hello\n')!
 
 	content, eol := read_file_trim_eol(file_path)!
@@ -364,7 +363,7 @@ fn test_read_file_trim_eol_lf() ? {
 }
 
 fn test_read_file_trim_eol_crlf() ? {
-	file_path := 'test_CRLF.txt'
+	file_path := os.join_path(os.temp_dir(), 'test_CRLF.txt')
 	os.write_file(file_path, 'hello\r\n')!
 
 	content, eol := read_file_trim_eol(file_path)!
