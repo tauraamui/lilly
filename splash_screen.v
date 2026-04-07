@@ -209,7 +209,7 @@ fn (mut m SplashScreenModel) reset_leader_mode() {
 }
 
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
-	render_version_label(mut ctx, '${m.version} - (#${build_id})', m.theme.subtle_light_grey)
+	render_version_label(mut ctx, '${m.version}', m.theme.subtle_light_grey)
 	render_logo_and_help_centered_and_stacked(mut ctx,
 		logo:                   m.logo
 		in_leader_mode:         m.leader_mode
@@ -437,7 +437,7 @@ fn (m SplashScreenModel) debug_data() DebugData {
 			'leader key':   m.leader_key
 			'tmux wrapped': '${m.tmux_wrapped}'
 			'':             if d := m.dialog_model { d.debug_data() } else { 'null' }
-			'version':      '${m.version} - (${build_id})'
+			'version':      '${m.version}'
 		}
 	}
 }
