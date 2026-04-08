@@ -137,7 +137,7 @@ fn EditorModel.new(opts EditorModelNewParams) EditorModel {
 		doc_controller: opts.doc_controller
 		cb:             opts.cb
 		token_parser:   syntax.Parser{}
-		lang_syn:       syntax.v_syntax() or { panic('unable to resolve v language syntax') }
+		lang_syn:       syntax.resolve_from_extension(opts.file_path) or { syntax.noop_syntax }
 	}
 }
 

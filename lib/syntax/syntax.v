@@ -15,7 +15,9 @@
 module syntax
 
 import json
+import os
 
+pub const noop_syntax = Syntax{}
 const builtin_v_syntax = $embed_file('v.syntax').to_string()
 const builtin_go_syntax = $embed_file('go.syntax').to_string()
 const builtin_c_syntax = $embed_file('c.syntax').to_string()
@@ -38,6 +40,35 @@ pub fn v_syntax() !Syntax {
 	return json.decode(Syntax, builtin_v_syntax) or {
 		error('builtin V syntax file failed to decode: ${err}')
 	}
+}
+
+pub fn resolve_from_extension(file_path string) !Syntax {
+	return json.decode(Syntax, match os.file_ext(file_path) {
+		'.v'  { builtin_v_syntax }
+		'.go' { builtin_go_syntax }
+		'.c'  { builtin_c_syntax }
+		'.rs' { builtin_rust_syntax }
+		'.js' { builtin_js_syntax }
+		'.ts' { builtin_ts_syntax }
+		'.py' { builtin_python_syntax }
+		'.pl' { builtin_perl_syntax }
+		else { '{}' }
+	}) or { error('failed to resolve syntax for: ${file_path}') }
+	/*
+	return match os.file_ext(file_path) {
+		'.v' {
+			json.decode(Syntax, builtin_v_syntax) or {
+				panic('builtin V syntax file failed to decode: ${err}')
+			}
+		}
+		'.go' {
+			json.decode(Syntax, builtin_go_syntax) or {
+				panic('builtin Go syntax file failed to decode: ${err}')
+			}
+		}
+		else { noop_syntax }
+	}
+	*/
 }
 
 pub fn load_builtin_syntaxes() []Syntax {
