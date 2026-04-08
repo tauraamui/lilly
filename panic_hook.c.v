@@ -11,12 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import os
 
 #include <fcntl.h>
 
 fn C.open(const_pathname &char, flags int, mode int) int
 
 fn persist_stderr_to_disk() {
-	fd := C.open(c'lilly.panic.log', C.O_CREAT | C.O_WRONLY | C.O_APPEND, 0o666)
+	path := os.join_path(os.state_dir(), 'lilly')
+	os.mkdir_all(path) or { exit(1) }
+	fd := C.open('${path}/lilly.log'.str, C.O_CREAT | C.O_WRONLY | C.O_APPEND, 0o666)
 	C.dup2(fd, C.STDERR_FILENO)
 }
