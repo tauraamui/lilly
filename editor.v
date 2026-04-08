@@ -687,50 +687,52 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 		}
 		for i, t in line_tokens {
 			token_str := m.arena.runes_to_str(m.rune_buf, t.start(), t.end())
-			match t.t_type() {
-				.comment {
-					ctx.set_color(m.theme.syntax_comment)
-				}
-				.string {
-					ctx.set_color(m.theme.syntax_string)
-				}
-				.number {
-					ctx.set_color(tea.Color.ansi(199))
-				}
-				else {
-					match true {
-						token_str in m.lang_syn.keywords {
-							ctx.set_color(m.theme.petal_red)
-						}
-						token_str in m.lang_syn.literals {
-							ctx.set_color(m.theme.syntax_literal)
-						}
-						token_str in m.lang_syn.builtins {
-							ctx.set_color(m.theme.syntax_builtin)
-						}
-						else {}
+			if m.lang_syn.name.len > 0 {
+				match t.t_type() {
+					.comment {
+						ctx.set_color(m.theme.syntax_comment)
 					}
-					prev_token := if i - 1 >= 0 {
-						?syntax.Token(line_tokens[i - 1])
-					} else {
-						?syntax.Token(none)
+					.string {
+						ctx.set_color(m.theme.syntax_string)
 					}
-					next_token := if i + 1 < line_tokens.len {
-						?syntax.Token(line_tokens[i + 1])
-					} else {
-						?syntax.Token(none)
+					.number {
+						ctx.set_color(tea.Color.ansi(199))
 					}
+					else {
+						match true {
+							token_str in m.lang_syn.keywords {
+								ctx.set_color(m.theme.petal_red)
+							}
+							token_str in m.lang_syn.literals {
+								ctx.set_color(m.theme.syntax_literal)
+							}
+							token_str in m.lang_syn.builtins {
+								ctx.set_color(m.theme.syntax_builtin)
+							}
+							else {}
+						}
+						prev_token := if i - 1 >= 0 {
+							?syntax.Token(line_tokens[i - 1])
+						} else {
+							?syntax.Token(none)
+						}
+						next_token := if i + 1 < line_tokens.len {
+							?syntax.Token(line_tokens[i + 1])
+						} else {
+							?syntax.Token(none)
+						}
 
-					if pt := prev_token {
-						if pt.t_type() != .whitespace && pt.end() - pt.start() == 1
-							&& m.rune_buf[pt.start()] == `_` {
-							ctx.reset_color()
-						}
-					} else {
-						if nt := next_token {
-							if nt.t_type() != .whitespace && nt.end() - nt.start() == 1
-								&& m.rune_buf[nt.start()] == `_` {
+						if pt := prev_token {
+							if pt.t_type() != .whitespace && pt.end() - pt.start() == 1
+								&& m.rune_buf[pt.start()] == `_` {
 								ctx.reset_color()
+							}
+						} else {
+							if nt := next_token {
+								if nt.t_type() != .whitespace && nt.end() - nt.start() == 1
+									&& m.rune_buf[nt.start()] == `_` {
+									ctx.reset_color()
+								}
 							}
 						}
 					}
