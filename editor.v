@@ -137,12 +137,44 @@ fn EditorModel.new(opts EditorModelNewParams) EditorModel {
 		doc_controller: opts.doc_controller
 		cb:             opts.cb
 		token_parser:   syntax.Parser{}
-		lang_syn:       syntax.resolve_from_extension(opts.file_path) or { syntax.noop_syntax }
+		lang_syn:       syntax.noop_syntax
+	}
+}
+
+struct SyntaxLoadedMsg {
+	syn     syntax.Syntax
+	err_msg string
+}
+
+fn load_syntax(editor_id int, file_path string) tea.Cmd {
+	return fn [editor_id, file_path] () tea.Msg {
+		syn := syntax.resolve_from_extension(file_path) or {
+			return EditorModelMsg{
+				id:  editor_id
+				msg: SyntaxLoadedMsg{
+					syn:     syntax.noop_syntax
+					err_msg: 'failed to load syntax for ${file_path}: ${err}'
+				}
+			}
+		}
+		if syn.name.len == 0 {
+			return EditorModelMsg{
+				id:  editor_id
+				msg: SyntaxLoadedMsg{
+					syn:     syn
+					err_msg: 'no syntax definition for ${file_path}, syntax highlighting disabled'
+				}
+			}
+		}
+		return EditorModelMsg{
+			id:  editor_id
+			msg: SyntaxLoadedMsg{ syn: syn }
+		}
 	}
 }
 
 fn (mut m EditorModel) init() fn () tea.Msg {
-	return tea.emit_resize
+	return tea.batch(tea.emit_resize, load_syntax(m.id, m.file_path))
 }
 
 struct EditorModelMsg {
@@ -558,6 +590,14 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					}
 					m.ensure_cursor_visible()
 					return m.clone(), tea.batch_array(cmds)
+				}
+				SyntaxLoadedMsg {
+					if msg.id == m.id {
+						m.lang_syn = msg.msg.syn
+						if msg.msg.err_msg.len > 0 {
+							cmds << debug_log(msg.msg.err_msg)
+						}
+					}
 				}
 				else {}
 			}

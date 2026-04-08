@@ -43,7 +43,8 @@ pub fn v_syntax() !Syntax {
 }
 
 pub fn resolve_from_extension(file_path string) !Syntax {
-	return json.decode(Syntax, match os.file_ext(file_path) {
+	ext := os.file_ext(file_path)
+	syn_data := match ext {
 		'.v'  { builtin_v_syntax }
 		'.go' { builtin_go_syntax }
 		'.c'  { builtin_c_syntax }
@@ -52,23 +53,14 @@ pub fn resolve_from_extension(file_path string) !Syntax {
 		'.ts' { builtin_ts_syntax }
 		'.py' { builtin_python_syntax }
 		'.pl' { builtin_perl_syntax }
-		else { '{}' }
-	}) or { error('failed to resolve syntax for: ${file_path}') }
-	/*
-	return match os.file_ext(file_path) {
-		'.v' {
-			json.decode(Syntax, builtin_v_syntax) or {
-				panic('builtin V syntax file failed to decode: ${err}')
-			}
-		}
-		'.go' {
-			json.decode(Syntax, builtin_go_syntax) or {
-				panic('builtin Go syntax file failed to decode: ${err}')
-			}
-		}
-		else { noop_syntax }
+		else  { '' }
 	}
-	*/
+	if syn_data.len == 0 {
+		return noop_syntax
+	}
+	return json.decode(Syntax, syn_data) or {
+		error('failed to parse syntax definition for ${ext}: ${err}')
+	}
 }
 
 pub fn load_builtin_syntaxes() []Syntax {
