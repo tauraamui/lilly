@@ -15,7 +15,9 @@
 module syntax
 
 import json
+import os
 
+pub const noop_syntax = Syntax{}
 const builtin_v_syntax = $embed_file('v.syntax').to_string()
 const builtin_go_syntax = $embed_file('go.syntax').to_string()
 const builtin_c_syntax = $embed_file('c.syntax').to_string()
@@ -37,6 +39,27 @@ pub:
 pub fn v_syntax() !Syntax {
 	return json.decode(Syntax, builtin_v_syntax) or {
 		error('builtin V syntax file failed to decode: ${err}')
+	}
+}
+
+pub fn resolve_from_extension(file_path string) !Syntax {
+	ext := os.file_ext(file_path)
+	syn_data := match ext {
+		'.v' { builtin_v_syntax }
+		'.go' { builtin_go_syntax }
+		'.c' { builtin_c_syntax }
+		'.rs' { builtin_rust_syntax }
+		'.js' { builtin_js_syntax }
+		'.ts' { builtin_ts_syntax }
+		'.py' { builtin_python_syntax }
+		'.pl' { builtin_perl_syntax }
+		else { '' }
+	}
+	if syn_data.len == 0 {
+		return noop_syntax
+	}
+	return json.decode(Syntax, syn_data) or {
+		error('failed to parse syntax definition for ${ext}: ${err}')
 	}
 }
 
