@@ -168,7 +168,9 @@ fn load_syntax(editor_id int, file_path string) tea.Cmd {
 		}
 		return EditorModelMsg{
 			id:  editor_id
-			msg: SyntaxLoadedMsg{ syn: syn }
+			msg: SyntaxLoadedMsg{
+				syn: syn
+			}
 		}
 	}
 }

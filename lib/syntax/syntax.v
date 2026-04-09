@@ -45,15 +45,15 @@ pub fn v_syntax() !Syntax {
 pub fn resolve_from_extension(file_path string) !Syntax {
 	ext := os.file_ext(file_path)
 	syn_data := match ext {
-		'.v'  { builtin_v_syntax }
+		'.v' { builtin_v_syntax }
 		'.go' { builtin_go_syntax }
-		'.c'  { builtin_c_syntax }
+		'.c' { builtin_c_syntax }
 		'.rs' { builtin_rust_syntax }
 		'.js' { builtin_js_syntax }
 		'.ts' { builtin_ts_syntax }
 		'.py' { builtin_python_syntax }
 		'.pl' { builtin_perl_syntax }
-		else  { '' }
+		else { '' }
 	}
 	if syn_data.len == 0 {
 		return noop_syntax
