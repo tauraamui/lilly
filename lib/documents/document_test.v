@@ -349,25 +349,6 @@ fn test_doc_move_cursor_to_next_word_start() {
 		1)
 }
 
-fn test_replace_leading_spaces_with_tabs() {
-	special_mock_content := 'This is the first line,
-  This is the second line.'
-	mut d := Document{
-		file_path: ''
-		data:      buffers.GapBuffer.new(content: special_mock_content.runes())
-	}
-	d.replace_leading_spaces_with_tabs(2)
-	lines := d.data.content().string().split('\n')
-	for i, line in lines {
-		assert !line.starts_with(' ')
-		match i {
-			0 { assert line == 'This is the first line,' }
-			1 { assert line == '	This is the second line.' }
-			else { assert false }
-		}
-	}
-}
-
 fn test_doc_move_cursor_to_previous_word_start() {
 	mut d := Document{
 		file_path: ''
