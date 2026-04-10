@@ -43,7 +43,7 @@ struct SplashScreenOptions {
 	cb                &clipboard.Manager
 	initial_file_path ?string
 	expand_tabs       bool
-	spaces            int
+	tab_width         int
 }
 
 struct SplashScreenModel {
@@ -55,7 +55,7 @@ struct SplashScreenModel {
 	cb                &clipboard.Manager
 	initial_file_path ?string
 	expand_tabs       bool
-	spaces            int
+	tab_width         int
 mut:
 	window_width  int
 	window_height int
@@ -77,7 +77,7 @@ fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
 		cb:                opts.cb
 		initial_file_path: opts.initial_file_path
 		expand_tabs:       opts.expand_tabs
-		spaces:            opts.spaces
+		tab_width:         opts.tab_width
 	}
 }
 
@@ -188,7 +188,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		}
 		OpenEditorWorkspaceMsg {
 			workspace := EditorWorkspaceModel.new(m.version, m.theme, m.leader_key, msg.initial_file_path,
-				m.doc_controller, m.cb, m.expand_tabs, m.spaces)
+				m.doc_controller, m.cb, m.expand_tabs, m.tab_width)
 			cmds << swap_active_screen(workspace)
 		}
 		else {}

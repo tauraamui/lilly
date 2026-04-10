@@ -35,7 +35,7 @@ struct EditorWorkspaceModel {
 	mode        petal.Mode
 	theme       theme.Theme
 	expand_tabs bool
-	spaces      int
+	tab_width   int
 mut:
 	tmux_wrapped bool
 	dialog_model ?DebuggableModel
@@ -84,7 +84,7 @@ fn open_editor_workspace(initial_file_path string) tea.Cmd {
 	}
 }
 
-fn EditorWorkspaceModel.new(version string, ttheme theme.Theme, leader_key string, initial_file_path string, doc_controller &documents.Controller, cb &clipboard.Manager, expand_tabs bool, spaces int) EditorWorkspaceModel {
+fn EditorWorkspaceModel.new(version string, ttheme theme.Theme, leader_key string, initial_file_path string, doc_controller &documents.Controller, cb &clipboard.Manager, expand_tabs bool, tab_width int) EditorWorkspaceModel {
 	return EditorWorkspaceModel{
 		version:           version
 		theme:             ttheme
@@ -94,7 +94,7 @@ fn EditorWorkspaceModel.new(version string, ttheme theme.Theme, leader_key strin
 		leader_key:        leader_key
 		cb:                cb
 		expand_tabs:       expand_tabs
-		spaces:            spaces
+		tab_width:         tab_width
 	}
 }
 
@@ -502,7 +502,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			}
 
 			if m.expand_tabs {
-				m.doc_controller.replace_in_doc(doc_id, '\t', ' '.repeat(m.spaces))
+				m.doc_controller.replace_in_doc(doc_id, '\t', ' '.repeat(m.tab_width))
 			}
 
 			mut e_model := EditorModel.new(
@@ -513,7 +513,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 				doc_controller: m.doc_controller
 				cb:             m.cb
 				expand_tabs:    m.expand_tabs
-				spaces:         m.spaces
+				tab_width:      m.tab_width
 			)
 			cmd := e_model.init()
 
@@ -546,7 +546,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					doc_controller: m.doc_controller
 					cb:             m.cb
 					expand_tabs:    m.expand_tabs
-					spaces:         m.spaces
+					tab_width:      m.tab_width
 				)
 				cmds << new_editor.init()
 

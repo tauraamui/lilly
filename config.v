@@ -25,7 +25,7 @@ pub:
 	theme       theme.Theme
 	leader_key  string
 	expand_tabs bool
-	spaces      int
+	tab_width   int
 }
 
 @[params]
@@ -40,7 +40,7 @@ fn parse_config_file(file_path string) !Config {
 	mut ttheme := theme.dark_theme
 	mut leader_key := ';'
 	mut expand_tabs := false
-	mut spaces := 2
+	mut tab_width := 4
 
 	$if !windows {
 		file := os.read_file(os.expand_tilde_to_home(file_path))!
@@ -84,9 +84,9 @@ fn parse_config_file(file_path string) !Config {
 				'expand_tabs' {
 					expand_tabs = value.bool()
 				}
-				'spaces' {
+				'tab_width' {
 					if expand_tabs {
-						spaces = value.int()
+						tab_width = value.int()
 					}
 				}
 				else {
@@ -100,7 +100,7 @@ fn parse_config_file(file_path string) !Config {
 		theme:       ttheme
 		leader_key:  leader_key
 		expand_tabs: expand_tabs
-		spaces:      spaces
+		tab_width:   tab_width
 	}
 }
 
