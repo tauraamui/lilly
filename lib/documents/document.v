@@ -118,6 +118,14 @@ pub fn (mut c Controller) write_document(doc_id int) ! {
 	}
 }
 
+pub fn (mut c Controller) replace_in_doc(doc_id int, old string, new string) {
+	c.docs[doc_id].replace(old, new)
+}
+
+pub fn (mut c Controller) replace_leading_spaces_with_tabs(doc_id int, spaces_per_tab int) {
+	c.docs[doc_id].replace_leading_spaces_with_tabs(spaces_per_tab)
+}
+
 pub fn (mut c Controller) begin_undo_group(doc_id int, pos cursor.Pos) {
 	c.undo_managers[doc_id].begin_group(pos, c.docs[doc_id].data.content())
 }
@@ -381,6 +389,38 @@ fn (mut d Document) write_to(file_path string) ! {
 		os.create(file_path)!
 	}
 	os.write_file(file_path, d.data.content().string())!
+}
+
+pub fn (mut d Document) replace(old string, new string) {
+	content := d.data.content().string()
+	d.data.set_content(content.replace(old, new).runes())
+}
+
+pub fn (mut d Document) replace_leading_spaces_with_tabs(spaces_per_tab int) {
+	content := d.data.content().string()
+	lines := content.split('\n')
+	mut new_lines := []string{}
+
+	for line in lines {
+		mut spaces_count := 0
+		for c in line {
+			if c == ` ` {
+				spaces_count++
+			} else {
+				break
+			}
+		}
+
+		if spaces_count >= spaces_per_tab {
+			tabs := spaces_count / spaces_per_tab
+			remaining := spaces_count % spaces_per_tab
+			new_line := '\t'.repeat(tabs) + ' '.repeat(remaining) + line[spaces_count..]
+			new_lines << new_line
+		} else {
+			new_lines << line
+		}
+	}
+	d.data.set_content(new_lines.join('\n').runes())
 }
 
 fn (mut d Document) prepare_for_insertion_at(pos cursor.Pos) ! {

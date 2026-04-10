@@ -501,6 +501,10 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 				return m.clone(), tea.batch_array(cmds)
 			}
 
+			if m.expand_tabs {
+				m.doc_controller.replace_in_doc(doc_id, '\t', ' '.repeat(m.spaces))
+			}
+
 			mut e_model := EditorModel.new(
 				id:             editor_id
 				theme:          m.theme

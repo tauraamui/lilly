@@ -561,6 +561,10 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 				}
 				WriteToDiskMsg {
 					if msg.id == m.id {
+						if m.expand_tabs {
+							m.doc_controller.replace_leading_spaces_with_tabs(m.doc_id,
+								m.spaces)
+						}
 						m.doc_controller.write_document(m.doc_id) or {
 							cmds << raise_error('failed to write to disk')
 							m.ensure_cursor_visible()
