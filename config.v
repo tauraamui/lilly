@@ -85,9 +85,7 @@ fn parse_config_file(file_path string) !Config {
 					expand_tabs = value.bool()
 				}
 				'tab_width' {
-					if expand_tabs {
-						tab_width = value.int()
-					}
+					tab_width = value.int()
 				}
 				else {
 					return error('unknown key')
