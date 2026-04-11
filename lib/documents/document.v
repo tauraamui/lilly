@@ -566,9 +566,9 @@ fn (d Document) move_cursor_to_line_start(pos cursor.Pos) cursor.Pos {
 }
 
 fn (d Document) move_cursor_to_text_start(pos cursor.Pos) cursor.Pos {
-	line := d.data.get_line_at(y: pos.y) or { return pos }
-	for x, c in line {
-		if !c.is_space() {
+	line_data := d.data.get_line_at(y: pos.y) or { return pos }
+	for x, c in line_data.runes_iterator() {
+		if !utf8.is_space(c) {
 			return cursor.Pos.new(x, pos.y)
 		}
 	}
