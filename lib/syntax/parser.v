@@ -20,6 +20,7 @@ enum State {
 	in_block_comment
 	in_double_quote
 	in_single_quote
+	in_backtick
 }
 
 pub enum TokenType {
@@ -100,7 +101,7 @@ fn resolve_char_type(c_char rune) TokenType {
 		` `, `\t` { .whitespace }
 		`a`...`z`, `A`...`Z` { .identifier }
 		`0`...`9` { .number }
-		`"`, `'` { .string } // quotes should be string tokens
+		`"`, `'`, 96 { .string } // quotes/backticks should be string tokens
 		else { .other }
 	}
 }
@@ -122,6 +123,7 @@ fn for_each_char(index int,
 				.in_block_comment { TokenType.comment }
 				.in_double_quote { TokenType.string }
 				.in_single_quote { TokenType.string }
+				.in_backtick { TokenType.string }
 				.default { last_char_type }
 			}
 		}
@@ -170,6 +172,7 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 					l_char == `/` && c_char == `*` { .in_block_comment }
 					c_char == `"` { .in_double_quote }
 					c_char == `'` { .in_single_quote }
+					c_char == 96 { .in_backtick } // 96 == backtick rune
 					else { State.default }
 				}
 			}
@@ -178,6 +181,8 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 			}
 			.in_single_quote {
 				if c_char == `'` { State.default } else { State.in_single_quote }
+			.in_backtick {
+				if c_char == 96 { State.default } else { State.in_backtick } // 96 == backtick rune
 			}
 			.in_block_comment {
 				match true {
@@ -200,6 +205,7 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 		.in_block_comment { TokenType.comment }
 		.in_double_quote { TokenType.string }
 		.in_single_quote { TokenType.string }
+		.in_backtick { TokenType.string }
 		else { token_type }
 	}
 
