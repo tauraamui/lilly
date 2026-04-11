@@ -89,6 +89,41 @@ fn test_simple_single_line_with_println_statement_with_string_content() {
 	assert line_1_tokens[13].t_type == .other
 }
 
+fn test_backtick_rune_literal_containing_double_quote_does_not_enter_string_state() {
+	// In V, `"` is a rune literal. The " inside the backticks must NOT open a string.
+	// Everything after the closing backtick should be default-classified, not string.
+	code := 'if value[0] != `"` { rest }'
+
+	mut parser := Parser{}
+	lines := code.split('\n')
+	assert lines.len == 1
+
+	parser.parse_line(0, lines[0])
+
+	line_1_tokens := parser.get_line_tokens(0)
+	last := line_1_tokens[line_1_tokens.len - 1]
+	assert extract_token_contents(lines[0], last) == '}'
+	assert last.t_type == .other
+}
+
+fn test_string_with_escaped_double_quote_does_not_bleed_past_closing_quote() {
+	// The escaped \" inside the string should NOT close the string state.
+	// Code after the real closing " must NOT be highlighted as a string.
+	code := 'println("say \\"hi\\"") foo'
+
+	mut parser := Parser{}
+	lines := code.split('\n')
+	assert lines.len == 1
+
+	parser.parse_line(0, lines[0])
+
+	line_1_tokens := parser.get_line_tokens(0)
+	// find the last token — it should be 'foo', classified as identifier, not string
+	last := line_1_tokens[line_1_tokens.len - 1]
+	assert extract_token_contents(lines[0], last) == 'foo'
+	assert last.t_type == .identifier
+}
+
 fn test_simple_single_line_with_string_in_the_middle() {
 	code := 'This is a line of text "with quotes in the middle" of it'
 
