@@ -293,6 +293,13 @@ fn test_controller_move_cursor_to_text_start() {
 	assert pos.x == 0
 }
 
+fn test_controller_move_cursor_to_text_start_on_line_with_padding() {
+	ctrl, id := new_controller_with_content(mock_content + '\n\t\t\tThis is the third line')
+	pos := ctrl.move_cursor_to_text_start(id, cursor.Pos.new(10, 2))
+	assert pos.y == 2
+	assert pos.x == 3
+}
+
 fn test_controller_move_cursor_to_next_blank_line() {
 	ctrl, id := new_controller_with_content(mock_multiline_content_with_blanks)
 	pos := ctrl.move_cursor_to_next_blank_line(id, cursor.Pos.new(0, 0))
