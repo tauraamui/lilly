@@ -218,6 +218,10 @@ pub fn (c Controller) move_cursor_to_line_start(doc_id int, pos cursor.Pos) curs
 	return c.docs[doc_id].move_cursor_to_line_start(pos)
 }
 
+pub fn (c Controller) move_cursor_to_text_start(doc_id int, pos cursor.Pos) cursor.Pos {
+	return c.docs[doc_id].move_cursor_to_text_start(pos)
+}
+
 pub fn (c Controller) move_cursor_to_next_blank_line(doc_id int, pos cursor.Pos) cursor.Pos {
 	return c.docs[doc_id].move_cursor_to_next_blank_line(pos)
 }
@@ -559,6 +563,16 @@ fn (d Document) move_cursor_to_line_end(pos cursor.Pos, mode petal.Mode) cursor.
 fn (d Document) move_cursor_to_line_start(pos cursor.Pos) cursor.Pos {
 	_ := d.data.get_line_at(y: pos.y) or { return pos }
 	return cursor.Pos.new(0, pos.y)
+}
+
+fn (d Document) move_cursor_to_text_start(pos cursor.Pos) cursor.Pos {
+	line_data := d.data.get_line_at(y: pos.y) or { return pos }
+	for x, c in line_data.runes_iterator() {
+		if !utf8.is_space(c) {
+			return cursor.Pos.new(x, pos.y)
+		}
+	}
+	return pos
 }
 
 fn (d Document) move_cursor_to_next_blank_line(pos cursor.Pos) cursor.Pos {
