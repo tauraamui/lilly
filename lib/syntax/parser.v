@@ -177,10 +177,11 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 				}
 			}
 			.in_double_quote {
-				if c_char == `"` { State.default } else { State.in_double_quote }
+				if c_char == `"` && l_char != `\\` { State.default } else { State.in_double_quote }
 			}
 			.in_single_quote {
-				if c_char == `'` { State.default } else { State.in_single_quote }
+				if c_char == `'` && l_char != `\\` { State.default } else { State.in_single_quote }
+			}
 			.in_backtick {
 				if c_char == 96 { State.default } else { State.in_backtick } // 96 == backtick rune
 			}
