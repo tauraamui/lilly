@@ -27,7 +27,7 @@ context.task(
 	depends: ['_generate-git-hash']
 	run:     |self| system('export LILLY_THEME=light && v -g run .')
 )
-context.task(name: 'compile-make', run: |self| system('v -prod -skip-running make.vsh'))
+context.task(name: 'compile-make', run: |self| system('v -prod -skip-running make.vsh -o make'))
 
 // TEST TASKS
 context.task(
