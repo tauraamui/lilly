@@ -96,9 +96,7 @@ struct EditorWorkspaceModelParams {
 	tab_width         int
 }
 
-fn EditorWorkspaceModel.new(
-	opts EditorWorkspaceModelParams
-) EditorWorkspaceModel {
+fn EditorWorkspaceModel.new(opts EditorWorkspaceModelParams) EditorWorkspaceModel {
 	return EditorWorkspaceModel{
 		version:           opts.version
 		theme:             opts.ttheme

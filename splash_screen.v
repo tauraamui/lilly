@@ -188,12 +188,14 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		}
 		OpenEditorWorkspaceMsg {
 			workspace := EditorWorkspaceModel.new(
-				version: m.version, ttheme: m.theme,
-				leader_key: m.leader_key,
-				initial_file_path: msg.initial_file_path,
-				doc_controller: m.doc_controller,
-				clip_manager: m.cb, expand_tabs: m.expand_tabs
-				tab_width: m.tab_width
+				version:           m.version
+				ttheme:            m.theme
+				leader_key:        m.leader_key
+				initial_file_path: msg.initial_file_path
+				doc_controller:    m.doc_controller
+				clip_manager:      m.cb
+				expand_tabs:       m.expand_tabs
+				tab_width:         m.tab_width
 			)
 			cmds << swap_active_screen(workspace)
 		}
