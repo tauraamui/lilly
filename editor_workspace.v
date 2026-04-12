@@ -32,8 +32,10 @@ struct EditorWorkspaceModel {
 	// NOTE(tauraamui): forced mode to be immutable, this ensures we cannot randomly
 	// accidentally set the mode state without accounting for necessary checks and state changes,
 	// the only way we can change the mode is by exiting the current scope with a command to do so
-	mode  petal.Mode
-	theme theme.Theme
+	mode        petal.Mode
+	theme       theme.Theme
+	expand_tabs bool
+	tab_width   int
 mut:
 	tmux_wrapped bool
 	dialog_model ?DebuggableModel
@@ -82,15 +84,29 @@ fn open_editor_workspace(initial_file_path string) tea.Cmd {
 	}
 }
 
-fn EditorWorkspaceModel.new(version string, ttheme theme.Theme, leader_key string, initial_file_path string, doc_controller &documents.Controller, cb &clipboard.Manager) EditorWorkspaceModel {
+@[params]
+struct EditorWorkspaceModelParams {
+	version           string
+	ttheme            theme.Theme
+	leader_key        string
+	initial_file_path string
+	doc_controller    &documents.Controller
+	clip_manager      &clipboard.Manager
+	expand_tabs       bool
+	tab_width         int
+}
+
+fn EditorWorkspaceModel.new(opts EditorWorkspaceModelParams) EditorWorkspaceModel {
 	return EditorWorkspaceModel{
-		version:           version
-		theme:             ttheme
-		initial_file_path: initial_file_path
+		version:           opts.version
+		theme:             opts.ttheme
+		initial_file_path: opts.initial_file_path
 		split_tree:        boba.SplitTree.new()
-		doc_controller:    doc_controller
-		leader_key:        leader_key
-		cb:                cb
+		doc_controller:    opts.doc_controller
+		leader_key:        opts.leader_key
+		cb:                opts.clip_manager
+		expand_tabs:       opts.expand_tabs
+		tab_width:         opts.tab_width
 	}
 }
 
@@ -504,6 +520,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 				doc_id:         doc_id
 				doc_controller: m.doc_controller
 				cb:             m.cb
+				expand_tabs:    m.expand_tabs
+				tab_width:      m.tab_width
 			)
 			cmd := e_model.init()
 
@@ -535,6 +553,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					doc_id:         info.doc_id
 					doc_controller: m.doc_controller
 					cb:             m.cb
+					expand_tabs:    m.expand_tabs
+					tab_width:      m.tab_width
 				)
 				cmds << new_editor.init()
 

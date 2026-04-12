@@ -23,8 +23,6 @@ import lib.documents.cursor
 import lib.syntax
 import lib.clipboard
 
-pub const tab_width = 4
-
 fn num_digits(n int) int {
 	if n <= 0 {
 		return 1
@@ -72,6 +70,9 @@ mut:
 	sel_start_pos ?cursor.Pos
 	sel_mode      petal.Mode = .normal // tracks which visual mode (.visual or .visual_line)
 	chord         Chord
+
+	expand_tabs bool
+	tab_width   int
 }
 
 struct OpenEditorMsg {
@@ -124,6 +125,8 @@ struct EditorModelNewParams {
 	doc_id         int
 	doc_controller &documents.Controller
 	cb             &clipboard.Manager
+	expand_tabs    bool
+	tab_width      int
 }
 
 fn EditorModel.new(opts EditorModelNewParams) EditorModel {
@@ -138,6 +141,8 @@ fn EditorModel.new(opts EditorModelNewParams) EditorModel {
 		cb:             opts.cb
 		token_parser:   syntax.Parser{}
 		lang_syn:       syntax.noop_syntax
+		expand_tabs:    opts.expand_tabs
+		tab_width:      opts.tab_width
 	}
 }
 
@@ -223,9 +228,16 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 							'delete' {
 								m.doc_controller.delete(m.doc_id, m.cursor_pos)
 							}
-							'tab', 'ctrl+i' {
-								m.cursor_pos = m.doc_controller.insert_char(m.doc_id,
-									m.cursor_pos, `\t`)
+							'ctrl+i', 'tab' {
+								if m.expand_tabs {
+									for i := 0; i != m.tab_width; i++ {
+										m.cursor_pos = m.doc_controller.insert_char(m.doc_id,
+											m.cursor_pos, ` `)
+									}
+								} else {
+									m.cursor_pos = m.doc_controller.insert_char(m.doc_id,
+										m.cursor_pos, `\t`)
+								}
 							} // ctrl+i is apparently equiv to TAB
 							'left' {
 								m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id,
@@ -653,10 +665,10 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 	// push gutter offset so selections, cursor highlight, and cursor are all shifted right
 	ctx.push_offset(tea.Offset{ x: gutter_width })
 
-	cursor_vpos := m.doc_controller.visual_pos_for(m.doc_id, m.cursor_pos, tab_width)
+	cursor_vpos := m.doc_controller.visual_pos_for(m.doc_id, m.cursor_pos, m.tab_width)
 	if sel_start := m.sel_start_pos {
 		if m.sel_mode == .visual {
-			sel_start_vpos := m.doc_controller.visual_pos_for(m.doc_id, sel_start, tab_width)
+			sel_start_vpos := m.doc_controller.visual_pos_for(m.doc_id, sel_start, m.tab_width)
 			m.render_visual_selection(mut ctx, sel_start_vpos, cursor_vpos)
 		} else {
 			m.render_visual_line_selection(mut ctx, sel_start.y, cursor_vpos.y)
@@ -680,7 +692,7 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 		offset_id := ctx.push_offset(tea.Offset{ x: 0 })
 		defer { ctx.clear_offsets_from(offset_id) }
 		line_str := l.string()
-		line_content := m.arena.expand_tabs(line_str, tab_width)
+		line_content := m.arena.expand_tabs(line_str, m.tab_width)
 		line_tokens := m.token_parser.parse_line(y, line_content)
 		// fill reusable rune buffer instead of allocating via .runes()
 		m.rune_buf.clear()
@@ -817,8 +829,8 @@ fn (m EditorModel) render_visual_selection(mut ctx tea.Context, sel_start cursor
 }
 
 fn (m EditorModel) render_cursor(mut ctx tea.Context) {
-	cursor_pos := m.doc_controller.visual_pos_for(m.doc_id, m.cursor_pos, tab_width)
-	char_at := m.doc_controller.get_char_at(m.doc_id, m.cursor_pos) or { ' ' }.expand_tabs(tab_width)
+	cursor_pos := m.doc_controller.visual_pos_for(m.doc_id, m.cursor_pos, m.tab_width)
+	char_at := m.doc_controller.get_char_at(m.doc_id, m.cursor_pos) or { ' ' }.expand_tabs(m.tab_width)
 	if m.cursor_underline {
 		default_fg_color := ctx.get_default_fg_color() or { palette.matte_white_fg_color }
 		ctx.set_color(default_fg_color)
