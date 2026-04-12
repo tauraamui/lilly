@@ -84,17 +84,31 @@ fn open_editor_workspace(initial_file_path string) tea.Cmd {
 	}
 }
 
-fn EditorWorkspaceModel.new(version string, ttheme theme.Theme, leader_key string, initial_file_path string, doc_controller &documents.Controller, cb &clipboard.Manager, expand_tabs bool, tab_width int) EditorWorkspaceModel {
+@[params]
+struct EditorWorkspaceModelParams {
+	version           string
+	ttheme            theme.Theme
+	leader_key        string
+	initial_file_path string
+	doc_controller    &documents.Controller
+	clip_manager      &clipboard.Manager
+	expand_tabs       bool
+	tab_width         int
+}
+
+fn EditorWorkspaceModel.new(
+	opts EditorWorkspaceModelParams
+) EditorWorkspaceModel {
 	return EditorWorkspaceModel{
-		version:           version
-		theme:             ttheme
-		initial_file_path: initial_file_path
+		version:           opts.version
+		theme:             opts.ttheme
+		initial_file_path: opts.initial_file_path
 		split_tree:        boba.SplitTree.new()
-		doc_controller:    doc_controller
-		leader_key:        leader_key
-		cb:                cb
-		expand_tabs:       expand_tabs
-		tab_width:         tab_width
+		doc_controller:    opts.doc_controller
+		leader_key:        opts.leader_key
+		cb:                opts.clip_manager
+		expand_tabs:       opts.expand_tabs
+		tab_width:         opts.tab_width
 	}
 }
 
