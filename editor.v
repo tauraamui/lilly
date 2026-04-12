@@ -223,7 +223,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 							'delete' {
 								m.doc_controller.delete(m.doc_id, m.cursor_pos)
 							}
-							'ctrl+i' {
+							'tab', 'ctrl+i' {
 								m.cursor_pos = m.doc_controller.insert_char(m.doc_id,
 									m.cursor_pos, `\t`)
 							} // ctrl+i is apparently equiv to TAB
