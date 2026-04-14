@@ -171,7 +171,8 @@ fn toggle_editor_show_border(editor_id int, show bool) tea.Cmd {
 }
 
 fn raise_error(error string) tea.Cmd {
-	return tea.sequence(display_message(.error, error), error_log(error), hide_message_after(6 * time.second))
+	return tea.sequence(display_message(.error, error), error_log(error),
+		hide_message_after(6 * time.second))
 }
 
 enum DisplayMessageType {
@@ -358,7 +359,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 						m.leader_suffix += msg.string()
 						match m.leader_suffix {
 							'ff' {
-								return m.clone(), tea.sequence(switch_mode(.normal), open_file_picker(m.theme))
+								return m.clone(), tea.sequence(switch_mode(.normal),
+									open_file_picker(m.theme))
 							}
 							else {}
 						}
@@ -590,7 +592,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 							m.active_editor_id = new_id
 
 							cmds << tea.sequence(unfocus_editor(old_id), focus_editor(new_id),
-								query_editor_data(new_id), query_pwd_git_branch, switch_mode(.normal))
+								query_editor_data(new_id), query_pwd_git_branch,
+								switch_mode(.normal))
 						}
 					} else {
 						if m.tmux_wrapped {
@@ -610,7 +613,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 							m.active_editor_id = new_id
 
 							cmds << tea.sequence(unfocus_editor(old_id), focus_editor(new_id),
-								query_editor_data(new_id), query_pwd_git_branch, switch_mode(.normal))
+								query_editor_data(new_id), query_pwd_git_branch,
+								switch_mode(.normal))
 						}
 					} else {
 						if m.tmux_wrapped {
@@ -887,8 +891,8 @@ fn (m EditorWorkspaceModel) render_leader_or_command_user_input_text(mut ctx tea
 		.leader {
 			ctx.set_color(palette.subtle_text_fg_color)
 			leader_data := '<leader>' + m.leader_suffix
-			ctx.draw_text(ctx.window_width() - tea.visible_len(leader_data) - 1, ctx.window_height() - 1,
-				leader_data)
+			ctx.draw_text(ctx.window_width() - tea.visible_len(leader_data) - 1,
+				ctx.window_height() - 1, leader_data)
 			ctx.reset_color()
 		}
 		.command {

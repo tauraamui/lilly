@@ -152,7 +152,7 @@ fn filter_file_paths(file_paths []string, query string, last_query string, last_
 		}
 		chunk := paths_to_filter[start..end].clone()
 
-		threads << spawn fn (paths []string, q string) []ScoredFile {
+		threads << spawn fn (paths []string, q string) []main.ScoredFile {
 			mut results := []ScoredFile{cap: paths.len}
 			for path in paths {
 				if fuzzy_match(q, path) {
@@ -267,8 +267,8 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		FilterFilesMsg {
 			query := m.input_field.value()
 			if msg.query == query {
-				m.filtered_files = filter_file_paths(m.finder.files(), msg.query, m.last_filtered_query,
-					m.filtered_files)
+				m.filtered_files = filter_file_paths(m.finder.files(), msg.query,
+					m.last_filtered_query, m.filtered_files)
 				m.last_filtered_query = msg.query
 			}
 		}
@@ -321,8 +321,7 @@ fn (m FilePickerModel) max_visible_items() int {
 }
 
 fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int, height int, border_color tea.Color) {
-	tea.new_layout().border(.normal).border_color(border_color).size(width, height).render(mut r_ctx,
-		fn [m, width, height] (mut ctx tea.Context) {
+	tea.new_layout().border(.normal).border_color(border_color).size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
 		max_width := width - 2
 		max_height := height - 2
 		ctx.set_clip_area(tea.ClipArea{0, 0, max_width - 1, max_height})

@@ -163,8 +163,8 @@ fn main() {
 
 	persist_stderr_to_disk()
 
-	initial_file_path := resolve_initial_file_path_and_chdir(no_matches, os.real_path,
-		os.is_dir, os.chdir)
+	initial_file_path := resolve_initial_file_path_and_chdir(no_matches, os.real_path, os.is_dir,
+		os.chdir)
 
 	mut config := cfg.Config.new()
 
