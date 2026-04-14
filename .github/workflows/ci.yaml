@@ -16,8 +16,7 @@ jobs:
 
       - uses: vlang/setup-v@v1.4
         with:
-          version: '57f11c6'
-          cache: 'false'
+          check-latest: true
 
       - name: Check formatting
         run: v run ./make.vsh verify-format
@@ -29,15 +28,14 @@ jobs:
 
       - uses: vlang/setup-v@v1.4
         with:
-          version: '57f11c6'
-          cache: 'false'
+          check-latest: true
 
       - name: Cache V modules
         uses: actions/cache@v4
         with:
           path: ~/.vmodules
-          key: vmodules-v3-${{ hashFiles('v.mod') }}
-          restore-keys: vmodules-v3-
+          key: vmodules-v2-${{ hashFiles('v.mod') }}
+          restore-keys: vmodules-v2-
 
       - name: Install dependencies
         run: v install tauraamui.bobatea
@@ -57,15 +55,14 @@ jobs:
 
       - uses: vlang/setup-v@v1.4
         with:
-          version: '57f11c6'
-          cache: 'false'
+          check-latest: true
 
       - name: Cache V modules
         uses: actions/cache@v4
         with:
           path: ~/.vmodules
-          key: vmodules-prod-v2-${{ hashFiles('v.mod') }}
-          restore-keys: vmodules-prod-v2-
+          key: vmodules-prod-${{ hashFiles('v.mod') }}
+          restore-keys: vmodules-prod-
 
       - name: Install dependencies
         run: v install tauraamui.bobatea
