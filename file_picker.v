@@ -14,7 +14,6 @@
 
 module main
 
-import math
 import os
 import strings
 import lib.files
@@ -287,16 +286,6 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		else {}
 	}
 	return m.clone(), tea.batch_array(cmds)
-}
-
-const frames_per_cycle = 50.0
-
-fn calculate_cursor_color(blink_frame int) tea.Color {
-	angle := f64(blink_frame) * 2.0 * math.pi / frames_per_cycle
-	sine_value := math.sin(angle)
-	color_range := 255 - 235
-	color_value := 235 + int((sine_value + 1.0) * f64(color_range) / 2.0)
-	return tea.Color.ansi(color_value)
 }
 
 @[params]

@@ -156,16 +156,6 @@ fn unfocus_editor(editor_id int) tea.Cmd {
 	}
 }
 
-fn forward_msg_to_editor(editor_id int, msg tea.Msg, mode petal.Mode) tea.Cmd {
-	return fn [editor_id, msg, mode] () tea.Msg {
-		return EditorModelMsg{
-			id:   editor_id
-			msg:  msg
-			mode: mode
-		}
-	}
-}
-
 struct ToggleEditorShowBorderMsg {
 	id   int
 	show bool
@@ -238,16 +228,9 @@ struct PWDGitBranchResultMsg {
 	branch_name string
 }
 
-fn pwd_git_branch_name(branch_name string) tea.Cmd {
-	return fn [branch_name] () tea.Msg {
-		return PWDGitBranchResultMsg{branch_name}
-	}
-}
-
 fn resolve_git_branch_name(execute fn (cmd string) os.Result) string {
 	prefix := '\uE0A0'
 	$if darwin {
-		// return '(not supported on macos)'
 		branch := read_git_branch_from_head_file()
 		if branch.len == 0 {
 			return ''
@@ -264,6 +247,7 @@ fn resolve_git_branch_name(execute fn (cmd string) os.Result) string {
 	return ''
 }
 
+$if darwin {
 fn read_git_branch_from_head_file() string {
 	mut dir := os.getwd()
 	for {
@@ -286,6 +270,7 @@ fn read_git_branch_from_head_file() string {
 		dir = parent
 	}
 	return ''
+}
 }
 
 fn currently_in_worktree(execute fn (cmd string) os.Result) bool {

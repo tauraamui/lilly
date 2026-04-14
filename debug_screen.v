@@ -103,18 +103,6 @@ fn debug_log(message string) tea.Cmd {
 	}
 }
 
-fn info_log(message string) tea.Cmd {
-	return fn [message] () tea.Msg {
-		return log(message, .info)
-	}
-}
-
-fn warn_log(message string) tea.Cmd {
-	return fn [message] () tea.Msg {
-		return log(message, .warn)
-	}
-}
-
 fn error_log(message string) tea.Cmd {
 	return fn [message] () tea.Msg {
 		return log(message, .error)
