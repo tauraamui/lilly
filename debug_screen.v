@@ -17,8 +17,8 @@ module main
 import rand
 import strings
 import tauraamui.bobatea as tea
-import boba
-import palette
+import lib.boba
+import lib.palette
 
 interface DebuggableModel {
 	tea.Model
@@ -100,18 +100,6 @@ fn log(message string, level LogLevel) tea.Msg {
 fn debug_log(message string) tea.Cmd {
 	return fn [message] () tea.Msg {
 		return log(message, .debug)
-	}
-}
-
-fn info_log(message string) tea.Cmd {
-	return fn [message] () tea.Msg {
-		return log(message, .info)
-	}
-}
-
-fn warn_log(message string) tea.Cmd {
-	return fn [message] () tea.Msg {
-		return log(message, .warn)
 	}
 }
 

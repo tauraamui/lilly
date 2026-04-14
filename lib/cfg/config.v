@@ -139,6 +139,7 @@ pub fn Config.new(opts ConfigOptions) Config {
 	return Config{
 		theme:      theme.dark_theme
 		leader_key: ';'
+		tab_width:  4
 	}
 }
 

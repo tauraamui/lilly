@@ -19,10 +19,10 @@ import time
 import math
 import tauraamui.bobatea as tea
 import lib.petal
-import boba
+import lib.boba
 import lib.petal.theme
-import palette
-import glyphs
+import lib.palette
+import lib.glyphs
 import lib.documents
 import lib.clipboard
 
@@ -156,16 +156,6 @@ fn unfocus_editor(editor_id int) tea.Cmd {
 	}
 }
 
-fn forward_msg_to_editor(editor_id int, msg tea.Msg, mode petal.Mode) tea.Cmd {
-	return fn [editor_id, msg, mode] () tea.Msg {
-		return EditorModelMsg{
-			id:   editor_id
-			msg:  msg
-			mode: mode
-		}
-	}
-}
-
 struct ToggleEditorShowBorderMsg {
 	id   int
 	show bool
@@ -238,16 +228,9 @@ struct PWDGitBranchResultMsg {
 	branch_name string
 }
 
-fn pwd_git_branch_name(branch_name string) tea.Cmd {
-	return fn [branch_name] () tea.Msg {
-		return PWDGitBranchResultMsg{branch_name}
-	}
-}
-
 fn resolve_git_branch_name(execute fn (cmd string) os.Result) string {
 	prefix := '\uE0A0'
 	$if darwin {
-		// return '(not supported on macos)'
 		branch := read_git_branch_from_head_file()
 		if branch.len == 0 {
 			return ''
@@ -264,28 +247,30 @@ fn resolve_git_branch_name(execute fn (cmd string) os.Result) string {
 	return ''
 }
 
-fn read_git_branch_from_head_file() string {
-	mut dir := os.getwd()
-	for {
-		head_path := os.join_path(dir, '.git', 'HEAD')
-		if os.exists(head_path) {
-			content := os.read_file(head_path) or { return '' }
-			trimmed := content.trim_space()
-			if trimmed.starts_with('ref: refs/heads/') {
-				return trimmed.all_after('ref: refs/heads/')
+$if darwin {
+	fn read_git_branch_from_head_file() string {
+		mut dir := os.getwd()
+		for {
+			head_path := os.join_path(dir, '.git', 'HEAD')
+			if os.exists(head_path) {
+				content := os.read_file(head_path) or { return '' }
+				trimmed := content.trim_space()
+				if trimmed.starts_with('ref: refs/heads/') {
+					return trimmed.all_after('ref: refs/heads/')
+				}
+				if trimmed.len >= 7 {
+					return trimmed[..7]
+				}
+				return trimmed
 			}
-			if trimmed.len >= 7 {
-				return trimmed[..7]
+			parent := os.dir(dir)
+			if parent == dir {
+				break
 			}
-			return trimmed
+			dir = parent
 		}
-		parent := os.dir(dir)
-		if parent == dir {
-			break
-		}
-		dir = parent
+		return ''
 	}
-	return ''
 }
 
 fn currently_in_worktree(execute fn (cmd string) os.Result) bool {

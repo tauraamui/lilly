@@ -18,7 +18,7 @@ import flag
 import os
 import v.vmod
 import tauraamui.bobatea as tea
-import cfg
+import lib.cfg
 import lib.documents
 import lib.clipboard
 import lib.telemetry
