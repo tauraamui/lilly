@@ -64,7 +64,8 @@ jobs:
       - name: Setup V
         uses: vlang/setup-v@v1.4
         with:
-          check-latest: true
+          version: '57f11c6'
+          cache: 'false'
 
       - name: Install extra packages
         if: matrix.extra_packages != ''
@@ -74,8 +75,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.vmodules
-          key: vmodules-${{ matrix.artifact_suffix }}-${{ hashFiles('v.mod') }}
-          restore-keys: vmodules-${{ matrix.artifact_suffix }}-
+          key: vmodules-v2-${{ matrix.artifact_suffix }}-${{ hashFiles('v.mod') }}
+          restore-keys: vmodules-v2-${{ matrix.artifact_suffix }}-
 
       - name: Install dependencies
         run: v install tauraamui.bobatea
