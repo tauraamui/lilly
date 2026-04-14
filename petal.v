@@ -17,8 +17,8 @@ module main
 import os
 import tauraamui.bobatea as tea
 import lib.petal.theme
-import cfg
-import palette
+import lib.cfg
+import lib.palette
 import lib.documents
 import lib.clipboard
 

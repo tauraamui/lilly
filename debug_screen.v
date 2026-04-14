@@ -17,8 +17,8 @@ module main
 import rand
 import strings
 import tauraamui.bobatea as tea
-import boba
-import palette
+import lib.boba
+import lib.palette
 
 interface DebuggableModel {
 	tea.Model

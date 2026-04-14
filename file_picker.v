@@ -19,9 +19,9 @@ import os
 import strings
 import lib.files
 import tauraamui.bobatea as tea
-import palette
+import lib.palette
 import lib.petal.theme
-import boba
+import lib.boba
 
 struct FilePickerModel {
 	theme theme.Theme

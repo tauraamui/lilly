@@ -19,10 +19,10 @@ import time
 import math
 import tauraamui.bobatea as tea
 import lib.petal
-import boba
+import lib.boba
 import lib.petal.theme
-import palette
-import glyphs
+import lib.palette
+import lib.glyphs
 import lib.documents
 import lib.clipboard
 
