@@ -75,8 +75,7 @@ fn (m VersionModel) view(mut r_ctx tea.Context) {
 	height := m.height - 2
 	version := m.version
 
-	tea.new_layout().border(.normal).border_color(m.theme.petal_pink).size(m.width, m.height).render(mut r_ctx,
-		fn [version, width, height] (mut ctx tea.Context) {
+	tea.new_layout().border(.normal).border_color(m.theme.petal_pink).size(m.width, m.height).render(mut r_ctx, fn [version, width, height] (mut ctx tea.Context) {
 		ctx.reset_color()
 		version_label := 'project petal version (${version})'
 		ctx.draw_text((width / 2) - tea.visible_len(version_label) / 2, height / 2, version_label)

@@ -356,8 +356,7 @@ fn (t SplitTree) calculate_layout(node SplitNode, x int, y int, width int, heigh
 							int(f64(width) * node.ratios[i])
 						}
 
-						t.calculate_layout(child, current_x, y, child_width, height, mut
-							rects)
+						t.calculate_layout(child, current_x, y, child_width, height, mut rects)
 						current_x += child_width
 						remaining_width -= child_width
 					}
@@ -375,8 +374,7 @@ fn (t SplitTree) calculate_layout(node SplitNode, x int, y int, width int, heigh
 							int(f64(height) * node.ratios[i])
 						}
 
-						t.calculate_layout(child, x, current_y, width, child_height, mut
-							rects)
+						t.calculate_layout(child, x, current_y, width, child_height, mut rects)
 						current_y += child_height
 						remaining_height -= child_height
 					}
