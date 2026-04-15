@@ -22,45 +22,103 @@ import time
 const bsu = '\x1bP=1s\x1b\\'
 const esu = '\x1bP=2s\x1b\\'
 
-fn main() {
-	args := os.args[1..]
-	if args.len < 2 {
-		eprintln('usage: xpty <program> <input-sequence>')
-		eprintln('')
-		eprintln('  Runs <program> inside a pseudo-terminal, sends <input-sequence>')
-		eprintln('  keystroke by keystroke, and captures each rendered frame to disk.')
-		eprintln('')
-		eprintln('  Special tokens in <input-sequence>:')
-		eprintln('    <enter>  -> carriage return')
-		eprintln('    <esc>    -> escape (0x1b)')
-		eprintln('    <tab>    -> tab')
-		eprintln('    <space>  -> space')
-		eprintln('    <bs>     -> backspace')
-		eprintln('    <up> <down> <left> <right> -> arrow keys')
-		eprintln('    <wait:NNN> -> pause NNN milliseconds before next key')
-		eprintln('')
-		eprintln('  Example:')
-		eprintln("    xpty ./lilly ';ffedi<enter>}}}}'")
-		exit(1)
+struct Config {
+	program     string
+	input_spec  string
+	output_dir  string
+	compare_dir string // if non-empty, compare captured frames against this golden dir
+}
+
+fn parse_args(args []string) !Config {
+	mut program := ''
+	mut input_spec := ''
+	mut output_dir := 'xpty_frames'
+	mut compare_dir := ''
+
+	mut i := 0
+	for i < args.len {
+		if args[i] == '--compare' {
+			i++
+			if i >= args.len {
+				return error('--compare requires a directory argument')
+			}
+			compare_dir = args[i]
+		} else if args[i] == '--output-dir' {
+			i++
+			if i >= args.len {
+				return error('--output-dir requires a directory argument')
+			}
+			output_dir = args[i]
+		} else if program.len == 0 {
+			program = args[i]
+		} else if input_spec.len == 0 {
+			input_spec = args[i]
+		} else {
+			return error('unexpected argument: ${args[i]}')
+		}
+		i++
 	}
 
-	program := args[0]
-	input_spec := args[1]
+	if program.len == 0 || input_spec.len == 0 {
+		return error('missing required arguments')
+	}
+
+	return Config{
+		program:     program
+		input_spec:  input_spec
+		output_dir:  output_dir
+		compare_dir: compare_dir
+	}
+}
+
+fn print_usage() {
+	eprintln('usage: xpty [options] <program> <input-sequence>')
+	eprintln('')
+	eprintln('  Runs <program> inside a pseudo-terminal, sends <input-sequence>')
+	eprintln('  keystroke by keystroke, and captures each rendered frame to disk.')
+	eprintln('')
+	eprintln('  Options:')
+	eprintln('    --output-dir <dir>   Directory to save captured frames (default: xpty_frames)')
+	eprintln('    --compare <dir>      Compare captured frames against golden frames in <dir>')
+	eprintln('')
+	eprintln('  Special tokens in <input-sequence>:')
+	eprintln('    <enter>  -> carriage return')
+	eprintln('    <esc>    -> escape (0x1b)')
+	eprintln('    <tab>    -> tab')
+	eprintln('    <space>  -> space')
+	eprintln('    <bs>     -> backspace')
+	eprintln('    <up> <down> <left> <right> -> arrow keys')
+	eprintln('    <wait:NNN> -> pause NNN milliseconds before next key')
+	eprintln('')
+	eprintln('  Examples:')
+	eprintln("    xpty ./lilly '<wait:2000>;ffedi<enter><wait:1000>}}}}}' ")
+	eprintln("    xpty --compare testdata/xpty/scroll-scenario ./lilly '<wait:2000>;ffedi<enter><wait:1000>}}}}}' ")
+}
+
+fn main() {
+	config := parse_args(os.args[1..]) or {
+		eprintln('xpty: ${err}')
+		eprintln('')
+		print_usage()
+		exit(1)
+	}
 
 	cols := u16(120)
 	rows := u16(40)
 
-	output_dir := 'xpty_frames'
-	os.mkdir_all(output_dir) or {
+	os.mkdir_all(config.output_dir) or {
 		eprintln('failed to create output directory: ${err}')
 		exit(1)
 	}
 
-	eprintln('xpty: starting "${program}" in ${cols}x${rows} pty')
-	eprintln('xpty: input sequence: ${input_spec}')
-	eprintln('xpty: frames will be saved to ${output_dir}/')
+	eprintln('xpty: starting "${config.program}" in ${cols}x${rows} pty')
+	eprintln('xpty: input sequence: ${config.input_spec}')
+	eprintln('xpty: frames will be saved to ${config.output_dir}/')
+	if config.compare_dir.len > 0 {
+		eprintln('xpty: will compare against golden frames in ${config.compare_dir}/')
+	}
 
-	master_fd, child_pid := spawn_in_pty(program, cols, rows) or {
+	master_fd, child_pid := spawn_in_pty(config.program, cols, rows) or {
 		eprintln('xpty: failed to spawn: ${err}')
 		exit(1)
 	}
@@ -72,12 +130,12 @@ fn main() {
 	// Drain any initial output (startup frames).
 	initial_output := drain_pty(master_fd, 200)
 	if initial_output.len > 0 {
-		save_frame(output_dir, 0, initial_output)
+		save_frame(config.output_dir, 0, initial_output)
 		eprintln('xpty: captured initial frame (${initial_output.len} bytes)')
 	}
 
 	// Parse and send input tokens one at a time, capturing after each.
-	tokens := parse_input(input_spec)
+	tokens := parse_input(config.input_spec)
 	eprintln('xpty: parsed ${tokens.len} input tokens')
 
 	mut frame_num := 1
@@ -93,7 +151,7 @@ fn main() {
 
 				output := drain_pty(master_fd, 100)
 				if output.len > 0 {
-					save_frame(output_dir, frame_num, output)
+					save_frame(config.output_dir, frame_num, output)
 					eprintln('xpty: captured frame ${frame_num} (${output.len} bytes)')
 					frame_num++
 				}
@@ -104,7 +162,7 @@ fn main() {
 
 				output := drain_pty(master_fd, 100)
 				if output.len > 0 {
-					save_frame(output_dir, frame_num, output)
+					save_frame(config.output_dir, frame_num, output)
 					eprintln('xpty: captured frame ${frame_num} (${output.len} bytes)')
 					frame_num++
 				}
@@ -116,12 +174,12 @@ fn main() {
 	time.sleep(500 * time.millisecond)
 	final_output := drain_pty(master_fd, 200)
 	if final_output.len > 0 {
-		save_frame(output_dir, frame_num, final_output)
+		save_frame(config.output_dir, frame_num, final_output)
 		eprintln('xpty: captured final frame ${frame_num} (${final_output.len} bytes)')
 		frame_num++
 	}
 
-	eprintln('xpty: done — ${frame_num} frames captured in ${output_dir}/')
+	eprintln('xpty: done — ${frame_num} frames captured in ${config.output_dir}/')
 
 	// Send quit signal to the child.
 	C.kill(child_pid, C.SIGTERM)
@@ -129,6 +187,11 @@ fn main() {
 	C.kill(child_pid, C.SIGKILL)
 
 	C.close(master_fd)
+
+	// If comparison was requested, run it now.
+	if config.compare_dir.len > 0 {
+		exit(compare_frames(config.output_dir, config.compare_dir, frame_num))
+	}
 }
 
 fn save_frame(dir string, num int, data []u8) {
@@ -271,4 +334,90 @@ fn escape_for_display(s string) string {
 		}
 	}
 	return result
+}
+
+// compare_frames compares captured .raw frames against golden .raw frames.
+// Returns 0 if all frames match, 1 if there are differences.
+fn compare_frames(captured_dir string, golden_dir string, captured_count int) int {
+	eprintln('')
+	eprintln('xpty: comparing captured frames against golden frames in ${golden_dir}/')
+
+	// Collect golden .raw files.
+	golden_files := os.glob(os.join_path(golden_dir, 'frame_*.raw')) or {
+		eprintln('xpty: ERROR: failed to list golden frames: ${err}')
+		return 1
+	}
+
+	golden_count := golden_files.len
+	if golden_count == 0 {
+		eprintln('xpty: ERROR: no golden frames found in ${golden_dir}/')
+		eprintln('xpty: hint: run without --compare first to capture golden frames, then copy .raw files to ${golden_dir}/')
+		return 1
+	}
+
+	if captured_count != golden_count {
+		eprintln('xpty: FAIL: frame count mismatch — captured ${captured_count}, golden ${golden_count}')
+		return 1
+	}
+
+	mut failures := 0
+	for i := 0; i < captured_count; i++ {
+		name := 'frame_${i:04d}.raw'
+		captured_path := os.join_path(captured_dir, name)
+		golden_path := os.join_path(golden_dir, name)
+
+		if !os.exists(golden_path) {
+			eprintln('xpty: FAIL: ${name} — golden frame missing')
+			failures++
+			continue
+		}
+
+		if !os.exists(captured_path) {
+			eprintln('xpty: FAIL: ${name} — captured frame missing')
+			failures++
+			continue
+		}
+
+		captured_data := os.read_bytes(captured_path) or {
+			eprintln('xpty: FAIL: ${name} — could not read captured frame: ${err}')
+			failures++
+			continue
+		}
+
+		golden_data := os.read_bytes(golden_path) or {
+			eprintln('xpty: FAIL: ${name} — could not read golden frame: ${err}')
+			failures++
+			continue
+		}
+
+		if captured_data == golden_data {
+			eprintln('xpty: OK: ${name}')
+		} else {
+			eprintln('xpty: FAIL: ${name} — differs (captured ${captured_data.len} bytes, golden ${golden_data.len} bytes)')
+			// Show first differing byte position for debugging.
+			min_len := if captured_data.len < golden_data.len {
+				captured_data.len
+			} else {
+				golden_data.len
+			}
+			for j := 0; j < min_len; j++ {
+				if captured_data[j] != golden_data[j] {
+					eprintln('xpty:        first difference at byte ${j}: captured 0x${captured_data[j]:02x}, golden 0x${golden_data[j]:02x}')
+					break
+				}
+			}
+			if captured_data.len != golden_data.len {
+				eprintln('xpty:        size difference: captured ${captured_data.len}, golden ${golden_data.len}')
+			}
+			failures++
+		}
+	}
+
+	eprintln('')
+	if failures > 0 {
+		eprintln('xpty: FAILED — ${failures}/${captured_count} frames differ')
+		return 1
+	}
+	eprintln('xpty: PASSED — all ${captured_count} frames match')
+	return 0
 }
