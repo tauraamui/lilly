@@ -1,40 +1,40 @@
- alpha-v0.0.0 (#ff2690b)                                                                                                
+ 1 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer id accumsan nulla. Proin a erat quis orci placerat p
+ 2                                                                                                                      
+ 3 Nullam lobortis mattis libero, ut pellentesque velit. Nulla eget bibendum tortor. Vestibulum ante ipsum primis in fau
+ 4                                                                                                                      
+ 5 Morbi ullamcorper, mauris vel cursus laoreet, lectus lacus egestas sapien, in placerat nibh massa sed lectus. Morbi a
+ 6                                                                                                                      
+ 7 Nullam dictum risus sit amet nisl feugiat, vitae placerat leo venenatis. Etiam sed justo velit. Nulla interdum maximu
+ 8                                                                                                                      
+ 9 Quisque in nisl a mi molestie pretium vel quis mauris. Proin bibendum urna ex, in interdum ex fermentum non. Cras ali
+10                                                                                                                      
+11 Sed sagittis massa non lacus ultricies, vitae fringilla justo faucibus. Quisque porttitor vitae nisl in auctor. Donec
+12                                                                                                                      
+13 Ut vel neque eget tortor porta euismod. In molestie, purus ut iaculis dapibus, nisl felis malesuada metus, at mattis 
+14                                                                                                                      
+15 Morbi rutrum lacus massa, non maximus libero blandit nec. Aenean ut ullamcorper nisl. Nam quis sollicitudin arcu, at 
+16                                                                                                                      
+17 Praesent laoreet elit vel congue lobortis. Sed ut nisi quis ipsum efficitur posuere. Pellentesque egestas ligula eget
+18                                                                                                                      
+19 Nunc in enim sit amet nisl molestie tempor. Sed eu nulla eros. In consectetur mauris nec turpis lobortis, at vulputat
+20                                                                                                                      
+21 Quisque magna odio, egestas ut aliquam ac, accumsan nec arcu. Nunc venenatis quam at ex bibendum, eu aliquet urna sem
+22                                                                                                                      
+23 Vestibulum vehicula urna lectus, at vulputate lorem gravida euismod. Ut tempor blandit massa quis efficitur. Cras ves
+24                                                                                                                      
+25 Sed luctus commodo vehicula. Maecenas non fermentum enim. Donec ultricies mauris at libero mattis pulvinar. Integer p
+26                                                                                                                      
+27 Nullam enim augue, sagittis in ante in, facilisis malesuada tortor. Sed volutpat vestibulum ultrices. Aenean sed tort
+28                                                                                                                      
+29 Cras dui nisi, tincidunt ut venenatis eget, mattis vitae dolor. Sed a lacinia quam. Cras diam est, commodo sit amet q
                                                                                                                         
                                                                                                                         
                                                                                                                         
-            ┌──────────────────────────────────────────────────────────────────────────────────────────────┐            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │                                                                                              │            
-            │  ./0002.txt                                                                                  │            
-            │» ./0001.txt                                                                                  │            
-            └──────────────────────────────────────────────────────────────────────────────────────────────┘            
-            ┌──────────────────────────────────────────────────────────────────────────────────────────────┐            
-            │>                                                                                             │            
-            └──────────────────────────────────────────────────────────────────────────────────────────────┘            
                                                                                                                         
-                                        the lilly editor authors © (made with 💕)                                       
                                                                                                                         
- q: quit • esc: exit                                                                                                    
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        
+█COMMAND██0002.txt██ master█                                                                             █0:0█
+:                                                                                                                       
