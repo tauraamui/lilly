@@ -1,0 +1,69 @@
+package main
+
+import (
+	"fmt"
+)
+
+type GapBuffer struct {
+	data []rune
+	gap  int
+	size int
+}
+
+func NewGapBuffer(initialSize int) *GapBuffer {
+	gb := &GapBuffer{
+		data: make([]rune, initialSize),
+		gap:  initialSize,
+		size: 0,
+	}
+	return gb
+}
+
+func (gb *GapBuffer) MoveGap(position int) {
+	if position < 0 || position > gb.size {
+		return
+	}
+	if position < gb.gap {
+		for i := position; i < gb.gap; i++ {
+			gb.data[i], gb.data[i+gb.gap-position] = gb.data[i+gb.gap-position], gb.data[i]
+		}
+	} else {
+		for i := gb.gap; i < position; i++ {
+			gb.data[i-gb.gap+position] = gb.data[i]
+		}
+	}
+	gb.gap = position
+}
+
+func (gb *GapBuffer) Delete(start, end int) {
+	if start < 0 || end > gb.size || start >= end {
+		return
+	}
+	copy(gb.data[start:], gb.data[end:gb.size])
+	gb.size -= (end - start)
+	gb.gap -= (end - start)
+}
+
+func (gb *GapBuffer) Insert(runes []rune) {
+	for _, r := range runes {
+		if gb.size < len(gb.data) {
+			gb.data[gb.gap] = r
+			gb.gap++
+			gb.size++
+		}
+	}
+}
+
+func (gb *GapBuffer) String() string {
+	return string(gb.data[:gb.size])
+}
+
+func main() {
+	gb := NewGapBuffer(10)
+	gb.Insert([]rune("Hello"))
+	gb.MoveGap(5)
+	gb.Insert([]rune(" World"))
+	gb.Delete(5, 11)
+	fmt.Println(gb.String()) // Output: Hello
+}
+
