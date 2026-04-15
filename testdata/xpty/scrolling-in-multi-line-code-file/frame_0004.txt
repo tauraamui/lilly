@@ -1,0 +1,40 @@
+31         for i := gb.gap; i < position; i++ {                                                                         
+32             gb.data[i-gb.gap+position] = gb.data[i]                                                                  
+33         }                                                                                                            
+34     }                                                                                                                
+35     gb.gap = position                                                                                                
+36 }                                                                                                                    
+37                                                                                                                      
+38 func (gb *GapBuffer) Delete(start, end int) {                                                                        
+39     if start < 0 || end > gb.size || start >= end {                                                                  
+40         return                                                                                                       
+41     }                                                                                                                
+42     copy(gb.data[start:], gb.data[end:gb.size])                                                                      
+43     gb.size -= (end - start)                                                                                         
+44     gb.gap -= (end - start)                                                                                          
+45 }                                                                                                                    
+46                                                                                                                      
+47 func (gb *GapBuffer) Insert(runes []rune) {                                                                          
+48     for _, r := range runes {                                                                                        
+49         if gb.size < len(gb.data) {                                                                                  
+50             gb.data[gb.gap] = r                                                                                      
+51             gb.gap++                                                                                                 
+52             gb.size++                                                                                                
+53         }                                                                                                            
+54     }                                                                                                                
+55 }                                                                                                                    
+56                                                                                                                      
+57 func (gb *GapBuffer) String() string {                                                                               
+58     return string(gb.data[:gb.size])                                                                                 
+59 }                                                                                                                    
+60                                                                                                                      
+61 func main() {                                                                                                        
+62     gb := NewGapBuffer(10)                                                                                           
+63     gb.Insert([]rune("Hello"))                                                                                       
+64     gb.MoveGap(5)                                                                                                    
+65     gb.Insert([]rune(" World"))                                                                                      
+66     gb.Delete(5, 11)                                                                                                 
+67     fmt.Println(gb.String()) // Output: Hello                                                                        
+68 }                                                                                                                    
+█COMMAND██0003.txt██ master█                                                                            █67:0█
+:                                                                                                                       
