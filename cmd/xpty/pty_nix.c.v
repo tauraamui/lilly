@@ -62,7 +62,7 @@ mut:
 fn C.tcgetattr(fd int, termios_p &C.termios) int
 fn C.tcsetattr(fd int, optional_actions int, termios_p &C.termios) int
 
-fn spawn_in_pty(program string, cols u16, rows u16) !(int, int) {
+fn spawn_in_pty(program string, cols u16, rows u16, golden_dir string) !(int, int) {
 	mut master_fd := 0
 	mut slave_fd := 0
 
@@ -104,6 +104,10 @@ fn spawn_in_pty(program string, cols u16, rows u16) !(int, int) {
 		C.setenv(c'TERM', c'xterm-256color', 1)
 		// Disable telemetry for test runs.
 		C.setenv(c'LILLY_NO_TELEMETRY', c'1', 1)
+		// If golden frame capture is requested, tell lilly where to dump frames.
+		if golden_dir.len > 0 {
+			C.setenv(c'LILLY_GOLDEN_DIR', golden_dir.str, 1)
+		}
 
 		// exec the target program
 		c_program := program.str

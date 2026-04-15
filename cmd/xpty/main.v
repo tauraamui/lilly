@@ -118,7 +118,10 @@ fn main() {
 		eprintln('xpty: will compare against golden frames in ${config.compare_dir}/')
 	}
 
-	master_fd, child_pid := spawn_in_pty(config.program, cols, rows) or {
+	// Tell lilly to dump golden frames into the output directory.
+	// This requires lilly to be built with -d golden_frames.
+	golden_capture_dir := os.real_path(config.output_dir)
+	master_fd, child_pid := spawn_in_pty(config.program, cols, rows, golden_capture_dir) or {
 		eprintln('xpty: failed to spawn: ${err}')
 		exit(1)
 	}
@@ -190,7 +193,7 @@ fn main() {
 
 	// If comparison was requested, run it now.
 	if config.compare_dir.len > 0 {
-		exit(compare_frames(config.output_dir, config.compare_dir, frame_num))
+		exit(compare_frames(config.output_dir, config.compare_dir))
 	}
 }
 
@@ -336,88 +339,98 @@ fn escape_for_display(s string) string {
 	return result
 }
 
-// compare_frames compares captured .raw frames against golden .raw frames.
+// compare_frames compares captured .txt golden frames (produced by lilly with
+// -d golden_frames and LILLY_GOLDEN_DIR) against committed golden .txt frames.
 // Returns 0 if all frames match, 1 if there are differences.
-fn compare_frames(captured_dir string, golden_dir string, captured_count int) int {
+fn compare_frames(captured_dir string, golden_dir string) int {
 	eprintln('')
 	eprintln('xpty: comparing captured frames against golden frames in ${golden_dir}/')
 
-	// Collect golden .raw files.
-	golden_files := os.glob(os.join_path(golden_dir, 'frame_*.raw')) or {
+	golden_files := os.glob(os.join_path(golden_dir, 'frame_*.txt')) or {
 		eprintln('xpty: ERROR: failed to list golden frames: ${err}')
 		return 1
 	}
 
-	golden_count := golden_files.len
-	if golden_count == 0 {
+	if golden_files.len == 0 {
 		eprintln('xpty: ERROR: no golden frames found in ${golden_dir}/')
-		eprintln('xpty: hint: run without --compare first to capture golden frames, then copy .raw files to ${golden_dir}/')
+		eprintln('xpty: hint: run xpty-capture first, review the .txt frames, then copy them to ${golden_dir}/')
 		return 1
 	}
 
-	if captured_count != golden_count {
-		eprintln('xpty: FAIL: frame count mismatch — captured ${captured_count}, golden ${golden_count}')
+	captured_files := os.glob(os.join_path(captured_dir, 'frame_*.txt')) or {
+		eprintln('xpty: ERROR: failed to list captured frames: ${err}')
+		eprintln('xpty: hint: ensure lilly was built with -d golden_frames')
 		return 1
 	}
 
+	if captured_files.len == 0 {
+		eprintln('xpty: ERROR: no captured .txt frames found in ${captured_dir}/')
+		eprintln('xpty: hint: ensure lilly was built with -d golden_frames')
+		return 1
+	}
+
+	if captured_files.len != golden_files.len {
+		eprintln('xpty: FAIL: frame count mismatch — captured ${captured_files.len}, golden ${golden_files.len}')
+	}
+
+	// Compare all golden frames that exist.
 	mut failures := 0
-	for i := 0; i < captured_count; i++ {
-		name := 'frame_${i:04d}.raw'
+	mut compared := 0
+	for golden_path in golden_files {
+		name := os.file_name(golden_path)
 		captured_path := os.join_path(captured_dir, name)
-		golden_path := os.join_path(golden_dir, name)
-
-		if !os.exists(golden_path) {
-			eprintln('xpty: FAIL: ${name} — golden frame missing')
-			failures++
-			continue
-		}
 
 		if !os.exists(captured_path) {
-			eprintln('xpty: FAIL: ${name} — captured frame missing')
+			eprintln('xpty: FAIL: ${name} — no matching captured frame')
 			failures++
 			continue
 		}
 
-		captured_data := os.read_bytes(captured_path) or {
+		captured_text := os.read_file(captured_path) or {
 			eprintln('xpty: FAIL: ${name} — could not read captured frame: ${err}')
 			failures++
 			continue
 		}
 
-		golden_data := os.read_bytes(golden_path) or {
+		golden_text := os.read_file(golden_path) or {
 			eprintln('xpty: FAIL: ${name} — could not read golden frame: ${err}')
 			failures++
 			continue
 		}
 
-		if captured_data == golden_data {
+		if captured_text == golden_text {
 			eprintln('xpty: OK: ${name}')
 		} else {
-			eprintln('xpty: FAIL: ${name} — differs (captured ${captured_data.len} bytes, golden ${golden_data.len} bytes)')
-			// Show first differing byte position for debugging.
-			min_len := if captured_data.len < golden_data.len {
-				captured_data.len
+			eprintln('xpty: FAIL: ${name} — content differs')
+			// Show the first differing line for debugging.
+			captured_lines := captured_text.split('\n')
+			golden_lines := golden_text.split('\n')
+			min_lines := if captured_lines.len < golden_lines.len {
+				captured_lines.len
 			} else {
-				golden_data.len
+				golden_lines.len
 			}
-			for j := 0; j < min_len; j++ {
-				if captured_data[j] != golden_data[j] {
-					eprintln('xpty:        first difference at byte ${j}: captured 0x${captured_data[j]:02x}, golden 0x${golden_data[j]:02x}')
+			for j := 0; j < min_lines; j++ {
+				if captured_lines[j] != golden_lines[j] {
+					eprintln('xpty:        first difference at line ${j + 1}:')
+					eprintln('xpty:          golden:   "${golden_lines[j]}"')
+					eprintln('xpty:          captured: "${captured_lines[j]}"')
 					break
 				}
 			}
-			if captured_data.len != golden_data.len {
-				eprintln('xpty:        size difference: captured ${captured_data.len}, golden ${golden_data.len}')
+			if captured_lines.len != golden_lines.len {
+				eprintln('xpty:        line count: captured ${captured_lines.len}, golden ${golden_lines.len}')
 			}
 			failures++
 		}
+		compared++
 	}
 
 	eprintln('')
 	if failures > 0 {
-		eprintln('xpty: FAILED — ${failures}/${captured_count} frames differ')
+		eprintln('xpty: FAILED — ${failures}/${compared} frames differ')
 		return 1
 	}
-	eprintln('xpty: PASSED — all ${captured_count} frames match')
+	eprintln('xpty: PASSED — all ${compared} frames match')
 	return 0
 }
