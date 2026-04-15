@@ -1,1 +1,0 @@
-[BSU: Begin Synchronized Update][CSI: ESC[?25l][CSI: ESC[40;2H][CSI: ESC[38;2;178;178;178m][CSI: ESC[48;2;18;18;18m]q[CSI: ESC[48;2;138;138;138m] [CSI: ESC[39m][CSI: ESC[49m][CSI: ESC[39;2H][ESU: End Synchronized Update]
