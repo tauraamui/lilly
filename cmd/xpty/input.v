@@ -16,7 +16,7 @@ module main
 
 import strconv
 
-type Token = InputToken | WaitToken
+type Token = InputToken | SnapshotToken | WaitToken
 
 struct InputToken {
 	label string
@@ -26,6 +26,8 @@ struct InputToken {
 struct WaitToken {
 	ms int
 }
+
+struct SnapshotToken {}
 
 // parse_input converts an input specification string into a sequence of tokens.
 // Literal characters are sent as-is. Special sequences inside angle brackets
@@ -94,6 +96,10 @@ fn resolve_tag(tag string) Token {
 		ms_str := lower[5..]
 		ms := strconv.atoi(ms_str) or { 500 }
 		return Token(WaitToken{ ms: ms })
+	}
+
+	if lower == 'snapshot' {
+		return Token(SnapshotToken{})
 	}
 
 	bytes, label := match lower {
