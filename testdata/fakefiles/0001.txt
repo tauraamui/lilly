@@ -1,0 +1,1 @@
+This is a fake file/document to test rendering a single line document.

@@ -48,6 +48,42 @@ jobs:
         timeout-minutes: 3
         run: v run ./make.vsh verbose-test
 
+  visual_regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+
+      - uses: vlang/setup-v@v1.4
+        with:
+          check-latest: true
+
+      - name: Cache V modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.vmodules
+          key: vmodules-xpty-${{ hashFiles('v.mod') }}
+          restore-keys: vmodules-xpty-
+
+      - name: Install dependencies
+        run: v install tauraamui.bobatea
+
+      - name: Check for golden frames
+        id: check_golden
+        run: |
+          if ls testdata/xpty/scroll-scenario/frame_*.txt 1>/dev/null 2>&1; then
+            echo "has_golden=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_golden=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No golden frames committed yet — skipping visual regression"
+          fi
+
+      - name: Run visual regression
+        if: steps.check_golden.outputs.has_golden == 'true'
+        timeout-minutes: 3
+        run: v run ./make.vsh xpty-verify
+
   prod_build:
     runs-on: ubuntu-22.04
     steps:

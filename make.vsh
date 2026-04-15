@@ -5,6 +5,7 @@ import strconv
 import math
 
 const app_name = 'lilly'
+const single_line_file_scenario = '<wait:2000><snapshot>;ff<wait:1000><snapshot>0001<enter><wait:1000><snapshot>:q<enter><wait:500>'
 
 mut context := build.context(
 	default: 'run'
@@ -136,6 +137,31 @@ context.task(
 		b := find_nearest_level(levels, bb)
 		println('RGB(${rr}, ${gg}, ${bb}) -> ${16 + (36 * r) + (6 * g) + b}')
 	}
+)
+
+// XPTY FRAME REGRESSION TASKS
+context.task(
+	name: 'xpty-build'
+	help: 'build lilly with golden frame support enabled'
+	depends: ['_generate-git-hash']
+	run:  |self| system('v -d golden_frames -g . -o lilly')
+)
+context.task(
+	name:    'xpty-capture'
+	help:    'capture golden frames for scroll scenario (review output before committing)'
+	depends: ['xpty-build']
+	run:     fn (self build.Task) ! {
+		system('v -g run cmd/xpty/ \'./lilly ./testdata/fakefiles\' \'${single_line_file_scenario}\'')
+		eprintln('')
+		eprintln('Frames saved to xpty_frames/. Review the .txt frames, then copy them:')
+		eprintln('  cp xpty_frames/frame_*.txt testdata/xpty/scroll-scenario/')
+	}
+)
+context.task(
+	name:    'xpty-verify'
+	help:    'verify current rendering matches golden frames for scroll scenario'
+	depends: ['xpty-build']
+	run:     |self| exit(system('v -g run cmd/xpty/ --compare testdata/xpty/scroll-scenario \'./lilly ./testdata/fakefiles\' \'${single_line_file_scenario}\''))
 )
 
 context.task(name: 'git-prune', run: |self| system('git remote prune origin'))

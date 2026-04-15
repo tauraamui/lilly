@@ -36,6 +36,7 @@ mut:
 	logs                    []LogMsg
 	last_resize_width       int
 	last_resize_height      int
+	golden_frames           GoldenFrameState
 }
 
 @[params]
@@ -59,6 +60,7 @@ fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.C
 			expand_tabs:       config.expand_tabs
 			tab_width:         config.tab_width
 		)
+		golden_frames: GoldenFrameState.init()
 	}
 }
 
@@ -155,6 +157,7 @@ fn (mut m PetalModel) view(mut ctx tea.Context) {
 	}
 	mut screen := m.active_screen
 	screen.view(mut ctx)
+	m.golden_frames.capture(ctx)
 }
 
 fn (m PetalModel) clone() tea.Model {
