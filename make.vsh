@@ -138,6 +138,25 @@ context.task(
 	}
 )
 
+// XPTY FRAME REGRESSION TASKS
+context.task(
+	name:    'xpty-capture'
+	help:    'capture golden frames for scroll scenario (review output before committing)'
+	depends: ['build']
+	run:     fn (self build.Task) ! {
+		system('v -g run cmd/xpty/ ./lilly \'<wait:2000>;ffedi<enter><wait:1000>}}}}}\'')
+		eprintln('')
+		eprintln('Frames saved to xpty_frames/. Review them, then copy .raw files:')
+		eprintln('  cp xpty_frames/frame_*.raw testdata/xpty/scroll-scenario/')
+	}
+)
+context.task(
+	name:    'xpty-verify'
+	help:    'verify current rendering matches golden frames for scroll scenario'
+	depends: ['build']
+	run:     |self| exit(system('v -g run cmd/xpty/ --compare testdata/xpty/scroll-scenario ./lilly \'<wait:2000>;ffedi<enter><wait:1000>}}}}}\''))
+)
+
 context.task(name: 'git-prune', run: |self| system('git remote prune origin'))
 
 context.task(
