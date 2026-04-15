@@ -70,13 +70,13 @@ jobs:
       - name: Generate git hash
         run: git log -n 1 --pretty=format:"%h" | tee ./.githash
 
-      - name: Build lilly
-        run: v . -o lilly
+      - name: Build lilly with golden frame support
+        run: v -d golden_frames . -o lilly
 
       - name: Check for golden frames
         id: check_golden
         run: |
-          if ls testdata/xpty/scroll-scenario/frame_*.raw 1>/dev/null 2>&1; then
+          if ls testdata/xpty/scroll-scenario/frame_*.txt 1>/dev/null 2>&1; then
             echo "has_golden=true" >> "$GITHUB_OUTPUT"
           else
             echo "has_golden=false" >> "$GITHUB_OUTPUT"
@@ -87,6 +87,13 @@ jobs:
         if: steps.check_golden.outputs.has_golden == 'true'
         timeout-minutes: 3
         run: v -g run cmd/xpty/ --compare testdata/xpty/scroll-scenario ./lilly '<wait:2000>;ffedi<enter><wait:1000>}}}}}'
+
+      - name: Upload captured frames
+        if: always() && steps.check_golden.outputs.has_golden == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: xpty-captured-frames
+          path: xpty_frames/
 
   prod_build:
     runs-on: ubuntu-22.04
