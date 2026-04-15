@@ -71,7 +71,7 @@ jobs:
       - name: Check for golden frames
         id: check_golden
         run: |
-          if ls testdata/xpty/scroll-scenario/frame_*.txt 1>/dev/null 2>&1; then
+          if ls testdata/xpty/*/frame_*.txt 1>/dev/null 2>&1; then
             echo "has_golden=true" >> "$GITHUB_OUTPUT"
           else
             echo "has_golden=false" >> "$GITHUB_OUTPUT"
