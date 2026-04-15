@@ -181,6 +181,26 @@ fn main() {
 	}
 }
 
+// normalise_frame replaces volatile content (e.g. git commit hashes) with
+// stable placeholders so that frames captured at different commits can be
+// compared meaningfully.
+fn normalise_frame(text string) string {
+	// The version string looks like: alpha-v0.0.0 (#abcdef1)
+	// Replace the 7-char hex hash with a fixed placeholder.
+	mut result := text
+	mut i := 0
+	for {
+		idx := result.index_after('(#', i) or { break }
+		hash_start := idx + 2
+		hash_end := hash_start + 7
+		if hash_end < result.len && result[hash_end] == `)` {
+			result = result[..hash_start] + 'GITHASH' + result[hash_end..]
+		}
+		i = idx + 2
+	}
+	return result
+}
+
 // compare_frames compares captured .txt golden frames (produced by lilly with
 // -d golden_frames and LILLY_GOLDEN_DIR) against committed golden .txt frames.
 // Returns 0 if all frames match, 1 if there are differences.
@@ -240,13 +260,16 @@ fn compare_frames(captured_dir string, golden_dir string) int {
 			continue
 		}
 
-		if captured_text == golden_text {
+		normalised_captured := normalise_frame(captured_text)
+		normalised_golden := normalise_frame(golden_text)
+
+		if normalised_captured == normalised_golden {
 			eprintln('xpty: OK: ${name}')
 		} else {
 			eprintln('xpty: FAIL: ${name} — content differs')
 			// Show the first differing line for debugging.
-			captured_lines := captured_text.split('\n')
-			golden_lines := golden_text.split('\n')
+			captured_lines := normalised_captured.split('\n')
+			golden_lines := normalised_golden.split('\n')
 			min_lines := if captured_lines.len < golden_lines.len {
 				captured_lines.len
 			} else {
