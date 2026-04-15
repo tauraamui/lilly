@@ -271,7 +271,7 @@ fn compare_frames(captured_dir string, golden_dir string) int {
 				golden_lines.len
 			}
 			for j := 0; j < min_lines; j++ {
-				if captured_lines[j] != golden_lines[j] {
+				if normalise_git_hash(captured_lines[j]) != normalise_git_hash(golden_lines[j]) {
 					eprintln('xpty:        first difference at line ${j + 1}:')
 					eprintln('xpty:          golden:   "${golden_lines[j]}"')
 					eprintln('xpty:          captured: "${captured_lines[j]}"')
