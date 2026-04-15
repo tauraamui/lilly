@@ -17,6 +17,14 @@ module main
 import os
 import tauraamui.bobatea as tea
 
+#include <signal.h>
+
+#flag -I .
+#include "golden_snapshot_signal.h"
+
+fn C.golden_snapshot_install_handler()
+fn C.golden_snapshot_check_and_clear() bool
+
 struct GoldenFrameState {
 mut:
 	output_dir string
@@ -35,6 +43,8 @@ fn GoldenFrameState.init() GoldenFrameState {
 		return GoldenFrameState{}
 	}
 
+	C.golden_snapshot_install_handler()
+
 	eprintln('golden_frames: enabled, writing frames to ${dir}/')
 	return GoldenFrameState{
 		output_dir: dir
@@ -48,6 +58,10 @@ fn (mut state GoldenFrameState) capture(ctx tea.Context) {
 		return
 	}
 
+	if !C.golden_snapshot_check_and_clear() {
+		return
+	}
+
 	text := ctx.screen_text()
 	path := os.join_path(state.output_dir, 'frame_${state.frame_num:04d}.txt')
 	os.write_file(path, text) or {
@@ -55,5 +69,6 @@ fn (mut state GoldenFrameState) capture(ctx tea.Context) {
 		return
 	}
 
+	eprintln('golden_frames: captured frame ${state.frame_num}')
 	state.frame_num++
 }
