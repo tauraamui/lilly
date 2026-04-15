@@ -7,6 +7,25 @@ import math
 const app_name = 'lilly'
 const single_line_file_scenario = '<wait:2000><snapshot>;ff<wait:1000><snapshot>0001<enter><wait:1000><snapshot>:q<enter><wait:500>'
 
+struct Scenario {
+	name    string
+	command string
+	keys    string
+}
+
+const scenarios = [
+	Scenario{
+		name:    'single-line-file'
+		command: './lilly ./testdata/fakefiles'
+		keys:    '<wait:2000><snapshot>;ff<wait:1000><snapshot>0001<enter><wait:1000><snapshot>:q<enter><wait:500>'
+	},
+	Scenario{
+		name:    'multi-line-file'
+		command: './lilly ./testdata/fakefiles'
+		keys:    '<wait:2000><snapshot>;ff<wait:1000><snapshot>0002<enter><wait:1000><snapshot>:q<enter><wait:500>'
+	},
+]
+
 mut context := build.context(
 	default: 'run'
 )
@@ -141,27 +160,42 @@ context.task(
 
 // XPTY FRAME REGRESSION TASKS
 context.task(
-	name: 'xpty-build'
-	help: 'build lilly with golden frame support enabled'
+	name:    'xpty-build'
+	help:    'build lilly with golden frame support enabled'
 	depends: ['_generate-git-hash']
-	run:  |self| system('v -d golden_frames -g . -o lilly')
+	run:     |self| system('v -d golden_frames -g . -o lilly')
 )
 context.task(
 	name:    'xpty-capture'
-	help:    'capture golden frames for scroll scenario (review output before committing)'
+	help:    'capture golden frames for all scenarios (review output before committing)'
 	depends: ['xpty-build']
 	run:     fn (self build.Task) ! {
-		system('v -g run cmd/xpty/ \'./lilly ./testdata/fakefiles\' \'${single_line_file_scenario}\'')
-		eprintln('')
-		eprintln('Frames saved to xpty_frames/. Review the .txt frames, then copy them:')
-		eprintln('  cp xpty_frames/frame_*.txt testdata/xpty/scroll-scenario/')
+		for s in scenarios {
+			eprintln('Capturing: ${s.name}')
+			system("v -g run cmd/xpty/ '${s.command}' '${s.keys}' --output-dir ./xpty_frames/${s.name}")
+			eprintln('')
+			eprintln('Frames saved to xpty_frames/. Review, then copy:')
+			eprintln('  cp xpty_frames/${s.name}/frame_*.txt testdata/xpty/${s.name}/')
+		}
 	}
 )
 context.task(
 	name:    'xpty-verify'
-	help:    'verify current rendering matches golden frames for scroll scenario'
+	help:    'verify current rendering matches golden frames for all scenarios'
 	depends: ['xpty-build']
-	run:     |self| exit(system('v -g run cmd/xpty/ --compare testdata/xpty/scroll-scenario \'./lilly ./testdata/fakefiles\' \'${single_line_file_scenario}\''))
+	run:     fn (self build.Task) ! {
+		mut failed := false
+		for s in scenarios {
+			eprintln('Verifying: ${s.name}')
+			rc := system("v -g run cmd/xpty/ --compare testdata/xpty/${s.name} '${s.command}' '${s.keys}'")
+			if rc != 0 {
+				failed = true
+			}
+		}
+		if failed {
+			exit(1)
+		}
+	}
 )
 
 context.task(name: 'git-prune', run: |self| system('git remote prune origin'))
