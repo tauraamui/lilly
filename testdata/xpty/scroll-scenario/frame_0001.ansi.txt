@@ -1,0 +1,1 @@
+[BSU: Begin Synchronized Update][CSI: ESC[?25l][CSI: ESC[26;41H][CSI: ESC[38;2;128;128;128m][CSI: ESC[48;2;18;18;18m][0xef][0x85][0x9c] Find File                   <leader>ff[CSI: ESC[40;119H][CSI: ESC[38;2;178;178;178m];[CSI: ESC[39m][CSI: ESC[49m][CSI: ESC[39;118H][ESU: End Synchronized Update]

@@ -23,14 +23,14 @@ const bsu = '\x1bP=1s\x1b\\'
 const esu = '\x1bP=2s\x1b\\'
 
 struct Config {
-	program     string
+	program     []string // program path and args
 	input_spec  string
 	output_dir  string
 	compare_dir string // if non-empty, compare captured frames against this golden dir
 }
 
 fn parse_args(args []string) !Config {
-	mut program := ''
+	mut program := []string{}
 	mut input_spec := ''
 	mut output_dir := 'xpty_frames'
 	mut compare_dir := ''
@@ -50,7 +50,7 @@ fn parse_args(args []string) !Config {
 			}
 			output_dir = args[i]
 		} else if program.len == 0 {
-			program = args[i]
+			program = args[i].split(' ').filter(it.len > 0)
 		} else if input_spec.len == 0 {
 			input_spec = args[i]
 		} else {
@@ -111,7 +111,7 @@ fn main() {
 		exit(1)
 	}
 
-	eprintln('xpty: starting "${config.program}" in ${cols}x${rows} pty')
+	eprintln('xpty: starting "${config.program.join(' ')}" in ${cols}x${rows} pty')
 	eprintln('xpty: input sequence: ${config.input_spec}')
 	eprintln('xpty: frames will be saved to ${config.output_dir}/')
 	if config.compare_dir.len > 0 {

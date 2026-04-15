@@ -62,7 +62,10 @@ mut:
 fn C.tcgetattr(fd int, termios_p &C.termios) int
 fn C.tcsetattr(fd int, optional_actions int, termios_p &C.termios) int
 
-fn spawn_in_pty(program string, cols u16, rows u16, golden_dir string) !(int, int) {
+fn spawn_in_pty(program []string, cols u16, rows u16, golden_dir string) !(int, int) {
+	if program.len == 0 {
+		return error('empty program argument')
+	}
 	mut master_fd := 0
 	mut slave_fd := 0
 
@@ -109,9 +112,15 @@ fn spawn_in_pty(program string, cols u16, rows u16, golden_dir string) !(int, in
 			C.setenv(c'LILLY_GOLDEN_DIR', golden_dir.str, 1)
 		}
 
-		// exec the target program
-		c_program := program.str
-		argv := [c_program, unsafe { nil }]
+		// exec the target program with arguments
+		c_program := program[0].str
+		mut argv := unsafe { []&char{ len: program.len + 1 } }
+		unsafe {
+			for idx, arg in program {
+				argv[idx] = arg.str
+			}
+			argv[program.len] = nil
+		}
 		C.execvp(c_program, argv.data)
 
 		// If we get here, exec failed.

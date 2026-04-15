@@ -150,7 +150,7 @@ context.task(
 	help:    'capture golden frames for scroll scenario (review output before committing)'
 	depends: ['xpty-build']
 	run:     fn (self build.Task) ! {
-		system('v -g run cmd/xpty/ ./lilly \'<wait:2000>;ffedi<enter><wait:1000>}}}}}\'')
+		system('v -g run cmd/xpty/ \'./lilly ./testdata/fakefiles\' \'<wait:2000>;ff<wait:100>0<wait:100>0<wait:100>0<wait:100>1<enter><wait:1000>:q<enter><wait:500>\'')
 		eprintln('')
 		eprintln('Frames saved to xpty_frames/. Review the .txt frames, then copy them:')
 		eprintln('  cp xpty_frames/frame_*.txt testdata/xpty/scroll-scenario/')
@@ -160,7 +160,7 @@ context.task(
 	name:    'xpty-verify'
 	help:    'verify current rendering matches golden frames for scroll scenario'
 	depends: ['xpty-build']
-	run:     |self| exit(system('v -g run cmd/xpty/ --compare testdata/xpty/scroll-scenario ./lilly \'<wait:2000>;ffedi<enter><wait:1000>}}}}}\''))
+	run:     |self| exit(system('v -g run cmd/xpty/ --compare testdata/xpty/scroll-scenario \'./lilly ./testdata/fakefiles\' \'<wait:2000>;ff<wait:100>0<wait:100>0<wait:100>0<wait:100>1<enter><wait:1000>:q<enter><wait:500>\''))
 )
 
 context.task(name: 'git-prune', run: |self| system('git remote prune origin'))

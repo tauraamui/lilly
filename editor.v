@@ -181,7 +181,7 @@ fn load_syntax(editor_id int, file_path string) tea.Cmd {
 }
 
 fn (mut m EditorModel) init() fn () tea.Msg {
-	return tea.batch(tea.emit_resize, load_syntax(m.id, m.file_path))
+	return tea.batch(tea.emit_resize, load_syntax(m.id, m.file_path), query_editor_data(m.id))
 }
 
 struct EditorModelMsg {
