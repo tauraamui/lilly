@@ -181,12 +181,10 @@ fn main() {
 	}
 }
 
-// normalise_frame replaces volatile content (e.g. git commit hashes) with
-// stable placeholders so that frames captured at different commits can be
-// compared meaningfully.
-fn normalise_frame(text string) string {
-	// The version string looks like: alpha-v0.0.0 (#abcdef1)
-	// Replace the 7-char hex hash with a fixed placeholder.
+// normalise_git_hash replaces the 7-char git commit hash in version strings
+// like "alpha-v0.0.0 (#abcdef1)" with a fixed placeholder, so that frames
+// captured on one commit can be verified against a different commit.
+fn normalise_git_hash(text string) string {
 	mut result := text
 	mut i := 0
 	for {
@@ -260,16 +258,13 @@ fn compare_frames(captured_dir string, golden_dir string) int {
 			continue
 		}
 
-		normalised_captured := normalise_frame(captured_text)
-		normalised_golden := normalise_frame(golden_text)
-
-		if normalised_captured == normalised_golden {
+		if normalise_git_hash(captured_text) == normalise_git_hash(golden_text) {
 			eprintln('xpty: OK: ${name}')
 		} else {
 			eprintln('xpty: FAIL: ${name} — content differs')
 			// Show the first differing line for debugging.
-			captured_lines := normalised_captured.split('\n')
-			golden_lines := normalised_golden.split('\n')
+			captured_lines := captured_text.split('\n')
+			golden_lines := golden_text.split('\n')
 			min_lines := if captured_lines.len < golden_lines.len {
 				captured_lines.len
 			} else {

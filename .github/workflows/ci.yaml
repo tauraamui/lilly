@@ -49,11 +49,10 @@ jobs:
         run: v run ./make.vsh verbose-test
 
   visual_regression:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref }}
 
       - uses: vlang/setup-v@v1.4
         with:
