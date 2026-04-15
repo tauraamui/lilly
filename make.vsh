@@ -5,7 +5,6 @@ import strconv
 import math
 
 const app_name = 'lilly'
-const single_line_file_scenario = '<wait:2000><snapshot>;ff<wait:1000><snapshot>0001<enter><wait:1000><snapshot>:q<enter><wait:500>'
 
 struct Scenario {
 	name    string
@@ -17,12 +16,12 @@ const scenarios = [
 	Scenario{
 		name:    'single-line-file'
 		command: './lilly ./testdata/fakefiles'
-		keys:    '<wait:2000><snapshot>;ff<wait:1000><snapshot>0001<enter><wait:1000><snapshot>:q<enter><wait:500>'
+		keys:    '<wait:2000><snapshot>;ff<wait:1000>0001<enter><wait:1000><snapshot>:q<enter><wait:500>'
 	},
 	Scenario{
 		name:    'multi-line-file'
 		command: './lilly ./testdata/fakefiles'
-		keys:    '<wait:2000><snapshot>;ff<wait:1000><snapshot>0002<enter><wait:1000><snapshot>:q<enter><wait:500>'
+		keys:    '<wait:2000><snapshot>;ff<wait:1000>0002<enter><wait:1000><snapshot>:q<enter><wait:500>'
 	},
 ]
 
