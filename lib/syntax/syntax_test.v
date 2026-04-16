@@ -14,8 +14,6 @@
 
 module syntax
 
-import os
-
 const t_lilly_config_root_dir_name = 'lilly'
 const t_lilly_syntaxes_dir_name = 'syntaxes'
 

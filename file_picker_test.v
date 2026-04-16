@@ -14,8 +14,6 @@
 
 module main
 
-import tauraamui.bobatea as tea
-import lib.files
 import lib.petal.theme
 
 struct MockFilesFinder {
@@ -43,7 +41,7 @@ fn test_file_list_loads_files() {
 	}
 	m, _ := fp.update(msg)
 	if m is FilePickerModel {
-		fp = m
+		fp = *m
 	}
 
 	assert fp.filtered_files.len == 3

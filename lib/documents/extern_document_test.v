@@ -26,7 +26,6 @@ fn third_random_function() {
 import encoding.utf8
 import documents
 import documents.cursor
-import petal
 
 fn test_move_cursor_to_next_word_start() {
 	mut ctrl := documents.Controller.new()
