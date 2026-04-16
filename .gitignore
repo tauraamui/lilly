@@ -22,7 +22,6 @@ bin/
 *.db
 *.js
 .editorconfig
-.gitattributes
 lilly.panic.log
 lilly
 /petal
