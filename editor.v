@@ -1332,11 +1332,7 @@ fn (m EditorModel) height() int {
 
 fn (m EditorModel) clone() tea.Model {
 	assert m.file_path.len != 0
-	mut c := EditorModel{
+	return EditorModel{
 		...m
 	}
-	// each clone gets its own arena, lazily initialized on first view()
-	c.arena = Arena{}
-	c.rune_buf = []rune{}
-	return c
 }

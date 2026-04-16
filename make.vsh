@@ -40,6 +40,11 @@ context.task(
 	depends: ['_generate-git-hash']
 	run:     |self| system('v . -o ${app_name}')
 )
+context.task(
+	name:    'prod'
+	depends: ['_generate-git-hash']
+	run:     |self| system('v -prod -g . -o ${app_name}')
+)
 context.task(name: 'run', depends: ['_generate-git-hash'], run: |self| system('v -g run .'))
 context.task(
 	name:    'run-d'
