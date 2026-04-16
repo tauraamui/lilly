@@ -248,32 +248,6 @@ fn resolve_git_branch_name(execute fn (cmd string) os.Result) string {
 	return ''
 }
 
-$if darwin {
-	fn read_git_branch_from_head_file() string {
-		mut dir := os.getwd()
-		for {
-			head_path := os.join_path(dir, '.git', 'HEAD')
-			if os.exists(head_path) {
-				content := os.read_file(head_path) or { return '' }
-				trimmed := content.trim_space()
-				if trimmed.starts_with('ref: refs/heads/') {
-					return trimmed.all_after('ref: refs/heads/')
-				}
-				if trimmed.len >= 7 {
-					return trimmed[..7]
-				}
-				return trimmed
-			}
-			parent := os.dir(dir)
-			if parent == dir {
-				break
-			}
-			dir = parent
-		}
-		return ''
-	}
-}
-
 fn currently_in_worktree(execute fn (cmd string) os.Result) bool {
 	res := execute('git rev-parse --is-inside-work-tree')
 	return res.exit_code == 0
