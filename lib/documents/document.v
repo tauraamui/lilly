@@ -23,10 +23,11 @@ import lib.files
 import lib.petal
 
 struct UndoEntry {
-	cursor_before  cursor.Pos
-	cursor_after   cursor.Pos
-	content_before []rune
-	content_after  []rune
+	cursor_before cursor.Pos
+	cursor_after  cursor.Pos
+	offset        int
+	deleted       []rune
+	inserted      []rune
 }
 
 struct UndoManager {
@@ -53,11 +54,27 @@ fn (mut um UndoManager) commit_group(cur cursor.Pos, content []rune) {
 	if um.pending_content == content {
 		return
 	}
+
+	old := um.pending_content
+	new := content
+
+	mut pre := 0
+	for pre < old.len && pre < new.len && old[pre] == new[pre] {
+		pre++
+	}
+
+	mut suf := 0
+	for suf < old.len - pre && suf < new.len - pre
+		&& old[old.len - 1 - suf] == new[new.len - 1 - suf] {
+		suf++
+	}
+
 	um.undo_stack << UndoEntry{
-		cursor_before:  pending_cur
-		cursor_after:   cur
-		content_before: um.pending_content
-		content_after:  content
+		cursor_before: pending_cur
+		cursor_after:  cur
+		offset:        pre
+		deleted:       old[pre..old.len - suf].clone()
+		inserted:      new[pre..new.len - suf].clone()
 	}
 	um.redo_stack.clear()
 }
@@ -128,7 +145,12 @@ pub fn (mut c Controller) commit_undo_group(doc_id int, pos cursor.Pos) {
 
 pub fn (mut c Controller) undo(doc_id int) ?cursor.Pos {
 	if entry := c.undo_managers[doc_id].undo() {
-		c.docs[doc_id].data.set_content(entry.content_before)
+		mut buf := c.docs[doc_id].data.content()
+		mut patched := []rune{cap: buf.len - entry.inserted.len + entry.deleted.len}
+		patched << buf[..entry.offset]
+		patched << entry.deleted
+		patched << buf[entry.offset + entry.inserted.len..]
+		c.docs[doc_id].data.set_content(patched)
 		return entry.cursor_before
 	}
 	return none
@@ -136,7 +158,12 @@ pub fn (mut c Controller) undo(doc_id int) ?cursor.Pos {
 
 pub fn (mut c Controller) redo(doc_id int) ?cursor.Pos {
 	if entry := c.undo_managers[doc_id].redo() {
-		c.docs[doc_id].data.set_content(entry.content_after)
+		mut buf := c.docs[doc_id].data.content()
+		mut patched := []rune{cap: buf.len - entry.deleted.len + entry.inserted.len}
+		patched << buf[..entry.offset]
+		patched << entry.inserted
+		patched << buf[entry.offset + entry.deleted.len..]
+		c.docs[doc_id].data.set_content(patched)
 		return entry.cursor_after
 	}
 	return none
