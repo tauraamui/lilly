@@ -1,0 +1,5 @@
+# Override GitHub Linguist language detection
+# .v files are V (vlang), not Verilog
+*.v linguist-language=V
+*.c.v linguist-language=V
+*.vsh linguist-language=V
