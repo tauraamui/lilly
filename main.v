@@ -177,7 +177,7 @@ fn main() {
 	mut documents_controller := documents.Controller.new()
 	defer { documents_controller.free() }
 
-	emit_metrics_maybe(vmod_manifest)
+	metrics_thread := emit_metrics_maybe(vmod_manifest)
 
 	mut cb := clipboard.new()
 	mut petal_model := PetalModel.new(version, config, &documents_controller, &cb,
@@ -186,16 +186,17 @@ fn main() {
 	mut app := tea.new_program(mut petal_model)
 	petal_model.app_send = app.send
 	app.run() or { panic('something went wrong! ${err}') }
+	metrics_thread.wait() or {}
 }
 
-fn emit_metrics_maybe(manifest vmod.Manifest) {
+fn emit_metrics_maybe(manifest vmod.Manifest) thread ! {
 	tp := if os.getenv('LILLY_NO_TELEMETRY') != '' {
 		telemetry.Provider(telemetry.NoOpProvider{})
 	} else {
 		telemetry.Provider(telemetry.HttpProvider.new('https://tauraamui.website/api/v1/lilly-ping'))
 	}
 
-	spawn tp.send_event(telemetry.Event{
+	return spawn tp.send_event(telemetry.Event{
 		kind:    .launch
 		version: manifest.version
 		os:      os.uname().sysname
