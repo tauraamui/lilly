@@ -138,44 +138,19 @@ fn filter_file_paths(file_paths []string, query string, last_query string, last_
 		file_paths
 	}
 
-	num_workers := 8
-	chunk_size := (paths_to_filter.len + num_workers - 1) / num_workers
-	mut threads := []thread []ScoredFile{cap: num_workers}
-
-	for i := 0; i < num_workers; i++ {
-		start := i * chunk_size
-		if start >= paths_to_filter.len {
-			break
-		}
-		end := if start + chunk_size > paths_to_filter.len {
-			paths_to_filter.len
-		} else {
-			start + chunk_size
-		}
-		chunk := paths_to_filter[start..end].clone()
-
-		threads << spawn fn (paths []string, q string) []main.ScoredFile {
-			mut results := []ScoredFile{cap: paths.len}
-			for path in paths {
-				if fuzzy_match(q, path) {
-					results << ScoredFile{
-						path:  path
-						score: score_value_by_query(q, path)
-					}
-				}
+	mut scored := []ScoredFile{cap: paths_to_filter.len}
+	for path in paths_to_filter {
+		if fuzzy_match(query, path) {
+			scored << ScoredFile{
+				path:  path
+				score: score_value_by_query(query, path)
 			}
-			return results
-		}(chunk, query)
+		}
 	}
 
-	mut all_scored := []ScoredFile{cap: paths_to_filter.len}
-	for t in threads {
-		all_scored << t.wait()
-	}
+	scored.sort(a.score > b.score)
 
-	all_scored.sort(a.score > b.score)
-
-	return all_scored.map(it.path)
+	return scored.map(it.path)
 }
 
 pub struct ClearQueryFieldMsg {}
