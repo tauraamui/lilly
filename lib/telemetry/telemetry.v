@@ -14,6 +14,8 @@
 
 module telemetry
 
+import json
+
 pub enum EventKind as u8 {
 	launch
 	session_end
@@ -29,8 +31,27 @@ pub:
 
 pub interface Provider {
 	send_event(event Event) !
+	post(payload string) !
 }
 
 pub struct NoOpProvider {}
 
 pub fn (p NoOpProvider) send_event(event Event) ! {}
+
+pub fn (p NoOpProvider) post(payload string) ! {}
+
+struct EventPayload {
+	kind    string
+	version string
+	os      string
+	arch    string
+}
+
+pub fn encode_event(event Event) string {
+	return json.encode(EventPayload{
+		kind:    event.kind.str()
+		version: event.version
+		os:      event.os
+		arch:    event.arch
+	})
+}

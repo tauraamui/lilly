@@ -15,14 +15,6 @@
 module telemetry
 
 import net.http
-import json
-
-struct EventPayload {
-	kind    string
-	version string
-	os      string
-	arch    string
-}
 
 pub struct HttpProvider {
 	endpoint string
@@ -35,12 +27,10 @@ pub fn HttpProvider.new(endpoint string) HttpProvider {
 }
 
 pub fn (p HttpProvider) send_event(event Event) ! {
-	payload := json.encode(EventPayload{
-		kind:    event.kind.str()
-		version: event.version
-		os:      event.os
-		arch:    event.arch
-	})
+	payload := encode_event(event)
+	p.post(payload)!
+}
 
+pub fn (p HttpProvider) post(payload string) ! {
 	http.post_json(p.endpoint, payload)!
 }

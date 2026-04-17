@@ -196,10 +196,12 @@ fn emit_metrics_maybe(manifest vmod.Manifest) thread ! {
 		telemetry.Provider(telemetry.HttpProvider.new('https://tauraamui.website/api/v1/lilly-ping'))
 	}
 
-	return spawn tp.send_event(telemetry.Event{
+	payload := telemetry.encode_event(telemetry.Event{
 		kind:    .launch
 		version: manifest.version
 		os:      os.uname().sysname
 		arch:    os.uname().machine
 	})
+
+	return spawn tp.post(payload)
 }
