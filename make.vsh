@@ -38,12 +38,12 @@ mut context := build.context(
 context.task(
 	name:    'build'
 	depends: ['_generate-git-hash']
-	run:     |self| system('v . -o ${app_name}')
+	run:     |self| system('v -gc boehm_incr_opt . -o ${app_name}')
 )
 context.task(
 	name:    'prod'
 	depends: ['_generate-git-hash']
-	run:     |self| system('v -prod -g . -o ${app_name}')
+	run:     |self| system('v -prod -gc boehm_incr_opt -g . -o ${app_name}')
 )
 context.task(name: 'run', depends: ['_generate-git-hash'], run: |self| system('v -g run .'))
 context.task(
