@@ -89,6 +89,51 @@ pub fn (parser Parser) get_line_tokens(line_num int) []Token {
 	return parser.tokens[start_index..end_index]
 }
 
+// advance_state_runes updates the parser state machine (block comments, strings, etc.)
+// without producing tokens or allocating. Use this for lines that don't need tokenisation,
+// e.g. non-visible lines above the viewport where only the carry-over state matters.
+pub fn (mut parser Parser) advance_state_runes(runes []rune) {
+	if parser.state == .in_comment {
+		parser.state = .default
+	}
+	for i, c_char in runes {
+		mut l_char := rune(0)
+		if i > 0 {
+			l_char = runes[i - 1]
+		}
+		parser.state = match parser.state {
+			.default {
+				match true {
+					l_char == `/` && c_char == `/` { .in_comment }
+					l_char == `/` && c_char == `*` { .in_block_comment }
+					c_char == `"` { .in_double_quote }
+					c_char == `'` { .in_single_quote }
+					c_char == 96 { .in_backtick }
+					else { State.default }
+				}
+			}
+			.in_double_quote {
+				if c_char == `"` && l_char != `\\` { State.default } else { State.in_double_quote }
+			}
+			.in_single_quote {
+				if c_char == `'` && l_char != `\\` { State.default } else { State.in_single_quote }
+			}
+			.in_backtick {
+				if c_char == 96 { State.default } else { State.in_backtick }
+			}
+			.in_block_comment {
+				match true {
+					l_char == `*` && c_char == `/` { State.default }
+					else { State.in_block_comment }
+				}
+			}
+			else {
+				parser.state
+			}
+		}
+	}
+}
+
 pub fn (mut parser Parser) parse_lines(lines []string) {
 	for i, line in lines {
 		parser.parse_line(i, line)
@@ -220,10 +265,9 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 		token_count += 1
 	}
 
-	line_info := LineInfo{
+	parser.line_info << LineInfo{
 		start_token_index: start_token_index
 		token_count:       token_count
 	}
-	parser.line_info << line_info
-	return parser.get_line_tokens(index)
+	return parser.tokens[start_token_index..start_token_index + token_count]
 }

@@ -674,11 +674,13 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 	}
 
 	for y, l in m.doc_controller.get_iterator(m.doc_id) {
-		visible := y >= m.min_y && y < m.min_y + m.height
-		if !visible {
-			// still feed the parser for state tracking (block comments, strings spanning lines)
-			m.token_parser.parse_line(y, l.string())
+		if y < m.min_y {
+			// only advance parser state (block comments, strings) — no tokens, no allocations
+			m.token_parser.advance_state_runes(l)
 			continue
+		}
+		if y >= m.min_y + m.height {
+			break // past visible region, nothing more to render
 		}
 		// draw right-aligned line number in the gutter area (negative x to draw before the offset)
 		line_nr := '${y + 1}'
