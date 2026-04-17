@@ -35,6 +35,7 @@ mut:
 	cursor_blink_frame  int
 	last_filtered_query string
 	loading             bool
+	cached_cwd          string
 }
 
 pub struct OpenDialogMsg {
@@ -70,11 +71,12 @@ pub fn close_file_picker() tea.Msg {
 
 pub fn (mut m FilePickerModel) init() fn () tea.Msg {
 	m.loading = true
+	m.cached_cwd = os.getwd()
 	m.input_field = boba.BorderedInputField.new(m.theme.petal_pink)
 	m.input_field.focus()
 	mut cmds := []tea.Cmd{}
 	cmds << m.input_field.init()
-	cmds << [tea.emit_resize, load_files(os.getwd())]
+	cmds << [tea.emit_resize, load_files(m.cached_cwd)]
 	// return tea.batch(tea.emit_resize, input_init_cmd, load_files(os.getwd()))
 	return tea.batch_array(cmds)
 }
@@ -295,6 +297,7 @@ struct RenderFilePathLineParams {
 	height             int
 	is_selected        bool
 	selection_bg_color tea.Color
+	cwd                string
 }
 
 fn render_file_path_line(mut ctx tea.Context, opts RenderFilePathLineParams) {
@@ -306,7 +309,7 @@ fn render_file_path_line(mut ctx tea.Context, opts RenderFilePathLineParams) {
 		ctx.set_bg_color(selected_path_highlight_bg_color)
 	}
 	ctx.draw_rect(0, opts.height - 3, opts.width - 2, 1)
-	ctx.draw_text(0, opts.height - 3, prefix + opts.file_path.replace(os.getwd(), '.'))
+	ctx.draw_text(0, opts.height - 3, prefix + opts.file_path.replace(opts.cwd, '.'))
 	if opts.is_selected {
 		ctx.reset_color()
 		ctx.reset_bg_color()
@@ -321,7 +324,8 @@ fn (m FilePickerModel) max_visible_items() int {
 }
 
 fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int, height int, border_color tea.Color) {
-	tea.new_layout().border(.normal).border_color(border_color).size(width, height).render(mut r_ctx, fn [m, width, height] (mut ctx tea.Context) {
+	cwd := m.cached_cwd
+	tea.new_layout().border(.normal).border_color(border_color).size(width, height).render(mut r_ctx, fn [m, width, height, cwd] (mut ctx tea.Context) {
 		max_width := width - 2
 		max_height := height - 2
 		ctx.set_clip_area(tea.ClipArea{0, 0, max_width - 1, max_height})
@@ -347,6 +351,7 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 				height:             height
 				is_selected:        is_selected
 				selection_bg_color: m.theme.highlight_bg_color
+				cwd:                cwd
 			)
 		}
 		ctx.clear_offsets_from(list_offset_id)
