@@ -14,7 +14,7 @@
 
 module syntax
 
-enum State {
+pub enum State {
 	default
 	in_comment
 	in_block_comment
@@ -77,6 +77,14 @@ pub fn (mut parser Parser) reset() {
 	parser.pending_token = none
 	parser.tokens.clear()
 	parser.line_info.clear()
+}
+
+pub fn (parser Parser) current_state() State {
+	return parser.state
+}
+
+pub fn (mut parser Parser) set_state(s State) {
+	parser.state = s
 }
 
 pub fn (parser Parser) get_line_tokens(line_num int) []Token {
