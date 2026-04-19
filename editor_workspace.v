@@ -677,7 +677,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		else {}
 	}
 
-	if msg !is tea.ResizedMsg {
+	if msg !is tea.ResizedMsg && msg !is tea.KeyMsg {
 		cmds << m.forward_msg_to_editors(msg)
 	}
 
