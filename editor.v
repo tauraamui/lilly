@@ -59,15 +59,15 @@ mut:
 	height int
 	min_y  int
 
-	cursor_pos     cursor.Pos
-	doc_controller &documents.Controller
-	cb             &clipboard.Manager
-	token_parser        syntax.Parser
-	lang_syn            syntax.Syntax
-	arena               Arena
-	rune_buf            []rune
-	parser_line_states  []syntax.State
-	parser_cache_dirty  bool = true
+	cursor_pos         cursor.Pos
+	doc_controller     &documents.Controller
+	cb                 &clipboard.Manager
+	token_parser       syntax.Parser
+	lang_syn           syntax.Syntax
+	arena              Arena
+	rune_buf           []rune
+	parser_line_states []syntax.State
+	parser_cache_dirty bool = true
 
 	sel_start_pos ?cursor.Pos
 	sel_mode      petal.Mode = .normal // tracks which visual mode (.visual or .visual_line)
