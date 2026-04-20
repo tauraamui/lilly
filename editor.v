@@ -629,11 +629,11 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					return m.clone(), tea.batch_array(cmds)
 				}
 				GoToLineMsg {
-				if msg.id == m.id {
-					m.goto_line(msg.msg.line)
+					if msg.id == m.id {
+						m.goto_line(msg.msg.line)
+					}
 				}
-			}
-			SyntaxLoadedMsg {
+				SyntaxLoadedMsg {
 					if msg.id == m.id {
 						m.lang_syn = msg.msg.syn
 						if msg.msg.err_msg.len > 0 {
@@ -932,8 +932,8 @@ fn (mut m EditorModel) goto_line(line int) {
 	}
 	current := m.cursor_pos.y
 	if target > current {
-		m.cursor_pos = m.doc_controller.move_cursor_down_by(m.doc_id, m.cursor_pos, target - current,
-			.normal)
+		m.cursor_pos = m.doc_controller.move_cursor_down_by(m.doc_id, m.cursor_pos,
+			target - current, .normal)
 	} else if target < current {
 		m.cursor_pos = m.doc_controller.move_cursor_up_by(m.doc_id, m.cursor_pos, current - target,
 			.normal)
