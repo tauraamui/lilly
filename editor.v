@@ -222,7 +222,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					.runes {
 						m.invalidate_parser_cache()
 						for cr in msg.key_msg.string().runes_iterator() {
-							m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
+							m.insert_rune(cr)
 						}
 					}
 					.special {
@@ -658,6 +658,27 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 
 	m.ensure_cursor_visible()
 	return m.clone(), tea.batch_array(cmds)
+}
+
+fn (mut m EditorModel) insert_rune(cr rune) {
+	if m.lang_syn.name.len > 0 {
+		closing := match cr {
+			`(` { `)` }
+			`{` { `}` }
+			`'` { `'` }
+			`"` { `"` }
+			96 { rune(96) }
+			else { rune(0) }
+		}
+		if closing != 0 {
+			m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
+			m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, closing)
+			m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id, m.cursor_pos)
+			m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {}
+			return
+		}
+	}
+	m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
 }
 
 const active_editor_border_color = palette.petal_pink_color
