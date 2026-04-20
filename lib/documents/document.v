@@ -126,12 +126,31 @@ pub fn (mut c Controller) write_document(doc_id int) ! {
 	// TODO(tauraamui): change error message emission to be just generic message emission
 	// with type flags, so the location is the same, but formatting or visual rep is different
 	target_file_path := c.docs[doc_id].file_path
+	mut original_mode := 0
+	mut has_original_mode := false
+	if os.exists(target_file_path) {
+		stat := os.stat(target_file_path) or {
+			return error('failed to stat existing file: ${target_file_path}: ${err}')
+		}
+		original_mode = int(stat.mode) & 0o7777
+		has_original_mode = true
+	}
 	temp_file_path := os.join_path(os.temp_dir(), os.base(target_file_path))
 	c.docs[doc_id].write_to(temp_file_path) or {
 		return error('failed to write to temp location: ${temp_file_path}')
 	}
+	if has_original_mode {
+		os.chmod(temp_file_path, original_mode) or {
+			return error('failed to apply original permissions to temp file: ${temp_file_path}: ${err}')
+		}
+	}
 	os.mv(temp_file_path, c.docs[doc_id].file_path) or {
 		return error('failed to move temp location: ${temp_file_path} to dest: ${target_file_path}')
+	}
+	if has_original_mode {
+		os.chmod(target_file_path, original_mode) or {
+			return error('failed to apply original permissions to target file: ${target_file_path}: ${err}')
+		}
 	}
 }
 
