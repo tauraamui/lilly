@@ -59,13 +59,15 @@ mut:
 	height int
 	min_y  int
 
-	cursor_pos     cursor.Pos
-	doc_controller &documents.Controller
-	cb             &clipboard.Manager
-	token_parser   syntax.Parser
-	lang_syn       syntax.Syntax
-	arena          Arena
-	rune_buf       []rune
+	cursor_pos         cursor.Pos
+	doc_controller     &documents.Controller
+	cb                 &clipboard.Manager
+	token_parser       syntax.Parser
+	lang_syn           syntax.Syntax
+	arena              Arena
+	rune_buf           []rune
+	parser_line_states []syntax.State
+	parser_cache_dirty bool = true
 
 	sel_start_pos ?cursor.Pos
 	sel_mode      petal.Mode = .normal // tracks which visual mode (.visual or .visual_line)
@@ -203,6 +205,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			.insert {
 				match msg.key_msg.k_type {
 					.runes {
+						m.invalidate_parser_cache()
 						for cr in msg.key_msg.string().runes_iterator() {
 							m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
 						}
@@ -210,6 +213,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					.special {
 						match msg.key_msg.string() {
 							'enter' {
+								m.invalidate_parser_cache()
 								leading_whitespace := m.doc_controller.leading_whitespace_on_current_line(m.doc_id,
 									m.cursor_pos)
 								m.cursor_pos = m.doc_controller.insert_newline(m.doc_id,
@@ -220,14 +224,17 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 								}
 							}
 							'backspace' {
+								m.invalidate_parser_cache()
 								m.cursor_pos = m.doc_controller.backspace(m.doc_id, m.cursor_pos) or {
 									m.cursor_pos
 								}
 							}
 							'delete' {
+								m.invalidate_parser_cache()
 								m.doc_controller.delete(m.doc_id, m.cursor_pos)
 							}
 							'ctrl+i', 'tab' {
+								m.invalidate_parser_cache()
 								if m.expand_tabs {
 									for i := 0; i != m.tab_width; i++ {
 										m.cursor_pos = m.doc_controller.insert_char(m.doc_id,
@@ -353,6 +360,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 							}
 							'd' {
 								if sel_start := m.sel_start_pos {
+									m.invalidate_parser_cache()
 									m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
 									m.yank_visual_selection(sel_start)
 									m.cursor_pos = m.doc_controller.delete_visual_range(m.doc_id, cursor.Range{
@@ -420,6 +428,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 							}
 							'd' {
 								if sel_start := m.sel_start_pos {
+									m.invalidate_parser_cache()
 									m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
 									m.yank_visual_line_selection(sel_start)
 									m.cursor_pos = m.doc_controller.delete_range(m.doc_id, cursor.Range{
@@ -474,6 +483,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 							}
 							'ctrl+r' {
 								if pos := m.doc_controller.redo(m.doc_id) {
+									m.invalidate_parser_cache()
 									m.cursor_pos = pos
 								}
 							}
@@ -492,6 +502,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 								m.ensure_cursor_visible()
 							}
 							'delete' {
+								m.invalidate_parser_cache()
 								m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
 								m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {
 									cmds << raise_error('error: ${err}')
@@ -553,6 +564,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 							''
 						}
 						if current_line.len > 0 && current_line.trim_space().len == 0 {
+							m.invalidate_parser_cache()
 							m.cursor_pos = m.doc_controller.clear_line(m.doc_id, m.cursor_pos)
 						} else {
 							m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id, m.cursor_pos)
@@ -623,6 +635,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		}
 		else {}
 	}
+
 	m.ensure_cursor_visible()
 	return m.clone(), tea.batch_array(cmds)
 }
@@ -654,6 +667,11 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 	m.arena.reset()
 	m.token_parser.reset()
 
+	// rebuild parser state cache when document content has changed
+	if m.parser_cache_dirty {
+		m.rebuild_parser_state_cache()
+	}
+
 	// compute fixed gutter width based on the largest visible line number (1-based)
 	max_line_nr := m.min_y + m.height
 	gutter_width := num_digits(max_line_nr) + 1 // +1 for padding after the number
@@ -673,11 +691,14 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 		m.render_cursor_line_highlight(mut ctx, cursor_vpos.y)
 	}
 
+	// restore cached parser state at viewport start instead of rescanning from line 0
+	if m.min_y < m.parser_line_states.len {
+		m.token_parser.set_state(m.parser_line_states[m.min_y])
+	}
+
 	for y, l in m.doc_controller.get_iterator(m.doc_id) {
 		if y < m.min_y {
-			// only advance parser state (block comments, strings) — no tokens, no allocations
-			m.token_parser.advance_state_runes(l)
-			continue
+			continue // skip entirely — parser state is restored from cache
 		}
 		if y >= m.min_y + m.height {
 			break // past visible region, nothing more to render
@@ -723,6 +744,7 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 							}
 							else {}
 						}
+
 						prev_token := if i - 1 >= 0 {
 							?syntax.Token(line_tokens[i - 1])
 						} else {
@@ -849,6 +871,21 @@ fn (m EditorModel) render_cursor(mut ctx tea.Context) {
 	}
 }
 
+fn (mut m EditorModel) rebuild_parser_state_cache() {
+	m.parser_line_states.clear()
+	m.token_parser.reset()
+	for _, l in m.doc_controller.get_iterator(m.doc_id) {
+		m.parser_line_states << m.token_parser.current_state()
+		m.token_parser.advance_state_runes(l)
+	}
+	m.parser_cache_dirty = false
+	m.token_parser.reset()
+}
+
+fn (mut m EditorModel) invalidate_parser_cache() {
+	m.parser_cache_dirty = true
+}
+
 fn (mut m EditorModel) ensure_cursor_visible() {
 	if m.height <= 0 {
 		return
@@ -866,6 +903,7 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 	if op := action.operator {
 		match op {
 			`d` {
+				m.invalidate_parser_cache()
 				match action.motion {
 					'line' {
 						m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
@@ -898,11 +936,13 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 			'u' {
 				for _ in 0 .. count {
 					if pos := m.doc_controller.undo(m.doc_id) {
+						m.invalidate_parser_cache()
 						m.cursor_pos = pos
 					}
 				}
 			}
 			'o' {
+				m.invalidate_parser_cache()
 				m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
 				m.cursor_pos = m.doc_controller.move_cursor_to_line_end(m.doc_id, m.cursor_pos,
 					.insert)
@@ -996,6 +1036,7 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 				}
 			}
 			'x' {
+				m.invalidate_parser_cache()
 				m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
 				for _ in 0 .. count {
 					m.doc_controller.delete_char_at(m.doc_id, m.cursor_pos)
@@ -1028,11 +1069,13 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 				cmds << switch_mode(.visual_line)
 			}
 			'p' {
+				m.invalidate_parser_cache()
 				m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
 				m.paste_after()
 				m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
 			}
 			'P' {
+				m.invalidate_parser_cache()
 				m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
 				m.paste_before()
 				m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
