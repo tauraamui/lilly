@@ -42,13 +42,13 @@ fn test_editor_model_insert_rune_auto_closes_parentheses() {
 	editor.insert_rune(`(`)
 
 	first_line := editor.doc_controller.get_line_at(editor.doc_id, 0) or { '' }
-	assert first_line == "()"
+	assert first_line == '()'
 	assert editor.cursor_pos == cursor.Pos.new(1, 0)
 
 	editor.insert_rune(`a`)
 
 	updated_line := editor.doc_controller.get_line_at(editor.doc_id, 0) or { '' }
-	assert updated_line == "(a)"
+	assert updated_line == '(a)'
 	assert editor.cursor_pos == cursor.Pos.new(2, 0)
 }
 
@@ -80,13 +80,13 @@ fn test_editor_model_insert_rune_auto_closes_braces() {
 	editor.insert_rune(`{`)
 
 	first_line := editor.doc_controller.get_line_at(editor.doc_id, 0) or { '' }
-	assert first_line == "{}"
+	assert first_line == '{}'
 	assert editor.cursor_pos == cursor.Pos.new(1, 0)
 
 	editor.insert_rune(`b`)
 
 	updated_line := editor.doc_controller.get_line_at(editor.doc_id, 0) or { '' }
-	assert updated_line == "{b}"
+	assert updated_line == '{b}'
 	assert editor.cursor_pos == cursor.Pos.new(2, 0)
 }
 
@@ -118,13 +118,13 @@ fn test_editor_model_insert_rune_auto_closes_double_quotes() {
 	editor.insert_rune(`"`)
 
 	first_line := editor.doc_controller.get_line_at(editor.doc_id, 0) or { '' }
-	assert first_line == "\"\""
+	assert first_line == '""'
 	assert editor.cursor_pos == cursor.Pos.new(1, 0)
 
 	editor.insert_rune(`x`)
 
 	updated_line := editor.doc_controller.get_line_at(editor.doc_id, 0) or { '' }
-	assert updated_line == "\"x\""
+	assert updated_line == '"x"'
 	assert editor.cursor_pos == cursor.Pos.new(2, 0)
 }
 
@@ -194,13 +194,13 @@ fn test_editor_model_insert_rune_auto_closes_backticks() {
 	editor.insert_rune(rune(96))
 
 	first_line := editor.doc_controller.get_line_at(editor.doc_id, 0) or { '' }
-	assert first_line == "``"
+	assert first_line == '``'
 	assert editor.cursor_pos == cursor.Pos.new(1, 0)
 
 	editor.insert_rune(`d`)
 
 	updated_line := editor.doc_controller.get_line_at(editor.doc_id, 0) or { '' }
-	assert updated_line == "`d`"
+	assert updated_line == '`d`'
 	assert editor.cursor_pos == cursor.Pos.new(2, 0)
 }
 
@@ -229,7 +229,7 @@ fn test_editor_model_insert_rune_without_syntax_does_not_auto_close_parentheses(
 	editor.insert_rune(`(`)
 
 	first_line := editor.doc_controller.get_line_at(editor.doc_id, 0) or { '' }
-	assert first_line == "("
+	assert first_line == '('
 	assert editor.cursor_pos == cursor.Pos.new(1, 0)
 }
 
@@ -258,7 +258,7 @@ fn test_editor_model_insert_rune_without_syntax_does_not_auto_close_double_quote
 	editor.insert_rune(`"`)
 
 	first_line := editor.doc_controller.get_line_at(editor.doc_id, 0) or { '' }
-	assert first_line == "\""
+	assert first_line == '"'
 	assert editor.cursor_pos == cursor.Pos.new(1, 0)
 }
 
@@ -316,6 +316,6 @@ fn test_editor_model_insert_rune_without_syntax_does_not_auto_close_backticks() 
 	editor.insert_rune(rune(96))
 
 	first_line := editor.doc_controller.get_line_at(editor.doc_id, 0) or { '' }
-	assert first_line == "`"
+	assert first_line == '`'
 	assert editor.cursor_pos == cursor.Pos.new(1, 0)
 }

@@ -670,6 +670,7 @@ fn (mut m EditorModel) insert_rune(cr rune) {
 			96 { rune(96) }
 			else { rune(0) }
 		}
+
 		if closing != 0 {
 			m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
 			m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, closing)
