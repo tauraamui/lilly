@@ -632,7 +632,11 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					cmds << close_active_split
 				}
 				else {
-					cmds << raise_error("unknown command '${msg.command}'")
+					if line_cmd := m.line_jump_command_for(msg.command) {
+						cmds << line_cmd
+					} else {
+						cmds << raise_error("unknown command '${msg.command}'")
+					}
 				}
 			}
 		}
@@ -686,6 +690,24 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	}
 
 	return m.clone(), tea.batch_array(cmds)
+}
+
+fn (m EditorWorkspaceModel) line_jump_command_for(command string) ?tea.Cmd {
+	if command.len == 0 || m.editors.len == 0 {
+		return none
+	}
+	editor_id := m.active_editor_id
+	if editor_id !in m.editors {
+		return none
+	}
+	for ch in command {
+		if ch < `0` || ch > `9` {
+			return none
+		}
+	}
+	line_number := command.int()
+	target_line := if line_number <= 0 { 1 } else { line_number }
+	return goto_line(editor_id, target_line)
 }
 
 fn (mut m EditorWorkspaceModel) recalculate_editor_layouts() []tea.Cmd {
