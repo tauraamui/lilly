@@ -119,6 +119,21 @@ fn write_to_disk(id int) tea.Cmd {
 	}
 }
 
+struct GoToLineMsg {
+	line int
+}
+
+fn goto_line(id int, line int) tea.Cmd {
+	return fn [id, line] () tea.Msg {
+		return EditorModelMsg{
+			id:  id
+			msg: GoToLineMsg{
+				line: line
+			}
+		}
+	}
+}
+
 @[params]
 struct EditorModelNewParams {
 	theme          theme.Theme
@@ -613,7 +628,12 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					m.ensure_cursor_visible()
 					return m.clone(), tea.batch_array(cmds)
 				}
-				SyntaxLoadedMsg {
+				GoToLineMsg {
+				if msg.id == m.id {
+					m.goto_line(msg.msg.line)
+				}
+			}
+			SyntaxLoadedMsg {
 					if msg.id == m.id {
 						m.lang_syn = msg.msg.syn
 						if msg.msg.err_msg.len > 0 {
@@ -895,6 +915,47 @@ fn (mut m EditorModel) ensure_cursor_visible() {
 	} else if m.cursor_pos.y >= m.min_y + m.height {
 		m.min_y = m.cursor_pos.y - m.height + 1
 	}
+}
+
+fn (mut m EditorModel) goto_line(line int) {
+	line_count := m.doc_controller.line_count(m.doc_id)
+	if line_count == 0 {
+		m.cursor_pos = cursor.Pos.new(0, 0)
+		m.min_y = 0
+		return
+	}
+	mut target := line - 1
+	if target < 0 {
+		target = 0
+	} else if target >= line_count {
+		target = line_count - 1
+	}
+	current := m.cursor_pos.y
+	if target > current {
+		m.cursor_pos = m.doc_controller.move_cursor_down_by(m.doc_id, m.cursor_pos, target - current,
+			.normal)
+	} else if target < current {
+		m.cursor_pos = m.doc_controller.move_cursor_up_by(m.doc_id, m.cursor_pos, current - target,
+			.normal)
+	}
+	m.center_cursor_line()
+}
+
+fn (mut m EditorModel) center_cursor_line() {
+	if m.height <= 0 {
+		m.min_y = if m.cursor_pos.y > 0 { m.cursor_pos.y } else { 0 }
+		return
+	}
+	line_count := m.doc_controller.line_count(m.doc_id)
+	mut new_min := m.cursor_pos.y - m.height / 2
+	if new_min < 0 {
+		new_min = 0
+	}
+	max_top := if line_count > m.height { line_count - m.height } else { 0 }
+	if new_min > max_top {
+		new_min = max_top
+	}
+	m.min_y = new_min
 }
 
 fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
