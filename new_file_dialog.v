@@ -48,7 +48,7 @@ fn (mut m NewFileDialogModel) init() fn () tea.Msg {
 	mut cmds := []tea.Cmd{}
 	cmds << m.input_field.init()
 	resized_field, resized_cmd := m.input_field.update(tea.ResizedMsg{
-		window_width: m.input_width()
+		window_width:  m.input_width()
 		window_height: 1
 	})
 	cmds << resized_cmd
@@ -64,7 +64,7 @@ fn (mut m NewFileDialogModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 
 	if msg is tea.ResizedMsg {
 		resized_field, resized_cmd := m.input_field.update(tea.ResizedMsg{
-			window_width: m.input_width()
+			window_width:  m.input_width()
 			window_height: 1
 		})
 		cmds << resized_cmd
