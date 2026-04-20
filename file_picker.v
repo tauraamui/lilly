@@ -22,6 +22,8 @@ import lib.palette
 import lib.petal.theme
 import lib.boba
 
+const max_preview_lines = 500
+
 struct FilePickerModel {
 	theme theme.Theme
 mut:
@@ -36,6 +38,8 @@ mut:
 	last_filtered_query string
 	loading             bool
 	cached_cwd          string
+	preview_lines       []string
+	preview_path        string
 }
 
 pub struct OpenDialogMsg {
@@ -178,6 +182,29 @@ fn filter_file_paths(file_paths []string, query string, last_query string, last_
 	return all_scored.map(it.path)
 }
 
+fn (mut m FilePickerModel) load_preview() {
+	if m.filtered_files.len == 0 || m.selected_index >= m.filtered_files.len {
+		m.preview_lines = []
+		m.preview_path = ''
+		return
+	}
+	selected := m.filtered_files[m.selected_index]
+	if selected == m.preview_path {
+		return
+	}
+	m.preview_path = selected
+	content := os.read_file(selected) or {
+		m.preview_lines = []
+		return
+	}
+	lines := content.split_into_lines()
+	m.preview_lines = if lines.len > max_preview_lines {
+		lines[..max_preview_lines]
+	} else {
+		lines
+	}
+}
+
 pub struct ClearQueryFieldMsg {}
 
 fn clear_query_field() tea.Msg {
@@ -288,6 +315,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		else {}
 	}
 
+	m.load_preview()
 	return m.clone(), tea.batch_array(cmds)
 }
 
@@ -359,6 +387,59 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 	})
 }
 
+fn sanitize_preview_line(line string, max_width int) string {
+	mut result := []rune{cap: max_width}
+	mut visual_width := 0
+	for r in line.runes() {
+		if visual_width >= max_width {
+			break
+		}
+		if r == `\t` {
+			// Replace tab with spaces (4-space tab stop)
+			spaces := 4 - (visual_width % 4)
+			for _ in 0 .. spaces {
+				if visual_width >= max_width {
+					break
+				}
+				result << ` `
+				visual_width++
+			}
+		} else if r < 32 || r == 127 {
+			// Skip control characters
+			continue
+		} else {
+			result << r
+			visual_width++
+		}
+	}
+	return result.string()
+}
+
+fn (m FilePickerModel) render_preview_pane(mut r_ctx tea.Context, width int, height int, border_color tea.Color) {
+	preview_lines := m.preview_lines
+	tea.new_layout().border(.normal).border_color(border_color).size(width, height).render(mut r_ctx, fn [m, preview_lines, width, height] (mut ctx tea.Context) {
+		max_width := width - 2
+		max_height := height - 2
+		ctx.set_clip_area(tea.ClipArea{0, 0, max_width - 1, max_height})
+		defer { ctx.clear_clip_area() }
+		ctx.clear_area(0, 0, max_width, max_height)
+
+		if preview_lines.len == 0 {
+			ctx.set_color(m.theme.subtle_light_grey)
+			no_preview_label := 'No preview'
+			ctx.draw_text((width / 2) - tea.visible_len(no_preview_label) / 2, height / 2,
+				no_preview_label)
+			ctx.reset_color()
+			return
+		}
+
+		visible_lines := if preview_lines.len > max_height { max_height } else { preview_lines.len }
+		for i in 0 .. visible_lines {
+			ctx.draw_text(0, i, sanitize_preview_line(preview_lines[i], max_width))
+		}
+	})
+}
+
 fn clamp_files_list_to_scrolled(start int, max_items int, initial_files_list []string) []string {
 	if initial_files_list.len == 0 || max_items <= 0 {
 		return []
@@ -393,7 +474,14 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 	ctx.clear_area(0, 0, m.width, m.height)
 
 	max_results_height := m.height - 3
-	m.render_file_results_pane(mut ctx, m.width, max_results_height, m.theme.petal_pink)
+	left_width := m.width / 2
+	right_width := m.width - left_width
+
+	m.render_file_results_pane(mut ctx, left_width, max_results_height, m.theme.petal_pink)
+
+	preview_offset_id := ctx.push_offset(tea.Offset{ x: left_width })
+	m.render_preview_pane(mut ctx, right_width, max_results_height, m.theme.petal_pink)
+	ctx.clear_offsets_from(preview_offset_id)
 
 	ctx.push_offset(tea.Offset{ y: max_results_height })
 	m.input_field.view(mut ctx)
