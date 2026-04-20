@@ -207,6 +207,10 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			m.reset_leader_mode()
 			cmds << open_file_picker(m.theme)
 		}
+		'nf' {
+			m.reset_leader_mode()
+			cmds << open_new_file_dialog(m.theme)
+		}
 		'xx' {
 			m.reset_leader_mode()
 			cmds << toggle_debug_screen
@@ -306,8 +310,21 @@ fn render_copyright_footer(mut ctx tea.Context, petal_pink tea.Color) {
 	ctx.reset_color()
 }
 
-const basic_command_help = [
-	' Find File                   <leader>ff',
+const keybind_combo_column_start = 30
+
+const basic_command_help_labels = [
+	' Find File',
+	' New File',
+]!
+
+const basic_command_help_combos = [
+	'<leader>ff',
+	'<leader>nf',
+]!
+
+const basic_command_help_suffixes = [
+	'ff',
+	'nf',
 ]!
 
 const disabled_command_help = [
@@ -315,8 +332,15 @@ const disabled_command_help = [
 	' Recent Files                <leader>fo',
 	' File Browser                <leader>fv',
 	' Colorschemes                <leader>cs',
-	' New File                    <leader>nf',
 ]!
+
+fn format_keybind_help(label string, combo string) string {
+	mut spacing := keybind_combo_column_start - tea.visible_len(label)
+	if spacing < 1 {
+		spacing = 1
+	}
+	return '${label}${' '.repeat(spacing)}${combo}'
+}
 
 const pending_match_color = tea.Color.ansi(244)
 
@@ -337,18 +361,20 @@ fn render_keybinds_list(mut ctx tea.Context,
 	ctx.draw_text(-(tea.visible_len(leader_key_label) / 2), 0, leader_key_label)
 	ctx.push_offset(tea.Offset{ y: 1 })
 
-	for l in basic_command_help {
+	for i, label in basic_command_help_labels {
+		combo := basic_command_help_combos[i]
+		suffix := basic_command_help_suffixes[i]
+		display_text := format_keybind_help(label, combo)
 		ctx.push_offset(tea.Offset{ y: 1 })
-		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(l) / 2) })
+		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(display_text) / 2) })
 		if opts.in_leader_mode {
-			fg_color := if opts.leader_data == 'f' {
-				opts.closest_match_color
+			if opts.leader_data.len > 0 && suffix.starts_with(opts.leader_data) {
+				ctx.set_color(opts.closest_match_color)
 			} else {
-				pending_match_color
+				ctx.set_color(pending_match_color)
 			}
-			ctx.set_color(fg_color)
 		}
-		ctx.draw_text(0, 0, l)
+		ctx.draw_text(0, 0, display_text)
 		if opts.in_leader_mode {
 			ctx.reset_color()
 		}
