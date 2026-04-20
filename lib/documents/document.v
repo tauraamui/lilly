@@ -259,7 +259,7 @@ pub fn (c Controller) move_cursor_to_previous_blank_line(doc_id int, pos cursor.
 
 pub fn (mut c Controller) insert_newline(doc_id int, pos cursor.Pos) cursor.Pos {
 	c.docs[doc_id].insert_char(`\n`)
-	return c.docs[doc_id].move_cursor_down(pos, .insert) // will need to have a 'cursor_up_and_start'
+	return cursor.Pos.new(0, pos.y + 1)
 }
 
 pub fn (mut c Controller) insert_char(doc_id int, pos cursor.Pos, data rune) cursor.Pos {
