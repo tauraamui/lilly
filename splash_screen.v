@@ -310,25 +310,21 @@ fn render_copyright_footer(mut ctx tea.Context, petal_pink tea.Color) {
 	ctx.reset_color()
 }
 
-struct KeybindHelpEntry {
-	label  string
-	combo  string
-	suffix string
-}
-
 const keybind_combo_column_start = 30
 
-const basic_command_help = [
-	KeybindHelpEntry{
-		label:  ' Find File'
-		combo:  '<leader>ff'
-		suffix: 'ff'
-	},
-	KeybindHelpEntry{
-		label:  ' New File'
-		combo:  '<leader>nf'
-		suffix: 'nf'
-	},
+const basic_command_help_labels = [
+	' Find File',
+	' New File',
+]!
+
+const basic_command_help_combos = [
+	'<leader>ff',
+	'<leader>nf',
+]!
+
+const basic_command_help_suffixes = [
+	'ff',
+	'nf',
 ]!
 
 const disabled_command_help = [
@@ -338,12 +334,12 @@ const disabled_command_help = [
 	' Colorschemes                <leader>cs',
 ]!
 
-fn format_keybind_help(entry KeybindHelpEntry) string {
-	mut spacing := keybind_combo_column_start - tea.visible_len(entry.label)
+fn format_keybind_help(label string, combo string) string {
+	mut spacing := keybind_combo_column_start - tea.visible_len(label)
 	if spacing < 1 {
 		spacing = 1
 	}
-	return '${entry.label}${' '.repeat(spacing)}${entry.combo}'
+	return '${label}${' '.repeat(spacing)}${combo}'
 }
 
 const pending_match_color = tea.Color.ansi(244)
@@ -365,12 +361,14 @@ fn render_keybinds_list(mut ctx tea.Context,
 	ctx.draw_text(-(tea.visible_len(leader_key_label) / 2), 0, leader_key_label)
 	ctx.push_offset(tea.Offset{ y: 1 })
 
-	for entry in basic_command_help {
-		display_text := format_keybind_help(entry)
+	for i, label in basic_command_help_labels {
+		combo := basic_command_help_combos[i]
+		suffix := basic_command_help_suffixes[i]
+		display_text := format_keybind_help(label, combo)
 		ctx.push_offset(tea.Offset{ y: 1 })
 		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(display_text) / 2) })
 		if opts.in_leader_mode {
-			if opts.leader_data.len > 0 && entry.suffix.starts_with(opts.leader_data) {
+			if opts.leader_data.len > 0 && suffix.starts_with(opts.leader_data) {
 				ctx.set_color(opts.closest_match_color)
 			} else {
 				ctx.set_color(pending_match_color)
