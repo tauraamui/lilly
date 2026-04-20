@@ -144,6 +144,7 @@ pub fn (mut m InputField) update(msg tea.Msg) (InputField, fn () tea.Msg) {
 		}
 		else {}
 	}
+
 	return m.clone(), tea.batch_array(cmds)
 }
 

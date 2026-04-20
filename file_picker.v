@@ -287,6 +287,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		}
 		else {}
 	}
+
 	return m.clone(), tea.batch_array(cmds)
 }
 

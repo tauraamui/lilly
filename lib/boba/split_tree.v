@@ -96,6 +96,7 @@ pub fn (t SplitTree) find_editor_by_id(node SplitNode, target_id int) ?EditorInf
 			}
 		}
 	}
+
 	return none
 }
 
@@ -244,6 +245,7 @@ fn (t SplitTree) collect_editor_ids(node SplitNode) []int {
 			}
 		}
 	}
+
 	return ids
 }
 

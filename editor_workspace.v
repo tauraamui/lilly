@@ -338,6 +338,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 							}
 							else {}
 						}
+
 						return m.clone(), tea.batch_array(cmds)
 					}
 				}
@@ -368,6 +369,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 						}
 					}
 				}
+
 				return m.clone(), switch_mode(.normal)
 			}
 			.normal {
@@ -434,6 +436,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			}
 			else {}
 		}
+
 		for id, mut editor in m.editors {
 			e, cmd := editor.update(EditorModelKeyMsg{
 				key_msg: msg
@@ -659,6 +662,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					m.input_field.blur()
 				}
 			}
+
 			enriched_msg := SwitchModeMsg{
 				from: m.mode
 				mode: msg.mode

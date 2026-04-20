@@ -140,6 +140,7 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		}
 		else {}
 	}
+
 	screen, active_cmds := m.active_screen.update(msg)
 	if screen is DebuggableModel {
 		m.active_screen = screen

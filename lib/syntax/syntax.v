@@ -55,6 +55,7 @@ pub fn resolve_from_extension(file_path string) !Syntax {
 		'.pl' { builtin_perl_syntax }
 		else { '' }
 	}
+
 	if syn_data.len == 0 {
 		return noop_syntax
 	}

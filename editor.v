@@ -635,6 +635,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		}
 		else {}
 	}
+
 	m.ensure_cursor_visible()
 	return m.clone(), tea.batch_array(cmds)
 }
@@ -743,6 +744,7 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 							}
 							else {}
 						}
+
 						prev_token := if i - 1 >= 0 {
 							?syntax.Token(line_tokens[i - 1])
 						} else {
