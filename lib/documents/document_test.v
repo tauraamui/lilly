@@ -258,6 +258,25 @@ fn test_controller_move_cursor_right() {
 	assert ctrl.move_cursor_right(id, cursor.Pos.new(0, 0), .normal) == cursor.Pos.new(1, 0)
 }
 
+fn test_controller_write_document_preserves_permissions() ? {
+	file_path := os.join_path(os.temp_dir(), 'lilly_exec_perm_test_' + os.getpid().str() + '.vsh')
+	if os.exists(file_path) {
+		os.rm(file_path)!
+	}
+	os.write_file(file_path, '#!/bin/bash\necho hello\n')!
+	defer {
+		os.rm(file_path) or {}
+	}
+	expected_mode := 0o755
+	os.chmod(file_path, expected_mode)!
+	mut ctrl := Controller.new()
+	doc_id := ctrl.open_document(file_path)!
+	ctrl.docs[doc_id].data.set_content('#!/bin/bash\necho goodbye'.runes())
+	ctrl.write_document(doc_id)!
+	stat := os.stat(file_path)!
+	assert int(stat.mode) & 0o7777 == expected_mode
+}
+
 fn test_controller_insert_newline_between_braces_positions_cursor_at_line_start() {
 	mut ctrl, id := new_controller_with_content('{}')
 
