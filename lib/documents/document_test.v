@@ -258,6 +258,18 @@ fn test_controller_move_cursor_right() {
 	assert ctrl.move_cursor_right(id, cursor.Pos.new(0, 0), .normal) == cursor.Pos.new(1, 0)
 }
 
+fn test_controller_insert_newline_between_braces_positions_cursor_at_line_start() {
+	mut ctrl, id := new_controller_with_content('{}')
+
+	mut pos := cursor.Pos.new(1, 0)
+	ctrl.prepare_for_insertion_at(id, pos) or { panic(err) }
+	pos = ctrl.insert_newline(id, pos)
+
+	assert pos == cursor.Pos.new(0, 1)
+	assert ctrl.get_line_at(id, 0) or { panic(err) } == '{'
+	assert ctrl.get_line_at(id, 1) or { panic(err) } == '}'
+}
+
 fn test_controller_move_cursor_to_line_end() {
 	ctrl, id := new_controller_with_content(mock_content)
 	// mock_content first line: 'This is the.first line' (22 chars, last index 21)
