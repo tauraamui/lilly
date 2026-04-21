@@ -53,7 +53,8 @@ fn test_vmon_service_emits_events() {
 	lock events {
 		assert events.len > 0
 		assert events.any(it.action == vmon.Action.create && it.absolute_path() == file_a)
-		assert events.any(it.action == vmon.Action.move && it.absolute_path() == file_b && it.old_file_path == 'file.txt')
+		assert events.any(it.action == vmon.Action.move && it.absolute_path() == file_b
+			&& it.old_file_path == 'file.txt')
 	}
 }
 
