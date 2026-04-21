@@ -16,17 +16,17 @@ const scenarios = [
 	Scenario{
 		name:    'single-line-file'
 		command: './lilly ./testdata/fakefiles'
-		keys:    '<wait:2000><snapshot>;ff<wait:1000>0001<enter><wait:1000><snapshot>:q<enter><wait:500>'
+		keys:    '<wait:2000><snapshot>;ff<wait:1000>0001<enter><wait:1000>w<snapshot>:q<enter><wait:500>'
 	},
 	Scenario{
 		name:    'multi-line-file'
 		command: './lilly ./testdata/fakefiles'
-		keys:    '<wait:2000><snapshot>;ff<wait:1000>0002<enter><wait:1000><snapshot>:q<enter><wait:500>'
+		keys:    '<wait:2000><snapshot>;ff<wait:1000>0002<enter><wait:1000>w<snapshot>:q<enter><wait:500>'
 	},
 	Scenario{
 		name:    'scrolling-in-multi-line-code-file'
 		command: './lilly ./testdata/fakefiles'
-		keys:    '<wait:2000><snapshot>;ff<wait:1000>0003<enter><wait:1000><snapshot>}}}}<snapshot>}}}<snapshot>}}}}<snapshot>:q<enter><wait:500>'
+		keys:    '<wait:2000><snapshot>;ff<wait:1000>0003<enter><wait:1000>w<snapshot>}}}}<snapshot>}}}<snapshot>}}}}<snapshot>:q<enter><wait:500>'
 	},
 ]
 

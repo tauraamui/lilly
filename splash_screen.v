@@ -24,7 +24,12 @@ import lib.clipboard
 
 const gitcommit_hash = $embed_file('.githash').to_string()
 
-const build_id = gitcommit_hash
+fn build_id() string {
+	$if golden_frames ? {
+		return 'GITHASH'
+	}
+	return gitcommit_hash
+}
 
 const logo_contents = $embed_file('./splash-logo.txt')
 
