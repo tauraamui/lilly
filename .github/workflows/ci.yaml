@@ -15,6 +15,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: vlang/setup-v@v1.4
+        id: setup_v
         with:
           check-latest: true
 
@@ -27,6 +28,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: vlang/setup-v@v1.4
+        id: setup_v
         with:
           check-latest: true
 
@@ -34,11 +36,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.vmodules
-          key: vmodules-v3-${{ hashFiles('v.mod') }}
-          restore-keys: vmodules-v3-
+          key: vmodules-v3-${{ steps.setup_v.outputs.v-version }}-${{ hashFiles('v.mod') }}
+          restore-keys: |
+            vmodules-v3-${{ steps.setup_v.outputs.v-version }}-
+            vmodules-v3-
 
       - name: Install dependencies
-        run: v install tauraamui.bobatea
+        env:
+          VFLAGS: -cc gcc
+        run: v install
 
       - name: Remove V source from workspace
         run: rm -rf vlang/
@@ -55,6 +61,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: vlang/setup-v@v1.4
+        id: setup_v
         with:
           check-latest: true
 
@@ -62,11 +69,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.vmodules
-          key: vmodules-xpty2-${{ hashFiles('v.mod') }}
-          restore-keys: vmodules-xpty2-
+          key: vmodules-xpty2-${{ steps.setup_v.outputs.v-version }}-${{ hashFiles('v.mod') }}
+          restore-keys: |
+            vmodules-xpty2-${{ steps.setup_v.outputs.v-version }}-
+            vmodules-xpty2-
 
       - name: Install dependencies
-        run: v install tauraamui.bobatea
+        env:
+          VFLAGS: -cc gcc
+        run: v install
 
       - name: Check for golden frames
         id: check_golden
@@ -89,6 +100,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: vlang/setup-v@v1.4
+        id: setup_v
         with:
           check-latest: true
 
@@ -96,11 +108,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.vmodules
-          key: vmodules-prod2-${{ hashFiles('v.mod') }}
-          restore-keys: vmodules-prod2-
+          key: vmodules-prod2-${{ steps.setup_v.outputs.v-version }}-${{ hashFiles('v.mod') }}
+          restore-keys: |
+            vmodules-prod2-${{ steps.setup_v.outputs.v-version }}-
+            vmodules-prod2-
 
       - name: Install dependencies
-        run: v install tauraamui.bobatea
+        env:
+          VFLAGS: -cc gcc
+        run: v install
 
       - name: Generate git hash
         run: git log -n 1 --pretty=format:"%h" | tee ./.githash
