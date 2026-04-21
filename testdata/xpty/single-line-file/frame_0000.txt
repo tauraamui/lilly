@@ -1,4 +1,4 @@
- alpha-v0.0.0 (#ac55f41)                                                                                                
+ alpha-v0.0.0 (#798269d3)                                                                                               
                                                                                                                         
                                                                                                                         
                                                                                                                         
@@ -25,6 +25,8 @@
                                                                                                                         
                                          Find File                   <leader>ff                                        
                                                                                                                         
+                                         New File                    <leader>nf                                        
+                                                                                                                        
                                          Find Word                   <leader>fg                                        
                                                                                                                         
                                          Recent Files                <leader>fo                                        
@@ -32,8 +34,6 @@
                                          File Browser                <leader>fv                                        
                                                                                                                         
                                          Colorschemes                <leader>cs                                        
-                                                                                                                        
-                                         New File                    <leader>nf                                        
                                                                                                                         
                                         the lilly editor authors © (made with 💕)                                       
                                                                                                                         
