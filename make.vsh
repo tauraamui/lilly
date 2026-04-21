@@ -38,37 +38,37 @@ mut context := build.context(
 context.task(
 	name:    'build'
 	depends: ['_generate-git-hash']
-	run:     |self| system('v . -o ${app_name}')
+	run:     |self| system('v -cc gcc -o ${app_name} .')
 )
 context.task(
 	name:    'prod'
 	depends: ['_generate-git-hash']
-	run:     |self| system('v -prod -g . -o ${app_name}')
+	run:     |self| system('v -cc gcc -prod -g -o ${app_name} .')
 )
-context.task(name: 'run', depends: ['_generate-git-hash'], run: |self| system('v -g run .'))
+context.task(name: 'run', depends: ['_generate-git-hash'], run: |self| system('v -cc gcc -g run .'))
 context.task(
 	name:    'run-d'
 	depends: ['_generate-git-hash']
-	run:     |self| system('export LILLY_THEME=dark && v -g run .')
+	run:     |self| system('export LILLY_THEME=dark && v -cc gcc -g run .')
 )
 context.task(
 	name:    'run-l'
 	depends: ['_generate-git-hash']
-	run:     |self| system('export LILLY_THEME=light && v -g run .')
+	run:     |self| system('export LILLY_THEME=light && v -cc gcc -g run .')
 )
-context.task(name: 'compile-make', run: |self| system('v -prod -skip-running make.vsh -o make'))
+context.task(name: 'compile-make', run: |self| system('v -cc gcc -prod -skip-running make.vsh -o make'))
 
 // TEST TASKS
 context.task(
 	name:    'test'
 	depends: ['_generate-git-hash']
-	run:     |self| exit(system('v -g test .'))
+	run:     |self| exit(system('v -cc gcc -g test .'))
 )
 
 context.task(
 	name:    'verbose-test'
 	depends: ['_generate-git-hash']
-	run:     |self| exit(system('v -g -stats test .'))
+	run:     |self| exit(system('v -cc gcc -g -stats test .'))
 )
 
 // UTIL TASKS
@@ -172,7 +172,7 @@ context.task(
 	name:    'xpty-build'
 	help:    'build lilly with golden frame support enabled'
 	depends: ['_generate-git-hash']
-	run:     |self| system('v -d golden_frames -g . -o lilly')
+	run:     |self| system('v -cc gcc -d golden_frames -g -o lilly .')
 )
 context.task(
 	name:    'xpty-capture'
@@ -181,7 +181,7 @@ context.task(
 	run:     fn (self build.Task) ! {
 		for s in scenarios {
 			eprintln('Capturing: ${s.name}')
-			system("v -g run cmd/xpty/ '${s.command}' '${s.keys}' --output-dir ./xpty_frames/${s.name}")
+			system("v -cc gcc -g run cmd/xpty/ '${s.command}' '${s.keys}' --output-dir ./xpty_frames/${s.name}")
 			eprintln('')
 			eprintln('Frames saved to xpty_frames/. Review, then copy:')
 			eprintln('  cp xpty_frames/${s.name}/frame_*.txt testdata/xpty/${s.name}/')
@@ -196,7 +196,7 @@ context.task(
 		mut failed := false
 		for s in scenarios {
 			eprintln('Verifying: ${s.name}')
-			rc := system("v -g run cmd/xpty/ --compare testdata/xpty/${s.name} '${s.command}' '${s.keys}'")
+			rc := system("v -cc gcc -g run cmd/xpty/ --compare testdata/xpty/${s.name} '${s.command}' '${s.keys}'")
 			if rc != 0 {
 				failed = true
 			}
