@@ -37,9 +37,10 @@ pub:
 }
 
 pub fn v_syntax() !Syntax {
-	return json.decode(Syntax, builtin_v_syntax) or {
-		error('builtin V syntax file failed to decode: ${err}')
+	syn := json.decode(Syntax, builtin_v_syntax) or {
+		return error('builtin V syntax file failed to decode: ${err}')
 	}
+	return syn
 }
 
 pub fn resolve_from_extension(file_path string) !Syntax {
@@ -59,9 +60,10 @@ pub fn resolve_from_extension(file_path string) !Syntax {
 	if syn_data.len == 0 {
 		return noop_syntax
 	}
-	return json.decode(Syntax, syn_data) or {
-		error('failed to parse syntax definition for ${ext}: ${err}')
+	syn := json.decode(Syntax, syn_data) or {
+		return error('failed to parse syntax definition for ${ext}: ${err}')
 	}
+	return syn
 }
 
 pub fn load_builtin_syntaxes() []Syntax {
