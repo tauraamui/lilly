@@ -255,7 +255,7 @@ fn currently_in_worktree(execute fn (cmd string) os.Result) bool {
 
 fn get_branch(execute fn (cmd string) os.Result) string {
 	res := execute('git branch --show-current')
-	return res.output
+	return res.output.trim_space()
 }
 
 // NOTE(tauraamui) [08/01/26]: do these actually need to be public, not sure, doubt it check when have time
@@ -842,12 +842,12 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 	ctx.push_offset(tea.Offset{ x: tea.visible_len(branch_name_label) })
 
 	ctx.set_color(branch_name_bg_color)
-	ctx.draw_text(-1, 0, '${glyphs.block}${glyphs.slant_right_flat_bottom}')
+	ctx.draw_text(0, 0, '${glyphs.block}${glyphs.slant_right_flat_bottom}')
 	ctx.reset_color()
 
 	// status bar spacer left end cap
 	ctx.set_color(m.theme.status_bar_spacer)
-	ctx.draw_text(1, 0, glyphs.slant_left_flat_top)
+	ctx.draw_text(2, 0, glyphs.slant_left_flat_top)
 	ctx.reset_color()
 	//
 
