@@ -204,6 +204,9 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			)
 			cmds << swap_active_screen(workspace)
 		}
+		CreateAndOpenFileMsg {
+			cmds << open_editor_workspace(msg.path)
+		}
 		else {}
 	}
 
