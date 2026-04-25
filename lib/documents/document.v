@@ -16,6 +16,7 @@ module documents
 
 import math
 import os
+import time
 import encoding.utf8
 import lib.buffers
 import lib.documents.cursor
@@ -135,7 +136,13 @@ pub fn (mut c Controller) write_document(doc_id int) ! {
 		original_mode = int(stat.mode) & 0o7777
 		has_original_mode = true
 	}
-	temp_file_path := os.join_path(os.temp_dir(), os.base(target_file_path))
+	temp_file_name := '.lilly-write-${os.getpid()}-${time.now().unix_micro()}-${os.base(target_file_path)}'
+	temp_file_path := os.join_path(os.dir(target_file_path), temp_file_name)
+	defer {
+		if os.exists(temp_file_path) {
+			os.rm(temp_file_path) or {}
+		}
+	}
 	c.docs[doc_id].write_to(temp_file_path) or {
 		return error('failed to write to temp location: ${temp_file_path}')
 	}
@@ -144,7 +151,7 @@ pub fn (mut c Controller) write_document(doc_id int) ! {
 			return error('failed to apply original permissions to temp file: ${temp_file_path}: ${err}')
 		}
 	}
-	os.mv(temp_file_path, c.docs[doc_id].file_path) or {
+	os.mv(temp_file_path, target_file_path) or {
 		return error('failed to move temp location: ${temp_file_path} to dest: ${target_file_path}')
 	}
 	if has_original_mode {
