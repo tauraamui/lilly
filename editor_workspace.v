@@ -628,8 +628,10 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					cmds << write_to_disk(m.active_editor_id)
 				}
 				'wq', 'x' {
-					cmds << write_to_disk(m.active_editor_id)
-					cmds << close_active_split
+					cmds << tea.sequence(write_to_disk(m.active_editor_id), close_active_split)
+				}
+				'new' {
+					cmds << open_new_file_dialog(m.theme)
 				}
 				else {
 					if line_cmd := m.line_jump_command_for(msg.command) {
@@ -639,6 +641,9 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					}
 				}
 			}
+		}
+		CreateAndOpenFileMsg {
+			cmds << open_editor(msg.path)
 		}
 		DisplayMessageMsg {
 			m.message_label = MessageLabel{

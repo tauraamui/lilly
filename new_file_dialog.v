@@ -28,6 +28,16 @@ mut:
 	error_msg   string
 }
 
+struct CreateAndOpenFileMsg {
+	path string
+}
+
+fn create_and_open_file(path string) tea.Cmd {
+	return fn [path] () tea.Msg {
+		return CreateAndOpenFileMsg{path}
+	}
+}
+
 fn open_new_file_dialog(ttheme theme.Theme) tea.Cmd {
 	return fn [ttheme] () tea.Msg {
 		return OpenDialogMsg{
@@ -88,8 +98,8 @@ fn (mut m NewFileDialogModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 								return m.clone(), tea.batch_array(cmds)
 							}
 							m.error_msg = ''
-							cmds << close_new_file_dialog
-							cmds << open_editor_workspace(abs_path)
+							cmds << tea.sequence(close_new_file_dialog,
+								create_and_open_file(abs_path))
 							return m.clone(), tea.batch_array(cmds)
 						}
 						else {}
