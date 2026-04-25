@@ -45,9 +45,10 @@ fn test_move_cursor_to_next_word_start() {
 	mut ctrl := documents.Controller.new()
 	meta_doc_id := ctrl.open_document('./lib/documents/extern_document_test.v')!
 
-	mut pos := ctrl.move_cursor_down(meta_doc_id, cursor.Pos.new(0, 0), .normal)
-	pos = ctrl.move_cursor_down(meta_doc_id, pos, .normal)
-	pos = ctrl.move_cursor_down(meta_doc_id, pos, .normal)
+	mut pos := cursor.Pos.new(0, 0)
+	for _ in 0 .. 17 {
+		pos = ctrl.move_cursor_down(meta_doc_id, pos, .normal)
+	}
 
 	pos = ctrl.move_cursor_right(meta_doc_id, pos, .normal)
 	pos = ctrl.move_cursor_right(meta_doc_id, pos, .normal)
