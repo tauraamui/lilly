@@ -98,7 +98,8 @@ fn (mut m NewFileDialogModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 								return m.clone(), tea.batch_array(cmds)
 							}
 							m.error_msg = ''
-							cmds << tea.sequence(close_new_file_dialog, create_and_open_file(abs_path))
+							cmds << tea.sequence(close_new_file_dialog,
+								create_and_open_file(abs_path))
 							return m.clone(), tea.batch_array(cmds)
 						}
 						else {}
