@@ -1,0 +1,28 @@
+  name: Setup V (latest master)
+  description: Builds V from source with a daily cache
+
+  runs:
+    using: composite
+    steps:
+      - name: Get date
+        id: date
+        shell: bash
+        run: echo "value=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+
+      - name: Cache V compiler
+        id: cache_v
+        uses: actions/cache@v4
+        with:
+          path: ~/v
+          key: v-master-${{ steps.date.outputs.value }}
+
+      - name: Build V from source
+        if: steps.cache_v.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          git clone --depth=1 https://github.com/vlang/v ~/v
+          cd ~/v && make
+
+      - name: Add V to PATH
+        shell: bash
+        run: echo "$HOME/v" >> $GITHUB_PATH

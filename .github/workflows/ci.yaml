@@ -14,9 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: vlang/setup-v@v1.4
-        with:
-          check-latest: true
+      - uses: ./.github/actions/setup-v-latest
 
       - name: Check formatting
         run: v run ./make.vsh verify-format
@@ -26,9 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: vlang/setup-v@v1.4
-        with:
-          check-latest: true
+      - uses: ./.github/actions/setup-v-latest
 
       - name: Cache V modules
         uses: actions/cache@v4
@@ -54,9 +50,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: vlang/setup-v@v1.4
-        with:
-          check-latest: true
+      - uses: ./.github/actions/setup-v-latest
 
       - name: Cache V modules
         uses: actions/cache@v4
@@ -88,9 +82,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: vlang/setup-v@v1.4
-        with:
-          check-latest: true
+      - uses: ./.github/actions/setup-v-latest
 
       - name: Cache V modules
         uses: actions/cache@v4
