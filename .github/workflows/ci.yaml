@@ -100,8 +100,4 @@ jobs:
       - name: Build (prod with debug symbols)
         run: v -prod -g -cc gcc . -o lilly-prod
 
-      - name: Upload prod binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: lilly-prod-linux-amd64
-          path: lilly-prod
+
