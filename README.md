@@ -5,6 +5,9 @@
 
 ## A VIM-Like editor for your terminal (<a href="https://discord.gg/N4UG2TfDfd">chat on Discord</a>)
 
+> **Note:** The canonical home of this project is now [git.catkin.dev/tauraamui/lilly](https://git.catkin.dev/tauraamui/lilly).
+> The [GitHub repository](https://github.com/tauraamui/lilly) is a **read-only mirror** — please open issues and pull requests on Catkin.
+
 <img width="1400" height="826" alt="screenshot-2026-04-01_12-23-26" src="https://github.com/user-attachments/assets/add7e429-f308-4025-809c-ff4510f6e67f" />
 <img width="1404" height="821" alt="screenshot-2026-04-01_12-23-44" src="https://github.com/user-attachments/assets/62f82f83-0d1d-444b-930d-f36e41114dcd" />
 <img width="1381" height="822" alt="screenshot-2026-04-01_12-24-33" src="https://github.com/user-attachments/assets/047e5ea4-0062-499f-9026-29f98a47f4a3" />
