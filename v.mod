@@ -1,7 +1,7 @@
 Module {
 	name: 'lilly'
 	description: ''
-	version: 'alpha-v0.0.0'
+	version: 'alpha-v0.0.1-test'
 	license: 'MIT'
 	dependencies: ['tauraamui.bobatea']
 }
