@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   validate-version:
+    if: github.server_url == 'https://github.com'
     name: Validate tag vs v.mod version
     runs-on: ubuntu-latest
     steps:
@@ -33,6 +34,7 @@ jobs:
           fi
 
   build:
+    if: github.server_url == 'https://github.com'
     name: Build (${{ matrix.artifact_suffix }})
     needs: validate-version
     strategy:
@@ -93,6 +95,7 @@ jobs:
           path: lilly-${{ matrix.artifact_suffix }}
 
   release:
+    if: github.server_url == 'https://github.com'
     name: Create draft release
     needs: build
     runs-on: ubuntu-latest
