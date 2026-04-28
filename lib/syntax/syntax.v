@@ -26,6 +26,7 @@ const builtin_js_syntax = $embed_file('javascript.syntax').to_string()
 const builtin_ts_syntax = $embed_file('typescript.syntax').to_string()
 const builtin_python_syntax = $embed_file('python.syntax').to_string()
 const builtin_perl_syntax = $embed_file('perl.syntax').to_string()
+const builtin_zig_syntax = $embed_file('zig.syntax').to_string()
 
 pub struct Syntax {
 pub:
@@ -34,6 +35,11 @@ pub:
 	keywords   []string
 	literals   []string
 	builtins   []string
+	// identifier_chars lists additional single-character strings that should
+	// be treated as identifier characters by the tokenizer, on top of the
+	// default a-z/A-Z classification. Used e.g. for Zig where builtins begin
+	// with `@` (`@import`, `@TypeOf`) and need to lex as a single token.
+	identifier_chars []string
 }
 
 pub fn v_syntax() !Syntax {
@@ -53,6 +59,7 @@ pub fn resolve_from_extension(file_path string) !Syntax {
 		'.ts' { builtin_ts_syntax }
 		'.py' { builtin_python_syntax }
 		'.pl' { builtin_perl_syntax }
+		'.zig' { builtin_zig_syntax }
 		else { '' }
 	}
 
@@ -89,9 +96,12 @@ pub fn load_builtin_syntaxes() []Syntax {
 	perl_syntax := json.decode(Syntax, builtin_perl_syntax) or {
 		panic('builting Perl syntax file failed to decode: ${err}')
 	}
+	zig_syntax := json.decode(Syntax, builtin_zig_syntax) or {
+		panic('builtin Zig syntax file failed to decode: ${err}')
+	}
 
 	return [v_syntax, go_syntax, c_syntax, rust_syntax, js_syntax, ts_syntax, python_syntax,
-		perl_syntax]
+		perl_syntax, zig_syntax]
 }
 
 fn load_syntaxes_from_disk(syntax_config_dir fn () !string,
@@ -153,6 +163,12 @@ fn load_syntaxes_from_disk(syntax_config_dir fn () !string,
 		if file_path.ends_with('perl.syntax') {
 			unsafe {
 				syns[7] = syn
+			}
+			return
+		}
+		if file_path.ends_with('zig.syntax') {
+			unsafe {
+				syns[8] = syn
 			}
 			return
 		}

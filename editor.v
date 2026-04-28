@@ -636,6 +636,14 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 				SyntaxLoadedMsg {
 					if msg.id == m.id {
 						m.lang_syn = msg.msg.syn
+						mut extra_id_chars := []rune{cap: m.lang_syn.identifier_chars.len}
+						for s in m.lang_syn.identifier_chars {
+							for r in s.runes() {
+								extra_id_chars << r
+							}
+						}
+						m.token_parser.set_extra_identifier_chars(extra_id_chars)
+						m.invalidate_parser_cache()
 						if msg.msg.err_msg.len > 0 {
 							cmds << debug_log(msg.msg.err_msg)
 						}

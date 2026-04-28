@@ -66,10 +66,18 @@ struct LineInfo {
 
 pub struct Parser {
 mut:
-	state         State
-	pending_token ?Token
-	tokens        []Token
-	line_info     []LineInfo
+	state                  State
+	pending_token          ?Token
+	tokens                 []Token
+	line_info              []LineInfo
+	extra_identifier_chars []rune
+}
+
+// set_extra_identifier_chars configures additional runes that should be
+// classified as identifier characters, on top of the default a-z/A-Z range.
+// Pass the runes derived from a Syntax's identifier_chars field.
+pub fn (mut parser Parser) set_extra_identifier_chars(chars []rune) {
+	parser.extra_identifier_chars = chars
 }
 
 pub fn (mut parser Parser) reset() {
@@ -148,15 +156,20 @@ pub fn (mut parser Parser) parse_lines(lines []string) {
 	}
 }
 
-fn resolve_char_type(c_char rune) TokenType {
+fn resolve_char_type(c_char rune, extra_id_chars []rune) TokenType {
 	// Default classification
-	return match c_char {
-		` `, `\t` { .whitespace }
+	default_type := match c_char {
+		` `, `\t` { TokenType.whitespace }
 		`a`...`z`, `A`...`Z` { .identifier }
 		`0`...`9` { .number }
 		`"`, `'`, 96 { .string } // quotes/backticks should be string tokens
 		else { .other }
 	}
+
+	if default_type == .other && c_char in extra_id_chars {
+		return .identifier
+	}
+	return default_type
 }
 
 fn for_each_char(index int,
@@ -164,10 +177,11 @@ fn for_each_char(index int,
 	mut rune_count &int,
 	mut token_count &int,
 	mut tokens []Token,
-	parser_state State) TokenType {
-	current_char_type := resolve_char_type(c_char)
+	parser_state State,
+	extra_id_chars []rune) TokenType {
+	current_char_type := resolve_char_type(c_char, extra_id_chars)
 	if l_char != rune(0) {
-		last_char_type := resolve_char_type(l_char)
+		last_char_type := resolve_char_type(l_char, extra_id_chars)
 
 		mut token_type := last_char_type
 		if last_char_type != .whitespace {
@@ -251,7 +265,7 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 
 		// use previous_state for classifying the previous character
 		token_type = for_each_char(i, l_char, c_char, mut &rune_count, mut &token_count, mut
-			parser.tokens, previous_state)
+			parser.tokens, previous_state, parser.extra_identifier_chars)
 	}
 
 	token_type = match parser.state {

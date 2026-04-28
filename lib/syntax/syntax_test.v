@@ -103,7 +103,7 @@ fn test_resolve_from_extension_resolves_perl_syntax() {
 @[assert_continues]
 fn test_loads_builtin_syntax() {
 	builtins := load_builtin_syntaxes()
-	assert builtins.len == 8
+	assert builtins.len == 9
 	assert builtins[0].name == 'V'
 	assert builtins[1].name == 'Go'
 	assert builtins[2].name == 'C'
@@ -112,4 +112,16 @@ fn test_loads_builtin_syntax() {
 	assert builtins[5].name == 'TypeScript'
 	assert builtins[6].name == 'Python'
 	assert builtins[7].name == 'Perl'
+	assert builtins[8].name == 'Zig'
+}
+
+@[assert_continues]
+fn test_resolve_from_extension_resolves_zig_syntax() {
+	syn := resolve_from_extension('main.zig') or {
+		assert false, 'unexpected error: ${err}'
+		return
+	}
+	assert syn.name == 'Zig'
+	assert '@' in syn.identifier_chars
+	assert '@import' in syn.builtins
 }
