@@ -79,7 +79,6 @@ pub fn (mut m InputField) update(msg tea.Msg) (InputField, fn () tea.Msg) {
 	mut cmds := []tea.Cmd{}
 	match msg {
 		tea.KeyMsg {
-			m.cursor_blink_frame = 0
 			match msg.k_type {
 				.special {
 					match msg.string() {
@@ -100,6 +99,7 @@ pub fn (mut m InputField) update(msg tea.Msg) (InputField, fn () tea.Msg) {
 							m.cursor_pos = m.rune_len()
 						}
 						'backspace' {
+							m.cursor_blink_frame = 0
 							if m.cursor_pos > 0 {
 								runes := m.value_runes()
 								m.value = (runes[..m.cursor_pos - 1].string()) +
@@ -118,6 +118,7 @@ pub fn (mut m InputField) update(msg tea.Msg) (InputField, fn () tea.Msg) {
 					}
 				}
 				else {
+					m.cursor_blink_frame = 0
 					input_char := msg.string()
 					runes := m.value_runes()
 					m.value = (runes[..m.cursor_pos].string()) + input_char +
