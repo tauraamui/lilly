@@ -336,6 +336,10 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 								return m.clone(), tea.sequence(switch_mode(.normal),
 									open_file_picker(m.theme))
 							}
+							'nf' {
+								return m.clone(), tea.sequence(switch_mode(.normal),
+									open_new_file_dialog(m.theme))
+							}
 							else {}
 						}
 
