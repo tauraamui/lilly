@@ -1145,6 +1145,13 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 						target - current_y, .normal)
 				}
 			}
+			'zz' {
+				if action.count > 1 {
+					m.goto_line(action.count)
+				} else {
+					m.center_cursor_line()
+				}
+			}
 			'G' {
 				current_y := m.cursor_pos.y
 				last_line := m.doc_controller.line_count(m.doc_id) - 1

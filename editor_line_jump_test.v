@@ -16,6 +16,7 @@ module main
 
 import os
 import time
+import bobatea as tea
 import lib.documents
 import lib.documents.cursor
 import lib.clipboard
@@ -172,4 +173,89 @@ fn test_line_jump_command_for_rejects_non_numeric_commands() {
 	} else {
 		assert true
 	}
+}
+
+fn test_editor_model_zz_centers_current_line() {
+	file_path := make_temp_file('zz_center', 40)
+	defer { os.rm(file_path) or {} }
+
+	mut ctrl := documents.Controller{}
+	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
+	mut cb := clipboard.new()
+	mut editor := EditorModel.new(
+		id:             5
+		theme:          theme.dark_theme
+		file_path:      file_path
+		doc_id:         doc_id
+		doc_controller: &ctrl
+		cb:             &cb
+		expand_tabs:    false
+		tab_width:      4
+	)
+	editor.height = 7
+	editor.cursor_pos = cursor.Pos.new(0, 15)
+	editor.min_y = 0
+
+	mut cmds := []tea.Cmd{}
+	editor.execute_action(ChordAction{
+		count:    1
+		operator: none
+		motion:   'zz'
+	}, mut cmds)
+
+	mut expected_min := editor.cursor_pos.y - editor.height / 2
+	if expected_min < 0 {
+		expected_min = 0
+	}
+	line_count := ctrl.line_count(doc_id)
+	max_top := if line_count > editor.height { line_count - editor.height } else { 0 }
+	if expected_min > max_top {
+		expected_min = max_top
+	}
+
+	assert editor.min_y == expected_min
+	assert editor.cursor_pos == cursor.Pos.new(0, 15)
+}
+
+fn test_editor_model_zz_with_count_moves_and_centers() {
+	file_path := make_temp_file('zz_count', 40)
+	defer { os.rm(file_path) or {} }
+
+	mut ctrl := documents.Controller{}
+	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
+	mut cb := clipboard.new()
+	mut editor := EditorModel.new(
+		id:             6
+		theme:          theme.dark_theme
+		file_path:      file_path
+		doc_id:         doc_id
+		doc_controller: &ctrl
+		cb:             &cb
+		expand_tabs:    false
+		tab_width:      4
+	)
+	editor.height = 7
+	editor.cursor_pos = cursor.Pos.new(0, 0)
+	editor.min_y = 0
+
+	mut cmds := []tea.Cmd{}
+	editor.execute_action(ChordAction{
+		count:    5
+		operator: none
+		motion:   'zz'
+	}, mut cmds)
+
+	assert editor.cursor_pos == cursor.Pos.new(0, 4)
+
+	mut expected_min := editor.cursor_pos.y - editor.height / 2
+	if expected_min < 0 {
+		expected_min = 0
+	}
+	line_count := ctrl.line_count(doc_id)
+	max_top := if line_count > editor.height { line_count - editor.height } else { 0 }
+	if expected_min > max_top {
+		expected_min = max_top
+	}
+
+	assert editor.min_y == expected_min
 }

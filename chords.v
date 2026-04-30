@@ -21,11 +21,12 @@ struct ChordAction {
 }
 
 enum ChordState {
-	empty            // nothing accumulated yet
-	pre_count        // accumulating digits before operator/motion
-	have_operator    // have operator, expecting post-count or motion
-	post_count       // accumulating digits after operator
-	motion_prefix    // got a multi-char motion prefix like 'g'
+	empty         // nothing accumulated yet
+	pre_count     // accumulating digits before operator/motion
+	have_operator // have operator, expecting post-count or motion
+	post_count    // accumulating digits after operator
+	motion_prefix // got a multi-char motion prefix like 'g'
+	z_motion_prefix
 	op_motion_prefix // got operator + 'g', expecting second char
 }
 
@@ -56,6 +57,10 @@ fn (mut c Chord) feed(key string) ?ChordAction {
 			}
 			if ch == `g` {
 				c.state = .motion_prefix
+				return none
+			}
+			if ch == `z` {
+				c.state = .z_motion_prefix
 				return none
 			}
 			if motion := c.single_char_motion(ch) {
@@ -119,6 +124,17 @@ fn (mut c Chord) feed(key string) ?ChordAction {
 				}
 			}
 			// unrecognised g-prefix combo
+			return none
+		}
+		.z_motion_prefix {
+			defer { c.reset() }
+			if ch == `z` {
+				return ChordAction{
+					count:    c.effective_count()
+					operator: none
+					motion:   'zz'
+				}
+			}
 			return none
 		}
 		.op_motion_prefix {
