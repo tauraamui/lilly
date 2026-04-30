@@ -3,5 +3,5 @@ Module {
 	description: ''
 	version: 'alpha-v0.0.0'
 	license: 'MIT'
-	dependencies: ['tauraamui.bobatea']
+	dependencies: ['https://git.catkin.dev/tauraamui/bobatea']
 }

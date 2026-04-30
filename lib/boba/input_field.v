@@ -16,7 +16,7 @@ module boba
 
 import math
 import time
-import tauraamui.bobatea as tea
+import bobatea as tea
 
 const frames_per_cycle = 50.0
 

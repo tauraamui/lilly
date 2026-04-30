@@ -14,7 +14,7 @@
 
 module palette
 
-import tauraamui.bobatea as tea
+import bobatea as tea
 
 // TODO(tauraamui): consolidate all used colors into a core palette/swatch set
 // and alias reference off of that only in the places/models they are used with

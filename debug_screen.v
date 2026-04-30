@@ -16,7 +16,7 @@ module main
 
 import rand
 import strings
-import tauraamui.bobatea as tea
+import bobatea as tea
 import lib.boba
 import lib.palette
 

@@ -15,7 +15,7 @@
 module main
 
 import os
-import tauraamui.bobatea as tea
+import bobatea as tea
 
 #include <signal.h>
 

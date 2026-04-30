@@ -14,7 +14,7 @@
 
 module main
 
-import tauraamui.bobatea as tea
+import bobatea as tea
 
 struct GoldenFrameState {}
 

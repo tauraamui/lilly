@@ -17,7 +17,7 @@ module main
 import os
 import strings
 import lib.files
-import tauraamui.bobatea as tea
+import bobatea as tea
 import lib.palette
 import lib.petal.theme
 import lib.boba

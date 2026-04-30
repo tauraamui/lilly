@@ -14,7 +14,7 @@
 
 module main
 
-import tauraamui.bobatea as tea
+import bobatea as tea
 import lib.petal.theme
 import lib.petal
 import lib.palette

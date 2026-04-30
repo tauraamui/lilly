@@ -30,11 +30,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.vmodules
-          key: vmodules-v3-${{ hashFiles('v.mod') }}
-          restore-keys: vmodules-v3-
+          key: vmodules-v4-${{ hashFiles('v.mod') }}
+          restore-keys: vmodules-v4-
 
       - name: Install dependencies
-        run: v install tauraamui.bobatea
+        run: v install
 
       - name: Remove V source from workspace
         run: rm -rf vlang/
@@ -56,11 +56,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.vmodules
-          key: vmodules-xpty2-${{ hashFiles('v.mod') }}
-          restore-keys: vmodules-xpty2-
+          key: vmodules-xpty3-${{ hashFiles('v.mod') }}
+          restore-keys: vmodules-xpty3-
 
       - name: Install dependencies
-        run: v install tauraamui.bobatea
+        run: v install
 
       - name: Check for golden frames
         id: check_golden
@@ -88,11 +88,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.vmodules
-          key: vmodules-prod2-${{ hashFiles('v.mod') }}
-          restore-keys: vmodules-prod2-
+          key: vmodules-prod3-${{ hashFiles('v.mod') }}
+          restore-keys: vmodules-prod3-
 
       - name: Install dependencies
-        run: v install tauraamui.bobatea
+        run: v install
 
       - name: Generate git hash
         run: git log -n 1 --pretty=format:"%h" | tee ./.githash

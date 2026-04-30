@@ -14,7 +14,7 @@
 
 module theme
 
-import tauraamui.bobatea as tea
+import bobatea as tea
 
 pub const dark_theme_name = 'dark'
 pub const light_theme_name = 'light'

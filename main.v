@@ -17,7 +17,7 @@ module main
 import flag
 import os
 import v.vmod
-import tauraamui.bobatea as tea
+import bobatea as tea
 import lib.cfg
 import lib.documents
 import lib.clipboard
