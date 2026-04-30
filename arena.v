@@ -127,19 +127,17 @@ fn (mut a Arena) expand_tabs(s string, tw int) string {
 	max_len := s.len * tw
 	ptr := a.alloc(max_len + 1) or { return s.expand_tabs(tw) }
 	mut pos := 0
-	mut column := 0
 	mut i := 0
 	for i < s.len {
 		b := unsafe { s.str[i] }
 		if b == 0x09 {
-			spaces := tw - (column % tw)
+			spaces := if tw > 0 { tw } else { 1 }
 			for _ in 0 .. spaces {
 				unsafe {
 					ptr[pos] = 0x20
 				}
 				pos += 1
 			}
-			column += spaces
 			i += 1
 		} else {
 			byte_len := if b < 0x80 {
@@ -159,7 +157,6 @@ fn (mut a Arena) expand_tabs(s string, tw int) string {
 					pos += 1
 				}
 			}
-			column += 1
 			i += byte_len
 		}
 	}

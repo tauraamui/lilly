@@ -663,7 +663,7 @@ fn (d Document) visual_cursor_pos(pos cursor.Pos, tab_width int) cursor.Pos {
 	mut visual_x := 0
 	for r in prefix {
 		if r == `\t` {
-			visual_x += tab_width
+			visual_x += if tab_width == 0 { 1 } else { tab_width }
 		} else {
 			visual_x += utf8_str_visible_length(r.str())
 		}
