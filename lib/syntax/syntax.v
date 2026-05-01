@@ -27,6 +27,7 @@ const builtin_ts_syntax = $embed_file('typescript.syntax').to_string()
 const builtin_python_syntax = $embed_file('python.syntax').to_string()
 const builtin_perl_syntax = $embed_file('perl.syntax').to_string()
 const builtin_zig_syntax = $embed_file('zig.syntax').to_string()
+const builtin_gleam_syntax = $embed_file('gleam.syntax').to_string()
 
 pub struct Syntax {
 pub:
@@ -60,6 +61,7 @@ pub fn resolve_from_extension(file_path string) !Syntax {
 		'.py' { builtin_python_syntax }
 		'.pl' { builtin_perl_syntax }
 		'.zig' { builtin_zig_syntax }
+		'.gleam' { builtin_gleam_syntax }
 		else { '' }
 	}
 
@@ -99,9 +101,12 @@ pub fn load_builtin_syntaxes() []Syntax {
 	zig_syntax := json.decode(Syntax, builtin_zig_syntax) or {
 		panic('builtin Zig syntax file failed to decode: ${err}')
 	}
+	gleam_syntax := json.decode(Syntax, builtin_gleam_syntax) or {
+		panic('builtin Gleam syntax file failed to decode: ${err}')
+	}
 
 	return [v_syntax, go_syntax, c_syntax, rust_syntax, js_syntax, ts_syntax, python_syntax,
-		perl_syntax, zig_syntax]
+		perl_syntax, zig_syntax, gleam_syntax]
 }
 
 fn load_syntaxes_from_disk(syntax_config_dir fn () !string,
@@ -169,6 +174,12 @@ fn load_syntaxes_from_disk(syntax_config_dir fn () !string,
 		if file_path.ends_with('zig.syntax') {
 			unsafe {
 				syns[8] = syn
+			}
+			return
+		}
+		if file_path.ends_with('gleam.syntax') {
+			unsafe {
+				syns[9] = syn
 			}
 			return
 		}

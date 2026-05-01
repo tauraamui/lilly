@@ -103,7 +103,7 @@ fn test_resolve_from_extension_resolves_perl_syntax() {
 @[assert_continues]
 fn test_loads_builtin_syntax() {
 	builtins := load_builtin_syntaxes()
-	assert builtins.len == 9
+	assert builtins.len == 10
 	assert builtins[0].name == 'V'
 	assert builtins[1].name == 'Go'
 	assert builtins[2].name == 'C'
@@ -113,6 +113,7 @@ fn test_loads_builtin_syntax() {
 	assert builtins[6].name == 'Python'
 	assert builtins[7].name == 'Perl'
 	assert builtins[8].name == 'Zig'
+	assert builtins[9].name == 'Gleam'
 }
 
 @[assert_continues]
@@ -124,4 +125,14 @@ fn test_resolve_from_extension_resolves_zig_syntax() {
 	assert syn.name == 'Zig'
 	assert '@' in syn.identifier_chars
 	assert '@import' in syn.builtins
+}
+
+@[assert_continues]
+fn test_resolve_from_extension_resolves_gleam_syntax() {
+	syn := resolve_from_extension('main.gleam') or {
+		assert false, 'unexpected error: ${err}'
+		return
+	}
+	assert syn.name == 'Gleam'
+	assert 'binary' in syn.builtins
 }

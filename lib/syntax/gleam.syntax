@@ -1,0 +1,57 @@
+{
+	"name": "Gleam",
+	"extensions": [
+		".gleam"
+	],
+	"keywords": [
+		"as",
+		"assert",
+		"auto",
+		"case",
+		"const",
+		"delegate",
+		"derive",
+		"echo",
+		"else",
+		"fn",
+		"if",
+		"implement",
+		"import",
+		"let",
+		"macro",
+		"opaque",
+		"panic",
+		"pub",
+		"test",
+		"todo",
+		"type",
+		"use"
+	],
+	"literals": [
+		"False",
+		"Nil",
+		"True"
+	],
+	"builtins": [
+		"big",
+		"binary",
+		"bit_array",
+		"bit_string",
+		"bits",
+		"bytes",
+		"float",
+		"int",
+		"little",
+		"native",
+		"signed",
+		"size",
+		"unit",
+		"unsigned",
+		"utf16",
+		"utf16_codepoint",
+		"utf32",
+		"utf32_codepoint",
+		"utf8",
+		"utf8_codepoint"
+	]
+}
