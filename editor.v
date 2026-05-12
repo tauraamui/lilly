@@ -1132,6 +1132,7 @@ fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 				for _ in 0 .. count {
 					m.doc_controller.delete_char_at(m.doc_id, m.cursor_pos)
 				}
+				m.cursor_pos = m.doc_controller.clamp_cursor_within_line(m.doc_id, m.cursor_pos)
 				m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
 			}
 			'gg' {

@@ -369,6 +369,10 @@ pub fn (c Controller) get_char_at(doc_id int, pos cursor.Pos) ?string {
 	return none
 }
 
+pub fn (c Controller) clamp_cursor_within_line(doc_id int, pos cursor.Pos) cursor.Pos {
+	return c.docs[doc_id].clamp_cursor_within_line(pos)
+}
+
 pub fn (c Controller) line_count(doc_id int) int {
 	return c.docs[doc_id].line_count()
 }
@@ -821,6 +825,12 @@ fn (mut d Document) delete_visual_range(range cursor.Range) cursor.Pos {
 	d.prepare_for_insertion_at(cursor.Pos.new(start.x, start.y)) or { return start }
 	d.data.delete_after_n(total)
 	return cursor.Pos.new(start.x, start.y)
+}
+
+fn (d Document) clamp_cursor_within_line(pos cursor.Pos) cursor.Pos {
+	current_line := d.data.get_line_at(y: pos.y) or { return pos }
+	if pos.x >= current_line.runes().len { return pos.x(current_line.runes().len - 1) }
+	return pos
 }
 
 fn (mut d Document) delete_before() {

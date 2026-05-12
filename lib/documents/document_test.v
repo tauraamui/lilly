@@ -258,6 +258,11 @@ fn test_controller_move_cursor_right() {
 	assert ctrl.move_cursor_right(id, cursor.Pos.new(0, 0), .normal) == cursor.Pos.new(1, 0)
 }
 
+fn test_controller_clamp_cursor_within_line() {
+	ctrl, id := new_controller_with_content('Single line of text.')
+	assert ctrl.clamp_cursor_within_line(id, cursor.Pos.new(50, 0)).x == 19
+}
+
 fn test_controller_write_document_preserves_permissions() ? {
 	file_path := os.join_path(os.temp_dir(), 'lilly_exec_perm_test_' + os.getpid().str() + '.vsh')
 	if os.exists(file_path) {
