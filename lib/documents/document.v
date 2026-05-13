@@ -115,11 +115,26 @@ pub fn (mut c Controller) open_document(file_path string) !int {
 		return existing_id
 	}
 	defer { c.doc_id_count += 1 }
+	/*
 	id := hash_id(c.doc_id_count)
 	c.loaded_files[file_path] = id
 	c.docs[id] = Document.new(file_path)!
 	c.undo_managers[id] = UndoManager{}
 	return id
+	*/
+	return c.open_document_with_id_hasher(file_path, hash_id)
+}
+
+fn (mut c Controller) open_document_with_id_hasher(file_path string, id_hasher fn (count int) int) !int {
+	id := id_hasher(c.doc_id_count)
+	c.loaded_files[file_path] = id
+	c.docs[id] = Document.new(file_path)!
+	c.undo_managers[id] = UndoManager{}
+	return id
+}
+
+pub fn (c Controller) active_document_buffers() map[string]int {
+	return c.loaded_files
 }
 
 pub fn (mut c Controller) write_document(doc_id int) ! {

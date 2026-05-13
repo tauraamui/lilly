@@ -629,3 +629,29 @@ fn test_doc_move_cursor_to_previous_blank_line() {
 	assert d.move_cursor_to_previous_blank_line(cursor.Pos.new(0, 2)) == cursor.Pos.new(0, 0)
 	assert d.move_cursor_to_previous_blank_line(cursor.Pos.new(0, 0)) == cursor.Pos.new(0, 0)
 }
+
+fn test_doc_list_loaded_file_paths_doc_id_pairs() {
+	test_file_paths := [1, 2, 3, 4].map(os.join_path(os.temp_dir(), 'test_loaded_docs_file_${it}.txt'))
+	eprintln(test_file_paths)
+	defer {
+		for temp_file_path in test_file_paths {
+			os.rm(temp_file_path) or { eprintln('failed to tidy up temp file: ${temp_file_path}') }
+		}
+	}
+	for i, temp_file_path in test_file_paths {
+		os.write_file(temp_file_path, 'hello ${i}\n')!
+	}
+
+	mut ctrl := Controller{}
+	for i, temp_file_path in test_file_paths {
+		assert ctrl.open_document_with_id_hasher(temp_file_path, fn [i] (j int) int { return i })! >= 0
+	}
+	
+	assert ctrl.active_document_buffers() == {
+
+	}
+}
+
+
+
+
