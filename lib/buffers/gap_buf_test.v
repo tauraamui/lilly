@@ -47,5 +47,10 @@ fn test_insert_into_gap_then_move_cursor_left_insert_char() {
 	b.insert(u8(`b`))
 	assert b.str() == 'bc'
 	assert b.rawstr() == 'b______c'
+
+	b.move_cur_left()
+	b.insert(u8(`a`))
+	assert b.str() == 'abc'
+	assert b.rawstr() == 'a_____bc'
 }
 
