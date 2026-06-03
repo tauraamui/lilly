@@ -17,7 +17,7 @@ pub fn Buffer.new(size int) Buffer {
 
 pub fn (mut gb Buffer) insert(c u8) {
 	// NOTE(tauraamui) [2026-06-02]: much prefer the idea the grow only occurs if next insert elapses not before
-	if gb.cend - gb.ccur == 0 {
+	if gb.gap_size() == 0 {
 		gb.grow()
 	}
 	gb.buf[gb.ccur] = c
@@ -57,8 +57,18 @@ fn (mut gb Buffer) grow() {
 	gb.buf = copy_dst
 }
 
+fn (gb Buffer) gap_size() u64 {
+	return gb.cend - gb.ccur
+}
+
 pub fn (gb Buffer) logical_len() int {
-	return gb.buf.len - int(gb.cend - gb.ccur)
+	return gb.buf.len - int(gb.gap_size())
+}
+
+pub fn (gb Buffer) get(pos u64) ?u8 {
+	offset := u64(if pos < gb.ccur { pos } else { pos + gb.gap_size() })
+	if offset >= gb.buf.len { return none }
+	return gb.buf[offset]
 }
 
 pub fn (gb Buffer) rawstr() string {
@@ -66,7 +76,7 @@ pub fn (gb Buffer) rawstr() string {
 }
 
 pub fn (gb Buffer) str() string {
-	mut copy_dst := []u8{ len: gb.buf.len - int(gb.cend - gb.ccur) }
+	mut copy_dst := []u8{ len: gb.buf.len - int(gb.gap_size()) }
 	copy(mut copy_dst[..gb.ccur], gb.buf[..gb.ccur])
 	copy(mut copy_dst[gb.ccur..], gb.buf[gb.cend..])
 	return copy_dst.bytestr()
