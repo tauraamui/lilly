@@ -44,7 +44,7 @@ struct PetalModelOptions {
 	initial_file_path ?string
 }
 
-fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.Controller, cb &clipboard.Manager, opts PetalModelOptions) PetalModel {
+fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.Controller, doc_controller2 &documents.Controller2, cb &clipboard.Manager, opts PetalModelOptions) PetalModel {
 	return PetalModel{
 		version:       version
 		config:        config
@@ -55,6 +55,7 @@ fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.C
 			leader_key:        config.leader_key
 			theme:             config.theme
 			doc_controller:    doc_controller
+			doc_controller2:   doc_controller2
 			cb:                cb
 			initial_file_path: opts.initial_file_path
 			expand_tabs:       config.expand_tabs

@@ -61,6 +61,7 @@ mut:
 
 	cursor_pos         cursor.Pos
 	doc_controller     &documents.Controller
+	doc_controller2    &documents.Controller2
 	cb                 &clipboard.Manager
 	token_parser       syntax.Parser
 	lang_syn           syntax.Syntax
@@ -141,6 +142,7 @@ struct EditorModelNewParams {
 	file_path      string
 	doc_id         int
 	doc_controller &documents.Controller
+	doc_controller2 &documents.Controller2
 	cb             &clipboard.Manager
 	expand_tabs    bool
 	tab_width      int
@@ -155,6 +157,7 @@ fn EditorModel.new(opts EditorModelNewParams) EditorModel {
 		doc_id:         opts.doc_id
 		theme:          opts.theme
 		doc_controller: opts.doc_controller
+		doc_controller2: opts.doc_controller2
 		cb:             opts.cb
 		token_parser:   syntax.Parser{}
 		lang_syn:       syntax.noop_syntax

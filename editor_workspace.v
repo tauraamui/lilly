@@ -49,6 +49,7 @@ mut:
 	last_window_height int
 
 	doc_controller     &documents.Controller
+	doc_controller2    &documents.Controller2
 	cb                 &clipboard.Manager
 	active_editor_data ?EditorData
 	branch_name        string
@@ -91,6 +92,7 @@ struct EditorWorkspaceModelParams {
 	leader_key        string
 	initial_file_path string
 	doc_controller    &documents.Controller
+	doc_controller2   &documents.Controller2
 	clip_manager      &clipboard.Manager
 	expand_tabs       bool
 	tab_width         int
@@ -103,6 +105,7 @@ fn EditorWorkspaceModel.new(opts EditorWorkspaceModelParams) EditorWorkspaceMode
 		initial_file_path: opts.initial_file_path
 		split_tree:        boba.SplitTree.new()
 		doc_controller:    opts.doc_controller
+		doc_controller2:   opts.doc_controller2
 		leader_key:        opts.leader_key
 		cb:                opts.clip_manager
 		expand_tabs:       opts.expand_tabs
@@ -487,6 +490,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 				file_path:      msg.file_path
 				doc_id:         doc_id
 				doc_controller: m.doc_controller
+				doc_controller2: m.doc_controller2
 				cb:             m.cb
 				expand_tabs:    m.expand_tabs
 				tab_width:      m.tab_width
@@ -520,6 +524,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					file_path:      info.file_path
 					doc_id:         info.doc_id
 					doc_controller: m.doc_controller
+					doc_controller2: m.doc_controller2
 					cb:             m.cb
 					expand_tabs:    m.expand_tabs
 					tab_width:      m.tab_width

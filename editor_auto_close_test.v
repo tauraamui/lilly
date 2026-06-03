@@ -33,6 +33,7 @@ fn test_editor_model_insert_rune_auto_closes_parentheses() {
 	defer { os.rm(file_path) or {} }
 
 	mut ctrl := documents.Controller{}
+	mut ctrl2 := documents.Controller2{}
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
@@ -41,6 +42,7 @@ fn test_editor_model_insert_rune_auto_closes_parentheses() {
 		file_path:      file_path
 		doc_id:         doc_id
 		doc_controller: &ctrl
+		doc_controller2: &ctrl2
 		cb:             &cb
 		expand_tabs:    false
 		tab_width:      4
@@ -71,6 +73,7 @@ fn test_editor_model_insert_rune_auto_closes_braces() {
 	defer { os.rm(file_path) or {} }
 
 	mut ctrl := documents.Controller{}
+	mut ctrl2 := documents.Controller2{}
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
@@ -79,6 +82,7 @@ fn test_editor_model_insert_rune_auto_closes_braces() {
 		file_path:      file_path
 		doc_id:         doc_id
 		doc_controller: &ctrl
+		doc_controller2: &ctrl2
 		cb:             &cb
 		expand_tabs:    false
 		tab_width:      4
@@ -109,6 +113,7 @@ fn test_editor_model_insert_rune_auto_closes_double_quotes() {
 	defer { os.rm(file_path) or {} }
 
 	mut ctrl := documents.Controller{}
+	mut ctrl2 := documents.Controller2{}
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
@@ -117,6 +122,7 @@ fn test_editor_model_insert_rune_auto_closes_double_quotes() {
 		file_path:      file_path
 		doc_id:         doc_id
 		doc_controller: &ctrl
+		doc_controller2: &ctrl2
 		cb:             &cb
 		expand_tabs:    false
 		tab_width:      4
@@ -147,6 +153,7 @@ fn test_editor_model_insert_rune_auto_closes_single_quotes() {
 	defer { os.rm(file_path) or {} }
 
 	mut ctrl := documents.Controller{}
+	mut ctrl2 := documents.Controller2{}
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
@@ -155,6 +162,7 @@ fn test_editor_model_insert_rune_auto_closes_single_quotes() {
 		file_path:      file_path
 		doc_id:         doc_id
 		doc_controller: &ctrl
+		doc_controller2: &ctrl2
 		cb:             &cb
 		expand_tabs:    false
 		tab_width:      4
@@ -185,6 +193,7 @@ fn test_editor_model_insert_rune_auto_closes_backticks() {
 	defer { os.rm(file_path) or {} }
 
 	mut ctrl := documents.Controller{}
+	mut ctrl2 := documents.Controller2{}
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
@@ -193,6 +202,7 @@ fn test_editor_model_insert_rune_auto_closes_backticks() {
 		file_path:      file_path
 		doc_id:         doc_id
 		doc_controller: &ctrl
+		doc_controller2: &ctrl2
 		cb:             &cb
 		expand_tabs:    false
 		tab_width:      4
@@ -223,6 +233,7 @@ fn test_editor_model_insert_rune_without_syntax_does_not_auto_close_parentheses(
 	defer { os.rm(file_path) or {} }
 
 	mut ctrl := documents.Controller{}
+	mut ctrl2 := documents.Controller2{}
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
@@ -231,6 +242,7 @@ fn test_editor_model_insert_rune_without_syntax_does_not_auto_close_parentheses(
 		file_path:      file_path
 		doc_id:         doc_id
 		doc_controller: &ctrl
+		doc_controller2: &ctrl2
 		cb:             &cb
 		expand_tabs:    false
 		tab_width:      4
@@ -252,6 +264,7 @@ fn test_editor_model_insert_rune_without_syntax_does_not_auto_close_double_quote
 	defer { os.rm(file_path) or {} }
 
 	mut ctrl := documents.Controller{}
+	mut ctrl2 := documents.Controller2{}
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
@@ -260,6 +273,7 @@ fn test_editor_model_insert_rune_without_syntax_does_not_auto_close_double_quote
 		file_path:      file_path
 		doc_id:         doc_id
 		doc_controller: &ctrl
+		doc_controller2: &ctrl2
 		cb:             &cb
 		expand_tabs:    false
 		tab_width:      4
@@ -281,6 +295,7 @@ fn test_editor_model_insert_rune_without_syntax_does_not_auto_close_single_quote
 	defer { os.rm(file_path) or {} }
 
 	mut ctrl := documents.Controller{}
+	mut ctrl2 := documents.Controller2{}
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
@@ -289,6 +304,7 @@ fn test_editor_model_insert_rune_without_syntax_does_not_auto_close_single_quote
 		file_path:      file_path
 		doc_id:         doc_id
 		doc_controller: &ctrl
+		doc_controller2: &ctrl2
 		cb:             &cb
 		expand_tabs:    false
 		tab_width:      4
@@ -310,6 +326,7 @@ fn test_editor_model_insert_rune_without_syntax_does_not_auto_close_backticks() 
 	defer { os.rm(file_path) or {} }
 
 	mut ctrl := documents.Controller{}
+	mut ctrl2 := documents.Controller2{}
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
@@ -318,6 +335,7 @@ fn test_editor_model_insert_rune_without_syntax_does_not_auto_close_backticks() 
 		file_path:      file_path
 		doc_id:         doc_id
 		doc_controller: &ctrl
+		doc_controller2: &ctrl2
 		cb:             &cb
 		expand_tabs:    false
 		tab_width:      4

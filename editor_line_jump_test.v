@@ -37,6 +37,7 @@ fn test_editor_model_goto_line_centers_view() {
 	defer { os.rm(file_path) or {} }
 
 	mut ctrl := documents.Controller{}
+	mut ctrl2 := documents.Controller2{}
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
@@ -45,6 +46,7 @@ fn test_editor_model_goto_line_centers_view() {
 		file_path:      file_path
 		doc_id:         doc_id
 		doc_controller: &ctrl
+		doc_controller2: &ctrl2
 		cb:             &cb
 		expand_tabs:    false
 		tab_width:      4
@@ -63,6 +65,7 @@ fn test_editor_model_goto_line_clamps_to_document_end() {
 	defer { os.rm(file_path) or {} }
 
 	mut ctrl := documents.Controller{}
+	mut ctrl2 := documents.Controller2{}
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
@@ -71,6 +74,7 @@ fn test_editor_model_goto_line_clamps_to_document_end() {
 		file_path:      file_path
 		doc_id:         doc_id
 		doc_controller: &ctrl
+		doc_controller2: &ctrl2
 		cb:             &cb
 		expand_tabs:    false
 		tab_width:      4
@@ -93,6 +97,7 @@ fn test_editor_model_goto_line_with_large_viewport_sets_min_y_to_zero() {
 	defer { os.rm(file_path) or {} }
 
 	mut ctrl := documents.Controller{}
+	mut ctrl2 := documents.Controller2{}
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
@@ -101,6 +106,7 @@ fn test_editor_model_goto_line_with_large_viewport_sets_min_y_to_zero() {
 		file_path:      file_path
 		doc_id:         doc_id
 		doc_controller: &ctrl
+		doc_controller2: &ctrl2
 		cb:             &cb
 		expand_tabs:    false
 		tab_width:      4
@@ -117,6 +123,7 @@ fn test_line_jump_command_for_returns_goto_line_command() {
 	defer { os.rm(file_path) or {} }
 
 	mut ctrl := documents.Controller{}
+	mut ctrl2 := documents.Controller2{}
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
@@ -125,6 +132,7 @@ fn test_line_jump_command_for_returns_goto_line_command() {
 		file_path:      file_path
 		doc_id:         doc_id
 		doc_controller: &ctrl
+		doc_controller2: &ctrl2
 		cb:             &cb
 		expand_tabs:    false
 		tab_width:      4
@@ -136,6 +144,7 @@ fn test_line_jump_command_for_returns_goto_line_command() {
 		leader_key:        ' '
 		initial_file_path: file_path
 		doc_controller:    &ctrl
+		doc_controller2:   &ctrl2
 		clip_manager:      &cb
 		expand_tabs:       false
 		tab_width:         4
@@ -157,6 +166,7 @@ fn test_line_jump_command_for_returns_goto_line_command() {
 
 fn test_line_jump_command_for_rejects_non_numeric_commands() {
 	mut ctrl := documents.Controller{}
+	mut ctrl2 := documents.Controller2{}
 	mut cb := clipboard.new()
 	mut workspace := EditorWorkspaceModel.new(EditorWorkspaceModelParams{
 		version:           'test'
@@ -164,6 +174,7 @@ fn test_line_jump_command_for_rejects_non_numeric_commands() {
 		leader_key:        ' '
 		initial_file_path: ''
 		doc_controller:    &ctrl
+		doc_controller2:   &ctrl2
 		clip_manager:      &cb
 		expand_tabs:       false
 		tab_width:         4
@@ -180,6 +191,7 @@ fn test_editor_model_zz_centers_current_line() {
 	defer { os.rm(file_path) or {} }
 
 	mut ctrl := documents.Controller{}
+	mut ctrl2 := documents.Controller2{}
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
@@ -188,6 +200,7 @@ fn test_editor_model_zz_centers_current_line() {
 		file_path:      file_path
 		doc_id:         doc_id
 		doc_controller: &ctrl
+		doc_controller2: &ctrl2
 		cb:             &cb
 		expand_tabs:    false
 		tab_width:      4
@@ -222,6 +235,7 @@ fn test_editor_model_zz_with_count_moves_and_centers() {
 	defer { os.rm(file_path) or {} }
 
 	mut ctrl := documents.Controller{}
+	mut ctrl2 := documents.Controller2{}
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
@@ -230,6 +244,7 @@ fn test_editor_model_zz_with_count_moves_and_centers() {
 		file_path:      file_path
 		doc_id:         doc_id
 		doc_controller: &ctrl
+		doc_controller2: &ctrl2
 		cb:             &cb
 		expand_tabs:    false
 		tab_width:      4

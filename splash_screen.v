@@ -45,6 +45,7 @@ struct SplashScreenOptions {
 	leader_key        string
 	theme             theme.Theme
 	doc_controller    &documents.Controller
+	doc_controller2    &documents.Controller2
 	cb                &clipboard.Manager
 	initial_file_path ?string
 	expand_tabs       bool
@@ -57,6 +58,7 @@ struct SplashScreenModel {
 	logo              SplashLogo
 	theme             theme.Theme
 	doc_controller    &documents.Controller
+	doc_controller2   &documents.Controller2
 	cb                &clipboard.Manager
 	initial_file_path ?string
 	expand_tabs       bool
@@ -79,6 +81,7 @@ fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
 			data: logo_contents.to_string().split_into_lines()
 		}
 		doc_controller:    opts.doc_controller
+		doc_controller2:   opts.doc_controller2
 		cb:                opts.cb
 		initial_file_path: opts.initial_file_path
 		expand_tabs:       opts.expand_tabs
@@ -198,6 +201,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 				leader_key:        m.leader_key
 				initial_file_path: msg.initial_file_path
 				doc_controller:    m.doc_controller
+				doc_controller2:   m.doc_controller2
 				clip_manager:      m.cb
 				expand_tabs:       m.expand_tabs
 				tab_width:         m.tab_width

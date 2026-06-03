@@ -175,12 +175,13 @@ fn main() {
 	}
 
 	mut documents_controller := documents.Controller.new()
+	mut documents_controller2 := documents.Controller2{}
 	defer { documents_controller.free() }
 
 	metrics_thread := emit_metrics_maybe(vmod_manifest)
 
 	mut cb := clipboard.new()
-	mut petal_model := PetalModel.new(version, config, &documents_controller, &cb,
+	mut petal_model := PetalModel.new(version, config, &documents_controller, &documents_controller2, &cb,
 		initial_file_path: initial_file_path
 	)
 	mut app := tea.new_program(mut petal_model)
