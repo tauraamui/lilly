@@ -2,6 +2,33 @@ module buffers
 
 import gap
 
+fn test_get_recieves_correct_byte_ignoring_gap() {
+	mut b := gap.Buffer.new(512)
+	assert b.logical_len() == 0
+
+	b.insert(u8(`c`))
+	assert b.str() == 'c'
+	assert b.get(0)? == u8(`c`)
+
+	b.insert(u8(`d`))
+	assert b.str() == 'cd'
+	assert b.get(1)? == u8(`d`)
+
+	b.move_cur_left()
+	b.insert(u8(`e`))
+	assert b.str() == 'ced'
+	assert b.get(1)? == u8(`e`)
+}
+
+fn test_get_with_oob_index_returns_none() {
+	mut b := gap.Buffer.new(512)
+	assert b.logical_len() == 0
+
+	assert b.get(0) == ?u8(none)
+	b.insert(u8(`c`))
+	assert b.get(0)? == u8(`c`)
+}
+
 fn test_logical_len_returns_total_real_char_count() {
 	mut b := gap.Buffer.new(512)
 	assert b.logical_len() == 0
