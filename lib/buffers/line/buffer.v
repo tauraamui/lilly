@@ -1,18 +1,17 @@
 module line
 
+@[noinit]
 pub struct Buffer {
 mut:
 	offsets      []u64
-	current_line int
+	current_line u64
 }
 
 pub fn Buffer.new() Buffer {
 	return Buffer{
-		// lines: []int{ len: 1, cap: 1 }
+		offsets:      []u64{ len: 1, cap: 1 }
+		current_line: 0
 	}
 }
 
-pub fn (mut lb Buffer) increment() {
-	// lb.lines[0] += 1
-}
 

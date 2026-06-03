@@ -1,5 +1,6 @@
 module gap
 
+@[noinit]
 pub struct Buffer {
 mut:
 	buf  []u8
