@@ -17,11 +17,21 @@ pub fn Buffer.new(size int) Buffer {
 
 pub fn (mut b Buffer) insert(c u8) {
 	// NOTE(tauraamui) [2026-06-02]: much prefer the idea the grow only occurs if next insert elapses not before
-	if b.ccur >= b.buf.len {
+	if b.cend - b.ccur == 0 {
 		b.grow()
 	}
 	b.buf[b.ccur] = c
 	b.ccur += u64(1)
+}
+
+pub fn (mut b Buffer) delete() {
+	if b.cend == u64(b.buf.len) { return }
+	b.cend += 1
+}
+
+pub fn (mut b Buffer) backspace() {
+	if b.ccur == 0 { return }
+	b.ccur -= 1
 }
 
 pub fn (mut b Buffer) move_cur_left() {
@@ -30,6 +40,14 @@ pub fn (mut b Buffer) move_cur_left() {
 	b.buf[b.cend - 1] = b.buf[b.ccur]
 	b.buf[b.ccur] = 0x0
 	b.cend -= 1
+}
+
+pub fn (mut b Buffer) move_cur_right() {
+	if b.cend == u64(b.buf.len) { return }
+	b.buf[b.ccur] = b.buf[b.cend]
+	b.buf[b.cend] = 0x0
+	b.ccur += 1
+	b.cend += 1
 }
 
 fn (mut b Buffer) grow() {
