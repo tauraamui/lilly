@@ -62,6 +62,10 @@ fn (gb Buffer) gap_size() u64 {
 	return gb.cend - gb.ccur
 }
 
+pub fn (gb Buffer) ccur() u64 {
+	return gb.ccur
+}
+
 pub fn (gb Buffer) logical_len() u64 {
 	return u64(gb.buf.len - int(gb.gap_size()))
 }
