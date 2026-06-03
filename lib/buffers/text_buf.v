@@ -37,10 +37,37 @@ pub fn (mut tb TextBuffer) backspace() {
 	if c_removed_byte == newline_hex {
 		tb.line_buf.offsets.delete(int(tb.line_buf.current_line))
 		tb.line_buf.current_line -= 1
+	}
 
-		for i := tb.line_buf.current_line + 1; i < tb.line_buf.offsets.len; i++ {
-			tb.line_buf.offsets[i] -= 1
-		}
+	for i := tb.line_buf.current_line + 1; i < tb.line_buf.offsets.len; i++ {
+		tb.line_buf.offsets[i] -= 1
+	}
+}
+
+pub fn (mut tb TextBuffer) delete() {
+	c_removed_byte := tb.data_buf.get(tb.data_buf.ccur()) or { return }
+	tb.data_buf.delete()
+	if c_removed_byte == newline_hex {
+		tb.line_buf.offsets.delete(int(tb.line_buf.current_line + 1))
+	}
+	for i := tb.line_buf.current_line + 1; i < tb.line_buf.offsets.len; i++ {
+		tb.line_buf.offsets[i] -= 1
+	}
+}
+
+pub fn (mut tb TextBuffer) move_cursor_left() {
+	c_byte := tb.data_buf.get(tb.data_buf.ccur() - 1) or { return }
+	tb.data_buf.move_cur_left()
+	if c_byte == newline_hex {
+		tb.line_buf.current_line -= 1
+	}
+}
+
+pub fn (mut tb TextBuffer) move_cursor_right() {
+	c_byte := tb.data_buf.get(tb.data_buf.ccur()) or { return }
+	tb.data_buf.move_cur_right()
+	if c_byte == newline_hex {
+		tb.line_buf.current_line += 1
 	}
 }
 
