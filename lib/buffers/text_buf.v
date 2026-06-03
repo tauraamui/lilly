@@ -31,7 +31,21 @@ pub fn (mut tb TextBuffer) insert(c u8) {
 	}
 }
 
-pub fn (tb TextBuffer) get_line_bytes(y u64) []u8 {
+pub fn (mut tb TextBuffer) backspace() {
+	c_removed_byte := tb.data_buf.get(tb.data_buf.ccur() - 1) or { return }
+	tb.data_buf.backspace()
+	if c_removed_byte == newline_hex {
+		tb.line_buf.offsets.delete(int(tb.line_buf.current_line))
+		tb.line_buf.current_line -= 1
+
+		for i := tb.line_buf.current_line + 1; i < tb.line_buf.offsets.len; i++ {
+			tb.line_buf.offsets[i] -= 1
+		}
+	}
+}
+
+pub fn (tb TextBuffer) get_line_bytes(y u64) ?[]u8 {
+	if y >= tb.line_buf.offsets.len { return none }
 	line_start, line_end := tb.get_line_start_and_end(y)
 	mut line_bytes := []u8{ len: int(line_end - line_start) }
 	mut c := 0
