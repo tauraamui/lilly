@@ -2,6 +2,27 @@ module buffers
 
 import gap
 
+fn test_logical_len_returns_total_real_char_count() {
+	mut b := gap.Buffer.new(512)
+	assert b.logical_len() == 0
+
+	b.insert(u8(`c`))
+	assert b.str() == 'c'
+	assert b.logical_len() == 1
+
+	b.insert(u8(`d`))
+	assert b.str() == 'cd'
+	assert b.logical_len() == 2
+
+	b.insert(u8(`e`))
+	assert b.str() == 'cde'
+	assert b.logical_len() == 3
+
+	b.backspace()
+	assert b.str() == 'cd'
+	assert b.logical_len() == 2
+}
+
 fn test_insert_into_gap_results_in_expected_string() {
 	mut b := gap.Buffer.new(512)
 	b.insert(u8(`c`))

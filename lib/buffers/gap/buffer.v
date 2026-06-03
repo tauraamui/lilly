@@ -57,6 +57,10 @@ fn (mut gb Buffer) grow() {
 	gb.buf = copy_dst
 }
 
+pub fn (gb Buffer) logical_len() int {
+	return gb.buf.len - int(gb.cend - gb.ccur)
+}
+
 pub fn (gb Buffer) rawstr() string {
 	return gb.buf.map(if it == 0x0 { u8(`_`) } else { it }).bytestr()
 }
