@@ -2,7 +2,7 @@ module line
 
 @[noinit]
 pub struct Buffer {
-mut:
+pub mut:
 	offsets      []u64
 	current_line u64
 }
