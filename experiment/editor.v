@@ -65,7 +65,7 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 	line_count := int(m.doc_controller.line_count(m.doc_id))
 	for y in 0..line_count {
 		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
-		ctx.draw_text(0, y, line_bytes.bytestr())
+		ctx.draw_text(0, y, line_bytes.bytestr().replace('\t', '    '))
 	}
 }
 
