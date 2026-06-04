@@ -30,19 +30,53 @@ pub fn (mut tb TextBuffer) backspace() {
 	if tb.data_buf.ccur() == 0 {
 		return
 	}
-	c_removed_byte := tb.data_buf.get(tb.data_buf.ccur() - 1) or { return }
-	tb.data_buf.backspace()
-	tb.line_buf.apply_delta(-1)
-	if c_removed_byte == newline_hex {
+
+	mut start_index := tb.data_buf.ccur() - 1
+	mut start_byte := tb.data_buf.get(start_index) or { return }
+	for start_index > 0 && is_utf8_continuation_byte(start_byte) {
+		start_index -= 1
+		start_byte = tb.data_buf.get(start_index) or { break }
+	}
+
+	char_len := int(tb.data_buf.ccur() - start_index)
+	for _ in 0 .. char_len {
+		if tb.data_buf.ccur() == 0 {
+			break
+		}
+		tb.data_buf.backspace()
+	}
+	tb.line_buf.apply_delta(-char_len)
+	if start_byte == newline_hex {
 		tb.line_buf.remove_current_line()
 	}
 }
 
 pub fn (mut tb TextBuffer) delete() {
-	c_removed_byte := tb.data_buf.get(tb.data_buf.ccur()) or { return }
-	tb.data_buf.delete()
-	tb.line_buf.apply_delta(-1)
-	if c_removed_byte == newline_hex {
+	start := tb.data_buf.ccur()
+	start_byte := tb.data_buf.get(start) or { return }
+
+	mut desired_len := utf8_codepoint_len(start_byte)
+	if desired_len < 1 {
+		desired_len = 1
+	}
+
+	mut actual_len := 1
+	for actual_len < desired_len {
+		next_byte := tb.data_buf.get(start + u64(actual_len)) or { break }
+		if !is_utf8_continuation_byte(next_byte) {
+			break
+		}
+		actual_len += 1
+	}
+
+	for _ in 0 .. actual_len {
+		if tb.data_buf.get(tb.data_buf.ccur()) == none {
+			break
+		}
+		tb.data_buf.delete()
+	}
+	tb.line_buf.apply_delta(-actual_len)
+	if start_byte == newline_hex {
 		tb.line_buf.remove_line_after_current()
 	}
 }
