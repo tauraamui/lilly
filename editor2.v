@@ -22,53 +22,60 @@ fn (mut m EditorModel2) init() fn () tea.Msg {
 }
 
 fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
-	return m.normal_mode_update(msg)
+	if msg is EditorModelKeyMsg {
+		match msg.mode {
+			.normal {
+				return m.normal_mode_update(msg.key_msg)
+			}
+			.insert {
+				return m.insert_mode_update(msg.key_msg)
+			}
+			else {}
+		}
+	}
+	return m.clone(), tea.noop_cmd
 }
 
-fn (mut m EditorModel2) normal_mode_update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
-	match msg {
-		tea.KeyMsg {
-			match msg.k_type {
-				.runes {
-					for cb in msg.string().bytes() {
-						m.doc_controller.insert(m.doc_id, cb)
-					}
-				}
-				.special {
-					match msg.string() {
-						'escape' {
-							return m.clone(), tea.quit
-						}
-						'enter' {
-							m.doc_controller.insert(m.doc_id, `\n`)
-						}
-						'ctrl+i' { // TAB
-							m.doc_controller.insert(m.doc_id, `\t`)
-						}
-						'backspace' {
-							m.doc_controller.backspace(m.doc_id)
-						}
-						'delete' {
-							m.doc_controller.delete(m.doc_id)
-						}
-						'left' {
-							m.doc_controller.move_cursor_left(m.doc_id)
-						}
-						'down' {
-							m.doc_controller.move_cursor_down(m.doc_id)
-						}
-						'right' {
-							m.doc_controller.move_cursor_right(m.doc_id)
-						}
-						'up' {
-							m.doc_controller.move_cursor_up(m.doc_id)
-						}
-						else {}
-					}
-				}
+fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+	return m.clone(), tea.noop_cmd
+}
+
+fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+	match msg.k_type {
+		.runes {
+			for cb in msg.string().bytes() {
+				m.doc_controller.insert(m.doc_id, cb)
 			}
 		}
-		else {}
+		.special {
+			match msg.string() {
+				'enter' {
+					m.doc_controller.insert(m.doc_id, `\n`)
+				}
+				'ctrl+i' { // TAB
+					m.doc_controller.insert(m.doc_id, `\t`)
+				}
+				'backspace' {
+					m.doc_controller.backspace(m.doc_id)
+				}
+				'delete' {
+					m.doc_controller.delete(m.doc_id)
+				}
+				'left' {
+					m.doc_controller.move_cursor_left(m.doc_id)
+				}
+				'down' {
+					m.doc_controller.move_cursor_down(m.doc_id)
+				}
+				'right' {
+					m.doc_controller.move_cursor_right(m.doc_id)
+				}
+				'up' {
+					m.doc_controller.move_cursor_up(m.doc_id)
+				}
+				else {}
+			}
+		}
 	}
 	return m.clone(), tea.noop_cmd
 }
