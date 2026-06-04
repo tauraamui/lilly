@@ -479,16 +479,19 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		OpenEditorMsg {
 			editor_id := m.next_editor_id()
 
+			/*
 			doc_id := m.doc_controller.open_document(msg.file_path) or {
 				cmds << debug_log('failed to open document ${msg.file_path}: ${err}')
 				return m.clone(), tea.batch_array(cmds)
 			}
+			*/
 			// TODO(tauraamui): actually store separate doc id as additional field
-			m.doc_controller2.open_document(msg.file_path) or {
+			doc_id2 := m.doc_controller2.open_document(msg.file_path) or {
 				cmds << debug_log('failed to open document ${msg.file_path}: ${err}')
 				return m.clone(), tea.batch_array(cmds)
 			}
 
+			/*
 			mut e_model := EditorModel.new(
 				id:             editor_id
 				theme:          m.theme
@@ -500,13 +503,15 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 				expand_tabs:    m.expand_tabs
 				tab_width:      m.tab_width
 			)
+			*/
+			mut e_model := EditorModel2.new(doc_id2, m.doc_controller2)
 			cmd := e_model.init()
 
 			if m.split_tree.is_empty() {
-				m.split_tree.init_with_editor(editor_id, msg.file_path, doc_id)
+				m.split_tree.init_with_editor(editor_id, msg.file_path, doc_id2)
 			} else {
 				old_id := m.split_tree.active_editor_id
-				m.split_tree.replace_active_editor(editor_id, msg.file_path, doc_id)
+				m.split_tree.replace_active_editor(editor_id, msg.file_path, doc_id2)
 				m.editors.delete(old_id)
 			}
 
@@ -523,6 +528,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			if info := m.split_tree.get_active_editor() {
 				old_id := info.id // get the old ID before inserting
 				new_id := m.next_editor_id()
+				/*
 				mut new_editor := EditorModel.new(
 					id:             new_id
 					theme:          m.theme
@@ -534,6 +540,8 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					expand_tabs:    m.expand_tabs
 					tab_width:      m.tab_width
 				)
+				*/
+				mut new_editor := EditorModel2.new(info.doc_id, m.doc_controller2)
 				cmds << new_editor.init()
 
 				m.split_tree.insert_vertical_split(new_id, info.file_path)
