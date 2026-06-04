@@ -30,7 +30,7 @@ fn test_text_buffer_get_line_bytes_of_multiple_lines() {
 	tb.insert(u8(`l`))
 	tb.insert(u8(`d`))
 
-	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`, `\n`]
+	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`]
 	assert tb.get_line_bytes(1)? == [u8(`W`), `o`, `r`, `l`, `d`]
 }
 
@@ -45,15 +45,15 @@ fn test_text_buffer_get_line_bytes_of_multiple_lines_post_backspace() {
 	tb.insert(u8(`W`))
 	tb.insert(u8(`o`))
 
-	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`, `\n`]
+	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`]
 	assert tb.get_line_bytes(1)? == [u8(`W`), `o`]
 
 	tb.backspace()
-	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`, `\n`]
+	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`]
 	assert tb.get_line_bytes(1)? == [u8(`W`)]
 
 	tb.backspace()
-	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`, `\n`]
+	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`]
 	assert tb.get_line_bytes(1)? == []
 
 	tb.backspace()
@@ -74,20 +74,20 @@ fn test_text_buffer_insertion_after_cursor_movement() {
 	tb.insert(u8(`o`))
 	tb.insert(u8(`\n`))
 
-	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`, `\n`]
+	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`]
 	assert tb.get_line_bytes(1)? == []
 
 	tb.move_cursor_left()
 	tb.insert(u8(`W`))
 
-	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`, `\n`]
+	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`]
 	assert tb.get_line_bytes(1)? == [u8(`W`)]
 
 	tb.move_cursor_left()
 	tb.move_cursor_right()
 	tb.insert(u8(`o`))
 
-	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`, `\n`]
+	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`]
 	assert tb.get_line_bytes(1)? == [u8(`W`), `o`]
 }
 
@@ -100,7 +100,7 @@ fn test_text_buffer_backspace() {
 	tb.insert(u8(`o`))
 	tb.insert(u8(`\n`))
 
-	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`, `\n`]
+	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`]
 	assert tb.get_line_bytes(1)? == []
 
 	tb.move_cursor_left()
@@ -143,7 +143,7 @@ fn test_text_buffer_blank_lines_after_multiple_inserts_at_start() {
 	assert tb.get_line_bytes(0)? == []
 	assert tb.get_line_bytes(1)? == []
 	assert tb.get_line_bytes(2)? == []
-	assert tb.get_line_bytes(3)? == [u8(`h`), `e`, `l`, `l`, `o`, `\n`]
+	assert tb.get_line_bytes(3)? == [u8(`h`), `e`, `l`, `l`, `o`]
 }
 
 fn test_text_buffer_cursor_line_and_x_basic() {

@@ -116,8 +116,8 @@ pub fn (tb TextBuffer) get_line_bytes(y u64) ?[]u8 {
 		}
 		c += 1
 	}
-	if line_bytes.len == 1 && line_bytes[0] == newline_hex {
-		return []u8{}
+	if line_bytes.len > 0 && line_bytes[line_bytes.len - 1] == newline_hex {
+		return line_bytes[..line_bytes.len - 1]
 	}
 	return line_bytes
 }
