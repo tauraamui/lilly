@@ -50,8 +50,14 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 						'left' {
 							m.doc_controller.move_cursor_left(m.doc_id)
 						}
+						'down' {
+							m.doc_controller.move_cursor_down(m.doc_id)
+						}
 						'right' {
 							m.doc_controller.move_cursor_right(m.doc_id)
+						}
+						'up' {
+							m.doc_controller.move_cursor_up(m.doc_id)
 						}
 						else {}
 					}

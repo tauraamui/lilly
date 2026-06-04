@@ -67,6 +67,14 @@ pub fn (mut dc Controller2) move_cursor_right(doc_id int) {
 	dc.docs[doc_id].move_cursor_right()
 }
 
+pub fn (mut dc Controller2) move_cursor_up(doc_id int) {
+	dc.docs[doc_id].move_cursor_up()
+}
+
+pub fn (mut dc Controller2) move_cursor_down(doc_id int) {
+	dc.docs[doc_id].move_cursor_down()
+}
+
 pub fn (mut dc Controller2) get_line_bytes(doc_id int, y u64) ?[]u8 {
 	return dc.docs[doc_id].get_line_bytes(y)
 }
