@@ -80,6 +80,25 @@ fn (mut m EditorModel2) view(mut ctx tea.Context) {
 		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
 		ctx.draw_text(0, y, line_bytes.bytestr().replace('\t', '    '))
 	}
+
+	cursor_line_bytes := m.doc_controller.get_line_bytes(m.doc_id, cursor_line) or { []u8{} }
+	mut visual_x := 0
+	limit := if int(cursor_x) < cursor_line_bytes.len { int(cursor_x) } else { cursor_line_bytes.len }
+	for i in 0..limit {
+		if cursor_line_bytes[i] == `\t` {
+			visual_x += 4
+		} else {
+			visual_x += 1
+		}
+	}
+
+	offset := ctx.compact_offsets()
+	default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
+	ctx.set_bg_color(palette.fg_color(default_bg_color))
+	ctx.set_color(default_bg_color)
+	ctx.draw_text(offset.x + visual_x, offset.y + int(cursor_line), '|')
+	ctx.reset_bg_color()
+	ctx.reset_color()
 }
 
 fn (m EditorModel2) width() int {
