@@ -38,6 +38,12 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 						'enter' {
 							m.doc_controller.insert(m.doc_id, `\n`)
 						}
+						'backspace' {
+							m.doc_controller.backspace(m.doc_id)
+						}
+						'delete' {
+							m.doc_controller.delete(m.doc_id)
+						}
 						'left' {
 							m.doc_controller.move_cursor_left(m.doc_id)
 						}

@@ -55,6 +55,10 @@ pub fn (mut dc Controller2) backspace(doc_id int) {
 	dc.docs[doc_id].backspace()
 }
 
+pub fn (mut dc Controller2) delete(doc_id int) {
+	dc.docs[doc_id].delete()
+}
+
 pub fn (mut dc Controller2) move_cursor_left(doc_id int) {
 	dc.docs[doc_id].move_cursor_left()
 }
