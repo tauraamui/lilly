@@ -80,14 +80,15 @@ fn test_text_buffer_insertion_after_cursor_movement() {
 	tb.move_cursor_left()
 	tb.insert(u8(`W`))
 
-	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`, `W`, `\n`]
-	assert tb.get_line_bytes(1)? == []
+	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`, `\n`]
+	assert tb.get_line_bytes(1)? == [u8(`W`)]
 
+	tb.move_cursor_left()
 	tb.move_cursor_right()
 	tb.insert(u8(`o`))
 
-	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`, `W`, `\n`]
-	assert tb.get_line_bytes(1)? == [u8(`o`)]
+	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`, `\n`]
+	assert tb.get_line_bytes(1)? == [u8(`W`), `o`]
 }
 
 fn test_text_buffer_backspace() {
@@ -105,16 +106,14 @@ fn test_text_buffer_backspace() {
 	tb.move_cursor_left()
 	tb.backspace()
 
-	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `\n`]
-	assert tb.get_line_bytes(1)? == []
-
-	tb.delete()
-	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`]
+	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`, `o`]
 	assert tb.get_line_bytes(1) == ?[]u8(none)
 
-	tb.move_cursor_left()
-	tb.move_cursor_left()
-	tb.move_cursor_left()
+	tb.backspace()
+	assert tb.get_line_bytes(0)? == [u8(`H`), `e`, `l`, `l`]
+
+	tb.move_cursor_to_start()
+	tb.move_cursor_right()
 	tb.delete()
 	assert tb.get_line_bytes(0)? == [u8(`H`), `l`, `l`]
 	assert tb.get_line_bytes(1) == ?[]u8(none)
@@ -177,8 +176,49 @@ fn test_text_buffer_cursor_line_and_x_across_newlines() {
 
 	tb.move_cursor_left()
 	line4, x4 := tb.cursor_line_and_x()
-	assert line4 == u64(0)
-	assert x4 == u64(5)
+	assert line4 == u64(1)
+	assert x4 == u64(0)
+}
+
+fn test_text_buffer_move_cursor_left_stops_at_newline() {
+	mut tb := TextBuffer.new()
+	for c in "ab\ncd".bytes() {
+		tb.insert(c)
+	}
+
+	line, x := tb.cursor_line_and_x()
+	assert line == u64(1)
+	assert x == u64(2)
+
+	tb.move_cursor_left()
+	tb.move_cursor_left()
+	line2, x2 := tb.cursor_line_and_x()
+	assert line2 == u64(1)
+	assert x2 == u64(0)
+
+	tb.move_cursor_left()
+	line3, x3 := tb.cursor_line_and_x()
+	assert line3 == u64(1)
+	assert x3 == u64(0)
+}
+
+fn test_text_buffer_move_cursor_right_stops_at_newline() {
+	mut tb := TextBuffer.new()
+	for c in "ab\nc".bytes() {
+		tb.insert(c)
+	}
+
+	tb.move_cursor_to_start()
+	tb.move_cursor_right()
+	tb.move_cursor_right()
+	line, x := tb.cursor_line_and_x()
+	assert line == u64(0)
+	assert x == u64(2)
+
+	tb.move_cursor_right()
+	line2, x2 := tb.cursor_line_and_x()
+	assert line2 == u64(0)
+	assert x2 == u64(2)
 }
 
 fn test_text_buffer_cursor_movement_skips_multibyte_codepoints() {

@@ -59,6 +59,10 @@ pub fn (mut tb TextBuffer) move_cursor_left() {
 		start_byte = tb.data_buf.get(start_index) or { break }
 	}
 
+	if start_byte == newline_hex {
+		return
+	}
+
 	char_len := int(tb.data_buf.ccur() - start_index)
 	for _ in 0 .. char_len {
 		if tb.data_buf.ccur() == 0 {
@@ -67,14 +71,14 @@ pub fn (mut tb TextBuffer) move_cursor_left() {
 		tb.data_buf.move_cur_left()
 	}
 
-	if start_byte == newline_hex {
-		tb.line_buf.move_current_line_up()
-	}
 }
 
 pub fn (mut tb TextBuffer) move_cursor_right() {
 	start := tb.data_buf.ccur()
 	start_byte := tb.data_buf.get(start) or { return }
+	if start_byte == newline_hex {
+		return
+	}
 
 	mut desired_len := utf8_codepoint_len(start_byte)
 	if desired_len < 1 {
@@ -98,9 +102,6 @@ pub fn (mut tb TextBuffer) move_cursor_right() {
 		tb.data_buf.move_cur_right()
 	}
 
-	if start_byte == newline_hex {
-		tb.line_buf.move_current_line_down()
-	}
 }
 
 pub fn (tb TextBuffer) get_line_bytes(y u64) ?[]u8 {
