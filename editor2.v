@@ -121,29 +121,26 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 fn (mut m EditorModel2) view(mut ctx tea.Context) {
 	cursor_line, cursor_x := m.doc_controller.cursor_line_and_x(m.doc_id)
 	line_count := int(m.doc_controller.line_count(m.doc_id))
+	mut cursor_visual_x := 0
 	for y in 0..line_count {
 		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
-		ctx.draw_text(0, y, line_bytes.bytestr().replace('\t', '    '))
-	}
-
-	cursor_line_bytes := m.doc_controller.get_line_bytes(m.doc_id, cursor_line) or { []u8{} }
-	mut visual_x := 0
-	limit := if int(cursor_x) < cursor_line_bytes.len { int(cursor_x) } else { cursor_line_bytes.len }
-	for i in 0..limit {
-		if cursor_line_bytes[i] == `\t` {
-			visual_x += 4
-		} else {
-			visual_x += 1
+		line_str := line_bytes.bytestr().replace('\t', '    ')
+		if y == cursor_line {
+			end := if int(cursor_x) > line_bytes.len { line_bytes.len } else { int(cursor_x) }
+			before_cursor := line_bytes[..end].bytestr()
+			for r in before_cursor.runes() {
+				if r == `\t` {
+					cursor_visual_x += 4
+				} else {
+					cursor_visual_x += 1
+				}
+			}
 		}
+		ctx.draw_text(0, y, line_str)
 	}
-
-	offset := ctx.compact_offsets()
-	default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
-	ctx.set_bg_color(palette.fg_color(default_bg_color))
-	ctx.set_color(default_bg_color)
-	ctx.draw_text(offset.x + visual_x, offset.y + int(cursor_line), '|')
+	ctx.set_bg_color(palette.petal_red_color)
+	ctx.draw_text(cursor_visual_x, int(cursor_line), '|')
 	ctx.reset_bg_color()
-	ctx.reset_color()
 }
 
 fn (m EditorModel2) width() int {
