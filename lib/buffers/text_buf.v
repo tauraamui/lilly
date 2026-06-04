@@ -75,7 +75,14 @@ pub fn (tb TextBuffer) get_line_bytes(y u64) ?[]u8 {
 		}
 		c += 1
 	}
+	if line_bytes.len == 1 && line_bytes[0] == newline_hex {
+		return []u8{}
+	}
 	return line_bytes
+}
+
+pub fn (tb TextBuffer) line_count() u64 {
+	return u64(tb.line_buf.len())
 }
 
 fn (tb TextBuffer) get_line_start_and_end(y u64) (u64, u64) {

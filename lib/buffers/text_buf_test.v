@@ -132,3 +132,18 @@ fn test_text_buffer_move_cursor_to_start() {
 	assert tb.get_line_bytes(0)? == [u8(`>`), `H`, `e`, `l`, `l`, `o`]
 }
 
+fn test_text_buffer_blank_lines_after_multiple_inserts_at_start() {
+	mut tb := TextBuffer.new()
+	for c in "hello\nWoRlD<\n😍".bytes() {
+		tb.insert(c)
+	}
+	tb.move_cursor_to_start()
+	for _ in 0..3 {
+		tb.insert(u8(`\n`))
+	}
+	assert tb.get_line_bytes(0)? == []
+	assert tb.get_line_bytes(1)? == []
+	assert tb.get_line_bytes(2)? == []
+	assert tb.get_line_bytes(3)? == [u8(`h`), `e`, `l`, `l`, `o`, `\n`]
+}
+

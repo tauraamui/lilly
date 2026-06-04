@@ -63,4 +63,8 @@ pub fn (mut dc Controller2) get_line_bytes(doc_id int, y u64) ?[]u8 {
 	return dc.docs[doc_id].get_line_bytes(y)
 }
 
+pub fn (dc Controller2) line_count(doc_id int) u64 {
+	return dc.docs[doc_id].line_count()
+}
+
 
