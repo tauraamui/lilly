@@ -69,9 +69,17 @@ pub fn (mut gb Buffer) move_cur_to_start() {
 }
 
 fn (mut gb Buffer) grow() {
-	new_size := gb.buf.len * 2
+	old_len := gb.buf.len
+	new_size := if old_len == 0 { 1 } else { old_len * 2 }
 	mut copy_dst := []u8{ len: new_size, cap: new_size }
-	copy(mut copy_dst, gb.buf)
+	copy(mut copy_dst[..int(gb.ccur)], gb.buf[..int(gb.ccur)])
+	additional := new_size - old_len
+	post_gap_len := if old_len > int(gb.cend) { old_len - int(gb.cend) } else { 0 }
+	new_gap_end := gb.cend + u64(additional)
+	if post_gap_len > 0 {
+		copy(mut copy_dst[int(new_gap_end)..int(new_gap_end) + post_gap_len], gb.buf[int(gb.cend)..])
+	}
+	gb.cend = new_gap_end
 	gb.buf = copy_dst
 }
 

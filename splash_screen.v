@@ -45,7 +45,7 @@ struct SplashScreenOptions {
 	leader_key        string
 	theme             theme.Theme
 	doc_controller    &documents.Controller
-	doc_controller2    &documents.Controller2
+	doc_controller2   &documents.Controller2
 	cb                &clipboard.Manager
 	initial_file_path ?string
 	expand_tabs       bool

@@ -483,6 +483,11 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 				cmds << debug_log('failed to open document ${msg.file_path}: ${err}')
 				return m.clone(), tea.batch_array(cmds)
 			}
+			// TODO(tauraamui): actually store separate doc id as additional field
+			m.doc_controller2.open_document(msg.file_path) or {
+				cmds << debug_log('failed to open document ${msg.file_path}: ${err}')
+				return m.clone(), tea.batch_array(cmds)
+			}
 
 			mut e_model := EditorModel.new(
 				id:             editor_id

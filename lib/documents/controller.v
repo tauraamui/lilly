@@ -11,6 +11,12 @@ mut:
 	next_id int
 }
 
+pub fn Controller2.new() Controller2 {
+	return Controller2{
+		docs: map[int]buffers.TextBuffer{}
+	}
+}
+
 pub fn (mut dc Controller2) open_document(path string) !int {
 	mut file := os.open(path) or { return error('failed to open ${path}: ${err}') }
 	defer {

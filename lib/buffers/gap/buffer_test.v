@@ -108,3 +108,11 @@ fn test_move_cur_to_start_with_right_side_content() {
 	assert gb.str() == '>abcd'
 }
 
+fn test_insert_many_chars_grows_without_panic() {
+	mut gb := Buffer.new(4)
+	for _ in 0 .. 20 {
+		gb.insert(u8(`a`))
+	}
+	assert gb.str().len == 20
+}
+

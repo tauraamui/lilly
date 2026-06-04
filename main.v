@@ -175,7 +175,7 @@ fn main() {
 	}
 
 	mut documents_controller := documents.Controller.new()
-	mut documents_controller2 := documents.Controller2{}
+	mut documents_controller2 := documents.Controller2.new()
 	defer { documents_controller.free() }
 
 	metrics_thread := emit_metrics_maybe(vmod_manifest)
