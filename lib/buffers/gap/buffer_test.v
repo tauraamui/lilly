@@ -83,3 +83,28 @@ fn test_insert_beyond_gap_clamped() {
 	assert gb.rawstr() == 'cdefghijk_______'
 }
 
+fn test_move_cur_to_start_preserves_content() {
+	mut gb := Buffer.new(test_gap_size)
+	gb.insert(u8(`a`))
+	gb.insert(u8(`b`))
+	gb.insert(u8(`c`))
+	gb.move_cur_to_start()
+	assert gb.str() == 'abc'
+	gb.insert(u8(`>`))
+	assert gb.str() == '>abc'
+}
+
+fn test_move_cur_to_start_with_right_side_content() {
+	mut gb := Buffer.new(test_gap_size)
+	gb.insert(u8(`a`))
+	gb.insert(u8(`b`))
+	gb.insert(u8(`c`))
+	gb.insert(u8(`d`))
+	gb.move_cur_left()
+	gb.move_cur_left()
+	gb.move_cur_to_start()
+	assert gb.str() == 'abcd'
+	gb.insert(u8(`>`))
+	assert gb.str() == '>abcd'
+}
+

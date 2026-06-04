@@ -51,6 +51,23 @@ pub fn (mut gb Buffer) move_cur_right() {
 	gb.cend += 1
 }
 
+pub fn (mut gb Buffer) move_cur_to_start() {
+	if gb.ccur == 0 {
+		return
+	}
+	if gb.cend <= gb.ccur {
+		gb.cend = u64(gb.buf.len)
+	}
+	gap := int(gb.cend - gb.ccur)
+	pre_len := int(gb.ccur)
+	for i := pre_len - 1; i >= 0; i-- {
+		gb.buf[gap + i] = gb.buf[i]
+		gb.buf[i] = 0x0
+	}
+	gb.cend = u64(gap)
+	gb.ccur = 0
+}
+
 fn (mut gb Buffer) grow() {
 	new_size := gb.buf.len * 2
 	mut copy_dst := []u8{ len: new_size, cap: new_size }

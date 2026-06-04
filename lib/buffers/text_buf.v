@@ -27,6 +27,9 @@ pub fn (mut tb TextBuffer) insert(c u8) {
 }
 
 pub fn (mut tb TextBuffer) backspace() {
+	if tb.data_buf.ccur() == 0 {
+		return
+	}
 	c_removed_byte := tb.data_buf.get(tb.data_buf.ccur() - 1) or { return }
 	tb.data_buf.backspace()
 	tb.line_buf.apply_delta(-1)
@@ -82,4 +85,8 @@ fn (tb TextBuffer) get_line_start_and_end(y u64) (u64, u64) {
 	return line_start, line_end
 }
 
+pub fn (mut tb TextBuffer) move_cursor_to_start() {
+	tb.data_buf.move_cur_to_start()
+	tb.line_buf.move_to_line(0)
+}
 

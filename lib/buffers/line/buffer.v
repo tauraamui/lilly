@@ -88,6 +88,21 @@ pub fn (mut lb Buffer) move_current_line_down() {
 	lb.move_gap_to_current()
 }
 
+pub fn (mut lb Buffer) move_to_line(line_idx u64) {
+	line_count := lb.len()
+	if line_count <= 0 {
+		lb.current_line = 0
+		lb.move_gap_to_current()
+		return
+	}
+	mut target := line_idx
+	if target >= u64(line_count) {
+		target = u64(line_count - 1)
+	}
+	lb.current_line = target
+	lb.move_gap_to_current()
+}
+
 fn (lb Buffer) to_physical_index(index int) int {
 	if index < lb.gap_start {
 		return index

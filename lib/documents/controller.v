@@ -34,6 +34,7 @@ pub fn (mut dc Controller2) load_document_from_reader(mut r io.Reader) !int {
 		}
 		text_buf.insert(single_byte[0])
 	}
+	text_buf.move_cursor_to_start()
 	doc_id := dc.next_id
 	dc.next_id += 1
 	dc.docs[doc_id] = text_buf
@@ -46,6 +47,10 @@ pub fn (mut dc Controller2) insert(doc_id int, c u8) {
 
 pub fn (mut dc Controller2) backspace(doc_id int) {
 	dc.docs[doc_id].backspace()
+}
+
+pub fn (mut dc Controller2) move_cursor_right(doc_id int) {
+	dc.docs[doc_id].move_cursor_right()
 }
 
 pub fn (mut dc Controller2) get_line_bytes(doc_id int, y u64) ?[]u8 {
