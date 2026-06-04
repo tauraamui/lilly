@@ -125,22 +125,8 @@ fn (mut m EditorModel2) view(mut ctx tea.Context) {
 	for y in 0..line_count {
 		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
 		line_str := line_bytes.bytestr().replace('\t', '    ')
-		if y == cursor_line {
-			end := if int(cursor_x) > line_bytes.len { line_bytes.len } else { int(cursor_x) }
-			before_cursor := line_bytes[..end].bytestr()
-			for r in before_cursor.runes() {
-				if r == `\t` {
-					cursor_visual_x += 4
-				} else {
-					cursor_visual_x += 1
-				}
-			}
-		}
 		ctx.draw_text(0, y, line_str)
 	}
-	ctx.set_bg_color(palette.petal_red_color)
-	ctx.draw_text(cursor_visual_x, int(cursor_line), '|')
-	ctx.reset_bg_color()
 }
 
 fn (m EditorModel2) width() int {
