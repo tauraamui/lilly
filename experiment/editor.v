@@ -38,6 +38,9 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 						'enter' {
 							m.doc_controller.insert(m.doc_id, `\n`)
 						}
+						'ctrl+i' { // TAB
+							m.doc_controller.insert(m.doc_id, `\t`)
+						}
 						'backspace' {
 							m.doc_controller.backspace(m.doc_id)
 						}
