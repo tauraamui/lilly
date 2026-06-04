@@ -6,8 +6,9 @@ import lib.documents
 import lib.palette
 
 struct EditorModel2 {
-	doc_id int
+	doc_id         int
 	doc_controller &documents.Controller2
+	chord          Chord
 }
 
 fn EditorModel2.new(doc_id int, doc_controller &documents.Controller2) EditorModel2 {
@@ -37,6 +38,43 @@ fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 }
 
 fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+	match msg.k_type {
+		// TODO(tauraamui) [2026-04-06]: implement rune based motions via chords once again
+		.runes {
+			match msg.string() {
+				'h' {
+					m.doc_controller.move_cursor_left(m.doc_id)
+				}
+				'j' {
+					m.doc_controller.move_cursor_down(m.doc_id)
+				}
+				'k' {
+					m.doc_controller.move_cursor_up(m.doc_id)
+				}
+				'l' {
+					m.doc_controller.move_cursor_right(m.doc_id)
+				}
+				else {}
+			}
+		}
+		.special {
+			match msg.string() {
+				'left' {
+					m.doc_controller.move_cursor_left(m.doc_id)
+				}
+				'down' {
+					m.doc_controller.move_cursor_down(m.doc_id)
+				}
+				'right' {
+					m.doc_controller.move_cursor_right(m.doc_id)
+				}
+				'up' {
+					m.doc_controller.move_cursor_up(m.doc_id)
+				}
+				else {}
+			}
+		}
+	}
 	return m.clone(), tea.noop_cmd
 }
 
