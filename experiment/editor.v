@@ -3,7 +3,7 @@ module main
 import os
 import bobatea as tea
 import lib.documents
-import lib.buffers
+import lib.palette
 
 struct EditorModel {
 	doc_id int
@@ -38,6 +38,12 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 						'enter' {
 							m.doc_controller.insert(m.doc_id, `\n`)
 						}
+						'left' {
+							m.doc_controller.move_cursor_left(m.doc_id)
+						}
+						'right' {
+							m.doc_controller.move_cursor_right(m.doc_id)
+						}
 						else {}
 					}
 				}
@@ -49,10 +55,57 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 }
 
 fn (mut m EditorModel) view(mut ctx tea.Context) {
-	for y in 0..m.doc_controller.line_count(m.doc_id) {
-		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { continue }
-		ctx.draw_text(0, int(y), line_bytes.bytestr())
+	cursor_line, cursor_x := m.doc_controller.cursor_line_and_x(m.doc_id)
+	line_count := int(m.doc_controller.line_count(m.doc_id))
+	mut cursor_char_bytes := []u8{}
+	mut cursor_char_set := false
+	for y in 0..line_count {
+		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
+		ctx.draw_text(0, y, line_bytes.bytestr())
+		if cursor_line == u64(y) {
+			cursor_char_set = true
+			start := int(cursor_x)
+			if start < line_bytes.len {
+				char_len := utf8_codepoint_len(line_bytes[start])
+				mut end := start + char_len
+				if end > line_bytes.len {
+					end = start + 1
+				}
+				cursor_char_bytes = line_bytes[start..end]
+			} else {
+				cursor_char_bytes = [u8(` `)]
+			}
+		}
 	}
+	cursor_char_str := if cursor_char_set && cursor_char_bytes.len > 0 && cursor_char_bytes[0] != `\n` {
+		cursor_char_bytes.bytestr()
+	} else {
+		' '
+	}
+	cursor_x_i := int(cursor_x)
+	cursor_y_i := int(cursor_line)
+	default_bg := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
+	ctx.set_bg_color(palette.fg_color(default_bg))
+	ctx.set_color(default_bg)
+	ctx.draw_text(cursor_x_i, cursor_y_i, cursor_char_str)
+	ctx.reset_bg_color()
+	ctx.reset_color()
+}
+
+fn utf8_codepoint_len(start_byte u8) int {
+	if start_byte & 0b10000000 == 0 {
+		return 1
+	}
+	if start_byte & 0b11100000 == 0b11000000 {
+		return 2
+	}
+	if start_byte & 0b11110000 == 0b11100000 {
+		return 3
+	}
+	if start_byte & 0b11111000 == 0b11110000 {
+		return 4
+	}
+	return 1
 }
 
 fn (m EditorModel) clone() tea.Model {

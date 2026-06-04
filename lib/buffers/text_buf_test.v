@@ -147,3 +147,37 @@ fn test_text_buffer_blank_lines_after_multiple_inserts_at_start() {
 	assert tb.get_line_bytes(3)? == [u8(`h`), `e`, `l`, `l`, `o`, `\n`]
 }
 
+fn test_text_buffer_cursor_line_and_x_basic() {
+	mut tb := TextBuffer.new()
+	tb.insert(u8(`H`))
+	tb.insert(u8(`i`))
+	line, x := tb.cursor_line_and_x()
+	assert line == u64(0)
+	assert x == u64(2)
+}
+
+fn test_text_buffer_cursor_line_and_x_across_newlines() {
+	mut tb := TextBuffer.new()
+	for c in "hello\nWo".bytes() {
+		tb.insert(c)
+	}
+	line, x := tb.cursor_line_and_x()
+	assert line == u64(1)
+	assert x == u64(2)
+
+	tb.move_cursor_left()
+	line2, x2 := tb.cursor_line_and_x()
+	assert line2 == u64(1)
+	assert x2 == u64(1)
+
+	tb.move_cursor_left()
+	line3, x3 := tb.cursor_line_and_x()
+	assert line3 == u64(1)
+	assert x3 == u64(0)
+
+	tb.move_cursor_left()
+	line4, x4 := tb.cursor_line_and_x()
+	assert line4 == u64(0)
+	assert x4 == u64(5)
+}
+
