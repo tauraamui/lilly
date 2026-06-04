@@ -96,6 +96,18 @@ fn is_combiner_at(b []u8, i int) bool {
 
 pub fn (mut dc Controller2) delete(doc_id int) {
 	dc.docs[doc_id].delete()
+	for dc.next_codepoint_is_combiner(doc_id) {
+		dc.docs[doc_id].delete()
+	}
+}
+
+fn (dc Controller2) next_codepoint_is_combiner(doc_id int) bool {
+	cursor_line, cursor_x := dc.docs[doc_id].cursor_line_and_x()
+	line_bytes := dc.docs[doc_id].get_line_bytes(cursor_line) or { return false }
+	if int(cursor_x) >= line_bytes.len {
+		return false
+	}
+	return is_combiner_at(line_bytes, int(cursor_x))
 }
 
 pub fn (mut dc Controller2) move_cursor_left(doc_id int) {
