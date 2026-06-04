@@ -48,17 +48,57 @@ pub fn (mut tb TextBuffer) delete() {
 }
 
 pub fn (mut tb TextBuffer) move_cursor_left() {
-	c_byte := tb.data_buf.get(tb.data_buf.ccur() - 1) or { return }
-	tb.data_buf.move_cur_left()
-	if c_byte == newline_hex {
+	if tb.data_buf.ccur() == 0 {
+		return
+	}
+
+	mut start_index := tb.data_buf.ccur() - 1
+	mut start_byte := tb.data_buf.get(start_index) or { return }
+	for start_index > 0 && is_utf8_continuation_byte(start_byte) {
+		start_index -= 1
+		start_byte = tb.data_buf.get(start_index) or { break }
+	}
+
+	char_len := int(tb.data_buf.ccur() - start_index)
+	for _ in 0 .. char_len {
+		if tb.data_buf.ccur() == 0 {
+			break
+		}
+		tb.data_buf.move_cur_left()
+	}
+
+	if start_byte == newline_hex {
 		tb.line_buf.move_current_line_up()
 	}
 }
 
 pub fn (mut tb TextBuffer) move_cursor_right() {
-	c_byte := tb.data_buf.get(tb.data_buf.ccur()) or { return }
-	tb.data_buf.move_cur_right()
-	if c_byte == newline_hex {
+	start := tb.data_buf.ccur()
+	start_byte := tb.data_buf.get(start) or { return }
+
+	mut desired_len := utf8_codepoint_len(start_byte)
+	if desired_len < 1 {
+		desired_len = 1
+	}
+
+	mut actual_len := 1
+	for actual_len < desired_len {
+		next_index := start + u64(actual_len)
+		next_byte := tb.data_buf.get(next_index) or { break }
+		if !is_utf8_continuation_byte(next_byte) {
+			break
+		}
+		actual_len += 1
+	}
+
+	for _ in 0 .. actual_len {
+		if tb.data_buf.get(tb.data_buf.ccur()) == none {
+			break
+		}
+		tb.data_buf.move_cur_right()
+	}
+
+	if start_byte == newline_hex {
 		tb.line_buf.move_current_line_down()
 	}
 }
@@ -110,5 +150,25 @@ fn (tb TextBuffer) get_line_start_and_end(y u64) (u64, u64) {
 pub fn (mut tb TextBuffer) move_cursor_to_start() {
 	tb.data_buf.move_cur_to_start()
 	tb.line_buf.move_to_line(0)
+}
+
+fn is_utf8_continuation_byte(b u8) bool {
+	return b & 0b11000000 == 0b10000000
+}
+
+fn utf8_codepoint_len(start_byte u8) int {
+	if start_byte & 0b10000000 == 0 {
+		return 1
+	}
+	if start_byte & 0b11100000 == 0b11000000 {
+		return 2
+	}
+	if start_byte & 0b11110000 == 0b11100000 {
+		return 3
+	}
+	if start_byte & 0b11111000 == 0b11110000 {
+		return 4
+	}
+	return 1
 }
 

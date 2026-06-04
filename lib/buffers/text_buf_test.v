@@ -181,3 +181,19 @@ fn test_text_buffer_cursor_line_and_x_across_newlines() {
 	assert x4 == u64(5)
 }
 
+fn test_text_buffer_cursor_movement_skips_multibyte_codepoints() {
+	mut tb := TextBuffer.new()
+	for c in "a😍b".bytes() {
+		tb.insert(c)
+	}
+
+	tb.move_cursor_left()
+	tb.move_cursor_left()
+	tb.insert(u8(`Z`))
+	assert tb.get_line_bytes(0)? == "aZ😍b".bytes()
+
+	tb.move_cursor_right()
+	tb.insert(u8(`X`))
+	assert tb.get_line_bytes(0)? == "aZ😍Xb".bytes()
+}
+
