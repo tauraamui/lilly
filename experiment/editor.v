@@ -22,6 +22,10 @@ fn (mut m EditorModel) init() fn () tea.Msg {
 }
 
 fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+	return m.normal_mode_update(msg)
+}
+
+fn (mut m EditorModel) normal_mode_update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	match msg {
 		tea.KeyMsg {
 			match msg.k_type {
@@ -85,10 +89,7 @@ fn (m EditorModel) clone() tea.Model {
 }
 
 fn main() {
-	file_path := os.join_path(os.temp_dir(), 'test_LF.txt')
-	defer { os.rm(file_path) or { println('failed to delete ${file_path}: ${err}') } }
-	os.write_file(file_path, 'hello\nWoRlD<\n😍')!
-
+	file_path := '/home/tauraamui/src/lilly/editor.v'
 	mut documents_controller := documents.Controller2.new()
 
 	doc_id := documents_controller.open_document(file_path) or {
