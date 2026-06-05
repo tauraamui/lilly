@@ -9,6 +9,9 @@ struct EditorModel2 {
 	doc_id         int
 	doc_controller &documents.Controller2
 	chord          Chord
+mut:
+	min_y int
+	max_y int
 }
 
 fn EditorModel2.new(doc_id int, doc_controller &documents.Controller2) EditorModel2 {
@@ -19,7 +22,7 @@ fn EditorModel2.new(doc_id int, doc_controller &documents.Controller2) EditorMod
 }
 
 fn (mut m EditorModel2) init() fn () tea.Msg {
-	return tea.noop_cmd
+	return tea.emit_resize
 }
 
 fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
