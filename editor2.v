@@ -1,17 +1,18 @@
 module main
 
-import os
 import bobatea as tea
 import lib.documents
-import lib.palette
 
 struct EditorModel2 {
+	id             int
+	file_path      string
 	doc_id         int
 	doc_controller &documents.Controller2
 	chord          Chord
 mut:
-	min_y int
-	max_y int
+	viewport_width int
+	viewport_height int
+	top_line int
 }
 
 fn EditorModel2.new(doc_id int, doc_controller &documents.Controller2) EditorModel2 {
@@ -36,6 +37,28 @@ fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			}
 			else {}
 		}
+	}
+
+	match msg {
+		tea.ResizedMsg {
+			m.viewport_width  = msg.window_width // artificially shrunk by parent model EditorWorkspace
+			m.viewport_height = msg.window_height
+		}
+		EditorModelMsg {
+			return m.editor_model_update(msg.msg)
+		}
+		else {}
+	}
+
+	return m.clone(), tea.noop_cmd
+}
+
+fn (mut m EditorModel2) editor_model_update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+	match msg {
+		QueryEditorDataMsg {
+			return m.clone(), editor_data(m.data())
+		}
+		else {}
 	}
 	return m.clone(), tea.noop_cmd
 }
@@ -78,6 +101,7 @@ fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 			}
 		}
 	}
+	m.scroll_to_cursor()
 	return m.clone(), tea.noop_cmd
 }
 
@@ -118,13 +142,32 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 			}
 		}
 	}
+	m.scroll_to_cursor()
 	return m.clone(), tea.noop_cmd
 }
 
-fn (mut m EditorModel2) view(mut ctx tea.Context) {
-	cursor_line, cursor_x := m.doc_controller.cursor_line_and_x(m.doc_id)
+fn (mut m EditorModel2) scroll_to_cursor() {
+	cursor_line_u, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+	cursor_line := int(cursor_line_u)
 	line_count := int(m.doc_controller.line_count(m.doc_id))
-	mut cursor_visual_x := 0
+
+	if cursor_line < m.top_line {
+		m.top_line = cursor_line
+	} else if cursor_line >= m.top_line + m.viewport_height {
+		m.top_line = cursor_line - m.viewport_height + 1
+	}
+
+	max_top := if line_count > m.viewport_height { line_count - m.viewport_height } else { 0 }
+	if m.top_line > max_top {
+		m.top_line = max_top
+	}
+	if m.top_line < 0 {
+		m.top_line = 0
+	}
+}
+
+fn (m EditorModel2) view(mut ctx tea.Context) {
+	line_count := int(m.doc_controller.line_count(m.doc_id))
 	for y in 0..line_count {
 		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
 		line_str := line_bytes.bytestr().replace('\t', '    ')
@@ -133,21 +176,40 @@ fn (mut m EditorModel2) view(mut ctx tea.Context) {
 }
 
 fn (m EditorModel2) width() int {
-	return 300
+	return m.viewport_width
 }
 
 fn (m EditorModel2) height() int {
-	return 500
+	return m.viewport_height
+}
+
+fn (m EditorModel2) data() EditorData {
+	cursor_line, cursor_x := m.doc_controller.cursor_line_and_x(m.doc_id)
+	return EditorData{
+		id:        m.id
+		file_path: m.file_path
+
+		cursor_row: int(cursor_line)
+		cursor_col: int(cursor_x)
+
+		chord_display: m.chord.display()
+		
+		width: m.viewport_width
+		height: m.viewport_height
+	}
 }
 
 fn (m EditorModel2) debug_data() DebugData {
+	cursor_line, cursor_x := m.doc_controller.cursor_line_and_x(m.doc_id)
 	return DebugData{
 		name: 'active editor data'
 		data: {
-			'id':         '${m.doc_id}'
-			// 'file path':  m.file_path
-			// 'cursor_row': '${m.cursor_pos.y}'
-			// 'cursor_col': '${m.cursor_pos.x}'
+			'id':         '${m.id}'
+			'doc_id':     '${m.doc_id}'
+			'cursor_row': '${int(cursor_line)}'
+			'cursor_col': '${int(cursor_x)}'
+			'width':      '${m.viewport_width}'
+			'height':     '${m.viewport_height}'
 		}
 	}
 }

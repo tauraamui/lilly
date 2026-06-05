@@ -42,6 +42,8 @@ struct EditorData {
 	cursor_row    int
 	cursor_col    int
 	chord_display string
+	width         int
+	height        int
 }
 
 struct EditorModel {

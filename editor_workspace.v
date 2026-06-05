@@ -968,6 +968,8 @@ fn (m EditorWorkspaceModel) debug_data() DebugData {
 		name: 'editor_workspace data'
 		data: {
 			'initial file path': m.initial_file_path
+			'active editor width': if d := m.active_editor_data { '${d.width}' } else { 'null' }
+			'active editor height': if d := m.active_editor_data { '${d.height}' } else { 'null' }
 		}
 	}
 }
