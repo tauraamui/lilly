@@ -179,16 +179,30 @@ fn (m EditorModel2) render_cursor_and_line_highlight(mut ctx tea.Context) {
 	line_bytes := m.doc_controller.get_line_bytes(m.doc_id, cursor_line) or { []u8{} }
 	tab_width := 4
 	mut visual_x := 0
-	for i in 0 .. int(cursor_x) {
-		if i >= line_bytes.len { break }
-		if line_bytes[i] == `\t` {
+	mut i := 0
+	cursor_byte := int(cursor_x)
+	for i < cursor_byte && i < line_bytes.len {
+		b := line_bytes[i]
+		if b == `\t` {
 			visual_x += tab_width
-		} else {
-			visual_x += 1
+			i += 1
+			continue
 		}
+		cp_len := utf8_codepoint_byte_len(b)
+		end := if i + cp_len <= line_bytes.len { i + cp_len } else { line_bytes.len }
+		visual_x += utf8_str_visible_length(line_bytes[i..end].bytestr())
+		i = end
 	}
-	cursor_width := if int(cursor_x) < line_bytes.len && line_bytes[int(cursor_x)] == `\t` {
-		tab_width
+	cursor_width := if cursor_byte < line_bytes.len {
+		b := line_bytes[cursor_byte]
+		if b == `\t` {
+			tab_width
+		} else {
+			cp_len := utf8_codepoint_byte_len(b)
+			end := if cursor_byte + cp_len <= line_bytes.len { cursor_byte + cp_len } else { line_bytes.len }
+			w := utf8_str_visible_length(line_bytes[cursor_byte..end].bytestr())
+			if w < 1 { 1 } else { w }
+		}
 	} else {
 		1
 	}
@@ -257,6 +271,22 @@ fn (m EditorModel2) clone() tea.Model {
 	return EditorModel2{
 		...m
 	}
+}
+
+fn utf8_codepoint_byte_len(b u8) int {
+	if b & 0b10000000 == 0 {
+		return 1
+	}
+	if b & 0b11100000 == 0b11000000 {
+		return 2
+	}
+	if b & 0b11110000 == 0b11100000 {
+		return 3
+	}
+	if b & 0b11111000 == 0b11110000 {
+		return 4
+	}
+	return 1
 }
 
 
