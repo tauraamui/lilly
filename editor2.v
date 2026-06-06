@@ -168,10 +168,11 @@ fn (mut m EditorModel2) scroll_to_cursor() {
 
 fn (m EditorModel2) view(mut ctx tea.Context) {
 	line_count := int(m.doc_controller.line_count(m.doc_id))
-	for y in 0..line_count {
+	end := if m.top_line + m.viewport_height < line_count { m.top_line + m.viewport_height } else { line_count }
+	for y in m.top_line .. end {
 		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
 		line_str := line_bytes.bytestr().replace('\t', '    ')
-		ctx.draw_text(0, y, line_str)
+		ctx.draw_text(0, y - m.top_line, line_str)
 	}
 }
 
