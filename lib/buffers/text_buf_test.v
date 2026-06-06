@@ -155,6 +155,38 @@ fn test_text_buffer_cursor_line_and_x_basic() {
 	assert x == u64(2)
 }
 
+fn text_text_buffer_cursor_line_and_x_rocket() {
+	mut tb := TextBuffer.new()
+	tb.insert(u8(`🚀`))
+	tb.insert(u8(`r`))
+	line, x := tb.cursor_line_and_x()
+	assert line == u64(0)
+	assert x == u64(1)
+}
+
+fn test_text_buffer_cursor_line_and_x_ambulance() {
+	mut tb := TextBuffer.new()
+	for b in '🚑️'.bytes() {
+		tb.insert(b)
+	}
+	tb.insert(u8(`r`))
+	line, x := tb.cursor_line_and_x()
+	assert line == u64(0)
+	assert x == u64(1)
+}
+
+fn test_text_buffer_cursor_line_and_x_rocket_and_ambulance() {
+	mut tb := TextBuffer.new()
+	tb.insert(u8(`🚀`))
+	for b in '🚑️'.bytes() {
+		tb.insert(b)
+	}
+	tb.insert(u8(`r`))
+	line, x := tb.cursor_line_and_x()
+	assert line == u64(0)
+	assert x == u64(1)
+}
+
 fn test_text_buffer_cursor_line_and_x_across_newlines() {
 	mut tb := TextBuffer.new()
 	for c in "hello\nWo".bytes() {
