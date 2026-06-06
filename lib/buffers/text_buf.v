@@ -224,7 +224,7 @@ pub fn (tb TextBuffer) get_line_bytes(y u64) ?[]u8 {
 pub fn (tb TextBuffer) cursor_line_and_x() (u64, u64) {
 	line_count := tb.line_buf.len()
 	if line_count == 0 {
-		return 0, tb.data_buf.ccur()
+		return 0, tb.count_codepoints(0, tb.data_buf.ccur())
 	}
 	mut line_idx := tb.line_buf.current_line
 	if line_idx >= u64(line_count) {
@@ -232,7 +232,11 @@ pub fn (tb TextBuffer) cursor_line_and_x() (u64, u64) {
 	}
 	line_start, _ := tb.get_line_start_and_end(line_idx)
 	cursor_offset := tb.data_buf.ccur()
-	column := if cursor_offset >= line_start { cursor_offset - line_start } else { 0 }
+	column := if cursor_offset >= line_start {
+		tb.count_codepoints(line_start, cursor_offset)
+	} else {
+		u64(0)
+	}
 	return line_idx, column
 }
 
