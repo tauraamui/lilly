@@ -170,53 +170,6 @@ fn (mut m EditorModel2) scroll_to_cursor() {
 	}
 }
 
-fn (m EditorModel2) render_cursor_and_line_highlight(mut ctx tea.Context) {
-	cursor_line, cursor_x := m.doc_controller.cursor_line_and_x(m.doc_id)
-	ctx.set_bg_color(m.theme.cursor_line_bg)
-	ctx.draw_rect(0, int(cursor_line) - m.top_line, m.viewport_width, 1)
-	ctx.reset_bg_color()
-
-	line_bytes := m.doc_controller.get_line_bytes(m.doc_id, cursor_line) or { []u8{} }
-	tab_width := 4
-	mut visual_x := 0
-	mut i := 0
-	cursor_byte := int(cursor_x)
-	for i < cursor_byte && i < line_bytes.len {
-		b := line_bytes[i]
-		if b == `\t` {
-			visual_x += tab_width
-			i += 1
-			continue
-		}
-		cp_len := utf8_codepoint_byte_len(b)
-		end := if i + cp_len <= line_bytes.len { i + cp_len } else { line_bytes.len }
-		visual_x += utf8_str_visible_length(line_bytes[i..end].bytestr())
-		i = end
-	}
-	cursor_width := if cursor_byte < line_bytes.len {
-		b := line_bytes[cursor_byte]
-		if b == `\t` {
-			tab_width
-		} else {
-			cp_len := utf8_codepoint_byte_len(b)
-			end := if cursor_byte + cp_len <= line_bytes.len { cursor_byte + cp_len } else { line_bytes.len }
-			w := utf8_str_visible_length(line_bytes[cursor_byte..end].bytestr())
-			if w < 1 { 1 } else { w }
-		}
-	} else {
-		1
-	}
-
-	// basically we want the block cursor to be the inverse of the background shade
-	// and then the text/fg color to be the inverse of that/the same as background
-	default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
-	ctx.set_bg_color(palette.fg_color(default_bg_color))
-	ctx.set_color(default_bg_color)
-	ctx.draw_rect(visual_x, int(cursor_line) - m.top_line, cursor_width, 1)
-	ctx.reset_bg_color()
-	ctx.reset_color()
-}
-
 fn (m EditorModel2) view(mut ctx tea.Context) {
 	m.render_cursor_and_line_highlight(mut ctx)
 	line_count := int(m.doc_controller.line_count(m.doc_id))
@@ -226,6 +179,39 @@ fn (m EditorModel2) view(mut ctx tea.Context) {
 		line_str := line_bytes.bytestr().replace('\t', '    ')
 		ctx.draw_text(0, y - m.top_line, line_str)
 	}
+}
+
+fn (m EditorModel2) render_cursor_and_line_highlight(mut ctx tea.Context) {
+	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
+	ctx.set_bg_color(m.theme.cursor_line_bg)
+	ctx.draw_rect(0, int(cursor_line) - m.top_line, m.viewport_width, 1)
+	ctx.reset_bg_color()
+
+	line_bytes := m.doc_controller.get_line_bytes(m.doc_id, cursor_line) or { []u8{} }
+	runes := line_bytes.bytestr().runes()
+	tab_width := 4
+	col := int(cursor_col) // logical column == rune index
+
+	// logical column -> visual column: sum display widths of runes before the cursor
+	mut visual_x := 0
+	for i := 0; i < col && i < runes.len; i++ {
+		visual_x += rune_display_width(runes[i], tab_width)
+	}
+
+	// width of the glyph sitting under the cursor (min 1 so the block is visible)
+	cursor_width := if col < runes.len {
+		w := rune_display_width(runes[col], tab_width)
+		if w < 1 { 1 } else { w }
+	} else {
+		1
+	}
+
+	default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
+	ctx.set_bg_color(palette.fg_color(default_bg_color))
+	ctx.set_color(default_bg_color)
+	ctx.draw_rect(visual_x, int(cursor_line) - m.top_line, cursor_width, 1)
+	ctx.reset_bg_color()
+	ctx.reset_color()
 }
 
 fn (m EditorModel2) width() int {
@@ -273,20 +259,15 @@ fn (m EditorModel2) clone() tea.Model {
 	}
 }
 
-fn utf8_codepoint_byte_len(b u8) int {
-	if b & 0b10000000 == 0 {
-		return 1
+fn rune_display_width(r rune, tab_width int) int {
+	if r == `\t` {
+		return tab_width
 	}
-	if b & 0b11100000 == 0b11000000 {
-		return 2
-	}
-	if b & 0b11110000 == 0b11100000 {
-		return 3
-	}
-	if b & 0b11111000 == 0b11110000 {
-		return 4
-	}
-	return 1
+	return char_width(r)
+}
+
+fn char_width(r rune) int {
+	return utf8_str_visible_length(r.str())
 }
 
 
