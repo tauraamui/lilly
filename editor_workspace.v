@@ -504,7 +504,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 				tab_width:      m.tab_width
 			)
 			*/
-			mut e_model := EditorModel2.new(doc_id2, m.doc_controller2)
+			mut e_model := EditorModel2.new(m.theme, doc_id2, m.doc_controller2)
 			cmd := e_model.init()
 
 			if m.split_tree.is_empty() {
@@ -541,7 +541,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					tab_width:      m.tab_width
 				)
 				*/
-				mut new_editor := EditorModel2.new(info.doc_id, m.doc_controller2)
+				mut new_editor := EditorModel2.new(m.theme, info.doc_id, m.doc_controller2)
 				cmds << new_editor.init()
 
 				m.split_tree.insert_vertical_split(new_id, info.file_path)

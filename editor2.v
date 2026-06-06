@@ -2,11 +2,14 @@ module main
 
 import bobatea as tea
 import lib.documents
+import lib.petal.theme
+import lib.palette
 
 struct EditorModel2 {
 	id             int
 	file_path      string
 	doc_id         int
+	theme          theme.Theme
 	doc_controller &documents.Controller2
 	chord          Chord
 mut:
@@ -15,9 +18,10 @@ mut:
 	top_line int
 }
 
-fn EditorModel2.new(doc_id int, doc_controller &documents.Controller2) EditorModel2 {
+fn EditorModel2.new(l_theme theme.Theme, doc_id int, doc_controller &documents.Controller2) EditorModel2 {
 	return EditorModel2{
 		doc_id: doc_id
+		theme: l_theme
 		doc_controller: doc_controller
 	}
 }
@@ -166,7 +170,24 @@ fn (mut m EditorModel2) scroll_to_cursor() {
 	}
 }
 
+fn (m EditorModel2) render_cursor_and_line_highlight(mut ctx tea.Context) {
+	cursor_line, cursor_x := m.doc_controller.cursor_line_and_x(m.doc_id)
+	ctx.set_bg_color(m.theme.cursor_line_bg)
+	ctx.draw_rect(0, int(cursor_line) - m.top_line, m.viewport_width, 1)
+	ctx.reset_bg_color()
+
+	// basically we want the block cursor to be the inverse of the background shade
+	// and then the text/fg color to be the inverse of that/the same as background
+	default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
+	ctx.set_bg_color(palette.fg_color(default_bg_color))
+	ctx.set_color(default_bg_color)
+	ctx.draw_rect(int(cursor_x), int(cursor_line) - m.top_line, 1, 1)
+	ctx.reset_bg_color()
+	ctx.reset_color()
+}
+
 fn (m EditorModel2) view(mut ctx tea.Context) {
+	m.render_cursor_and_line_highlight(mut ctx)
 	line_count := int(m.doc_controller.line_count(m.doc_id))
 	end := if m.top_line + m.viewport_height < line_count { m.top_line + m.viewport_height } else { line_count }
 	for y in m.top_line .. end {
