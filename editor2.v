@@ -176,12 +176,29 @@ fn (m EditorModel2) render_cursor_and_line_highlight(mut ctx tea.Context) {
 	ctx.draw_rect(0, int(cursor_line) - m.top_line, m.viewport_width, 1)
 	ctx.reset_bg_color()
 
+	line_bytes := m.doc_controller.get_line_bytes(m.doc_id, cursor_line) or { []u8{} }
+	tab_width := 4
+	mut visual_x := 0
+	for i in 0 .. int(cursor_x) {
+		if i >= line_bytes.len { break }
+		if line_bytes[i] == `\t` {
+			visual_x += tab_width
+		} else {
+			visual_x += 1
+		}
+	}
+	cursor_width := if int(cursor_x) < line_bytes.len && line_bytes[int(cursor_x)] == `\t` {
+		tab_width
+	} else {
+		1
+	}
+
 	// basically we want the block cursor to be the inverse of the background shade
 	// and then the text/fg color to be the inverse of that/the same as background
 	default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
 	ctx.set_bg_color(palette.fg_color(default_bg_color))
 	ctx.set_color(default_bg_color)
-	ctx.draw_rect(int(cursor_x), int(cursor_line) - m.top_line, 1, 1)
+	ctx.draw_rect(visual_x, int(cursor_line) - m.top_line, cursor_width, 1)
 	ctx.reset_bg_color()
 	ctx.reset_color()
 }
