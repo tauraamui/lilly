@@ -154,7 +154,11 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 
 fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
 	match msg.k_type {
-		.runes {}
+		.runes {
+			if action := m.chord.feed(msg.string()) {
+				return m.clone(), m.execute_action(action)
+			}
+		}
 		.special {
 			match msg.string() {
 				'escape' {
@@ -164,6 +168,7 @@ fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 			}
 		}
 	}
+	m.scroll_to_cursor()
 	return m.clone(), tea.noop_cmd
 }
 
