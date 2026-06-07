@@ -178,8 +178,13 @@ fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	match msg.k_type {
 		.runes {
 			if action := m.chord.feed(msg.string()) {
-				cmd, _ := m.execute_action(action)
+				cmd, switching_mode := m.execute_action(action)
+				if !switching_mode {
+					m.clamp_cursor_to_line_end()
+				}
+				m.scroll_to_cursor()
 				return m.clone(), cmd
+
 			}
 		}
 		.special {
@@ -191,6 +196,7 @@ fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 			}
 		}
 	}
+	m.clamp_cursor_to_line_end()
 	m.scroll_to_cursor()
 	return m.clone(), tea.noop_cmd
 }
@@ -319,6 +325,11 @@ fn (mut m EditorModel2) clamp_cursor_to_line_end() {
 }
 
 fn (m EditorModel2) view(mut ctx tea.Context) {
+	ctx.set_clip_area(tea.ClipArea{ 0, 0, m.width(), m.height() })
+	defer { ctx.clear_clip_area() }
+
+	offset_id := m.render_line_numbers(mut ctx)
+	defer { ctx.clear_offsets_from(offset_id) }
 	m.render_cursor_line_highlight(mut ctx)
 	m.render_visual_selection(mut ctx)
 	m.render_cursor_block(mut ctx)
@@ -329,6 +340,16 @@ fn (m EditorModel2) view(mut ctx tea.Context) {
 		line_str := line_bytes.bytestr().replace('\t', '    ')
 		ctx.draw_text(0, y - m.top_line, line_str)
 	}
+}
+
+fn (m EditorModel2) render_line_numbers(mut ctx tea.Context) int {
+	line_count := int(m.doc_controller.line_count(m.doc_id))
+	end := if m.top_line + m.viewport_height < line_count { m.top_line + m.viewport_height } else { line_count }
+	max_line_nr := m.top_line + end
+	gutter_width := num_digits(max_line_nr) + 1
+	
+	offset_id := ctx.push_offset(tea.Offset{ x: gutter_width })
+	return offset_id
 }
 
 fn (m EditorModel2) render_cursor_line_highlight(mut ctx tea.Context) {
