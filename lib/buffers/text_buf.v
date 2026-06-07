@@ -66,14 +66,25 @@ pub fn (mut tb TextBuffer) delete() {
 }
 
 pub fn (mut tb TextBuffer) delete_line(y u64) {
-	if y >= u64(tb.line_buf.len()) {
+	line_count := u64(tb.line_buf.len())
+	if y >= line_count {
 		return
 	}
+	is_last := y + 1 == line_count
+	has_prev := y > 0
 	line_start, line_end := tb.get_line_start_and_end(y)
 	byte_count := line_end - line_start
 	tb.move_cursor_to_line_start(y)
 	for _ in 0..byte_count {
 		tb.delete()
+	}
+	// Vim collapse: when the deleted line was the last in the file, also
+	// consume the preceding line's terminating newline so we don't leave
+	// behind an empty trailing line. Skipped for the only-line case —
+	// the buffer must always contain at least one line.
+	if is_last && has_prev {
+		tb.backspace()
+		tb.move_cursor_to_line_start(y - 1)
 	}
 }
 
