@@ -11,8 +11,8 @@ struct EditorModel2 {
 	doc_id         int
 	theme          theme.Theme
 	doc_controller &documents.Controller2
-	chord          Chord
 mut:
+	chord          Chord
 	viewport_width int
 	viewport_height int
 	top_line int
@@ -69,28 +69,10 @@ fn (mut m EditorModel2) editor_model_update(msg tea.Msg) (tea.Model, fn () tea.M
 
 fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
 	match msg.k_type {
-		// TODO(tauraamui) [2026-04-06]: implement rune based motions via chords once again
 		.runes {
-			match msg.string() {
-				'h' {
-					m.doc_controller.move_cursor_left(m.doc_id)
-				}
-				'j' {
-					m.doc_controller.move_cursor_down(m.doc_id)
-				}
-				'k' {
-					m.doc_controller.move_cursor_up(m.doc_id)
-				}
-				'l' {
-					m.doc_controller.move_cursor_right(m.doc_id)
-				}
-				'{' {
-					m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id)
-				}
-				'}' {
-					m.doc_controller.move_cursor_to_next_blank_line(m.doc_id)
-				}
-				else {}
+			if action := m.chord.feed(msg.string()) {
+				mut cmds := []tea.Cmd{}
+				m.execute_action(action, mut cmds)
 			}
 		}
 		.special {
@@ -154,6 +136,50 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	}
 	m.scroll_to_cursor()
 	return m.clone(), tea.noop_cmd
+}
+
+fn (mut m EditorModel2) execute_action(action ChordAction, mut cmds []tea.Cmd) {
+	count := action.count
+	if op := action.operator {
+		return // TODO(tauraamui) [2026-06-07]: actually populate this part
+	}
+	m.execute_motion_action(action.motion, count)
+}
+
+fn (mut m EditorModel2) execute_motion_action(action_motion string, count int) {
+	match action_motion {
+		'h' {
+			for _ in 0..count {
+				m.doc_controller.move_cursor_left(m.doc_id)
+			}
+		}
+		'j' {
+			for _ in 0..count {
+				m.doc_controller.move_cursor_down(m.doc_id)
+			}
+		}
+		'k' {
+			for _ in 0..count {
+				m.doc_controller.move_cursor_up(m.doc_id)
+			}
+		}
+		'l' {
+			for _ in 0..count {
+				m.doc_controller.move_cursor_right(m.doc_id)
+			}
+		}
+		'{' {
+			for _ in 0..count {
+				m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id)
+			}
+		}
+		'}' {
+			for _ in 0..count {
+				m.doc_controller.move_cursor_to_next_blank_line(m.doc_id)
+			}
+		}
+		else {}
+	}
 }
 
 fn (mut m EditorModel2) scroll_to_cursor() {
