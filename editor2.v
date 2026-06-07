@@ -16,6 +16,8 @@ mut:
 	viewport_width int
 	viewport_height int
 	top_line int
+	visual_sel_start_col ?u64
+	visual_sel_start_line ?u64
 }
 
 fn EditorModel2.new(l_theme theme.Theme, doc_id int, doc_controller &documents.Controller2) EditorModel2 {
@@ -74,9 +76,23 @@ fn (mut m EditorModel2) editor_model_update(msg tea.Msg) (tea.Model, fn () tea.M
 }
 
 fn (mut m EditorModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () tea.Msg) {
-	if msg.mode == .normal {
-		m.doc_controller.move_cursor_left(m.doc_id)
+	match msg.mode {
+		.normal {
+			if msg.from == .insert || msg.from == .normal {
+				m.doc_controller.move_cursor_left(m.doc_id)
+			}
+		}
+		.visual {
+			cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
+			m.visual_sel_start_line = cursor_line
+			m.visual_sel_start_col = cursor_col
+			return m.clone(), tea.noop_cmd
+		}
+		else {}
 	}
+
+	m.visual_sel_start_line = ?u64(none)
+	m.visual_sel_start_col = ?u64(none)
 
 	return m.clone(), tea.noop_cmd
 }
@@ -303,7 +319,9 @@ fn (mut m EditorModel2) clamp_cursor_to_line_end() {
 }
 
 fn (m EditorModel2) view(mut ctx tea.Context) {
-	m.render_cursor_and_line_highlight(mut ctx)
+	m.render_cursor_line_highlight(mut ctx)
+	m.render_visual_selection(mut ctx)
+	m.render_cursor_block(mut ctx)
 	line_count := int(m.doc_controller.line_count(m.doc_id))
 	end := if m.top_line + m.viewport_height < line_count { m.top_line + m.viewport_height } else { line_count }
 	for y in m.top_line .. end {
@@ -313,24 +331,91 @@ fn (m EditorModel2) view(mut ctx tea.Context) {
 	}
 }
 
-fn (m EditorModel2) render_cursor_and_line_highlight(mut ctx tea.Context) {
-	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
+fn (m EditorModel2) render_cursor_line_highlight(mut ctx tea.Context) {
+	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
 	ctx.set_bg_color(m.theme.cursor_line_bg)
 	ctx.draw_rect(0, int(cursor_line) - m.top_line, m.viewport_width, 1)
 	ctx.reset_bg_color()
+}
 
-	line_bytes := m.doc_controller.get_line_bytes(m.doc_id, cursor_line) or { []u8{} }
+fn (m EditorModel2) render_cursor_block(mut ctx tea.Context) {
+	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
+	visual_x, cursor_width := m.visual_x_and_cluster_width_for(cursor_line, cursor_col)
+
+	default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
+	ctx.set_bg_color(palette.fg_color(default_bg_color))
+	ctx.set_color(default_bg_color)
+	ctx.draw_rect(visual_x, int(cursor_line) - m.top_line, cursor_width, 1)
+	ctx.reset_bg_color()
+	ctx.reset_color()
+}
+
+fn (m EditorModel2) render_visual_selection(mut ctx tea.Context) {
+	sel_start_line := m.visual_sel_start_line or { return }
+	sel_start_col := m.visual_sel_start_col or { return }
+	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
+
+	mut start_line, mut start_col := sel_start_line, sel_start_col
+	mut end_line, mut end_col := cursor_line, cursor_col
+	if cursor_line < sel_start_line
+		|| (cursor_line == sel_start_line && cursor_col < sel_start_col) {
+		start_line, start_col = cursor_line, cursor_col
+		end_line, end_col = sel_start_line, sel_start_col
+	}
+
+	start_visual_x, _ := m.visual_x_and_cluster_width_for(start_line, start_col)
+	end_visual_x, end_cluster_width := m.visual_x_and_cluster_width_for(end_line, end_col)
+
+	ctx.set_bg_color(m.theme.highlight_bg_color)
+	defer { ctx.reset_bg_color() }
+
+	line_count := int(m.doc_controller.line_count(m.doc_id))
+	view_end := if m.top_line + m.viewport_height < line_count {
+		m.top_line + m.viewport_height
+	} else {
+		line_count
+	}
+
+	if start_line == end_line {
+		screen_y := int(start_line) - m.top_line
+		if screen_y >= 0 && screen_y < m.viewport_height {
+			ctx.draw_rect(start_visual_x, screen_y, end_visual_x + end_cluster_width - start_visual_x, 1)
+		}
+		return
+	}
+
+	// first line: from start_visual_x to end of viewport
+	first_sy := int(start_line) - m.top_line
+	if first_sy >= 0 && first_sy < m.viewport_height {
+		ctx.draw_rect(start_visual_x, first_sy, m.viewport_width - start_visual_x, 1)
+	}
+	// middle lines: full width
+	for y in int(start_line) + 1 .. int(end_line) {
+		if y < m.top_line || y >= view_end {
+			continue
+		}
+		ctx.draw_rect(0, y - m.top_line, m.viewport_width, 1)
+	}
+	// last line: from 0 to end_visual_x + cluster_width
+	last_sy := int(end_line) - m.top_line
+	if last_sy >= 0 && last_sy < m.viewport_height {
+		ctx.draw_rect(0, last_sy, end_visual_x + end_cluster_width, 1)
+	}
+}
+
+fn (m EditorModel2) visual_x_and_cluster_width_for(line u64, col u64) (int, int) {
+	line_bytes := m.doc_controller.get_line_bytes(m.doc_id, line) or { []u8{} }
 	runes := line_bytes.bytestr().runes()
-	col := int(cursor_col) // logical column == grapheme cluster index
+	c := int(col) // logical column == grapheme cluster index
 
 	// grapheme-cluster index -> rune prefix length, so visible-width
 	// measurement covers ZWJ sequences and variation selectors as one glyph.
-	prefix_end := rune_index_after_graphemes(runes, col)
+	prefix_end := rune_index_after_graphemes(runes, c)
 	prefix := runes[..prefix_end].string().replace('\t', '    ')
 	visual_x := utf8_str_visible_length(prefix)
 
-	// width of the cluster under the cursor (min 1 so the block stays visible)
-	cursor_width := if prefix_end < runes.len {
+	// width of the cluster at the column (min 1 so the block stays visible)
+	cluster_width := if prefix_end < runes.len {
 		cluster_end := next_grapheme_rune_index(runes, prefix_end)
 		if runes[prefix_end] == `\t` {
 			4
@@ -342,12 +427,7 @@ fn (m EditorModel2) render_cursor_and_line_highlight(mut ctx tea.Context) {
 		1
 	}
 
-	default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
-	ctx.set_bg_color(palette.fg_color(default_bg_color))
-	ctx.set_color(default_bg_color)
-	ctx.draw_rect(visual_x, int(cursor_line) - m.top_line, cursor_width, 1)
-	ctx.reset_bg_color()
-	ctx.reset_color()
+	return visual_x, cluster_width
 }
 
 fn (m EditorModel2) width() int {
