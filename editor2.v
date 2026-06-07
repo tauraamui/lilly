@@ -2,6 +2,7 @@ module main
 
 import bobatea as tea
 import lib.documents
+import lib.documents.cursor
 import lib.petal.theme
 import lib.palette
 
@@ -101,7 +102,7 @@ fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	match msg.k_type {
 		.runes {
 			if action := m.chord.feed(msg.string()) {
-				cmd, switching_mode := m.execute_action(action)
+				cmd, switching_mode := m.execute_action_normal(action)
 				if !switching_mode {
 					m.clamp_cursor_to_line_end()
 				}
@@ -178,7 +179,7 @@ fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	match msg.k_type {
 		.runes {
 			if action := m.chord.feed(msg.string()) {
-				cmd, switching_mode := m.execute_action(action)
+				cmd, switching_mode := m.execute_action_visual(action)
 				if !switching_mode {
 					m.clamp_cursor_to_line_end()
 				}
@@ -201,73 +202,12 @@ fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	return m.clone(), tea.noop_cmd
 }
 
-fn (mut m EditorModel2) execute_action(action ChordAction) (fn () tea.Msg, bool) {
-	count := action.count
-	if _ := action.operator { // op :=
-		return tea.noop_cmd, false // TODO(tauraamui) [2026-06-07]: actually populate this part
-	}
-	return m.execute_motion_action(action.motion, count)
-}
+fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg, bool) {
+	count := if action.count == 0 { 1 } else { action.count }
 
-fn (mut m EditorModel2) execute_motion_action(action_motion string, count int) (fn () tea.Msg, bool) {
-	match action_motion {
-		// nav motion actions
-		'h' {
-			for _ in 0..count {
-				m.doc_controller.move_cursor_left(m.doc_id)
-			}
-		}
-		'j' {
-			for _ in 0..count {
-				m.doc_controller.move_cursor_down(m.doc_id)
-			}
-		}
-		'k' {
-			for _ in 0..count {
-				m.doc_controller.move_cursor_up(m.doc_id)
-			}
-		}
-		'l' {
-			for _ in 0..count {
-				m.doc_controller.move_cursor_right(m.doc_id)
-			}
-		}
-		'{' {
-			for _ in 0..count {
-				m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id)
-			}
-		}
-		'}' {
-			for _ in 0..count {
-				m.doc_controller.move_cursor_to_next_blank_line(m.doc_id)
-			}
-		}
-		'w' {
-			for _ in 0..count {
-				m.doc_controller.move_cursor_to_next_word_start(m.doc_id)
-			}
-		}
-		'W' {
-			for _ in 0..count {
-				m.doc_controller.move_cursor_to_next_big_word_start(m.doc_id)
-			}
-		}
-		'e' {
-			for _ in 0..count {
-				m.doc_controller.move_cursor_to_next_word_end(m.doc_id)
-			}
-		}
-		'b' {
-			for _ in 0..count {
-				m.doc_controller.move_cursor_to_previous_word_start(m.doc_id)
-			}
-		}
-		'ge' {
-			for _ in 0..count {
-				m.doc_controller.move_cursor_to_previous_word_end(m.doc_id)
-			}
-		}
-		// editing motion actions
+	// mode-bound things that aren't really motions; handled before the
+	// shared motion table so they can switch modes / insert text.
+	match action.motion {
 		'o' {
 			m.doc_controller.jump_cursor_to_line_end(m.doc_id)
 			prefix := m.doc_controller.resolve_prev_line_whitespace_prefix(m.doc_id)
@@ -277,13 +217,64 @@ fn (mut m EditorModel2) execute_motion_action(action_motion string, count int) (
 			}
 			return switch_mode(.insert), true
 		}
-		// state motion actions
 		'v' {
 			return switch_mode(.visual), true
 		}
+		'line' {
+			return tea.noop_cmd, false
+		}
 		else {}
 	}
+
+	if op := action.operator {
+		// operator + motion: resolve the motion's range, then apply operator.
+		// `dd` arrives here as motion == 'line' (see chords.v) — left as a
+		// TODO until a linewise range helper exists on Controller2.
+		r := motion_range(m.doc_controller, m.doc_id, action.motion, count) or {
+			return tea.noop_cmd, false
+		}
+		apply_operator(m.doc_controller, m.doc_id, op, r)
+		return tea.noop_cmd, false
+	}
+
+	apply_motion(m.doc_controller, m.doc_id, action.motion, count)
 	return tea.noop_cmd, false
+}
+
+fn (mut m EditorModel2) execute_action_visual(action ChordAction) (fn () tea.Msg, bool) {
+	count := if action.count == 0 { 1 } else { action.count }
+
+	if op := action.operator {
+		// in visual mode the selection IS the range — apply the operator
+		// against it immediately and exit back to normal mode.
+		r := m.current_visual_range() or { return switch_mode(.normal), true }
+		apply_operator(m.doc_controller, m.doc_id, op, r)
+		return switch_mode(.normal), true
+	}
+
+	// pure motion in visual mode = extend selection. The cursor moves;
+	// render_visual_selection derives the highlight from sel_start + cursor.
+	apply_motion(m.doc_controller, m.doc_id, action.motion, count)
+	return tea.noop_cmd, false
+}
+
+fn (m EditorModel2) current_visual_range() ?cursor.Range {
+	sel_start_line := m.visual_sel_start_line or { return none }
+	sel_start_col := m.visual_sel_start_col or { return none }
+	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
+
+	mut start_line, mut start_col := sel_start_line, sel_start_col
+	mut end_line, mut end_col := cursor_line, cursor_col
+	if cursor_line < sel_start_line
+		|| (cursor_line == sel_start_line && cursor_col < sel_start_col) {
+		start_line, start_col = cursor_line, cursor_col
+		end_line, end_col = sel_start_line, sel_start_col
+	}
+
+	return cursor.Range{
+		start: cursor.Pos.new(int(start_col), int(start_line))
+		end:   cursor.Pos.new(int(end_col), int(end_line))
+	}
 }
 
 fn (mut m EditorModel2) scroll_to_cursor() {
