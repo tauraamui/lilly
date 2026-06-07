@@ -245,7 +245,11 @@ fn (mut m EditorModel2) execute_motion_action(action_motion string, count int) f
 		// editing motion actions
 		'o' {
 			m.doc_controller.jump_cursor_to_line_end(m.doc_id)
+			prefix := m.doc_controller.resolve_prev_line_whitespace_prefix(m.doc_id)
 			m.doc_controller.insert(m.doc_id, `\n`)
+			for b in prefix {
+				m.doc_controller.insert(m.doc_id, b)
+			}
 			return switch_mode(.insert)
 		}
 		// state motion actions

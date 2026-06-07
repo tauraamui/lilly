@@ -5,6 +5,8 @@ import gap
 import line
 
 const newline_hex = 0x0A
+const space_hex   = 0x20
+const tab_hex     = 0x09
 
 pub struct TextBuffer {
 mut:
@@ -420,6 +422,30 @@ fn (mut tb TextBuffer) move_cursor_to_line_start(y u64) {
 pub fn (mut tb TextBuffer) move_cursor_to_start() {
 	tb.data_buf.move_cur_to_start()
 	tb.line_buf.move_to_line(0)
+}
+
+pub fn (tb TextBuffer) resolve_prev_line_whitespace_prefix() []u8 {
+	line_count := tb.line_buf.len()
+	if line_count == 0 {
+		return []
+	}
+	mut line_idx := tb.line_buf.current_line
+	if line_idx >= u64(line_count) {
+		line_idx = u64(line_count - 1)
+	}
+	line_start, line_end := tb.get_line_start_and_end(line_idx)
+	mut prefix := []u8{}
+	for o := line_start; o < line_end; o++ {
+		b := tb.data_buf.get(o) or { break }
+		if b == newline_hex {
+			break
+		}
+		if b != space_hex && b != tab_hex {
+			break
+		}
+		prefix << b
+	}
+	return prefix
 }
 
 pub fn (mut tb TextBuffer) jump_cursor_to_line_end() {
