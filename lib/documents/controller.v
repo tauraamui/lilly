@@ -51,6 +51,10 @@ pub fn (mut dc Controller2) insert(doc_id int, c u8) {
 	dc.docs[doc_id].insert(c)
 }
 
+pub fn (mut dc Controller2) insert_rune(doc_id int, cr rune) {
+	dc.docs[doc_id].insert_rune(cr)
+}
+
 pub fn (mut dc Controller2) backspace(doc_id int) {
 	dc.docs[doc_id].backspace()
 }

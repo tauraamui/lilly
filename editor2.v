@@ -118,8 +118,8 @@ fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
 	match msg.k_type {
 		.runes {
-			for cb in msg.string().bytes() {
-				m.doc_controller.insert(m.doc_id, cb)
+			for cr in msg.string().runes_iterator() {
+				m.doc_controller.insert_rune(m.doc_id, cr)
 			}
 		}
 		.special {
