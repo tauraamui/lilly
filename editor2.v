@@ -186,6 +186,7 @@ fn (mut m EditorModel2) execute_action(action ChordAction) fn () tea.Msg {
 
 fn (mut m EditorModel2) execute_motion_action(action_motion string, count int) fn () tea.Msg {
 	match action_motion {
+		// nav motion actions
 		'h' {
 			for _ in 0..count {
 				m.doc_controller.move_cursor_left(m.doc_id)
@@ -241,6 +242,13 @@ fn (mut m EditorModel2) execute_motion_action(action_motion string, count int) f
 				m.doc_controller.move_cursor_to_previous_word_end(m.doc_id)
 			}
 		}
+		// editing motion actions
+		'o' {
+			m.doc_controller.jump_cursor_to_line_end(m.doc_id)
+			m.doc_controller.insert(m.doc_id, `\n`)
+			return switch_mode(.insert)
+		}
+		// state motion actions
 		'v' {
 			return switch_mode(.visual)
 		}

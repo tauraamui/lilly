@@ -107,6 +107,10 @@ pub fn (mut dc Controller2) move_cursor_to_next_big_word_start(doc_id int) {
 	dc.docs[doc_id].move_cursor_to_next_big_word_start()
 }
 
+pub fn (mut dc Controller2) jump_cursor_to_line_end(doc_id int) {
+	dc.docs[doc_id].jump_cursor_to_line_end()
+}
+
 pub fn (mut dc Controller2) get_line_bytes(doc_id int, y u64) ?[]u8 {
 	return dc.docs[doc_id].get_line_bytes(y)
 }
