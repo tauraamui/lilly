@@ -85,7 +85,10 @@ fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	match msg.k_type {
 		.runes {
 			if action := m.chord.feed(msg.string()) {
-				return m.clone(), m.execute_action(action)
+				cmd := m.execute_action(action)
+				m.clamp_cursor_to_line_end()
+				m.scroll_to_cursor()
+				return m.clone(), cmd
 			}
 		}
 		.special {
@@ -106,6 +109,7 @@ fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 			}
 		}
 	}
+
 	m.clamp_cursor_to_line_end()
 	m.scroll_to_cursor()
 	return m.clone(), tea.noop_cmd
