@@ -71,8 +71,9 @@ fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	match msg.k_type {
 		.runes {
 			if action := m.chord.feed(msg.string()) {
-				mut cmds := []tea.Cmd{}
-				m.execute_action(action, mut cmds)
+				// mut cmds := []tea.Cmd{}
+				// m.execute_action(action, mut cmds)
+				m.execute_action(action)
 			}
 		}
 		.special {
@@ -138,9 +139,10 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	return m.clone(), tea.noop_cmd
 }
 
-fn (mut m EditorModel2) execute_action(action ChordAction, mut cmds []tea.Cmd) {
+fn (mut m EditorModel2) execute_action(action ChordAction) {
+// fn (mut m EditorModel2) execute_action(action ChordAction, mut cmds []tea.Cmd) {
 	count := action.count
-	if op := action.operator {
+	if _ := action.operator { // op :=
 		return // TODO(tauraamui) [2026-06-07]: actually populate this part
 	}
 	m.execute_motion_action(action.motion, count)
@@ -176,6 +178,31 @@ fn (mut m EditorModel2) execute_motion_action(action_motion string, count int) {
 		'}' {
 			for _ in 0..count {
 				m.doc_controller.move_cursor_to_next_blank_line(m.doc_id)
+			}
+		}
+		'w' {
+			for _ in 0..count {
+				m.doc_controller.move_cursor_to_next_word_start(m.doc_id)
+			}
+		}
+		'W' {
+			for _ in 0..count {
+				m.doc_controller.move_cursor_to_next_big_word_start(m.doc_id)
+			}
+		}
+		'e' {
+			for _ in 0..count {
+				m.doc_controller.move_cursor_to_next_word_end(m.doc_id)
+			}
+		}
+		'b' {
+			for _ in 0..count {
+				m.doc_controller.move_cursor_to_previous_word_start(m.doc_id)
+			}
+		}
+		'ge' {
+			for _ in 0..count {
+				m.doc_controller.move_cursor_to_previous_word_end(m.doc_id)
 			}
 		}
 		else {}
