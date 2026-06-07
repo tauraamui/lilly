@@ -51,6 +51,11 @@ fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		EditorModelMsg {
 			return m.editor_model_update(msg.msg)
 		}
+		SwitchModeMsg {
+			if msg.mode == .normal {
+				m.doc_controller.move_cursor_left(m.doc_id)
+			}
+		}
 		else {}
 	}
 
@@ -94,8 +99,27 @@ fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 			}
 		}
 	}
+	m.clamp_cursor_to_line_end()
 	m.scroll_to_cursor()
 	return m.clone(), tea.noop_cmd
+}
+
+fn (mut m EditorModel2) clamp_cursor_to_line_end() {
+	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
+	line_bytes := m.doc_controller.get_line_bytes(m.doc_id, cursor_line) or { return }
+	runes := line_bytes.bytestr().runes()
+	mut grapheme_count := u64(0)
+	mut i := 0
+	for i < runes.len {
+		i = next_grapheme_rune_index(runes, i)
+		grapheme_count += 1
+	}
+	if grapheme_count == 0 {
+		return
+	}
+	if cursor_col >= grapheme_count {
+		m.doc_controller.move_cursor_left(m.doc_id)
+	}
 }
 
 fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
