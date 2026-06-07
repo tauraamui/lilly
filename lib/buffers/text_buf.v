@@ -65,6 +65,18 @@ pub fn (mut tb TextBuffer) delete() {
 	}
 }
 
+pub fn (mut tb TextBuffer) delete_line(y u64) {
+	if y >= u64(tb.line_buf.len()) {
+		return
+	}
+	line_start, line_end := tb.get_line_start_and_end(y)
+	byte_count := line_end - line_start
+	tb.move_cursor_to_line_start(y)
+	for _ in 0..byte_count {
+		tb.delete()
+	}
+}
+
 pub fn (mut tb TextBuffer) move_cursor_left() {
 	cur := tb.data_buf.ccur()
 	if cur == 0 {

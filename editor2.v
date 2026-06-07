@@ -221,6 +221,12 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg
 			return switch_mode(.visual), true
 		}
 		'line' {
+			cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+			for _ in 0..count {
+				// deleting the same line since each line delete will move the
+				// next line up, into the delete
+				m.doc_controller.delete_line(m.doc_id, cursor_line)
+			}
 			return tea.noop_cmd, false
 		}
 		else {}

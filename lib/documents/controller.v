@@ -63,6 +63,10 @@ pub fn (mut dc Controller2) delete(doc_id int) {
 	dc.docs[doc_id].delete()
 }
 
+pub fn (mut dc Controller2) delete_line(doc_id int, y u64) {
+	dc.docs[doc_id].delete_line(y)
+}
+
 pub fn (mut dc Controller2) move_cursor_left(doc_id int) {
 	dc.docs[doc_id].move_cursor_left()
 }
