@@ -1,6 +1,6 @@
-
 module buffers
 
+import encoding.utf8
 import gap
 import line
 
@@ -112,7 +112,7 @@ fn (mut tb TextBuffer) move_cursor_vertical(direction int) {
 
 	// current column measured in codepoints, not bytes
 	cur_start, _ := tb.get_line_start_and_end(current_line)
-	current_col := tb.count_codepoints(cur_start, tb.data_buf.ccur())
+	current_col := tb.count_graphemes(cur_start, tb.data_buf.ccur())
 
 	target_line := if direction < 0 { current_line - 1 } else { current_line + 1 }
 	target_start, target_end := tb.get_line_start_and_end(target_line)
@@ -274,7 +274,7 @@ fn (tb TextBuffer) is_extender_at(offset u64) bool {
 }
 
 // count grapheme clusters in the byte range [start, end)
-fn (tb TextBuffer) count_codepoints(start u64, end u64) u64 {
+fn (tb TextBuffer) count_graphemes(start u64, end u64) u64 {
 	mut count := u64(0)
 	mut offset := start
 	for offset < end {
@@ -318,7 +318,7 @@ pub fn (tb TextBuffer) get_line_bytes(y u64) ?[]u8 {
 pub fn (tb TextBuffer) cursor_line_and_x() (u64, u64) {
 	line_count := tb.line_buf.len()
 	if line_count == 0 {
-		return 0, tb.count_codepoints(0, tb.data_buf.ccur())
+		return 0, tb.count_graphemes(0, tb.data_buf.ccur())
 	}
 	mut line_idx := tb.line_buf.current_line
 	if line_idx >= u64(line_count) {
@@ -327,7 +327,7 @@ pub fn (tb TextBuffer) cursor_line_and_x() (u64, u64) {
 	line_start, _ := tb.get_line_start_and_end(line_idx)
 	cursor_offset := tb.data_buf.ccur()
 	column := if cursor_offset >= line_start {
-		tb.count_codepoints(line_start, cursor_offset)
+		tb.count_graphemes(line_start, cursor_offset)
 	} else {
 		u64(0)
 	}
@@ -420,6 +420,447 @@ fn (mut tb TextBuffer) move_cursor_to_line_start(y u64) {
 pub fn (mut tb TextBuffer) move_cursor_to_start() {
 	tb.data_buf.move_cur_to_start()
 	tb.line_buf.move_to_line(0)
+}
+
+enum CharType {
+	alpha_num
+	whitespace
+	other
+}
+
+fn char_type(c rune) CharType {
+	return match true {
+		utf8.is_space(c) { .whitespace }
+		is_alpha_num(c) { .alpha_num }
+		else { .other }
+	}
+}
+
+fn is_alpha_num(c rune) bool {
+	return utf8.is_letter(c) || utf8.is_number(c) || c == `_`
+}
+
+pub fn (tb TextBuffer) line_graphemes(y u64) []string {
+	line_start, line_end := tb.get_line_start_and_end(y)
+	mut end := line_end
+	if end > line_start {
+		if last := tb.data_buf.get(end - 1) {
+			if last == newline_hex {
+				end -= 1
+			}
+		}
+	}
+	mut result := []string{}
+	mut offset := line_start
+	for offset < end {
+		next := tb.next_boundary(offset)
+		if next <= offset {
+			break
+		}
+		mut bytes := []u8{len: int(next - offset)}
+		for i in 0 .. bytes.len {
+			if b := tb.data_buf.get(offset + u64(i)) {
+				bytes[i] = b
+			}
+		}
+		result << bytes.bytestr()
+		offset = next
+	}
+	return result
+}
+
+fn grapheme_char_type(g string) CharType {
+	if g.len == 0 {
+		return .other
+	}
+	first := g.runes()[0]
+	return char_type(first)
+}
+
+fn grapheme_is_space(g string) bool {
+	if g.len == 0 {
+		return false
+	}
+	return utf8.is_space(g.runes()[0])
+}
+
+fn (mut tb TextBuffer) move_cursor_to_position(y u64, x u64) {
+	line_count := tb.line_buf.len()
+	if y >= u64(line_count) {
+		return
+	}
+	line_start, line_end := tb.get_line_start_and_end(y)
+	mut content_end := line_end
+	if content_end > line_start {
+		if last := tb.data_buf.get(content_end - 1) {
+			if last == newline_hex {
+				content_end -= 1
+			}
+		}
+	}
+	target_offset := tb.offset_at_column(line_start, content_end, x)
+	current_offset := tb.data_buf.ccur()
+	if target_offset > current_offset {
+		for _ in 0 .. target_offset - current_offset {
+			tb.data_buf.move_cur_right()
+		}
+	} else if target_offset < current_offset {
+		for _ in 0 .. current_offset - target_offset {
+			tb.data_buf.move_cur_left()
+		}
+	}
+	tb.line_buf.move_to_line(y)
+}
+
+pub fn (mut tb TextBuffer) move_cursor_to_next_word_start() {
+	src_y, start_x := tb.cursor_line_and_x()
+	line_count := tb.line_buf.len()
+	mut y := src_y
+	mut x := start_x
+	for {
+		if pos := scan_to_next_word_start(tb.line_graphemes(y), int(x), int(y), int(src_y)) {
+			tb.move_cursor_to_position(u64(pos.y), u64(pos.x))
+			return
+		}
+		next_y := y + 1
+		if next_y >= u64(line_count) {
+			return
+		}
+		y = next_y
+		x = 0
+	}
+}
+
+pub fn (mut tb TextBuffer) move_cursor_to_previous_word_start() {
+	src_y, start_x := tb.cursor_line_and_x()
+	mut y := src_y
+	mut x := start_x
+	for {
+		if pos := scan_to_previous_word_start(tb.line_graphemes(y), int(x), int(y), int(src_y)) {
+			tb.move_cursor_to_position(u64(pos.y), u64(pos.x))
+			return
+		}
+		if y == 0 {
+			return
+		}
+		y -= 1
+		prev_graphemes := tb.line_graphemes(y)
+		x = if prev_graphemes.len == 0 { u64(0) } else { u64(prev_graphemes.len - 1) }
+	}
+}
+
+pub fn (mut tb TextBuffer) move_cursor_to_next_word_end() {
+	src_y, start_x := tb.cursor_line_and_x()
+	line_count := tb.line_buf.len()
+	mut y := src_y
+	mut x := start_x
+	for {
+		if pos := scan_to_next_word_end(tb.line_graphemes(y), int(x), int(y), int(src_y)) {
+			tb.move_cursor_to_position(u64(pos.y), u64(pos.x))
+			return
+		}
+		next_y := y + 1
+		if next_y >= u64(line_count) {
+			return
+		}
+		y = next_y
+		x = 0
+	}
+}
+
+pub fn (mut tb TextBuffer) move_cursor_to_previous_word_end() {
+	src_y, start_x := tb.cursor_line_and_x()
+	mut y := src_y
+	mut x := start_x
+	for {
+		if pos := scan_to_previous_word_end(tb.line_graphemes(y), int(x), int(y), int(src_y)) {
+			tb.move_cursor_to_position(u64(pos.y), u64(pos.x))
+			return
+		}
+		if y == 0 {
+			return
+		}
+		y -= 1
+		prev_graphemes := tb.line_graphemes(y)
+		x = if prev_graphemes.len == 0 { u64(0) } else { u64(prev_graphemes.len - 1) }
+	}
+}
+
+pub fn (mut tb TextBuffer) move_cursor_to_next_big_word_start() {
+	src_y, start_x := tb.cursor_line_and_x()
+	line_count := tb.line_buf.len()
+	mut y := src_y
+	mut x := start_x
+	for {
+		if pos := scan_to_next_big_word_start(tb.line_graphemes(y), int(x), int(y), int(src_y)) {
+			tb.move_cursor_to_position(u64(pos.y), u64(pos.x))
+			return
+		}
+		next_y := y + 1
+		if next_y >= u64(line_count) {
+			return
+		}
+		y = next_y
+		x = 0
+	}
+}
+
+struct MotionPos {
+	x int
+	y int
+}
+
+fn scan_to_next_word_start(graphemes []string, px int, py int, source_y int) ?MotionPos {
+	if py != source_y && px == 0 {
+		if graphemes.len == 0 {
+			return MotionPos{x: px, y: py}
+		}
+		if grapheme_char_type(graphemes[px]) != .whitespace {
+			return MotionPos{x: px, y: py}
+		}
+	}
+
+	mut c_scanner := CharScanner{
+		last_index: px
+		data:       graphemes
+	}
+	diff := c_scanner.next_diff() or { return none }
+
+	if diff.next_type == .whitespace {
+		post := c_scanner.next_diff() or { return none }
+		return MotionPos{x: post.index, y: py}
+	}
+	return MotionPos{x: diff.index, y: py}
+}
+
+fn scan_to_previous_word_start(graphemes []string, px int, py int, source_y int) ?MotionPos {
+	if py != source_y {
+		if graphemes.len == 0 {
+			return MotionPos{x: px, y: py}
+		}
+		if px == 0 {
+			if grapheme_char_type(graphemes[px]) != .whitespace {
+				return MotionPos{x: px, y: py}
+			}
+		} else {
+			c_type := grapheme_char_type(graphemes[px])
+			if c_type != .whitespace {
+				mut word_start := px
+				for i := px - 1; i >= 0; i-- {
+					if grapheme_char_type(graphemes[i]) != c_type {
+						break
+					}
+					word_start = i
+				}
+				return MotionPos{x: word_start, y: py}
+			}
+		}
+	}
+
+	mut c_scanner := CharScanner{
+		last_index: px
+		data:       graphemes
+	}
+	diff := c_scanner.prev_diff() or { return none }
+
+	if diff.start_type == .alpha_num || diff.start_type == .other {
+		if pre := diff.pre_diff {
+			return MotionPos{x: pre.index, y: py}
+		}
+		if diff.next_type == .whitespace {
+			c_scanner.prev_diff() or { return none }
+			return find_prev_token_start(mut c_scanner, py)
+		}
+		return find_prev_token_start(mut c_scanner, py)
+	}
+
+	if diff.start_type == .whitespace {
+		return find_prev_token_start(mut c_scanner, py)
+	}
+
+	return MotionPos{x: px, y: py}
+}
+
+fn find_prev_token_start(mut c_scanner CharScanner, y int) ?MotionPos {
+	diff := c_scanner.prev_diff() or { return MotionPos{x: 0, y: y} }
+	if pre := diff.pre_diff {
+		return MotionPos{x: pre.index, y: y}
+	}
+	return MotionPos{x: diff.index + 1, y: y}
+}
+
+fn scan_to_next_word_end(graphemes []string, px int, py int, source_y int) ?MotionPos {
+	if py != source_y && px == 0 {
+		if graphemes.len == 0 {
+			return MotionPos{x: px, y: py}
+		}
+	}
+
+	start := if py == source_y { px + 1 } else { px }
+	if start >= graphemes.len {
+		return none
+	}
+
+	mut x := start
+	for x < graphemes.len && grapheme_char_type(graphemes[x]) == .whitespace {
+		x++
+	}
+	if x >= graphemes.len {
+		return none
+	}
+
+	word_class := grapheme_char_type(graphemes[x])
+	for x + 1 < graphemes.len && grapheme_char_type(graphemes[x + 1]) == word_class {
+		x++
+	}
+
+	return MotionPos{x: x, y: py}
+}
+
+fn scan_to_previous_word_end(graphemes []string, px int, py int, source_y int) ?MotionPos {
+	if py != source_y {
+		if graphemes.len == 0 {
+			return MotionPos{x: px, y: py}
+		}
+		mut x := graphemes.len - 1
+		for x >= 0 && grapheme_char_type(graphemes[x]) == .whitespace {
+			x--
+		}
+		if x < 0 {
+			return none
+		}
+		return MotionPos{x: x, y: py}
+	}
+
+	if px <= 0 {
+		return none
+	}
+
+	mut x := px - 1
+	curr_class := grapheme_char_type(graphemes[x])
+
+	if curr_class == .whitespace {
+		for x >= 0 && grapheme_char_type(graphemes[x]) == .whitespace {
+			x--
+		}
+		if x < 0 {
+			return none
+		}
+		return MotionPos{x: x, y: py}
+	}
+
+	orig_class := grapheme_char_type(graphemes[px])
+	if curr_class != orig_class {
+		return MotionPos{x: x, y: py}
+	}
+
+	for x >= 0 && grapheme_char_type(graphemes[x]) == curr_class {
+		x--
+	}
+	if x < 0 {
+		return none
+	}
+
+	if grapheme_char_type(graphemes[x]) == .whitespace {
+		for x >= 0 && grapheme_char_type(graphemes[x]) == .whitespace {
+			x--
+		}
+		if x < 0 {
+			return none
+		}
+	}
+
+	return MotionPos{x: x, y: py}
+}
+
+fn scan_to_next_big_word_start(graphemes []string, px int, py int, source_y int) ?MotionPos {
+	if py != source_y && px == 0 {
+		if graphemes.len == 0 {
+			return MotionPos{x: px, y: py}
+		}
+		if !grapheme_is_space(graphemes[px]) {
+			return MotionPos{x: px, y: py}
+		}
+	}
+
+	mut x := px
+	for x < graphemes.len && !grapheme_is_space(graphemes[x]) {
+		x++
+	}
+	for x < graphemes.len && grapheme_is_space(graphemes[x]) {
+		x++
+	}
+
+	if x >= graphemes.len {
+		return none
+	}
+	return MotionPos{x: x, y: py}
+}
+
+struct CharScanner {
+	data []string
+mut:
+	last_index int
+}
+
+struct ScanResult {
+	index      int
+	pre_diff   ?PreDiffChar
+	start_type CharType
+	next_type  CharType
+}
+
+struct PreDiffChar {
+	index  int
+	c_type CharType
+}
+
+fn (mut s CharScanner) prev_diff() ?ScanResult {
+	if s.data.len == 0 || s.last_index <= 0 {
+		return none
+	}
+	start_type := grapheme_char_type(s.data[s.last_index])
+	for i := s.last_index; i >= 0; i-- {
+		c_type := grapheme_char_type(s.data[i])
+		pre_diff_char := ?PreDiffChar(if i + 1 < s.last_index {
+			PreDiffChar{
+				index:  i + 1
+				c_type: grapheme_char_type(s.data[i + 1])
+			}
+		} else {
+			none
+		})
+
+		if c_type != start_type {
+			s.last_index = i
+			return ScanResult{
+				index:      i
+				pre_diff:   pre_diff_char
+				start_type: start_type
+				next_type:  c_type
+			}
+		}
+	}
+	return none
+}
+
+fn (mut s CharScanner) next_diff() ?ScanResult {
+	if s.data.len == 0 || s.last_index >= s.data.len {
+		return none
+	}
+	start_type := grapheme_char_type(s.data[s.last_index])
+	for i := s.last_index; i < s.data.len; i++ {
+		c_type := grapheme_char_type(s.data[i])
+		if c_type != start_type {
+			s.last_index = i
+			return ScanResult{
+				index:      i
+				start_type: start_type
+				next_type:  c_type
+			}
+		}
+	}
+	return none
 }
 
 fn is_utf8_continuation_byte(b u8) bool {
