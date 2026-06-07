@@ -340,28 +340,62 @@ fn test_text_buffer_move_cursor_to_next_word_start() {
 	line, x := tb.cursor_line_and_x()
 	assert line == u64(0)
 	assert x == u64(0)
-	assert tb.line_runes(line)[x] == `h`
+	assert tb.line_graphemes(line)[x] == 'h'
 
 	tb.move_cursor_to_next_word_start()
 
 	line2, x2 := tb.cursor_line_and_x()
 	assert line2 == u64(0)
 	assert x2 == u64(6)
-	assert tb.line_runes(line2)[x2] == `W`
+	assert tb.line_graphemes(line2)[x2] == 'W'
 
 	tb.move_cursor_to_next_word_start()
 
 	line3, x3 := tb.cursor_line_and_x()
 	assert line3 == u64(1)
 	assert x3 == u64(0)
-	assert tb.line_runes(line3)[x3] == `T`
+	assert tb.line_graphemes(line3)[x3] == 'T'
 
 	tb.move_cursor_to_next_word_start()
 
 	line4, x4 := tb.cursor_line_and_x()
 	assert line4 == u64(1)
 	assert x4 == u64(5)
-	assert tb.line_runes(line4)[x4] == `i`
+	assert tb.line_graphemes(line4)[x4] == 'i'
+}
+
+fn test_text_buffer_move_cursor_to_next_word_start_within_line_containing_graphemes() {
+	mut tb := TextBuffer.new()
+	for c in "🚑️🚑️llo World\nThis is the second line".bytes() {
+		tb.insert(c)
+	}
+	tb.move_cursor_to_start()
+
+	line, x := tb.cursor_line_and_x()
+	assert line == u64(0)
+	assert x == u64(0)
+	assert tb.line_graphemes(line)[x] == '🚑️'
+
+	tb.move_cursor_to_next_word_start()
+
+	line2, x2 := tb.cursor_line_and_x()
+	assert line2 == u64(0)
+	assert x2 == u64(2)
+	assert tb.line_graphemes(line2)[x2] == 'l'
+
+	tb.move_cursor_to_next_word_start()
+
+	line3, x3 := tb.cursor_line_and_x()
+	assert line3 == u64(0)
+	assert x3 == u64(6)
+	assert tb.line_graphemes(line3)[x3] == 'W'
+
+	tb.move_cursor_to_next_word_start()
+
+	line4, x4 := tb.cursor_line_and_x()
+	assert line4 == u64(1)
+	assert x4 == u64(0)
+	assert tb.line_graphemes(line4)[x4] == 'T'
 }
 
 fn test_text_buffer_cursor_movement_skips_multibyte_codepoints() {
