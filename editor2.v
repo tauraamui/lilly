@@ -84,6 +84,12 @@ fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 				'l' {
 					m.doc_controller.move_cursor_right(m.doc_id)
 				}
+				'{' {
+					m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id)
+				}
+				'}' {
+					m.doc_controller.move_cursor_to_next_blank_line(m.doc_id)
+				}
 				else {}
 			}
 		}

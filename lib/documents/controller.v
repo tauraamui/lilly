@@ -75,6 +75,14 @@ pub fn (mut dc Controller2) move_cursor_down(doc_id int) {
 	dc.docs[doc_id].move_cursor_down()
 }
 
+pub fn (mut dc Controller2) move_cursor_to_previous_blank_line(doc_id int) {
+	dc.docs[doc_id].move_cursor_to_previous_blank_line()
+}
+
+pub fn (mut dc Controller2) move_cursor_to_next_blank_line(doc_id int) {
+	dc.docs[doc_id].move_cursor_to_next_blank_line()
+}
+
 pub fn (mut dc Controller2) get_line_bytes(doc_id int, y u64) ?[]u8 {
 	return dc.docs[doc_id].get_line_bytes(y)
 }

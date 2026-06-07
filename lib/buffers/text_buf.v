@@ -349,6 +349,74 @@ fn (tb TextBuffer) get_line_start_and_end(y u64) (u64, u64) {
 	return line_start, line_end
 }
 
+pub fn (mut tb TextBuffer) move_cursor_to_previous_blank_line() {
+	current_line, _ := tb.cursor_line_and_x()
+	if current_line == 0 {
+		return
+	}
+	mut target := i64(-1)
+	mut i := i64(current_line) - 1
+	for i >= 0 {
+		if tb.is_blank_line(u64(i)) {
+			target = i
+			break
+		}
+		i -= 1
+	}
+	if target < 0 {
+		return
+	}
+	tb.move_cursor_to_line_start(u64(target))
+}
+
+pub fn (mut tb TextBuffer) move_cursor_to_next_blank_line() {
+	line_count := u64(tb.line_buf.len())
+	current_line, _ := tb.cursor_line_and_x()
+	if current_line + 1 >= line_count {
+		return
+	}
+	mut target := i64(-1)
+	for i in current_line + 1 .. line_count {
+		if tb.is_blank_line(i) {
+			target = i64(i)
+			break
+		}
+	}
+	if target < 0 {
+		return
+	}
+	tb.move_cursor_to_line_start(u64(target))
+}
+
+fn (tb TextBuffer) is_blank_line(y u64) bool {
+	line_start, line_end := tb.get_line_start_and_end(y)
+	span := line_end - line_start
+	if span == 0 {
+		return true
+	}
+	if span == 1 {
+		if b := tb.data_buf.get(line_start) {
+			return b == newline_hex
+		}
+	}
+	return false
+}
+
+fn (mut tb TextBuffer) move_cursor_to_line_start(y u64) {
+	line_start, _ := tb.get_line_start_and_end(y)
+	current_offset := tb.data_buf.ccur()
+	if line_start > current_offset {
+		for _ in 0 .. line_start - current_offset {
+			tb.data_buf.move_cur_right()
+		}
+	} else if line_start < current_offset {
+		for _ in 0 .. current_offset - line_start {
+			tb.data_buf.move_cur_left()
+		}
+	}
+	tb.line_buf.move_to_line(y)
+}
+
 pub fn (mut tb TextBuffer) move_cursor_to_start() {
 	tb.data_buf.move_cur_to_start()
 	tb.line_buf.move_to_line(0)
