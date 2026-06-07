@@ -189,19 +189,25 @@ fn (m EditorModel2) render_cursor_and_line_highlight(mut ctx tea.Context) {
 
 	line_bytes := m.doc_controller.get_line_bytes(m.doc_id, cursor_line) or { []u8{} }
 	runes := line_bytes.bytestr().runes()
-	tab_width := 4
-	col := int(cursor_col) // logical column == rune index
-
-	// logical column -> visual column: sum display widths of runes before the cursor
-	mut visual_x := 0
-	for i := 0; i < col && i < runes.len; i++ {
-		visual_x += rune_display_width(runes[i], tab_width)
+	mut col := int(cursor_col) // logical column == rune index
+	if col > runes.len {
+		col = runes.len
 	}
 
-	// width of the glyph sitting under the cursor (min 1 so the block is visible)
+	// logical column -> visual column: measure the prefix as a whole so
+	// grapheme clustering (ZWJ, combining marks, wide glyphs) is correct.
+	prefix := runes[..col].string().replace('\t', '    ')
+	visual_x := utf8_str_visible_length(prefix)
+
+	// width of the glyph under the cursor (min 1 so the block stays visible)
 	cursor_width := if col < runes.len {
-		w := rune_display_width(runes[col], tab_width)
-		if w < 1 { 1 } else { w }
+		r := runes[col]
+		if r == `\t` {
+			4
+		} else {
+			w := utf8_str_visible_length(r.str())
+			if w < 1 { 1 } else { w }
+		}
 	} else {
 		1
 	}
