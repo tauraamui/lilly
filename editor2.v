@@ -39,6 +39,9 @@ fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			.insert {
 				return m.insert_mode_update(msg.key_msg)
 			}
+			.visual {
+				return m.visual_mode_update(msg.key_msg)
+			}
 			else {}
 		}
 	}
@@ -52,9 +55,7 @@ fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			return m.editor_model_update(msg.msg)
 		}
 		SwitchModeMsg {
-			if msg.mode == .normal {
-				m.doc_controller.move_cursor_left(m.doc_id)
-			}
+			return m.switch_mode_update(msg)
 		}
 		else {}
 	}
@@ -72,13 +73,19 @@ fn (mut m EditorModel2) editor_model_update(msg tea.Msg) (tea.Model, fn () tea.M
 	return m.clone(), tea.noop_cmd
 }
 
+fn (mut m EditorModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () tea.Msg) {
+	if msg.mode == .normal {
+		m.doc_controller.move_cursor_left(m.doc_id)
+	}
+
+	return m.clone(), tea.noop_cmd
+}
+
 fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
 	match msg.k_type {
 		.runes {
 			if action := m.chord.feed(msg.string()) {
-				// mut cmds := []tea.Cmd{}
-				// m.execute_action(action, mut cmds)
-				m.execute_action(action)
+				return m.clone(), m.execute_action(action)
 			}
 		}
 		.special {
@@ -102,24 +109,6 @@ fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	m.clamp_cursor_to_line_end()
 	m.scroll_to_cursor()
 	return m.clone(), tea.noop_cmd
-}
-
-fn (mut m EditorModel2) clamp_cursor_to_line_end() {
-	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
-	line_bytes := m.doc_controller.get_line_bytes(m.doc_id, cursor_line) or { return }
-	runes := line_bytes.bytestr().runes()
-	mut grapheme_count := u64(0)
-	mut i := 0
-	for i < runes.len {
-		i = next_grapheme_rune_index(runes, i)
-		grapheme_count += 1
-	}
-	if grapheme_count == 0 {
-		return
-	}
-	if cursor_col >= grapheme_count {
-		m.doc_controller.move_cursor_left(m.doc_id)
-	}
 }
 
 fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
@@ -163,16 +152,30 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	return m.clone(), tea.noop_cmd
 }
 
-fn (mut m EditorModel2) execute_action(action ChordAction) {
-// fn (mut m EditorModel2) execute_action(action ChordAction, mut cmds []tea.Cmd) {
-	count := action.count
-	if _ := action.operator { // op :=
-		return // TODO(tauraamui) [2026-06-07]: actually populate this part
+fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+	match msg.k_type {
+		.runes {}
+		.special {
+			match msg.string() {
+				'escape' {
+					return m.clone(), switch_mode(.normal)
+				}
+				else {}
+			}
+		}
 	}
-	m.execute_motion_action(action.motion, count)
+	return m.clone(), tea.noop_cmd
 }
 
-fn (mut m EditorModel2) execute_motion_action(action_motion string, count int) {
+fn (mut m EditorModel2) execute_action(action ChordAction) fn () tea.Msg {
+	count := action.count
+	if _ := action.operator { // op :=
+		return tea.noop_cmd // TODO(tauraamui) [2026-06-07]: actually populate this part
+	}
+	return m.execute_motion_action(action.motion, count)
+}
+
+fn (mut m EditorModel2) execute_motion_action(action_motion string, count int) fn () tea.Msg {
 	match action_motion {
 		'h' {
 			for _ in 0..count {
@@ -229,8 +232,12 @@ fn (mut m EditorModel2) execute_motion_action(action_motion string, count int) {
 				m.doc_controller.move_cursor_to_previous_word_end(m.doc_id)
 			}
 		}
+		'v' {
+			return switch_mode(.visual)
+		}
 		else {}
 	}
+	return tea.noop_cmd
 }
 
 fn (mut m EditorModel2) scroll_to_cursor() {
@@ -250,6 +257,24 @@ fn (mut m EditorModel2) scroll_to_cursor() {
 	}
 	if m.top_line < 0 {
 		m.top_line = 0
+	}
+}
+
+fn (mut m EditorModel2) clamp_cursor_to_line_end() {
+	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
+	line_bytes := m.doc_controller.get_line_bytes(m.doc_id, cursor_line) or { return }
+	runes := line_bytes.bytestr().runes()
+	mut grapheme_count := u64(0)
+	mut i := 0
+	for i < runes.len {
+		i = next_grapheme_rune_index(runes, i)
+		grapheme_count += 1
+	}
+	if grapheme_count == 0 {
+		return
+	}
+	if cursor_col >= grapheme_count {
+		m.doc_controller.move_cursor_left(m.doc_id)
 	}
 }
 
