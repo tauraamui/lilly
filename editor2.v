@@ -85,8 +85,10 @@ fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	match msg.k_type {
 		.runes {
 			if action := m.chord.feed(msg.string()) {
-				cmd := m.execute_action(action)
-				m.clamp_cursor_to_line_end()
+				cmd, switching_mode := m.execute_action(action)
+				if !switching_mode {
+					m.clamp_cursor_to_line_end()
+				}
 				m.scroll_to_cursor()
 				return m.clone(), cmd
 			}
@@ -160,7 +162,8 @@ fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	match msg.k_type {
 		.runes {
 			if action := m.chord.feed(msg.string()) {
-				return m.clone(), m.execute_action(action)
+				cmd, _ := m.execute_action(action)
+				return m.clone(), cmd
 			}
 		}
 		.special {
@@ -176,15 +179,15 @@ fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	return m.clone(), tea.noop_cmd
 }
 
-fn (mut m EditorModel2) execute_action(action ChordAction) fn () tea.Msg {
+fn (mut m EditorModel2) execute_action(action ChordAction) (fn () tea.Msg, bool) {
 	count := action.count
 	if _ := action.operator { // op :=
-		return tea.noop_cmd // TODO(tauraamui) [2026-06-07]: actually populate this part
+		return tea.noop_cmd, false // TODO(tauraamui) [2026-06-07]: actually populate this part
 	}
 	return m.execute_motion_action(action.motion, count)
 }
 
-fn (mut m EditorModel2) execute_motion_action(action_motion string, count int) fn () tea.Msg {
+fn (mut m EditorModel2) execute_motion_action(action_motion string, count int) (fn () tea.Msg, bool) {
 	match action_motion {
 		// nav motion actions
 		'h' {
@@ -250,15 +253,15 @@ fn (mut m EditorModel2) execute_motion_action(action_motion string, count int) f
 			for b in prefix {
 				m.doc_controller.insert(m.doc_id, b)
 			}
-			return switch_mode(.insert)
+			return switch_mode(.insert), true
 		}
 		// state motion actions
 		'v' {
-			return switch_mode(.visual)
+			return switch_mode(.visual), true
 		}
 		else {}
 	}
-	return tea.noop_cmd
+	return tea.noop_cmd, false
 }
 
 fn (mut m EditorModel2) scroll_to_cursor() {
