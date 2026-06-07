@@ -819,6 +819,9 @@ fn (mut s CharScanner) prev_diff() ?ScanResult {
 	if s.data.len == 0 || s.last_index <= 0 {
 		return none
 	}
+	if s.last_index >= s.data.len {
+		s.last_index = s.data.len - 1
+	}
 	start_type := grapheme_char_type(s.data[s.last_index])
 	for i := s.last_index; i >= 0; i-- {
 		c_type := grapheme_char_type(s.data[i])
