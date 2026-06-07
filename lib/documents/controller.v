@@ -52,62 +52,11 @@ pub fn (mut dc Controller2) insert(doc_id int, c u8) {
 }
 
 pub fn (mut dc Controller2) backspace(doc_id int) {
-	for dc.last_codepoint_is_combiner(doc_id) {
-		dc.docs[doc_id].backspace()
-	}
 	dc.docs[doc_id].backspace()
-}
-
-fn (dc Controller2) last_codepoint_is_combiner(doc_id int) bool {
-	cursor_line, cursor_x := dc.docs[doc_id].cursor_line_and_x()
-	if cursor_x == 0 {
-		return false
-	}
-	line_bytes := dc.docs[doc_id].get_line_bytes(cursor_line) or { return false }
-	if int(cursor_x) > line_bytes.len {
-		return false
-	}
-	mut i := int(cursor_x) - 1
-	for i > 0 && line_bytes[i] & 0xC0 == 0x80 {
-		i -= 1
-	}
-	return is_combiner_at(line_bytes, i)
-}
-
-fn is_combiner_at(b []u8, i int) bool {
-	if i >= b.len {
-		return false
-	}
-	c0 := b[i]
-	// 2-byte combining diacriticals U+0300..U+036F (CC 80..CD AF)
-	if c0 == 0xCC || c0 == 0xCD {
-		return true
-	}
-	// 3-byte ZWJ U+200D (E2 80 8D)
-	if c0 == 0xE2 && i + 2 < b.len && b[i + 1] == 0x80 && b[i + 2] == 0x8D {
-		return true
-	}
-	// 3-byte variation selectors VS1..VS16 U+FE00..U+FE0F (EF B8 80..8F)
-	if c0 == 0xEF && i + 2 < b.len && b[i + 1] == 0xB8 && b[i + 2] >= 0x80 && b[i + 2] <= 0x8F {
-		return true
-	}
-	return false
 }
 
 pub fn (mut dc Controller2) delete(doc_id int) {
 	dc.docs[doc_id].delete()
-	for dc.next_codepoint_is_combiner(doc_id) {
-		dc.docs[doc_id].delete()
-	}
-}
-
-fn (dc Controller2) next_codepoint_is_combiner(doc_id int) bool {
-	cursor_line, cursor_x := dc.docs[doc_id].cursor_line_and_x()
-	line_bytes := dc.docs[doc_id].get_line_bytes(cursor_line) or { return false }
-	if int(cursor_x) >= line_bytes.len {
-		return false
-	}
-	return is_combiner_at(line_bytes, int(cursor_x))
 }
 
 pub fn (mut dc Controller2) move_cursor_left(doc_id int) {

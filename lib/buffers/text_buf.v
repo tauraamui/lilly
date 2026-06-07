@@ -159,7 +159,7 @@ fn (tb TextBuffer) codepoint_len_at(offset u64) ?int {
 	return actual
 }
 
-fn (tb TextBuffer) prev_boundary(offset u64) u64 {
+fn (tb TextBuffer) prev_codepoint_boundary(offset u64) u64 {
 	if offset == 0 {
 		return 0
 	}
@@ -174,12 +174,106 @@ fn (tb TextBuffer) prev_boundary(offset u64) u64 {
 	return i
 }
 
-fn (tb TextBuffer) next_boundary(offset u64) u64 {
+fn (tb TextBuffer) next_codepoint_boundary(offset u64) u64 {
 	len := tb.codepoint_len_at(offset) or { return offset }
 	return offset + u64(len)
 }
 
-// count codepoints in the byte range [start, end)
+// grapheme-cluster aware boundaries: cover combining marks U+0300..U+036F,
+// ZWJ U+200D, and variation selectors U+FE00..U+FE0F.
+fn (tb TextBuffer) prev_boundary(offset u64) u64 {
+	if offset == 0 {
+		return 0
+	}
+	mut o := tb.prev_codepoint_boundary(offset)
+	for o > 0 {
+		if tb.is_extender_at(o) {
+			o = tb.prev_codepoint_boundary(o)
+			continue
+		}
+		prev_cp := tb.prev_codepoint_boundary(o)
+		if tb.is_zwj_at(prev_cp) {
+			before_zwj := tb.prev_codepoint_boundary(prev_cp)
+			o = before_zwj
+			continue
+		}
+		break
+	}
+	return o
+}
+
+fn (tb TextBuffer) next_boundary(offset u64) u64 {
+	mut o := tb.next_codepoint_boundary(offset)
+	if o == offset {
+		return o
+	}
+	for {
+		if tb.is_zwj_at(o) {
+			after_zwj := tb.next_codepoint_boundary(o)
+			if after_zwj == o {
+				break
+			}
+			next_cp := tb.next_codepoint_boundary(after_zwj)
+			if next_cp == after_zwj {
+				break
+			}
+			o = next_cp
+			continue
+		}
+		if tb.is_extender_at(o) {
+			next_cp := tb.next_codepoint_boundary(o)
+			if next_cp == o {
+				break
+			}
+			o = next_cp
+			continue
+		}
+		break
+	}
+	return o
+}
+
+fn (tb TextBuffer) is_zwj_at(offset u64) bool {
+	c0 := tb.data_buf.get(offset) or { return false }
+	if c0 != 0xE2 {
+		return false
+	}
+	c1 := tb.data_buf.get(offset + 1) or { return false }
+	c2 := tb.data_buf.get(offset + 2) or { return false }
+	return c1 == 0x80 && c2 == 0x8D
+}
+
+fn (tb TextBuffer) is_extender_at(offset u64) bool {
+	c0 := tb.data_buf.get(offset) or { return false }
+	// U+0300..U+036F combining diacriticals: CC 80..BF, CD 80..AF
+	if c0 == 0xCC {
+		c1 := tb.data_buf.get(offset + 1) or { return false }
+		return c1 >= 0x80 && c1 <= 0xBF
+	}
+	if c0 == 0xCD {
+		c1 := tb.data_buf.get(offset + 1) or { return false }
+		return c1 >= 0x80 && c1 <= 0xAF
+	}
+	// U+200D ZWJ: E2 80 8D
+	if c0 == 0xE2 {
+		c1 := tb.data_buf.get(offset + 1) or { return false }
+		c2 := tb.data_buf.get(offset + 2) or { return false }
+		if c1 == 0x80 && c2 == 0x8D {
+			return true
+		}
+	}
+	// U+FE00..U+FE0F variation selectors: EF B8 80..8F
+	if c0 == 0xEF {
+		c1 := tb.data_buf.get(offset + 1) or { return false }
+		c2 := tb.data_buf.get(offset + 2) or { return false }
+		if c1 == 0xB8 && c2 >= 0x80 && c2 <= 0x8F {
+			return true
+		}
+	}
+	return false
+}
+
+// count grapheme clusters in the byte range [start, end)
 fn (tb TextBuffer) count_codepoints(start u64, end u64) u64 {
 	mut count := u64(0)
 	mut offset := start

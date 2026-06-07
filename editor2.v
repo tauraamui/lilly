@@ -189,23 +189,21 @@ fn (m EditorModel2) render_cursor_and_line_highlight(mut ctx tea.Context) {
 
 	line_bytes := m.doc_controller.get_line_bytes(m.doc_id, cursor_line) or { []u8{} }
 	runes := line_bytes.bytestr().runes()
-	mut col := int(cursor_col) // logical column == rune index
-	if col > runes.len {
-		col = runes.len
-	}
+	col := int(cursor_col) // logical column == grapheme cluster index
 
-	// logical column -> visual column: measure the prefix as a whole so
-	// grapheme clustering (ZWJ, combining marks, wide glyphs) is correct.
-	prefix := runes[..col].string().replace('\t', '    ')
+	// grapheme-cluster index -> rune prefix length, so visible-width
+	// measurement covers ZWJ sequences and variation selectors as one glyph.
+	prefix_end := rune_index_after_graphemes(runes, col)
+	prefix := runes[..prefix_end].string().replace('\t', '    ')
 	visual_x := utf8_str_visible_length(prefix)
 
-	// width of the glyph under the cursor (min 1 so the block stays visible)
-	cursor_width := if col < runes.len {
-		r := runes[col]
-		if r == `\t` {
+	// width of the cluster under the cursor (min 1 so the block stays visible)
+	cursor_width := if prefix_end < runes.len {
+		cluster_end := next_grapheme_rune_index(runes, prefix_end)
+		if runes[prefix_end] == `\t` {
 			4
 		} else {
-			w := utf8_str_visible_length(r.str())
+			w := utf8_str_visible_length(runes[prefix_end..cluster_end].string())
 			if w < 1 { 1 } else { w }
 		}
 	} else {
@@ -265,15 +263,47 @@ fn (m EditorModel2) clone() tea.Model {
 	}
 }
 
-fn rune_display_width(r rune, tab_width int) int {
-	if r == `\t` {
-		return tab_width
+fn rune_index_after_graphemes(runes []rune, n int) int {
+	mut i := 0
+	mut count := 0
+	for i < runes.len && count < n {
+		i = next_grapheme_rune_index(runes, i)
+		count += 1
 	}
-	return char_width(r)
+	return i
 }
 
-fn char_width(r rune) int {
-	return utf8_str_visible_length(r.str())
+fn next_grapheme_rune_index(runes []rune, start int) int {
+	if start >= runes.len {
+		return start
+	}
+	mut i := start + 1
+	for i < runes.len {
+		r := runes[i]
+		if r == rune(0x200D) {
+			// ZWJ glues to the following codepoint
+			i += 1
+			if i < runes.len {
+				i += 1
+			}
+			continue
+		}
+		if is_rune_extender(r) {
+			i += 1
+			continue
+		}
+		break
+	}
+	return i
 }
 
+fn is_rune_extender(r rune) bool {
+	if r >= rune(0x0300) && r <= rune(0x036F) {
+		return true
+	}
+	if r >= rune(0xFE00) && r <= rune(0xFE0F) {
+		return true
+	}
+	return false
+}
 
