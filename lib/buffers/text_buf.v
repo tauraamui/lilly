@@ -442,7 +442,7 @@ pub fn (mut tb TextBuffer) move_cursor_to_previous_blank_line() {
 		i -= 1
 	}
 	if target < 0 {
-		return
+		target = 0
 	}
 	tb.move_cursor_to_line_start(u64(target))
 }
@@ -461,7 +461,7 @@ pub fn (mut tb TextBuffer) move_cursor_to_next_blank_line() {
 		}
 	}
 	if target < 0 {
-		return
+		target = i64(line_count - 1)
 	}
 	tb.move_cursor_to_line_start(u64(target))
 }
