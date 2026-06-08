@@ -4,6 +4,7 @@ import bobatea as tea
 import lib.documents
 import lib.documents.cursor
 import lib.petal.theme
+import lib.syntax
 import lib.palette
 
 struct EditorModel2 {
@@ -19,18 +20,25 @@ mut:
 	top_line int
 	visual_sel_start_col ?u64
 	visual_sel_start_line ?u64
+	lang_syn syntax.Syntax = syntax.noop_syntax
+	token_parser syntax.Parser
+	parser_line_states []syntax.State
+	parser_cache_dirty bool = true
 }
 
-fn EditorModel2.new(l_theme theme.Theme, doc_id int, doc_controller &documents.Controller2) EditorModel2 {
+fn EditorModel2.new(l_theme theme.Theme, id int, doc_id int, file_path string, doc_controller &documents.Controller2) EditorModel2 {
 	return EditorModel2{
+		id: id
+		file_path: file_path
 		doc_id: doc_id
 		theme: l_theme
 		doc_controller: doc_controller
+		token_parser: syntax.Parser{}
 	}
 }
 
 fn (mut m EditorModel2) init() fn () tea.Msg {
-	return tea.emit_resize
+	return tea.batch(tea.emit_resize, load_syntax(m.id, m.file_path), query_editor_data(m.id))
 }
 
 fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
@@ -70,6 +78,20 @@ fn (mut m EditorModel2) editor_model_update(msg tea.Msg) (tea.Model, fn () tea.M
 	match msg {
 		QueryEditorDataMsg {
 			return m.clone(), editor_data(m.data())
+		}
+		SyntaxLoadedMsg {
+			m.lang_syn = msg.syn
+			mut extra_id_chars := []rune{ cap: m.lang_syn.identifier_chars.len }
+			for s in m.lang_syn.identifier_chars {
+				for r in s.runes() {
+					extra_id_chars << r
+				}
+			}
+			m.token_parser.set_extra_identifier_chars(extra_id_chars)
+			m.invalidate_parser_cache()
+			if msg.err_msg.len > 0 {
+				return m.clone(), debug_log(msg.err_msg)
+			}
 		}
 		else {}
 	}
@@ -137,6 +159,7 @@ fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
 	match msg.k_type {
 		.runes {
+			m.invalidate_parser_cache()
 			for cr in msg.string().runes_iterator() {
 				m.doc_controller.insert_rune(m.doc_id, cr)
 			}
@@ -144,15 +167,19 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 		.special {
 			match msg.string() {
 				'enter' {
+					m.invalidate_parser_cache()
 					m.doc_controller.insert(m.doc_id, `\n`)
 				}
 				'ctrl+i' { // TAB
+					m.invalidate_parser_cache()
 					m.doc_controller.insert(m.doc_id, `\t`)
 				}
 				'backspace' {
+					m.invalidate_parser_cache()
 					m.doc_controller.backspace(m.doc_id)
 				}
 				'delete' {
+					m.invalidate_parser_cache()
 					m.doc_controller.delete(m.doc_id)
 				}
 				'left' {
@@ -209,6 +236,7 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg
 	// shared motion table so they can switch modes / insert text.
 	match action.motion {
 		'o' {
+			m.invalidate_parser_cache()
 			m.doc_controller.jump_cursor_to_line_end(m.doc_id)
 			prefix := m.doc_controller.resolve_prev_line_whitespace_prefix(m.doc_id)
 			m.doc_controller.insert(m.doc_id, `\n`)
@@ -221,6 +249,7 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg
 			return switch_mode(.visual), true
 		}
 		'line' {
+			m.invalidate_parser_cache()
 			cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
 			for _ in 0..count {
 				// deleting the same line since each line delete will move the
@@ -253,6 +282,7 @@ fn (mut m EditorModel2) execute_action_visual(action ChordAction) (fn () tea.Msg
 	if op := action.operator {
 		// in visual mode the selection IS the range — apply the operator
 		// against it immediately and exit back to normal mode.
+		m.invalidate_parser_cache()
 		r := m.current_visual_range() or { return switch_mode(.normal), true }
 		apply_operator(m.doc_controller, m.doc_id, op, r)
 		return switch_mode(.normal), true
@@ -262,6 +292,24 @@ fn (mut m EditorModel2) execute_action_visual(action ChordAction) (fn () tea.Msg
 	// render_visual_selection derives the highlight from sel_start + cursor.
 	apply_motion(m.doc_controller, m.doc_id, action.motion, count)
 	return tea.noop_cmd, false
+}
+
+fn (mut m EditorModel2) invalidate_parser_cache() {
+	m.parser_cache_dirty = true
+}
+
+fn (mut m EditorModel2) rebuild_parser_state_cache() {
+	m.parser_line_states.clear()
+	m.token_parser.reset()
+	line_count := int(m.doc_controller.line_count(m.doc_id))
+	for y in 0..line_count {
+		m.parser_line_states << m.token_parser.current_state()
+		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
+		line_content := line_bytes.bytestr().replace('\t', '    ')
+		m.token_parser.advance_state_runes(line_content.runes())
+	}
+	m.parser_cache_dirty = false
+	m.token_parser.reset()
 }
 
 fn (m EditorModel2) current_visual_range() ?cursor.Range {
@@ -321,12 +369,13 @@ fn (mut m EditorModel2) clamp_cursor_to_line_end() {
 	}
 }
 
-fn (m EditorModel2) view(mut ctx tea.Context) {
+fn (mut m EditorModel2) view(mut ctx tea.Context) {
 	ctx.set_clip_area(tea.ClipArea{ 0, 0, m.width(), m.height() })
 	defer { ctx.clear_clip_area() }
 
 	offset_id := m.render_line_numbers(mut ctx)
 	defer { ctx.clear_offsets_from(offset_id) }
+	m.render_syntax_highlighting(mut ctx)
 	m.render_cursor_line_highlight(mut ctx)
 	m.render_visual_selection(mut ctx)
 	m.render_cursor_block(mut ctx)
@@ -355,6 +404,115 @@ fn (m EditorModel2) render_line_numbers(mut ctx tea.Context) int {
 	ctx.reset_color()
 
 	return offset_id
+}
+
+fn (mut m EditorModel2) render_syntax_highlighting(mut ctx tea.Context) {
+	if m.lang_syn.name.len == 0 {
+		return
+	}
+	
+	if m.parser_cache_dirty {
+		m.rebuild_parser_state_cache()
+	}
+	
+	line_count := int(m.doc_controller.line_count(m.doc_id))
+	end := if m.top_line + m.viewport_height < line_count {
+		m.top_line + m.viewport_height
+	} else {
+		line_count
+	}
+	
+	m.token_parser.reset()
+	if m.top_line < m.parser_line_states.len {
+		m.token_parser.set_state(m.parser_line_states[m.top_line])
+	}
+
+	mut rune_buf := []rune{}
+	for y in m.top_line .. end {
+		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
+		// expand tabs to match the text actually drawn in view(), so token
+		// rune indices line up 1:1 with on-screen columns
+		line_content := line_bytes.bytestr().replace('\t', '    ')
+		line_tokens := m.token_parser.parse_line(y, line_content)
+
+		rune_buf.clear()
+		for r in line_content.runes_iterator() {
+			rune_buf << r
+		}
+
+		mut visual_x := 0
+		for i, t in line_tokens {
+			token_str := rune_buf[t.start()..t.end()].string()
+			token_width := utf8_str_visible_length(token_str)
+			if color := m.color_for_token(t, token_str, rune_buf, line_tokens, i) {
+				ctx.set_color(color)
+				ctx.draw_rect(visual_x, y - m.top_line, token_width, 1)
+				ctx.reset_color()
+			}
+			visual_x += token_width
+		}
+	}
+
+	m.token_parser.reset()
+}
+
+fn (m EditorModel2) color_for_token(t syntax.Token, token_str string, rune_buf []rune, line_tokens []syntax.Token, i int) ?tea.Color {
+	match t.t_type() {
+		.comment {
+			return m.theme.syntax_comment
+		}
+		.string {
+			return m.theme.syntax_string
+		}
+		.number {
+			return tea.Color.ansi(199)
+		}
+		else {
+			mut color := ?tea.Color(none)
+			match true {
+				token_str in m.lang_syn.keywords {
+					color = m.theme.petal_red
+				}
+				token_str in m.lang_syn.literals {
+					color = m.theme.syntax_literal
+				}
+				token_str in m.lang_syn.builtins {
+					color = m.theme.syntax_builtin
+				}
+				else {}
+			}
+
+			// suppress keyword/literal/builtin coloring when this identifier is
+			// glued to a lone `_` token (e.g. `_foo` / `foo_`), matching the
+			// original editor's behavior
+			prev_token := if i - 1 >= 0 {
+				?syntax.Token(line_tokens[i - 1])
+			} else {
+				?syntax.Token(none)
+			}
+			next_token := if i + 1 < line_tokens.len {
+				?syntax.Token(line_tokens[i + 1])
+			} else {
+				?syntax.Token(none)
+			}
+
+			if pt := prev_token {
+				if pt.t_type() != .whitespace && pt.end() - pt.start() == 1
+					&& rune_buf[pt.start()] == `_` {
+					return none
+				}
+			} else {
+				if nt := next_token {
+					if nt.t_type() != .whitespace && nt.end() - nt.start() == 1
+						&& rune_buf[nt.start()] == `_` {
+						return none
+					}
+				}
+			}
+
+			return color
+		}
+	}
 }
 
 fn (m EditorModel2) render_cursor_line_highlight(mut ctx tea.Context) {
