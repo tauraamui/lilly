@@ -344,8 +344,16 @@ fn (m EditorModel2) render_line_numbers(mut ctx tea.Context) int {
 	end := if m.top_line + m.viewport_height < line_count { m.top_line + m.viewport_height } else { line_count }
 	max_line_nr := m.top_line + end
 	gutter_width := num_digits(max_line_nr) + 1
-	
+
 	offset_id := ctx.push_offset(tea.Offset{ x: gutter_width })
+
+	ctx.set_color(m.theme.syntax_comment)
+	for y in m.top_line..end {
+		line_nr := '${y + 1}'
+		ctx.draw_text(-1 - line_nr.len, y - m.top_line, line_nr)
+	}
+	ctx.reset_color()
+
 	return offset_id
 }
 
