@@ -3,6 +3,7 @@ module documents
 import io
 import os
 import lib.buffers
+import lib.documents.cursor
 
 @[heap]
 pub struct Controller2 {
@@ -65,6 +66,10 @@ pub fn (mut dc Controller2) delete(doc_id int) {
 
 pub fn (mut dc Controller2) delete_line(doc_id int, y u64) {
 	dc.docs[doc_id].delete_line(y)
+}
+
+pub fn (mut dc Controller2) delete_range(doc_id int, r cursor.Range) {
+	dc.docs[doc_id].delete_range(u64(r.start.y), u64(r.start.x), u64(r.end.y), u64(r.end.x))
 }
 
 pub fn (mut dc Controller2) move_cursor_left(doc_id int) {

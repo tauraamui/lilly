@@ -88,6 +88,59 @@ pub fn (mut tb TextBuffer) delete_line(y u64) {
 	}
 }
 
+// delete_range removes graphemes in the half-open span
+// [(start_y, start_x), (end_y, end_x)). Positions are given in
+// (line, grapheme-column) terms — the same units `cursor_line_and_x`
+// returns — so callers can pass values straight from a resolved motion
+// range. Endpoints in document order are normalized; an inverted range
+// is treated as the same span. Out-of-range lines are clamped to the
+// last line; columns past line content are clamped to the line's end
+// (excluding the terminating newline). When the span crosses a
+// newline, the underlying delete() handles line-buffer accounting, so
+// joins happen automatically.
+pub fn (mut tb TextBuffer) delete_range(start_y u64, start_x u64, end_y u64, end_x u64) {
+	line_count := u64(tb.line_buf.len())
+	if line_count == 0 {
+		return
+	}
+	mut sy, mut sx := start_y, start_x
+	mut ey, mut ex := end_y, end_x
+	if sy > ey || (sy == ey && sx > ex) {
+		sy, sx = end_y, end_x
+		ey, ex = start_y, start_x
+	}
+	if sy >= line_count {
+		return
+	}
+	if ey >= line_count {
+		ey = line_count - 1
+		ex = u64(tb.line_graphemes(ey).len)
+	}
+	start_offset := tb.byte_offset_at(sy, sx)
+	end_offset := tb.byte_offset_at(ey, ex)
+	if end_offset <= start_offset {
+		return
+	}
+	grapheme_count := tb.count_graphemes(start_offset, end_offset)
+	tb.move_cursor_to_position(sy, sx)
+	for _ in 0 .. grapheme_count {
+		tb.delete()
+	}
+}
+
+fn (tb TextBuffer) byte_offset_at(y u64, x u64) u64 {
+	line_start, line_end := tb.get_line_start_and_end(y)
+	mut content_end := line_end
+	if content_end > line_start {
+		if last := tb.data_buf.get(content_end - 1) {
+			if last == newline_hex {
+				content_end -= 1
+			}
+		}
+	}
+	return tb.offset_at_column(line_start, content_end, x)
+}
+
 pub fn (mut tb TextBuffer) move_cursor_left() {
 	cur := tb.data_buf.ccur()
 	if cur == 0 {

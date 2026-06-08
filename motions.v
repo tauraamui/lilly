@@ -13,7 +13,7 @@ import lib.documents.cursor
 
 // apply_motion runs a navigation motion against the controller. It returns
 // true if the motion key was recognised. Operators in both normal and visual
-// mode share this — visual mode reuses it as "extend selection" because the
+// mode share this but visual mode reuses it as "extend selection" because the
 // selection range is derived from visual_sel_start + cursor.
 fn apply_motion(c &documents.Controller2, doc_id int, motion string, count int) bool {
 	match motion {
@@ -52,9 +52,12 @@ fn motion_range(c &documents.Controller2, doc_id int, motion string, count int) 
 // true if the operator was recognised.
 fn apply_operator(c &documents.Controller2, doc_id int, op u8, r cursor.Range) bool {
 	match op {
+		`d` {
+			c.delete_range(doc_id, r)
+			return true
+		}
 		// TODO(tauraamui) [2026-06-08]: wire up once Controller2 grows
-		// delete_visual_range / delete_range / yank etc.
-		`d` { return false }
+		// change / yank etc.
 		`c` { return false }
 		`y` { return false }
 		else { return false }

@@ -414,3 +414,62 @@ fn test_text_buffer_cursor_movement_skips_multibyte_codepoints() {
 	assert tb.get_line_bytes(0)? == "aZ😍Xb".bytes()
 }
 
+fn insert_str(mut tb TextBuffer, s string) {
+	for b in s.bytes() {
+		tb.insert(b)
+	}
+}
+
+fn test_text_buffer_delete_range_within_single_line() {
+	mut tb := TextBuffer.new()
+	insert_str(mut tb, 'Hello, World!')
+
+	tb.delete_range(0, 5, 0, 12)
+	assert tb.get_line_bytes(0)? == 'Hello!'.bytes()
+}
+
+fn test_text_buffer_delete_range_spanning_multiple_lines() {
+	mut tb := TextBuffer.new()
+	insert_str(mut tb, 'first line\nsecond line\nthird line')
+
+	tb.delete_range(0, 6, 2, 6)
+	assert tb.line_count() == 1
+	assert tb.get_line_bytes(0)? == 'first line'.bytes()
+}
+
+fn test_text_buffer_delete_range_joins_two_lines() {
+	mut tb := TextBuffer.new()
+	insert_str(mut tb, 'foo\nbar')
+
+	// span: end of "foo" through start of "bar" => join lines
+	tb.delete_range(0, 3, 1, 0)
+	assert tb.line_count() == 1
+	assert tb.get_line_bytes(0)? == 'foobar'.bytes()
+}
+
+fn test_text_buffer_delete_range_inverted_endpoints() {
+	mut tb := TextBuffer.new()
+	insert_str(mut tb, 'Hello, World!')
+
+	// same as the within-line case, but with endpoints swapped
+	tb.delete_range(0, 12, 0, 5)
+	assert tb.get_line_bytes(0)? == 'Hello!'.bytes()
+}
+
+fn test_text_buffer_delete_range_clamps_past_end_of_buffer() {
+	mut tb := TextBuffer.new()
+	insert_str(mut tb, 'abc\ndef')
+
+	tb.delete_range(0, 1, 99, 99)
+	assert tb.line_count() == 1
+	assert tb.get_line_bytes(0)? == 'a'.bytes()
+}
+
+fn test_text_buffer_delete_range_noop_when_endpoints_equal() {
+	mut tb := TextBuffer.new()
+	insert_str(mut tb, 'unchanged')
+
+	tb.delete_range(0, 4, 0, 4)
+	assert tb.get_line_bytes(0)? == 'unchanged'.bytes()
+}
+
