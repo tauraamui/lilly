@@ -178,7 +178,7 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
 	match msg.k_type {
 		.runes {
-			if action := m.chord.feed(msg.string()) {
+			if action := m.chord.feed_visual(msg.string()) {
 				cmd, switching_mode := m.execute_action_visual(action)
 				if !switching_mode {
 					m.clamp_cursor_to_line_end()
