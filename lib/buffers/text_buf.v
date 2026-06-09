@@ -291,6 +291,21 @@ pub fn (mut tb TextBuffer) undo() {
 	tb.history.chain_idx = idx
 }
 
+pub fn (mut tb TextBuffer) redo() {
+	tb.commit_undo_group() // close any open group first
+	if tb.history.chain_idx < 0 {
+		return // chain broken (or never undone) - nothing to redo
+	}
+	if tb.history.chain_idx >= tb.history.groups.len {
+		return // fully redone already
+	}
+	// invariant: last group is the inverse of groups[chain_idx],
+	// pushed there by the matching undo()
+	inv := tb.history.groups.pop()
+	tb.apply_inverse(inv) // inverting the inverse == re-applying forward
+	tb.history.chain_idx++
+}
+
 fn (mut tb TextBuffer) apply_inverse(grp UndoGroup2) UndoGroup2 {
 	tb.history.recording = false
 	defer { tb.history.recording = true }

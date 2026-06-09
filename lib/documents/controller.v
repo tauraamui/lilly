@@ -70,6 +70,10 @@ pub fn (mut dc Controller2) undo(doc_id int) {
 	dc.docs[doc_id].undo()
 }
 
+pub fn (mut dc Controller2) redo(doc_id int) {
+	dc.docs[doc_id].redo()
+}
+
 pub fn (mut dc Controller2) move_cursor_left(doc_id int) {
 	dc.docs[doc_id].move_cursor_left()
 }

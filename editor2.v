@@ -150,6 +150,9 @@ fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 				'up' {
 					m.doc_controller.move_cursor_up(m.doc_id)
 				}
+				'ctrl+r' {
+					m.doc_controller.redo(m.doc_id)
+				}
 				else {}
 			}
 		}
