@@ -1,5 +1,6 @@
 module buffers
 
+import io
 import encoding.utf8
 import gap
 import line
@@ -8,17 +9,67 @@ const newline_hex = 0x0A
 const space_hex   = 0x20
 const tab_hex     = 0x09
 
+enum OpKind2 {
+	insert
+	delete
+}
+
+struct EditOp2 {
+mut:
+	kind   OpKind2
+	offset u64
+	bytes  []u8
+}
+
+struct UndoGroup2 {
+mut:
+	ops           []EditOp2
+	cursor_before u64 // byte offset valid at the moment the op applied
+	cursor_after  u64 // what was inserted / what was removed
+}
+
+struct History {
+mut:
+	groups    []UndoGroup2
+	open      bool
+	cur       UndoGroup2
+	chain_idx int = -1 // next group to undo; -1 = chain broken
+	recording bool = true
+}
+
 pub struct TextBuffer {
 mut:
 	data_buf gap.Buffer
 	line_buf line.Buffer
+	history  History
 }
 
-pub fn TextBuffer.new() TextBuffer { // TODO(tauraamui) [2026-06-03]: pass in reader into text buffer
-	return TextBuffer{
+pub fn TextBuffer.new(mut r io.Reader) !TextBuffer { // TODO(tauraamui) [2026-06-03]: pass in reader into text buffer
+	mut tb := TextBuffer{
 		data_buf: gap.Buffer.new(1024)
 		line_buf: line.Buffer.new()
 	}
+	tb.history.recording = false
+	mut single_byte := []u8{len: 1}
+	for {
+		read := r.read(mut single_byte) or {
+			if err is io.Eof{} {
+				break
+			}
+			return error('read error: ${err}')
+		}
+		if read == 0 {
+			continue
+		}
+		tb.insert(single_byte[0])
+	}
+	tb.move_cursor_to_start()
+	tb.history = History{}
+	return tb
+}
+
+pub fn (mut tb TextBuffer) load(bytes []u8) {
+	tb.history.recording = false
 }
 
 pub fn (mut tb TextBuffer) insert_rune(r rune) {
@@ -29,6 +80,7 @@ pub fn (mut tb TextBuffer) insert_rune(r rune) {
 }
 
 pub fn (mut tb TextBuffer) insert(c u8) {
+	tb.record(.insert, tb.data_buf.ccur(), [c])
 	tb.data_buf.insert(c)
 	tb.line_buf.apply_delta(1)
 	if c == newline_hex {
@@ -42,6 +94,11 @@ pub fn (mut tb TextBuffer) backspace() {
 		return
 	}
 	start := tb.prev_boundary(cur)
+	mut removed := []u8{ len: int(cur - start) }
+	for i in 0..removed.len {
+		removed[i] = tb.data_buf.get(start + u64(i)) or { 0 }
+	}
+	tb.record(.delete, start, removed)
 	deleted_newline := tb.data_buf.get(start) or { 0 } == newline_hex
 	for _ in start..cur {
 		tb.data_buf.backspace()
@@ -56,6 +113,11 @@ pub fn (mut tb TextBuffer) delete() {
 	cur := tb.data_buf.ccur()
 	deleted_byte := tb.data_buf.get(cur) or { return }
 	end := tb.next_boundary(cur)
+	mut removed := []u8{ len: int(end - cur) }
+	for i in 0..removed.len {
+		removed[i] = tb.data_buf.get(cur + u64(i)) or { 0 }
+	}
+	tb.record(.delete, cur, removed)
 	for _ in cur .. end {
 		tb.data_buf.delete()
 	}
@@ -80,7 +142,7 @@ pub fn (mut tb TextBuffer) delete_line(y u64) {
 	}
 	// Vim collapse: when the deleted line was the last in the file, also
 	// consume the preceding line's terminating newline so we don't leave
-	// behind an empty trailing line. Skipped for the only-line case —
+	// behind an empty trailing line. Skipped for the only-line case
 	// the buffer must always contain at least one line.
 	if is_last && has_prev {
 		tb.backspace()
@@ -90,8 +152,8 @@ pub fn (mut tb TextBuffer) delete_line(y u64) {
 
 // delete_range removes graphemes in the half-open span
 // [(start_y, start_x), (end_y, end_x)). Positions are given in
-// (line, grapheme-column) terms — the same units `cursor_line_and_x`
-// returns — so callers can pass values straight from a resolved motion
+// (line, grapheme-column) terms - the same units `cursor_line_and_x`
+// returns - so callers can pass values straight from a resolved motion
 // range. Endpoints in document order are normalized; an inverted range
 // is treated as the same span. Out-of-range lines are clamped to the
 // last line; columns past line content are clamped to the line's end
@@ -125,6 +187,21 @@ pub fn (mut tb TextBuffer) delete_range(start_y u64, start_x u64, end_y u64, end
 	tb.move_cursor_to_position(sy, sx)
 	for _ in 0 .. grapheme_count {
 		tb.delete()
+	}
+}
+
+// delete_bytes_at removes exactly `n` bytes starting at `offset`.
+// Byte-precise (no grapheme logic) so it can faithfully invert
+// recorded ops. Does NOT record history; callers manage that.
+fn (mut tb TextBuffer) delete_bytes_at(offset u64, n int) {
+	tb.move_cursor_to_offset(offset)
+	for _ in 0 .. n {
+		deleted := tb.data_buf.get(offset) or { break }
+		tb.data_buf.delete()
+		tb.line_buf.apply_delta(-1)
+		if deleted == newline_hex {
+			tb.line_buf.remove_line_after_current()
+		}
 	}
 }
 
@@ -175,6 +252,73 @@ pub fn (mut tb TextBuffer) move_cursor_down() {
 	tb.move_cursor_vertical(1)
 }
 
+pub fn (mut tb TextBuffer) begin_undo_group() {
+	if tb.history.open {
+		return
+	}
+	tb.history.open = true
+	tb.history.cur = UndoGroup2{
+		cursor_before: tb.data_buf.ccur()
+	}
+}
+
+pub fn (mut tb TextBuffer) commit_undo_group() {
+	if !tb.history.open {
+		return
+	}
+	tb.history.open = false
+	if tb.history.cur.ops.len == 0 {
+		return
+	}
+	tb.history.cur.cursor_after = tb.data_buf.ccur()
+	tb.history.groups << tb.history.cur
+	tb.history.chain_idx = -1
+}
+
+pub fn (mut tb TextBuffer) undo() {
+	tb.commit_undo_group() // close any open group first
+	if tb.history.chain_idx < 0 {
+		tb.history.chain_idx = tb.history.groups.len
+	}
+	if tb.history.chain_idx == 0 {
+		return // nothing left to undo
+	}
+	idx := tb.history.chain_idx - 1
+	grp := tb.history.groups[idx]
+	inv := tb.apply_inverse(grp)
+	// the inverse becomes a NEW history entry - undoing it later == redo
+	tb.history.groups << inv
+	tb.history.chain_idx = idx
+}
+
+fn (mut tb TextBuffer) apply_inverse(grp UndoGroup2) UndoGroup2 {
+	tb.history.recording = false
+	defer { tb.history.recording = true }
+
+	mut inv := UndoGroup2{
+		cursor_before: grp.cursor_after
+		cursor_after: grp.cursor_before
+	}
+	for i := grp.ops.len - 1; i >= 0; i-- {
+		op := grp.ops[i]
+		match op.kind {
+			.insert {
+				tb.delete_bytes_at(op.offset, op.bytes.len)
+				inv.ops << EditOp2{ kind: .delete, offset: op.offset, bytes: op.bytes }
+			}
+			.delete {
+				tb.move_cursor_to_offset(op.offset)
+				for b in op.bytes {
+					tb.insert(b) // recording is off; line_buf stays in sync
+				}
+				inv.ops << EditOp2{ kind: .insert, offset: op.offset, bytes: op.bytes }
+			}
+		}
+	}
+	tb.move_cursor_to_offset(grp.cursor_before)
+	return inv
+}
+
 fn (mut tb TextBuffer) move_cursor_vertical(direction int) {
 	line_count := tb.line_buf.len()
 	if line_count == 0 {
@@ -219,6 +363,76 @@ fn (mut tb TextBuffer) move_cursor_vertical(direction int) {
 		}
 	}
 	tb.line_buf.move_to_line(target_line)
+}
+
+fn (mut tb TextBuffer) record(kind OpKind2, offset u64, bytes []u8) {
+	if !tb.history.recording {
+		return
+	}
+	if !tb.history.open {
+		tb.begin_undo_group()
+	}
+	mut grp := &tb.history.cur
+	if grp.ops.len > 0 {
+		mut last := &grp.ops[grp.ops.len - 1]
+		// typing forward
+		if kind == .insert && last.kind == .insert && offset == last.offset + u64(last.bytes.len) {
+			last.bytes << bytes
+			return
+		}
+		if kind == .delete && last.kind == .delete && offset + u64(bytes.len) == last.offset {
+			mut merged := bytes.clone()
+			merged << last.bytes
+			last.offset = offset
+			last.bytes = merged
+			return
+		}
+		// forward delete: repeated deletes at same offset
+		if kind == .delete && last.kind == .delete && offset == last.offset {
+			last.bytes << bytes
+			return
+		}
+	}
+	grp.ops << EditOp2{
+		kind: kind
+		offset: offset
+		bytes: bytes
+	}
+}
+
+fn (mut tb TextBuffer) move_cursor_to_offset(target u64) {
+	current := tb.data_buf.ccur()
+	if target > current {
+		for _ in 0 .. target - current {
+			tb.data_buf.move_cur_right()
+		}
+	} else if target < current {
+		for _ in 0 .. current - target {
+			tb.data_buf.move_cur_left()
+		}
+	}
+	tb.line_buf.move_to_line(tb.line_index_for_offset(target))
+}
+
+// which line does a logical byte offset fall on?
+fn (tb TextBuffer) line_index_for_offset(offset u64) u64 {
+	line_count := u64(tb.line_buf.len())
+	if line_count == 0 {
+		return 0
+	}
+	mut lo := u64(0)
+	mut hi := line_count - 1
+	// binary search: largest line whose start <= offset
+	for lo < hi {
+		mid := (lo + hi + 1) / 2
+		start, _ := tb.get_line_start_and_end(mid)
+		if start <= offset {
+			lo = mid
+		} else {
+			hi = mid - 1
+		}
+	}
+	return lo
 }
 
 fn (tb TextBuffer) codepoint_len_at(offset u64) ?int {

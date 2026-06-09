@@ -27,21 +27,7 @@ pub fn (mut dc Controller2) open_document(path string) !int {
 }
 
 pub fn (mut dc Controller2) load_document_from_reader(mut r io.Reader) !int {
-	mut text_buf := buffers.TextBuffer.new()
-	mut single_byte := []u8{len: 1}
-	for {
-		read := r.read(mut single_byte) or {
-			if err is io.Eof{} {
-				break
-			}
-			return error('read error: ${err}')
-		}
-		if read == 0 {
-			continue
-		}
-		text_buf.insert(single_byte[0])
-	}
-	text_buf.move_cursor_to_start()
+	mut text_buf := buffers.TextBuffer.new(mut r) or { return err }
 	doc_id := dc.next_id
 	dc.next_id += 1
 	dc.docs[doc_id] = text_buf
@@ -70,6 +56,18 @@ pub fn (mut dc Controller2) delete_line(doc_id int, y u64) {
 
 pub fn (mut dc Controller2) delete_range(doc_id int, r cursor.Range) {
 	dc.docs[doc_id].delete_range(u64(r.start.y), u64(r.start.x), u64(r.end.y), u64(r.end.x))
+}
+
+pub fn (mut dc Controller2) begin_undo_group(doc_id int) {
+	dc.docs[doc_id].begin_undo_group()
+}
+
+pub fn (mut dc Controller2) commit_undo_group(doc_id int) {
+	dc.docs[doc_id].commit_undo_group()
+}
+
+pub fn (mut dc Controller2) undo(doc_id int) {
+	dc.docs[doc_id].undo()
 }
 
 pub fn (mut dc Controller2) move_cursor_left(doc_id int) {

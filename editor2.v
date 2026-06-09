@@ -111,6 +111,10 @@ fn (mut m EditorModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () 
 			m.visual_sel_start_col = cursor_col
 			return m.clone(), tea.noop_cmd
 		}
+		.insert {
+			m.doc_controller.commit_undo_group(m.doc_id)
+			m.doc_controller.begin_undo_group(m.doc_id)
+		}
 		else {}
 	}
 
@@ -166,6 +170,9 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 		}
 		.special {
 			match msg.string() {
+				'escape' {
+					m.doc_controller.commit_undo_group(m.doc_id)
+				}
 				'enter' {
 					m.invalidate_parser_cache()
 					m.doc_controller.insert(m.doc_id, `\n`)
@@ -256,6 +263,12 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg
 				// next line up, into the delete
 				m.doc_controller.delete_line(m.doc_id, cursor_line)
 			}
+			m.doc_controller.commit_undo_group(m.doc_id)
+			return tea.noop_cmd, false
+		}
+		'u' {
+			m.doc_controller.undo(m.doc_id)
+			m.invalidate_parser_cache()
 			return tea.noop_cmd, false
 		}
 		else {}
@@ -269,6 +282,7 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg
 			return tea.noop_cmd, false
 		}
 		apply_operator(m.doc_controller, m.doc_id, op, r)
+		m.doc_controller.commit_undo_group(m.doc_id)
 		return tea.noop_cmd, false
 	}
 
