@@ -38,12 +38,12 @@ mut context := build.context(
 context.task(
 	name:    'build'
 	depends: ['_generate-git-hash']
-	run:     |self| system('v . -o ${app_name}')
+	run:     |self| system($if darwin { 'v -cc cc . -o ${app_name}' } $else { 'v . -o ${app_name}' })
 )
 context.task(
 	name:    'prod'
 	depends: ['_generate-git-hash']
-	run:     |self| system('v -prod -g . -o ${app_name}')
+	run:     |self| system($if darwin { 'v -cc cc -prod -g . -o ${app_name}' } $else { 'v -prod -g . -o ${app_name}' })
 )
 context.task(
 	name:    'build-windows'
@@ -55,16 +55,16 @@ context.task(
 	depends: ['_generate-git-hash']
 	run:     |self| system('v -prod -g -os windows -o ${app_name}.exe .')
 )
-context.task(name: 'run', depends: ['_generate-git-hash'], run: |self| system('v -g run .'))
+context.task(name: 'run', depends: ['_generate-git-hash'], run: |self| system($if darwin { 'v -cc cc -g run .' } $else { 'v -g run .' }))
 context.task(
 	name:    'run-d'
 	depends: ['_generate-git-hash']
-	run:     |self| system('export LILLY_THEME=dark && v -g run .')
+	run:     |self| system($if darwin { 'export LILLY_THEME=dark && v -cc cc -g run .' } $else { 'export LILLY_THEME=dark && v -g run .' })
 )
 context.task(
 	name:    'run-l'
 	depends: ['_generate-git-hash']
-	run:     |self| system('export LILLY_THEME=light && v -g run .')
+	run:     |self| system($if darwin { 'export LILLY_THEME=light && v -cc cc -g run .' } $else { 'export LILLY_THEME=light && v -g run .' })
 )
 context.task(name: 'compile-make', run: |self| system('v -prod -skip-running make.vsh -o make'))
 
@@ -72,13 +72,13 @@ context.task(name: 'compile-make', run: |self| system('v -prod -skip-running mak
 context.task(
 	name:    'test'
 	depends: ['_generate-git-hash']
-	run:     |self| exit(system('v -g test .'))
+	run:     |self| exit(system($if darwin { 'v -cc cc -g test .' } $else { 'v -g test .' }))
 )
 
 context.task(
 	name:    'verbose-test'
 	depends: ['_generate-git-hash']
-	run:     |self| exit(system('v -g -stats test .'))
+	run:     |self| exit(system($if darwin { 'v -cc cc -g -stats test .' } $else { 'v -g -stats test .' }))
 )
 
 // UTIL TASKS
