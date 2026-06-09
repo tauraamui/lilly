@@ -552,6 +552,8 @@ fn (m EditorModel2) render_visual_selection(mut ctx tea.Context) {
 
 	ctx.set_bg_color(m.theme.highlight_bg_color)
 	defer { ctx.reset_bg_color() }
+	ctx.set_color(palette.fg_color(m.theme.highlight_bg_color)) // set fg color to inverse shade of bg
+	defer { ctx.reset_color() }
 
 	line_count := int(m.doc_controller.line_count(m.doc_id))
 	view_end := if m.top_line + m.viewport_height < line_count {
