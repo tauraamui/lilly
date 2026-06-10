@@ -112,4 +112,12 @@ pub fn (gb Buffer) str() string {
 	return copy_dst.bytestr()
 }
 
+pub fn (gb Buffer) left() []u8 {
+	return gb.buf[..int(gb.ccur)]
+}
+
+pub fn (gb Buffer) right() []u8 {
+	return gb.buf[int(gb.cend)..]
+}
+
 

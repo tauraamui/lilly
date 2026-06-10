@@ -1,6 +1,7 @@
 module buffers
 
 import io
+import os
 import encoding.utf8
 import gap
 import line
@@ -70,6 +71,43 @@ pub fn TextBuffer.new(mut r io.Reader) !TextBuffer { // TODO(tauraamui) [2026-06
 
 pub fn (mut tb TextBuffer) load(bytes []u8) {
 	tb.history.recording = false
+}
+
+// write_to_path streams the buffer's contents to `path` atomically:
+// writes the two gap-buffer halves directly into a sibling tmp file,
+// then renames over the target. Readers either see the previous file
+// or the fully-written new one, never a partial state. On dmon's
+// inotify/FSEvents/ReadDirectoryChangesW backends this surfaces as a
+// rename/create rather than modify; consumers should treat a CREATE
+// for an already-known path as a content change.
+pub fn (tb TextBuffer) write_to_path(path string) ! {
+	dir := os.dir(path)
+	tmp := os.join_path(dir, '.${os.file_name(path)}.${os.getpid()}.tmp')
+	{
+		mut f := os.create(tmp) or { return error('failed to create tmp ${tmp}: ${err}') }
+		left := tb.data_buf.left()
+		if left.len > 0 {
+			f.write(left) or {
+				f.close()
+				os.rm(tmp) or {}
+				return error('failed to write tmp ${tmp}: ${err}')
+			}
+		}
+		right := tb.data_buf.right()
+		if right.len > 0 {
+			f.write(right) or {
+				f.close()
+				os.rm(tmp) or {}
+				return error('failed to write tmp ${tmp}: ${err}')
+			}
+		}
+		f.flush()
+		f.close()
+	}
+	os.rename(tmp, path) or {
+		os.rm(tmp) or {}
+		return error('failed to rename ${tmp} -> ${path}: ${err}')
+	}
 }
 
 pub fn (mut tb TextBuffer) insert_rune(r rune) {

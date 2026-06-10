@@ -63,7 +63,7 @@ fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			m.viewport_height = msg.window_height
 		}
 		EditorModelMsg {
-			return m.editor_model_update(msg.msg)
+			return m.editor_model_update(msg.id, msg.msg)
 		}
 		SwitchModeMsg {
 			return m.switch_mode_update(msg)
@@ -74,12 +74,14 @@ fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	return m.clone(), tea.noop_cmd
 }
 
-fn (mut m EditorModel2) editor_model_update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorModel2) editor_model_update(editor_id int, msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	match msg {
 		QueryEditorDataMsg {
+			if editor_id != m.id { return m.clone(), tea.noop_cmd }
 			return m.clone(), editor_data(m.data())
 		}
 		SyntaxLoadedMsg {
+			if editor_id != m.id { return m.clone(), tea.noop_cmd }
 			m.lang_syn = msg.syn
 			mut extra_id_chars := []rune{ cap: m.lang_syn.identifier_chars.len }
 			for s in m.lang_syn.identifier_chars {
@@ -93,8 +95,19 @@ fn (mut m EditorModel2) editor_model_update(msg tea.Msg) (tea.Model, fn () tea.M
 				return m.clone(), debug_log(msg.err_msg)
 			}
 		}
+		WriteToDiskMsg {
+			if editor_id != m.id { return m.clone(), tea.noop_cmd }
+			m.doc_controller.write_to_disk(m.doc_id, m.file_path) or {
+				return m.clone(), raise_error('failed to write to disk: ${err}')
+			}
+			success_msg := 'written ${m.file_path} successfully'
+			return m.clone(), tea.sequence(debug_log(success_msg), display_message(.normal, success_msg))
+		}
 		else {}
 	}
+
+	m.clamp_cursor_to_line_end()
+	m.scroll_to_cursor()
 	return m.clone(), tea.noop_cmd
 }
 

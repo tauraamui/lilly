@@ -122,6 +122,10 @@ pub fn (mut dc Controller2) jump_cursor_to_line_end(doc_id int) {
 	dc.docs[doc_id].jump_cursor_to_line_end()
 }
 
+pub fn (mut dc Controller2) write_to_disk(doc_id int, target string) ! {
+	dc.docs[doc_id].write_to_path(target)!
+}
+
 pub fn (dc Controller2) resolve_prev_line_whitespace_prefix(doc_id int) []u8 {
 	return dc.docs[doc_id].resolve_prev_line_whitespace_prefix()
 }
