@@ -14,16 +14,17 @@ struct EditorModel2 {
 	theme          theme.Theme
 	doc_controller &documents.Controller2
 mut:
-	chord          Chord
-	viewport_width int
-	viewport_height int
-	top_line int
-	visual_sel_start_col ?u64
+	in_focus              bool
+	chord                 Chord
+	viewport_width        int
+	viewport_height       int
+	top_line              int
+	visual_sel_start_col  ?u64
 	visual_sel_start_line ?u64
-	lang_syn syntax.Syntax = syntax.noop_syntax
-	token_parser syntax.Parser
-	parser_line_states []syntax.State
-	parser_cache_dirty bool = true
+	lang_syn              syntax.Syntax = syntax.noop_syntax
+	token_parser          syntax.Parser
+	parser_line_states    []syntax.State
+	parser_cache_dirty    bool = true
 }
 
 fn EditorModel2.new(l_theme theme.Theme, id int, doc_id int, file_path string, doc_controller &documents.Controller2) EditorModel2 {
@@ -43,6 +44,7 @@ fn (mut m EditorModel2) init() fn () tea.Msg {
 
 fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	if msg is EditorModelKeyMsg {
+		if !m.in_focus { return m.clone(), tea.noop_cmd}
 		match msg.mode {
 			.normal {
 				return m.normal_mode_update(msg.key_msg)
@@ -76,6 +78,9 @@ fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 
 fn (mut m EditorModel2) editor_model_update(editor_id int, msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	match msg {
+		tea.FocusedMsg {
+			m.in_focus = editor_id == m.id
+		}
 		QueryEditorDataMsg {
 			if editor_id != m.id { return m.clone(), tea.noop_cmd }
 			return m.clone(), editor_data(m.data())
