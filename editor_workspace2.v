@@ -11,6 +11,8 @@ struct EditorWorkspaceModel2 {
 	theme          theme.Theme
 	doc_controller &documents.Controller2
 mut:
+	width          int
+	height         int
 	dialog_model   ?DebuggableModel
 	input_field    boba.InputField
 
@@ -30,16 +32,54 @@ fn (mut m EditorWorkspaceModel2) init() fn () tea.Msg {
 }
 
 fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
-	if msg is tea.KeyMsg {
-		if msg.k_type == .special && msg.string() == 'escape' {
-			return m.clone(), tea.quit
+	match msg {
+		tea.KeyMsg {
+			return m.key_update(msg)
 		}
+		tea.ResizedMsg {
+			return m.resized_update(msg)
+		}
+		OpenEditorInWorkspaceMsg {
+			return m.open_editor_in_workspace_update(msg)
+		}
+		else {}
 	}
+	return m.clone(), tea.noop_cmd
+}
+
+fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+	if msg.k_type == .special && msg.string() == 'escape' {
+		return m.clone(), tea.quit
+	}
+	return m.clone(), tea.noop_cmd
+}
+
+fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, fn () tea.Msg) {
+	m.width = msg.window_width
+	m.height = msg.window_height
+	return m.clone(), tea.noop_cmd
+}
+
+fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorInWorkspaceMsg) (tea.Model, fn () tea.Msg) {
 	return m.clone(), tea.noop_cmd
 }
 
 fn (m EditorWorkspaceModel2) view(mut ctx tea.Context) {
 	ctx.draw_text(0, 0, 'Editor Workspace WIP')
+}
+
+fn (m EditorWorkspaceModel2) width() int {
+	return m.width
+}
+
+fn (m EditorWorkspaceModel2) height() int {
+	return m.height
+}
+
+fn (m EditorWorkspaceModel2) debug_data() DebugData {
+	return DebugData{
+		name: 'editor workspace'
+	}
 }
 
 fn (m EditorWorkspaceModel2) clone() tea.Model {
@@ -54,3 +94,17 @@ fn (m EditorWorkspaceModel2) clone_with_mode(mode petal.Mode) tea.Model {
 		mode: mode
 	}
 }
+
+struct OpenEditorInWorkspaceMsg {
+	file_path string
+}
+
+fn open_editor_in_workspace_cmd(file_path string) fn () tea.Msg {
+	return fn [file_path] () tea.Msg {
+		return OpenEditorInWorkspaceMsg{
+			file_path: file_path
+		}
+	}
+}
+
+
