@@ -37,13 +37,22 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 			return m.key_update(msg)
 		}
 		tea.ResizedMsg {
-			return m.resized_update(msg)
+			m.resized_update(msg)
 		}
 		OpenEditorInWorkspaceMsg {
 			return m.open_editor_in_workspace_update(msg)
 		}
 		else {}
 	}
+
+	if mut active_editor := m.active_editor {
+		new_active_editor, cmd := active_editor.update(msg)
+		if new_active_editor is DebuggableModel {
+			m.active_editor = new_active_editor
+		}
+		return m.clone(), cmd
+	}
+
 	return m.clone(), tea.noop_cmd
 }
 
@@ -51,20 +60,40 @@ fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () te
 	if msg.k_type == .special && msg.string() == 'escape' {
 		return m.clone(), tea.quit
 	}
+
+	if mut active_editor := m.active_editor {
+		new_active_editor, cmd := active_editor.update(EditorModelKeyMsg{
+			key_msg: msg
+			mode: m.mode
+		})
+		if new_active_editor is DebuggableModel {
+			m.active_editor = new_active_editor
+		}
+		return m.clone(), tea.batch(cmd, debug_log('mode on key press: ${m.mode}'))
+	}
 	return m.clone(), tea.noop_cmd
 }
 
-fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) {
 	m.width = msg.window_width
 	m.height = msg.window_height
-	return m.clone(), tea.noop_cmd
 }
 
 fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorInWorkspaceMsg) (tea.Model, fn () tea.Msg) {
-	return m.clone(), tea.noop_cmd
+	doc_id := m.doc_controller.open_document(msg.file_path) or {
+		return m.clone(), debug_log('failed to open document ${msg.file_path}: ${err}')
+	}
+	mut e_model := EditorModel2.new(m.theme, 0, doc_id, msg.file_path, m.doc_controller)
+	model_init_cmd := e_model.init()
+	m.active_editor = e_model
+	return m.clone(), tea.sequence(model_init_cmd)
 }
 
 fn (m EditorWorkspaceModel2) view(mut ctx tea.Context) {
+	if mut editor := m.active_editor {
+		editor.view(mut ctx)
+		return
+	}
 	ctx.draw_text(0, 0, 'Editor Workspace WIP')
 }
 

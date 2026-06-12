@@ -44,7 +44,7 @@ fn (mut m EditorModel2) init() fn () tea.Msg {
 
 fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	if msg is EditorModelKeyMsg {
-		if !m.in_focus { return m.clone(), tea.noop_cmd}
+		// if !m.in_focus { return m.clone(), tea.noop_cmd}
 		match msg.mode {
 			.normal {
 				return m.normal_mode_update(msg.key_msg)
