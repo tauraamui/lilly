@@ -3,6 +3,7 @@ module main
 import bobatea as tea
 import lib.documents
 import lib.documents.cursor
+import lib.petal
 import lib.petal.theme
 import lib.syntax
 import lib.palette
@@ -14,6 +15,7 @@ struct EditorModel2 {
 	theme          theme.Theme
 	doc_controller &documents.Controller2
 mut:
+	mode                  petal.Mode = .normal
 	in_focus              bool
 	chord                 Chord
 	viewport_width        int
@@ -117,6 +119,13 @@ fn (mut m EditorModel2) editor_model_update(editor_id int, msg tea.Msg) (tea.Mod
 }
 
 fn (mut m EditorModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () tea.Msg) {
+	defer {
+		if m.mode != .visual {
+			m.visual_sel_start_line = ?u64(none)
+			m.visual_sel_start_col = ?u64(none)
+		}
+	}
+	m.mode = msg.mode
 	match msg.mode {
 		.normal {
 			if msg.from == .insert || msg.from == .normal {
@@ -135,9 +144,6 @@ fn (mut m EditorModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () 
 		}
 		else {}
 	}
-
-	m.visual_sel_start_line = ?u64(none)
-	m.visual_sel_start_col = ?u64(none)
 
 	return m.clone(), tea.noop_cmd
 }
