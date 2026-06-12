@@ -5,6 +5,8 @@ import lib.petal
 import lib.petal.theme
 import lib.boba
 import lib.documents
+import lib.glyphs
+import lib.palette
 
 struct EditorWorkspaceModel2 {
 	mode           petal.Mode = .normal
@@ -92,9 +94,143 @@ fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorI
 fn (m EditorWorkspaceModel2) view(mut ctx tea.Context) {
 	if mut editor := m.active_editor {
 		editor.view(mut ctx)
-		return
 	}
-	ctx.draw_text(0, 0, 'Editor Workspace WIP')
+
+	m.render_status_bar(mut ctx)
+}
+
+fn (m EditorWorkspaceModel2) render_status_bar(mut ctx tea.Context) {
+	ctx.set_bg_color(m.theme.status_bar_spacer)
+	ctx.draw_rect(0, ctx.window_height() - 2, ctx.window_width(), 1)
+	ctx.reset_bg_color()
+
+	m.render_status_blocks(mut ctx)
+	// m.render_leader_or_command_user_input_text(mut ctx)
+}
+
+fn (m EditorWorkspaceModel2) render_status_blocks(mut ctx tea.Context) {
+	status_bar_offset := ctx.push_offset(tea.Offset{ y: ctx.window_height() - 2 })
+	defer { ctx.clear_offsets_from(status_bar_offset) }
+
+	mode_color := m.mode.color(m.theme)
+	ctx.set_color(mode_color)
+	ctx.draw_text(0, 0, '${glyphs.left_rounded}${glyphs.block}')
+	ctx.reset_color()
+	blocks_offset := ctx.push_offset(tea.Offset{ x: 2 })
+
+	mode_label := m.mode.str()
+	ctx.set_color(palette.matte_black_fg_color)
+	ctx.set_bg_color(mode_color)
+	ctx.draw_text(0, 0, mode_label)
+	ctx.reset_bg_color()
+	ctx.reset_color()
+
+	ctx.push_offset(tea.Offset{ x: tea.visible_len(mode_label) })
+
+	ctx.set_color(mode_color)
+	ctx.draw_text(0, 0, '${glyphs.block}${glyphs.slant_right_flat_bottom}')
+	ctx.reset_color()
+	ctx.push_offset(tea.Offset{ x: 2 })
+
+	file_name_bg_color := m.theme.status_file_name
+	ctx.set_color(file_name_bg_color)
+	ctx.draw_text(0, 0, '${glyphs.slant_left_flat_top}${glyphs.block}')
+	ctx.reset_color()
+	ctx.push_offset(tea.Offset{ x: 2 })
+
+	file_name_label := m.active_file_name()
+	ctx.set_color(palette.fg_color(file_name_bg_color))
+	ctx.set_bg_color(file_name_bg_color)
+	ctx.draw_text(0, 0, file_name_label)
+	ctx.reset_bg_color()
+	ctx.reset_color()
+
+	ctx.push_offset(tea.Offset{ x: tea.visible_len(file_name_label) })
+
+	ctx.set_color(file_name_bg_color)
+	ctx.draw_text(0, 0, '${glyphs.block}${glyphs.slant_right_flat_bottom}')
+	ctx.reset_color()
+	ctx.push_offset(tea.Offset{ x: 2 })
+
+	branch_name_bg_color := m.theme.status_branch_name
+	ctx.set_color(branch_name_bg_color)
+	ctx.draw_text(0, 0, '${glyphs.slant_left_flat_top}${glyphs.block}')
+	ctx.reset_color()
+	ctx.push_offset(tea.Offset{ x: 2 })
+
+	branch_name_label := m.active_branch_name()
+	ctx.set_color(palette.fg_color(branch_name_bg_color))
+	ctx.set_bg_color(branch_name_bg_color)
+	ctx.draw_text(0, 0, branch_name_label)
+	ctx.reset_bg_color()
+	ctx.reset_color()
+
+	ctx.push_offset(tea.Offset{ x: tea.visible_len(branch_name_label) })
+
+	ctx.set_color(branch_name_bg_color)
+	ctx.draw_text(0, 0, '${glyphs.block}${glyphs.slant_right_flat_bottom}')
+	ctx.reset_color()
+
+	// status bar spacer left end cap
+	ctx.set_color(m.theme.status_bar_spacer)
+	ctx.draw_text(2, 0, glyphs.slant_left_flat_top)
+	ctx.reset_color()
+	//
+
+	ctx.clear_offsets_from(blocks_offset)
+
+	cursor_pos_label := m.active_cursor_pos()
+	cursor_pos_segment_start := (ctx.window_width() - tea.visible_len(cursor_pos_label)) - 3
+	ctx.push_offset(tea.Offset{ x: cursor_pos_segment_start })
+
+	// status bar spacer right end cap
+	ctx.set_color(m.theme.status_bar_spacer)
+	ctx.draw_text(-1, 0, glyphs.slant_right_flat_top)
+	ctx.reset_color()
+	//
+
+	ctx.set_color(palette.status_cursor_pos_bg_color)
+	ctx.draw_text(0, 0, '${glyphs.slant_left_flat_bottom}${glyphs.block}')
+	ctx.reset_color()
+	ctx.push_offset(tea.Offset{ x: 2 })
+
+	ctx.set_color(palette.bright_off_white_fg_color)
+	ctx.set_bg_color(palette.status_cursor_pos_bg_color)
+	ctx.draw_text(0, 0, cursor_pos_label)
+	ctx.reset_bg_color()
+	ctx.reset_color()
+	ctx.push_offset(tea.Offset{ x: tea.visible_len(cursor_pos_label) })
+
+	ctx.set_color(palette.status_cursor_pos_bg_color)
+	ctx.draw_text(0, 0, glyphs.block)
+	ctx.reset_color()
+}
+
+fn (m EditorWorkspaceModel2) active_file_name() string {
+	/*
+	if d := m.active_editor_data {
+		return os.base(d.file_path)
+	}
+	*/
+	return '???'
+}
+
+fn (m EditorWorkspaceModel2) active_branch_name() string {
+	/*
+	if m.branch_name.len > 0 {
+		return m.branch_name
+	}
+	*/
+	return '???'
+}
+
+fn (m EditorWorkspaceModel2) active_cursor_pos() string {
+	/*
+	if d := m.active_editor_data {
+		return '${d.cursor_row}:${d.cursor_col}'
+	}
+	*/
+	return '???'
 }
 
 fn (m EditorWorkspaceModel2) width() int {
