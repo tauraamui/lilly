@@ -118,12 +118,6 @@ fn (mut m EditorModel2) editor_model_update(editor_id int, msg tea.Msg) (tea.Mod
 }
 
 fn (mut m EditorModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () tea.Msg) {
-	defer {
-		if msg.from == .visual {
-			m.visual_sel_start_line = ?u64(none)
-			m.visual_sel_start_col = ?u64(none)
-		}
-	}
 	match msg.mode {
 		.normal {
 			if msg.from == .insert || msg.from == .normal {
@@ -149,14 +143,15 @@ fn (mut m EditorModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () 
 }
 
 fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+	mut cmds := []tea.Cmd{}
 	match msg.k_type {
 		.runes {
 			match msg.string() {
 				'i' {
-					return m.clone(), switch_mode(.insert)
+					cmds << switch_mode(.insert)
 				}
 				'v' {
-					return m.clone(), switch_mode(.visual)
+					cmds << switch_mode(.visual)
 				}
 				'V' { // currently horrible consequences of use, avoid
 					// return m.clone(), switch_mode(.visual_line)
@@ -168,7 +163,7 @@ fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 							m.clamp_cursor_to_line_end()
 						}
 						m.scroll_to_cursor()
-						return m.clone(), cmd
+						cmds << cmd
 					}
 				}
 			}
@@ -197,10 +192,11 @@ fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 
 	m.clamp_cursor_to_line_end()
 	m.scroll_to_cursor()
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.batch_array(cmds)
 }
 
 fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+	mut cmds := []tea.Cmd{}
 	match msg.k_type {
 		.runes {
 			m.invalidate_parser_cache()
@@ -212,7 +208,7 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 			match msg.string() {
 				'escape' {
 					m.doc_controller.commit_undo_group(m.doc_id)
-					return m.clone(), switch_mode(.normal)
+					cmds << switch_mode(.normal)
 				}
 				'enter' {
 					m.invalidate_parser_cache()
@@ -247,10 +243,11 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 		}
 	}
 	m.scroll_to_cursor()
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.batch_array(cmds)
 }
 
 fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+	mut cmds := []tea.Cmd{}
 	match msg.k_type {
 		.runes {
 			if action := m.chord.feed_visual(msg.string()) {
@@ -259,14 +256,14 @@ fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 					m.clamp_cursor_to_line_end()
 				}
 				m.scroll_to_cursor()
-				return m.clone(), cmd
+				cmds << cmd
 
 			}
 		}
 		.special {
 			match msg.string() {
 				'escape' {
-					return m.clone(), switch_mode(.normal)
+					cmds << switch_mode(.normal)
 				}
 				else {}
 			}
@@ -274,7 +271,7 @@ fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	}
 	m.clamp_cursor_to_line_end()
 	m.scroll_to_cursor()
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.batch_array(cmds)
 }
 
 fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg, bool) {
