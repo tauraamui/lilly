@@ -195,7 +195,8 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			cmds << open_editor_workspace(msg.file_path)
 		}
 		OpenEditorWorkspaceMsg {
-			// mut workspace := EditorWorkspaceModel2.new(m.theme, m.doc_controller2)
+			mut workspace := EditorWorkspaceModel2.new(m.theme, m.doc_controller2)
+			/*
 			workspace := EditorWorkspaceModel.new(
 				version:           m.version
 				ttheme:            m.theme
@@ -207,8 +208,9 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 				expand_tabs:       m.expand_tabs
 				tab_width:         m.tab_width
 			)
+			*/
 			cmds << swap_active_screen(workspace)
-			// cmds << open_editor_in_workspace_cmd(msg.initial_file_path)
+			cmds << open_editor_in_workspace_cmd(msg.initial_file_path)
 			return m.clone(), tea.sequence(...cmds)
 		}
 		CreateAndOpenFileMsg {

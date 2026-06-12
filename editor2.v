@@ -45,32 +45,24 @@ fn (mut m EditorModel2) init() fn () tea.Msg {
 }
 
 fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
-	if msg is EditorModelKeyMsg {
-		// if !m.in_focus { return m.clone(), tea.noop_cmd}
-		match m.mode {
-			.normal {
-				return m.normal_mode_update(msg.key_msg)
-			}
-			.insert {
-				return m.insert_mode_update(msg.key_msg)
-			}
-			.visual {
-				return m.visual_mode_update(msg.key_msg)
-			}
-			else {}
-		}
-	}
-
 	match msg {
-		tea.ResizedMsg {
-			m.viewport_width  = msg.window_width // artificially shrunk by parent model EditorWorkspace
-			m.viewport_height = msg.window_height
+		EditorModelKeyMsg {
+			// if !m.in_focus { return m.clone(), tea.noop_cmd}
+			match m.mode {
+				.normal {
+					return m.normal_mode_update(msg.key_msg)
+				}
+				.insert {
+					return m.insert_mode_update(msg.key_msg)
+				}
+				.visual {
+					return m.visual_mode_update(msg.key_msg)
+				}
+				else {}
+			}
 		}
 		EditorModelMsg {
 			return m.editor_model_update(msg.id, msg.msg)
-		}
-		SwitchModeMsg {
-			return m.switch_mode_update(msg)
 		}
 		else {}
 	}
@@ -82,6 +74,13 @@ fn (mut m EditorModel2) editor_model_update(editor_id int, msg tea.Msg) (tea.Mod
 	match msg {
 		tea.FocusedMsg {
 			m.in_focus = editor_id == m.id
+		}
+		tea.ResizedMsg {
+			m.viewport_width  = msg.window_width // artificially shrunk by parent model EditorWorkspace
+			m.viewport_height = msg.window_height
+		}
+		SwitchModeMsg {
+			return m.switch_mode_update(msg)
 		}
 		QueryEditorDataMsg {
 			if editor_id != m.id { return m.clone(), tea.noop_cmd }
@@ -213,6 +212,7 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 			match msg.string() {
 				'escape' {
 					m.doc_controller.commit_undo_group(m.doc_id)
+					return m.clone(), switch_mode(.normal)
 				}
 				'enter' {
 					m.invalidate_parser_cache()

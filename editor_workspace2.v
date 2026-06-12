@@ -39,10 +39,13 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 			return m.key_update(msg)
 		}
 		tea.ResizedMsg {
-			m.resized_update(msg)
+			return m.resized_update(msg)
 		}
 		OpenEditorInWorkspaceMsg {
 			return m.open_editor_in_workspace_update(msg)
+		}
+		SwitchModeMsg {
+			return m.switch_mode_update(msg)
 		}
 		else {}
 	}
@@ -59,7 +62,7 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 }
 
 fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
-	if msg.k_type == .special && msg.string() == 'escape' {
+	if m.mode == .normal && msg.k_type == .runes && msg.string() == 'q' {
 		return m.clone(), tea.quit
 	}
 
@@ -76,9 +79,22 @@ fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () te
 	return m.clone(), tea.noop_cmd
 }
 
-fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) {
+fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, fn () tea.Msg) {
 	m.width = msg.window_width
 	m.height = msg.window_height
+
+	if mut active_editor := m.active_editor {
+		new_active_editor, cmd := active_editor.update(EditorModelMsg{
+			id: 0 // will be active editors when forwarding to all editor instances
+			mode: m.mode
+			msg: msg
+		})
+		if new_active_editor is DebuggableModel {
+			m.active_editor = new_active_editor
+		}
+		return m.clone(), cmd
+	}
+	return m.clone(), tea.noop_cmd
 }
 
 fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorInWorkspaceMsg) (tea.Model, fn () tea.Msg) {
@@ -89,6 +105,21 @@ fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorI
 	model_init_cmd := e_model.init()
 	m.active_editor = e_model
 	return m.clone(), tea.sequence(model_init_cmd)
+}
+
+fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () tea.Msg) {
+	if mut active_editor := m.active_editor {
+		new_active_editor, cmd := active_editor.update(EditorModelMsg{
+			id: 0 // will be active editors when forwarding to all editor instances
+			mode: m.mode
+			msg: msg
+		})
+		if new_active_editor is DebuggableModel {
+			m.active_editor = new_active_editor
+		}
+		return m.clone_with_mode(msg.mode), cmd
+	}
+	return m.clone_with_mode(msg.mode), tea.noop_cmd
 }
 
 fn (m EditorWorkspaceModel2) view(mut ctx tea.Context) {
