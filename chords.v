@@ -209,8 +209,8 @@ fn (c Chord) single_char_motion(ch u8) ?string {
 		`{` { '{' }
 		`}` { '}' }
 		`x` { 'x' }
-		`v` { 'v' }
-		`V` { 'V' }
+		// `v` { 'v' }
+		// `V` { 'V' }
 		`p` { 'p' }
 		`P` { 'P' }
 		`G` { 'G' }

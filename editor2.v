@@ -14,8 +14,8 @@ struct EditorModel2 {
 	doc_id         int
 	theme          theme.Theme
 	doc_controller &documents.Controller2
+	mode           petal.Mode = .normal
 mut:
-	mode                  petal.Mode = .normal
 	in_focus              bool
 	chord                 Chord
 	viewport_width        int
@@ -47,7 +47,7 @@ fn (mut m EditorModel2) init() fn () tea.Msg {
 fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	if msg is EditorModelKeyMsg {
 		// if !m.in_focus { return m.clone(), tea.noop_cmd}
-		match msg.mode {
+		match m.mode {
 			.normal {
 				return m.normal_mode_update(msg.key_msg)
 			}
@@ -120,27 +120,28 @@ fn (mut m EditorModel2) editor_model_update(editor_id int, msg tea.Msg) (tea.Mod
 
 fn (mut m EditorModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () tea.Msg) {
 	defer {
-		if m.mode != .visual {
+		if msg.from == .visual {
 			m.visual_sel_start_line = ?u64(none)
 			m.visual_sel_start_col = ?u64(none)
 		}
 	}
-	m.mode = msg.mode
 	match msg.mode {
 		.normal {
 			if msg.from == .insert || msg.from == .normal {
 				m.doc_controller.move_cursor_left(m.doc_id)
 			}
+			return m.clone_with_mode(.normal), tea.noop_cmd
 		}
 		.visual {
 			cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
 			m.visual_sel_start_line = cursor_line
 			m.visual_sel_start_col = cursor_col
-			return m.clone(), tea.noop_cmd
+			return m.clone_with_mode(.visual), tea.noop_cmd
 		}
 		.insert {
 			m.doc_controller.commit_undo_group(m.doc_id)
 			m.doc_controller.begin_undo_group(m.doc_id)
+			return m.clone_with_mode(.insert), tea.noop_cmd
 		}
 		else {}
 	}
@@ -151,13 +152,26 @@ fn (mut m EditorModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () 
 fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
 	match msg.k_type {
 		.runes {
-			if action := m.chord.feed(msg.string()) {
-				cmd, switching_mode := m.execute_action_normal(action)
-				if !switching_mode {
-					m.clamp_cursor_to_line_end()
+			match msg.string() {
+				'i' {
+					return m.clone(), switch_mode(.insert)
 				}
-				m.scroll_to_cursor()
-				return m.clone(), cmd
+				'v' {
+					return m.clone(), switch_mode(.visual)
+				}
+				'V' { // currently horrible consequences of use, avoid
+					// return m.clone(), switch_mode(.visual_line)
+				}
+				else {
+					if action := m.chord.feed(msg.string()) {
+						cmd, switching_mode := m.execute_action_normal(action)
+						if !switching_mode {
+							m.clamp_cursor_to_line_end()
+						}
+						m.scroll_to_cursor()
+						return m.clone(), cmd
+					}
+				}
 			}
 		}
 		.special {
@@ -278,9 +292,6 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg
 				m.doc_controller.insert(m.doc_id, b)
 			}
 			return switch_mode(.insert), true
-		}
-		'v' {
-			return switch_mode(.visual), true
 		}
 		'line' {
 			m.invalidate_parser_cache()
@@ -576,6 +587,7 @@ fn (m EditorModel2) render_cursor_block(mut ctx tea.Context) {
 }
 
 fn (m EditorModel2) render_visual_selection(mut ctx tea.Context) {
+	if m.mode != .visual { return }
 	sel_start_line := m.visual_sel_start_line or { return }
 	sel_start_col := m.visual_sel_start_col or { return }
 	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
@@ -699,6 +711,13 @@ fn (m EditorModel2) debug_data() DebugData {
 fn (m EditorModel2) clone() tea.Model {
 	return EditorModel2{
 		...m
+	}
+}
+
+fn (m EditorModel2) clone_with_mode(mode petal.Mode) tea.Model {
+	return EditorModel2{
+		...m
+		mode: mode
 	}
 }
 

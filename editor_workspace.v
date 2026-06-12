@@ -406,9 +406,9 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 							':' {
 								return m.clone(), switch_mode(.command)
 							}
-							'i' {
-								return m.clone(), switch_mode(.insert)
-							}
+							// 'i' {
+							// return m.clone(), switch_mode(.insert)
+							// }
 							else {}
 						}
 					}
