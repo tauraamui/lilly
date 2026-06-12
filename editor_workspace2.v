@@ -50,6 +50,10 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		else {}
 	}
 
+	return m.forward_msg_to_active_editor(msg)
+}
+
+fn (mut m EditorWorkspaceModel2) forward_msg_to_active_editor(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	if mut active_editor := m.active_editor {
 		new_active_editor, cmd := active_editor.update(msg)
 		if new_active_editor is DebuggableModel {
@@ -57,7 +61,6 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		}
 		return m.clone(), cmd
 	}
-
 	return m.clone(), tea.noop_cmd
 }
 
@@ -66,35 +69,24 @@ fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () te
 		return m.clone(), tea.quit
 	}
 
-	if mut active_editor := m.active_editor {
-		new_active_editor, cmd := active_editor.update(EditorModelKeyMsg{
-			key_msg: msg
-			mode: m.mode
-		})
-		if new_active_editor is DebuggableModel {
-			m.active_editor = new_active_editor
-		}
-		return m.clone(), tea.batch(cmd, debug_log('mode on key press: ${m.mode}'))
-	}
-	return m.clone(), tea.noop_cmd
+	return m.forward_msg_to_active_editor(EditorModelKeyMsg{
+		key_msg: msg
+		mode: m.mode
+	})
 }
 
 fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, fn () tea.Msg) {
 	m.width = msg.window_width
 	m.height = msg.window_height
 
-	if mut active_editor := m.active_editor {
-		new_active_editor, cmd := active_editor.update(EditorModelMsg{
-			id: 0 // will be active editors when forwarding to all editor instances
-			mode: m.mode
-			msg: msg
-		})
-		if new_active_editor is DebuggableModel {
-			m.active_editor = new_active_editor
-		}
-		return m.clone(), cmd
-	}
-	return m.clone(), tea.noop_cmd
+	return m.forward_msg_to_active_editor(EditorModelMsg{
+		id: 0,
+		mode: m.mode,
+		msg: tea.ResizedMsg{
+			window_width: msg.window_width
+			window_height: msg.window_height - 2
+		},
+	})
 }
 
 fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorInWorkspaceMsg) (tea.Model, fn () tea.Msg) {
@@ -108,18 +100,12 @@ fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorI
 }
 
 fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () tea.Msg) {
-	if mut active_editor := m.active_editor {
-		new_active_editor, cmd := active_editor.update(EditorModelMsg{
-			id: 0 // will be active editors when forwarding to all editor instances
-			mode: m.mode
-			msg: msg
-		})
-		if new_active_editor is DebuggableModel {
-			m.active_editor = new_active_editor
-		}
-		return m.clone_with_mode(msg.mode), cmd
-	}
-	return m.clone_with_mode(msg.mode), tea.noop_cmd
+	_, cmd := m.forward_msg_to_active_editor(EditorModelMsg{
+		id: 0 // will be active editors when forwarding to all editor instances
+		mode: m.mode
+		msg: msg
+	})
+	return m.clone_with_mode(msg.mode), cmd
 }
 
 fn (m EditorWorkspaceModel2) view(mut ctx tea.Context) {
