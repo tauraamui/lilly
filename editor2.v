@@ -429,7 +429,7 @@ fn (mut m EditorModel2) view(mut ctx tea.Context) {
 	end := if m.top_line + m.viewport_height < line_count { m.top_line + m.viewport_height } else { line_count }
 	for y in m.top_line .. end {
 		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
-		line_str := line_bytes.bytestr().replace('\t', '    ')
+		line_str := line_bytes.bytestr().replace('\t', '    ') // TODO(tauraamui) [2026-06-14]: use newly passed in config value for tab width
 		ctx.draw_text(0, y - m.top_line, line_str)
 	}
 }
