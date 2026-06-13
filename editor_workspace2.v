@@ -1,5 +1,6 @@
 module main
 
+import time
 import bobatea as tea
 import lib.petal
 import lib.petal.theme
@@ -17,6 +18,7 @@ mut:
 	height         int
 	dialog_model   ?DebuggableModel
 	input_field    boba.InputField
+	message_label  ?MessageLabel
 
 	active_editor  ?DebuggableModel // underlying type of Editor2
 }
@@ -46,6 +48,15 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		}
 		SwitchModeMsg {
 			return m.switch_mode_update(msg)
+		}
+		DisplayMessageMsg {
+			m.message_label = MessageLabel{
+				contents: msg.contents
+				ccolor: msg.m_type.color(m.theme)
+			}
+		}
+		HideMessageMsg {
+			m.message_label = ?MessageLabel(none)
 		}
 		boba.CursorBlinkMsg {
 			match m.mode {
@@ -96,13 +107,20 @@ fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () te
 
 fn (mut m EditorWorkspaceModel2) normal_mode_key_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
 	match msg.k_type {
-		.special {}
+		.special {
+			match msg.string() {
+				'escape' {
+					return m.clone(), hide_message
+				}
+				else {}
+			}
+		}
 		.runes {
 			match msg.string() {
 				':' {
 					i_input, i_cmd := m.input_field.update(tea.FocusedMsg{})
 					m.input_field = i_input
-					return m.clone(), tea.sequence(switch_mode(.command), i_cmd)
+					return m.clone(), tea.sequence(hide_message, switch_mode(.command), i_cmd)
 				}
 				else {}
 			}
@@ -120,6 +138,9 @@ fn (mut m EditorWorkspaceModel2) command_mode_key_update(msg tea.KeyMsg) (tea.Mo
 				}
 				'enter' {
 					execute_command(m.input_field.value())
+				}
+				'backspace' {
+					return m.clone(), tea.noop_cmd
 				}
 				else {
 					tea.noop_cmd
@@ -139,12 +160,67 @@ fn (mut m EditorWorkspaceModel2) command_mode_key_update(msg tea.KeyMsg) (tea.Mo
 	return m.clone(), tea.noop_cmd
 }
 
-fn execute_command(cmd string) fn () tea.Msg {
+struct MessageLabel {
+	contents string
+	ccolor   tea.Color
+}
+
+enum DisplayMessageType {
+	normal
+	warning
+	error
+}
+
+fn (t DisplayMessageType) color(ttheme theme.Theme) tea.Color {
+	return match t {
+		.normal { ttheme.petal_green }
+		.warning { ttheme.status_orange }
+		.error { ttheme.petal_red }
+	}
+}
+
+struct DisplayMessageMsg {
+	contents string
+	m_type   DisplayMessageType
+}
+
+fn display_message(m_type DisplayMessageType, contents string) tea.Cmd {
+	return fn [m_type, contents] () tea.Msg {
+		return DisplayMessageMsg{
+			contents: contents
+			m_type:   m_type
+		}
+	}
+}
+
+fn display_error_message(contents string) tea.Cmd {
+	return tea.sequence(display_message(.error, contents), hide_message_after(6 * time.second))
+}
+
+struct HideMessageMsg {
+	time time.Time
+}
+
+fn hide_message() tea.Msg {
+	return HideMessageMsg{}
+}
+
+fn hide_message_after(duration time.Duration) tea.Cmd {
+	return tea.tick(duration, fn (t time.Time) tea.Msg {
+		return HideMessageMsg{
+			time: t
+		}
+	})
+}
+
+fn execute_command(cmd string) tea.Cmd {
 	match cmd {
 		'qa' {
 			return tea.quit
 		}
-		else {}
+		else {
+			return display_error_message('unrecognised command: ${cmd}')
+		}
 	}
 	return tea.noop_cmd
 }
@@ -303,14 +379,12 @@ fn (m EditorWorkspaceModel2) render_status_blocks(mut ctx tea.Context) {
 }
 
 fn (m EditorWorkspaceModel2) render_leader_or_command_user_input_text(mut ctx tea.Context) {
-	/*
 	if msg_label := m.message_label {
 		ctx.set_color(msg_label.ccolor)
 		ctx.draw_text(1, ctx.window_height() - 1, msg_label.contents)
 		ctx.reset_color()
 		return
 	}
-	*/
 	match m.mode {
 		.leader {
 			/*
