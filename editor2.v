@@ -1,3 +1,17 @@
+// Copyright 2026 The Lilly Edtior contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 module main
 
 import bobatea as tea
@@ -28,12 +42,12 @@ mut:
 
 fn EditorModel2.new(config EditorWorkspaceConfig, id int, doc_id int, file_path string, doc_controller &documents.Controller2) EditorModel2 {
 	return EditorModel2{
-		config: config
-		id: id
-		file_path: file_path
-		doc_id: doc_id
+		config:         config
+		id:             id
+		file_path:      file_path
+		doc_id:         doc_id
 		doc_controller: doc_controller
-		token_parser: syntax.Parser{}
+		token_parser:   syntax.Parser{}
 	}
 }
 
@@ -73,7 +87,7 @@ fn (mut m EditorModel2) editor_model_update(editor_id int, msg tea.Msg) (tea.Mod
 			m.in_focus = editor_id == m.id
 		}
 		tea.ResizedMsg {
-			m.viewport_width  = msg.window_width // artificially shrunk by parent model EditorWorkspace
+			m.viewport_width = msg.window_width // artificially shrunk by parent model EditorWorkspace
 			m.viewport_height = msg.window_height
 		}
 		SwitchModeMsg {
@@ -86,7 +100,7 @@ fn (mut m EditorModel2) editor_model_update(editor_id int, msg tea.Msg) (tea.Mod
 		SyntaxLoadedMsg {
 			if editor_id != m.id { return m.clone(), tea.noop_cmd }
 			m.lang_syn = msg.syn
-			mut extra_id_chars := []rune{ cap: m.lang_syn.identifier_chars.len }
+			mut extra_id_chars := []rune{cap: m.lang_syn.identifier_chars.len}
 			for s in m.lang_syn.identifier_chars {
 				for r in s.runes() {
 					extra_id_chars << r
@@ -104,7 +118,8 @@ fn (mut m EditorModel2) editor_model_update(editor_id int, msg tea.Msg) (tea.Mod
 				return m.clone(), raise_error('failed to write to disk: ${err}')
 			}
 			success_msg := 'written ${m.file_path} successfully'
-			return m.clone(), tea.sequence(debug_log(success_msg), display_message(.normal, success_msg))
+			return m.clone(), tea.sequence(debug_log(success_msg), display_message(.normal,
+				success_msg))
 		}
 		else {}
 	}
@@ -239,6 +254,7 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 			}
 		}
 	}
+
 	m.scroll_to_cursor()
 	return m.clone(), tea.batch_array(cmds)
 }
@@ -254,7 +270,6 @@ fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 				}
 				m.scroll_to_cursor()
 				cmds << cmd
-
 			}
 		}
 		.special {
@@ -266,6 +281,7 @@ fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 			}
 		}
 	}
+
 	m.clamp_cursor_to_line_end()
 	m.scroll_to_cursor()
 	return m.clone(), tea.batch_array(cmds)
@@ -290,7 +306,7 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg
 		'line' {
 			m.invalidate_parser_cache()
 			cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
-			for _ in 0..count {
+			for _ in 0 .. count {
 				// deleting the same line since each line delete will move the
 				// next line up, into the delete
 				m.doc_controller.delete_line(m.doc_id, cursor_line)
@@ -348,7 +364,7 @@ fn (mut m EditorModel2) rebuild_parser_state_cache() {
 	m.parser_line_states.clear()
 	m.token_parser.reset()
 	line_count := int(m.doc_controller.line_count(m.doc_id))
-	for y in 0..line_count {
+	for y in 0 .. line_count {
 		m.parser_line_states << m.token_parser.current_state()
 		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
 		line_content := line_bytes.bytestr().replace('\t', '    ')
@@ -365,8 +381,7 @@ fn (m EditorModel2) current_visual_range() ?cursor.Range {
 
 	mut start_line, mut start_col := sel_start_line, sel_start_col
 	mut end_line, mut end_col := cursor_line, cursor_col
-	if cursor_line < sel_start_line
-		|| (cursor_line == sel_start_line && cursor_col < sel_start_col) {
+	if cursor_line < sel_start_line || (cursor_line == sel_start_line && cursor_col < sel_start_col) {
 		start_line, start_col = cursor_line, cursor_col
 		end_line, end_col = sel_start_line, sel_start_col
 	}
@@ -416,7 +431,7 @@ fn (mut m EditorModel2) clamp_cursor_to_line_end() {
 }
 
 fn (mut m EditorModel2) view(mut ctx tea.Context) {
-	ctx.set_clip_area(tea.ClipArea{ 0, 0, m.width(), m.height() })
+	ctx.set_clip_area(tea.ClipArea{0, 0, m.width(), m.height()})
 	defer { ctx.clear_clip_area() }
 
 	offset_id := m.render_line_numbers(mut ctx)
@@ -426,24 +441,33 @@ fn (mut m EditorModel2) view(mut ctx tea.Context) {
 	m.render_visual_selection(mut ctx)
 	m.render_cursor_block(mut ctx)
 	line_count := int(m.doc_controller.line_count(m.doc_id))
-	end := if m.top_line + m.viewport_height < line_count { m.top_line + m.viewport_height } else { line_count }
+	end := if m.top_line + m.viewport_height < line_count {
+		m.top_line + m.viewport_height
+	} else {
+		line_count
+	}
 	for y in m.top_line .. end {
 		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
-		line_str := line_bytes.bytestr().replace('\t', '    ') // TODO(tauraamui) [2026-06-14]: use newly passed in config value for tab width
+		line_str :=
+			line_bytes.bytestr().replace('\t', '    ') // TODO(tauraamui) [2026-06-14]: use newly passed in config value for tab width
 		ctx.draw_text(0, y - m.top_line, line_str)
 	}
 }
 
 fn (m EditorModel2) render_line_numbers(mut ctx tea.Context) int {
 	line_count := int(m.doc_controller.line_count(m.doc_id))
-	end := if m.top_line + m.viewport_height < line_count { m.top_line + m.viewport_height } else { line_count }
+	end := if m.top_line + m.viewport_height < line_count {
+		m.top_line + m.viewport_height
+	} else {
+		line_count
+	}
 	max_line_nr := m.top_line + end
 	gutter_width := num_digits(max_line_nr) + 1
 
 	offset_id := ctx.push_offset(tea.Offset{ x: gutter_width })
 
 	ctx.set_color(m.config.theme.syntax_comment)
-	for y in m.top_line..end {
+	for y in m.top_line .. end {
 		line_nr := '${y + 1}'
 		ctx.draw_text(-1 - line_nr.len, y - m.top_line, line_nr)
 	}
@@ -456,18 +480,18 @@ fn (mut m EditorModel2) render_syntax_highlighting(mut ctx tea.Context) {
 	if m.lang_syn.name.len == 0 {
 		return
 	}
-	
+
 	if m.parser_cache_dirty {
 		m.rebuild_parser_state_cache()
 	}
-	
+
 	line_count := int(m.doc_controller.line_count(m.doc_id))
 	end := if m.top_line + m.viewport_height < line_count {
 		m.top_line + m.viewport_height
 	} else {
 		line_count
 	}
-	
+
 	m.token_parser.reset()
 	if m.top_line < m.parser_line_states.len {
 		m.token_parser.set_state(m.parser_line_states[m.top_line])
@@ -587,8 +611,7 @@ fn (m EditorModel2) render_visual_selection(mut ctx tea.Context) {
 
 	mut start_line, mut start_col := sel_start_line, sel_start_col
 	mut end_line, mut end_col := cursor_line, cursor_col
-	if cursor_line < sel_start_line
-		|| (cursor_line == sel_start_line && cursor_col < sel_start_col) {
+	if cursor_line < sel_start_line || (cursor_line == sel_start_line && cursor_col < sel_start_col) {
 		start_line, start_col = cursor_line, cursor_col
 		end_line, end_col = sel_start_line, sel_start_col
 	}
@@ -611,7 +634,8 @@ fn (m EditorModel2) render_visual_selection(mut ctx tea.Context) {
 	if start_line == end_line {
 		screen_y := int(start_line) - m.top_line
 		if screen_y >= 0 && screen_y < m.viewport_height {
-			ctx.draw_rect(start_visual_x, screen_y, end_visual_x + end_cluster_width - start_visual_x, 1)
+			ctx.draw_rect(start_visual_x, screen_y, end_visual_x + end_cluster_width -
+				start_visual_x, 1)
 		}
 		return
 	}
@@ -653,7 +677,11 @@ fn (m EditorModel2) visual_x_and_cluster_width_for(line u64, col u64) (int, int)
 			4
 		} else {
 			w := utf8_str_visible_length(runes[prefix_end..cluster_end].string())
-			if w < 1 { 1 } else { w }
+			if w < 1 {
+				1
+			} else {
+				w
+			}
 		}
 	} else {
 		1
@@ -680,8 +708,8 @@ fn (m EditorModel2) data() EditorData {
 		cursor_col: int(cursor_x)
 
 		chord_display: m.chord.display()
-		
-		width: m.viewport_width
+
+		width:  m.viewport_width
 		height: m.viewport_height
 	}
 }
@@ -750,4 +778,3 @@ fn is_rune_extender(r rune) bool {
 	}
 	return false
 }
-

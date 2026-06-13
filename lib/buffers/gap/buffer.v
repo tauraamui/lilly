@@ -1,3 +1,17 @@
+// Copyright 2026 The Lilly Edtior contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 module gap
 
 @[noinit]
@@ -10,7 +24,7 @@ mut:
 
 pub fn Buffer.new(size int) Buffer {
 	return Buffer{
-		buf: []u8{ len: size, cap: size }
+		buf:  []u8{len: size, cap: size}
 		ccur: 0
 		cend: u64(size)
 	}
@@ -71,13 +85,14 @@ pub fn (mut gb Buffer) move_cur_to_start() {
 fn (mut gb Buffer) grow() {
 	old_len := gb.buf.len
 	new_size := if old_len == 0 { 1 } else { old_len * 2 }
-	mut copy_dst := []u8{ len: new_size, cap: new_size }
+	mut copy_dst := []u8{len: new_size, cap: new_size}
 	copy(mut copy_dst[..int(gb.ccur)], gb.buf[..int(gb.ccur)])
 	additional := new_size - old_len
 	post_gap_len := if old_len > int(gb.cend) { old_len - int(gb.cend) } else { 0 }
 	new_gap_end := gb.cend + u64(additional)
 	if post_gap_len > 0 {
-		copy(mut copy_dst[int(new_gap_end)..int(new_gap_end) + post_gap_len], gb.buf[int(gb.cend)..])
+		copy(mut copy_dst[int(new_gap_end)..int(new_gap_end) + post_gap_len],
+			gb.buf[int(gb.cend)..])
 	}
 	gb.cend = new_gap_end
 	gb.buf = copy_dst
@@ -106,7 +121,7 @@ pub fn (gb Buffer) rawstr() string {
 }
 
 pub fn (gb Buffer) str() string {
-	mut copy_dst := []u8{ len: gb.buf.len - int(gb.gap_size()) }
+	mut copy_dst := []u8{len: gb.buf.len - int(gb.gap_size())}
 	copy(mut copy_dst[..gb.ccur], gb.buf[..gb.ccur])
 	copy(mut copy_dst[gb.ccur..], gb.buf[gb.cend..])
 	return copy_dst.bytestr()
@@ -119,5 +134,3 @@ pub fn (gb Buffer) left() []u8 {
 pub fn (gb Buffer) right() []u8 {
 	return gb.buf[int(gb.cend)..]
 }
-
-

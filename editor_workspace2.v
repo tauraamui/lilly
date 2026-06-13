@@ -1,3 +1,17 @@
+// Copyright 2026 The Lilly Edtior contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 module main
 
 import time
@@ -15,20 +29,20 @@ struct EditorWorkspaceModel2 {
 	doc_controller &documents.Controller2
 	config         EditorWorkspaceConfig
 mut:
-	width          int
-	height         int
-	dialog_model   ?DebuggableModel
-	input_field    boba.InputField
-	message_label  ?MessageLabel
+	width         int
+	height        int
+	dialog_model  ?DebuggableModel
+	input_field   boba.InputField
+	message_label ?MessageLabel
 
-	active_editor  ?DebuggableModel // underlying type of Editor2
+	active_editor ?DebuggableModel // underlying type of Editor2
 }
 
-struct EditorWorkspaceConfig{
-	theme          theme.Theme
-	leader_key     string
-	expand_tabs    bool
-	tab_width      int
+struct EditorWorkspaceConfig {
+	theme       theme.Theme
+	leader_key  string
+	expand_tabs bool
+	tab_width   int
 }
 
 fn EditorWorkspaceConfig.new(base_cfg cfg.Config) EditorWorkspaceConfig {
@@ -42,7 +56,7 @@ fn EditorWorkspaceConfig.new(base_cfg cfg.Config) EditorWorkspaceConfig {
 
 fn EditorWorkspaceModel2.new(config EditorWorkspaceConfig, doc_controller &documents.Controller2) EditorWorkspaceModel2 {
 	return EditorWorkspaceModel2{
-		config: config
+		config:         config
 		doc_controller: doc_controller
 	}
 }
@@ -69,7 +83,7 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		DisplayMessageMsg {
 			m.message_label = MessageLabel{
 				contents: msg.contents
-				ccolor: msg.m_type.color(m.config.theme)
+				ccolor:   msg.m_type.color(m.config.theme)
 			}
 		}
 		HideMessageMsg {
@@ -118,7 +132,7 @@ fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () te
 
 	return m.forward_msg_to_active_editor(EditorModelKeyMsg{
 		key_msg: msg
-		mode: m.mode
+		mode:    m.mode
 	})
 }
 
@@ -143,6 +157,7 @@ fn (mut m EditorWorkspaceModel2) normal_mode_key_update(msg tea.KeyMsg) (tea.Mod
 			}
 		}
 	}
+
 	return m.clone(), tea.noop_cmd
 }
 
@@ -174,6 +189,7 @@ fn (mut m EditorWorkspaceModel2) command_mode_key_update(msg tea.KeyMsg) (tea.Mo
 			return m.clone(), i_cmd
 		}
 	}
+
 	return m.clone(), tea.noop_cmd
 }
 
@@ -239,6 +255,7 @@ fn execute_command(cmd string) tea.Cmd {
 			return display_error_message('unrecognised command: ${cmd}')
 		}
 	}
+
 	return tea.noop_cmd
 }
 
@@ -250,12 +267,12 @@ fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, 
 	m.input_field = i_field
 
 	model, cmd := m.forward_msg_to_active_editor(EditorModelMsg{
-		id: 0,
-		mode: m.mode,
-		msg: tea.ResizedMsg{
-			window_width: msg.window_width
+		id:   0
+		mode: m.mode
+		msg:  tea.ResizedMsg{
+			window_width:  msg.window_width
 			window_height: msg.window_height - 2
-		},
+		}
 	})
 
 	return model, tea.sequence(i_cmd, cmd)
@@ -273,9 +290,9 @@ fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorI
 
 fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () tea.Msg) {
 	_, cmd := m.forward_msg_to_active_editor(EditorModelMsg{
-		id: 0 // will be active editors when forwarding to all editor instances
+		id:   0 // will be active editors when forwarding to all editor instances
 		mode: m.mode
-		msg: msg
+		msg:  msg
 	})
 	return m.clone_with_mode(msg.mode), cmd
 }
@@ -499,5 +516,3 @@ fn open_editor_in_workspace_cmd(file_path string) fn () tea.Msg {
 		}
 	}
 }
-
-

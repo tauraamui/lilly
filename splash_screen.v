@@ -186,7 +186,8 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			cmds << open_editor_workspace(msg.file_path)
 		}
 		OpenEditorWorkspaceMsg {
-			mut workspace := EditorWorkspaceModel2.new(EditorWorkspaceConfig.new(m.config), m.doc_controller2)
+			mut workspace := EditorWorkspaceModel2.new(EditorWorkspaceConfig.new(m.config),
+				m.doc_controller2)
 			/*
 			workspace := EditorWorkspaceModel.new(
 				version:           m.version

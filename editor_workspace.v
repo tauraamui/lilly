@@ -443,15 +443,15 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			}
 
 			mut e_model := EditorModel.new(
-				id:             editor_id
-				theme:          m.theme
-				file_path:      msg.file_path
-				doc_id:         doc_id2
-				doc_controller: m.doc_controller
+				id:              editor_id
+				theme:           m.theme
+				file_path:       msg.file_path
+				doc_id:          doc_id2
+				doc_controller:  m.doc_controller
 				doc_controller2: m.doc_controller2
-				cb:             m.cb
-				expand_tabs:    m.expand_tabs
-				tab_width:      m.tab_width
+				cb:              m.cb
+				expand_tabs:     m.expand_tabs
+				tab_width:       m.tab_width
 			)
 			// mut e_model := EditorModel2.new(m.theme, editor_id, doc_id2, msg.file_path, m.doc_controller2)
 			cmd := e_model.init()
@@ -478,15 +478,15 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 				old_id := info.id // get the old ID before inserting
 				new_id := m.next_editor_id()
 				mut new_editor := EditorModel.new(
-					id:             new_id
-					theme:          m.theme
-					file_path:      info.file_path
-					doc_id:         info.doc_id
-					doc_controller: m.doc_controller
+					id:              new_id
+					theme:           m.theme
+					file_path:       info.file_path
+					doc_id:          info.doc_id
+					doc_controller:  m.doc_controller
 					doc_controller2: m.doc_controller2
-					cb:             m.cb
-					expand_tabs:    m.expand_tabs
-					tab_width:      m.tab_width
+					cb:              m.cb
+					expand_tabs:     m.expand_tabs
+					tab_width:       m.tab_width
 				)
 				// mut new_editor := EditorModel2.new(EditorWorkspaceConfig.new(m.config), new_id, info.doc_id, info.file_path, m.doc_controller2)
 				cmds << new_editor.init()
@@ -914,8 +914,8 @@ fn (m EditorWorkspaceModel) debug_data() DebugData {
 	return DebugData{
 		name: 'editor_workspace data'
 		data: {
-			'initial file path': m.initial_file_path
-			'active editor width': if d := m.active_editor_data { '${d.width}' } else { 'null' }
+			'initial file path':    m.initial_file_path
+			'active editor width':  if d := m.active_editor_data { '${d.width}' } else { 'null' }
 			'active editor height': if d := m.active_editor_data { '${d.height}' } else { 'null' }
 		}
 	}

@@ -1,3 +1,17 @@
+// Copyright 2026 The Lilly Edtior contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 module buffers
 
 import io
@@ -7,8 +21,8 @@ import gap
 import line
 
 const newline_hex = 0x0A
-const space_hex   = 0x20
-const tab_hex     = 0x09
+const space_hex = 0x20
+const tab_hex = 0x09
 
 enum OpKind2 {
 	insert
@@ -34,7 +48,7 @@ mut:
 	groups    []UndoGroup2
 	open      bool
 	cur       UndoGroup2
-	chain_idx int = -1 // next group to undo; -1 = chain broken
+	chain_idx int  = -1 // next group to undo; -1 = chain broken
 	recording bool = true
 }
 
@@ -54,7 +68,9 @@ pub fn TextBuffer.new(mut r io.Reader) !TextBuffer { // TODO(tauraamui) [2026-06
 	mut single_byte := []u8{len: 1}
 	for {
 		read := r.read(mut single_byte) or {
-			if err is io.Eof{} {
+			if err is io.Eof {
+			}
+			{
 				break
 			}
 			return error('read error: ${err}')
@@ -132,13 +148,13 @@ pub fn (mut tb TextBuffer) backspace() {
 		return
 	}
 	start := tb.prev_boundary(cur)
-	mut removed := []u8{ len: int(cur - start) }
-	for i in 0..removed.len {
+	mut removed := []u8{len: int(cur - start)}
+	for i in 0 .. removed.len {
 		removed[i] = tb.data_buf.get(start + u64(i)) or { 0 }
 	}
 	tb.record(.delete, start, removed)
 	deleted_newline := tb.data_buf.get(start) or { 0 } == newline_hex
-	for _ in start..cur {
+	for _ in start .. cur {
 		tb.data_buf.backspace()
 	}
 	tb.line_buf.apply_delta(-int(cur - start))
@@ -151,8 +167,8 @@ pub fn (mut tb TextBuffer) delete() {
 	cur := tb.data_buf.ccur()
 	deleted_byte := tb.data_buf.get(cur) or { return }
 	end := tb.next_boundary(cur)
-	mut removed := []u8{ len: int(end - cur) }
-	for i in 0..removed.len {
+	mut removed := []u8{len: int(end - cur)}
+	for i in 0 .. removed.len {
 		removed[i] = tb.data_buf.get(cur + u64(i)) or { 0 }
 	}
 	tb.record(.delete, cur, removed)
@@ -175,7 +191,7 @@ pub fn (mut tb TextBuffer) delete_line(y u64) {
 	line_start, line_end := tb.get_line_start_and_end(y)
 	byte_count := line_end - line_start
 	tb.move_cursor_to_line_start(y)
-	for _ in 0..byte_count {
+	for _ in 0 .. byte_count {
 		tb.delete()
 	}
 	// Vim collapse: when the deleted line was the last in the file, also
@@ -319,7 +335,7 @@ pub fn (mut tb TextBuffer) undo() {
 		tb.history.chain_idx = tb.history.groups.len
 	}
 	if tb.history.chain_idx == 0 {
-		return // nothing left to undo
+		return
 	}
 	idx := tb.history.chain_idx - 1
 	grp := tb.history.groups[idx]
@@ -332,10 +348,10 @@ pub fn (mut tb TextBuffer) undo() {
 pub fn (mut tb TextBuffer) redo() {
 	tb.commit_undo_group() // close any open group first
 	if tb.history.chain_idx < 0 {
-		return // chain broken (or never undone) - nothing to redo
+		return
 	}
 	if tb.history.chain_idx >= tb.history.groups.len {
-		return // fully redone already
+		return
 	}
 	// invariant: last group is the inverse of groups[chain_idx],
 	// pushed there by the matching undo()
@@ -350,21 +366,29 @@ fn (mut tb TextBuffer) apply_inverse(grp UndoGroup2) UndoGroup2 {
 
 	mut inv := UndoGroup2{
 		cursor_before: grp.cursor_after
-		cursor_after: grp.cursor_before
+		cursor_after:  grp.cursor_before
 	}
 	for i := grp.ops.len - 1; i >= 0; i-- {
 		op := grp.ops[i]
 		match op.kind {
 			.insert {
 				tb.delete_bytes_at(op.offset, op.bytes.len)
-				inv.ops << EditOp2{ kind: .delete, offset: op.offset, bytes: op.bytes }
+				inv.ops << EditOp2{
+					kind:   .delete
+					offset: op.offset
+					bytes:  op.bytes
+				}
 			}
 			.delete {
 				tb.move_cursor_to_offset(op.offset)
 				for b in op.bytes {
 					tb.insert(b) // recording is off; line_buf stays in sync
 				}
-				inv.ops << EditOp2{ kind: .insert, offset: op.offset, bytes: op.bytes }
+				inv.ops << EditOp2{
+					kind:   .insert
+					offset: op.offset
+					bytes:  op.bytes
+				}
 			}
 		}
 	}
@@ -447,9 +471,9 @@ fn (mut tb TextBuffer) record(kind OpKind2, offset u64, bytes []u8) {
 		}
 	}
 	grp.ops << EditOp2{
-		kind: kind
+		kind:   kind
 		offset: offset
-		bytes: bytes
+		bytes:  bytes
 	}
 }
 
@@ -1012,10 +1036,16 @@ struct MotionPos {
 fn scan_to_next_word_start(graphemes []string, px int, py int, source_y int) ?MotionPos {
 	if py != source_y && px == 0 {
 		if graphemes.len == 0 {
-			return MotionPos{x: px, y: py}
+			return MotionPos{
+				x: px
+				y: py
+			}
 		}
 		if grapheme_char_type(graphemes[px]) != .whitespace {
-			return MotionPos{x: px, y: py}
+			return MotionPos{
+				x: px
+				y: py
+			}
 		}
 	}
 
@@ -1027,19 +1057,31 @@ fn scan_to_next_word_start(graphemes []string, px int, py int, source_y int) ?Mo
 
 	if diff.next_type == .whitespace {
 		post := c_scanner.next_diff() or { return none }
-		return MotionPos{x: post.index, y: py}
+		return MotionPos{
+			x: post.index
+			y: py
+		}
 	}
-	return MotionPos{x: diff.index, y: py}
+	return MotionPos{
+		x: diff.index
+		y: py
+	}
 }
 
 fn scan_to_previous_word_start(graphemes []string, px int, py int, source_y int) ?MotionPos {
 	if py != source_y {
 		if graphemes.len == 0 {
-			return MotionPos{x: px, y: py}
+			return MotionPos{
+				x: px
+				y: py
+			}
 		}
 		if px == 0 {
 			if grapheme_char_type(graphemes[px]) != .whitespace {
-				return MotionPos{x: px, y: py}
+				return MotionPos{
+					x: px
+					y: py
+				}
 			}
 		} else {
 			c_type := grapheme_char_type(graphemes[px])
@@ -1051,7 +1093,10 @@ fn scan_to_previous_word_start(graphemes []string, px int, py int, source_y int)
 					}
 					word_start = i
 				}
-				return MotionPos{x: word_start, y: py}
+				return MotionPos{
+					x: word_start
+					y: py
+				}
 			}
 		}
 	}
@@ -1064,7 +1109,10 @@ fn scan_to_previous_word_start(graphemes []string, px int, py int, source_y int)
 
 	if diff.start_type == .alpha_num || diff.start_type == .other {
 		if pre := diff.pre_diff {
-			return MotionPos{x: pre.index, y: py}
+			return MotionPos{
+				x: pre.index
+				y: py
+			}
 		}
 		if diff.next_type == .whitespace {
 			c_scanner.prev_diff() or { return none }
@@ -1077,21 +1125,36 @@ fn scan_to_previous_word_start(graphemes []string, px int, py int, source_y int)
 		return find_prev_token_start(mut c_scanner, py)
 	}
 
-	return MotionPos{x: px, y: py}
+	return MotionPos{
+		x: px
+		y: py
+	}
 }
 
 fn find_prev_token_start(mut c_scanner CharScanner, y int) ?MotionPos {
-	diff := c_scanner.prev_diff() or { return MotionPos{x: 0, y: y} }
+	diff := c_scanner.prev_diff() or { return MotionPos{
+		x: 0
+		y: y
+	} }
 	if pre := diff.pre_diff {
-		return MotionPos{x: pre.index, y: y}
+		return MotionPos{
+			x: pre.index
+			y: y
+		}
 	}
-	return MotionPos{x: diff.index + 1, y: y}
+	return MotionPos{
+		x: diff.index + 1
+		y: y
+	}
 }
 
 fn scan_to_next_word_end(graphemes []string, px int, py int, source_y int) ?MotionPos {
 	if py != source_y && px == 0 {
 		if graphemes.len == 0 {
-			return MotionPos{x: px, y: py}
+			return MotionPos{
+				x: px
+				y: py
+			}
 		}
 	}
 
@@ -1113,13 +1176,19 @@ fn scan_to_next_word_end(graphemes []string, px int, py int, source_y int) ?Moti
 		x++
 	}
 
-	return MotionPos{x: x, y: py}
+	return MotionPos{
+		x: x
+		y: py
+	}
 }
 
 fn scan_to_previous_word_end(graphemes []string, px int, py int, source_y int) ?MotionPos {
 	if py != source_y {
 		if graphemes.len == 0 {
-			return MotionPos{x: px, y: py}
+			return MotionPos{
+				x: px
+				y: py
+			}
 		}
 		mut x := graphemes.len - 1
 		for x >= 0 && grapheme_char_type(graphemes[x]) == .whitespace {
@@ -1128,7 +1197,10 @@ fn scan_to_previous_word_end(graphemes []string, px int, py int, source_y int) ?
 		if x < 0 {
 			return none
 		}
-		return MotionPos{x: x, y: py}
+		return MotionPos{
+			x: x
+			y: py
+		}
 	}
 
 	if px <= 0 {
@@ -1145,12 +1217,18 @@ fn scan_to_previous_word_end(graphemes []string, px int, py int, source_y int) ?
 		if x < 0 {
 			return none
 		}
-		return MotionPos{x: x, y: py}
+		return MotionPos{
+			x: x
+			y: py
+		}
 	}
 
 	orig_class := grapheme_char_type(graphemes[px])
 	if curr_class != orig_class {
-		return MotionPos{x: x, y: py}
+		return MotionPos{
+			x: x
+			y: py
+		}
 	}
 
 	for x >= 0 && grapheme_char_type(graphemes[x]) == curr_class {
@@ -1169,16 +1247,25 @@ fn scan_to_previous_word_end(graphemes []string, px int, py int, source_y int) ?
 		}
 	}
 
-	return MotionPos{x: x, y: py}
+	return MotionPos{
+		x: x
+		y: py
+	}
 }
 
 fn scan_to_next_big_word_start(graphemes []string, px int, py int, source_y int) ?MotionPos {
 	if py != source_y && px == 0 {
 		if graphemes.len == 0 {
-			return MotionPos{x: px, y: py}
+			return MotionPos{
+				x: px
+				y: py
+			}
 		}
 		if !grapheme_is_space(graphemes[px]) {
-			return MotionPos{x: px, y: py}
+			return MotionPos{
+				x: px
+				y: py
+			}
 		}
 	}
 
@@ -1193,7 +1280,10 @@ fn scan_to_next_big_word_start(graphemes []string, px int, py int, source_y int)
 	if x >= graphemes.len {
 		return none
 	}
-	return MotionPos{x: x, y: py}
+	return MotionPos{
+		x: x
+		y: py
+	}
 }
 
 struct CharScanner {
@@ -1284,5 +1374,3 @@ fn utf8_codepoint_len(lead u8) int {
 	}
 	return 1 // invalid lead byte: treat as a single byte
 }
-
-

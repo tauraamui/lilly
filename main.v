@@ -181,7 +181,8 @@ fn main() {
 	metrics_thread := emit_metrics_maybe(vmod_manifest)
 
 	mut cb := clipboard.new()
-	mut petal_model := PetalModel.new(version, config, &documents_controller, &documents_controller2, &cb,
+	mut petal_model := PetalModel.new(version, config, &documents_controller,
+		&documents_controller2, &cb,
 		initial_file_path: initial_file_path
 	)
 	mut app := tea.new_program(mut petal_model)

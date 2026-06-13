@@ -1,3 +1,17 @@
+// Copyright 2026 The Lilly Edtior contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 module documents
 
 import os
@@ -32,7 +46,7 @@ fn test_controller_open_document_from_path_subsequent_edits() {
 	assert c.open_document(file_path)! == 0
 	assert c.get_line_bytes(0, 0)? == [u8(`h`), `e`, `l`, `l`, `o`]
 	assert c.get_line_bytes(0, 1)? == [u8(`W`), `o`, `R`, `l`, `D`, `<`]
-	
+
 	c.backspace(0)
 	assert c.get_line_bytes(0, 0)? == [u8(`h`), `e`, `l`, `l`, `o`]
 	assert c.get_line_bytes(0, 1)? == [u8(`W`), `o`, `R`, `l`, `D`, `<`]
@@ -56,4 +70,3 @@ fn test_controller_insert_after_load_goes_to_start() {
 	assert c.get_line_bytes(doc_id, 0)? == [u8(`>`), `h`, `e`, `l`, `l`, `o`]
 	assert c.get_line_bytes(doc_id, 1)? == [u8(`W`), `o`, `R`, `l`, `D`, `<`]
 }
-

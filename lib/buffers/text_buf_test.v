@@ -1,16 +1,30 @@
+// Copyright 2026 The Lilly Edtior contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 module buffers
 
 import io
 
 fn mock_reader(content []u8) io.Reader {
 	return MockByteReader{
-		data: content
+		data:       content
 		read_index: 0
 	}
 }
 
 struct MockByteReader {
-	data       ?[]u8
+	data ?[]u8
 mut:
 	read_index int
 }
@@ -135,7 +149,7 @@ fn test_text_buffer_blank_lines_after_multiple_inserts_at_start() ! {
 	mut reader := mock_reader('hello\nWoRlD<\n😍'.bytes())
 	mut tb := TextBuffer.new(mut reader)!
 
-	for _ in 0..3 {
+	for _ in 0 .. 3 {
 		tb.insert(u8(`\n`))
 	}
 	assert tb.get_line_bytes(0)? == []
@@ -163,7 +177,7 @@ fn text_text_buffer_cursor_line_and_x_rocket() ! {
 fn test_text_buffer_cursor_line_and_x_ambulance() ! {
 	mut reader := mock_reader('🚑️r'.bytes())
 	mut tb := TextBuffer.new(mut reader)!
-	
+
 	mut line, mut x := tb.cursor_line_and_x()
 	assert line == u64(0)
 	assert x == u64(0)
@@ -214,13 +228,13 @@ fn test_text_buffer_cursor_line_and_x_rocket_and_ambulance() ! {
 }
 
 fn test_text_buffer_move_cursor_left() ! {
-	mut reader := mock_reader("hello\nWo".bytes())
+	mut reader := mock_reader('hello\nWo'.bytes())
 	mut tb := TextBuffer.new(mut reader)!
 
 	mut line, mut x := tb.cursor_line_and_x()
 	assert line == u64(0)
 	assert x == u64(0)
-	
+
 	tb.move_cursor_to_position(1, 1)
 
 	tb.move_cursor_left()
@@ -230,7 +244,7 @@ fn test_text_buffer_move_cursor_left() ! {
 }
 
 fn test_text_buffer_move_cursor_right() ! {
-	mut reader := mock_reader("hello\nWo".bytes())
+	mut reader := mock_reader('hello\nWo'.bytes())
 	mut tb := TextBuffer.new(mut reader)!
 	tb.move_cursor_to_start()
 
@@ -265,7 +279,7 @@ fn test_text_buffer_move_cursor_right() ! {
 }
 
 fn test_text_buffer_move_cursor_left_stops_at_newline() ! {
-	mut reader := mock_reader("ab\ncd".bytes())
+	mut reader := mock_reader('ab\ncd'.bytes())
 	mut tb := TextBuffer.new(mut reader)!
 
 	tb.move_cursor_to_position(1, 2)
@@ -286,7 +300,7 @@ fn test_text_buffer_move_cursor_left_stops_at_newline() ! {
 }
 
 fn test_text_buffer_move_cursor_right_stops_at_newline() ! {
-	mut reader := mock_reader("ab\nc".bytes())
+	mut reader := mock_reader('ab\nc'.bytes())
 	mut tb := TextBuffer.new(mut reader)!
 
 	tb.move_cursor_to_start()
@@ -303,16 +317,16 @@ fn test_text_buffer_move_cursor_right_stops_at_newline() ! {
 }
 
 fn test_text_buffer_move_cursor_vertically_down() ! {
-	mut reader := mock_reader("hello\nWorld".bytes())
+	mut reader := mock_reader('hello\nWorld'.bytes())
 	mut tb := TextBuffer.new(mut reader)!
 	tb.move_cursor_to_start()
-	
+
 	tb.move_cursor_right()
 	tb.move_cursor_right()
 	line, x := tb.cursor_line_and_x()
 	assert line == u64(0)
 	assert x == u64(2)
-	
+
 	tb.move_cursor_vertical(1)
 	line2, x2 := tb.cursor_line_and_x()
 	assert line2 == u64(1)
@@ -320,15 +334,15 @@ fn test_text_buffer_move_cursor_vertically_down() ! {
 }
 
 fn test_text_buffer_move_cursor_vertically_up() ! {
-	mut reader := mock_reader("hello\nWorld".bytes())
+	mut reader := mock_reader('hello\nWorld'.bytes())
 	mut tb := TextBuffer.new(mut reader)!
-	
+
 	tb.move_cursor_to_position(1, 5)
 
 	line, x := tb.cursor_line_and_x()
 	assert line == u64(1)
 	assert x == u64(5)
-	
+
 	tb.move_cursor_vertical(-1)
 	line2, x2 := tb.cursor_line_and_x()
 	assert line2 == u64(0)
@@ -336,7 +350,7 @@ fn test_text_buffer_move_cursor_vertically_up() ! {
 }
 
 fn test_text_buffer_move_cursor_to_next_word_start() ! {
-	mut reader := mock_reader("hello World\nThis is the second line".bytes())
+	mut reader := mock_reader('hello World\nThis is the second line'.bytes())
 	mut tb := TextBuffer.new(mut reader)!
 
 	tb.move_cursor_to_start()
@@ -369,7 +383,7 @@ fn test_text_buffer_move_cursor_to_next_word_start() ! {
 }
 
 fn test_text_buffer_move_cursor_to_next_word_start_within_line_containing_graphemes() ! {
-	mut reader := mock_reader("🚑️🚑️llo World\nThis is the second line".bytes())
+	mut reader := mock_reader('🚑️🚑️llo World\nThis is the second line'.bytes())
 	mut tb := TextBuffer.new(mut reader)!
 	tb.move_cursor_to_start()
 
@@ -401,17 +415,17 @@ fn test_text_buffer_move_cursor_to_next_word_start_within_line_containing_graphe
 }
 
 fn test_text_buffer_cursor_movement_skips_multibyte_codepoints() ! {
-	mut reader := mock_reader("a😍b".bytes())
+	mut reader := mock_reader('a😍b'.bytes())
 	mut tb := TextBuffer.new(mut reader)!
 
 	tb.move_cursor_to_position(0, 1)
 
 	tb.insert(u8(`Z`))
-	assert tb.get_line_bytes(0)? == "aZ😍b".bytes()
+	assert tb.get_line_bytes(0)? == 'aZ😍b'.bytes()
 
 	tb.move_cursor_right()
 	tb.insert(u8(`X`))
-	assert tb.get_line_bytes(0)? == "aZ😍Xb".bytes()
+	assert tb.get_line_bytes(0)? == 'aZ😍Xb'.bytes()
 }
 
 fn insert_str(mut tb TextBuffer, s string) {
@@ -472,4 +486,3 @@ fn test_text_buffer_delete_range_noop_when_endpoints_equal() ! {
 	tb.delete_range(0, 4, 0, 4)
 	assert tb.get_line_bytes(0)? == 'unchanged'.bytes()
 }
-

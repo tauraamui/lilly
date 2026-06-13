@@ -41,15 +41,15 @@ fn test_editor_model_goto_line_centers_view() {
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
-		id:             1
-		theme:          theme.dark_theme
-		file_path:      file_path
-		doc_id:         doc_id
-		doc_controller: &ctrl
+		id:              1
+		theme:           theme.dark_theme
+		file_path:       file_path
+		doc_id:          doc_id
+		doc_controller:  &ctrl
 		doc_controller2: &ctrl2
-		cb:             &cb
-		expand_tabs:    false
-		tab_width:      4
+		cb:              &cb
+		expand_tabs:     false
+		tab_width:       4
 	)
 	editor.height = 7
 
@@ -69,15 +69,15 @@ fn test_editor_model_goto_line_clamps_to_document_end() {
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
-		id:             2
-		theme:          theme.dark_theme
-		file_path:      file_path
-		doc_id:         doc_id
-		doc_controller: &ctrl
+		id:              2
+		theme:           theme.dark_theme
+		file_path:       file_path
+		doc_id:          doc_id
+		doc_controller:  &ctrl
 		doc_controller2: &ctrl2
-		cb:             &cb
-		expand_tabs:    false
-		tab_width:      4
+		cb:              &cb
+		expand_tabs:     false
+		tab_width:       4
 	)
 	editor.height = 7
 
@@ -101,15 +101,15 @@ fn test_editor_model_goto_line_with_large_viewport_sets_min_y_to_zero() {
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
-		id:             3
-		theme:          theme.dark_theme
-		file_path:      file_path
-		doc_id:         doc_id
-		doc_controller: &ctrl
+		id:              3
+		theme:           theme.dark_theme
+		file_path:       file_path
+		doc_id:          doc_id
+		doc_controller:  &ctrl
 		doc_controller2: &ctrl2
-		cb:             &cb
-		expand_tabs:    false
-		tab_width:      4
+		cb:              &cb
+		expand_tabs:     false
+		tab_width:       4
 	)
 	editor.height = 20
 
@@ -127,15 +127,15 @@ fn test_line_jump_command_for_returns_goto_line_command() {
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
-		id:             4
-		theme:          theme.dark_theme
-		file_path:      file_path
-		doc_id:         doc_id
-		doc_controller: &ctrl
+		id:              4
+		theme:           theme.dark_theme
+		file_path:       file_path
+		doc_id:          doc_id
+		doc_controller:  &ctrl
 		doc_controller2: &ctrl2
-		cb:             &cb
-		expand_tabs:    false
-		tab_width:      4
+		cb:              &cb
+		expand_tabs:     false
+		tab_width:       4
 	)
 
 	mut workspace := EditorWorkspaceModel.new(EditorWorkspaceModelParams{
@@ -195,15 +195,15 @@ fn test_editor_model_zz_centers_current_line() {
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
-		id:             5
-		theme:          theme.dark_theme
-		file_path:      file_path
-		doc_id:         doc_id
-		doc_controller: &ctrl
+		id:              5
+		theme:           theme.dark_theme
+		file_path:       file_path
+		doc_id:          doc_id
+		doc_controller:  &ctrl
 		doc_controller2: &ctrl2
-		cb:             &cb
-		expand_tabs:    false
-		tab_width:      4
+		cb:              &cb
+		expand_tabs:     false
+		tab_width:       4
 	)
 	editor.height = 7
 	editor.cursor_pos = cursor.Pos.new(0, 15)
@@ -239,15 +239,15 @@ fn test_editor_model_zz_with_count_moves_and_centers() {
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
-		id:             6
-		theme:          theme.dark_theme
-		file_path:      file_path
-		doc_id:         doc_id
-		doc_controller: &ctrl
+		id:              6
+		theme:           theme.dark_theme
+		file_path:       file_path
+		doc_id:          doc_id
+		doc_controller:  &ctrl
 		doc_controller2: &ctrl2
-		cb:             &cb
-		expand_tabs:    false
-		tab_width:      4
+		cb:              &cb
+		expand_tabs:     false
+		tab_width:       4
 	)
 	editor.height = 7
 	editor.cursor_pos = cursor.Pos.new(0, 0)

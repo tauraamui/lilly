@@ -17,19 +17,66 @@ import lib.documents.cursor
 // selection range is derived from visual_sel_start + cursor.
 fn apply_motion(c &documents.Controller2, doc_id int, motion string, count int) bool {
 	match motion {
-		'h' { for _ in 0 .. count { c.move_cursor_left(doc_id) } }
-		'j' { for _ in 0 .. count { c.move_cursor_down(doc_id) } }
-		'k' { for _ in 0 .. count { c.move_cursor_up(doc_id) } }
-		'l' { for _ in 0 .. count { c.move_cursor_right(doc_id) } }
-		'{' { for _ in 0 .. count { c.move_cursor_to_previous_blank_line(doc_id) } }
-		'}' { for _ in 0 .. count { c.move_cursor_to_next_blank_line(doc_id) } }
-		'w' { for _ in 0 .. count { c.move_cursor_to_next_word_start(doc_id) } }
-		'W' { for _ in 0 .. count { c.move_cursor_to_next_big_word_start(doc_id) } }
-		'e' { for _ in 0 .. count { c.move_cursor_to_next_word_end(doc_id) } }
-		'b' { for _ in 0 .. count { c.move_cursor_to_previous_word_start(doc_id) } }
-		'ge' { for _ in 0 .. count { c.move_cursor_to_previous_word_end(doc_id) } }
-		else { return false }
+		'h' {
+			for _ in 0 .. count {
+				c.move_cursor_left(doc_id)
+			}
+		}
+		'j' {
+			for _ in 0 .. count {
+				c.move_cursor_down(doc_id)
+			}
+		}
+		'k' {
+			for _ in 0 .. count {
+				c.move_cursor_up(doc_id)
+			}
+		}
+		'l' {
+			for _ in 0 .. count {
+				c.move_cursor_right(doc_id)
+			}
+		}
+		'{' {
+			for _ in 0 .. count {
+				c.move_cursor_to_previous_blank_line(doc_id)
+			}
+		}
+		'}' {
+			for _ in 0 .. count {
+				c.move_cursor_to_next_blank_line(doc_id)
+			}
+		}
+		'w' {
+			for _ in 0 .. count {
+				c.move_cursor_to_next_word_start(doc_id)
+			}
+		}
+		'W' {
+			for _ in 0 .. count {
+				c.move_cursor_to_next_big_word_start(doc_id)
+			}
+		}
+		'e' {
+			for _ in 0 .. count {
+				c.move_cursor_to_next_word_end(doc_id)
+			}
+		}
+		'b' {
+			for _ in 0 .. count {
+				c.move_cursor_to_previous_word_start(doc_id)
+			}
+		}
+		'ge' {
+			for _ in 0 .. count {
+				c.move_cursor_to_previous_word_end(doc_id)
+			}
+		}
+		else {
+			return false
+		}
 	}
+
 	return true
 }
 
@@ -58,8 +105,14 @@ fn apply_operator(c &documents.Controller2, doc_id int, op u8, r cursor.Range) b
 		}
 		// TODO(tauraamui) [2026-06-08]: wire up once Controller2 grows
 		// change / yank etc.
-		`c` { return false }
-		`y` { return false }
-		else { return false }
+		`c` {
+			return false
+		}
+		`y` {
+			return false
+		}
+		else {
+			return false
+		}
 	}
 }

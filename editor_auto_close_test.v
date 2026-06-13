@@ -37,15 +37,15 @@ fn test_editor_model_insert_rune_auto_closes_parentheses() {
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
-		id:             101
-		theme:          theme.dark_theme
-		file_path:      file_path
-		doc_id:         doc_id
-		doc_controller: &ctrl
+		id:              101
+		theme:           theme.dark_theme
+		file_path:       file_path
+		doc_id:          doc_id
+		doc_controller:  &ctrl
 		doc_controller2: &ctrl2
-		cb:             &cb
-		expand_tabs:    false
-		tab_width:      4
+		cb:              &cb
+		expand_tabs:     false
+		tab_width:       4
 	)
 	editor.lang_syn = syntax.Syntax{
 		name: 'test'
@@ -77,15 +77,15 @@ fn test_editor_model_insert_rune_auto_closes_braces() {
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
-		id:             102
-		theme:          theme.dark_theme
-		file_path:      file_path
-		doc_id:         doc_id
-		doc_controller: &ctrl
+		id:              102
+		theme:           theme.dark_theme
+		file_path:       file_path
+		doc_id:          doc_id
+		doc_controller:  &ctrl
 		doc_controller2: &ctrl2
-		cb:             &cb
-		expand_tabs:    false
-		tab_width:      4
+		cb:              &cb
+		expand_tabs:     false
+		tab_width:       4
 	)
 	editor.lang_syn = syntax.Syntax{
 		name: 'test'
@@ -117,15 +117,15 @@ fn test_editor_model_insert_rune_auto_closes_double_quotes() {
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
-		id:             104
-		theme:          theme.dark_theme
-		file_path:      file_path
-		doc_id:         doc_id
-		doc_controller: &ctrl
+		id:              104
+		theme:           theme.dark_theme
+		file_path:       file_path
+		doc_id:          doc_id
+		doc_controller:  &ctrl
 		doc_controller2: &ctrl2
-		cb:             &cb
-		expand_tabs:    false
-		tab_width:      4
+		cb:              &cb
+		expand_tabs:     false
+		tab_width:       4
 	)
 	editor.lang_syn = syntax.Syntax{
 		name: 'test'
@@ -157,15 +157,15 @@ fn test_editor_model_insert_rune_auto_closes_single_quotes() {
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
-		id:             105
-		theme:          theme.dark_theme
-		file_path:      file_path
-		doc_id:         doc_id
-		doc_controller: &ctrl
+		id:              105
+		theme:           theme.dark_theme
+		file_path:       file_path
+		doc_id:          doc_id
+		doc_controller:  &ctrl
 		doc_controller2: &ctrl2
-		cb:             &cb
-		expand_tabs:    false
-		tab_width:      4
+		cb:              &cb
+		expand_tabs:     false
+		tab_width:       4
 	)
 	editor.lang_syn = syntax.Syntax{
 		name: 'test'
@@ -197,15 +197,15 @@ fn test_editor_model_insert_rune_auto_closes_backticks() {
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
-		id:             106
-		theme:          theme.dark_theme
-		file_path:      file_path
-		doc_id:         doc_id
-		doc_controller: &ctrl
+		id:              106
+		theme:           theme.dark_theme
+		file_path:       file_path
+		doc_id:          doc_id
+		doc_controller:  &ctrl
 		doc_controller2: &ctrl2
-		cb:             &cb
-		expand_tabs:    false
-		tab_width:      4
+		cb:              &cb
+		expand_tabs:     false
+		tab_width:       4
 	)
 	editor.lang_syn = syntax.Syntax{
 		name: 'test'
@@ -237,15 +237,15 @@ fn test_editor_model_insert_rune_without_syntax_does_not_auto_close_parentheses(
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
-		id:             103
-		theme:          theme.dark_theme
-		file_path:      file_path
-		doc_id:         doc_id
-		doc_controller: &ctrl
+		id:              103
+		theme:           theme.dark_theme
+		file_path:       file_path
+		doc_id:          doc_id
+		doc_controller:  &ctrl
 		doc_controller2: &ctrl2
-		cb:             &cb
-		expand_tabs:    false
-		tab_width:      4
+		cb:              &cb
+		expand_tabs:     false
+		tab_width:       4
 	)
 
 	editor.doc_controller.prepare_for_insertion_at(editor.doc_id, editor.cursor_pos) or {
@@ -268,15 +268,15 @@ fn test_editor_model_insert_rune_without_syntax_does_not_auto_close_double_quote
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
-		id:             107
-		theme:          theme.dark_theme
-		file_path:      file_path
-		doc_id:         doc_id
-		doc_controller: &ctrl
+		id:              107
+		theme:           theme.dark_theme
+		file_path:       file_path
+		doc_id:          doc_id
+		doc_controller:  &ctrl
 		doc_controller2: &ctrl2
-		cb:             &cb
-		expand_tabs:    false
-		tab_width:      4
+		cb:              &cb
+		expand_tabs:     false
+		tab_width:       4
 	)
 
 	editor.doc_controller.prepare_for_insertion_at(editor.doc_id, editor.cursor_pos) or {
@@ -299,15 +299,15 @@ fn test_editor_model_insert_rune_without_syntax_does_not_auto_close_single_quote
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
-		id:             108
-		theme:          theme.dark_theme
-		file_path:      file_path
-		doc_id:         doc_id
-		doc_controller: &ctrl
+		id:              108
+		theme:           theme.dark_theme
+		file_path:       file_path
+		doc_id:          doc_id
+		doc_controller:  &ctrl
 		doc_controller2: &ctrl2
-		cb:             &cb
-		expand_tabs:    false
-		tab_width:      4
+		cb:              &cb
+		expand_tabs:     false
+		tab_width:       4
 	)
 
 	editor.doc_controller.prepare_for_insertion_at(editor.doc_id, editor.cursor_pos) or {
@@ -330,15 +330,15 @@ fn test_editor_model_insert_rune_without_syntax_does_not_auto_close_backticks() 
 	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut cb := clipboard.new()
 	mut editor := EditorModel.new(
-		id:             109
-		theme:          theme.dark_theme
-		file_path:      file_path
-		doc_id:         doc_id
-		doc_controller: &ctrl
+		id:              109
+		theme:           theme.dark_theme
+		file_path:       file_path
+		doc_id:          doc_id
+		doc_controller:  &ctrl
 		doc_controller2: &ctrl2
-		cb:             &cb
-		expand_tabs:    false
-		tab_width:      4
+		cb:              &cb
+		expand_tabs:     false
+		tab_width:       4
 	)
 
 	editor.doc_controller.prepare_for_insertion_at(editor.doc_id, editor.cursor_pos) or {

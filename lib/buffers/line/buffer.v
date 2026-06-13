@@ -1,3 +1,17 @@
+// Copyright 2026 The Lilly Edtior contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 module line
 
 import arrays
@@ -7,10 +21,10 @@ const initial_capacity = 8
 @[noinit]
 pub struct Buffer {
 mut:
-	offsets    []i64
-	gap_start  int
-	gap_end    int
-	delta      i64
+	offsets   []i64
+	gap_start int
+	gap_end   int
+	delta     i64
 pub mut:
 	current_line u64
 }
@@ -20,10 +34,10 @@ pub fn Buffer.new() Buffer {
 	mut offsets := []i64{len: capacity, cap: capacity}
 	offsets[0] = 0
 	return Buffer{
-		offsets: offsets
-		gap_start: 1
-		gap_end: capacity
-		delta: 0
+		offsets:      offsets
+		gap_start:    1
+		gap_end:      capacity
+		delta:        0
 		current_line: 0
 	}
 }
