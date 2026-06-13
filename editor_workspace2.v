@@ -47,6 +47,16 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		SwitchModeMsg {
 			return m.switch_mode_update(msg)
 		}
+		boba.CursorBlinkMsg {
+			match m.mode {
+				.command {
+					i_input, i_cmd := m.input_field.update(msg)
+					m.input_field = i_input
+					return m.clone(), i_cmd
+				}
+				else {}
+			}
+		}
 		else {}
 	}
 
@@ -94,7 +104,9 @@ fn (mut m EditorWorkspaceModel2) normal_mode_key_update(msg tea.KeyMsg) (tea.Mod
 		.runes {
 			match msg.string() {
 				':' {
-					return m.clone(), switch_mode(.command)
+					i_input, i_cmd := m.input_field.update(tea.FocusedMsg{})
+					m.input_field = i_input
+					return m.clone(), tea.sequence(switch_mode(.command), i_cmd)
 				}
 				else {}
 			}
@@ -108,21 +120,30 @@ fn (mut m EditorWorkspaceModel2) command_mode_key_update(msg tea.KeyMsg) (tea.Mo
 		.special {
 			match msg.string() {
 				'escape' {
-					return m.clone(), switch_mode(.normal)
+					i_input, i_cmd := m.input_field.update(tea.BlurredMsg{})
+					m.input_field = i_input
+					return m.clone(), tea.sequence(switch_mode(.normal), i_cmd)
 				}
 				else {}
 			}
 		}
 		.runes {}
 	}
-	return m.clone(), tea.noop_cmd
+
+	i_field, i_cmd := m.input_field.update(msg)
+	m.input_field = i_field
+
+	return m.clone(), i_cmd
 }
 
 fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, fn () tea.Msg) {
 	m.width = msg.window_width
 	m.height = msg.window_height
 
-	return m.forward_msg_to_active_editor(EditorModelMsg{
+	i_field, i_cmd := m.input_field.update(msg)
+	m.input_field = i_field
+
+	model, cmd := m.forward_msg_to_active_editor(EditorModelMsg{
 		id: 0,
 		mode: m.mode,
 		msg: tea.ResizedMsg{
@@ -130,6 +151,8 @@ fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, 
 			window_height: msg.window_height - 2
 		},
 	})
+
+	return model, tea.sequence(i_cmd, cmd)
 }
 
 fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorInWorkspaceMsg) (tea.Model, fn () tea.Msg) {
@@ -165,7 +188,7 @@ fn (m EditorWorkspaceModel2) render_status_bar(mut ctx tea.Context) {
 	ctx.reset_bg_color()
 
 	m.render_status_blocks(mut ctx)
-	// m.render_leader_or_command_user_input_text(mut ctx)
+	m.render_leader_or_command_user_input_text(mut ctx)
 }
 
 fn (m EditorWorkspaceModel2) render_status_blocks(mut ctx tea.Context) {
@@ -264,6 +287,47 @@ fn (m EditorWorkspaceModel2) render_status_blocks(mut ctx tea.Context) {
 	ctx.set_color(palette.status_cursor_pos_bg_color)
 	ctx.draw_text(0, 0, glyphs.block)
 	ctx.reset_color()
+}
+
+fn (m EditorWorkspaceModel2) render_leader_or_command_user_input_text(mut ctx tea.Context) {
+	/*
+	if msg_label := m.message_label {
+		ctx.set_color(msg_label.ccolor)
+		ctx.draw_text(1, ctx.window_height() - 1, msg_label.contents)
+		ctx.reset_color()
+		return
+	}
+	*/
+	match m.mode {
+		.leader {
+			/*
+			ctx.set_color(palette.subtle_text_fg_color)
+			leader_data := '<leader>' + m.leader_suffix
+			ctx.draw_text(ctx.window_width() - tea.visible_len(leader_data) - 1,
+				ctx.window_height() - 1, leader_data)
+			ctx.reset_color()
+			*/
+		}
+		.command {
+			ctx.set_color(palette.subtle_text_fg_color)
+			ctx.push_offset(tea.Offset{ y: ctx.window_height() - 1 })
+			m.input_field.view(mut ctx)
+			ctx.pop_offset()
+		}
+		.normal {
+			/*
+			if d := m.active_editor_data {
+				if d.chord_display.len > 0 {
+					ctx.set_color(palette.subtle_text_fg_color)
+					ctx.draw_text(ctx.window_width() - tea.visible_len(d.chord_display) - 1,
+						ctx.window_height() - 1, d.chord_display)
+					ctx.reset_color()
+				}
+			}
+			*/
+		}
+		else {}
+	}
 }
 
 fn (m EditorWorkspaceModel2) active_file_name() string {
