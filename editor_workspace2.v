@@ -8,11 +8,12 @@ import lib.boba
 import lib.documents
 import lib.glyphs
 import lib.palette
+import lib.cfg
 
 struct EditorWorkspaceModel2 {
 	mode           petal.Mode = .normal
-	theme          theme.Theme
 	doc_controller &documents.Controller2
+	config         EditorWorkspaceConfig
 mut:
 	width          int
 	height         int
@@ -23,9 +24,25 @@ mut:
 	active_editor  ?DebuggableModel // underlying type of Editor2
 }
 
-fn EditorWorkspaceModel2.new(l_theme theme.Theme, doc_controller &documents.Controller2) EditorWorkspaceModel2 {
+struct EditorWorkspaceConfig{
+	theme          theme.Theme
+	leader_key     string
+	expand_tabs    bool
+	tab_width      int
+}
+
+fn EditorWorkspaceConfig.new(base_cfg cfg.Config) EditorWorkspaceConfig {
+	return EditorWorkspaceConfig{
+		theme:       base_cfg.theme
+		leader_key:  base_cfg.leader_key
+		expand_tabs: base_cfg.expand_tabs
+		tab_width:   base_cfg.tab_width
+	}
+}
+
+fn EditorWorkspaceModel2.new(config EditorWorkspaceConfig, doc_controller &documents.Controller2) EditorWorkspaceModel2 {
 	return EditorWorkspaceModel2{
-		theme: l_theme
+		config: config
 		doc_controller: doc_controller
 	}
 }
@@ -52,7 +69,7 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		DisplayMessageMsg {
 			m.message_label = MessageLabel{
 				contents: msg.contents
-				ccolor: msg.m_type.color(m.theme)
+				ccolor: msg.m_type.color(m.config.theme)
 			}
 		}
 		HideMessageMsg {
@@ -248,7 +265,7 @@ fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorI
 	doc_id := m.doc_controller.open_document(msg.file_path) or {
 		return m.clone(), debug_log('failed to open document ${msg.file_path}: ${err}')
 	}
-	mut e_model := EditorModel2.new(m.theme, 0, doc_id, msg.file_path, m.doc_controller)
+	mut e_model := EditorModel2.new(m.config, 0, doc_id, msg.file_path, m.doc_controller)
 	model_init_cmd := e_model.init()
 	m.active_editor = e_model
 	return m.clone(), tea.sequence(model_init_cmd)
@@ -272,7 +289,7 @@ fn (m EditorWorkspaceModel2) view(mut ctx tea.Context) {
 }
 
 fn (m EditorWorkspaceModel2) render_status_bar(mut ctx tea.Context) {
-	ctx.set_bg_color(m.theme.status_bar_spacer)
+	ctx.set_bg_color(m.config.theme.status_bar_spacer)
 	ctx.draw_rect(0, ctx.window_height() - 2, ctx.window_width(), 1)
 	ctx.reset_bg_color()
 
@@ -284,7 +301,7 @@ fn (m EditorWorkspaceModel2) render_status_blocks(mut ctx tea.Context) {
 	status_bar_offset := ctx.push_offset(tea.Offset{ y: ctx.window_height() - 2 })
 	defer { ctx.clear_offsets_from(status_bar_offset) }
 
-	mode_color := m.mode.color(m.theme)
+	mode_color := m.mode.color(m.config.theme)
 	ctx.set_color(mode_color)
 	ctx.draw_text(0, 0, '${glyphs.left_rounded}${glyphs.block}')
 	ctx.reset_color()
@@ -304,7 +321,7 @@ fn (m EditorWorkspaceModel2) render_status_blocks(mut ctx tea.Context) {
 	ctx.reset_color()
 	ctx.push_offset(tea.Offset{ x: 2 })
 
-	file_name_bg_color := m.theme.status_file_name
+	file_name_bg_color := m.config.theme.status_file_name
 	ctx.set_color(file_name_bg_color)
 	ctx.draw_text(0, 0, '${glyphs.slant_left_flat_top}${glyphs.block}')
 	ctx.reset_color()
@@ -324,7 +341,7 @@ fn (m EditorWorkspaceModel2) render_status_blocks(mut ctx tea.Context) {
 	ctx.reset_color()
 	ctx.push_offset(tea.Offset{ x: 2 })
 
-	branch_name_bg_color := m.theme.status_branch_name
+	branch_name_bg_color := m.config.theme.status_branch_name
 	ctx.set_color(branch_name_bg_color)
 	ctx.draw_text(0, 0, '${glyphs.slant_left_flat_top}${glyphs.block}')
 	ctx.reset_color()
@@ -344,7 +361,7 @@ fn (m EditorWorkspaceModel2) render_status_blocks(mut ctx tea.Context) {
 	ctx.reset_color()
 
 	// status bar spacer left end cap
-	ctx.set_color(m.theme.status_bar_spacer)
+	ctx.set_color(m.config.theme.status_bar_spacer)
 	ctx.draw_text(2, 0, glyphs.slant_left_flat_top)
 	ctx.reset_color()
 	//
@@ -356,7 +373,7 @@ fn (m EditorWorkspaceModel2) render_status_blocks(mut ctx tea.Context) {
 	ctx.push_offset(tea.Offset{ x: cursor_pos_segment_start })
 
 	// status bar spacer right end cap
-	ctx.set_color(m.theme.status_bar_spacer)
+	ctx.set_color(m.config.theme.status_bar_spacer)
 	ctx.draw_text(-1, 0, glyphs.slant_right_flat_top)
 	ctx.reset_color()
 	//

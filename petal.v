@@ -51,15 +51,12 @@ fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.C
 		theme:         config.theme
 		first_frame:   true
 		active_screen: SplashScreenModel.new(
+			config:            config
 			version:           version
-			leader_key:        config.leader_key
-			theme:             config.theme
 			doc_controller:    doc_controller
 			doc_controller2:   doc_controller2
 			cb:                cb
 			initial_file_path: opts.initial_file_path
-			expand_tabs:       config.expand_tabs
-			tab_width:         config.tab_width
 		)
 		golden_frames: GoldenFrameState.init()
 	}

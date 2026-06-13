@@ -17,8 +17,8 @@ module main
 import math
 import os
 import bobatea as tea
+import lib.cfg
 import lib.palette
-import lib.petal.theme
 import lib.documents
 import lib.clipboard
 
@@ -41,28 +41,22 @@ mut:
 
 @[params]
 struct SplashScreenOptions {
+	config            cfg.Config
 	version           string
-	leader_key        string
-	theme             theme.Theme
 	doc_controller    &documents.Controller
 	doc_controller2   &documents.Controller2
 	cb                &clipboard.Manager
 	initial_file_path ?string
-	expand_tabs       bool
-	tab_width         int
 }
 
 struct SplashScreenModel {
+	config            cfg.Config
 	version           string
-	leader_key        string
 	logo              SplashLogo
-	theme             theme.Theme
 	doc_controller    &documents.Controller
 	doc_controller2   &documents.Controller2
 	cb                &clipboard.Manager
 	initial_file_path ?string
-	expand_tabs       bool
-	tab_width         int
 mut:
 	window_width  int
 	window_height int
@@ -74,9 +68,8 @@ mut:
 
 fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
 	return SplashScreenModel{
+		config:            opts.config
 		version:           opts.version
-		leader_key:        opts.leader_key
-		theme:             opts.theme
 		logo:              SplashLogo{
 			data: logo_contents.to_string().split_into_lines()
 		}
@@ -84,8 +77,6 @@ fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
 		doc_controller2:   opts.doc_controller2
 		cb:                opts.cb
 		initial_file_path: opts.initial_file_path
-		expand_tabs:       opts.expand_tabs
-		tab_width:         opts.tab_width
 	}
 }
 
@@ -174,7 +165,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 								'q' {
 									return m.clone(), tea.quit
 								}
-								m.leader_key {
+								m.config.leader_key {
 									if !m.leader_mode {
 										m.leader_mode = true
 									}
@@ -195,7 +186,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			cmds << open_editor_workspace(msg.file_path)
 		}
 		OpenEditorWorkspaceMsg {
-			mut workspace := EditorWorkspaceModel2.new(m.theme, m.doc_controller2)
+			mut workspace := EditorWorkspaceModel2.new(EditorWorkspaceConfig.new(m.config), m.doc_controller2)
 			/*
 			workspace := EditorWorkspaceModel.new(
 				version:           m.version
@@ -222,11 +213,11 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	match m.leader_data {
 		'ff' {
 			m.reset_leader_mode()
-			cmds << open_file_picker(m.theme)
+			cmds << open_file_picker(m.config.theme)
 		}
 		'nf' {
 			m.reset_leader_mode()
-			cmds << open_new_file_dialog(m.theme)
+			cmds << open_new_file_dialog(m.config.theme)
 		}
 		'xx' {
 			m.reset_leader_mode()
@@ -244,23 +235,25 @@ fn (mut m SplashScreenModel) reset_leader_mode() {
 }
 
 fn (m SplashScreenModel) view(mut ctx tea.Context) {
-	render_version_label(mut ctx, '${m.version}', m.theme.subtle_light_grey)
+	p_theme := m.config.theme
+	render_version_label(mut ctx, '${m.version}', p_theme.subtle_light_grey)
 	render_logo_and_help_centered_and_stacked(mut ctx,
 		logo:                   m.logo
 		in_leader_mode:         m.leader_mode
+		leader_key:             m.config.leader_key
 		leader_data:            m.leader_data
-		petal_pink:             m.theme.petal_pink
-		petal_green:            m.theme.petal_green
-		closest_match_color:    m.theme.petal_green
-		disabled_help_fg_color: m.theme.subtle_light_grey
+		petal_pink:             p_theme.petal_pink
+		petal_green:            p_theme.petal_green
+		closest_match_color:    p_theme.petal_green
+		disabled_help_fg_color: p_theme.subtle_light_grey
 	)
-	render_help_keybinds(mut ctx, m.theme.subtle_light_grey)
+	render_help_keybinds(mut ctx, p_theme.subtle_light_grey)
 
 	offset_from_id := ctx.push_offset(tea.Offset{ y: ctx.window_height() - 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
 	if m.leader_mode {
 		ctx.set_color(palette.subtle_text_fg_color)
-		leader_data := m.leader_key + m.leader_data
+		leader_data := m.config.leader_key + m.leader_data
 		ctx.draw_text(ctx.window_width() - tea.visible_len(leader_data) - 1, 0, leader_data)
 		ctx.reset_color()
 	}
@@ -364,6 +357,7 @@ const pending_match_color = tea.Color.ansi(244)
 @[params]
 struct RenderKeybindsListParams {
 	in_leader_mode         bool
+	leader_key             string
 	leader_data            string
 	closest_match_color    tea.Color
 	disabled_help_fg_color tea.Color
@@ -374,7 +368,7 @@ fn render_keybinds_list(mut ctx tea.Context,
 	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
 	defer { ctx.clear_offsets_from(offset_from_id) }
 
-	leader_key_label := 'default leader = ;'
+	leader_key_label := 'leader = \'${opts.leader_key}\''
 	ctx.draw_text(-(tea.visible_len(leader_key_label) / 2), 0, leader_key_label)
 	ctx.push_offset(tea.Offset{ y: 1 })
 
@@ -491,7 +485,7 @@ fn (m SplashScreenModel) debug_data() DebugData {
 	return DebugData{
 		name: 'splash_screen data'
 		data: {
-			'leader key':   m.leader_key
+			'leader key':   m.config.leader_key
 			'tmux wrapped': '${m.tmux_wrapped}'
 			'':             if d := m.dialog_model { d.debug_data() } else { 'null' }
 			'version':      '${m.version}'

@@ -3,15 +3,14 @@ module main
 import bobatea as tea
 import lib.documents
 import lib.documents.cursor
-import lib.petal.theme
 import lib.syntax
 import lib.palette
 
 struct EditorModel2 {
+	config         EditorWorkspaceConfig
 	id             int
 	file_path      string
 	doc_id         int
-	theme          theme.Theme
 	doc_controller &documents.Controller2
 mut:
 	in_focus              bool
@@ -27,12 +26,12 @@ mut:
 	parser_cache_dirty    bool = true
 }
 
-fn EditorModel2.new(l_theme theme.Theme, id int, doc_id int, file_path string, doc_controller &documents.Controller2) EditorModel2 {
+fn EditorModel2.new(config EditorWorkspaceConfig, id int, doc_id int, file_path string, doc_controller &documents.Controller2) EditorModel2 {
 	return EditorModel2{
+		config: config
 		id: id
 		file_path: file_path
 		doc_id: doc_id
-		theme: l_theme
 		doc_controller: doc_controller
 		token_parser: syntax.Parser{}
 	}
@@ -443,7 +442,7 @@ fn (m EditorModel2) render_line_numbers(mut ctx tea.Context) int {
 
 	offset_id := ctx.push_offset(tea.Offset{ x: gutter_width })
 
-	ctx.set_color(m.theme.syntax_comment)
+	ctx.set_color(m.config.theme.syntax_comment)
 	for y in m.top_line..end {
 		line_nr := '${y + 1}'
 		ctx.draw_text(-1 - line_nr.len, y - m.top_line, line_nr)
@@ -506,10 +505,10 @@ fn (mut m EditorModel2) render_syntax_highlighting(mut ctx tea.Context) {
 fn (m EditorModel2) color_for_token(t syntax.Token, token_str string, rune_buf []rune, line_tokens []syntax.Token, i int) ?tea.Color {
 	match t.t_type() {
 		.comment {
-			return m.theme.syntax_comment
+			return m.config.theme.syntax_comment
 		}
 		.string {
-			return m.theme.syntax_string
+			return m.config.theme.syntax_string
 		}
 		.number {
 			return tea.Color.ansi(199)
@@ -518,13 +517,13 @@ fn (m EditorModel2) color_for_token(t syntax.Token, token_str string, rune_buf [
 			mut color := ?tea.Color(none)
 			match true {
 				token_str in m.lang_syn.keywords {
-					color = m.theme.petal_red
+					color = m.config.theme.petal_red
 				}
 				token_str in m.lang_syn.literals {
-					color = m.theme.syntax_literal
+					color = m.config.theme.syntax_literal
 				}
 				token_str in m.lang_syn.builtins {
-					color = m.theme.syntax_builtin
+					color = m.config.theme.syntax_builtin
 				}
 				else {}
 			}
@@ -564,7 +563,7 @@ fn (m EditorModel2) color_for_token(t syntax.Token, token_str string, rune_buf [
 
 fn (m EditorModel2) render_cursor_line_highlight(mut ctx tea.Context) {
 	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
-	ctx.set_bg_color(m.theme.cursor_line_bg)
+	ctx.set_bg_color(m.config.theme.cursor_line_bg)
 	ctx.draw_rect(0, int(cursor_line) - m.top_line, m.viewport_width, 1)
 	ctx.reset_bg_color()
 }
@@ -597,9 +596,9 @@ fn (m EditorModel2) render_visual_selection(mut ctx tea.Context) {
 	start_visual_x, _ := m.visual_x_and_cluster_width_for(start_line, start_col)
 	end_visual_x, end_cluster_width := m.visual_x_and_cluster_width_for(end_line, end_col)
 
-	ctx.set_bg_color(m.theme.highlight_bg_color)
+	ctx.set_bg_color(m.config.theme.highlight_bg_color)
 	defer { ctx.reset_bg_color() }
-	ctx.set_color(palette.fg_color(m.theme.highlight_bg_color)) // set fg color to inverse shade of bg
+	ctx.set_color(palette.fg_color(m.config.theme.highlight_bg_color)) // set fg color to inverse shade of bg
 	defer { ctx.reset_color() }
 
 	line_count := int(m.doc_controller.line_count(m.doc_id))
