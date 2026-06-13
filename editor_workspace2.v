@@ -75,10 +75,6 @@ fn (mut m EditorWorkspaceModel2) forward_msg_to_active_editor(msg tea.Msg) (tea.
 }
 
 fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
-	if m.mode == .normal && msg.k_type == .runes && msg.string() == 'q' {
-		return m.clone(), tea.quit
-	}
-
 	match m.mode {
 		.normal {
 			model, cmd := m.normal_mode_key_update(msg)
@@ -118,22 +114,39 @@ fn (mut m EditorWorkspaceModel2) normal_mode_key_update(msg tea.KeyMsg) (tea.Mod
 fn (mut m EditorWorkspaceModel2) command_mode_key_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
 	match msg.k_type {
 		.special {
-			match msg.string() {
+			cmd := match msg.string() {
 				'escape' {
-					i_input, i_cmd := m.input_field.update(tea.BlurredMsg{})
-					m.input_field = i_input
-					return m.clone(), tea.sequence(switch_mode(.normal), i_cmd)
+					tea.noop_cmd
 				}
-				else {}
+				'enter' {
+					execute_command(m.input_field.value())
+				}
+				else {
+					tea.noop_cmd
+				}
 			}
+
+			i_input, i_cmd := m.input_field.update(tea.BlurredMsg{})
+			m.input_field = i_input
+			return m.clone(), tea.sequence(switch_mode(.normal), i_cmd, cmd)
 		}
-		.runes {}
+		.runes {
+			i_field, i_cmd := m.input_field.update(msg)
+			m.input_field = i_field
+			return m.clone(), i_cmd
+		}
 	}
+	return m.clone(), tea.noop_cmd
+}
 
-	i_field, i_cmd := m.input_field.update(msg)
-	m.input_field = i_field
-
-	return m.clone(), i_cmd
+fn execute_command(cmd string) fn () tea.Msg {
+	match cmd {
+		'qa' {
+			return tea.quit
+		}
+		else {}
+	}
+	return tea.noop_cmd
 }
 
 fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, fn () tea.Msg) {
