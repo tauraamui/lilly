@@ -3,7 +3,6 @@ module main
 import bobatea as tea
 import lib.documents
 import lib.documents.cursor
-import lib.petal
 import lib.petal.theme
 import lib.syntax
 import lib.palette
@@ -14,7 +13,6 @@ struct EditorModel2 {
 	doc_id         int
 	theme          theme.Theme
 	doc_controller &documents.Controller2
-	mode           petal.Mode = .normal
 mut:
 	in_focus              bool
 	chord                 Chord
@@ -48,7 +46,7 @@ fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	match msg {
 		EditorModelKeyMsg {
 			// if !m.in_focus { return m.clone(), tea.noop_cmd}
-			match m.mode {
+			match msg.mode {
 				.normal {
 					return m.normal_mode_update(msg.key_msg)
 				}
@@ -118,23 +116,23 @@ fn (mut m EditorModel2) editor_model_update(editor_id int, msg tea.Msg) (tea.Mod
 }
 
 fn (mut m EditorModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () tea.Msg) {
+	m.visual_sel_start_line = ?u64(none)
+	m.visual_sel_start_col = ?u64(none)
+
 	match msg.mode {
 		.normal {
 			if msg.from == .insert || msg.from == .normal {
 				m.doc_controller.move_cursor_left(m.doc_id)
 			}
-			return m.clone_with_mode(.normal), tea.noop_cmd
 		}
 		.visual {
 			cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
 			m.visual_sel_start_line = cursor_line
 			m.visual_sel_start_col = cursor_col
-			return m.clone_with_mode(.visual), tea.noop_cmd
 		}
 		.insert {
 			m.doc_controller.commit_undo_group(m.doc_id)
 			m.doc_controller.begin_undo_group(m.doc_id)
-			return m.clone_with_mode(.insert), tea.noop_cmd
 		}
 		else {}
 	}
@@ -584,7 +582,6 @@ fn (m EditorModel2) render_cursor_block(mut ctx tea.Context) {
 }
 
 fn (m EditorModel2) render_visual_selection(mut ctx tea.Context) {
-	if m.mode != .visual { return }
 	sel_start_line := m.visual_sel_start_line or { return }
 	sel_start_col := m.visual_sel_start_col or { return }
 	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
@@ -708,13 +705,6 @@ fn (m EditorModel2) debug_data() DebugData {
 fn (m EditorModel2) clone() tea.Model {
 	return EditorModel2{
 		...m
-	}
-}
-
-fn (m EditorModel2) clone_with_mode(mode petal.Mode) tea.Model {
-	return EditorModel2{
-		...m
-		mode: mode
 	}
 }
 
