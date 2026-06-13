@@ -69,10 +69,53 @@ fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () te
 		return m.clone(), tea.quit
 	}
 
+	match m.mode {
+		.normal {
+			model, cmd := m.normal_mode_key_update(msg)
+			if cmd != tea.noop_cmd {
+				return model, cmd // do not forward key event to editor in normal mode if consumed here
+			}
+		}
+		.command {
+			return m.command_mode_key_update(msg) // never forward key events to editor when in command mode
+		}
+		else {}
+	}
+
 	return m.forward_msg_to_active_editor(EditorModelKeyMsg{
 		key_msg: msg
 		mode: m.mode
 	})
+}
+
+fn (mut m EditorWorkspaceModel2) normal_mode_key_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+	match msg.k_type {
+		.special {}
+		.runes {
+			match msg.string() {
+				':' {
+					return m.clone(), switch_mode(.command)
+				}
+				else {}
+			}
+		}
+	}
+	return m.clone(), tea.noop_cmd
+}
+
+fn (mut m EditorWorkspaceModel2) command_mode_key_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+	match msg.k_type {
+		.special {
+			match msg.string() {
+				'escape' {
+					return m.clone(), switch_mode(.normal)
+				}
+				else {}
+			}
+		}
+		.runes {}
+	}
+	return m.clone(), tea.noop_cmd
 }
 
 fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, fn () tea.Msg) {
