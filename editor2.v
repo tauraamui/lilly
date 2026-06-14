@@ -367,7 +367,7 @@ fn (mut m EditorModel2) rebuild_parser_state_cache() {
 	for y in 0 .. line_count {
 		m.parser_line_states << m.token_parser.current_state()
 		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
-		line_content := line_bytes.bytestr().replace('\t', '    ')
+		line_content := expand_tabs(line_bytes, m.config.tab_width)
 		m.token_parser.advance_state_runes(line_content.runes())
 	}
 	m.parser_cache_dirty = false
@@ -448,10 +448,14 @@ fn (mut m EditorModel2) view(mut ctx tea.Context) {
 	}
 	for y in m.top_line .. end {
 		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
-		line_str :=
-			line_bytes.bytestr().replace('\t', '    ') // TODO(tauraamui) [2026-06-14]: use newly passed in config value for tab width
-		ctx.draw_text(0, y - m.top_line, line_str)
+		// line_str := line_bytes.bytestr().replace('\t', '    ') // TODO(tauraamui) [2026-06-14]: use newly passed in config value for tab width
+		ctx.draw_text(0, y - m.top_line, expand_tabs(line_bytes, m.config.tab_width))
 	}
+}
+
+fn expand_tabs(line_bytes []u8, width int) string {
+	w := if width <= 0 { 1 } else { width }
+	return line_bytes.bytestr().replace('\t', ' '.repeat(w))
 }
 
 fn (m EditorModel2) render_line_numbers(mut ctx tea.Context) int {
@@ -502,7 +506,7 @@ fn (mut m EditorModel2) render_syntax_highlighting(mut ctx tea.Context) {
 		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
 		// expand tabs to match the text actually drawn in view(), so token
 		// rune indices line up 1:1 with on-screen columns
-		line_content := line_bytes.bytestr().replace('\t', '    ')
+		line_content := expand_tabs(line_bytes, m.config.tab_width)
 		line_tokens := m.token_parser.parse_line(y, line_content)
 
 		rune_buf.clear()
@@ -667,14 +671,22 @@ fn (m EditorModel2) visual_x_and_cluster_width_for(line u64, col u64) (int, int)
 	// grapheme-cluster index -> rune prefix length, so visible-width
 	// measurement covers ZWJ sequences and variation selectors as one glyph.
 	prefix_end := rune_index_after_graphemes(runes, c)
-	prefix := runes[..prefix_end].string().replace('\t', '    ')
+	prefix := runes[..prefix_end].string().replace('\t', ' '.repeat(if m.config.tab_width <= 0 {
+		1
+	} else {
+		m.config.tab_width
+	}))
 	visual_x := utf8_str_visible_length(prefix)
 
 	// width of the cluster at the column (min 1 so the block stays visible)
 	cluster_width := if prefix_end < runes.len {
 		cluster_end := next_grapheme_rune_index(runes, prefix_end)
 		if runes[prefix_end] == `\t` {
-			4
+			if m.config.tab_width <= 0 {
+				1
+			} else {
+				m.config.tab_width
+			}
 		} else {
 			w := utf8_str_visible_length(runes[prefix_end..cluster_end].string())
 			if w < 1 {
