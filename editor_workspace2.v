@@ -35,7 +35,8 @@ mut:
 	input_field   boba.InputField
 	message_label ?MessageLabel
 
-	active_editor ?DebuggableModel // underlying type of Editor2
+	active_editor      ?DebuggableModel // underlying type of Editor2
+	active_editor_data ?EditorData
 }
 
 struct EditorWorkspaceConfig {
@@ -88,6 +89,10 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		}
 		HideMessageMsg {
 			m.message_label = ?MessageLabel(none)
+		}
+		EditorDataResultMsg { // TODO(tauraamui) rename query message result type to make it clear its a query result
+			m.active_editor_data = msg.data
+			return m.clone(), tea.noop_cmd
 		}
 		boba.CursorBlinkMsg {
 			match m.mode {
