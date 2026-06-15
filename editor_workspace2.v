@@ -135,10 +135,11 @@ fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () te
 		else {}
 	}
 
-	return m.forward_msg_to_active_editor(EditorModelKeyMsg{
+	m_clone, cmd := m.forward_msg_to_active_editor(EditorModelKeyMsg{
 		key_msg: msg
 		mode:    m.mode
 	})
+	return m_clone, tea.sequence(cmd, query_editor_data(0))
 }
 
 fn (mut m EditorWorkspaceModel2) normal_mode_key_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
@@ -475,11 +476,9 @@ fn (m EditorWorkspaceModel2) active_branch_name() string {
 }
 
 fn (m EditorWorkspaceModel2) active_cursor_pos() string {
-	/*
 	if d := m.active_editor_data {
 		return '${d.cursor_row}:${d.cursor_col}'
 	}
-	*/
 	return '???'
 }
 
