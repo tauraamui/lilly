@@ -482,8 +482,7 @@ fn (m EditorModel2) render_line_numbers(mut ctx tea.Context, relative_line_numbe
 }
 
 fn resolve_line_number_label(y int, cursor_line int, relative_line_numbers bool) string {
-	if !relative_line_numbers { return '${y + 1}' }
-	if y == cursor_line { return '${y + 1}' }
+	if !relative_line_numbers || y == cursor_line { return '${y + 1}' }
 	if y < cursor_line { return '${cursor_line - y}' }
 	return '${y - cursor_line}'
 }
