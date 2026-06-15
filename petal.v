@@ -126,7 +126,7 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			m.last_resize_width = msg.window_width
 			m.last_resize_height = msg.window_height
 		}
-		QueryPWDGitBranchMsg {
+		QueryPWDGitBranchMsg { // TODO(tauraamui): DEPRECATE THIS POST EDITOR REWRITE
 			if send := m.app_send {
 				spawn fn [send] () {
 					branch := resolve_git_branch_name(os.execute)
@@ -134,6 +134,17 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 						branch_name: branch
 					})
 				}()
+			}
+		}
+		QueryGitBranchMsg {
+			if send := m.app_send {
+				spawn fn [send] () {
+					branch_name := resolve_git_branch_name(os.execute)
+					send(GitBranchQueryResultMsg{ branch_name })
+				}()
+			} else {
+				branch_name := resolve_git_branch_name(os.execute)
+				return m.clone(), git_branch_query_result(branch_name)
 			}
 		}
 		else {}

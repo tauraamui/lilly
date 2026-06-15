@@ -14,7 +14,7 @@
 
 module main
 
-import time
+import os
 import bobatea as tea
 import lib.petal
 import lib.petal.theme
@@ -34,6 +34,7 @@ mut:
 	dialog_model  ?DebuggableModel
 	input_field   boba.InputField
 	message_label ?MessageLabel
+	branch_name   ?string
 
 	active_editor      ?DebuggableModel // underlying type of Editor2
 	active_editor_data ?EditorData
@@ -64,11 +65,14 @@ fn EditorWorkspaceModel2.new(config EditorWorkspaceConfig, doc_controller &docum
 
 fn (mut m EditorWorkspaceModel2) init() fn () tea.Msg {
 	m.input_field = boba.InputField.new_with_prefix(':', 0)
-	return tea.emit_resize
+	return tea.sequence(tea.emit_resize, query_git_branch)
 }
 
 fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	match msg {
+		tea.FocusedMsg {
+			return m.clone(), query_git_branch
+		}
 		tea.KeyMsg {
 			return m.key_update(msg)
 		}
@@ -92,6 +96,10 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		}
 		EditorDataResultMsg { // TODO(tauraamui) rename query message result type to make it clear its a query result
 			m.active_editor_data = msg.data
+			return m.clone(), tea.noop_cmd
+		}
+		GitBranchQueryResultMsg {
+			m.branch_name = msg.branch_name
 			return m.clone(), tea.noop_cmd
 		}
 		boba.CursorBlinkMsg {
@@ -197,72 +205,6 @@ fn (mut m EditorWorkspaceModel2) command_mode_key_update(msg tea.KeyMsg) (tea.Mo
 	}
 
 	return m.clone(), tea.noop_cmd
-}
-
-struct MessageLabel {
-	contents string
-	ccolor   tea.Color
-}
-
-enum DisplayMessageType {
-	normal
-	warning
-	error
-}
-
-fn (t DisplayMessageType) color(ttheme theme.Theme) tea.Color {
-	return match t {
-		.normal { ttheme.petal_green }
-		.warning { ttheme.status_orange }
-		.error { ttheme.petal_red }
-	}
-}
-
-struct DisplayMessageMsg {
-	contents string
-	m_type   DisplayMessageType
-}
-
-fn display_message(m_type DisplayMessageType, contents string) tea.Cmd {
-	return fn [m_type, contents] () tea.Msg {
-		return DisplayMessageMsg{
-			contents: contents
-			m_type:   m_type
-		}
-	}
-}
-
-fn display_error_message(contents string) tea.Cmd {
-	return tea.sequence(display_message(.error, contents), hide_message_after(6 * time.second))
-}
-
-struct HideMessageMsg {
-	time time.Time
-}
-
-fn hide_message() tea.Msg {
-	return HideMessageMsg{}
-}
-
-fn hide_message_after(duration time.Duration) tea.Cmd {
-	return tea.tick(duration, fn (t time.Time) tea.Msg {
-		return HideMessageMsg{
-			time: t
-		}
-	})
-}
-
-fn execute_command(cmd string) tea.Cmd {
-	match cmd {
-		'qa' {
-			return tea.quit
-		}
-		else {
-			return display_error_message('unrecognised command: ${cmd}')
-		}
-	}
-
-	return tea.noop_cmd
 }
 
 fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, fn () tea.Msg) {
@@ -458,21 +400,14 @@ fn (m EditorWorkspaceModel2) render_leader_or_command_user_input_text(mut ctx te
 }
 
 fn (m EditorWorkspaceModel2) active_file_name() string {
-	/*
 	if d := m.active_editor_data {
 		return os.base(d.file_path)
 	}
-	*/
 	return '???'
 }
 
 fn (m EditorWorkspaceModel2) active_branch_name() string {
-	/*
-	if m.branch_name.len > 0 {
-		return m.branch_name
-	}
-	*/
-	return '???'
+	return m.branch_name or { '???' }
 }
 
 fn (m EditorWorkspaceModel2) active_cursor_pos() string {
