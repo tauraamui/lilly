@@ -434,7 +434,7 @@ fn (mut m EditorModel2) view(mut ctx tea.Context) {
 	ctx.set_clip_area(tea.ClipArea{0, 0, m.width(), m.height()})
 	defer { ctx.clear_clip_area() }
 
-	offset_id := m.render_line_numbers(mut ctx)
+	offset_id := m.render_line_numbers(mut ctx, m.config.relative_line_numbers)
 	defer { ctx.clear_offsets_from(offset_id) }
 	m.render_syntax_highlighting(mut ctx)
 	m.render_cursor_line_highlight(mut ctx)
@@ -458,7 +458,8 @@ fn expand_tabs(line_bytes []u8, width int) string {
 	return line_bytes.bytestr().replace('\t', ' '.repeat(w))
 }
 
-fn (m EditorModel2) render_line_numbers(mut ctx tea.Context) int {
+fn (m EditorModel2) render_line_numbers(mut ctx tea.Context, relative_line_numbers bool) int {
+	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
 	line_count := int(m.doc_controller.line_count(m.doc_id))
 	end := if m.top_line + m.viewport_height < line_count {
 		m.top_line + m.viewport_height
@@ -472,12 +473,19 @@ fn (m EditorModel2) render_line_numbers(mut ctx tea.Context) int {
 
 	ctx.set_color(m.config.theme.syntax_comment)
 	for y in m.top_line .. end {
-		line_nr := '${y + 1}'
+		line_nr := resolve_line_number_label(y, int(cursor_line), relative_line_numbers)
 		ctx.draw_text(-1 - line_nr.len, y - m.top_line, line_nr)
 	}
 	ctx.reset_color()
 
 	return offset_id
+}
+
+fn resolve_line_number_label(y int, cursor_line int, relative_line_numbers bool) string {
+	if !relative_line_numbers { return '${y + 1}' }
+	if y == cursor_line { return '${y + 1}' }
+	if y < cursor_line { return '${cursor_line - y}' }
+	return '${y - cursor_line}'
 }
 
 fn (mut m EditorModel2) render_syntax_highlighting(mut ctx tea.Context) {
