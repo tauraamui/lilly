@@ -183,7 +183,8 @@ fn (mut m EditorWorkspaceModel2) command_mode_key_update(msg tea.KeyMsg) (tea.Mo
 					tea.noop_cmd
 				}
 				'enter' {
-					execute_command(m.input_field.value())
+					active_editor_id := 0
+					execute_command(active_editor_id, m.input_field.value())
 				}
 				'backspace' {
 					return m.clone(), tea.noop_cmd

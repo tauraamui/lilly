@@ -61,10 +61,13 @@ fn hide_message_after(duration time.Duration) tea.Cmd {
 	})
 }
 
-fn execute_command(cmd string) tea.Cmd {
+fn execute_command(active_editor_id int, cmd string) tea.Cmd {
 	match cmd {
 		'qa' {
 			return tea.quit
+		}
+		'w' {
+			return write_to_disk(active_editor_id)
 		}
 		else {
 			return display_error_message('unrecognised command: ${cmd}')
