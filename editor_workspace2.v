@@ -41,18 +41,18 @@ mut:
 }
 
 struct EditorWorkspaceConfig {
-	theme       theme.Theme
-	leader_key  string
-	expand_tabs bool
-	tab_width   int
+	theme                 theme.Theme
+	leader_key            string
+	tab_width             int
+	relative_line_numbers bool
 }
 
 fn EditorWorkspaceConfig.new(base_cfg cfg.Config) EditorWorkspaceConfig {
 	return EditorWorkspaceConfig{
 		theme:       base_cfg.theme
 		leader_key:  base_cfg.leader_key
-		expand_tabs: base_cfg.expand_tabs
 		tab_width:   base_cfg.tab_width
+		relative_line_numbers: base_cfg.relative_line_numbers
 	}
 }
 
