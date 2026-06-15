@@ -166,14 +166,6 @@ fn main() {
 	initial_file_path := resolve_initial_file_path_and_chdir(no_matches, os.real_path, os.is_dir,
 		os.chdir)
 
-	mut config := cfg.Config.new()
-
-	theme_name := os.getenv('LILLY_THEME')
-
-	if theme_name.len != 0 {
-		config = config.set_theme(theme_name)
-	}
-
 	mut documents_controller := documents.Controller.new()
 	mut documents_controller2 := documents.Controller2.new()
 	defer { documents_controller.free() }
@@ -181,7 +173,7 @@ fn main() {
 	metrics_thread := emit_metrics_maybe(vmod_manifest)
 
 	mut cb := clipboard.new()
-	mut petal_model := PetalModel.new(version, config, &documents_controller,
+	mut petal_model := PetalModel.new(version, cfg.Config.new(), &documents_controller,
 		&documents_controller2, &cb,
 		initial_file_path: initial_file_path
 	)
