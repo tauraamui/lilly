@@ -14,6 +14,7 @@
 
 module main
 
+import time
 import bobatea as tea
 import lib.documents
 import lib.documents.cursor
@@ -119,7 +120,7 @@ fn (mut m EditorModel2) editor_model_update(editor_id int, msg tea.Msg) (tea.Mod
 			}
 			success_msg := 'written ${m.file_path} successfully'
 			return m.clone(), tea.sequence(debug_log(success_msg), display_message(.normal,
-				success_msg))
+				success_msg), hide_message_after(6 * time.second))
 		}
 		else {}
 	}
