@@ -35,7 +35,7 @@ mut:
 	input_field   boba.InputField
 	message_label ?MessageLabel
 	branch_name   ?string
-	leader_suffix ?string
+	leader_suffix []rune
 
 	active_editor      ?DebuggableModel // underlying type of Editor2
 	active_editor_data ?EditorData
@@ -225,7 +225,15 @@ fn (mut m EditorWorkspaceModel2) leader_mode_key_update(msg tea.KeyMsg) (tea.Mod
 				else {}
 			}
 		}
-		.runes {}
+		.runes {
+			m.leader_suffix << msg.string().runes()
+			match m.leader_suffix.string() {
+				'ff' {
+					return m.clone(), tea.sequence(switch_mode(.normal), open_file_picker(m.config.theme))
+				}
+				else {}
+			}
+		}
 	}
 	return m.clone(), tea.noop_cmd
 }
@@ -261,7 +269,7 @@ fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorI
 
 fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () tea.Msg) {
 	if m.mode == .leader {
-		m.leader_suffix = ''
+		m.leader_suffix = []
 	}
 	_, cmd := m.forward_msg_to_active_editor(EditorModelMsg{
 		id:   0 // will be active editors when forwarding to all editor instances
@@ -399,7 +407,7 @@ fn (m EditorWorkspaceModel2) render_leader_or_command_user_input_text(mut ctx te
 	match m.mode {
 		.leader {
 			ctx.set_color(palette.subtle_text_fg_color)
-			leader_data := '${m.config.leader_key}${m.leader_suffix or { "" }}'
+			leader_data := '${m.config.leader_key}${m.leader_suffix.string()}'
 			ctx.draw_text(ctx.window_width() - tea.visible_len(leader_data) - 1,
 				ctx.window_height() - 1, leader_data)
 			ctx.reset_color()
