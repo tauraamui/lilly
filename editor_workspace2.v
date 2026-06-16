@@ -260,13 +260,16 @@ fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorI
 }
 
 fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () tea.Msg) {
-	if msg.from == .leader {
+	if m.mode == .leader {
 		m.leader_suffix = ''
 	}
 	_, cmd := m.forward_msg_to_active_editor(EditorModelMsg{
 		id:   0 // will be active editors when forwarding to all editor instances
 		mode: m.mode
-		msg:  msg
+		msg:  SwitchModeMsg{
+			from: m.mode // send current mode pre-change as mode moving from
+			mode: msg.mode
+		}
 	})
 	return m.clone_with_mode(msg.mode), cmd
 }
