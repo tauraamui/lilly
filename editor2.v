@@ -125,7 +125,7 @@ fn (mut m EditorModel2) editor_model_update(editor_id int, msg tea.Msg) (tea.Mod
 		else {}
 	}
 
-	m.clamp_cursor_to_line_end()
+	// m.clamp_cursor_to_line_end()
 	m.scroll_to_cursor()
 	return m.clone(), tea.noop_cmd
 }
@@ -288,6 +288,15 @@ fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	return m.clone(), tea.batch_array(cmds)
 }
 
+fn virtual_direction_key_press(direction string) fn () tea.Msg {
+	return fn [direction] () tea.Msg {
+		return tea.KeyMsg{
+			k_type: .special
+			runes: direction.runes()
+		}
+	}
+}
+
 fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg, bool) {
 	count := if action.count == 0 { 1 } else { action.count }
 
@@ -302,7 +311,11 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg
 			for b in prefix {
 				m.doc_controller.insert(m.doc_id, b)
 			}
-			return switch_mode(.insert), true
+			// TODO(tauraamui) [2026-06-17]: investigate a better less hacky feeling alternative method
+			// to making the cursor be correctly positioned once we've manually inserted the previous line's
+			// whitespace prefix than virtually emulating cursor right press. for example perhaps we could
+			// make the cursor clamp method take the current mode into account? hmmm
+			return tea.sequence(switch_mode(.insert), virtual_direction_key_press('right')), true
 		}
 		'line' {
 			m.invalidate_parser_cache()
