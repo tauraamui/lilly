@@ -37,6 +37,9 @@ mut:
 	branch_name   ?string
 	leader_suffix []rune
 
+	active_modal       ?DebuggableModel
+	// active_modal_data  ?ModalData // TODO(tauraamui) [2026-06-17]: wire this up to query and response messages
+
 	active_editor      ?DebuggableModel // underlying type of Editor2
 	active_editor_data ?EditorData
 }
@@ -82,6 +85,16 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		}
 		OpenEditorInWorkspaceMsg {
 			return m.open_editor_in_workspace_update(msg)
+		}
+		OpenDialogMsg {
+			mut d_modal := msg.model
+			init_cmd := d_modal.init()
+			m.dialog_model = d_modal
+			return m.clone(), init_cmd
+		}
+		CloseDialogMsg {
+			m.dialog_model = ?DebuggableModel(none)
+			return m.clone(), tea.noop_cmd
 		}
 		SwitchModeMsg {
 			return m.switch_mode_update(msg)
@@ -155,6 +168,14 @@ fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () te
 }
 
 fn (mut m EditorWorkspaceModel2) normal_mode_key_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+	if mut d_modal := m.dialog_model {
+		d_model, dialog_cmd := d_modal.update(msg)
+		if d_model is DebuggableModel {
+			m.dialog_model = d_model
+		}
+		return m.clone(), dialog_cmd
+	}
+
 	match msg.k_type {
 		.special {
 			match msg.string() {
@@ -254,7 +275,19 @@ fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, 
 		}
 	})
 
-	return model, tea.sequence(i_cmd, cmd)
+	mut d_cmd := tea.noop_cmd
+	if mut d_modal := m.dialog_model {
+		d_model, dialog_cmd := d_modal.update(tea.ResizedMsg{
+			window_width: int(f64(msg.window_width) * .8)
+			window_height: int(f64(msg.window_height) * .8)
+		})
+		if d_model is DebuggableModel {
+			m.dialog_model = d_model
+		}
+		d_cmd = dialog_cmd
+	}
+
+	return model, tea.sequence(i_cmd, cmd, d_cmd)
 }
 
 fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorInWorkspaceMsg) (tea.Model, fn () tea.Msg) {
@@ -288,6 +321,16 @@ fn (m EditorWorkspaceModel2) view(mut ctx tea.Context) {
 	}
 
 	m.render_status_bar(mut ctx)
+
+	if mut open_modal := m.dialog_model {
+		id := ctx.push_offset(tea.Offset{
+			x: int(f64(m.width / 2)) - int(f64(open_modal.width() / 2))
+			y: int(f64(m.height / 2)) - int(f64(open_modal.height() / 2))
+		})
+		defer { ctx.clear_offsets_from(id) }
+
+		open_modal.view(mut ctx)
+	}
 }
 
 fn (m EditorWorkspaceModel2) render_status_bar(mut ctx tea.Context) {
