@@ -39,9 +39,10 @@ mut:
 
 	active_modal       ?DebuggableModel
 	// active_modal_data  ?ModalData // TODO(tauraamui) [2026-06-17]: wire this up to query and response messages
-
-	active_editor      ?DebuggableModel // underlying type of Editor2
 	active_editor_data ?EditorData
+	active_editor_id   int
+	editors            map[int]DebuggableModel
+	tree               boba.Tree
 }
 
 struct EditorWorkspaceConfig {
@@ -64,11 +65,13 @@ fn EditorWorkspaceModel2.new(config EditorWorkspaceConfig, doc_controller &docum
 	return EditorWorkspaceModel2{
 		config:         config
 		doc_controller: doc_controller
+		tree:           boba.Tree{}
 	}
 }
 
 fn (mut m EditorWorkspaceModel2) init() fn () tea.Msg {
 	m.input_field = boba.InputField.new_with_prefix(':', 0)
+	m.tree.plant()
 	return tea.sequence(tea.emit_resize, query_git_branch)
 }
 
@@ -133,10 +136,10 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 }
 
 fn (mut m EditorWorkspaceModel2) forward_msg_to_active_editor(msg tea.Msg) (tea.Model, fn () tea.Msg) {
-	if mut active_editor := m.active_editor {
+	if mut active_editor := m.editors[m.active_editor_id] {
 		new_active_editor, cmd := active_editor.update(msg)
 		if new_active_editor is DebuggableModel {
-			m.active_editor = new_active_editor
+			m.editors[m.active_editor_id] = new_active_editor
 		}
 		return m.clone(), cmd
 	}
@@ -296,7 +299,9 @@ fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorI
 	}
 	mut e_model := EditorModel2.new(m.config, 0, doc_id, msg.file_path, m.doc_controller)
 	model_init_cmd := e_model.init()
-	m.active_editor = e_model
+	// m.active_editor = e_model
+	m.active_editor_id = 0
+	m.editors[m.active_editor_id] = e_model
 	return m.clone(), tea.sequence(model_init_cmd)
 }
 
@@ -316,9 +321,10 @@ fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Mode
 }
 
 fn (m EditorWorkspaceModel2) view(mut ctx tea.Context) {
-	if mut editor := m.active_editor {
+	if mut editor := m.editors[m.active_editor_id] {
 		editor.view(mut ctx)
 	}
+	// m.tree.view()
 
 	m.render_status_bar(mut ctx)
 
