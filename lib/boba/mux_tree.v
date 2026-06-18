@@ -70,8 +70,32 @@ pub:
 	height int
 }
 
-pub fn (t Tree) view(editor_id int, max_width int, max_height int) Layout {
-	return Layout{ x: 0, y: 0, width: max_width, height: max_height }
+// layouts walks the tree once, subdividing the screen rectangle, and returns
+// the rectangle each leaf editor occupies keyed by its editor_id. Internal
+// nodes render nothing themselves; they just split their rectangle along the
+// node's direction, with the second child taking the remainder so odd sizes
+// don't drop a row/column.
+pub fn (t Tree) layouts(max_width int, max_height int) map[int]Layout {
+	mut out := map[int]Layout{}
+	t.root.layout(0, 0, max_width, max_height, mut out)
+	return out
 }
 
-// fn (t Tree) render_node(x int, y int)
+fn (n &Node) layout(x int, y int, width int, height int, mut out map[int]Layout) {
+	if n.is_leaf() {
+		out[n.editor_id] = Layout{ x: x, y: y, width: width, height: height }
+		return
+	}
+	match n.direction {
+		.horizontal {
+			lw := width / 2
+			n.first_child.layout(x, y, lw, height, mut out)
+			n.second_child.layout(x + lw, y, width - lw, height, mut out)
+		}
+		.vertical {
+			lh := height / 2
+			n.first_child.layout(x, y, width, lh, mut out)
+			n.second_child.layout(x, y + lh, width, height - lh, mut out)
+		}
+	}
+}

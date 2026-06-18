@@ -15,6 +15,7 @@
 module main
 
 import os
+import time
 import bobatea as tea
 import lib.petal
 import lib.petal.theme
@@ -305,6 +306,10 @@ fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorI
 	return m.clone(), tea.sequence(model_init_cmd)
 }
 
+fn (mut m EditorWorkspaceModel2) open_editor_in_split_update(msg OpenEditorInSplitMsg) (tea.Model, fn () tea.Msg) {
+	return m.clone(), tea.noop_cmd
+}
+
 fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () tea.Msg) {
 	if m.mode == .leader {
 		m.leader_suffix = []
@@ -321,8 +326,8 @@ fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Mode
 }
 
 fn (mut m EditorWorkspaceModel2) view(mut ctx tea.Context) {
-	for id, mut editor in m.editors {
-		layout := m.tree.view(id, m.width, m.height)
+	for id, layout in m.tree.layouts(m.width, m.height) {
+		mut editor := m.editors[id] or { continue }
 		ctx.push_offset(tea.Offset{ x: layout.x, y: layout.y })
 		ctx.set_clip_area(tea.ClipArea{ 0, 0, layout.width, layout.height })
 		editor.view(mut ctx)
@@ -543,3 +548,99 @@ fn open_editor_in_workspace_cmd(file_path string) fn () tea.Msg {
 		}
 	}
 }
+
+struct OpenEditorInSplitMsg {
+}
+
+struct MessageLabel {
+	contents string
+	ccolor   tea.Color
+}
+
+enum DisplayMessageType {
+	normal
+	warning
+	error
+}
+
+fn (t DisplayMessageType) color(ttheme theme.Theme) tea.Color {
+	return match t {
+		.normal { ttheme.petal_green }
+		.warning { ttheme.status_orange }
+		.error { ttheme.petal_red }
+	}
+}
+
+struct DisplayMessageMsg {
+	contents string
+	m_type   DisplayMessageType
+}
+
+fn display_message(m_type DisplayMessageType, contents string) tea.Cmd {
+	return fn [m_type, contents] () tea.Msg {
+		return DisplayMessageMsg{
+			contents: contents
+			m_type:   m_type
+		}
+	}
+}
+
+fn emit_focused() tea.Msg {
+	return tea.FocusedMsg{}
+}
+
+fn display_error_message(contents string) tea.Cmd {
+	return tea.sequence(display_message(.error, contents), hide_message_after(6 * time.second))
+}
+
+struct HideMessageMsg {
+	time time.Time
+}
+
+fn hide_message() tea.Msg {
+	return HideMessageMsg{}
+}
+
+fn hide_message_after(duration time.Duration) tea.Cmd {
+	return tea.tick(duration, fn (t time.Time) tea.Msg {
+		return HideMessageMsg{
+			time: t
+		}
+	})
+}
+
+fn execute_command(active_editor_id int, cmd string) tea.Cmd {
+	match cmd {
+		'qa' {
+			return tea.quit
+		}
+		'w' {
+			return write_to_disk(active_editor_id)
+		}
+		else {
+			return display_error_message('unrecognised command: ${cmd}')
+		}
+	}
+
+	return tea.noop_cmd
+}
+
+struct QueryGitBranchMsg {}
+
+fn query_git_branch() tea.Msg {
+	return QueryGitBranchMsg{}
+}
+
+struct GitBranchQueryResultMsg {
+	branch_name string
+}
+
+fn git_branch_query_result(branch_name string) tea.Cmd {
+	return fn [branch_name] () tea.Msg {
+		return GitBranchQueryResultMsg{
+			branch_name: branch_name
+		}
+	}
+}
+
+
