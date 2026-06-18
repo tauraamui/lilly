@@ -445,8 +445,8 @@ fn (mut m EditorModel2) clamp_cursor_to_line_end() {
 }
 
 fn (mut m EditorModel2) view(mut ctx tea.Context) {
-	ctx.set_clip_area(tea.ClipArea{0, 0, m.width(), m.height()})
-	defer { ctx.clear_clip_area() }
+	// ctx.set_clip_area(tea.ClipArea{0, 0, m.width(), m.height()})
+	// defer { ctx.clear_clip_area() }
 
 	offset_id := m.render_line_numbers(mut ctx, m.config.relative_line_numbers)
 	defer { ctx.clear_offsets_from(offset_id) }

@@ -62,5 +62,16 @@ pub fn (mut t Tree) split(direction SplitDirection) {
 	}
 }
 
-pub fn (t Tree) view(editor_id int) {
+pub struct Layout {
+pub:
+	x      int
+	y      int
+	width  int
+	height int
 }
+
+pub fn (t Tree) view(editor_id int, max_width int, max_height int) Layout {
+	return Layout{ x: 0, y: 0, width: max_width, height: max_height }
+}
+
+// fn (t Tree) render_node(x int, y int)

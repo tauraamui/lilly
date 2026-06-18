@@ -320,11 +320,15 @@ fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Mode
 	return m.clone_with_mode(msg.mode), cmd
 }
 
-fn (m EditorWorkspaceModel2) view(mut ctx tea.Context) {
-	if mut editor := m.editors[m.active_editor_id] {
+fn (mut m EditorWorkspaceModel2) view(mut ctx tea.Context) {
+	for id, mut editor in m.editors {
+		layout := m.tree.view(id, m.width, m.height)
+		ctx.push_offset(tea.Offset{ x: layout.x, y: layout.y })
+		ctx.set_clip_area(tea.ClipArea{ 0, 0, layout.width, layout.height })
 		editor.view(mut ctx)
+		ctx.clear_clip_area()
+		ctx.pop_offset()
 	}
-	// m.tree.view()
 
 	m.render_status_bar(mut ctx)
 
