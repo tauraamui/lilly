@@ -72,7 +72,7 @@ fn EditorWorkspaceModel2.new(config EditorWorkspaceConfig, doc_controller &docum
 
 fn (mut m EditorWorkspaceModel2) init() fn () tea.Msg {
 	m.input_field = boba.InputField.new_with_prefix(':', 0)
-	m.tree.plant()
+	m.tree.plant(0)
 	return tea.sequence(tea.emit_resize, query_git_branch)
 }
 
@@ -89,6 +89,9 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		}
 		OpenEditorInWorkspaceMsg {
 			return m.open_editor_in_workspace_update(msg)
+		}
+		OpenEditorInSplitMsg {
+			return m.open_editor_in_split_update(msg)
 		}
 		OpenDialogMsg {
 			mut d_modal := msg.model
@@ -303,10 +306,20 @@ fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorI
 	// m.active_editor = e_model
 	m.active_editor_id = 0
 	m.editors[m.active_editor_id] = e_model
-	return m.clone(), tea.sequence(model_init_cmd)
+	return m.clone(), model_init_cmd
 }
 
 fn (mut m EditorWorkspaceModel2) open_editor_in_split_update(msg OpenEditorInSplitMsg) (tea.Model, fn () tea.Msg) {
+	if active_editor := m.editors[msg.active_editor_id] {
+		if active_editor is EditorModel2 {
+			if !m.tree.split(0, 1, msg.direction) { return m.clone(), tea.noop_cmd }
+			mut e_model := EditorModel2.new(m.config, 1, active_editor.doc_id, active_editor.file_path, m.doc_controller)
+			model_init_cmd := e_model.init()
+			m.active_editor_id = 1
+			m.editors[m.active_editor_id] = e_model
+			return m.clone(), model_init_cmd
+		}
+	}
 	return m.clone(), tea.noop_cmd
 }
 
@@ -550,6 +563,17 @@ fn open_editor_in_workspace_cmd(file_path string) fn () tea.Msg {
 }
 
 struct OpenEditorInSplitMsg {
+	active_editor_id int
+	direction        boba.SplitDirection
+}
+
+fn open_editor_in_split_cmd(editor_id int, direction boba.SplitDirection) fn () tea.Msg {
+	return fn [editor_id, direction] () tea.Msg {
+		return OpenEditorInSplitMsg{
+			active_editor_id: editor_id
+			direction: direction
+		}
+	}
 }
 
 struct MessageLabel {
@@ -616,6 +640,12 @@ fn execute_command(active_editor_id int, cmd string) tea.Cmd {
 		}
 		'w' {
 			return write_to_disk(active_editor_id)
+		}
+		'vs' {
+			return open_editor_in_split_cmd(active_editor_id, .horizontal)
+		}
+		'sp' {
+			return open_editor_in_split_cmd(active_editor_id, .vertical)
 		}
 		else {
 			return display_error_message('unrecognised command: ${cmd}')

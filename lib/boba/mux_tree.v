@@ -1,6 +1,6 @@
 module boba
 
-enum SplitDirection {
+pub enum SplitDirection {
 	horizontal // children positioned side by side -> fraction of width
 	vertical   // children stacked top to bottom   -> fraction of height
 }
@@ -43,23 +43,21 @@ fn (mut n Node) split(target_editor_id int, new_editor_id int, direction SplitDi
 
 pub struct Tree {
 mut:
-	root             Node
-	active_editor_id int
-	next_editor_id   int
+	root Node
 }
 
-pub fn (mut t Tree) plant() {
-	t.root = Node{ editor_id: 0 }
-	t.active_editor_id = 0
-	t.next_editor_id = 1
+// plant seeds the tree with a single leaf holding the given, externally
+// managed editor_id. Editor id allocation and active tracking live with the
+// caller; the tree only stores the ids it is told to.
+pub fn (mut t Tree) plant(editor_id int) {
+	t.root = Node{ editor_id: editor_id }
 }
 
-pub fn (mut t Tree) split(direction SplitDirection) {
-	new_editor_id := t.next_editor_id
-	if t.root.split(t.active_editor_id, new_editor_id, direction) {
-		t.next_editor_id += 1
-		t.active_editor_id = new_editor_id
-	}
+// split finds the leaf holding target_editor_id and splits it along direction,
+// placing new_editor_id in the freshly created second child. Both ids are
+// supplied by the caller. Returns true when the target leaf was found.
+pub fn (mut t Tree) split(target_editor_id int, new_editor_id int, direction SplitDirection) bool {
+	return t.root.split(target_editor_id, new_editor_id, direction)
 }
 
 pub struct Layout {
