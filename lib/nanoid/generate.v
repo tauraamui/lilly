@@ -9,30 +9,32 @@ const alpha_set = [
 	`n`, `o`, `p`, `q`, `r`, `s`, `t`, `u`, `v`, `w`, `x`, `y`, `z`
 ]
 
-pub fn generate(size int) string {
+pub type ID = string
+
+pub fn generate(size int) ID {
 	return custom(alpha_set, size)
 }
 
-pub fn simple() string {
+pub fn simple() ID {
 	return generate(21)
 }
 
-pub fn safe_generate(size int) ?string {
+pub fn safe_generate(size int) ?ID {
 	return safe_custom(alpha_set, size)
 }
 
-pub fn safe_simple() ?string {
+pub fn safe_simple() ?ID {
 	return safe_generate(21)
 }
 
-pub fn custom(alphas []u8, size int) string {
+pub fn custom(alphas []u8, size int) ID {
 	alpha_size := alphas.len - 1
 	return custom_with(alphas, size, fn [alpha_size] () !int {
 		return rand.int_in_range(0, alpha_size)
 	})
 }
 
-fn custom_with(alphas []u8, size int, next_int fn () !int) string {
+fn custom_with(alphas []u8, size int, next_int fn () !int) ID {
 	mut id := []u8{ len: size }
 	for i in 0..size {
 		random_num := next_int() or { 0 }
@@ -41,14 +43,14 @@ fn custom_with(alphas []u8, size int, next_int fn () !int) string {
 	return id.bytestr()
 }
 
-pub fn safe_custom(alphas []u8, size int) ?string {
+pub fn safe_custom(alphas []u8, size int) ?ID {
 	return safe_custom_with(alphas, size, fn () !u8 {
 		b := crand.bytes(1)!
 		return b[0]
 	})
 }
 
-fn safe_custom_with(alphas []u8, size int, next_byte fn () !u8) ?string {
+fn safe_custom_with(alphas []u8, size int, next_byte fn () !u8) ?ID {
 	alpha_size := alphas.len
 	if alpha_size == 0 || alpha_size > 256 {
 		return none

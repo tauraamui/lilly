@@ -6,28 +6,27 @@ pub enum SplitDirection {
 }
 
 @[heap]
-struct Node {
+struct Node[T] {
 mut:
-	parent       &Node = unsafe { nil }
-	// leaf data
-	editor_id    int = -1
+	parent       &Node[T] = unsafe { nil }
+	// leaf data: only meaningful while the node is a leaf (is_leaf() == true)
+	editor_id    T
 	// internal data:
 	direction    SplitDirection
-	first_child  &Node = unsafe { nil }
-	second_child &Node = unsafe { nil }
+	first_child  &Node[T] = unsafe { nil }
+	second_child &Node[T] = unsafe { nil }
 }
 
-fn (n &Node) is_leaf() bool {
+fn (n &Node[T]) is_leaf() bool {
 	return n.first_child == unsafe { nil }
 }
 
-fn (mut n Node) split(target_editor_id int, new_editor_id int, direction SplitDirection) bool {
+fn (mut n Node[T]) split(target_editor_id T, new_editor_id T, direction SplitDirection) bool {
 	if n.is_leaf() {
 		if n.editor_id == target_editor_id {
 			n.direction = direction
-			n.first_child = &Node{ editor_id: n.editor_id, parent: &n }
-			n.second_child = &Node{ editor_id: new_editor_id, parent: &n }
-			n.editor_id = -1
+			n.first_child = &Node[T]{ editor_id: n.editor_id, parent: &n }
+			n.second_child = &Node[T]{ editor_id: new_editor_id, parent: &n }
 			return true
 		}
 		return false
@@ -41,22 +40,24 @@ fn (mut n Node) split(target_editor_id int, new_editor_id int, direction SplitDi
 	return false
 }
 
-pub struct Tree {
+pub struct Tree[T] {
 mut:
-	root Node
+	root Node[T]
 }
 
 // plant seeds the tree with a single leaf holding the given, externally
 // managed editor_id. Editor id allocation and active tracking live with the
-// caller; the tree only stores the ids it is told to.
-pub fn (mut t Tree) plant(editor_id int) {
-	t.root = Node{ editor_id: editor_id }
+// caller; the tree only stores the ids it is told to. The id type T is chosen
+// by the caller (e.g. int, or nanoid.ID), the tree only compares ids for
+// equality and uses them as map keys.
+pub fn (mut t Tree[T]) plant(editor_id T) {
+	t.root = Node[T]{ editor_id: editor_id }
 }
 
 // split finds the leaf holding target_editor_id and splits it along direction,
 // placing new_editor_id in the freshly created second child. Both ids are
 // supplied by the caller. Returns true when the target leaf was found.
-pub fn (mut t Tree) split(target_editor_id int, new_editor_id int, direction SplitDirection) bool {
+pub fn (mut t Tree[T]) split(target_editor_id T, new_editor_id T, direction SplitDirection) bool {
 	return t.root.split(target_editor_id, new_editor_id, direction)
 }
 
@@ -73,13 +74,13 @@ pub:
 // nodes render nothing themselves; they just split their rectangle along the
 // node's direction, with the second child taking the remainder so odd sizes
 // don't drop a row/column.
-pub fn (t Tree) layouts(max_width int, max_height int) map[int]Layout {
-	mut out := map[int]Layout{}
+pub fn (t Tree[T]) layouts(max_width int, max_height int) map[T]Layout {
+	mut out := map[T]Layout{}
 	t.root.layout(0, 0, max_width, max_height, mut out)
 	return out
 }
 
-fn (n &Node) layout(x int, y int, width int, height int, mut out map[int]Layout) {
+fn (n &Node[T]) layout(x int, y int, width int, height int, mut out map[T]Layout) {
 	if n.is_leaf() {
 		out[n.editor_id] = Layout{ x: x, y: y, width: width, height: height }
 		return
