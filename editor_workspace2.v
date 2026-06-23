@@ -24,6 +24,7 @@ import lib.documents
 import lib.glyphs
 import lib.palette
 import lib.cfg
+import lib.nanoid
 
 struct EditorWorkspaceModel2 {
 	mode           petal.Mode = .normal
@@ -41,9 +42,9 @@ mut:
 	active_modal       ?DebuggableModel
 	// active_modal_data  ?ModalData // TODO(tauraamui) [2026-06-17]: wire this up to query and response messages
 	active_editor_data ?EditorData
-	active_editor_id   int
-	editors            map[int]DebuggableModel
-	tree               boba.Tree
+	active_editor_id   nanoid.ID
+	editors            map[nanoid.ID]DebuggableModel
+	tree               boba.Tree[nanoid.ID]
 }
 
 struct EditorWorkspaceConfig {
@@ -66,13 +67,14 @@ fn EditorWorkspaceModel2.new(config EditorWorkspaceConfig, doc_controller &docum
 	return EditorWorkspaceModel2{
 		config:         config
 		doc_controller: doc_controller
-		tree:           boba.Tree{}
+		tree:           boba.Tree[nanoid.ID]{}
 	}
 }
 
 fn (mut m EditorWorkspaceModel2) init() fn () tea.Msg {
 	m.input_field = boba.InputField.new_with_prefix(':', 0)
-	m.tree.plant(0)
+	// the tree is planted when the first editor opens (open_editor_in_workspace_update),
+	// using that editor's generated id; until then it holds no editor leaves.
 	return tea.sequence(tea.emit_resize, query_git_branch)
 }
 
@@ -218,8 +220,7 @@ fn (mut m EditorWorkspaceModel2) command_mode_key_update(msg tea.KeyMsg) (tea.Mo
 					tea.noop_cmd
 				}
 				'enter' {
-					active_editor_id := 0
-					execute_command(active_editor_id, m.input_field.value())
+					execute_command(m.active_editor_id, m.input_field.value())
 				}
 				'backspace' {
 					return m.clone(), tea.noop_cmd
@@ -304,19 +305,22 @@ fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorI
 	mut e_model := EditorModel2.new(m.config, 0, doc_id, msg.file_path, m.doc_controller)
 	model_init_cmd := e_model.init()
 	// m.active_editor = e_model
-	m.active_editor_id = 0
-	m.editors[m.active_editor_id] = e_model
+	editor_id := nanoid.simple()
+	m.active_editor_id = editor_id
+	m.editors[editor_id] = e_model
+	m.tree.plant(editor_id)
 	return m.clone(), model_init_cmd
 }
 
 fn (mut m EditorWorkspaceModel2) open_editor_in_split_update(msg OpenEditorInSplitMsg) (tea.Model, fn () tea.Msg) {
 	if active_editor := m.editors[msg.active_editor_id] {
 		if active_editor is EditorModel2 {
-			if !m.tree.split(0, 1, msg.direction) { return m.clone(), tea.noop_cmd }
+			new_editor_id := nanoid.simple()
+			if !m.tree.split(msg.active_editor_id, new_editor_id, msg.direction) { return m.clone(), tea.noop_cmd }
 			mut e_model := EditorModel2.new(m.config, 1, active_editor.doc_id, active_editor.file_path, m.doc_controller)
 			model_init_cmd := e_model.init()
-			m.active_editor_id = 1
-			m.editors[m.active_editor_id] = e_model
+			m.active_editor_id = new_editor_id
+			m.editors[new_editor_id] = e_model
 			return m.clone(), model_init_cmd
 		}
 	}
@@ -563,11 +567,11 @@ fn open_editor_in_workspace_cmd(file_path string) fn () tea.Msg {
 }
 
 struct OpenEditorInSplitMsg {
-	active_editor_id int
+	active_editor_id nanoid.ID
 	direction        boba.SplitDirection
 }
 
-fn open_editor_in_split_cmd(editor_id int, direction boba.SplitDirection) fn () tea.Msg {
+fn open_editor_in_split_cmd(editor_id nanoid.ID, direction boba.SplitDirection) fn () tea.Msg {
 	return fn [editor_id, direction] () tea.Msg {
 		return OpenEditorInSplitMsg{
 			active_editor_id: editor_id
@@ -633,13 +637,16 @@ fn hide_message_after(duration time.Duration) tea.Cmd {
 	})
 }
 
-fn execute_command(active_editor_id int, cmd string) tea.Cmd {
+fn execute_command(active_editor_id nanoid.ID, cmd string) tea.Cmd {
 	match cmd {
 		'qa' {
 			return tea.quit
 		}
 		'w' {
-			return write_to_disk(active_editor_id)
+			// write_to_disk carries the editor's own int handle, which workspace2
+			// ignores when routing (forward_msg_to_active_editor routes by
+			// active_editor_id). 0 preserves the prior behaviour here.
+			return write_to_disk(0)
 		}
 		'vs' {
 			return open_editor_in_split_cmd(active_editor_id, .horizontal)
