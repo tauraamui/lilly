@@ -16,14 +16,16 @@ module main
 
 import time
 import bobatea as tea
+import lib.petal
 import lib.documents
 import lib.documents.cursor
 import lib.syntax
 import lib.palette
+import lib.nanoid
 
 struct EditorModel2 {
 	config         EditorWorkspaceConfig
-	id             int
+	id             nanoid.ID
 	file_path      string
 	doc_id         int
 	doc_controller &documents.Controller2
@@ -41,7 +43,7 @@ mut:
 	parser_cache_dirty    bool = true
 }
 
-fn EditorModel2.new(config EditorWorkspaceConfig, id int, doc_id int, file_path string, doc_controller &documents.Controller2) EditorModel2 {
+fn EditorModel2.new(config EditorWorkspaceConfig, id nanoid.ID, doc_id int, file_path string, doc_controller &documents.Controller2) EditorModel2 {
 	return EditorModel2{
 		config:         config
 		id:             id
@@ -53,7 +55,7 @@ fn EditorModel2.new(config EditorWorkspaceConfig, id int, doc_id int, file_path 
 }
 
 fn (mut m EditorModel2) init() fn () tea.Msg {
-	return tea.batch(tea.emit_resize, load_syntax(m.id, m.file_path), query_editor_data(m.id))
+	return tea.batch(tea.emit_resize, load_syntax2(m.id, m.file_path), query_editor_data2(m.id))
 }
 
 fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
@@ -73,7 +75,7 @@ fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 				else {}
 			}
 		}
-		EditorModelMsg {
+		EditorModel2Msg {
 			return m.editor_model_update(msg.id, msg.msg)
 		}
 		else {}
@@ -82,7 +84,7 @@ fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	return m.clone(), tea.noop_cmd
 }
 
-fn (mut m EditorModel2) editor_model_update(editor_id int, msg tea.Msg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorModel2) editor_model_update(editor_id nanoid.ID, msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	match msg {
 		tea.FocusedMsg {
 			m.in_focus = editor_id == m.id
@@ -94,9 +96,9 @@ fn (mut m EditorModel2) editor_model_update(editor_id int, msg tea.Msg) (tea.Mod
 		SwitchModeMsg {
 			return m.switch_mode_update(msg)
 		}
-		QueryEditorDataMsg {
+		QueryEditorData2Msg {
 			if editor_id != m.id { return m.clone(), tea.noop_cmd }
-			return m.clone(), editor_data(m.data())
+			return m.clone(), editor_data2(m.data())
 		}
 		SyntaxLoadedMsg {
 			if editor_id != m.id { return m.clone(), tea.noop_cmd }
@@ -731,9 +733,21 @@ fn (m EditorModel2) height() int {
 	return m.viewport_height
 }
 
-fn (m EditorModel2) data() EditorData {
+
+struct EditorData2 {
+	id            nanoid.ID
+	file_path     string
+	cursor_row    int
+	cursor_col    int
+	chord_display string
+	width         int
+	height        int
+}
+
+
+fn (m EditorModel2) data() EditorData2 {
 	cursor_line, cursor_x := m.doc_controller.cursor_line_and_x(m.doc_id)
-	return EditorData{
+	return EditorData2{
 		id:        m.id
 		file_path: m.file_path
 
@@ -811,3 +825,69 @@ fn is_rune_extender(r rune) bool {
 	}
 	return false
 }
+
+struct EditorModel2Msg {
+	id   nanoid.ID
+	msg  tea.Msg
+	mode petal.Mode
+}
+
+struct QueryEditorData2Msg {}
+
+fn query_editor_data2(id nanoid.ID) tea.Cmd {
+	return fn [id] () tea.Msg {
+		return EditorModel2Msg{
+			id:  id
+			msg: QueryEditorData2Msg{}
+		}
+	}
+}
+
+struct EditorData2ResultMsg {
+	data EditorData2
+}
+
+fn editor_data2(data EditorData2) tea.Cmd {
+	return fn [data] () tea.Msg {
+		return EditorData2ResultMsg{data}
+	}
+}
+
+fn write_to_disk2(id nanoid.ID) tea.Cmd {
+	return fn [id] () tea.Msg {
+		return EditorModel2Msg{
+			id:  id
+			msg: WriteToDiskMsg{}
+		}
+	}
+}
+
+fn load_syntax2(editor_id nanoid.ID, file_path string) tea.Cmd {
+	return fn [editor_id, file_path] () tea.Msg {
+		syn := syntax.resolve_from_extension(file_path) or {
+			return EditorModel2Msg{
+				id:  editor_id
+				msg: SyntaxLoadedMsg{
+					syn:     syntax.noop_syntax
+					err_msg: 'failed to load syntax for ${file_path}: ${err}'
+				}
+			}
+		}
+		if syn.name.len == 0 {
+			return EditorModel2Msg{
+				id:  editor_id
+				msg: SyntaxLoadedMsg{
+					syn:     syn
+					err_msg: 'no syntax definition for ${file_path}, syntax highlighting disabled'
+				}
+			}
+		}
+		return EditorModel2Msg{
+			id:  editor_id
+			msg: SyntaxLoadedMsg{
+				syn: syn
+			}
+		}
+	}
+}
+

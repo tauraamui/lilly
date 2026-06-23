@@ -41,7 +41,7 @@ mut:
 
 	active_modal       ?DebuggableModel
 	// active_modal_data  ?ModalData // TODO(tauraamui) [2026-06-17]: wire this up to query and response messages
-	active_editor_data ?EditorData
+	active_editor_data ?EditorData2
 	active_editor_id   nanoid.ID
 	editors            map[nanoid.ID]DebuggableModel
 	tree               boba.Tree[nanoid.ID]
@@ -117,7 +117,7 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		HideMessageMsg {
 			m.message_label = ?MessageLabel(none)
 		}
-		EditorDataResultMsg { // TODO(tauraamui) rename query message result type to make it clear its a query result
+		EditorData2ResultMsg { // TODO(tauraamui) rename query message result type to make it clear its a query result
 			m.active_editor_data = msg.data
 			return m.clone(), tea.noop_cmd
 		}
@@ -173,7 +173,7 @@ fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () te
 		key_msg: msg
 		mode:    m.mode
 	})
-	return m_clone, tea.sequence(cmd, query_editor_data(0))
+	return m_clone, tea.sequence(cmd, query_editor_data2(m.active_editor_id))
 }
 
 fn (mut m EditorWorkspaceModel2) normal_mode_key_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
@@ -267,6 +267,7 @@ fn (mut m EditorWorkspaceModel2) leader_mode_key_update(msg tea.KeyMsg) (tea.Mod
 	return m.clone(), tea.noop_cmd
 }
 
+// TODO(tauraamui): forward resize messages to all editor splits/instances not just active
 fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, fn () tea.Msg) {
 	m.width = msg.window_width
 	m.height = msg.window_height
@@ -274,8 +275,8 @@ fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, 
 	i_field, i_cmd := m.input_field.update(msg)
 	m.input_field = i_field
 
-	model, cmd := m.forward_msg_to_active_editor(EditorModelMsg{
-		id:   0
+	model, cmd := m.forward_msg_to_active_editor(EditorModel2Msg{
+		id:   m.active_editor_id
 		mode: m.mode
 		msg:  tea.ResizedMsg{
 			window_width:  msg.window_width
@@ -302,10 +303,10 @@ fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorI
 	doc_id := m.doc_controller.open_document(msg.file_path) or {
 		return m.clone(), debug_log('failed to open document ${msg.file_path}: ${err}')
 	}
-	mut e_model := EditorModel2.new(m.config, 0, doc_id, msg.file_path, m.doc_controller)
+	editor_id := nanoid.simple()
+	mut e_model := EditorModel2.new(m.config, editor_id, doc_id, msg.file_path, m.doc_controller)
 	model_init_cmd := e_model.init()
 	// m.active_editor = e_model
-	editor_id := nanoid.simple()
 	m.active_editor_id = editor_id
 	m.editors[editor_id] = e_model
 	m.tree.plant(editor_id)
@@ -317,7 +318,7 @@ fn (mut m EditorWorkspaceModel2) open_editor_in_split_update(msg OpenEditorInSpl
 		if active_editor is EditorModel2 {
 			new_editor_id := nanoid.simple()
 			if !m.tree.split(msg.active_editor_id, new_editor_id, msg.direction) { return m.clone(), tea.noop_cmd }
-			mut e_model := EditorModel2.new(m.config, 1, active_editor.doc_id, active_editor.file_path, m.doc_controller)
+			mut e_model := EditorModel2.new(m.config, new_editor_id, active_editor.doc_id, active_editor.file_path, m.doc_controller)
 			model_init_cmd := e_model.init()
 			m.active_editor_id = new_editor_id
 			m.editors[new_editor_id] = e_model
@@ -331,8 +332,8 @@ fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Mode
 	if m.mode == .leader {
 		m.leader_suffix = []
 	}
-	_, cmd := m.forward_msg_to_active_editor(EditorModelMsg{
-		id:   0 // will be active editors when forwarding to all editor instances
+	_, cmd := m.forward_msg_to_active_editor(EditorModel2Msg{
+		id:   m.active_editor_id // will be active editors when forwarding to all editor instances
 		mode: m.mode
 		msg:  SwitchModeMsg{
 			from: m.mode // send current mode pre-change as mode moving from
@@ -643,10 +644,7 @@ fn execute_command(active_editor_id nanoid.ID, cmd string) tea.Cmd {
 			return tea.quit
 		}
 		'w' {
-			// write_to_disk carries the editor's own int handle, which workspace2
-			// ignores when routing (forward_msg_to_active_editor routes by
-			// active_editor_id). 0 preserves the prior behaviour here.
-			return write_to_disk(0)
+			return write_to_disk2(active_editor_id)
 		}
 		'vs' {
 			return open_editor_in_split_cmd(active_editor_id, .horizontal)
