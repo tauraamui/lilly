@@ -27,15 +27,18 @@ pub fn safe_simple() ?string {
 
 pub fn custom(alphas []u8, size int) string {
 	alpha_size := alphas.len - 1
-	mut id := []u8{ len: size }
-	for i in 0..size {
-		random_num := rand.int_in_range(0, alpha_size) or { 0 }
-		id[i] = alphas[random_num]
-	}
-	return id.bytestr()
+	return custom_with(alphas, size, fn [alpha_size] () !int {
+		return rand.int_in_range(0, alpha_size)
+	})
 }
 
 fn custom_with(alphas []u8, size int, next_int fn () !int) string {
+	mut id := []u8{ len: size }
+	for i in 0..size {
+		random_num := next_int() or { 0 }
+		id[i] = alphas[random_num]
+	}
+	return id.bytestr()
 }
 
 pub fn safe_custom(alphas []u8, size int) ?string {
