@@ -309,6 +309,7 @@ fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, 
 	return m.clone(), tea.sequence(i_cmd, tea.batch_array(cmds), d_cmd)
 }
 
+// TODO(tauraamui): merge these two methods since in the end they should really be doing the same thing
 fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorInWorkspaceMsg) (tea.Model, fn () tea.Msg) {
 	doc_id := m.doc_controller.open_document(msg.file_path) or {
 		return m.clone(), debug_log('failed to open document ${msg.file_path}: ${err}')
@@ -316,11 +317,10 @@ fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorI
 	editor_id := nanoid.simple()
 	mut e_model := EditorModel2.new(m.config, editor_id, doc_id, msg.file_path, m.doc_controller)
 	model_init_cmd := e_model.init()
-	// m.active_editor = e_model
 	m.active_editor_id = editor_id
 	m.editors[editor_id] = e_model
 	m.tree.plant(editor_id)
-	return m.clone(), model_init_cmd
+	return m.clone(), tea.sequence(model_init_cmd, focus_editor2(m.active_editor_id), tea.emit_resize)
 }
 
 fn (mut m EditorWorkspaceModel2) open_editor_in_split_update(msg OpenEditorInSplitMsg) (tea.Model, fn () tea.Msg) {
@@ -332,7 +332,7 @@ fn (mut m EditorWorkspaceModel2) open_editor_in_split_update(msg OpenEditorInSpl
 			model_init_cmd := e_model.init()
 			m.active_editor_id = new_editor_id
 			m.editors[new_editor_id] = e_model
-			return m.clone(), model_init_cmd
+			return m.clone(), tea.sequence(model_init_cmd, focus_editor2(m.active_editor_id), tea.emit_resize)
 		}
 	}
 	return m.clone(), tea.noop_cmd
@@ -587,6 +587,15 @@ fn open_editor_in_split_cmd(editor_id nanoid.ID, direction boba.SplitDirection) 
 		return OpenEditorInSplitMsg{
 			active_editor_id: editor_id
 			direction: direction
+		}
+	}
+}
+
+fn focus_editor2(editor_id nanoid.ID) fn () tea.Msg {
+	return fn [editor_id] () tea.Msg {
+		return EditorModel2Msg{
+			active_id: editor_id
+			msg: tea.FocusedMsg{}
 		}
 	}
 }

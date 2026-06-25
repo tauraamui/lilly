@@ -447,10 +447,8 @@ fn (mut m EditorModel2) clamp_cursor_to_line_end() {
 }
 
 fn (mut m EditorModel2) view(mut ctx tea.Context) {
-	// ctx.set_clip_area(tea.ClipArea{0, 0, m.width(), m.height()})
-	// defer { ctx.clear_clip_area() }
-
-	offset_id := m.render_line_numbers(mut ctx, m.config.relative_line_numbers)
+	relative_line_numbers := if m.config.relative_line_numbers { m.in_focus } else { false }
+	offset_id := m.render_line_numbers(mut ctx, relative_line_numbers)
 	defer { ctx.clear_offsets_from(offset_id) }
 	m.render_syntax_highlighting(mut ctx)
 	m.render_cursor_line_highlight(mut ctx)
@@ -464,7 +462,6 @@ fn (mut m EditorModel2) view(mut ctx tea.Context) {
 	}
 	for y in m.top_line .. end {
 		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
-		// line_str := line_bytes.bytestr().replace('\t', '    ') // TODO(tauraamui) [2026-06-14]: use newly passed in config value for tab width
 		ctx.draw_text(0, y - m.top_line, expand_tabs(line_bytes, m.config.tab_width))
 	}
 }
@@ -613,6 +610,7 @@ fn (m EditorModel2) color_for_token(t syntax.Token, token_str string, rune_buf [
 }
 
 fn (m EditorModel2) render_cursor_line_highlight(mut ctx tea.Context) {
+	if !m.in_focus { return }
 	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
 	ctx.set_bg_color(m.config.theme.cursor_line_bg)
 	ctx.draw_rect(0, int(cursor_line) - m.top_line, m.viewport_width, 1)
@@ -620,6 +618,7 @@ fn (m EditorModel2) render_cursor_line_highlight(mut ctx tea.Context) {
 }
 
 fn (m EditorModel2) render_cursor_block(mut ctx tea.Context) {
+	if !m.in_focus { return }
 	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
 	visual_x, cursor_width := m.visual_x_and_cluster_width_for(cursor_line, cursor_col)
 
@@ -632,6 +631,7 @@ fn (m EditorModel2) render_cursor_block(mut ctx tea.Context) {
 }
 
 fn (m EditorModel2) render_visual_selection(mut ctx tea.Context) {
+	if !m.in_focus { return }
 	sel_start_line := m.visual_sel_start_line or { return }
 	sel_start_col := m.visual_sel_start_col or { return }
 	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
