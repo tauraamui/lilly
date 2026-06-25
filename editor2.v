@@ -94,7 +94,6 @@ fn (mut m EditorModel2) editor_model_update(editor_id nanoid.ID, msg tea.Msg) (t
 			m.viewport_height = msg.window_height
 		}
 		SwitchModeMsg {
-			if editor_id != m.id { return m.clone(), tea.noop_cmd }
 			return m.switch_mode_update(msg)
 		}
 		QueryEditorData2Msg {
@@ -138,7 +137,7 @@ fn (mut m EditorModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () 
 
 	match msg.mode {
 		.normal {
-			if msg.from == .insert || msg.from == .normal {
+			if (msg.from == .insert || msg.from == .normal) && m.in_focus {
 				m.doc_controller.move_cursor_left(m.doc_id)
 			}
 		}
@@ -148,8 +147,10 @@ fn (mut m EditorModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () 
 			m.visual_sel_start_col = cursor_col
 		}
 		.insert {
-			m.doc_controller.commit_undo_group(m.doc_id)
-			m.doc_controller.begin_undo_group(m.doc_id)
+			if m.in_focus {
+				m.doc_controller.commit_undo_group(m.doc_id)
+				m.doc_controller.begin_undo_group(m.doc_id)
+			}
 		}
 		else {}
 	}
@@ -631,7 +632,6 @@ fn (m EditorModel2) render_cursor_block(mut ctx tea.Context) {
 }
 
 fn (m EditorModel2) render_visual_selection(mut ctx tea.Context) {
-	if !m.in_focus { return }
 	sel_start_line := m.visual_sel_start_line or { return }
 	sel_start_col := m.visual_sel_start_col or { return }
 	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
