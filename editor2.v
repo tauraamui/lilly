@@ -61,7 +61,7 @@ fn (mut m EditorModel2) init() fn () tea.Msg {
 fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	match msg {
 		EditorModelKeyMsg {
-			// if !m.in_focus { return m.clone(), tea.noop_cmd}
+			if m.id != msg.active_id { return m.clone(), tea.noop_cmd }
 			match msg.mode {
 				.normal {
 					return m.normal_mode_update(msg.key_msg)
@@ -76,7 +76,7 @@ fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			}
 		}
 		EditorModel2Msg {
-			return m.editor_model_update(msg.id, msg.msg)
+			return m.editor_model_update(msg.active_id, msg.msg)
 		}
 		else {}
 	}
@@ -94,6 +94,7 @@ fn (mut m EditorModel2) editor_model_update(editor_id nanoid.ID, msg tea.Msg) (t
 			m.viewport_height = msg.window_height
 		}
 		SwitchModeMsg {
+			if editor_id != m.id { return m.clone(), tea.noop_cmd }
 			return m.switch_mode_update(msg)
 		}
 		QueryEditorData2Msg {
@@ -127,7 +128,6 @@ fn (mut m EditorModel2) editor_model_update(editor_id nanoid.ID, msg tea.Msg) (t
 		else {}
 	}
 
-	// m.clamp_cursor_to_line_end()
 	m.scroll_to_cursor()
 	return m.clone(), tea.noop_cmd
 }
@@ -827,9 +827,9 @@ fn is_rune_extender(r rune) bool {
 }
 
 struct EditorModel2Msg {
-	id   nanoid.ID
-	msg  tea.Msg
-	mode petal.Mode
+	active_id nanoid.ID
+	msg       tea.Msg
+	mode      petal.Mode
 }
 
 struct QueryEditorData2Msg {}
@@ -837,7 +837,7 @@ struct QueryEditorData2Msg {}
 fn query_editor_data2(id nanoid.ID) tea.Cmd {
 	return fn [id] () tea.Msg {
 		return EditorModel2Msg{
-			id:  id
+			active_id:  id
 			msg: QueryEditorData2Msg{}
 		}
 	}
@@ -856,7 +856,7 @@ fn editor_data2(data EditorData2) tea.Cmd {
 fn write_to_disk2(id nanoid.ID) tea.Cmd {
 	return fn [id] () tea.Msg {
 		return EditorModel2Msg{
-			id:  id
+			active_id:  id
 			msg: WriteToDiskMsg{}
 		}
 	}
@@ -866,7 +866,7 @@ fn load_syntax2(editor_id nanoid.ID, file_path string) tea.Cmd {
 	return fn [editor_id, file_path] () tea.Msg {
 		syn := syntax.resolve_from_extension(file_path) or {
 			return EditorModel2Msg{
-				id:  editor_id
+				active_id:  editor_id
 				msg: SyntaxLoadedMsg{
 					syn:     syntax.noop_syntax
 					err_msg: 'failed to load syntax for ${file_path}: ${err}'
@@ -875,7 +875,7 @@ fn load_syntax2(editor_id nanoid.ID, file_path string) tea.Cmd {
 		}
 		if syn.name.len == 0 {
 			return EditorModel2Msg{
-				id:  editor_id
+				active_id:  editor_id
 				msg: SyntaxLoadedMsg{
 					syn:     syn
 					err_msg: 'no syntax definition for ${file_path}, syntax highlighting disabled'
@@ -883,7 +883,7 @@ fn load_syntax2(editor_id nanoid.ID, file_path string) tea.Cmd {
 			}
 		}
 		return EditorModel2Msg{
-			id:  editor_id
+			active_id:  editor_id
 			msg: SyntaxLoadedMsg{
 				syn: syn
 			}

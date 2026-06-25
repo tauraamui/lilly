@@ -22,6 +22,7 @@ import lib.documents
 import lib.documents.cursor
 import lib.syntax
 import lib.clipboard
+import lib.nanoid
 
 fn num_digits(n int) int {
 	if n <= 0 {
@@ -207,14 +208,15 @@ fn (mut m EditorModel) init() fn () tea.Msg {
 }
 
 struct EditorModelMsg {
-	id   int
-	msg  tea.Msg
-	mode petal.Mode
+	id               int
+	msg              tea.Msg
+	mode             petal.Mode
 }
 
 struct EditorModelKeyMsg {
-	key_msg tea.KeyMsg
-	mode    petal.Mode
+	active_id nanoid.ID
+	key_msg   tea.KeyMsg
+	mode      petal.Mode
 }
 
 fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {

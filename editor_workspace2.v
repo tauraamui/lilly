@@ -138,18 +138,19 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		else {}
 	}
 
-	return m.forward_msg_to_active_editor(msg)
+	return m.forward_msg_to_all_editors(msg)
 }
 
-fn (mut m EditorWorkspaceModel2) forward_msg_to_active_editor(msg tea.Msg) (tea.Model, fn () tea.Msg) {
-	if mut active_editor := m.editors[m.active_editor_id] {
-		new_active_editor, cmd := active_editor.update(msg)
-		if new_active_editor is DebuggableModel {
-			m.editors[m.active_editor_id] = new_active_editor
+fn (mut m EditorWorkspaceModel2) forward_msg_to_all_editors(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+	mut cmds := []tea.Cmd{}
+	for id, mut editor in m.editors {
+		new_editor, cmd := editor.update(msg)
+		if new_editor is DebuggableModel {
+			m.editors[id] = new_editor
+			cmds << cmd
 		}
-		return m.clone(), cmd
 	}
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.batch_array(cmds)
 }
 
 fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
@@ -169,7 +170,8 @@ fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () te
 		else {}
 	}
 
-	m_clone, cmd := m.forward_msg_to_active_editor(EditorModelKeyMsg{
+	m_clone, cmd := m.forward_msg_to_all_editors(EditorModelKeyMsg{
+		active_id: m.active_editor_id
 		key_msg: msg
 		mode:    m.mode
 	})
@@ -275,8 +277,8 @@ fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, 
 	i_field, i_cmd := m.input_field.update(msg)
 	m.input_field = i_field
 
-	model, cmd := m.forward_msg_to_active_editor(EditorModel2Msg{
-		id:   m.active_editor_id
+	model, cmd := m.forward_msg_to_all_editors(EditorModel2Msg{
+		active_id:   m.active_editor_id
 		mode: m.mode
 		msg:  tea.ResizedMsg{
 			window_width:  msg.window_width
@@ -332,8 +334,8 @@ fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Mode
 	if m.mode == .leader {
 		m.leader_suffix = []
 	}
-	_, cmd := m.forward_msg_to_active_editor(EditorModel2Msg{
-		id:   m.active_editor_id // will be active editors when forwarding to all editor instances
+	_, cmd := m.forward_msg_to_all_editors(EditorModel2Msg{
+		active_id:   m.active_editor_id // will be active editors when forwarding to all editor instances
 		mode: m.mode
 		msg:  SwitchModeMsg{
 			from: m.mode // send current mode pre-change as mode moving from
