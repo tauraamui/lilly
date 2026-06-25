@@ -279,12 +279,17 @@ fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, 
 	mut cmds := []tea.Cmd{}
 	for id, layout in m.tree.layouts(m.width, m.height - 2) {
 		if mut editor := m.editors[id] {
+			// mirror the divider insets applied in view(): a leaf with a
+			// neighbour above/left loses one cell to that divider, so the
+			// editor's usable viewport is that much smaller.
+			left_inset := if layout.x > 0 { 1 } else { 0 }
+			top_inset := if layout.y > 0 { 1 } else { 0 }
 			new_editor, cmd := editor.update(EditorModel2Msg{
 				active_id: m.active_editor_id
 				mode: m.mode
 				msg: tea.ResizedMsg{
-					window_width: layout.width
-					window_height: layout.height
+					window_width: layout.width - left_inset
+					window_height: layout.height - top_inset
 				}
 			})
 			if new_editor is DebuggableModel {
@@ -354,23 +359,26 @@ fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Mode
 }
 
 fn (mut m EditorWorkspaceModel2) view(mut ctx tea.Context) {
-	for id, layout in m.tree.layouts(m.width, m.height - 2) {
+	layouts := m.tree.layouts(m.width, m.height - 2)
+	for id, layout in layouts {
 		mut editor := m.editors[id] or { continue }
+		// a leaf owns the divider on any side where it has a neighbour: a left
+		// divider when it isn't flush to the left edge, a top divider when it
+		// isn't flush to the top. The divider eats one cell of the leaf, so the
+		// editor content is inset by the same amount (see resized_update, which
+		// must shrink the editor by these insets or it renders a row/col too many).
+		left_inset := if layout.x > 0 { 1 } else { 0 }
+		top_inset := if layout.y > 0 { 1 } else { 0 }
 		ctx.push_offset(tea.Offset{ x: layout.x, y: layout.y })
 		ctx.set_clip_area(tea.ClipArea{ 0, 0, layout.width, layout.height })
-		ctx.set_color(if id == m.active_editor_id { active_editor_border_color } else { inactive_editor_border_color })
-		if layout.x > 0 {
-			for y in 0 .. layout.height {
-				ctx.draw_text(0, y, '│')
-			}
-		}
-		ctx.reset_color()
-		ctx.push_offset(tea.Offset{ x: 1 })
+		ctx.push_offset(tea.Offset{ x: left_inset, y: top_inset })
 		editor.view(mut ctx)
 		ctx.pop_offset()
 		ctx.clear_clip_area()
 		ctx.pop_offset()
 	}
+
+	m.render_dividers(mut ctx, layouts)
 
 	m.render_status_bar(mut ctx)
 
@@ -383,6 +391,20 @@ fn (mut m EditorWorkspaceModel2) view(mut ctx tea.Context) {
 
 		open_modal.view(mut ctx)
 	}
+}
+
+// render_dividers paints the lines between panes. The tree resolves each cell's
+// connecting arms (so junctions render as proper tees), and a cell is drawn in
+// the active colour when it lies on the active editor's own top/left frame.
+fn (m EditorWorkspaceModel2) render_dividers(mut ctx tea.Context, layouts map[nanoid.ID]boba.Layout) {
+	active := layouts[m.active_editor_id]
+	m.tree.each_divider(m.width, m.height - 2, fn [mut ctx, active] (x int, y int, up bool, down bool, left bool, right bool) {
+		on_active := (active.x > 0 && x == active.x && y >= active.y && y < active.y + active.height)
+			|| (active.y > 0 && y == active.y && x >= active.x && x < active.x + active.width)
+		ctx.set_color(if on_active { active_editor_border_color } else { inactive_editor_border_color })
+		ctx.draw_text(x, y, glyphs.box_junction(up, down, left, right))
+	})
+	ctx.reset_color()
 }
 
 fn (m EditorWorkspaceModel2) render_status_bar(mut ctx tea.Context) {

@@ -98,3 +98,59 @@ fn (n &Node[T]) layout(x int, y int, width int, height int, mut out map[T]Layout
 		}
 	}
 }
+
+// edge_* mark, during a divider walk, which sides of the current rectangle are
+// themselves dividers (an ancestor split) rather than the outer screen
+// boundary. A divider line that ends on such a side meets another line there,
+// so the cell is a junction (tee) instead of a plain line end.
+const edge_top = u8(1)
+const edge_bottom = u8(2)
+const edge_left = u8(4)
+const edge_right = u8(8)
+
+// DividerVisitor receives one divider cell: its position and which of the four
+// directions a divider line continues toward. The caller maps those to a box
+// glyph and colour; the tree stays render-agnostic.
+pub type DividerVisitor = fn (x int, y int, up bool, down bool, left bool, right bool)
+
+// each_divider walks the tree with the same subdivision arithmetic as
+// layouts() and reports every divider cell, so positions always line up with
+// the leaf boundaries. Junctions are resolved from edge flags alone — no
+// second pass or per-cell grid — which is enough because splits only ever
+// subdivide a leaf into a fresh second_child, so a divider only ever meets an
+// ancestor edge, never crosses a sibling mid-span.
+pub fn (t Tree[T]) each_divider(max_width int, max_height int, visit DividerVisitor) {
+	t.root.each_divider(0, 0, max_width, max_height, 0, visit)
+}
+
+fn (n &Node[T]) each_divider(x int, y int, width int, height int, edges u8, visit DividerVisitor) {
+	if n.is_leaf() {
+		return
+	}
+	match n.direction {
+		.horizontal {
+			lw := width / 2
+			dx := x + lw
+			top_join := edges & edge_top != 0
+			bottom_join := edges & edge_bottom != 0
+			for ry in y .. y + height {
+				join := (ry == y && top_join) || (ry == y + height - 1 && bottom_join)
+				visit(dx, ry, ry > y, ry < y + height - 1, join, join)
+			}
+			n.first_child.each_divider(x, y, lw, height, edges | edge_right, visit)
+			n.second_child.each_divider(dx, y, width - lw, height, edges | edge_left, visit)
+		}
+		.vertical {
+			lh := height / 2
+			dy := y + lh
+			left_join := edges & edge_left != 0
+			right_join := edges & edge_right != 0
+			for cx in x .. x + width {
+				join := (cx == x && left_join) || (cx == x + width - 1 && right_join)
+				visit(cx, dy, join, join, cx > x, cx < x + width - 1)
+			}
+			n.first_child.each_divider(x, y, width, lh, edges | edge_bottom, visit)
+			n.second_child.each_divider(x, dy, width, height - lh, edges | edge_top, visit)
+		}
+	}
+}
