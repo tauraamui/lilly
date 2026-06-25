@@ -269,7 +269,6 @@ fn (mut m EditorWorkspaceModel2) leader_mode_key_update(msg tea.KeyMsg) (tea.Mod
 	return m.clone(), tea.noop_cmd
 }
 
-// TODO(tauraamui): forward resize messages to all editor splits/instances not just active
 fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, fn () tea.Msg) {
 	m.width = msg.window_width
 	m.height = msg.window_height
@@ -277,14 +276,23 @@ fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, 
 	i_field, i_cmd := m.input_field.update(msg)
 	m.input_field = i_field
 
-	model, cmd := m.forward_msg_to_all_editors(EditorModel2Msg{
-		active_id:   m.active_editor_id
-		mode: m.mode
-		msg:  tea.ResizedMsg{
-			window_width:  msg.window_width
-			window_height: msg.window_height - 2
+	mut cmds := []tea.Cmd{}
+	for id, layout in m.tree.layouts(m.width, m.height - 2) {
+		if mut editor := m.editors[id] {
+			new_editor, cmd := editor.update(EditorModel2Msg{
+				active_id: m.active_editor_id
+				mode: m.mode
+				msg: tea.ResizedMsg{
+					window_width: layout.width
+					window_height: layout.height
+				}
+			})
+			if new_editor is DebuggableModel {
+				m.editors[id] = new_editor
+				cmds << cmd
+			}
 		}
-	})
+	}
 
 	mut d_cmd := tea.noop_cmd
 	if mut d_modal := m.dialog_model {
@@ -298,7 +306,7 @@ fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, 
 		d_cmd = dialog_cmd
 	}
 
-	return model, tea.sequence(i_cmd, cmd, d_cmd)
+	return m.clone(), tea.sequence(i_cmd, tea.batch_array(cmds), d_cmd)
 }
 
 fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorInWorkspaceMsg) (tea.Model, fn () tea.Msg) {
@@ -346,7 +354,7 @@ fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Mode
 }
 
 fn (mut m EditorWorkspaceModel2) view(mut ctx tea.Context) {
-	for id, layout in m.tree.layouts(m.width, m.height) {
+	for id, layout in m.tree.layouts(m.width, m.height - 2) {
 		mut editor := m.editors[id] or { continue }
 		ctx.push_offset(tea.Offset{ x: layout.x, y: layout.y })
 		ctx.set_clip_area(tea.ClipArea{ 0, 0, layout.width, layout.height })
