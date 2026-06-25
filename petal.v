@@ -168,6 +168,7 @@ fn (mut m PetalModel) view(mut ctx tea.Context) {
 	mut screen := m.active_screen
 	screen.view(mut ctx)
 	m.golden_frames.capture(ctx)
+	ctx.clear_all_offsets()
 }
 
 fn (m PetalModel) clone() tea.Model {
