@@ -358,7 +358,16 @@ fn (mut m EditorWorkspaceModel2) view(mut ctx tea.Context) {
 		mut editor := m.editors[id] or { continue }
 		ctx.push_offset(tea.Offset{ x: layout.x, y: layout.y })
 		ctx.set_clip_area(tea.ClipArea{ 0, 0, layout.width, layout.height })
+		ctx.set_color(if id == m.active_editor_id { active_editor_border_color } else { inactive_editor_border_color })
+		if layout.x > 0 {
+			for y in 0 .. layout.height {
+				ctx.draw_text(0, y, '│')
+			}
+		}
+		ctx.reset_color()
+		ctx.push_offset(tea.Offset{ x: 1 })
 		editor.view(mut ctx)
+		ctx.pop_offset()
 		ctx.clear_clip_area()
 		ctx.pop_offset()
 	}
