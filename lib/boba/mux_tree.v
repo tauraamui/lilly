@@ -63,32 +63,55 @@ pub fn (mut t Tree[T]) split(target_editor_id T, new_editor_id T, direction Spli
 
 // remove finds the leaf holding editor_id and removes it, collapsing its parent
 // so the sibling subtree takes the parent's place — the inverse of split().
-// Returns true when the leaf was found and removed. Removing the only remaining
-// leaf (the root itself, which has no parent to collapse into) is a no-op that
-// returns false: the tree always holds at least one leaf, and re-seeding is the
-// caller's job via plant().
-pub fn (mut t Tree[T]) remove(editor_id T) bool {
+// Returns the id of the leaf that should take focus in the closed leaf's place:
+// the leaf within the surviving sibling subtree that sat directly against the
+// removed leaf (its nearest neighbour across the shared divider). Returns none
+// when editor_id was not found, or when it was the only remaining leaf (the root
+// has no parent to collapse into): the tree always holds at least one leaf, and
+// re-seeding is the caller's job via plant().
+pub fn (mut t Tree[T]) remove(editor_id T) ?T {
 	return t.root.remove(editor_id)
 }
 
-fn (mut n Node[T]) remove(editor_id T) bool {
+fn (mut n Node[T]) remove(editor_id T) ?T {
 	if n.is_leaf() {
-		return false
+		return none
 	}
 	// when one of our own children is the target leaf, this node collapses into
-	// the surviving sibling; otherwise keep descending.
+	// the surviving sibling; the nearest neighbour to focus is the sibling leaf
+	// hugging the divider they shared. otherwise keep descending.
 	if n.first_child.is_leaf() && n.first_child.editor_id == editor_id {
+		focus := n.second_child.leading_leaf()
 		n.absorb(n.second_child)
-		return true
+		return focus
 	}
 	if n.second_child.is_leaf() && n.second_child.editor_id == editor_id {
+		focus := n.first_child.trailing_leaf()
 		n.absorb(n.first_child)
-		return true
+		return focus
 	}
-	if n.first_child.remove(editor_id) {
-		return true
+	if id := n.first_child.remove(editor_id) {
+		return id
 	}
 	return n.second_child.remove(editor_id)
+}
+
+// leading_leaf returns the editor id of the top/left-most leaf of the subtree —
+// reached by always descending into the first child.
+fn (n &Node[T]) leading_leaf() T {
+	if n.is_leaf() {
+		return n.editor_id
+	}
+	return n.first_child.leading_leaf()
+}
+
+// trailing_leaf returns the editor id of the bottom/right-most leaf of the
+// subtree — reached by always descending into the second child.
+fn (n &Node[T]) trailing_leaf() T {
+	if n.is_leaf() {
+		return n.editor_id
+	}
+	return n.second_child.trailing_leaf()
 }
 
 // absorb overwrites n in place with the contents of survivor (n's remaining

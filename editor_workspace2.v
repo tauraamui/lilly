@@ -363,16 +363,14 @@ fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Mode
 
 fn (mut m EditorWorkspaceModel2) close_editor_update(msg CloseEditor2Msg) (tea.Model, fn () tea.Msg) {
 	if _ := m.editors[msg.editor_id_to_close] {
-		if !m.tree.remove(msg.editor_id_to_close) {
+		next_active_id := m.tree.remove(msg.editor_id_to_close) or {
 			return m.clone(), tea.noop_cmd // TODO(tauraamui) [2026-07-01]: return lilly_quit event here
 		}
 		m.editors.delete(msg.editor_id_to_close)
+		// remove() hands back the closed leaf's nearest surviving neighbour, so
+		// focus lands on the split that grew into the freed space.
 		if m.active_editor_id == msg.editor_id_to_close {
-			// pick a surviving leaf to focus; layouts() keys are the live leaf ids
-			for id, _ in m.tree.layouts(m.width, m.height - 2) {
-				m.active_editor_id = id
-				break
-			}
+			m.active_editor_id = next_active_id
 		}
 		return m.clone(), tea.sequence(focus_editor2(m.active_editor_id), tea.emit_resize)
 	}
