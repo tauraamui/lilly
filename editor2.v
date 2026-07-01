@@ -127,7 +127,9 @@ fn (mut m EditorModel2) editor_model_update(editor_id nanoid.ID, msg tea.Msg) (t
 		else {}
 	}
 
-	m.scroll_to_cursor()
+	if editor_id == m.id {
+		m.scroll_to_cursor()
+	}
 	return m.clone(), tea.noop_cmd
 }
 
