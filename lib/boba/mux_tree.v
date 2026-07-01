@@ -5,6 +5,14 @@ pub enum SplitDirection {
 	vertical   // children stacked top to bottom   -> fraction of height
 }
 
+// Direction is the axis-aligned direction of a focus move between leaves.
+pub enum Direction {
+	left
+	right
+	up
+	down
+}
+
 @[heap]
 struct Node[T] {
 mut:
@@ -166,6 +174,80 @@ fn (n &Node[T]) layout(x int, y int, width int, height int, mut out map[T]Layout
 			n.second_child.layout(x, y + lh, width, height - lh, mut out)
 		}
 	}
+}
+
+// neighbour returns the editor id of the leaf sitting directly against
+// editor_id in the given direction — the leaf focus should move to. It decides
+// adjacency geometrically from the very rectangles layouts() produces, so it
+// always agrees with what the user sees: among the leaves lying on the
+// requested side and overlapping editor_id along the perpendicular axis, the
+// closest wins, breaking ties by the largest overlap. Returns none when
+// editor_id is not a leaf in the tree, or when there is no leaf on that side
+// (editor_id already hugs that edge of the screen). Pass the same
+// max_width/max_height used to render so the rectangles line up.
+pub fn (t Tree[T]) neighbour(editor_id T, direction Direction, max_width int, max_height int) ?T {
+	rects := t.layouts(max_width, max_height)
+	cur := rects[editor_id] or { return none }
+
+	mut best := editor_id
+	mut found := false
+	mut best_distance := 0
+	mut best_overlap := 0
+	for id, rect in rects {
+		if id == editor_id {
+			continue
+		}
+		distance, overlap := directional_gap(cur, rect, direction)
+		// distance < 0 means rect intrudes into cur's own span rather than
+		// sitting on the requested side; overlap <= 0 means they only touch at
+		// a corner (or not at all), so no shared border to cross.
+		if distance < 0 || overlap <= 0 {
+			continue
+		}
+		if !found || distance < best_distance
+			|| (distance == best_distance && overlap > best_overlap) {
+			best = id
+			found = true
+			best_distance = distance
+			best_overlap = overlap
+		}
+	}
+	if !found {
+		return none
+	}
+	return best
+}
+
+// directional_gap measures, for a move from cur toward c in direction, the gap
+// between them along the movement axis (negative when c overlaps cur's span on
+// that axis) and how much they overlap along the perpendicular axis.
+fn directional_gap(cur Layout, c Layout, direction Direction) (int, int) {
+	match direction {
+		.left {
+			return cur.x - (c.x + c.width), span_overlap(cur.y, cur.y + cur.height, c.y,
+				c.y + c.height)
+		}
+		.right {
+			return c.x - (cur.x + cur.width), span_overlap(cur.y, cur.y + cur.height, c.y,
+				c.y + c.height)
+		}
+		.up {
+			return cur.y - (c.y + c.height), span_overlap(cur.x, cur.x + cur.width, c.x,
+				c.x + c.width)
+		}
+		.down {
+			return c.y - (cur.y + cur.height), span_overlap(cur.x, cur.x + cur.width, c.x,
+				c.x + c.width)
+		}
+	}
+}
+
+// span_overlap returns the length of the overlap between the ranges [a_lo, a_hi)
+// and [b_lo, b_hi); zero or negative when they do not overlap.
+fn span_overlap(a_lo int, a_hi int, b_lo int, b_hi int) int {
+	lo := if a_lo > b_lo { a_lo } else { b_lo }
+	hi := if a_hi < b_hi { a_hi } else { b_hi }
+	return hi - lo
 }
 
 // edge_* mark, during a divider walk, which sides of the current rectangle are

@@ -199,6 +199,18 @@ fn (mut m EditorWorkspaceModel2) normal_mode_key_update(msg tea.KeyMsg) (tea.Mod
 				'escape' {
 					return m.clone(), hide_message
 				}
+				'ctrl+w+h' {
+					return m.move_to_next_split_in_direction(.left)
+				}
+				'ctrl+w+j' {
+					return m.move_to_next_split_in_direction(.down)
+				}
+				'ctrl+w+k' {
+					return m.move_to_next_split_in_direction(.up)
+				}
+				'ctrl+w+l' {
+					return m.move_to_next_split_in_direction(.right)
+				}
 				else {}
 			}
 		}
@@ -217,6 +229,14 @@ fn (mut m EditorWorkspaceModel2) normal_mode_key_update(msg tea.KeyMsg) (tea.Mod
 		}
 	}
 
+	return m.clone(), tea.noop_cmd
+}
+
+fn (mut m EditorWorkspaceModel2) move_to_next_split_in_direction(direction boba.Direction) (tea.Model, fn () tea.Msg) {
+	if split_editor_id := m.tree.neighbour(m.active_editor_id, direction, m.width, m.height) {
+		m.active_editor_id = split_editor_id
+		return m.clone(), tea.sequence(focus_editor2(m.active_editor_id), tea.emit_resize)
+	}
 	return m.clone(), tea.noop_cmd
 }
 
@@ -731,7 +751,7 @@ fn hide_message_after(duration time.Duration) tea.Cmd {
 fn execute_command(active_editor_id nanoid.ID, cmd string) tea.Cmd {
 	match cmd {
 		'qa' {
-			return tea.quit
+			return shutdown
 		}
 		'q' {
 			return close_editor2(active_editor_id)
