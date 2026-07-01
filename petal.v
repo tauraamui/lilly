@@ -90,6 +90,12 @@ fn swap_active_screen(screen DebuggableModel) tea.Cmd {
 	}
 }
 
+struct ShutdownMsg {}
+
+fn shutdown() tea.Msg {
+	return ShutdownMsg{}
+}
+
 struct CheckIfTMUXWrappedMsg {}
 
 fn check_if_tmux_wrapped() tea.Msg {

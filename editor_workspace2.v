@@ -80,6 +80,9 @@ fn (mut m EditorWorkspaceModel2) init() fn () tea.Msg {
 
 fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	match msg {
+		ShutdownMsg {
+			return m.shutdown_update(msg)
+		}
 		tea.FocusedMsg {
 			return m.clone(), query_git_branch
 		}
@@ -364,7 +367,7 @@ fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Mode
 fn (mut m EditorWorkspaceModel2) close_editor_update(msg CloseEditor2Msg) (tea.Model, fn () tea.Msg) {
 	if _ := m.editors[msg.editor_id_to_close] {
 		next_active_id := m.tree.remove(msg.editor_id_to_close) or {
-			return m.clone(), tea.noop_cmd // TODO(tauraamui) [2026-07-01]: return lilly_quit event here
+			return m.clone(), shutdown
 		}
 		m.editors.delete(msg.editor_id_to_close)
 		// remove() hands back the closed leaf's nearest surviving neighbour, so
@@ -375,6 +378,10 @@ fn (mut m EditorWorkspaceModel2) close_editor_update(msg CloseEditor2Msg) (tea.M
 		return m.clone(), tea.sequence(focus_editor2(m.active_editor_id), tea.emit_resize)
 	}
 	return m.clone(), tea.noop_cmd
+}
+
+fn (mut m EditorWorkspaceModel2) shutdown_update(msg ShutdownMsg) (tea.Model, fn () tea.Msg) {
+	return m.clone(), tea.quit
 }
 
 fn (mut m EditorWorkspaceModel2) view(mut ctx tea.Context) {
