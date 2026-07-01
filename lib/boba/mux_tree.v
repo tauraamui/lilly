@@ -61,6 +61,52 @@ pub fn (mut t Tree[T]) split(target_editor_id T, new_editor_id T, direction Spli
 	return t.root.split(target_editor_id, new_editor_id, direction)
 }
 
+// remove finds the leaf holding editor_id and removes it, collapsing its parent
+// so the sibling subtree takes the parent's place — the inverse of split().
+// Returns true when the leaf was found and removed. Removing the only remaining
+// leaf (the root itself, which has no parent to collapse into) is a no-op that
+// returns false: the tree always holds at least one leaf, and re-seeding is the
+// caller's job via plant().
+pub fn (mut t Tree[T]) remove(editor_id T) bool {
+	return t.root.remove(editor_id)
+}
+
+fn (mut n Node[T]) remove(editor_id T) bool {
+	if n.is_leaf() {
+		return false
+	}
+	// when one of our own children is the target leaf, this node collapses into
+	// the surviving sibling; otherwise keep descending.
+	if n.first_child.is_leaf() && n.first_child.editor_id == editor_id {
+		n.absorb(n.second_child)
+		return true
+	}
+	if n.second_child.is_leaf() && n.second_child.editor_id == editor_id {
+		n.absorb(n.first_child)
+		return true
+	}
+	if n.first_child.remove(editor_id) {
+		return true
+	}
+	return n.second_child.remove(editor_id)
+}
+
+// absorb overwrites n in place with the contents of survivor (n's remaining
+// child after its sibling was removed), keeping n's own address and parent link
+// intact so pointers held elsewhere in the tree stay valid. When survivor is an
+// internal node its children are reparented onto n; when it is a leaf n simply
+// becomes that leaf.
+fn (mut n Node[T]) absorb(survivor &Node[T]) {
+	n.editor_id = survivor.editor_id
+	n.direction = survivor.direction
+	n.first_child = survivor.first_child
+	n.second_child = survivor.second_child
+	if !n.is_leaf() {
+		n.first_child.parent = &n
+		n.second_child.parent = &n
+	}
+}
+
 pub struct Layout {
 pub:
 	x      int

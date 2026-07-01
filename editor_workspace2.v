@@ -101,6 +101,9 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 			m.dialog_model = d_modal
 			return m.clone(), init_cmd
 		}
+		CloseEditor2Msg {
+			return m.close_editor_update(msg)
+		}
 		CloseDialogMsg {
 			m.dialog_model = ?DebuggableModel(none)
 			return m.clone(), tea.noop_cmd
@@ -356,6 +359,24 @@ fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Mode
 		}
 	})
 	return m.clone_with_mode(msg.mode), cmd
+}
+
+fn (mut m EditorWorkspaceModel2) close_editor_update(msg CloseEditor2Msg) (tea.Model, fn () tea.Msg) {
+	if _ := m.editors[msg.editor_id_to_close] {
+		if !m.tree.remove(msg.editor_id_to_close) {
+			return m.clone(), tea.noop_cmd // TODO(tauraamui) [2026-07-01]: return lilly_quit event here
+		}
+		m.editors.delete(msg.editor_id_to_close)
+		if m.active_editor_id == msg.editor_id_to_close {
+			// pick a surviving leaf to focus; layouts() keys are the live leaf ids
+			for id, _ in m.tree.layouts(m.width, m.height - 2) {
+				m.active_editor_id = id
+				break
+			}
+		}
+		return m.clone(), tea.sequence(focus_editor2(m.active_editor_id), tea.emit_resize)
+	}
+	return m.clone(), tea.noop_cmd
 }
 
 fn (mut m EditorWorkspaceModel2) view(mut ctx tea.Context) {
@@ -622,6 +643,20 @@ fn open_editor_in_split_cmd(editor_id nanoid.ID, direction boba.SplitDirection) 
 	}
 }
 
+struct CloseEditor2Msg {
+	active_editor_id   nanoid.ID
+	editor_id_to_close nanoid.ID
+}
+
+fn close_editor2(editor_id nanoid.ID) fn () tea.Msg {
+	return fn [editor_id] () tea.Msg {
+		return CloseEditor2Msg{
+			active_editor_id: editor_id
+			editor_id_to_close: editor_id
+		}
+	}
+}
+
 fn focus_editor2(editor_id nanoid.ID) fn () tea.Msg {
 	return fn [editor_id] () tea.Msg {
 		return EditorModel2Msg{
@@ -692,6 +727,9 @@ fn execute_command(active_editor_id nanoid.ID, cmd string) tea.Cmd {
 	match cmd {
 		'qa' {
 			return tea.quit
+		}
+		'q' {
+			return close_editor2(active_editor_id)
 		}
 		'w' {
 			return write_to_disk2(active_editor_id)
