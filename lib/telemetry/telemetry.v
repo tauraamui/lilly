@@ -14,7 +14,7 @@
 
 module telemetry
 
-import json
+import json2
 
 pub enum EventKind as u8 {
 	launch
@@ -48,7 +48,7 @@ struct EventPayload {
 }
 
 pub fn encode_event(event Event) string {
-	return json.encode(EventPayload{
+	return json2.encode(EventPayload{
 		kind:    event.kind.str()
 		version: event.version
 		os:      event.os

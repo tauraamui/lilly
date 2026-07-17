@@ -446,7 +446,7 @@ fn (mut m EditorWorkspaceModel2) close_editor_update(msg CloseEditor2Msg) (tea.M
 }
 
 fn (mut m EditorWorkspaceModel2) shutdown_update(msg ShutdownMsg) (tea.Model, fn () tea.Msg) {
-	return m.clone(), tea.quit
+	return m.clone(), tea.sequence(debug_log('${msg}...'), tea.quit)
 }
 
 fn (mut m EditorWorkspaceModel2) view(mut ctx tea.Context) {
