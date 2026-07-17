@@ -10,12 +10,13 @@ module main
 
 import lib.documents
 import lib.documents.cursor
+import lib.nanoid
 
 // apply_motion runs a navigation motion against the controller. It returns
 // true if the motion key was recognised. Operators in both normal and visual
 // mode share this but visual mode reuses it as "extend selection" because the
 // selection range is derived from visual_sel_start + cursor.
-fn apply_motion(c &documents.Controller2, doc_id int, motion string, count int) bool {
+fn apply_motion(c &documents.Controller2, doc_id nanoid.ID, motion string, count int) bool {
 	match motion {
 		'h' {
 			for _ in 0 .. count {
@@ -83,7 +84,7 @@ fn apply_motion(c &documents.Controller2, doc_id int, motion string, count int) 
 // motion_range resolves a motion to the range it traverses, leaving the
 // cursor at the motion's endpoint. Used by normal mode when an operator
 // is paired with a motion (e.g. `dw`).
-fn motion_range(c &documents.Controller2, doc_id int, motion string, count int) ?cursor.Range {
+fn motion_range(c &documents.Controller2, doc_id nanoid.ID, motion string, count int) ?cursor.Range {
 	start_line, start_col := c.cursor_line_and_x(doc_id)
 	if !apply_motion(c, doc_id, motion, count) {
 		return none
@@ -97,7 +98,7 @@ fn motion_range(c &documents.Controller2, doc_id int, motion string, count int) 
 
 // apply_operator dispatches an operator against a resolved range. Returns
 // true if the operator was recognised.
-fn apply_operator(c &documents.Controller2, doc_id int, op u8, r cursor.Range) bool {
+fn apply_operator(c &documents.Controller2, doc_id nanoid.ID, op u8, r cursor.Range) bool {
 	match op {
 		`d` {
 			c.delete_range(doc_id, r)

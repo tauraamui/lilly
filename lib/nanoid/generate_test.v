@@ -7,6 +7,12 @@ fn test_simple_generation() {
 	assert simple() == 'k6xdi7ljafxso8iinbb-m'
 }
 
+fn test_simple_generation_from_seed() {
+	assert simple_with_seed('~/src/project/file.v') == 'xuegdsoaelebpmo_6vynr'
+	assert simple_with_seed('/home/user/document/notes.txt') == 'rl_4efe3q63jp-jyw8_nw'
+	assert simple_with_seed('/tmp/misc/xxfeiwjfiewfiwe.backup') == '83hucvhu8dr6hj3v3pm9l'
+}
+
 // NOTE(tauraamui) [2026-06-23]: the assertions of these tests passing relies on the stdlib's internal
 // RNG functionality remaining the same. if in future they inexplicably fail after a compiler update
 // we can just remove the seed setting tests entirely.

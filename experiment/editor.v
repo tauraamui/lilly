@@ -17,14 +17,15 @@ module main
 import os
 import bobatea as tea
 import lib.documents
+import lib.nanoid
 import lib.palette
 
 struct EditorModel {
-	doc_id int
+	doc_id nanoid.ID
 	doc_controller &documents.Controller2
 }
 
-fn EditorModel.new(doc_id int, doc_controller &documents.Controller2) EditorModel {
+fn EditorModel.new(doc_id nanoid.ID, doc_controller &documents.Controller2) EditorModel {
 	return EditorModel{
 		doc_id: doc_id
 		doc_controller: doc_controller

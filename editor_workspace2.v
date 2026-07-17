@@ -79,6 +79,13 @@ fn (mut m EditorWorkspaceModel2) init() fn () tea.Msg {
 }
 
 fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+	// ***** dialog related state *****
+	d_model, d_cmd := m.update_dialog(msg)
+	if cloned_model := d_model {
+		return cloned_model, d_cmd
+	}
+	// ********
+
 	match msg {
 		ShutdownMsg {
 			return m.shutdown_update(msg)
@@ -91,6 +98,9 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		}
 		tea.ResizedMsg {
 			return m.resized_update(msg)
+		}
+		OpenFileMsg {
+			return m.open_file_update(msg)
 		}
 		OpenEditorInWorkspaceMsg {
 			return m.open_editor_in_workspace_update(msg)
@@ -157,6 +167,29 @@ fn (mut m EditorWorkspaceModel2) forward_msg_to_all_editors(msg tea.Msg) (tea.Mo
 		}
 	}
 	return m.clone(), tea.batch_array(cmds)
+}
+
+fn (mut m EditorWorkspaceModel2) update_dialog(msg tea.Msg) (?tea.Model, fn () tea.Msg) {
+	if msg is CloseDialogMsg {
+		m.dialog_model = none
+		return m.clone(), tea.noop_cmd
+	}
+
+	if mut open_model := m.dialog_model {
+		// force forward a 80% of the actual window size down to moddal model
+		intercepted_msg := if msg is tea.ResizedMsg && mut open_model is FilePickerModel { tea.Msg(tea.ResizedMsg{
+				window_width:  int(f64(msg.window_width) * 0.8)
+				window_height: int(f64(msg.window_height) * 0.8)
+			}) } else { msg }
+
+		d, cmd := open_model.update(intercepted_msg)
+		if d is DebuggableModel {
+			m.dialog_model = d
+		}
+		return m.clone(), cmd
+	}
+
+	return none, tea.noop_cmd
 }
 
 fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
@@ -338,6 +371,13 @@ fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, 
 	}
 
 	return m.clone(), tea.sequence(i_cmd, tea.batch_array(cmds), d_cmd)
+}
+
+fn (mut m EditorWorkspaceModel2) open_file_update(msg OpenFileMsg) (tea.Model, fn () tea.Msg) {
+	// just replace whatever existing editor modal instance with this new open file unless they're already the same
+	// if editor instance we're on matches the new file to open's path, do nothing
+	// if it does not, create new instance of editormodal and replace the current active editor id slot with it
+	return m.clone(), tea.noop_cmd
 }
 
 // TODO(tauraamui): merge these two methods since in the end they should really be doing the same thing

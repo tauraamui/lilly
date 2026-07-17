@@ -430,14 +430,7 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		OpenEditorMsg {
 			editor_id := m.next_editor_id()
 
-			/*
 			doc_id := m.doc_controller.open_document(msg.file_path) or {
-				cmds << debug_log('failed to open document ${msg.file_path}: ${err}')
-				return m.clone(), tea.batch_array(cmds)
-			}
-			*/
-			// TODO(tauraamui): actually store separate doc id as additional field
-			doc_id2 := m.doc_controller2.open_document(msg.file_path) or {
 				cmds << debug_log('failed to open document ${msg.file_path}: ${err}')
 				return m.clone(), tea.batch_array(cmds)
 			}
@@ -446,21 +439,20 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 				id:              editor_id
 				theme:           m.theme
 				file_path:       msg.file_path
-				doc_id:          doc_id2
+				doc_id:          doc_id
 				doc_controller:  m.doc_controller
 				doc_controller2: m.doc_controller2
 				cb:              m.cb
 				expand_tabs:     m.expand_tabs
 				tab_width:       m.tab_width
 			)
-			// mut e_model := EditorModel2.new(m.theme, editor_id, doc_id2, msg.file_path, m.doc_controller2)
 			cmd := e_model.init()
 
 			if m.split_tree.is_empty() {
-				m.split_tree.init_with_editor(editor_id, msg.file_path, doc_id2)
+				m.split_tree.init_with_editor(editor_id, msg.file_path, doc_id)
 			} else {
 				old_id := m.split_tree.active_editor_id
-				m.split_tree.replace_active_editor(editor_id, msg.file_path, doc_id2)
+				m.split_tree.replace_active_editor(editor_id, msg.file_path, doc_id)
 				m.editors.delete(old_id)
 			}
 

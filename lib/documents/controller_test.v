@@ -32,9 +32,10 @@ fn test_controller_open_document_from_path() {
 	os.write_file(file_path, 'hello\nWoRlD<')!
 
 	mut c := Controller2{}
-	assert c.open_document(file_path)! == 0
-	assert c.get_line_bytes(0, 0)? == [u8(`h`), `e`, `l`, `l`, `o`]
-	assert c.get_line_bytes(0, 1)? == [u8(`W`), `o`, `R`, `l`, `D`, `<`]
+	doc_id := c.open_document(file_path)!
+	assert doc_id != ''
+	assert c.get_line_bytes(doc_id, 0)? == [u8(`h`), `e`, `l`, `l`, `o`]
+	assert c.get_line_bytes(doc_id, 1)? == [u8(`W`), `o`, `R`, `l`, `D`, `<`]
 }
 
 fn test_controller_open_document_from_path_subsequent_edits() {
@@ -43,19 +44,20 @@ fn test_controller_open_document_from_path_subsequent_edits() {
 	os.write_file(file_path, 'hello\nWoRlD<')!
 
 	mut c := Controller2{}
-	assert c.open_document(file_path)! == 0
-	assert c.get_line_bytes(0, 0)? == [u8(`h`), `e`, `l`, `l`, `o`]
-	assert c.get_line_bytes(0, 1)? == [u8(`W`), `o`, `R`, `l`, `D`, `<`]
+	doc_id := c.open_document(file_path)!
+	assert doc_id != ''
+	assert c.get_line_bytes(doc_id, 0)? == [u8(`h`), `e`, `l`, `l`, `o`]
+	assert c.get_line_bytes(doc_id, 1)? == [u8(`W`), `o`, `R`, `l`, `D`, `<`]
 
-	c.backspace(0)
-	assert c.get_line_bytes(0, 0)? == [u8(`h`), `e`, `l`, `l`, `o`]
-	assert c.get_line_bytes(0, 1)? == [u8(`W`), `o`, `R`, `l`, `D`, `<`]
+	c.backspace(doc_id)
+	assert c.get_line_bytes(doc_id, 0)? == [u8(`h`), `e`, `l`, `l`, `o`]
+	assert c.get_line_bytes(doc_id, 1)? == [u8(`W`), `o`, `R`, `l`, `D`, `<`]
 
-	c.move_cursor_right(0)
-	c.move_cursor_right(0)
-	c.backspace(0)
-	assert c.get_line_bytes(0, 0)? == [u8(`h`), `l`, `l`, `o`]
-	assert c.get_line_bytes(0, 1)? == [u8(`W`), `o`, `R`, `l`, `D`, `<`]
+	c.move_cursor_right(doc_id)
+	c.move_cursor_right(doc_id)
+	c.backspace(doc_id)
+	assert c.get_line_bytes(doc_id, 0)? == [u8(`h`), `l`, `l`, `o`]
+	assert c.get_line_bytes(doc_id, 1)? == [u8(`W`), `o`, `R`, `l`, `D`, `<`]
 }
 
 fn test_controller_insert_after_load_goes_to_start() {

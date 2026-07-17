@@ -27,7 +27,7 @@ struct EditorModel2 {
 	config         EditorWorkspaceConfig
 	id             nanoid.ID
 	file_path      string
-	doc_id         int
+	doc_id         nanoid.ID
 	doc_controller &documents.Controller2
 mut:
 	in_focus              bool
@@ -43,7 +43,7 @@ mut:
 	parser_cache_dirty    bool = true
 }
 
-fn EditorModel2.new(config EditorWorkspaceConfig, id nanoid.ID, doc_id int, file_path string, doc_controller &documents.Controller2) EditorModel2 {
+fn EditorModel2.new(config EditorWorkspaceConfig, id nanoid.ID, doc_id nanoid.ID, file_path string, doc_controller &documents.Controller2) EditorModel2 {
 	return EditorModel2{
 		config:         config
 		id:             id

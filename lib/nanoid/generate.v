@@ -2,6 +2,7 @@ module nanoid
 
 import rand
 import crypto.rand as crand
+import hash.fnv1a
 
 const alpha_set = [
 	u8(`-`), `_`, `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`,
@@ -17,6 +18,19 @@ pub fn generate(size int) ID {
 
 pub fn simple() ID {
 	return generate(21)
+}
+
+pub fn simple_with_seed(seed string) ID {
+	rand.seed(seed_lanes(seed))
+	return generate(21)
+}
+
+// seed_lanes hashes s with the stdlib FNV-1a and splits the resulting u64 into two
+// u32 lanes, producing the []u32 shape that rand.seed / WyRand requires regardless of
+// the input string's length.
+fn seed_lanes(s string) []u32 {
+	h := fnv1a.sum64_string(s)
+	return [u32(h >> 32), u32(h)]
 }
 
 pub fn safe_generate(size int) ?ID {
