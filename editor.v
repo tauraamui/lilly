@@ -208,9 +208,9 @@ fn (mut m EditorModel) init() fn () tea.Msg {
 }
 
 struct EditorModelMsg {
-	id               int
-	msg              tea.Msg
-	mode             petal.Mode
+	id   int
+	msg  tea.Msg
+	mode petal.Mode
 }
 
 struct EditorModelKeyMsg {

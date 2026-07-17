@@ -52,6 +52,7 @@ pub fn box_junction(up bool, down bool, left bool, right bool) string {
 	}
 	return '│'
 }
+
 pub const slant_left_flat_bottom = ''
 pub const left_rounded = ''
 pub const slant_left_flat_top = ''

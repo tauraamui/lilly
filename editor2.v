@@ -297,7 +297,7 @@ fn virtual_direction_key_press(direction string) fn () tea.Msg {
 	return fn [direction] () tea.Msg {
 		return tea.KeyMsg{
 			k_type: .special
-			runes: direction.runes()
+			runes:  direction.runes()
 		}
 	}
 }
@@ -735,7 +735,6 @@ fn (m EditorModel2) height() int {
 	return m.viewport_height
 }
 
-
 struct EditorData2 {
 	id            nanoid.ID
 	file_path     string
@@ -745,7 +744,6 @@ struct EditorData2 {
 	width         int
 	height        int
 }
-
 
 fn (m EditorModel2) data() EditorData2 {
 	cursor_line, cursor_x := m.doc_controller.cursor_line_and_x(m.doc_id)
@@ -839,8 +837,8 @@ struct QueryEditorData2Msg {}
 fn query_editor_data2(id nanoid.ID) tea.Cmd {
 	return fn [id] () tea.Msg {
 		return EditorModel2Msg{
-			active_id:  id
-			msg: QueryEditorData2Msg{}
+			active_id: id
+			msg:       QueryEditorData2Msg{}
 		}
 	}
 }
@@ -858,8 +856,8 @@ fn editor_data2(data EditorData2) tea.Cmd {
 fn write_to_disk2(id nanoid.ID) tea.Cmd {
 	return fn [id] () tea.Msg {
 		return EditorModel2Msg{
-			active_id:  id
-			msg: WriteToDiskMsg{}
+			active_id: id
+			msg:       WriteToDiskMsg{}
 		}
 	}
 }
@@ -868,8 +866,8 @@ fn load_syntax2(editor_id nanoid.ID, file_path string) tea.Cmd {
 	return fn [editor_id, file_path] () tea.Msg {
 		syn := syntax.resolve_from_extension(file_path) or {
 			return EditorModel2Msg{
-				active_id:  editor_id
-				msg: SyntaxLoadedMsg{
+				active_id: editor_id
+				msg:       SyntaxLoadedMsg{
 					syn:     syntax.noop_syntax
 					err_msg: 'failed to load syntax for ${file_path}: ${err}'
 				}
@@ -877,19 +875,18 @@ fn load_syntax2(editor_id nanoid.ID, file_path string) tea.Cmd {
 		}
 		if syn.name.len == 0 {
 			return EditorModel2Msg{
-				active_id:  editor_id
-				msg: SyntaxLoadedMsg{
+				active_id: editor_id
+				msg:       SyntaxLoadedMsg{
 					syn:     syn
 					err_msg: 'no syntax definition for ${file_path}, syntax highlighting disabled'
 				}
 			}
 		}
 		return EditorModel2Msg{
-			active_id:  editor_id
-			msg: SyntaxLoadedMsg{
+			active_id: editor_id
+			msg:       SyntaxLoadedMsg{
 				syn: syn
 			}
 		}
 	}
 }
-

@@ -57,11 +57,11 @@ fn test_safe_custom_generation_is_deterministic_given_static_source() {
 		return b
 	}
 
-	hash_output := safe_custom_with([u8(`a`), `b`, `c`, `d`, `e`, `f`, `g`, `h`, `i`, `j`], bytes.len, next) or {
+	hash_output := safe_custom_with([u8(`a`), `b`, `c`, `d`, `e`, `f`, `g`, `h`, `i`, `j`],
+		bytes.len, next) or {
 		assert false, 'should not fail'
 		return
 	}
 
 	assert hash_output == 'abcdefghij'
 }
-

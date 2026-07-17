@@ -146,7 +146,7 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			if send := m.app_send {
 				spawn fn [send] () {
 					branch_name := resolve_git_branch_name(os.execute)
-					send(GitBranchQueryResultMsg{ branch_name })
+					send(GitBranchQueryResultMsg{branch_name})
 				}()
 			} else {
 				branch_name := resolve_git_branch_name(os.execute)

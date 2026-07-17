@@ -39,7 +39,7 @@ mut:
 	branch_name   ?string
 	leader_suffix []rune
 
-	active_modal       ?DebuggableModel
+	active_modal ?DebuggableModel
 	// active_modal_data  ?ModalData // TODO(tauraamui) [2026-06-17]: wire this up to query and response messages
 	active_editor_data ?EditorData2
 	active_editor_id   nanoid.ID
@@ -56,9 +56,9 @@ struct EditorWorkspaceConfig {
 
 fn EditorWorkspaceConfig.new(base_cfg cfg.Config) EditorWorkspaceConfig {
 	return EditorWorkspaceConfig{
-		theme:       base_cfg.theme
-		leader_key:  base_cfg.leader_key
-		tab_width:   base_cfg.tab_width
+		theme:                 base_cfg.theme
+		leader_key:            base_cfg.leader_key
+		tab_width:             base_cfg.tab_width
 		relative_line_numbers: base_cfg.relative_line_numbers
 	}
 }
@@ -211,8 +211,8 @@ fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () te
 
 	m_clone, cmd := m.forward_msg_to_all_editors(EditorModelKeyMsg{
 		active_id: m.active_editor_id
-		key_msg: msg
-		mode:    m.mode
+		key_msg:   msg
+		mode:      m.mode
 	})
 	return m_clone, tea.sequence(cmd, query_editor_data2(m.active_editor_id))
 }
@@ -319,12 +319,14 @@ fn (mut m EditorWorkspaceModel2) leader_mode_key_update(msg tea.KeyMsg) (tea.Mod
 			m.leader_suffix << msg.string().runes()
 			match m.leader_suffix.string() {
 				'ff' {
-					return m.clone(), tea.sequence(switch_mode(.normal), open_file_picker(m.config.theme))
+					return m.clone(), tea.sequence(switch_mode(.normal),
+						open_file_picker(m.config.theme))
 				}
 				else {}
 			}
 		}
 	}
+
 	return m.clone(), tea.noop_cmd
 }
 
@@ -345,9 +347,9 @@ fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, 
 			top_inset := if layout.y > 0 { 1 } else { 0 }
 			new_editor, cmd := editor.update(EditorModel2Msg{
 				active_id: m.active_editor_id
-				mode: m.mode
-				msg: tea.ResizedMsg{
-					window_width: layout.width - left_inset
+				mode:      m.mode
+				msg:       tea.ResizedMsg{
+					window_width:  layout.width - left_inset
 					window_height: layout.height - top_inset
 				}
 			})
@@ -361,7 +363,7 @@ fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, 
 	mut d_cmd := tea.noop_cmd
 	if mut d_modal := m.dialog_model {
 		d_model, dialog_cmd := d_modal.update(tea.ResizedMsg{
-			window_width: int(f64(msg.window_width) * .8)
+			window_width:  int(f64(msg.window_width) * .8)
 			window_height: int(f64(msg.window_height) * .8)
 		})
 		if d_model is DebuggableModel {
@@ -391,19 +393,24 @@ fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorI
 	m.active_editor_id = editor_id
 	m.editors[editor_id] = e_model
 	m.tree.plant(editor_id)
-	return m.clone(), tea.sequence(model_init_cmd, focus_editor2(m.active_editor_id), tea.emit_resize)
+	return m.clone(), tea.sequence(model_init_cmd, focus_editor2(m.active_editor_id),
+		tea.emit_resize)
 }
 
 fn (mut m EditorWorkspaceModel2) open_editor_in_split_update(msg OpenEditorInSplitMsg) (tea.Model, fn () tea.Msg) {
 	if active_editor := m.editors[msg.active_editor_id] {
 		if active_editor is EditorModel2 {
 			new_editor_id := nanoid.simple()
-			if !m.tree.split(msg.active_editor_id, new_editor_id, msg.direction) { return m.clone(), tea.noop_cmd }
-			mut e_model := EditorModel2.new(m.config, new_editor_id, active_editor.doc_id, active_editor.file_path, m.doc_controller)
+			if !m.tree.split(msg.active_editor_id, new_editor_id, msg.direction) {
+				return m.clone(), tea.noop_cmd
+			}
+			mut e_model := EditorModel2.new(m.config, new_editor_id, active_editor.doc_id,
+				active_editor.file_path, m.doc_controller)
 			model_init_cmd := e_model.init()
 			m.active_editor_id = new_editor_id
 			m.editors[new_editor_id] = e_model
-			return m.clone(), tea.sequence(model_init_cmd, focus_editor2(m.active_editor_id), tea.emit_resize)
+			return m.clone(), tea.sequence(model_init_cmd, focus_editor2(m.active_editor_id),
+				tea.emit_resize)
 		}
 	}
 	return m.clone(), tea.noop_cmd
@@ -414,9 +421,9 @@ fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Mode
 		m.leader_suffix = []
 	}
 	_, cmd := m.forward_msg_to_all_editors(EditorModel2Msg{
-		active_id:   m.active_editor_id // will be active editors when forwarding to all editor instances
-		mode: m.mode
-		msg:  SwitchModeMsg{
+		active_id: m.active_editor_id // will be active editors when forwarding to all editor instances
+		mode:      m.mode
+		msg:       SwitchModeMsg{
 			from: m.mode // send current mode pre-change as mode moving from
 			mode: msg.mode
 		}
@@ -426,9 +433,7 @@ fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Mode
 
 fn (mut m EditorWorkspaceModel2) close_editor_update(msg CloseEditor2Msg) (tea.Model, fn () tea.Msg) {
 	if _ := m.editors[msg.editor_id_to_close] {
-		next_active_id := m.tree.remove(msg.editor_id_to_close) or {
-			return m.clone(), shutdown
-		}
+		next_active_id := m.tree.remove(msg.editor_id_to_close) or { return m.clone(), shutdown }
 		m.editors.delete(msg.editor_id_to_close)
 		// remove() hands back the closed leaf's nearest surviving neighbour, so
 		// focus lands on the split that grew into the freed space.
@@ -456,7 +461,7 @@ fn (mut m EditorWorkspaceModel2) view(mut ctx tea.Context) {
 		left_inset := if layout.x > 0 { 1 } else { 0 }
 		top_inset := if layout.y > 0 { 1 } else { 0 }
 		ctx.push_offset(tea.Offset{ x: layout.x, y: layout.y })
-		ctx.set_clip_area(tea.ClipArea{ 0, 0, layout.width, layout.height })
+		ctx.set_clip_area(tea.ClipArea{0, 0, layout.width, layout.height})
 		ctx.push_offset(tea.Offset{ x: left_inset, y: top_inset })
 		editor.view(mut ctx)
 		ctx.pop_offset()
@@ -485,9 +490,14 @@ fn (mut m EditorWorkspaceModel2) view(mut ctx tea.Context) {
 fn (m EditorWorkspaceModel2) render_dividers(mut ctx tea.Context, layouts map[nanoid.ID]boba.Layout) {
 	active := layouts[m.active_editor_id]
 	m.tree.each_divider(m.width, m.height - 2, fn [mut ctx, active] (x int, y int, up bool, down bool, left bool, right bool) {
-		on_active := (active.x > 0 && x == active.x && y >= active.y && y < active.y + active.height)
+		on_active :=
+			(active.x > 0 && x == active.x && y >= active.y && y < active.y + active.height)
 			|| (active.y > 0 && y == active.y && x >= active.x && x < active.x + active.width)
-		ctx.set_color(if on_active { active_editor_border_color } else { inactive_editor_border_color })
+		ctx.set_color(if on_active {
+			active_editor_border_color
+		} else {
+			inactive_editor_border_color
+		})
 		ctx.draw_text(x, y, glyphs.box_junction(up, down, left, right))
 	})
 	ctx.reset_color()
@@ -703,7 +713,7 @@ fn open_editor_in_split_cmd(editor_id nanoid.ID, direction boba.SplitDirection) 
 	return fn [editor_id, direction] () tea.Msg {
 		return OpenEditorInSplitMsg{
 			active_editor_id: editor_id
-			direction: direction
+			direction:        direction
 		}
 	}
 }
@@ -716,7 +726,7 @@ struct CloseEditor2Msg {
 fn close_editor2(editor_id nanoid.ID) fn () tea.Msg {
 	return fn [editor_id] () tea.Msg {
 		return CloseEditor2Msg{
-			active_editor_id: editor_id
+			active_editor_id:   editor_id
 			editor_id_to_close: editor_id
 		}
 	}
@@ -726,7 +736,7 @@ fn focus_editor2(editor_id nanoid.ID) fn () tea.Msg {
 	return fn [editor_id] () tea.Msg {
 		return EditorModel2Msg{
 			active_id: editor_id
-			msg: tea.FocusedMsg{}
+			msg:       tea.FocusedMsg{}
 		}
 	}
 }
@@ -830,5 +840,3 @@ fn git_branch_query_result(branch_name string) tea.Cmd {
 		}
 	}
 }
-
-

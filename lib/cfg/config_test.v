@@ -60,8 +60,7 @@ $if !windows {
 
 	fn test_parse_config_file_no_root_node() {
 		path := os.join_path(os.temp_dir(), 'test_lilly.cfg')
-		os.write_file(path,
-			'theme "light"')!
+		os.write_file(path, 'theme "light"')!
 
 		defer {
 			os.rm(path) or {}

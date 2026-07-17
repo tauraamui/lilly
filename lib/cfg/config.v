@@ -22,10 +22,10 @@ pub const light_theme_name = theme.light_theme_name
 pub const dark_theme_name = theme.dark_theme_name
 
 pub const default_config = Config{
-    theme: theme.dark_theme
-    leader_key: ';'
-    tab_width: 4
-    relative_line_numbers: true
+	theme:                 theme.dark_theme
+	leader_key:            ';'
+	tab_width:             4
+	relative_line_numbers: true
 }
 
 pub struct Config {
@@ -74,26 +74,26 @@ fn xdg_config_paths() []string {
 }
 
 fn resolve_theme_name(config_name string, override_name string) string {
-    if override_name.len > 0 {
-        return override_name
-    }
-    return config_name
+	if override_name.len > 0 {
+		return override_name
+	}
+	return config_name
 }
 
 fn resolve_theme(name string) theme.Theme {
-    return match name.trim_space() {
+	return match name.trim_space() {
 		'light' { theme.light_theme }
 		'dark' { theme.dark_theme }
 		else { default_config.theme }
-    }
+	}
 }
 
 fn resolve_leader_key(leader_key string) string {
-    return if leader_key.len == 1 { leader_key } else { default_config.leader_key }
+	return if leader_key.len == 1 { leader_key } else { default_config.leader_key }
 }
 
 fn resolve_tab_width(width int) int {
-    return if width > 0 { width } else { default_config.tab_width }
+	return if width > 0 { width } else { default_config.tab_width }
 }
 
 pub fn parse_config_file(file_path string) !Config {
@@ -113,15 +113,16 @@ pub fn parse_config_file(file_path string) !Config {
 			nodes: doc.nodes[0].children
 		}, kdlv.GenerateOptions{}))!
 
-        return Config{
-            theme: resolve_theme(resolve_theme_name(config.theme, os.getenv('LILLY_THEME')))
-            leader_key: resolve_leader_key(config.leader_key)
-            tab_width: resolve_tab_width(config.tab_width)
-            relative_line_numbers: config.relative_line_numbers
-        }
+		return Config{
+			theme:                 resolve_theme(resolve_theme_name(config.theme,
+				os.getenv('LILLY_THEME')))
+			leader_key:            resolve_leader_key(config.leader_key)
+			tab_width:             resolve_tab_width(config.tab_width)
+			relative_line_numbers: config.relative_line_numbers
+		}
 	}
-	
-    return default_config
+
+	return default_config
 }
 
 pub fn Config.new(opts ConfigOptions) Config {
@@ -137,6 +138,5 @@ pub fn Config.new(opts ConfigOptions) Config {
 		}
 	}
 
-    return default_config
+	return default_config
 }
-

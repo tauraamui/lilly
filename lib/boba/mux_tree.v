@@ -16,9 +16,9 @@ pub enum Direction {
 @[heap]
 struct Node[T] {
 mut:
-	parent       &Node[T] = unsafe { nil }
+	parent &Node[T] = unsafe { nil }
 	// leaf data: only meaningful while the node is a leaf (is_leaf() == true)
-	editor_id    T
+	editor_id T
 	// internal data:
 	direction    SplitDirection
 	first_child  &Node[T] = unsafe { nil }
@@ -33,8 +33,14 @@ fn (mut n Node[T]) split(target_editor_id T, new_editor_id T, direction SplitDir
 	if n.is_leaf() {
 		if n.editor_id == target_editor_id {
 			n.direction = direction
-			n.first_child = &Node[T]{ editor_id: n.editor_id, parent: &n }
-			n.second_child = &Node[T]{ editor_id: new_editor_id, parent: &n }
+			n.first_child = &Node[T]{
+				editor_id: n.editor_id
+				parent:    &n
+			}
+			n.second_child = &Node[T]{
+				editor_id: new_editor_id
+				parent:    &n
+			}
 			return true
 		}
 		return false
@@ -59,7 +65,9 @@ mut:
 // by the caller (e.g. int, or nanoid.ID), the tree only compares ids for
 // equality and uses them as map keys.
 pub fn (mut t Tree[T]) plant(editor_id T) {
-	t.root = Node[T]{ editor_id: editor_id }
+	t.root = Node[T]{
+		editor_id: editor_id
+	}
 }
 
 // split finds the leaf holding target_editor_id and splits it along direction,
@@ -159,7 +167,12 @@ pub fn (t Tree[T]) layouts(max_width int, max_height int) map[T]Layout {
 
 fn (n &Node[T]) layout(x int, y int, width int, height int, mut out map[T]Layout) {
 	if n.is_leaf() {
-		out[n.editor_id] = Layout{ x: x, y: y, width: width, height: height }
+		out[n.editor_id] = Layout{
+			x:      x
+			y:      y
+			width:  width
+			height: height
+		}
 		return
 	}
 	match n.direction {
@@ -224,20 +237,20 @@ pub fn (t Tree[T]) neighbour(editor_id T, direction Direction, max_width int, ma
 fn directional_gap(cur Layout, c Layout, direction Direction) (int, int) {
 	match direction {
 		.left {
-			return cur.x - (c.x + c.width), span_overlap(cur.y, cur.y + cur.height, c.y,
-				c.y + c.height)
+			return cur.x - (c.x + c.width), span_overlap(cur.y, cur.y + cur.height, c.y, c.y +
+				c.height)
 		}
 		.right {
-			return c.x - (cur.x + cur.width), span_overlap(cur.y, cur.y + cur.height, c.y,
-				c.y + c.height)
+			return c.x - (cur.x + cur.width), span_overlap(cur.y, cur.y + cur.height, c.y, c.y +
+				c.height)
 		}
 		.up {
-			return cur.y - (c.y + c.height), span_overlap(cur.x, cur.x + cur.width, c.x,
-				c.x + c.width)
+			return cur.y - (c.y + c.height), span_overlap(cur.x, cur.x + cur.width, c.x, c.x +
+				c.width)
 		}
 		.down {
-			return c.y - (cur.y + cur.height), span_overlap(cur.x, cur.x + cur.width, c.x,
-				c.x + c.width)
+			return c.y - (cur.y + cur.height), span_overlap(cur.x, cur.x + cur.width, c.x, c.x +
+				c.width)
 		}
 	}
 }
