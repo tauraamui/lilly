@@ -15,8 +15,6 @@ import os
 
 #include <fcntl.h>
 
-fn C.open(const_pathname &char, flags int, mode int) int
-
 fn persist_stderr_to_disk() {
 	path := os.join_path(os.state_dir(), 'lilly')
 	os.mkdir_all(path) or { exit(1) }
