@@ -40,7 +40,6 @@ fn C.dup2(oldfd int, newfd int) int
 fn C.execvp(file &char, argv &&char) int
 fn C.kill(pid int, sig int) int
 fn C.fcntl(fd int, cmd int, arg ...int) int
-fn C.ioctl(fd int, request u64, arg voidptr) int
 fn C.strerror(errnum int) &char
 
 struct C.winsize {

@@ -1,40 +1,40 @@
- 1 package main                                                                                                         
- 2                                                                                                                      
- 3 import (                                                                                                             
- 4     "fmt"                                                                                                            
- 5 )                                                                                                                    
- 6                                                                                                                      
- 7 type GapBuffer struct {                                                                                              
- 8     data []rune                                                                                                      
- 9     gap  int                                                                                                         
-10     size int                                                                                                         
-11 }                                                                                                                    
-12                                                                                                                      
-13 func NewGapBuffer(initialSize int) *GapBuffer {                                                                      
-14     gb := &GapBuffer{                                                                                                
-15         data: make([]rune, initialSize),                                                                             
-16         gap:  initialSize,                                                                                           
-17         size: 0,                                                                                                     
-18     }                                                                                                                
-19     return gb                                                                                                        
-20 }                                                                                                                    
-21                                                                                                                      
-22 func (gb *GapBuffer) MoveGap(position int) {                                                                         
-23     if position < 0 || position > gb.size {                                                                          
-24         return                                                                                                       
-25     }                                                                                                                
-26     if position < gb.gap {                                                                                           
-27         for i := position; i < gb.gap; i++ {                                                                         
-28             gb.data[i], gb.data[i+gb.gap-position] = gb.data[i+gb.gap-position], gb.data[i]                          
-29         }                                                                                                            
-30     } else {                                                                                                         
-31         for i := gb.gap; i < position; i++ {                                                                         
-32             gb.data[i-gb.gap+position] = gb.data[i]                                                                  
-33         }                                                                                                            
-34     }                                                                                                                
-35     gb.gap = position                                                                                                
-36 }                                                                                                                    
+36 package main                                                                                                         
+35                                                                                                                      
+34 import (                                                                                                             
+33     "fmt"                                                                                                            
+32 )                                                                                                                    
+31                                                                                                                      
+30 type GapBuffer struct {                                                                                              
+29     data []rune                                                                                                      
+28     gap  int                                                                                                         
+27     size int                                                                                                         
+26 }                                                                                                                    
+25                                                                                                                      
+24 func NewGapBuffer(initialSize int) *GapBuffer {                                                                      
+23     gb := &GapBuffer{                                                                                                
+22         data: make([]rune, initialSize),                                                                             
+21         gap:  initialSize,                                                                                           
+20         size: 0,                                                                                                     
+19     }                                                                                                                
+18     return gb                                                                                                        
+17 }                                                                                                                    
+16                                                                                                                      
+15 func (gb *GapBuffer) MoveGap(position int) {                                                                         
+14     if position < 0 || position > gb.size {                                                                          
+13         return                                                                                                       
+12     }                                                                                                                
+11     if position < gb.gap {                                                                                           
+10         for i := position; i < gb.gap; i++ {                                                                         
+ 9             gb.data[i], gb.data[i+gb.gap-position] = gb.data[i+gb.gap-position], gb.data[i]                          
+ 8         }                                                                                                            
+ 7     } else {                                                                                                         
+ 6         for i := gb.gap; i < position; i++ {                                                                         
+ 5             gb.data[i-gb.gap+position] = gb.data[i]                                                                  
+ 4         }                                                                                                            
+ 3     }                                                                                                                
+ 2     gb.gap = position                                                                                                
+ 1 }                                                                                                                    
 37                                                                                                                      
-38 func (gb *GapBuffer) Delete(start, end int) {                                                                        
+ 1 func (gb *GapBuffer) Delete(start, end int) {                                                                        
 █NORMAL██0003.txt██ master█                                                                             █36:0█
                                                                                                                         
