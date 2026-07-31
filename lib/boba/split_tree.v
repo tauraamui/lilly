@@ -32,11 +32,6 @@ pub mut:
 	ratios   []f64
 }
 
-pub enum SplitDirection {
-	vertical
-	horizontal
-}
-
 pub struct SplitTree {
 pub mut:
 	root             ?SplitNode

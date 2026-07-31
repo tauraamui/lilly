@@ -49,6 +49,7 @@ mut:
 	last_window_height int
 
 	doc_controller     &documents.Controller
+	doc_controller2    &documents.Controller2
 	cb                 &clipboard.Manager
 	active_editor_data ?EditorData
 	branch_name        string
@@ -57,11 +58,6 @@ mut:
 	input_field        boba.InputField
 	message_label      ?MessageLabel
 	editor_id_count    int
-}
-
-struct MessageLabel {
-	contents string
-	ccolor   tea.Color
 }
 
 struct OpenFileMsg {
@@ -91,6 +87,7 @@ struct EditorWorkspaceModelParams {
 	leader_key        string
 	initial_file_path string
 	doc_controller    &documents.Controller
+	doc_controller2   &documents.Controller2
 	clip_manager      &clipboard.Manager
 	expand_tabs       bool
 	tab_width         int
@@ -103,6 +100,7 @@ fn EditorWorkspaceModel.new(opts EditorWorkspaceModelParams) EditorWorkspaceMode
 		initial_file_path: opts.initial_file_path
 		split_tree:        boba.SplitTree.new()
 		doc_controller:    opts.doc_controller
+		doc_controller2:   opts.doc_controller2
 		leader_key:        opts.leader_key
 		cb:                opts.clip_manager
 		expand_tabs:       opts.expand_tabs
@@ -173,50 +171,6 @@ fn toggle_editor_show_border(editor_id int, show bool) tea.Cmd {
 fn raise_error(error string) tea.Cmd {
 	return tea.sequence(display_message(.error, error), error_log(error),
 		hide_message_after(6 * time.second))
-}
-
-enum DisplayMessageType {
-	normal
-	warning
-	error
-}
-
-fn (t DisplayMessageType) color(ttheme theme.Theme) tea.Color {
-	return match t {
-		.normal { ttheme.petal_green }
-		.warning { ttheme.status_orange }
-		.error { ttheme.petal_red }
-	}
-}
-
-struct DisplayMessageMsg {
-	contents string
-	m_type   DisplayMessageType
-}
-
-fn display_message(m_type DisplayMessageType, contents string) tea.Cmd {
-	return fn [m_type, contents] () tea.Msg {
-		return DisplayMessageMsg{
-			contents: contents
-			m_type:   m_type
-		}
-	}
-}
-
-struct HideMessageMsg {
-	time time.Time
-}
-
-fn hide_message() tea.Msg {
-	return HideMessageMsg{}
-}
-
-fn hide_message_after(duration time.Duration) tea.Cmd {
-	return tea.tick(duration, fn (t time.Time) tea.Msg {
-		return HideMessageMsg{
-			time: t
-		}
-	})
 }
 
 struct QueryPWDGitBranchMsg {}
@@ -403,9 +357,9 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 							':' {
 								return m.clone(), switch_mode(.command)
 							}
-							'i' {
-								return m.clone(), switch_mode(.insert)
-							}
+							// 'i' {
+							// return m.clone(), switch_mode(.insert)
+							// }
 							else {}
 						}
 					}
@@ -482,14 +436,15 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			}
 
 			mut e_model := EditorModel.new(
-				id:             editor_id
-				theme:          m.theme
-				file_path:      msg.file_path
-				doc_id:         doc_id
-				doc_controller: m.doc_controller
-				cb:             m.cb
-				expand_tabs:    m.expand_tabs
-				tab_width:      m.tab_width
+				id:              editor_id
+				theme:           m.theme
+				file_path:       msg.file_path
+				doc_id:          doc_id
+				doc_controller:  m.doc_controller
+				doc_controller2: m.doc_controller2
+				cb:              m.cb
+				expand_tabs:     m.expand_tabs
+				tab_width:       m.tab_width
 			)
 			cmd := e_model.init()
 
@@ -515,15 +470,17 @@ fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 				old_id := info.id // get the old ID before inserting
 				new_id := m.next_editor_id()
 				mut new_editor := EditorModel.new(
-					id:             new_id
-					theme:          m.theme
-					file_path:      info.file_path
-					doc_id:         info.doc_id
-					doc_controller: m.doc_controller
-					cb:             m.cb
-					expand_tabs:    m.expand_tabs
-					tab_width:      m.tab_width
+					id:              new_id
+					theme:           m.theme
+					file_path:       info.file_path
+					doc_id:          info.doc_id
+					doc_controller:  m.doc_controller
+					doc_controller2: m.doc_controller2
+					cb:              m.cb
+					expand_tabs:     m.expand_tabs
+					tab_width:       m.tab_width
 				)
+				// mut new_editor := EditorModel2.new(EditorWorkspaceConfig.new(m.config), new_id, info.doc_id, info.file_path, m.doc_controller2)
 				cmds << new_editor.init()
 
 				m.split_tree.insert_vertical_split(new_id, info.file_path)
@@ -949,7 +906,9 @@ fn (m EditorWorkspaceModel) debug_data() DebugData {
 	return DebugData{
 		name: 'editor_workspace data'
 		data: {
-			'initial file path': m.initial_file_path
+			'initial file path':    m.initial_file_path
+			'active editor width':  if d := m.active_editor_data { '${d.width}' } else { 'null' }
+			'active editor height': if d := m.active_editor_data { '${d.height}' } else { 'null' }
 		}
 	}
 }

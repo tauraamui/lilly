@@ -139,6 +139,7 @@ pub fn (mut m InputField) update(msg tea.Msg) (InputField, fn () tea.Msg) {
 		}
 		tea.BlurredMsg {
 			m.focused = false
+			m.reset()
 		}
 		tea.ResizedMsg {
 			m.width = msg.window_width

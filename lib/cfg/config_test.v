@@ -34,21 +34,40 @@ $if !windows {
 
 		assert config.theme.name == 'light'
 		assert config.leader_key == ','
-		assert config.expand_tabs
 		assert config.tab_width == 2
 	}
 
-	fn test_parse_config_file_theme() {
+	fn test_parse_config_file_incorrect_values_defaults() {
 		path := os.join_path(os.temp_dir(), 'test_lilly.cfg')
 		os.write_file(path,
-			'config {\n\ttheme "gibberish"\n\tleader_key ","\n\texpand_tabs true\n\ttab_width 2\n}')!
+			'config {\n\ttheme "gibberish"\n\tleader_key ","\n\ttab_width -10\n\trelative_line_numbers false\n}')!
 
 		defer {
 			os.rm(path) or {}
 		}
 
 		config := parse_config_file(path) or {
-			assert err.msg() == 'unknown theme'
+			assert false, 'expected parse to succeed but got: ${err}'
+
+			return
+		}
+
+		assert config.theme.name == 'dark'
+		assert config.leader_key == ','
+		assert config.tab_width == 4
+		assert config.relative_line_numbers == false
+	}
+
+	fn test_parse_config_file_no_root_node() {
+		path := os.join_path(os.temp_dir(), 'test_lilly.cfg')
+		os.write_file(path, 'theme "light"')!
+
+		defer {
+			os.rm(path) or {}
+		}
+
+		config := parse_config_file(path) or {
+			assert err.msg() == 'no config node'
 
 			return
 		}

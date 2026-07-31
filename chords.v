@@ -40,6 +40,17 @@ mut:
 }
 
 fn (mut c Chord) feed(key string) ?ChordAction {
+	return c.feed_internal(key, false)
+}
+
+// feed_visual is like feed, but treats operators as standalone actions
+// in visual mode the selection supplies the range, so `d`/`c`/`y` must
+// fire immediately rather than wait for a motion.
+fn (mut c Chord) feed_visual(key string) ?ChordAction {
+	return c.feed_internal(key, true)
+}
+
+fn (mut c Chord) feed_internal(key string, in_visual bool) ?ChordAction {
 	c.buf << key.bytes()
 
 	ch := key[0]
@@ -51,6 +62,14 @@ fn (mut c Chord) feed(key string) ?ChordAction {
 				return none
 			}
 			if c.is_operator(ch) {
+				if in_visual {
+					defer { c.reset() }
+					return ChordAction{
+						count:    c.effective_count()
+						operator: ch
+						motion:   ''
+					}
+				}
 				c.operator = ch
 				c.state = .have_operator
 				return none
@@ -190,8 +209,8 @@ fn (c Chord) single_char_motion(ch u8) ?string {
 		`{` { '{' }
 		`}` { '}' }
 		`x` { 'x' }
-		`v` { 'v' }
-		`V` { 'V' }
+		// `v` { 'v' }
+		// `V` { 'V' }
 		`p` { 'p' }
 		`P` { 'P' }
 		`G` { 'G' }

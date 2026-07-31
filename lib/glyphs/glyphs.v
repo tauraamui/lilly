@@ -15,6 +15,44 @@
 module glyphs
 
 pub const block = '█'
+
+// box_junction picks the single box-drawing glyph for a divider cell from the
+// four sides a divider line continues toward. This lets junctions where panes
+// meet render the correct tee/cross instead of a fixed, often-wrong corner.
+pub fn box_junction(up bool, down bool, left bool, right bool) string {
+	if up && down && left && right {
+		return '┼'
+	}
+	if up && down && right {
+		return '├'
+	}
+	if up && down && left {
+		return '┤'
+	}
+	if down && left && right {
+		return '┬'
+	}
+	if up && left && right {
+		return '┴'
+	}
+	if down && right {
+		return '┌'
+	}
+	if down && left {
+		return '┐'
+	}
+	if up && right {
+		return '└'
+	}
+	if up && left {
+		return '┘'
+	}
+	if left || right {
+		return '─'
+	}
+	return '│'
+}
+
 pub const slant_left_flat_bottom = ''
 pub const left_rounded = ''
 pub const slant_left_flat_top = ''

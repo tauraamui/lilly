@@ -1,0 +1,176 @@
+// Copyright 2026 The Lilly Edtior contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+module buffers
+
+import gap
+
+fn test_get_recieves_correct_byte_ignoring_gap() {
+	mut b := gap.Buffer.new(512)
+	assert b.logical_len() == 0
+
+	b.insert(u8(`c`))
+	assert b.str() == 'c'
+	assert b.get(0)? == u8(`c`)
+
+	b.insert(u8(`d`))
+	assert b.str() == 'cd'
+	assert b.get(1)? == u8(`d`)
+
+	b.move_cur_left()
+	b.insert(u8(`e`))
+	assert b.str() == 'ced'
+	assert b.get(1)? == u8(`e`)
+}
+
+fn test_get_with_oob_index_returns_none() {
+	mut b := gap.Buffer.new(512)
+	assert b.logical_len() == 0
+
+	assert b.get(0) == ?u8(none)
+	b.insert(u8(`c`))
+	assert b.get(0)? == u8(`c`)
+}
+
+fn test_logical_len_returns_total_real_char_count() {
+	mut b := gap.Buffer.new(512)
+	assert b.logical_len() == 0
+
+	b.insert(u8(`c`))
+	assert b.str() == 'c'
+	assert b.logical_len() == 1
+
+	b.insert(u8(`d`))
+	assert b.str() == 'cd'
+	assert b.logical_len() == 2
+
+	b.insert(u8(`e`))
+	assert b.str() == 'cde'
+	assert b.logical_len() == 3
+
+	b.backspace()
+	assert b.str() == 'cd'
+	assert b.logical_len() == 2
+}
+
+fn test_insert_into_gap_results_in_expected_string() {
+	mut b := gap.Buffer.new(512)
+	b.insert(u8(`c`))
+	assert b.str() == 'c'
+}
+
+fn test_insert_into_gap_then_delete_results_in_expected_string() {
+	mut b := gap.Buffer.new(8)
+	b.insert(u8(`c`))
+	b.insert(u8(`d`))
+	b.insert(u8(`e`))
+	b.insert(u8(`f`))
+	assert b.str() == 'cdef'
+	assert b.rawstr() == 'cdef____'
+
+	b.move_cur_left()
+	b.move_cur_left()
+	assert b.str() == 'cdef'
+	assert b.rawstr() == 'cd____ef'
+
+	b.delete()
+	assert b.str() == 'cdf'
+	assert b.rawstr() == 'cd____ef'
+}
+
+fn test_insert_into_gap_then_backspace_results_in_expected_string() {
+	mut b := gap.Buffer.new(8)
+	b.insert(u8(`c`))
+	b.insert(u8(`d`))
+	b.insert(u8(`e`))
+	b.insert(u8(`f`))
+	assert b.str() == 'cdef'
+	assert b.rawstr() == 'cdef____'
+
+	b.move_cur_left()
+	b.move_cur_left()
+	assert b.str() == 'cdef'
+	assert b.rawstr() == 'cd____ef'
+
+	b.backspace()
+	assert b.str() == 'cef'
+	assert b.rawstr() == 'cd____ef'
+}
+
+@[assert_continues]
+fn test_insert_into_gap_then_move_cursor_left() {
+	mut b := gap.Buffer.new(8)
+	b.insert(u8(`c`))
+	assert b.str() == 'c'
+	assert b.rawstr() == 'c_______'
+
+	b.move_cur_left()
+	assert b.str() == 'c'
+	assert b.rawstr() == '_______c'
+}
+
+@[assert_continues]
+fn test_insert_into_gap_then_move_cursor_right() {
+	mut b := gap.Buffer.new(8)
+	b.insert(u8(`c`))
+	assert b.str() == 'c'
+	assert b.rawstr() == 'c_______'
+
+	b.move_cur_left()
+	assert b.str() == 'c'
+	assert b.rawstr() == '_______c'
+
+	b.insert(u8(`d`))
+	assert b.str() == 'dc'
+	assert b.rawstr() == 'd______c'
+
+	b.move_cur_right()
+	b.insert(u8(`z`))
+	assert b.str() == 'dcz'
+	assert b.rawstr() == 'dcz_____'
+}
+
+@[assert_continues]
+fn test_insert_into_gap_then_move_cursor_left_multiple_times() {
+	mut b := gap.Buffer.new(8)
+	b.insert(u8(`c`))
+	assert b.str() == 'c'
+	assert b.rawstr() == 'c_______'
+
+	b.move_cur_left()
+	assert b.str() == 'c'
+	assert b.rawstr() == '_______c'
+
+	b.move_cur_left()
+	assert b.str() == 'c'
+	assert b.rawstr() == '_______c'
+}
+
+@[assert_continues]
+fn test_insert_into_gap_then_move_cursor_left_insert_char() {
+	mut b := gap.Buffer.new(8)
+	b.insert(u8(`c`))
+	assert b.str() == 'c'
+	assert b.rawstr() == 'c_______'
+
+	b.move_cur_left()
+	b.insert(u8(`b`))
+	assert b.str() == 'bc'
+	assert b.rawstr() == 'b______c'
+
+	b.move_cur_left()
+	b.insert(u8(`a`))
+	assert b.str() == 'abc'
+	assert b.rawstr() == 'a_____bc'
+}

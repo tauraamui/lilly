@@ -22,6 +22,7 @@ import lib.documents
 import lib.documents.cursor
 import lib.syntax
 import lib.clipboard
+import lib.nanoid
 
 fn num_digits(n int) int {
 	if n <= 0 {
@@ -42,6 +43,8 @@ struct EditorData {
 	cursor_row    int
 	cursor_col    int
 	chord_display string
+	width         int
+	height        int
 }
 
 struct EditorModel {
@@ -61,6 +64,7 @@ mut:
 
 	cursor_pos         cursor.Pos
 	doc_controller     &documents.Controller
+	doc_controller2    &documents.Controller2
 	cb                 &clipboard.Manager
 	token_parser       syntax.Parser
 	lang_syn           syntax.Syntax
@@ -136,30 +140,32 @@ fn goto_line(id int, line int) tea.Cmd {
 
 @[params]
 struct EditorModelNewParams {
-	theme          theme.Theme
-	id             int
-	file_path      string
-	doc_id         int
-	doc_controller &documents.Controller
-	cb             &clipboard.Manager
-	expand_tabs    bool
-	tab_width      int
+	theme           theme.Theme
+	id              int
+	file_path       string
+	doc_id          int
+	doc_controller  &documents.Controller
+	doc_controller2 &documents.Controller2
+	cb              &clipboard.Manager
+	expand_tabs     bool
+	tab_width       int
 }
 
 fn EditorModel.new(opts EditorModelNewParams) EditorModel {
 	assert opts.file_path != ''
 	return EditorModel{
-		id:             opts.id
-		cursor_pos:     cursor.Pos.new(0, 0)
-		file_path:      opts.file_path
-		doc_id:         opts.doc_id
-		theme:          opts.theme
-		doc_controller: opts.doc_controller
-		cb:             opts.cb
-		token_parser:   syntax.Parser{}
-		lang_syn:       syntax.noop_syntax
-		expand_tabs:    opts.expand_tabs
-		tab_width:      opts.tab_width
+		id:              opts.id
+		cursor_pos:      cursor.Pos.new(0, 0)
+		file_path:       opts.file_path
+		doc_id:          opts.doc_id
+		theme:           opts.theme
+		doc_controller:  opts.doc_controller
+		doc_controller2: opts.doc_controller2
+		cb:              opts.cb
+		token_parser:    syntax.Parser{}
+		lang_syn:        syntax.noop_syntax
+		expand_tabs:     opts.expand_tabs
+		tab_width:       opts.tab_width
 	}
 }
 
@@ -208,8 +214,9 @@ struct EditorModelMsg {
 }
 
 struct EditorModelKeyMsg {
-	key_msg tea.KeyMsg
-	mode    petal.Mode
+	active_id nanoid.ID
+	key_msg   tea.KeyMsg
+	mode      petal.Mode
 }
 
 fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {

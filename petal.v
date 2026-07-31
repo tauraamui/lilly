@@ -44,21 +44,19 @@ struct PetalModelOptions {
 	initial_file_path ?string
 }
 
-fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.Controller, cb &clipboard.Manager, opts PetalModelOptions) PetalModel {
+fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.Controller, doc_controller2 &documents.Controller2, cb &clipboard.Manager, opts PetalModelOptions) PetalModel {
 	return PetalModel{
 		version:       version
 		config:        config
 		theme:         config.theme
 		first_frame:   true
 		active_screen: SplashScreenModel.new(
+			config:            config
 			version:           version
-			leader_key:        config.leader_key
-			theme:             config.theme
 			doc_controller:    doc_controller
+			doc_controller2:   doc_controller2
 			cb:                cb
 			initial_file_path: opts.initial_file_path
-			expand_tabs:       config.expand_tabs
-			tab_width:         config.tab_width
 		)
 		golden_frames: GoldenFrameState.init()
 	}
@@ -90,6 +88,12 @@ fn swap_active_screen(screen DebuggableModel) tea.Cmd {
 	return fn [screen] () tea.Msg {
 		return SwapActiveScreenMsg{screen}
 	}
+}
+
+struct ShutdownMsg {}
+
+fn shutdown() tea.Msg {
+	return ShutdownMsg{}
 }
 
 struct CheckIfTMUXWrappedMsg {}
@@ -128,7 +132,7 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			m.last_resize_width = msg.window_width
 			m.last_resize_height = msg.window_height
 		}
-		QueryPWDGitBranchMsg {
+		QueryPWDGitBranchMsg { // TODO(tauraamui): DEPRECATE THIS POST EDITOR REWRITE
 			if send := m.app_send {
 				spawn fn [send] () {
 					branch := resolve_git_branch_name(os.execute)
@@ -136,6 +140,17 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 						branch_name: branch
 					})
 				}()
+			}
+		}
+		QueryGitBranchMsg {
+			if send := m.app_send {
+				spawn fn [send] () {
+					branch_name := resolve_git_branch_name(os.execute)
+					send(GitBranchQueryResultMsg{branch_name})
+				}()
+			} else {
+				branch_name := resolve_git_branch_name(os.execute)
+				return m.clone(), git_branch_query_result(branch_name)
 			}
 		}
 		else {}
@@ -159,6 +174,7 @@ fn (mut m PetalModel) view(mut ctx tea.Context) {
 	mut screen := m.active_screen
 	screen.view(mut ctx)
 	m.golden_frames.capture(ctx)
+	ctx.clear_all_offsets()
 }
 
 fn (m PetalModel) clone() tea.Model {

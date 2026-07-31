@@ -14,7 +14,7 @@
 
 module syntax
 
-import json
+import json2
 import os
 
 pub const noop_syntax = Syntax{}
@@ -44,7 +44,7 @@ pub:
 }
 
 pub fn v_syntax() !Syntax {
-	return json.decode(Syntax, builtin_v_syntax) or {
+	return json2.decode[Syntax](builtin_v_syntax) or {
 		error('builtin V syntax file failed to decode: ${err}')
 	}
 }
@@ -68,40 +68,40 @@ pub fn resolve_from_extension(file_path string) !Syntax {
 	if syn_data.len == 0 {
 		return noop_syntax
 	}
-	return json.decode(Syntax, syn_data) or {
+	return json2.decode[Syntax](syn_data) or {
 		error('failed to parse syntax definition for ${ext}: ${err}')
 	}
 }
 
 pub fn load_builtin_syntaxes() []Syntax {
-	v_syntax := json.decode(Syntax, builtin_v_syntax) or {
+	v_syntax := json2.decode[Syntax](builtin_v_syntax) or {
 		panic('builtin V syntax file failed to decode: ${err}')
 	}
-	go_syntax := json.decode(Syntax, builtin_go_syntax) or {
+	go_syntax := json2.decode[Syntax](builtin_go_syntax) or {
 		panic('builtin Go syntax file failed to decode: ${err}')
 	}
-	c_syntax := json.decode(Syntax, builtin_c_syntax) or {
+	c_syntax := json2.decode[Syntax](builtin_c_syntax) or {
 		panic('builtin C syntax file failed to decode: ${err}')
 	}
-	rust_syntax := json.decode(Syntax, builtin_rust_syntax) or {
+	rust_syntax := json2.decode[Syntax](builtin_rust_syntax) or {
 		panic('builtin Rust syntax file failed to decode: ${err}')
 	}
-	js_syntax := json.decode(Syntax, builtin_js_syntax) or {
+	js_syntax := json2.decode[Syntax](builtin_js_syntax) or {
 		panic('builtin JavaScript syntax file failed to decode: ${err}')
 	}
-	ts_syntax := json.decode(Syntax, builtin_ts_syntax) or {
+	ts_syntax := json2.decode[Syntax](builtin_ts_syntax) or {
 		panic('builtin TypeScript syntax file failed to decode: ${err}')
 	}
-	python_syntax := json.decode(Syntax, builtin_python_syntax) or {
+	python_syntax := json2.decode[Syntax](builtin_python_syntax) or {
 		panic('builtin Python syntax file failed to decode: ${err}')
 	}
-	perl_syntax := json.decode(Syntax, builtin_perl_syntax) or {
+	perl_syntax := json2.decode[Syntax](builtin_perl_syntax) or {
 		panic('builting Perl syntax file failed to decode: ${err}')
 	}
-	zig_syntax := json.decode(Syntax, builtin_zig_syntax) or {
+	zig_syntax := json2.decode[Syntax](builtin_zig_syntax) or {
 		panic('builtin Zig syntax file failed to decode: ${err}')
 	}
-	gleam_syntax := json.decode(Syntax, builtin_gleam_syntax) or {
+	gleam_syntax := json2.decode[Syntax](builtin_gleam_syntax) or {
 		panic('builtin Gleam syntax file failed to decode: ${err}')
 	}
 
@@ -122,7 +122,7 @@ fn load_syntaxes_from_disk(syntax_config_dir fn () !string,
 			panic('${err.msg()}')
 			'{}'
 		} // TODO(tauraamui): log out to a file here probably
-		mut syn := json.decode(Syntax, contents) or { Syntax{} }
+		mut syn := json2.decode[Syntax](contents) or { Syntax{} }
 		if file_path.ends_with('v.syntax') {
 			unsafe {
 				syns[0] = syn

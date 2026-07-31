@@ -158,7 +158,7 @@ fn filter_file_paths(file_paths []string, query string, last_query string, last_
 		}
 		chunk := paths_to_filter[start..end].clone()
 
-		threads << spawn fn (paths []string, q string) []main.ScoredFile {
+		threads << spawn fn (paths []string, q string) []ScoredFile {
 			mut results := []ScoredFile{cap: paths.len}
 			for path in paths {
 				if fuzzy_match(q, path) {

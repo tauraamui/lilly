@@ -21,20 +21,27 @@ import lib.petal.theme
 pub const light_theme_name = theme.light_theme_name
 pub const dark_theme_name = theme.dark_theme_name
 
+pub const default_config = Config{
+	theme:                 theme.dark_theme
+	leader_key:            ';'
+	tab_width:             4
+	relative_line_numbers: true
+}
+
 pub struct Config {
 pub:
-	theme       theme.Theme
-	leader_key  string
-	expand_tabs bool
-	tab_width   int
+	theme                 theme.Theme
+	leader_key            string
+	tab_width             int
+	relative_line_numbers bool
 }
 
 pub struct ConfigFile {
 pub mut:
-	theme       string
-	leader_key  string
-	expand_tabs bool
-	tab_width   int
+	theme                 string
+	leader_key            string
+	tab_width             int
+	relative_line_numbers bool
 }
 
 @[params]
@@ -66,12 +73,30 @@ fn xdg_config_paths() []string {
 	return paths
 }
 
-pub fn parse_config_file(file_path string) !Config {
-	mut ttheme := theme.dark_theme
-	mut leader_key := ';'
-	mut expand_tabs := false
-	mut tab_width := 4
+fn resolve_theme_name(config_name string, override_name string) string {
+	if override_name.len > 0 {
+		return override_name
+	}
+	return config_name
+}
 
+fn resolve_theme(name string) theme.Theme {
+	return match name.trim_space() {
+		'light' { theme.light_theme }
+		'dark' { theme.dark_theme }
+		else { default_config.theme }
+	}
+}
+
+fn resolve_leader_key(leader_key string) string {
+	return if leader_key.len == 1 { leader_key } else { default_config.leader_key }
+}
+
+fn resolve_tab_width(width int) int {
+	return if width > 0 { width } else { default_config.tab_width }
+}
+
+pub fn parse_config_file(file_path string) !Config {
 	$if !windows {
 		file := os.read_file(os.expand_tilde_to_home(file_path))!
 
@@ -88,35 +113,16 @@ pub fn parse_config_file(file_path string) !Config {
 			nodes: doc.nodes[0].children
 		}, kdlv.GenerateOptions{}))!
 
-		config.theme = config.theme.trim_space()
-
-		match config.theme {
-			'light' { ttheme = theme.light_theme }
-			'dark' { ttheme = theme.dark_theme }
-			'' {}
-			else { return error('unknown theme') }
-		}
-
-		if config.leader_key != '' {
-			if config.leader_key.len != 1 {
-				return error('invalid leader key, too long')
-			}
-			leader_key = config.leader_key
-		}
-
-		expand_tabs = config.expand_tabs
-
-		if config.tab_width > 0 {
-			tab_width = config.tab_width
+		return Config{
+			theme:                 resolve_theme(resolve_theme_name(config.theme,
+				os.getenv('LILLY_THEME')))
+			leader_key:            resolve_leader_key(config.leader_key)
+			tab_width:             resolve_tab_width(config.tab_width)
+			relative_line_numbers: config.relative_line_numbers
 		}
 	}
 
-	return Config{
-		theme:       ttheme
-		leader_key:  leader_key
-		expand_tabs: expand_tabs
-		tab_width:   tab_width
-	}
+	return default_config
 }
 
 pub fn Config.new(opts ConfigOptions) Config {
@@ -132,16 +138,5 @@ pub fn Config.new(opts ConfigOptions) Config {
 		}
 	}
 
-	return Config{
-		theme:      theme.dark_theme
-		leader_key: ';'
-		tab_width:  4
-	}
-}
-
-pub fn (c Config) set_theme(name string) Config {
-	return Config{
-		...c
-		theme: if name == 'dark' { theme.dark_theme } else { theme.light_theme }
-	}
+	return default_config
 }
