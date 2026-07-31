@@ -202,7 +202,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 			)
 			*/
 			cmds << swap_active_screen(workspace)
-			cmds << open_editor_in_workspace_cmd(msg.initial_file_path)
+			cmds << open_file(msg.initial_file_path)
 			return m.clone(), tea.sequence(...cmds)
 		}
 		CreateAndOpenFileMsg {

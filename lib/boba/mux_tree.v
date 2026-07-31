@@ -112,6 +112,29 @@ fn (mut n Node[T]) remove(editor_id T) ?T {
 	return n.second_child.remove(editor_id)
 }
 
+// replace finds the leaf holding old_id and swaps it for new_id in place,
+// leaving the tree's shape (and every other leaf) untouched — unlike remove(),
+// which collapses the parent into the surviving sibling. Used when a pane's
+// contents change (e.g. opening a different file into the active split)
+// without altering the layout. Returns true when old_id was found.
+pub fn (mut t Tree[T]) replace(old_id T, new_id T) bool {
+	return t.root.replace(old_id, new_id)
+}
+
+fn (mut n Node[T]) replace(old_id T, new_id T) bool {
+	if n.is_leaf() {
+		if n.editor_id == old_id {
+			n.editor_id = new_id
+			return true
+		}
+		return false
+	}
+	if n.first_child.replace(old_id, new_id) {
+		return true
+	}
+	return n.second_child.replace(old_id, new_id)
+}
+
 // leading_leaf returns the editor id of the top/left-most leaf of the subtree —
 // reached by always descending into the first child.
 fn (n &Node[T]) leading_leaf() T {

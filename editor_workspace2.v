@@ -73,7 +73,7 @@ fn EditorWorkspaceModel2.new(config EditorWorkspaceConfig, doc_controller &docum
 
 fn (mut m EditorWorkspaceModel2) init() fn () tea.Msg {
 	m.input_field = boba.InputField.new_with_prefix(':', 0)
-	// the tree is planted when the first editor opens (open_editor_in_workspace_update),
+	// the tree is planted when the first editor opens (open_file_update),
 	// using that editor's generated id; until then it holds no editor leaves.
 	return tea.sequence(tea.emit_resize, query_git_branch)
 }
@@ -101,9 +101,6 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		}
 		OpenFileMsg {
 			return m.open_file_update(msg)
-		}
-		OpenEditorInWorkspaceMsg {
-			return m.open_editor_in_workspace_update(msg)
 		}
 		OpenEditorInSplitMsg {
 			return m.open_editor_in_split_update(msg)
@@ -375,24 +372,39 @@ fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, 
 	return m.clone(), tea.sequence(i_cmd, tea.batch_array(cmds), d_cmd)
 }
 
+// open_file_update is the single entry point for putting a file's contents
+// into the active pane, whether that's the very first editor planted into an
+// empty workspace or swapping the active pane over to a different file. The
+// doc controller derives doc_id deterministically from the path, so a file
+// already open in the active pane resolves to the same id and this bails out
+// immediately rather than tearing down and rebuilding an identical editor.
 fn (mut m EditorWorkspaceModel2) open_file_update(msg OpenFileMsg) (tea.Model, fn () tea.Msg) {
-	// just replace whatever existing editor modal instance with this new open file unless they're already the same
-	// if editor instance we're on matches the new file to open's path, do nothing
-	// if it does not, create new instance of editormodal and replace the current active editor id slot with it
-	return m.clone(), tea.noop_cmd
-}
-
-// TODO(tauraamui): merge these two methods since in the end they should really be doing the same thing
-fn (mut m EditorWorkspaceModel2) open_editor_in_workspace_update(msg OpenEditorInWorkspaceMsg) (tea.Model, fn () tea.Msg) {
 	doc_id := m.doc_controller.open_document(msg.file_path) or {
 		return m.clone(), debug_log('failed to open document ${msg.file_path}: ${err}')
 	}
+
+	old_active_id := m.active_editor_id
+	if active_editor := m.editors[old_active_id] {
+		if active_editor is EditorModel2 {
+			if active_editor.doc_id == doc_id {
+				return m.clone(), tea.noop_cmd
+			}
+		}
+	}
+
 	editor_id := nanoid.simple()
 	mut e_model := EditorModel2.new(m.config, editor_id, doc_id, msg.file_path, m.doc_controller)
 	model_init_cmd := e_model.init()
+
+	if _ := m.editors[old_active_id] {
+		m.tree.replace(old_active_id, editor_id)
+		m.editors.delete(old_active_id)
+	} else {
+		m.tree.plant(editor_id)
+	}
+
 	m.active_editor_id = editor_id
 	m.editors[editor_id] = e_model
-	m.tree.plant(editor_id)
 	return m.clone(), tea.sequence(model_init_cmd, focus_editor2(m.active_editor_id),
 		tea.emit_resize)
 }
@@ -689,18 +701,6 @@ fn (m EditorWorkspaceModel2) clone_with_mode(mode petal.Mode) tea.Model {
 	return EditorWorkspaceModel2{
 		...m
 		mode: mode
-	}
-}
-
-struct OpenEditorInWorkspaceMsg {
-	file_path string
-}
-
-fn open_editor_in_workspace_cmd(file_path string) fn () tea.Msg {
-	return fn [file_path] () tea.Msg {
-		return OpenEditorInWorkspaceMsg{
-			file_path: file_path
-		}
 	}
 }
 
