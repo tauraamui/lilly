@@ -78,7 +78,7 @@ pub fn TextBuffer.new(mut r io.Reader) !TextBuffer { // TODO(tauraamui) [2026-06
 		if read == 0 {
 			continue
 		}
-		tb.insert(single_byte[0])
+		tb.insert_byte(single_byte[0])
 	}
 	tb.move_cursor_to_start()
 	tb.history = History{}
@@ -133,12 +133,27 @@ pub fn (mut tb TextBuffer) insert_rune(r rune) {
 	}
 }
 
-pub fn (mut tb TextBuffer) insert(c u8) {
+const symbols_to_autoclose = {
+	u8(`{`): u8(`}`)
+	u8(`(`): u8(`)`)
+	u8(`'`): u8(`'`)
+}
+
+// insert_byte performs the raw insert with no autoclose behaviour
+fn (mut tb TextBuffer) insert_byte(c u8) {
 	tb.record(.insert, tb.data_buf.ccur(), [c])
 	tb.data_buf.insert(c)
 	tb.line_buf.apply_delta(1)
 	if c == newline_hex {
 		tb.line_buf.insert_after_current(tb.data_buf.ccur())
+	}
+}
+
+pub fn (mut tb TextBuffer) insert(c u8) {
+	tb.insert_byte(c)
+	if autoclose_symbol := symbols_to_autoclose[c] {
+		tb.insert_byte(autoclose_symbol)
+		tb.move_cursor_left()
 	}
 }
 
@@ -382,7 +397,7 @@ fn (mut tb TextBuffer) apply_inverse(grp UndoGroup2) UndoGroup2 {
 			.delete {
 				tb.move_cursor_to_offset(op.offset)
 				for b in op.bytes {
-					tb.insert(b) // recording is off; line_buf stays in sync
+					tb.insert_byte(b) // recording is off; line_buf stays in sync
 				}
 				inv.ops << EditOp2{
 					kind:   .insert
