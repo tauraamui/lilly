@@ -66,6 +66,10 @@ pub fn (mut dc Controller2) delete(doc_id nanoid.ID) {
 	dc.docs[doc_id].delete()
 }
 
+pub fn (mut dc Controller2) delete_char_at(doc_id nanoid.ID) {
+	dc.docs[doc_id].delete_char_at()
+}
+
 pub fn (mut dc Controller2) delete_line(doc_id nanoid.ID, y u64) {
 	dc.docs[doc_id].delete_line(y)
 }
@@ -96,6 +100,18 @@ pub fn (mut dc Controller2) move_cursor_left(doc_id nanoid.ID) {
 
 pub fn (mut dc Controller2) move_cursor_right(doc_id nanoid.ID) {
 	dc.docs[doc_id].move_cursor_right()
+}
+
+// internal_move_cursor_left/right are for automatic clamping only (e.g.
+// pulling the cursor back onto the last char in normal mode) - they don't
+// reset the sticky goal column the way real user-triggered moves do, so
+// don't wire these to actual key input.
+pub fn (mut dc Controller2) internal_move_cursor_left(doc_id nanoid.ID) {
+	dc.docs[doc_id].internal_move_cursor_left()
+}
+
+pub fn (mut dc Controller2) internal_move_cursor_right(doc_id nanoid.ID) {
+	dc.docs[doc_id].internal_move_cursor_right()
 }
 
 pub fn (mut dc Controller2) move_cursor_up(doc_id nanoid.ID) {
@@ -136,6 +152,18 @@ pub fn (mut dc Controller2) move_cursor_to_next_big_word_start(doc_id nanoid.ID)
 
 pub fn (mut dc Controller2) jump_cursor_to_line_end(doc_id nanoid.ID) {
 	dc.docs[doc_id].jump_cursor_to_line_end()
+}
+
+pub fn (mut dc Controller2) jump_cursor_to_line_start(doc_id nanoid.ID) {
+	dc.docs[doc_id].jump_cursor_to_line_start()
+}
+
+pub fn (mut dc Controller2) jump_cursor_to_text_start(doc_id nanoid.ID) {
+	dc.docs[doc_id].jump_cursor_to_text_start()
+}
+
+pub fn (mut dc Controller2) jump_cursor_to_line(doc_id nanoid.ID, y u64) {
+	dc.docs[doc_id].jump_cursor_to_line(y)
 }
 
 pub fn (mut dc Controller2) write_to_disk(doc_id nanoid.ID, target string) ! {

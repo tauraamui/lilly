@@ -349,6 +349,67 @@ fn test_text_buffer_move_cursor_vertically_up() ! {
 	assert x2 == u64(5)
 }
 
+fn test_text_buffer_move_cursor_vertical_restores_goal_column_through_short_line() ! {
+	mut reader := mock_reader('hello\n\nworld'.bytes())
+	mut tb := TextBuffer.new(mut reader)!
+
+	tb.move_cursor_to_position(0, 4)
+
+	// blank line in between clamps x to 0
+	tb.move_cursor_vertical(1)
+	_, x_blank := tb.cursor_line_and_x()
+	assert x_blank == u64(0)
+
+	// but the goal column of 4 is restored once a long-enough line is reached
+	tb.move_cursor_vertical(1)
+	line, x := tb.cursor_line_and_x()
+	assert line == u64(2)
+	assert x == u64(4)
+}
+
+fn test_text_buffer_move_cursor_vertical_goal_column_resets_on_horizontal_move() ! {
+	mut reader := mock_reader('hello\n\nworld'.bytes())
+	mut tb := TextBuffer.new(mut reader)!
+
+	tb.move_cursor_to_position(0, 4)
+	tb.move_cursor_vertical(1) // clamped to x 0 on the blank line
+	tb.move_cursor_left() // no-op (already at x 0), but resets the goal column
+	tb.move_cursor_vertical(1)
+	line, x := tb.cursor_line_and_x()
+	assert line == u64(2)
+	assert x == u64(0)
+}
+
+fn test_text_buffer_internal_move_cursor_left_preserves_goal_column() ! {
+	mut reader := mock_reader('hello\nx\n\nworld'.bytes())
+	mut tb := TextBuffer.new(mut reader)!
+
+	tb.move_cursor_to_position(0, 4)
+
+	// lands one grapheme past 'x', the single char on line 1
+	tb.move_cursor_vertical(1)
+	_, x_landed := tb.cursor_line_and_x()
+	assert x_landed == u64(1)
+
+	// simulates an editor's normal-mode "can't sit past the last char" clamp:
+	// must not reset the goal column the way a real user h-press would
+	tb.internal_move_cursor_left()
+	_, x_clamped := tb.cursor_line_and_x()
+	assert x_clamped == u64(0)
+	assert tb.goal_column == 4
+
+	// blank line still clamps to 0 without disturbing the goal
+	tb.move_cursor_vertical(1)
+	_, x_blank := tb.cursor_line_and_x()
+	assert x_blank == u64(0)
+
+	// original column of 4 is restored once a long-enough line is reached
+	tb.move_cursor_vertical(1)
+	line, x := tb.cursor_line_and_x()
+	assert line == u64(3)
+	assert x == u64(4)
+}
+
 fn test_text_buffer_move_cursor_to_next_word_start() ! {
 	mut reader := mock_reader('hello World\nThis is the second line'.bytes())
 	mut tb := TextBuffer.new(mut reader)!

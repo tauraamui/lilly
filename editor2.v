@@ -37,10 +37,17 @@ mut:
 	top_line              int
 	visual_sel_start_col  ?u64
 	visual_sel_start_line ?u64
+	visual_linewise       bool
 	lang_syn              syntax.Syntax = syntax.noop_syntax
 	token_parser          syntax.Parser
 	parser_line_states    []syntax.State
 	parser_cache_dirty    bool = true
+	// insert_line_pristine_indent mirrors Neovim's 'autoindent' semantics: true
+	// only while the current line's sole content is whitespace that *this*
+	// insert session auto-inserted (via `o`/`O`) and the user hasn't typed
+	// anything but backspace since. Any real keystroke clears it, so
+	// user-typed whitespace is left alone on leaving insert mode.
+	insert_line_pristine_indent bool
 }
 
 fn EditorModel2.new(config EditorWorkspaceConfig, id nanoid.ID, doc_id nanoid.ID, file_path string, doc_controller &documents.Controller2) EditorModel2 {
@@ -70,6 +77,9 @@ fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 					return m.insert_mode_update(msg.key_msg)
 				}
 				.visual {
+					return m.visual_mode_update(msg.key_msg)
+				}
+				.visual_line {
 					return m.visual_mode_update(msg.key_msg)
 				}
 				else {}
@@ -136,17 +146,25 @@ fn (mut m EditorModel2) editor_model_update(editor_id nanoid.ID, msg tea.Msg) (t
 fn (mut m EditorModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () tea.Msg) {
 	m.visual_sel_start_line = ?u64(none)
 	m.visual_sel_start_col = ?u64(none)
+	m.visual_linewise = false
 
 	match msg.mode {
 		.normal {
-			if (msg.from == .insert || msg.from == .normal) && m.in_focus {
-				m.doc_controller.move_cursor_left(m.doc_id)
+			if m.in_focus {
+				m.switch_to_normal_mode_update(msg)
+				m.insert_line_pristine_indent = false
 			}
 		}
 		.visual {
 			cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
 			m.visual_sel_start_line = cursor_line
 			m.visual_sel_start_col = cursor_col
+		}
+		.visual_line {
+			cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
+			m.visual_sel_start_line = cursor_line
+			m.visual_sel_start_col = cursor_col
+			m.visual_linewise = true
 		}
 		.insert {
 			if m.in_focus {
@@ -160,19 +178,45 @@ fn (mut m EditorModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () 
 	return m.clone(), tea.noop_cmd
 }
 
+fn (mut m EditorModel2) switch_to_normal_mode_update(msg SwitchModeMsg) {
+	match msg.from {
+		.normal {
+			m.doc_controller.move_cursor_left(m.doc_id)
+			return
+		}
+		.insert {
+			if m.insert_line_pristine_indent {
+				cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+				line_bytes := m.doc_controller.get_line_bytes(m.doc_id, cursor_line) or { []u8{} }
+				if line_bytes.len > 0 && line_bytes.bytestr().trim_space().len == 0 {
+					m.doc_controller.delete_range(m.doc_id, cursor.Range{
+						start: cursor.Pos.new(0, int(cursor_line))
+						end:   cursor.Pos.new(line_bytes.len, int(cursor_line))
+					})
+					m.invalidate_parser_cache()
+					return
+				}
+			}
+			m.doc_controller.move_cursor_left(m.doc_id)
+		}
+		else {}
+	}
+}
+
 fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
 	mut cmds := []tea.Cmd{}
 	match msg.k_type {
 		.runes {
 			match msg.string() {
 				'i' {
+					m.insert_line_pristine_indent = false
 					cmds << switch_mode(.insert)
 				}
 				'v' {
 					cmds << switch_mode(.visual)
 				}
-				'V' { // currently horrible consequences of use, avoid
-					// return m.clone(), switch_mode(.visual_line)
+				'V' {
+					cmds << switch_mode(.visual_line)
 				}
 				else {
 					if action := m.chord.feed(msg.string()) {
@@ -188,6 +232,9 @@ fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 		}
 		.special {
 			match msg.string() {
+				'delete' {
+					m.doc_controller.delete_char_at(m.doc_id)
+				}
 				'left' {
 					m.doc_controller.move_cursor_left(m.doc_id)
 				}
@@ -202,6 +249,12 @@ fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 				}
 				'ctrl+r' {
 					m.doc_controller.redo(m.doc_id)
+				}
+				'ctrl+u' {
+					m.scroll_page_up()
+				}
+				'ctrl+d' {
+					m.scroll_page_down()
 				}
 				else {}
 			}
@@ -218,6 +271,7 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	match msg.k_type {
 		.runes {
 			m.invalidate_parser_cache()
+			m.insert_line_pristine_indent = false
 			for cr in msg.string().runes_iterator() {
 				m.doc_controller.insert_rune(m.doc_id, cr)
 			}
@@ -230,18 +284,24 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 				}
 				'enter' {
 					m.invalidate_parser_cache()
+					m.insert_line_pristine_indent = false
 					m.doc_controller.insert(m.doc_id, `\n`)
 				}
 				'ctrl+i' { // TAB
 					m.invalidate_parser_cache()
+					m.insert_line_pristine_indent = false
 					m.doc_controller.insert(m.doc_id, `\t`)
 				}
 				'backspace' {
 					m.invalidate_parser_cache()
+					// backspace is exempt (mirrors Neovim's <BS>/CTRL-D exemption):
+					// trimming auto-inserted indent back down doesn't disqualify
+					// the line from being cleared on leaving insert mode.
 					m.doc_controller.backspace(m.doc_id)
 				}
 				'delete' {
 					m.invalidate_parser_cache()
+					m.insert_line_pristine_indent = false
 					m.doc_controller.delete(m.doc_id)
 				}
 				'left' {
@@ -316,11 +376,22 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg
 			for b in prefix {
 				m.doc_controller.insert(m.doc_id, b)
 			}
+			m.insert_line_pristine_indent = prefix.len > 0
 			// TODO(tauraamui) [2026-06-17]: investigate a better less hacky feeling alternative method
 			// to making the cursor be correctly positioned once we've manually inserted the previous line's
 			// whitespace prefix than virtually emulating cursor right press. for example perhaps we could
 			// make the cursor clamp method take the current mode into account? hmmm
 			return tea.sequence(switch_mode(.insert), virtual_direction_key_press('right')), true
+		}
+		'I' {
+			m.insert_line_pristine_indent = false
+			m.doc_controller.jump_cursor_to_text_start(m.doc_id)
+			return switch_mode(.insert), true
+		}
+		'A' {
+			m.insert_line_pristine_indent = false
+			m.doc_controller.jump_cursor_to_line_end(m.doc_id)
+			return switch_mode(.insert), true
 		}
 		'line' {
 			m.invalidate_parser_cache()
@@ -336,6 +407,25 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg
 		'u' {
 			m.doc_controller.undo(m.doc_id)
 			m.invalidate_parser_cache()
+			return tea.noop_cmd, false
+		}
+		'x' {
+			m.invalidate_parser_cache()
+			m.doc_controller.begin_undo_group(m.doc_id)
+			for _ in 0 .. count {
+				m.doc_controller.delete_char_at(m.doc_id)
+			}
+			m.doc_controller.commit_undo_group(m.doc_id)
+			return tea.noop_cmd, false
+		}
+		'zz' {
+			// bare `zz` centers the viewport on the current line; an explicit
+			// count jumps to that line first (matches v1's `zz` and the same
+			// `count > 1` convention `G` already uses here).
+			if count > 1 {
+				m.doc_controller.jump_cursor_to_line(m.doc_id, u64(count - 1))
+			}
+			m.center_viewport_on_cursor()
 			return tea.noop_cmd, false
 		}
 		else {}
@@ -364,8 +454,13 @@ fn (mut m EditorModel2) execute_action_visual(action ChordAction) (fn () tea.Msg
 		// in visual mode the selection IS the range — apply the operator
 		// against it immediately and exit back to normal mode.
 		m.invalidate_parser_cache()
-		r := m.current_visual_range() or { return switch_mode(.normal), true }
-		apply_operator(m.doc_controller, m.doc_id, op, r)
+		if m.visual_linewise {
+			m.apply_linewise_operator(op)
+		} else {
+			r := m.current_visual_range() or { return switch_mode(.normal), true }
+			apply_operator(m.doc_controller, m.doc_id, op, r)
+		}
+		m.doc_controller.commit_undo_group(m.doc_id)
 		return switch_mode(.normal), true
 	}
 
@@ -373,6 +468,27 @@ fn (mut m EditorModel2) execute_action_visual(action ChordAction) (fn () tea.Msg
 	// render_visual_selection derives the highlight from sel_start + cursor.
 	apply_motion(m.doc_controller, m.doc_id, action.motion, count)
 	return tea.noop_cmd, false
+}
+
+// apply_linewise_operator applies an operator across every full line spanned
+// by the visual-line selection - same shape as the normal-mode `dd` handling
+// in execute_action_normal, just driven by sel_start instead of a count.
+fn (mut m EditorModel2) apply_linewise_operator(op u8) {
+	sel_start_line := m.visual_sel_start_line or { return }
+	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+	start_line := if sel_start_line < cursor_line { sel_start_line } else { cursor_line }
+	end_line := if sel_start_line > cursor_line { sel_start_line } else { cursor_line }
+
+	match op {
+		`d` {
+			for _ in start_line .. end_line + 1 {
+				// deleting the same line repeatedly since each delete moves
+				// the next line up into the deleted one
+				m.doc_controller.delete_line(m.doc_id, start_line)
+			}
+		}
+		else {}
+	}
 }
 
 fn (mut m EditorModel2) invalidate_parser_cache() {
@@ -405,9 +521,13 @@ fn (m EditorModel2) current_visual_range() ?cursor.Range {
 		end_line, end_col = sel_start_line, sel_start_col
 	}
 
+	// visual mode selection is always inclusive of the character under the
+	// cursor at both ends (unlike normal-mode motions, which are mostly
+	// exclusive) - bump the endpoint by one so it survives the exclusive
+	// delete_range/apply_operator boundary, same as `$` does for d$.
 	return cursor.Range{
 		start: cursor.Pos.new(int(start_col), int(start_line))
-		end:   cursor.Pos.new(int(end_col), int(end_line))
+		end:   cursor.Pos.new(int(end_col) + 1, int(end_line))
 	}
 }
 
@@ -431,6 +551,77 @@ fn (mut m EditorModel2) scroll_to_cursor() {
 	}
 }
 
+// scroll_page_up implements ctrl+u: scrolls the viewport up by half a page
+// and moves the cursor to keep its position relative to the new viewport
+// (a quarter of the way down), mirroring v1's ctrl+u handling.
+fn (mut m EditorModel2) scroll_page_up() {
+	if m.viewport_height <= 0 {
+		return
+	}
+	half := m.viewport_height / 2
+	m.top_line -= half
+	if m.top_line < 0 {
+		m.top_line = 0
+	}
+	target_line := m.top_line + m.viewport_height / 4
+	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+	current_line := int(cursor_line)
+	if current_line > target_line {
+		for _ in 0 .. current_line - target_line {
+			m.doc_controller.move_cursor_up(m.doc_id)
+		}
+	} else if current_line < target_line {
+		for _ in 0 .. target_line - current_line {
+			m.doc_controller.move_cursor_down(m.doc_id)
+		}
+	}
+}
+
+// scroll_page_down implements ctrl+d: scrolls the viewport down by half a
+// page and moves the cursor to keep its position relative to the new
+// viewport (three quarters of the way down), mirroring v1's ctrl+d handling.
+fn (mut m EditorModel2) scroll_page_down() {
+	if m.viewport_height <= 0 {
+		return
+	}
+	half := m.viewport_height / 2
+	m.top_line += half
+	target_line := m.top_line + m.viewport_height * 3 / 4
+	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+	current_line := int(cursor_line)
+	if current_line < target_line {
+		for _ in 0 .. target_line - current_line {
+			m.doc_controller.move_cursor_down(m.doc_id)
+		}
+	} else if current_line > target_line {
+		for _ in 0 .. current_line - target_line {
+			m.doc_controller.move_cursor_up(m.doc_id)
+		}
+	}
+}
+
+// center_viewport_on_cursor mirrors v1's center_cursor_line: puts the
+// current line in the middle of the viewport, clamped so top_line never
+// scrolls past what the buffer can fill.
+fn (mut m EditorModel2) center_viewport_on_cursor() {
+	cursor_line_u, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+	cursor_line := int(cursor_line_u)
+	if m.viewport_height <= 0 {
+		m.top_line = if cursor_line > 0 { cursor_line } else { 0 }
+		return
+	}
+	line_count := int(m.doc_controller.line_count(m.doc_id))
+	mut new_top := cursor_line - m.viewport_height / 2
+	if new_top < 0 {
+		new_top = 0
+	}
+	max_top := if line_count > m.viewport_height { line_count - m.viewport_height } else { 0 }
+	if new_top > max_top {
+		new_top = max_top
+	}
+	m.top_line = new_top
+}
+
 fn (mut m EditorModel2) clamp_cursor_to_line_end() {
 	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
 	line_bytes := m.doc_controller.get_line_bytes(m.doc_id, cursor_line) or { return }
@@ -445,7 +636,7 @@ fn (mut m EditorModel2) clamp_cursor_to_line_end() {
 		return
 	}
 	if cursor_col >= grapheme_count {
-		m.doc_controller.move_cursor_left(m.doc_id)
+		m.doc_controller.internal_move_cursor_left(m.doc_id)
 	}
 }
 
@@ -645,9 +836,6 @@ fn (m EditorModel2) render_visual_selection(mut ctx tea.Context) {
 		end_line, end_col = sel_start_line, sel_start_col
 	}
 
-	start_visual_x, _ := m.visual_x_and_cluster_width_for(start_line, start_col)
-	end_visual_x, end_cluster_width := m.visual_x_and_cluster_width_for(end_line, end_col)
-
 	ctx.set_bg_color(m.config.theme.highlight_bg_color)
 	defer { ctx.reset_bg_color() }
 	ctx.set_color(palette.fg_color(m.config.theme.highlight_bg_color)) // set fg color to inverse shade of bg
@@ -659,6 +847,19 @@ fn (m EditorModel2) render_visual_selection(mut ctx tea.Context) {
 	} else {
 		line_count
 	}
+
+	if m.visual_linewise {
+		for y in int(start_line) .. int(end_line) + 1 {
+			if y < m.top_line || y >= view_end {
+				continue
+			}
+			ctx.draw_rect(0, y - m.top_line, m.viewport_width, 1)
+		}
+		return
+	}
+
+	start_visual_x, _ := m.visual_x_and_cluster_width_for(start_line, start_col)
+	end_visual_x, end_cluster_width := m.visual_x_and_cluster_width_for(end_line, end_col)
 
 	if start_line == end_line {
 		screen_y := int(start_line) - m.top_line

@@ -57,6 +57,19 @@ mut:
 	data_buf gap.Buffer
 	line_buf line.Buffer
 	history  History
+	// goal_column is the sticky "curswant" column (in graphemes) remembered
+	// across a run of consecutive vertical moves, so passing through a
+	// shorter line and back doesn't lose the original column. -1 means
+	// unset: the next vertical move should capture the actual column.
+	goal_column int = -1
+}
+
+// reset_goal_column clears the sticky vertical-move column. Called by every
+// cursor operation that explicitly (re)positions the cursor so that the next
+// move_cursor_vertical call re-captures the actual column, mirroring vim's
+// goal-column reset on any non-vertical motion or edit.
+fn (mut tb TextBuffer) reset_goal_column() {
+	tb.goal_column = -1
 }
 
 pub fn TextBuffer.new(mut r io.Reader) !TextBuffer { // TODO(tauraamui) [2026-06-03]: pass in reader into text buffer
@@ -141,6 +154,7 @@ const symbols_to_autoclose = {
 
 // insert_byte performs the raw insert with no autoclose behaviour
 fn (mut tb TextBuffer) insert_byte(c u8) {
+	tb.reset_goal_column()
 	tb.record(.insert, tb.data_buf.ccur(), [c])
 	tb.data_buf.insert(c)
 	tb.line_buf.apply_delta(1)
@@ -158,6 +172,7 @@ pub fn (mut tb TextBuffer) insert(c u8) {
 }
 
 pub fn (mut tb TextBuffer) backspace() {
+	tb.reset_goal_column()
 	cur := tb.data_buf.ccur()
 	if cur == 0 {
 		return
@@ -179,6 +194,7 @@ pub fn (mut tb TextBuffer) backspace() {
 }
 
 pub fn (mut tb TextBuffer) delete() {
+	tb.reset_goal_column()
 	cur := tb.data_buf.ccur()
 	deleted_byte := tb.data_buf.get(cur) or { return }
 	end := tb.next_boundary(cur)
@@ -194,6 +210,34 @@ pub fn (mut tb TextBuffer) delete() {
 	if deleted_byte == newline_hex {
 		tb.line_buf.remove_line_after_current()
 	}
+}
+
+// delete_char_at deletes the single character under the cursor on the
+// current line (the `x` motion). Unlike delete(), it never joins with the
+// next line - on an empty line (nothing but the trailing newline) it is a
+// no-op, matching Neovim's `x`.
+pub fn (mut tb TextBuffer) delete_char_at() {
+	line_count := tb.line_buf.len()
+	if line_count == 0 {
+		return
+	}
+	mut line_idx := tb.line_buf.current_line
+	if line_idx >= u64(line_count) {
+		line_idx = u64(line_count - 1)
+	}
+	line_start, line_end := tb.get_line_start_and_end(line_idx)
+	mut content_end := line_end
+	if content_end > line_start {
+		if last := tb.data_buf.get(content_end - 1) {
+			if last == newline_hex {
+				content_end -= 1
+			}
+		}
+	}
+	if tb.data_buf.ccur() >= content_end {
+		return
+	}
+	tb.delete()
 }
 
 pub fn (mut tb TextBuffer) delete_line(y u64) {
@@ -288,6 +332,21 @@ fn (tb TextBuffer) byte_offset_at(y u64, x u64) u64 {
 }
 
 pub fn (mut tb TextBuffer) move_cursor_left() {
+	tb.reset_goal_column()
+	tb.internal_move_cursor_left()
+}
+
+pub fn (mut tb TextBuffer) move_cursor_right() {
+	tb.reset_goal_column()
+	tb.internal_move_cursor_right()
+}
+
+// internal_move_cursor_left/right shift the cursor by one grapheme without
+// resetting the sticky goal column. For automatic clamping (e.g. pulling the
+// cursor back onto the last char after a normal-mode operation) - real user
+// input must go through move_cursor_left/move_cursor_right instead, so a
+// genuine h/l press still resets curswant like vim does.
+pub fn (mut tb TextBuffer) internal_move_cursor_left() {
 	cur := tb.data_buf.ccur()
 	if cur == 0 {
 		return
@@ -301,7 +360,7 @@ pub fn (mut tb TextBuffer) move_cursor_left() {
 	}
 }
 
-pub fn (mut tb TextBuffer) move_cursor_right() {
+pub fn (mut tb TextBuffer) internal_move_cursor_right() {
 	cur := tb.data_buf.ccur()
 	c := tb.data_buf.get(cur) or { return }
 	if c == newline_hex {
@@ -426,7 +485,13 @@ fn (mut tb TextBuffer) move_cursor_vertical(direction int) {
 
 	// current column measured in codepoints, not bytes
 	cur_start, _ := tb.get_line_start_and_end(current_line)
-	current_col := tb.count_graphemes(cur_start, tb.data_buf.ccur())
+	actual_col := tb.count_graphemes(cur_start, tb.data_buf.ccur())
+
+	// the goal column persists across a run of vertical moves (vim's
+	// "curswant"): once set by the first move in the run, it's kept even
+	// when an intervening shorter line clamps the actual x, so returning
+	// to a longer line restores the original column
+	current_col := if tb.goal_column >= 0 { u64(tb.goal_column) } else { actual_col }
 
 	target_line := if direction < 0 { current_line - 1 } else { current_line + 1 }
 	target_start, target_end := tb.get_line_start_and_end(target_line)
@@ -455,6 +520,7 @@ fn (mut tb TextBuffer) move_cursor_vertical(direction int) {
 		}
 	}
 	tb.line_buf.move_to_line(target_line)
+	tb.goal_column = int(current_col)
 }
 
 fn (mut tb TextBuffer) record(kind OpKind2, offset u64, bytes []u8) {
@@ -493,6 +559,7 @@ fn (mut tb TextBuffer) record(kind OpKind2, offset u64, bytes []u8) {
 }
 
 fn (mut tb TextBuffer) move_cursor_to_offset(target u64) {
+	tb.reset_goal_column()
 	current := tb.data_buf.ccur()
 	if target > current {
 		for _ in 0 .. target - current {
@@ -787,6 +854,7 @@ fn (tb TextBuffer) is_blank_line(y u64) bool {
 }
 
 fn (mut tb TextBuffer) move_cursor_to_line_start(y u64) {
+	tb.reset_goal_column()
 	line_start, _ := tb.get_line_start_and_end(y)
 	current_offset := tb.data_buf.ccur()
 	if line_start > current_offset {
@@ -801,7 +869,22 @@ fn (mut tb TextBuffer) move_cursor_to_line_start(y u64) {
 	tb.line_buf.move_to_line(y)
 }
 
+// jump_cursor_to_line_start moves the cursor to column 0 of the current line
+// (the `0` motion).
+pub fn (mut tb TextBuffer) jump_cursor_to_line_start() {
+	line_count := tb.line_buf.len()
+	if line_count == 0 {
+		return
+	}
+	mut line_idx := tb.line_buf.current_line
+	if line_idx >= u64(line_count) {
+		line_idx = u64(line_count - 1)
+	}
+	tb.move_cursor_to_line_start(line_idx)
+}
+
 pub fn (mut tb TextBuffer) move_cursor_to_start() {
+	tb.reset_goal_column()
 	tb.data_buf.move_cur_to_start()
 	tb.line_buf.move_to_line(0)
 }
@@ -831,6 +914,7 @@ pub fn (tb TextBuffer) resolve_prev_line_whitespace_prefix() []u8 {
 }
 
 pub fn (mut tb TextBuffer) jump_cursor_to_line_end() {
+	tb.reset_goal_column()
 	line_count := tb.line_buf.len()
 	if line_count == 0 {
 		return
@@ -858,6 +942,65 @@ pub fn (mut tb TextBuffer) jump_cursor_to_line_end() {
 			tb.data_buf.move_cur_left()
 		}
 	}
+}
+
+// jump_cursor_to_text_start moves the cursor to the first non-blank
+// character of the current line (the `^` motion). If the line is entirely
+// blank, the cursor is left where it is.
+pub fn (mut tb TextBuffer) jump_cursor_to_text_start() {
+	line_count := tb.line_buf.len()
+	if line_count == 0 {
+		return
+	}
+	mut line_idx := tb.line_buf.current_line
+	if line_idx >= u64(line_count) {
+		line_idx = u64(line_count - 1)
+	}
+	line_start, line_end := tb.get_line_start_and_end(line_idx)
+	mut target := u64(0)
+	mut found := false
+	for o := line_start; o < line_end; o++ {
+		b := tb.data_buf.get(o) or { break }
+		if b == newline_hex {
+			break
+		}
+		if b != space_hex && b != tab_hex {
+			target = o
+			found = true
+			break
+		}
+	}
+	if !found {
+		return
+	}
+
+	tb.reset_goal_column()
+	current_offset := tb.data_buf.ccur()
+	if target > current_offset {
+		for _ in 0 .. target - current_offset {
+			tb.data_buf.move_cur_right()
+		}
+	} else if target < current_offset {
+		for _ in 0 .. current_offset - target {
+			tb.data_buf.move_cur_left()
+		}
+	}
+}
+
+// jump_cursor_to_line moves the cursor to the first non-blank character of
+// line `y` (clamped to the document's line range), the shared landing spot
+// for the `gg` and `G` motions.
+pub fn (mut tb TextBuffer) jump_cursor_to_line(y u64) {
+	line_count := tb.line_buf.len()
+	if line_count == 0 {
+		return
+	}
+	mut target := y
+	if target >= u64(line_count) {
+		target = u64(line_count - 1)
+	}
+	tb.move_cursor_to_line_start(target)
+	tb.jump_cursor_to_text_start()
 }
 
 enum CharType {
@@ -923,6 +1066,7 @@ fn grapheme_is_space(g string) bool {
 }
 
 fn (mut tb TextBuffer) move_cursor_to_position(y u64, x u64) {
+	tb.reset_goal_column()
 	line_count := tb.line_buf.len()
 	if y >= u64(line_count) {
 		return

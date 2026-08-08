@@ -644,7 +644,6 @@ fn (m EditorWorkspaceModel2) render_leader_or_command_user_input_text(mut ctx te
 			ctx.pop_offset()
 		}
 		.normal {
-			/*
 			if d := m.active_editor_data {
 				if d.chord_display.len > 0 {
 					ctx.set_color(palette.subtle_text_fg_color)
@@ -653,7 +652,6 @@ fn (m EditorWorkspaceModel2) render_leader_or_command_user_input_text(mut ctx te
 					ctx.reset_color()
 				}
 			}
-			*/
 		}
 		else {}
 	}
