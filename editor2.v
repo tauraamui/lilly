@@ -290,7 +290,12 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 				'ctrl+i' { // TAB
 					m.invalidate_parser_cache()
 					m.insert_line_pristine_indent = false
-					m.doc_controller.insert(m.doc_id, `\t`)
+
+					if m.config.convert_tabs_to_spaces {
+						m.doc_controller.insert_string(m.doc_id, ' '.repeat(m.config.tab_width))
+					} else {
+						m.doc_controller.insert(m.doc_id, `\t`)
+					}
 				}
 				'backspace' {
 					m.invalidate_parser_cache()

@@ -22,26 +22,29 @@ pub const light_theme_name = theme.light_theme_name
 pub const dark_theme_name = theme.dark_theme_name
 
 pub const default_config = Config{
-	theme:                 theme.dark_theme
-	leader_key:            ';'
-	tab_width:             4
-	relative_line_numbers: true
+	theme:                  theme.dark_theme
+	leader_key:             ';'
+	tab_width:              4
+	relative_line_numbers:  true
+	convert_tabs_to_spaces: true
 }
 
 pub struct Config {
 pub:
-	theme                 theme.Theme
-	leader_key            string
-	tab_width             int
-	relative_line_numbers bool
+	theme                  theme.Theme
+	leader_key             string
+	tab_width              int
+	relative_line_numbers  bool
+	convert_tabs_to_spaces bool
 }
 
 pub struct ConfigFile {
 pub mut:
-	theme                 string
-	leader_key            string
-	tab_width             int
-	relative_line_numbers bool
+	theme                  string
+	leader_key             string
+	tab_width              int
+	relative_line_numbers  bool
+	convert_tabs_to_spaces bool
 }
 
 @[params]

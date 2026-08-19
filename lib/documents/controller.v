@@ -58,6 +58,12 @@ pub fn (mut dc Controller2) insert_rune(doc_id nanoid.ID, cr rune) {
 	dc.docs[doc_id].insert_rune(cr)
 }
 
+pub fn (mut dc Controller2) insert_string(doc_id nanoid.ID, s string) {
+	for cr in s.runes() {
+		dc.docs[doc_id].insert_rune(cr)
+	}
+}
+
 pub fn (mut dc Controller2) backspace(doc_id nanoid.ID) {
 	dc.docs[doc_id].backspace()
 }
