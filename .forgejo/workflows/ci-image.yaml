@@ -25,32 +25,50 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Talks to the runner's Docker-in-Docker engine, which the runner exposes
-      # to job containers via container.docker_host in runner-config.yml. If
-      # this step reports no engine, that setting is still "-" (socket hidden).
-      - name: Ensure Docker CLI
+      # The runner creates job containers on the Docker-in-Docker engine, but it
+      # does NOT inject DOCKER_HOST into them -- container.docker_host only
+      # tells the runner which engine to use. dind speaks TCP only, so there is
+      # no socket to mount either. Probe for the engine and export whatever
+      # answers, so this does not depend on dind's internal bridge numbering.
+      - name: Locate Docker engine
         run: |
           if ! command -v docker >/dev/null 2>&1; then
             curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-27.3.1.tgz \
               | tar -xz --strip-components=1 -C /usr/local/bin docker/docker
           fi
-          docker version || {
-            echo "::error::no Docker engine reachable from this job -- set container.docker_host to tcp://docker-in-docker:2375 in the runner config"
+          found=""
+          for h in "$DOCKER_HOST" tcp://172.17.0.1:2375 tcp://host.docker.internal:2375 \
+                   tcp://docker-in-docker:2375 unix:///var/run/docker.sock; do
+            [ -n "$h" ] || continue
+            if DOCKER_HOST="$h" timeout 10 docker version >/dev/null 2>&1; then
+              found="$h"
+              break
+            fi
+            echo "  no engine at $h"
+          done
+          if [ -z "$found" ]; then
+            echo "::error::no Docker engine reachable from this job container. dind is TCP-only, so set runner.envs.DOCKER_HOST in runner-config.yml to the dind address."
             exit 1
-          }
+          fi
+          echo "Docker engine at $found"
+          echo "DOCKER_HOST=$found" >> "$GITHUB_ENV"
 
       - name: Build
         run: |
-          # Dated cache bust so the V layer is actually rebuilt on the daily
-          # schedule rather than replayed from cache.
-          docker build --pull \
+          # --load is required: when the active buildx driver is
+          # docker-container, a plain `docker build -t` leaves the result in the
+          # build cache only and never enters the image store, so the later
+          # push fails with "image not known". Both tags are applied here
+          # rather than via a separate `docker tag` for the same reason.
+          #
+          # The dated tag lets a V master that breaks the build be rolled back
+          # to by pointing the workflows at an earlier image.
+          docker build --pull --load \
             --build-arg V_CACHE_BUST="$(date -u +%Y-%m-%d)" \
             -t "$IMAGE:latest" \
+            -t "$IMAGE:$(date -u +%Y-%m-%d)" \
             -f .forgejo/ci-image/Containerfile \
             .forgejo/ci-image
-          # A dated tag alongside latest, so a V master that breaks the build
-          # can be rolled back to by pointing the workflows at an earlier image.
-          docker tag "$IMAGE:latest" "$IMAGE:$(date -u +%Y-%m-%d)"
 
       - name: Push
         env:

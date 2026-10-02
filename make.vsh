@@ -241,8 +241,12 @@ IMAGE=registry.catkin.dev/tauraamui/lilly-ci
 DATE=$(date -u +%Y-%m-%d)
 # Dated cache bust, matching .forgejo/workflows/ci-image.yaml, so the V layer is
 # genuinely rebuilt instead of being replayed from Docker layer cache.
-docker build --pull --build-arg V_CACHE_BUST="$DATE" -t "$IMAGE:latest" -f .forgejo/ci-image/Containerfile .forgejo/ci-image
-docker tag "$IMAGE:latest" "$IMAGE:$DATE"
+#
+# --load matters: when the active buildx driver is docker-container, a plain
+# build leaves the image in the build cache only and never enters the image
+# store, and the push then fails with "image not known". Both tags are applied
+# in the one build for the same reason.
+docker build --pull --load --build-arg V_CACHE_BUST="$DATE" -t "$IMAGE:latest" -t "$IMAGE:$DATE" -f .forgejo/ci-image/Containerfile .forgejo/ci-image
 echo
 echo "Built $IMAGE:latest and $IMAGE:$DATE"
 echo "Push them with:"
