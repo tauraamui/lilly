@@ -30,6 +30,22 @@ const scenarios = [
 	},
 ]
 
+// Runs a build command and fails the task if the compiler does. A bare
+// system() call discards the exit code, which silently turns a compile error
+// into a confusing downstream failure -- xpty comparing against a stale lilly
+// binary and reporting "no captured frames", for instance.
+//
+// Deliberately not exit(system(...)) as the test tasks use: these tasks are
+// depended on by others, and exit(0) would end the run before the dependent
+// task got to execute.
+fn build_step(label string, cmd string) {
+	rc := system(cmd)
+	if rc != 0 {
+		eprintln('${label}: command failed (exit ${rc}): ${cmd}')
+		exit(rc)
+	}
+}
+
 mut context := build.context(
 	default: 'run'
 )
@@ -38,22 +54,22 @@ mut context := build.context(
 context.task(
 	name:    'build'
 	depends: ['_generate-git-hash']
-	run:     |self| system($if darwin { 'v -cc cc . -o ${app_name}' } $else { 'v . -o ${app_name}' })
+	run:     |self| build_step('build', $if darwin { 'v -cc cc . -o ${app_name}' } $else { 'v . -o ${app_name}' })
 )
 context.task(
 	name:    'prod'
 	depends: ['_generate-git-hash']
-	run:     |self| system($if darwin { 'v -cc cc -prod -g . -o ${app_name}' } $else { 'v -prod -g . -o ${app_name}' })
+	run:     |self| build_step('prod', $if darwin { 'v -cc cc -prod -g . -o ${app_name}' } $else { 'v -prod -g . -o ${app_name}' })
 )
 context.task(
 	name:    'build-windows'
 	depends: ['_generate-git-hash']
-	run:     |self| system('v -os windows -o ${app_name}.exe .')
+	run:     |self| build_step('build-windows', 'v -os windows -o ${app_name}.exe .')
 )
 context.task(
 	name:    'prod-windows'
 	depends: ['_generate-git-hash']
-	run:     |self| system('v -prod -g -os windows -o ${app_name}.exe .')
+	run:     |self| build_step('prod-windows', 'v -prod -g -os windows -o ${app_name}.exe .')
 )
 context.task(name: 'run', depends: ['_generate-git-hash'], run: |self| system($if darwin { 'v -cc cc -g run .' } $else { 'v -g run .' }))
 context.task(
@@ -66,7 +82,7 @@ context.task(
 	depends: ['_generate-git-hash']
 	run:     |self| system($if darwin { 'export LILLY_THEME=light && v -cc cc -g run .' } $else { 'export LILLY_THEME=light && v -g run .' })
 )
-context.task(name: 'compile-make', run: |self| system('v -prod -skip-running make.vsh -o make'))
+context.task(name: 'compile-make', run: |self| build_step('compile-make', 'v -prod -skip-running make.vsh -o make'))
 
 // TEST TASKS
 context.task(
@@ -182,7 +198,7 @@ context.task(
 	name:    'xpty-build'
 	help:    'build lilly with golden frame support enabled'
 	depends: ['_generate-git-hash']
-	run:     |self| system('v -d golden_frames -g . -o lilly')
+	run:     |self| build_step('xpty-build', 'v -d golden_frames -g . -o lilly')
 )
 context.task(
 	name:    'xpty-capture'

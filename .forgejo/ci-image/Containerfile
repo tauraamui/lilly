@@ -22,18 +22,32 @@ RUN apt-get update \
 		ca-certificates git curl build-essential \
 	&& rm -rf /var/lib/apt/lists/*
 
-# V is unpinned: whatever is on master when the image is built. Shallow, since
-# the history is never needed and is most of the clone.
+# V is pinned to an exact commit so CI and local development agree on the
+# compiler. That matters here: lilly tracks V master closely and the tests fail
+# on genuine V regressions, so a floating compiler means CI and a developer's
+# machine disagree about whether the tree is broken.
 #
+# To bump it, set V_REF to a new commit (or to `master` to resume tracking
+# master) -- editing this file matches the .forgejo/ci-image/** path filter in
+# ci-image.yaml, so pushing the change rebuilds the image.
+#
+# A ref rather than a clone of master, so this takes either a SHA or a branch
+# name. Shallow, since the history is never needed and is most of the fetch.
+ARG V_REF=c0e8c7ba8648dcd0d48c952c2351a2aeca4205cc
 # V_CACHE_BUST is referenced inside the RUN so that changing it actually
-# invalidates this layer. Without it `git clone` is a cached layer that only
-# rebuilds when the base image digest changes, so a daily rebuild schedule
-# would not track master at all -- it would just replay the cache.
+# invalidates this layer. While V_REF is a pinned SHA the rebuild is
+# reproducible and this only picks up base-image updates; it matters when
+# V_REF is a moving branch, where otherwise the fetch would be a cached layer
+# that only rebuilds when the base image digest changes.
 ARG V_CACHE_BUST=unset
 RUN echo "V cache bust: ${V_CACHE_BUST}" \
-	&& git clone --depth=1 https://github.com/vlang/v /opt/v \
-	&& make -C /opt/v \
-	&& /opt/v/v version
+	&& git init /opt/v \
+	&& cd /opt/v \
+	&& git remote add origin https://github.com/vlang/v \
+	&& git fetch --depth=1 origin "${V_REF}" \
+	&& git checkout --detach FETCH_HEAD \
+	&& make \
+	&& ./v version
 ENV PATH=/opt/v:$PATH
 
 # Guard the regression this image exists to prevent. If the bundled TCC is not
