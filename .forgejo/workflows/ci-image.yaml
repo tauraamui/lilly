@@ -1,0 +1,62 @@
+name: CI image
+
+# Rebuilds the toolchain image the CI jobs run in. Daily, so V follows master a
+# day at a time instead of every job rebuilding it; and on any change to the
+# Containerfile, so edits land without waiting for the schedule.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 3 * * *'
+  push:
+    branches: [master]
+    paths:
+      - .forgejo/ci-image/**
+      - .forgejo/workflows/ci-image.yaml
+
+env:
+  IMAGE: registry.catkin.dev/tauraamui/lilly-ci
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: lilly-ci-image
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+
+      # Talks to the runner's Docker-in-Docker engine, which the runner exposes
+      # to job containers via container.docker_host in runner-config.yml. If
+      # this step reports no engine, that setting is still "-" (socket hidden).
+      - name: Ensure Docker CLI
+        run: |
+          if ! command -v docker >/dev/null 2>&1; then
+            curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-27.3.1.tgz \
+              | tar -xz --strip-components=1 -C /usr/local/bin docker/docker
+          fi
+          docker version || {
+            echo "::error::no Docker engine reachable from this job -- set container.docker_host to tcp://docker-in-docker:2375 in the runner config"
+            exit 1
+          }
+
+      - name: Build
+        run: |
+          # Dated cache bust so the V layer is actually rebuilt on the daily
+          # schedule rather than replayed from cache.
+          docker build --pull \
+            --build-arg V_CACHE_BUST="$(date -u +%Y-%m-%d)" \
+            -t "$IMAGE:latest" \
+            -f .forgejo/ci-image/Containerfile \
+            .forgejo/ci-image
+          # A dated tag alongside latest, so a V master that breaks the build
+          # can be rolled back to by pointing the workflows at an earlier image.
+          docker tag "$IMAGE:latest" "$IMAGE:$(date -u +%Y-%m-%d)"
+
+      - name: Push
+        env:
+          REGISTRY_USER: ${{ vars.CI_REGISTRY_USER }}
+          REGISTRY_TOKEN: ${{ secrets.CI_REGISTRY_TOKEN }}
+        run: |
+          printf '%s' "$REGISTRY_TOKEN" | docker login registry.catkin.dev -u "$REGISTRY_USER" --password-stdin
+          docker push "$IMAGE:latest"
+          docker push "$IMAGE:$(date -u +%Y-%m-%d)"

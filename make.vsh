@@ -231,6 +231,26 @@ context.task(
 	run:  |self| system('go install github.com/google/addlicense@latest')
 )
 
+// CI TASKS
+context.task(
+	name: 'ci-image'
+	help:  'build the CI toolchain image, for bootstrapping it or rebuilding it by hand'
+	run:   |self| system(r'
+set -eu
+IMAGE=registry.catkin.dev/tauraamui/lilly-ci
+DATE=$(date -u +%Y-%m-%d)
+# Dated cache bust, matching .forgejo/workflows/ci-image.yaml, so the V layer is
+# genuinely rebuilt instead of being replayed from Docker layer cache.
+docker build --pull --build-arg V_CACHE_BUST="$DATE" -t "$IMAGE:latest" -f .forgejo/ci-image/Containerfile .forgejo/ci-image
+docker tag "$IMAGE:latest" "$IMAGE:$DATE"
+echo
+echo "Built $IMAGE:latest and $IMAGE:$DATE"
+echo "Push them with:"
+echo "  docker login registry.catkin.dev"
+echo "  docker push \"$IMAGE:latest\" && docker push \"$IMAGE:$DATE\""
+')
+)
+
 // ARTIFACTS
 context.artifact(
 	name: '_generate-git-hash'

@@ -1,0 +1,60 @@
+# Prebuilt toolchain image for every lilly CI job: Debian 13 (trixie) with V
+# already built and on PATH.
+#
+# Why trixie specifically: V's bundled thirdparty TCC links against
+# GLIBC_2.38. On an older base (bookworm is 2.36, and the catthehacker
+# act-22.04 image is 2.35) that check fails, V silently falls back to an older
+# TCC and the -DCUSTOM_DEFINE_v1_fallback bootstrap path, where stage 2 runs
+# `v1 -o v2 -gc none` with garbage collection disabled. That path grew without
+# bound and took the whole runner host down on 2026-10-02. Trixie ships glibc
+# 2.41, so the bundled TCC is used and the fallback never triggers.
+#
+# node (rather than plain debian:13) because the JS actions the jobs use --
+# actions/checkout and actions/cache -- need node inside the job container.
+#
+# Baking V in replaces a per-job `git clone vlang/v && make`. Rebuilt daily by
+# .forgejo/workflows/ci-image.yaml so V tracks master a day at a time;
+# bootstrap or rebuild it by hand with `v run ./make.vsh ci-image`.
+FROM docker.io/library/node:22-trixie
+
+RUN apt-get update \
+	&& DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+		ca-certificates git curl build-essential \
+	&& rm -rf /var/lib/apt/lists/*
+
+# V is unpinned: whatever is on master when the image is built. Shallow, since
+# the history is never needed and is most of the clone.
+#
+# V_CACHE_BUST is referenced inside the RUN so that changing it actually
+# invalidates this layer. Without it `git clone` is a cached layer that only
+# rebuilds when the base image digest changes, so a daily rebuild schedule
+# would not track master at all -- it would just replay the cache.
+ARG V_CACHE_BUST=unset
+RUN echo "V cache bust: ${V_CACHE_BUST}" \
+	&& git clone --depth=1 https://github.com/vlang/v /opt/v \
+	&& make -C /opt/v \
+	&& /opt/v/v version
+ENV PATH=/opt/v:$PATH
+
+# Guard the regression this image exists to prevent. If the bundled TCC is not
+# host-compatible we are back on the v1 fallback path, so fail the image build
+# loudly. Jobs keep running against the previous :latest and the dated tags,
+# so a failure here is a signal, not an outage.
+RUN set -eu; \
+	tcc=/opt/v/thirdparty/tcc/tcc.exe; \
+	if [ ! -x "$tcc" ]; then \
+		echo "ERROR: expected bundled TCC at $tcc, not found." >&2; \
+		echo "V's bootstrap will fall back to the v1 fallback path. Refusing to ship this image." >&2; \
+		exit 1; \
+	fi; \
+	if ! "$tcc" -v >/dev/null 2>&1; then \
+		echo "ERROR: bundled TCC is not host-compatible on this base image:" >&2; \
+		"$tcc" -v 2>&1 | sed 's/^/  /' >&2 || true; \
+		echo "Pick a base image whose glibc satisfies it, or pin V. Refusing to ship." >&2; \
+		exit 1; \
+	fi; \
+	echo "bundled TCC OK: $("$tcc" -v 2>&1 | head -1)"
+
+# V master uploads generated C to bugs.vlang.io when a C compile fails. CI
+# should not make surprise network calls on failure.
+ENV V_C_ERROR_BUG_REPORT_DISABLED=1
