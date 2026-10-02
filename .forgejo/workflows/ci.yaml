@@ -8,23 +8,40 @@ on:
     branches: [master]
 
 jobs:
+  # Bootstrap V exactly once per run and leave it in the cache. Every other
+  # job waits on this and then restores it, so a cold cache costs one V build
+  # instead of one per job. This job is the only place allowed to build V.
+  setup-v:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-v-latest
+      - name: Report V version
+        run: v version
+
   format-check:
+    needs: setup-v
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-v-latest
+        with:
+          build-if-missing: 'false'
 
       - name: Check formatting
         run: v run ./make.vsh verify-format
 
   unit_tests:
+    needs: setup-v
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-v-latest
+        with:
+          build-if-missing: 'false'
 
       - name: Cache V modules
         uses: actions/cache@v4
@@ -45,12 +62,15 @@ jobs:
         run: v run ./make.vsh verbose-test
 
   visual_regression:
+    needs: setup-v
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-v-latest
+        with:
+          build-if-missing: 'false'
 
       - name: Cache V modules
         uses: actions/cache@v4
@@ -78,11 +98,14 @@ jobs:
         run: v run ./make.vsh xpty-verify
 
   prod_build:
+    needs: setup-v
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-v-latest
+        with:
+          build-if-missing: 'false'
 
       - name: Cache V modules
         uses: actions/cache@v4
@@ -98,6 +121,5 @@ jobs:
         run: git log -n 1 --pretty=format:"%h" | tee ./.githash
 
       - name: Build (prod with debug symbols)
+        timeout-minutes: 20
         run: v -prod -g -cc gcc . -o lilly-prod
-
-
