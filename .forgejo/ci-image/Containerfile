@@ -33,7 +33,7 @@ RUN apt-get update \
 #
 # A ref rather than a clone of master, so this takes either a SHA or a branch
 # name. Shallow, since the history is never needed and is most of the fetch.
-ARG V_REF=c0e8c7ba8648dcd0d48c952c2351a2aeca4205cc
+ARG V_REF=3f930ed47584f90f2c3053fc393dcfa1084ddb75
 # V_CACHE_BUST is referenced inside the RUN so that changing it actually
 # invalidates this layer. While V_REF is a pinned SHA the rebuild is
 # reproducible and this only picks up base-image updates; it matters when
