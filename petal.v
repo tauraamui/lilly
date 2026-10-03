@@ -131,8 +131,8 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		tea.ResizedMsg {
 			m.last_resize_width = msg.window_width
 			m.last_resize_height = msg.window_height
-		}
-		QueryPWDGitBranchMsg { // TODO(tauraamui): DEPRECATE THIS POST EDITOR REWRITE
+		} // TODO(tauraamui): DEPRECATE THIS POST EDITOR REWRITE
+		QueryPWDGitBranchMsg {
 			if send := m.app_send {
 				spawn fn [send] () {
 					branch := resolve_git_branch_name(os.execute)

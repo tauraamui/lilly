@@ -1291,10 +1291,12 @@ fn scan_to_previous_word_start(graphemes []string, px int, py int, source_y int)
 }
 
 fn find_prev_token_start(mut c_scanner CharScanner, y int) ?MotionPos {
-	diff := c_scanner.prev_diff() or { return MotionPos{
-		x: 0
-		y: y
-	} }
+	diff := c_scanner.prev_diff() or {
+		return MotionPos{
+			x: 0
+			y: y
+		}
+	}
 	if pre := diff.pre_diff {
 		return MotionPos{
 			x: pre.index

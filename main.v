@@ -178,7 +178,11 @@ fn main() {
 		initial_file_path: initial_file_path
 	)
 	mut app := tea.new_program(mut petal_model)
-	petal_model.app_send = app.send
+	// the method value is taken off an explicit pointer to app, as a method value
+	// bound to a mutable local receiver is not allowed to escape its call site.
+	// app outlives every app_send call, which can only happen inside app.run().
+	mut app_ref := &app
+	petal_model.app_send = app_ref.send
 	app.run() or { panic('something went wrong! ${err}') }
 	metrics_thread.wait() or {}
 }

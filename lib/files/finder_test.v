@@ -23,7 +23,7 @@ const mock_small_list = [
 	'.gitignore',
 ]
 
-fn mock_lister(root string) ![]string {
+fn mock_lister(_ string) ![]string {
 	return mock_small_list
 }
 

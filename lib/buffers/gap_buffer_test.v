@@ -14,6 +14,14 @@
 
 module buffers
 
+// Renders the gap as `_` so the assertions below can compare raw buffer
+// contents as a plain string. Test-only, so it lives here rather than in
+// gap_buffer.v, where it was flagged as an unused function by every other
+// test binary that links this module.
+fn null_code_point_to_str(c rune) rune {
+	return if c == null_code_point { `_` } else { c }
+}
+
 fn test_initialise_gap_buffer_with_no_contents() {
 	gb := GapBuffer.new(content: ''.runes())
 	assert gb.content_str() == ''
@@ -115,7 +123,7 @@ fn test_move_gap_buffer_simplest_case_from_cursor() {
 	assert gb.content_str() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
 
-	gb.move_gap(gb.cursor_to_offset(x: 0, y: 0) or { panic('failed to convert: ${err}') })
+	gb.move_gap(gb.cursor_to_offset(x: 0, y: 0) or { panic('failed to convert cursor position') })
 	assert gb.content_str() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
 }
@@ -125,7 +133,7 @@ fn test_move_gap_buffer_simplest_case_from_cursor_first_char_first_line() {
 	assert gb.content_str() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk'
 
-	gb.move_gap(gb.cursor_to_offset(x: 1, y: 0) or { panic('failed to convert: ${err}') })
+	gb.move_gap(gb.cursor_to_offset(x: 1, y: 0) or { panic('failed to convert cursor position') })
 	assert gb.content_str() == 'abcdefghijk'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'a___bcdefghijk'
 }
@@ -135,15 +143,15 @@ fn test_move_gap_buffer_simplest_case_from_cursor_second_line() {
 	assert gb.content_str() == 'abcdefghijk\nlmnopq'
 	assert gb.raw_content().map(null_code_point_to_str).string() == '___abcdefghijk\nlmnopq'
 
-	gb.move_gap(gb.cursor_to_offset(x: 0, y: 1) or { panic('failed to convert: ${err}') })
+	gb.move_gap(gb.cursor_to_offset(x: 0, y: 1) or { panic('failed to convert cursor position') })
 	assert gb.content_str() == 'abcdefghijk\nlmnopq'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcdefghijk\n___lmnopq'
 
-	gb.move_gap(gb.cursor_to_offset(x: 5, y: 1) or { panic('failed to convert: ${err}') })
+	gb.move_gap(gb.cursor_to_offset(x: 5, y: 1) or { panic('failed to convert cursor position') })
 	assert gb.content_str() == 'abcdefghijk\nlmnopq'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcdefghijk\nlmnop___q'
 
-	gb.move_gap(gb.cursor_to_offset(x: 1, y: 1) or { panic('failed to convert: ${err}') })
+	gb.move_gap(gb.cursor_to_offset(x: 1, y: 1) or { panic('failed to convert cursor position') })
 	assert gb.content_str() == 'abcdefghijk\nlmnopq'
 	assert gb.raw_content().map(null_code_point_to_str).string() == 'abcdefghijk\nl___mnopq'
 }

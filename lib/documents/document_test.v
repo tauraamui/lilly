@@ -290,8 +290,8 @@ fn test_controller_insert_newline_between_braces_positions_cursor_at_line_start(
 	pos = ctrl.insert_newline(id, pos)
 
 	assert pos == cursor.Pos.new(0, 1)
-	assert ctrl.get_line_at(id, 0) or { panic(err) } == '{'
-	assert ctrl.get_line_at(id, 1) or { panic(err) } == '}'
+	assert ctrl.get_line_at(id, 0) or { panic('no line at 0') } == '{'
+	assert ctrl.get_line_at(id, 1) or { panic('no line at 1') } == '}'
 }
 
 fn test_controller_move_cursor_to_line_end() {

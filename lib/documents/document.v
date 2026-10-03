@@ -422,7 +422,7 @@ fn Document.new(file_path string) !Document {
 		file_path: file_path
 		data:      data
 		// data: buffers.GapBuffer.new(content: (iconv.read_file_encoding(file_path, "UTF-8") or { return error("failed to read file ${file_path}: ${err}") }).runes())
-		eol: eol
+		eol:       eol
 	}
 }
 

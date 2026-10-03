@@ -248,10 +248,14 @@ fn (mut m EditorWorkspaceModel) update_dialog(msg tea.Msg) (?tea.Model, fn () te
 
 	if mut open_model := m.dialog_model {
 		// force forward a 80% of the actual window size down to moddal model
-		intercepted_msg := if msg is tea.ResizedMsg && mut open_model is FilePickerModel { tea.Msg(tea.ResizedMsg{
+		intercepted_msg := if msg is tea.ResizedMsg && mut open_model is FilePickerModel {
+			tea.Msg(tea.ResizedMsg{
 				window_width:  int(f64(msg.window_width) * 0.8)
 				window_height: int(f64(msg.window_height) * 0.8)
-			}) } else { msg }
+			})
+		} else {
+			msg
+		}
 
 		d, cmd := open_model.update(intercepted_msg)
 		if d is DebuggableModel {

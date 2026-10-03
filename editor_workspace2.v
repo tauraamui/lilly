@@ -131,8 +131,8 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		}
 		HideMessageMsg {
 			m.message_label = ?MessageLabel(none)
-		}
-		EditorData2ResultMsg { // TODO(tauraamui) rename query message result type to make it clear its a query result
+		} // TODO(tauraamui) rename query message result type to make it clear its a query result
+		EditorData2ResultMsg {
 			m.active_editor_data = msg.data
 			return m.clone(), tea.noop_cmd
 		}
@@ -176,10 +176,14 @@ fn (mut m EditorWorkspaceModel2) update_dialog(msg tea.Msg) (?tea.Model, fn () t
 
 	if mut open_model := m.dialog_model {
 		// force forward a 80% of the actual window size down to moddal model
-		intercepted_msg := if msg is tea.ResizedMsg && mut open_model is FilePickerModel { tea.Msg(tea.ResizedMsg{
+		intercepted_msg := if msg is tea.ResizedMsg && mut open_model is FilePickerModel {
+			tea.Msg(tea.ResizedMsg{
 				window_width:  int(f64(msg.window_width) * 0.8)
 				window_height: int(f64(msg.window_height) * 0.8)
-			}) } else { msg }
+			})
+		} else {
+			msg
+		}
 
 		d, cmd := open_model.update(intercepted_msg)
 		if d is DebuggableModel {
@@ -506,7 +510,7 @@ fn (m EditorWorkspaceModel2) render_dividers(mut ctx tea.Context, layouts map[na
 	m.tree.each_divider(m.width, m.height - 2, fn [mut ctx, active] (x int, y int, up bool, down bool, left bool, right bool) {
 		on_active :=
 			(active.x > 0 && x == active.x && y >= active.y && y < active.y + active.height)
-			|| (active.y > 0 && y == active.y && x >= active.x && x < active.x + active.width)
+				|| (active.y > 0 && y == active.y && x >= active.x && x < active.x + active.width)
 		ctx.set_color(if on_active {
 			active_editor_border_color
 		} else {
@@ -772,10 +776,6 @@ fn display_message(m_type DisplayMessageType, contents string) tea.Cmd {
 			m_type:   m_type
 		}
 	}
-}
-
-fn emit_focused() tea.Msg {
-	return tea.FocusedMsg{}
 }
 
 fn display_error_message(contents string) tea.Cmd {

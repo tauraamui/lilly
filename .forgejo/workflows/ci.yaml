@@ -50,8 +50,14 @@ jobs:
         run: rm -rf vlang/
 
       - run: v run ./make.vsh build
+      # Each of the seven main-module test files relinks the whole editor, so
+      # most of the wall time here is comptime, not test runtime: ~130s of
+      # compile across 30 files on a 3-job local machine, and appreciably more
+      # in the 5-CPU job container. The old 3 minute cap killed the step
+      # mid-run (reported as a bare "context canceled"), so it is sized to
+      # catch a genuine hang rather than to bound a healthy run.
       - name: Run tests
-        timeout-minutes: 3
+        timeout-minutes: 15
         run: v run ./make.vsh verbose-test
 
   visual_regression:
@@ -85,9 +91,12 @@ jobs:
             echo "::warning::No golden frames committed yet — skipping visual regression"
           fi
 
+      # xpty-verify depends on xpty-build, so a full -d golden_frames build of
+      # the editor happens inside this step, before any scenario is driven. 3
+      # minutes did not cover that either.
       - name: Run visual regression
         if: steps.check_golden.outputs.has_golden == 'true'
-        timeout-minutes: 3
+        timeout-minutes: 15
         run: v run ./make.vsh xpty-verify
 
   prod_build:

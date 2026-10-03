@@ -378,7 +378,8 @@ fn (t SplitTree) calculate_layout(node SplitNode, x int, y int, width int, heigh
 				}
 			}
 		}
-		/*
+	}
+	/*
 		SplitContainer {
 			if node.direction == .vertical {
 				// split horizontally across the width
@@ -399,7 +400,6 @@ fn (t SplitTree) calculate_layout(node SplitNode, x int, y int, width int, heigh
 			}
 		}
 		*/
-	}
 }
 
 // close the active editor split

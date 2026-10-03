@@ -172,13 +172,18 @@ fn resolve_char_type(c_char rune, extra_id_chars []rune) TokenType {
 	return default_type
 }
 
+struct CharResult {
+	char_type  TokenType
+	rune_count int
+}
+
 fn for_each_char(index int,
 	l_char rune, c_char rune,
-	mut rune_count &int,
-	mut token_count &int,
+	rune_count int,
 	mut tokens []Token,
 	parser_state State,
-	extra_id_chars []rune) TokenType {
+	extra_id_chars []rune) CharResult {
+	mut next_rune_count := rune_count
 	current_char_type := resolve_char_type(c_char, extra_id_chars)
 	if l_char != rune(0) {
 		last_char_type := resolve_char_type(l_char, extra_id_chars)
@@ -203,18 +208,19 @@ fn for_each_char(index int,
 				end:    index
 			}
 			tokens << token
-			token_count += 1
-			rune_count = 0
+			next_rune_count = 0
 		}
 	}
 
-	rune_count += 1
-	return current_char_type
+	next_rune_count += 1
+	return CharResult{
+		char_type:  current_char_type
+		rune_count: next_rune_count
+	}
 }
 
 pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 	mut start_token_index := parser.tokens.len
-	mut token_count := 0
 	mut rune_count := 0
 	runes := line.runes()
 	if parser.state == .in_comment {
@@ -264,8 +270,10 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 		}
 
 		// use previous_state for classifying the previous character
-		token_type = for_each_char(i, l_char, c_char, mut &rune_count, mut &token_count, mut
-			parser.tokens, previous_state, parser.extra_identifier_chars)
+		result := for_each_char(i, l_char, c_char, rune_count, mut parser.tokens, previous_state,
+			parser.extra_identifier_chars)
+		token_type = result.char_type
+		rune_count = result.rune_count
 	}
 
 	token_type = match parser.state {
@@ -284,8 +292,9 @@ pub fn (mut parser Parser) parse_line(index int, line string) []Token {
 			end:    runes.len
 		}
 		parser.tokens << token
-		token_count += 1
 	}
+
+	token_count := parser.tokens.len - start_token_index
 
 	parser.line_info << LineInfo{
 		start_token_index: start_token_index

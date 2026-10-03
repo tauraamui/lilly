@@ -43,12 +43,6 @@ pub:
 	identifier_chars []string
 }
 
-pub fn v_syntax() !Syntax {
-	return json2.decode[Syntax](builtin_v_syntax) or {
-		error('builtin V syntax file failed to decode: ${err}')
-	}
-}
-
 pub fn resolve_from_extension(file_path string) !Syntax {
 	ext := os.file_ext(file_path)
 	syn_data := match ext {
@@ -107,83 +101,4 @@ pub fn load_builtin_syntaxes() []Syntax {
 
 	return [v_syntax, go_syntax, c_syntax, rust_syntax, js_syntax, ts_syntax, python_syntax,
 		perl_syntax, zig_syntax, gleam_syntax]
-}
-
-fn load_syntaxes_from_disk(syntax_config_dir fn () !string,
-	dir_walker fn (path string, f fn (string)),
-	read_file fn (path string) !string) ![]Syntax {
-	syntax_dir_full_path := syntax_config_dir() or { return err }
-	mut syns := []Syntax{}
-	dir_walker(syntax_dir_full_path, fn [mut syns, read_file] (file_path string) {
-		if !file_path.ends_with('.syntax') {
-			return
-		}
-		contents := read_file(file_path) or {
-			panic('${err.msg()}')
-			'{}'
-		} // TODO(tauraamui): log out to a file here probably
-		mut syn := json2.decode[Syntax](contents) or { Syntax{} }
-		if file_path.ends_with('v.syntax') {
-			unsafe {
-				syns[0] = syn
-			}
-			return
-		}
-		if file_path.ends_with('go.syntax') {
-			unsafe {
-				syns[1] = syn
-			}
-			return
-		}
-		if file_path.ends_with('c.syntax') {
-			unsafe {
-				syns[2] = syn
-			}
-			return
-		}
-		if file_path.ends_with('rust.syntax') {
-			unsafe {
-				syns[3] = syn
-			}
-			return
-		}
-		if file_path.ends_with('js.syntax') {
-			unsafe {
-				syns[4] = syn
-			}
-			return
-		}
-		if file_path.ends_with('ts.syntax') {
-			unsafe {
-				syns[5] = syn
-			}
-			return
-		}
-		if file_path.ends_with('python.syntax') {
-			unsafe {
-				syns[6] = syn
-			}
-			return
-		}
-		if file_path.ends_with('perl.syntax') {
-			unsafe {
-				syns[7] = syn
-			}
-			return
-		}
-		if file_path.ends_with('zig.syntax') {
-			unsafe {
-				syns[8] = syn
-			}
-			return
-		}
-		if file_path.ends_with('gleam.syntax') {
-			unsafe {
-				syns[9] = syn
-			}
-			return
-		}
-		syns << syn
-	})
-	return syns
 }

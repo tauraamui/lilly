@@ -83,8 +83,12 @@ fn (mut cb LinuxClipboard) set_content(content ClipboardContent) {
 	// pipe FDs. Without the redirect, os.execute blocks forever waiting for EOF.
 	copy_cmd := match cb.backend {
 		.wayland { "wl-copy '${escaped(content.data)}' >/dev/null 2>&1" }
-		.x11_xclip { "echo -n '${escaped(content.data)}' | xclip -selection clipboard >/dev/null 2>&1" }
-		.x11_xsel { "echo -n '${escaped(content.data)}' | xsel --clipboard --input >/dev/null 2>&1" }
+		.x11_xclip {
+			"echo -n '${escaped(content.data)}' | xclip -selection clipboard >/dev/null 2>&1"
+		}
+		.x11_xsel {
+			"echo -n '${escaped(content.data)}' | xsel --clipboard --input >/dev/null 2>&1"
+		}
 		.none { '' }
 	}
 
