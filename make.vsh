@@ -3,6 +3,7 @@
 import build
 import strconv
 import math
+import term
 
 const app_name = 'lilly'
 
@@ -39,12 +40,15 @@ const scenarios = [
 // depended on by others, and exit(0) would end the run before the dependent
 // task got to execute.
 fn build_step(label string, cmd string) {
+	print('executing build step \'${label}\' -> \'${term.bright_yellow(cmd)}\': ')
 	rc := system(cmd)
 	if rc != 0 {
-		eprintln('${label}: command failed (exit ${rc}): ${cmd}')
+		// eprintln('${label}: command failed (exit ${rc}): ${cmd}')
+		// exit(rc)
+		println(term.failed('failed with exit code (${rc})'))
 		exit(rc)
 	}
-	println('built \'./${app_name}\' successfully')
+	println(term.ok_message('success'))
 }
 
 mut context := build.context(
