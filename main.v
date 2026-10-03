@@ -50,7 +50,7 @@ struct OsFns {
 
 fn resolve_cfg_args_from_args[T](args []string, v_manifest vmod.Manifest) !(T, []string) {
 	args_cfg, no_matches := flag.to_struct[T](args, skip: 1) or {
-		return error('unexpected error: ${err}')
+		return error('${err}')
 	}
 	if args_cfg.show_help || no_matches.len > 1 {
 		help_doc := flag.to_doc[T](version: v_manifest.version)!
@@ -139,7 +139,10 @@ fn resolve_initial_file_path_and_chdir(no_matches []string, real_path fn (s stri
 
 fn main() {
 	vmod_manifest := vmod.decode(mod_file_content) or { panic('failed to parse v.mod: ${err}') }
-	args_cfg, no_matches := resolve_cfg_args_from_args[CfgArgs](os.args, vmod_manifest)!
+	args_cfg, no_matches := resolve_cfg_args_from_args[CfgArgs](os.args, vmod_manifest) or {
+		eprintln('failed to parse args: ${err}')
+		exit(1)
+	}
 
 	version := '${vmod_manifest.version} (#${build_id()})'
 	execute_on_flags(args_cfg, version, OsFns{

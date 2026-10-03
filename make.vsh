@@ -44,6 +44,7 @@ fn build_step(label string, cmd string) {
 		eprintln('${label}: command failed (exit ${rc}): ${cmd}')
 		exit(rc)
 	}
+	println('built \'./${app_name}\' successfully')
 }
 
 mut context := build.context(
