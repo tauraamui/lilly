@@ -36,5 +36,5 @@
  1 }                                                                                                                    
 37                                                                                                                      
  1 func (gb *GapBuffer) Delete(start, end int) {                                                                        
-█NORMAL██0003.txt██ perf/investigate-mem-usage█                                                         █36:0█
+█NORMAL██0003.txt██ master█                                                                             █36:0█
                                                                                                                         
