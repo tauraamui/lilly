@@ -22,6 +22,7 @@ import time
 #include <signal.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <sys/wait.h>
 
 $if macos {
 	#include <util.h>
@@ -39,6 +40,7 @@ fn C.setsid() int
 fn C.dup2(oldfd int, newfd int) int
 fn C.execvp(file &char, argv &&char) int
 fn C.kill(pid int, sig int) int
+fn C.waitpid(pid int, wstatus &int, options int) int
 fn C.fcntl(fd int, cmd int, arg ...int) int
 fn C.strerror(errnum int) &char
 

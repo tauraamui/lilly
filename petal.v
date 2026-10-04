@@ -37,6 +37,7 @@ mut:
 	last_resize_width       int
 	last_resize_height      int
 	golden_frames           GoldenFrameState
+	probe                   &MemoryProbe = unsafe { nil }
 }
 
 @[params]
@@ -59,6 +60,7 @@ fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.C
 			initial_file_path: opts.initial_file_path
 		)
 		golden_frames: GoldenFrameState.init()
+		probe:         MemoryProbe.new(doc_controller, doc_controller2)
 	}
 }
 
@@ -74,7 +76,7 @@ fn toggle_debug_screen() tea.Msg {
 
 fn (mut m PetalModel) on_toggle_debug_screen() (tea.Model, fn () tea.Msg) {
 	if m.active_screen !is DebugScreenModel {
-		m.active_screen = DebugScreenModel.new(m.active_screen, m.logs, m.last_resize_width,
+		m.active_screen = DebugScreenModel.new(m.active_screen, m.logs, m.probe, m.last_resize_width,
 			m.last_resize_height)
 	}
 	return m.clone(), tea.noop_cmd
@@ -102,7 +104,24 @@ fn check_if_tmux_wrapped() tea.Msg {
 	return CheckIfTMUXWrappedMsg{}
 }
 
+// update brackets the real handler with the allocation counter so every byte
+// allocated while handling a message is attributed to that message's type.
+// The counter is cumulative and monotonic, so the delta covers garbage as well
+// as retained bytes - which is the figure that explains heap growth, since the
+// collector grows the heap in response to allocation rate, not to the live set.
 fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+	if isnil(m.probe) {
+		return m.handle(msg)
+	}
+	before := m.probe.total_allocated_now()
+	model, cmd := m.handle(msg)
+	// the probe is shared by pointer, so recording here is visible to the
+	// clone that handle() just returned
+	m.probe.record_op(msg_label(msg), before)
+	return model, cmd
+}
+
+fn (mut m PetalModel) handle(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	mut cmds := []tea.Cmd{}
 	match msg {
 		tea.KeyMsg {
@@ -175,6 +194,11 @@ fn (mut m PetalModel) view(mut ctx tea.Context) {
 	screen.view(mut ctx)
 	m.golden_frames.capture(ctx)
 	ctx.clear_all_offsets()
+	if !isnil(m.probe) {
+		// sampled after the view so the frame's churn covers the render too,
+		// which is where the bulk of this program's allocation happens
+		m.probe.sample_frame(ctx.window_width(), ctx.window_height())
+	}
 }
 
 fn (m PetalModel) clone() tea.Model {

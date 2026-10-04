@@ -24,11 +24,20 @@ import lib.documents.cursor
 pub struct Controller2 {
 mut:
 	docs map[nanoid.ID]buffers.TextBuffer = map[nanoid.ID]buffers.TextBuffer{}
+	// dirty holds the ids of documents edited since they were last written.
+	//
+	// Deliberately conservative: every edit sets it and only a successful
+	// write clears it, so undoing back to the on-disk content still reports
+	// dirty. Tracking that exactly would mean marking a save point in the undo
+	// chain and keeping it valid across undo, redo and chain breaks, and the
+	// cost of being wrong the other way is a discarded edit.
+	dirty map[nanoid.ID]bool = map[nanoid.ID]bool{}
 }
 
 pub fn Controller2.new() Controller2 {
 	return Controller2{
-		docs: map[nanoid.ID]buffers.TextBuffer{}
+		docs:  map[nanoid.ID]buffers.TextBuffer{}
+		dirty: map[nanoid.ID]bool{}
 	}
 }
 
@@ -51,36 +60,44 @@ pub fn (mut dc Controller2) load_document_from_reader(path string, mut r io.Read
 }
 
 pub fn (mut dc Controller2) insert(doc_id nanoid.ID, c u8) {
+	dc.dirty[doc_id] = true
 	dc.docs[doc_id].insert(c)
 }
 
 pub fn (mut dc Controller2) insert_rune(doc_id nanoid.ID, cr rune) {
+	dc.dirty[doc_id] = true
 	dc.docs[doc_id].insert_rune(cr)
 }
 
 pub fn (mut dc Controller2) insert_string(doc_id nanoid.ID, s string) {
+	dc.dirty[doc_id] = true
 	for cr in s.runes() {
 		dc.docs[doc_id].insert_rune(cr)
 	}
 }
 
 pub fn (mut dc Controller2) backspace(doc_id nanoid.ID) {
+	dc.dirty[doc_id] = true
 	dc.docs[doc_id].backspace()
 }
 
 pub fn (mut dc Controller2) delete(doc_id nanoid.ID) {
+	dc.dirty[doc_id] = true
 	dc.docs[doc_id].delete()
 }
 
 pub fn (mut dc Controller2) delete_char_at(doc_id nanoid.ID) {
+	dc.dirty[doc_id] = true
 	dc.docs[doc_id].delete_char_at()
 }
 
 pub fn (mut dc Controller2) delete_line(doc_id nanoid.ID, y u64) {
+	dc.dirty[doc_id] = true
 	dc.docs[doc_id].delete_line(y)
 }
 
 pub fn (mut dc Controller2) delete_range(doc_id nanoid.ID, r cursor.Range) {
+	dc.dirty[doc_id] = true
 	dc.docs[doc_id].delete_range(u64(r.start.y), u64(r.start.x), u64(r.end.y), u64(r.end.x))
 }
 
@@ -93,10 +110,12 @@ pub fn (mut dc Controller2) commit_undo_group(doc_id nanoid.ID) {
 }
 
 pub fn (mut dc Controller2) undo(doc_id nanoid.ID) {
+	dc.dirty[doc_id] = true
 	dc.docs[doc_id].undo()
 }
 
 pub fn (mut dc Controller2) redo(doc_id nanoid.ID) {
+	dc.dirty[doc_id] = true
 	dc.docs[doc_id].redo()
 }
 
@@ -174,6 +193,52 @@ pub fn (mut dc Controller2) jump_cursor_to_line(doc_id nanoid.ID, y u64) {
 
 pub fn (mut dc Controller2) write_to_disk(doc_id nanoid.ID, target string) ! {
 	dc.docs[doc_id].write_to_path(target)!
+	dc.dirty.delete(doc_id)
+}
+
+// mark_clean forgets that a document has unwritten edits, without writing
+// them. For a caller that has asked and been told to discard: the edits go
+// when the document does, and the flag has to go with them or the next close
+// would ask about them again.
+pub fn (mut dc Controller2) mark_clean(doc_id nanoid.ID) {
+	dc.dirty.delete(doc_id)
+}
+
+// is_dirty reports whether this document has been edited since it was last
+// written to disk. An id that is not open reads clean.
+pub fn (dc Controller2) is_dirty(doc_id nanoid.ID) bool {
+	return dc.dirty[doc_id]
+}
+
+// close_unreferenced drops every open document whose id is not in live_doc_ids,
+// and reports how many it closed.
+//
+// A document outlives the editor that opened it: splitting gives two editors
+// one id, and opening a file over an editor retires that editor while the
+// document it showed stays open. So a document is only releasable once no
+// editor names it, which the caller establishes by passing the ids its
+// surviving editors hold.
+//
+// Sweeping the whole map is deliberate in place of a reference count per
+// document: it is less state, it cannot drift out of step with the editors
+// that are actually open, and the map holds one entry per open file.
+pub fn (mut dc Controller2) close_unreferenced(live_doc_ids []nanoid.ID) int {
+	mut stale := []nanoid.ID{}
+	for doc_id, _ in dc.docs {
+		if doc_id !in live_doc_ids {
+			stale << doc_id
+		}
+	}
+	for doc_id in stale {
+		// cleared before the key is removed, and not merely deleted: V's map
+		// delete drops the key but leaves the value's bytes in the map's
+		// backing store, so everything the value points at stays reachable and
+		// the collector keeps a document alive long after it was closed.
+		dc.docs[doc_id].release()
+		dc.docs.delete(doc_id)
+		dc.dirty.delete(doc_id)
+	}
+	return stale.len
 }
 
 pub fn (dc Controller2) resolve_prev_line_whitespace_prefix(doc_id nanoid.ID) []u8 {

@@ -138,6 +138,8 @@ fn resolve_initial_file_path_and_chdir(no_matches []string, real_path fn (s stri
 }
 
 fn main() {
+	tune_gc_for_interactive_use()
+
 	vmod_manifest := vmod.decode(mod_file_content) or { panic('failed to parse v.mod: ${err}') }
 	args_cfg, no_matches := resolve_cfg_args_from_args[CfgArgs](os.args, vmod_manifest) or {
 		eprintln('failed to parse args: ${err}')

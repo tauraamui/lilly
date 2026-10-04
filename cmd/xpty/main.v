@@ -17,6 +17,10 @@ module main
 import os
 import time
 
+// child_exit_grace is how long the child gets to exit after SIGTERM before it
+// is killed outright.
+const child_exit_grace = 5 * time.second
+
 struct Config {
 	program     []string // program path and args
 	input_spec  string
@@ -107,6 +111,19 @@ fn main() {
 		exit(1)
 	}
 
+	// Discard frames left by an earlier run. The capture is numbered from zero
+	// every time and the comparison globs the directory rather than counting
+	// snapshots, so a run that captures fewer frames than whatever ran here
+	// before would be compared against the leftovers and report a frame count
+	// mismatch that has nothing to do with the scenario.
+	stale_frames := os.glob(os.join_path(config.output_dir, 'frame_*.txt')) or { []string{} }
+	for stale in stale_frames {
+		os.rm(stale) or {
+			eprintln('xpty: failed to remove stale frame ${stale}: ${err}')
+			exit(1)
+		}
+	}
+
 	eprintln('xpty: starting "${config.program.join(' ')}" in ${cols}x${rows} pty')
 	eprintln('xpty: input sequence: ${config.input_spec}')
 	eprintln('xpty: frames will be saved to ${config.output_dir}/')
@@ -168,9 +185,20 @@ fn main() {
 
 	eprintln('xpty: done — ${frame_num} snapshots captured in ${config.output_dir}/')
 
-	// Send quit signal to the child.
+	// Ask the child to quit, then wait for it rather than killing it on a
+	// fixed timer. A profiler wrapped around the program - heaptrack, for
+	// instance - only writes its capture when the process exits, so a SIGKILL
+	// that lands first silently produces an empty report. Polling costs
+	// nothing when the program exits promptly, which is the normal case.
 	C.kill(child_pid, C.SIGTERM)
-	time.sleep(200 * time.millisecond)
+	mut status := 0
+	deadline := time.now().add(child_exit_grace)
+	for time.now() < deadline {
+		if C.waitpid(child_pid, &status, C.WNOHANG) == child_pid {
+			break
+		}
+		time.sleep(20 * time.millisecond)
+	}
 	C.kill(child_pid, C.SIGKILL)
 
 	C.close(master_fd)

@@ -75,11 +75,21 @@ fn (m VersionModel) view(mut r_ctx tea.Context) {
 	height := m.height - 2
 	version := m.version
 
-	tea.new_layout().border(.normal).border_color(m.theme.petal_pink).size(m.width, m.height).render(mut r_ctx, fn [version, width, height] (mut ctx tea.Context) {
+	// drawn inline rather than in a render callback, for the reason given on
+	// Layout.render_begin: a captured context is never released
+	layout := tea.new_layout().border(.normal).border_color(m.theme.petal_pink).size(m.width,
+		m.height)
+	layout.render_begin(mut r_ctx)
+	defer { layout.render_end(mut r_ctx) }
+	draw_version_body(mut r_ctx, version, width, height)
+}
+
+fn draw_version_body(mut ctx tea.Context, version string, width int, height int) {
+	{
 		ctx.reset_color()
 		version_label := 'project petal version (${version})'
 		ctx.draw_text((width / 2) - tea.visible_len(version_label) / 2, height / 2, version_label)
-	})
+	}
 }
 
 fn (m VersionModel) width() int {

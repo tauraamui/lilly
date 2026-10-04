@@ -36,6 +36,7 @@ struct SnapshotToken {}
 //   <enter>  -> \r
 //   <esc>    -> \x1b
 //   <tab>    -> \t
+//   <f1>..<f12> -> function key escape sequences
 //   <space>  -> ' '
 //   <bs>     -> \x7f
 //   <up>     -> \x1b[A
@@ -144,6 +145,46 @@ fn resolve_tag(tag string) Token {
 		}
 		'del', 'delete' {
 			[u8(0x1b), u8(`[`), u8(`3`), u8(`~`)], 'DEL'
+		}
+		// function keys. These matter because a literal escape sequence cannot
+		// be expressed in a spec: tokens are written 150ms apart, so the
+		// program's key decoder would see a lone ESC followed by plain
+		// characters rather than one sequence.
+		'f1' {
+			[u8(0x1b), u8(`O`), u8(`P`)], 'F1'
+		}
+		'f2' {
+			[u8(0x1b), u8(`O`), u8(`Q`)], 'F2'
+		}
+		'f3' {
+			[u8(0x1b), u8(`O`), u8(`R`)], 'F3'
+		}
+		'f4' {
+			[u8(0x1b), u8(`O`), u8(`S`)], 'F4'
+		}
+		'f5' {
+			[u8(0x1b), u8(`[`), u8(`1`), u8(`5`), u8(`~`)], 'F5'
+		}
+		'f6' {
+			[u8(0x1b), u8(`[`), u8(`1`), u8(`7`), u8(`~`)], 'F6'
+		}
+		'f7' {
+			[u8(0x1b), u8(`[`), u8(`1`), u8(`8`), u8(`~`)], 'F7'
+		}
+		'f8' {
+			[u8(0x1b), u8(`[`), u8(`1`), u8(`9`), u8(`~`)], 'F8'
+		}
+		'f9' {
+			[u8(0x1b), u8(`[`), u8(`2`), u8(`0`), u8(`~`)], 'F9'
+		}
+		'f10' {
+			[u8(0x1b), u8(`[`), u8(`2`), u8(`1`), u8(`~`)], 'F10'
+		}
+		'f11' {
+			[u8(0x1b), u8(`[`), u8(`2`), u8(`3`), u8(`~`)], 'F11'
+		}
+		'f12' {
+			[u8(0x1b), u8(`[`), u8(`2`), u8(`4`), u8(`~`)], 'F12'
 		}
 		'ctrl-c' {
 			[u8(0x03)], 'CTRL-C'

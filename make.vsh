@@ -31,6 +31,53 @@ const scenarios = [
 	},
 ]
 
+// MEMORY PROFILING SCENARIOS
+//
+// The app runs under Boehm by default, and heaptrack cannot see through
+// GC_malloc: Boehm takes memory from the OS in large chunks and hands it out
+// itself, so an external profiler attributes the whole heap to the collector
+// and nothing to the code that asked for it. Building with `-gc none` turns
+// every V allocation back into a plain malloc, which gives heaptrack a real
+// call stack per allocation. Nothing is ever freed in that mode, so for a
+// scripted session of a few seconds "leaked" is simply "allocated", and the
+// report becomes a complete, exact attribution of every byte.
+//
+// `-old-compiler` is needed until the v3 backend stops panicking with
+// "interface method telemetry__Provider.post not implemented" on the spawned
+// telemetry post when the GC is off; the default-GC build of the same source
+// is fine, so the workaround is scoped to this task.
+const profile_app_name = '${app_name}-profile'
+
+const profile_output_dir = './profile'
+
+const profile_scenarios = [
+	Scenario{
+		name:    'idle'
+		command: './${profile_app_name} ./testdata/fakefiles'
+		keys:    '<wait:5000>:q<enter><wait:500>'
+	},
+	Scenario{
+		name:    'open-and-scroll'
+		command: './${profile_app_name} ./testdata/fakefiles'
+		keys:    '<wait:1500>;ff<wait:1000>0002<enter><wait:1500>w<wait:500>}}}}}}}}{{{{{{{{<wait:500>:q<enter><wait:500>'
+	},
+	// The picker is driven by navigation rather than by typing a query. Typing
+	// one spawns the filter's worker threads, and with the GC off the process
+	// then does not exit on quit - which loses the capture, since heaptrack
+	// only writes its report when the process exits. Navigation exercises the
+	// same row rendering and selection repaint without that.
+	Scenario{
+		name:    'file-picker'
+		command: './${profile_app_name} .'
+		keys:    '<wait:1500>;ff<wait:2000><down><down><down><down><down><down><down><down><wait:800><up><up><up><wait:800><esc><wait:600>q<wait:800>'
+	},
+	Scenario{
+		name:    'insert-typing'
+		command: './${profile_app_name} ./testdata/fakefiles'
+		keys:    '<wait:1500>;ff<wait:1000>0002<enter><wait:1500>wiabcdefghijklmnopqrstuvwxyz<wait:500><esc><wait:500>:q<enter><wait:1000>'
+	},
+]
+
 // Runs a build command and fails the task if the compiler does. A bare
 // system() call discards the exit code, which silently turns a compile error
 // into a confusing downstream failure -- xpty comparing against a stale lilly
@@ -40,7 +87,7 @@ const scenarios = [
 // depended on by others, and exit(0) would end the run before the dependent
 // task got to execute.
 fn build_step(label string, cmd string) {
-	print('executing build step \'${label}\' -> \'${term.bright_yellow(cmd)}\': ')
+	print("executing build step '${label}' -> '${term.bright_yellow(cmd)}': ")
 	rc := system(cmd)
 	if rc != 0 {
 		// eprintln('${label}: command failed (exit ${rc}): ${cmd}')
@@ -76,7 +123,11 @@ context.task(
 	depends: ['_generate-git-hash']
 	run:     |self| build_step('prod-windows', 'v -prod -g -os windows -o ${app_name}.exe .')
 )
-context.task(name: 'run', depends: ['_generate-git-hash'], run: |self| system($if darwin { 'v -cc cc -g run .' } $else { 'v -g run .' }))
+context.task(
+	name:    'run'
+	depends: ['_generate-git-hash']
+	run:     |self| system($if darwin { 'v -cc cc -g run .' } $else { 'v -g run .' })
+)
 context.task(
 	name:    'run-d'
 	depends: ['_generate-git-hash']
@@ -87,7 +138,10 @@ context.task(
 	depends: ['_generate-git-hash']
 	run:     |self| system($if darwin { 'export LILLY_THEME=light && v -cc cc -g run .' } $else { 'export LILLY_THEME=light && v -g run .' })
 )
-context.task(name: 'compile-make', run: |self| build_step('compile-make', 'v -prod -skip-running make.vsh -o make'))
+context.task(
+	name: 'compile-make'
+	run:  |self| build_step('compile-make', 'v -prod -skip-running make.vsh -o make')
+)
 
 // TEST TASKS
 context.task(
@@ -227,10 +281,73 @@ context.task(
 		mut failed := false
 		for s in scenarios {
 			eprintln('Verifying: ${s.name}')
-			rc := system("v -g run cmd/xpty/ --compare testdata/xpty/${s.name} '${s.command}' '${s.keys}'")
+			// per-scenario output dir, matching xpty-capture: a shared one lets
+			// a scenario be compared against frames another one left behind
+			rc := system("v -g run cmd/xpty/ --compare testdata/xpty/${s.name} --output-dir ./xpty_frames/${s.name} '${s.command}' '${s.keys}'")
 			if rc != 0 {
 				failed = true
 			}
+		}
+		if failed {
+			exit(1)
+		}
+	}
+)
+
+// MEMORY PROFILING TASKS. See profile_scenarios above for why these build
+// with the GC off.
+context.task(
+	name:    'profile-mem-build'
+	help:    'build lilly with the GC off, so an allocation profiler can attribute every byte'
+	depends: ['_generate-git-hash']
+	run:     |self| build_step('profile-mem-build', 'v -old-compiler -gc none -g . -o ${profile_app_name}')
+)
+
+context.task(
+	name:    'profile-mem'
+	help:    'profile allocation per scenario under heaptrack, printing the top consumers'
+	depends: ['profile-mem-build']
+	run:     fn (self build.Task) ! {
+		if system('command -v heaptrack > /dev/null 2>&1') != 0 {
+			eprintln('profile-mem: heaptrack not found on PATH')
+			eprintln('  arch:   sudo pacman -S heaptrack')
+			eprintln('  debian: sudo apt install heaptrack')
+			exit(1)
+		}
+		mkdir_all(profile_output_dir) or {}
+		mut failed := false
+		for s in profile_scenarios {
+			out := '${profile_output_dir}/${s.name}'
+			eprintln('')
+			eprintln(term.bright_yellow('=== profiling: ${s.name} ==='))
+			// LILLY_NO_TELEMETRY keeps the run off the network, so the profile
+			// covers the editor rather than an HTTP client
+			rc := system("LILLY_NO_TELEMETRY=1 v -g run cmd/xpty/ 'heaptrack -o ${out} ${s.command}' '${s.keys}' --output-dir ${profile_output_dir}/${s.name}-frames")
+			if rc != 0 {
+				eprintln(term.failed('profile-mem: scenario ${s.name} failed to run'))
+				failed = true
+				continue
+			}
+			// An empty capture reads as a successful run of a program that
+			// allocated nothing, which is never true here: it means the
+			// process was killed before heaptrack could write its report.
+			// Catch it rather than print a column of zeroes.
+			if system("test -s '${out}.zst'") != 0 {
+				eprintln(term.failed('profile-mem: ${s.name} produced an empty capture - the program likely did not exit on its own'))
+				failed = true
+				continue
+			}
+			if system("heaptrack_print '${out}.zst' | grep -E '^(total runtime|calls to allocation|temporary memory|peak heap|peak RSS|total memory leaked)'") != 0 {
+				eprintln(term.failed('profile-mem: could not read the capture for ${s.name}'))
+				failed = true
+				continue
+			}
+			eprintln('')
+			eprintln('top consumers (full report: heaptrack_print ${out}.zst, or heaptrack_gui ${out}.zst):')
+			// only the peak section, five entries deep, two stacks each: enough
+			// to name the culprits without burying them. The saved capture
+			// still holds the complete tree, which heaptrack_gui can explore.
+			system("heaptrack_print -a off -T off -n 5 -s 2 '${out}.zst' 2>/dev/null | sed -n '/PEAK MEMORY CONSUMERS/,\$p' | grep -v '^  *in ' | head -60")
 		}
 		if failed {
 			exit(1)
@@ -255,8 +372,8 @@ context.task(
 // CI TASKS
 context.task(
 	name: 'ci-image'
-	help:  'build the CI toolchain image, for bootstrapping it or rebuilding it by hand'
-	run:   |self| system(r'
+	help: 'build the CI toolchain image, for bootstrapping it or rebuilding it by hand'
+	run:  |self| system(r'
 set -eu
 IMAGE=registry.catkin.dev/tauraamui/lilly-ci
 DATE=$(date -u +%Y-%m-%d)

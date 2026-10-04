@@ -121,7 +121,19 @@ fn (m NewFileDialogModel) view(mut r_ctx tea.Context) {
 		inner_height = 0
 	}
 
-	tea.new_layout().border(.normal).border_color(m.theme.petal_pink).size(m.width, m.height).render(mut r_ctx, fn [m, inner_height] (mut ctx tea.Context) {
+	// drawn inline rather than in a render callback: the callback would capture
+	// this model, and V pins a closure's captured context for the life of the
+	// process. This dialog holds a focused input field, so it redraws on every
+	// cursor blink and would pin a copy of itself thirty times a second.
+	layout := tea.new_layout().border(.normal).border_color(m.theme.petal_pink).size(m.width,
+		m.height)
+	layout.render_begin(mut r_ctx)
+	defer { layout.render_end(mut r_ctx) }
+	m.draw_dialog_body(mut r_ctx, inner_height)
+}
+
+fn (m NewFileDialogModel) draw_dialog_body(mut ctx tea.Context, inner_height int) {
+	{
 		title := 'Create new file'
 		ctx.draw_text(2, 1, title)
 
@@ -143,7 +155,7 @@ fn (m NewFileDialogModel) view(mut r_ctx tea.Context) {
 		ctx.set_color(m.theme.subtle_light_grey)
 		ctx.draw_text(2, inner_height - 2, 'Enter to create • Esc to cancel')
 		ctx.reset_color()
-	})
+	}
 }
 
 fn (m NewFileDialogModel) width() int {

@@ -33,10 +33,97 @@ fn build_id() string {
 
 const logo_contents = $embed_file('./splash-logo.txt')
 
+// LogoColour selects which theme colour a run is drawn in. Runs carry a
+// selector rather than a resolved tea.Color because the theme is a render-time
+// input, so a cached colour would go stale.
+enum LogoColour as u8 {
+	pink
+	green
+}
+
+// LogoRun is a stretch of one logo line drawn in a single colour, starting at
+// visible column x. The logo's `g`/`p` colouring directives are already
+// resolved: a directive's own cell is a space at the head of the run it opens.
+struct LogoRun {
+	x      int
+	text   string
+	colour LogoColour
+}
+
+// LogoLine is one prepared line of the logo.
+struct LogoLine {
+	visible_len int
+	runs        []LogoRun
+}
+
+// SplashLogo holds the logo prepared for drawing. The preparation happens once,
+// at construction, rather than per frame: scanning each line for directives and
+// then drawing it one character at a time was the largest single source of
+// allocation in the editor, and it ran on every frame the splash screen was
+// visible - including every frame spent behind an open dialog.
 struct SplashLogo {
-mut:
-	data  []string
+	lines []LogoLine
 	width int
+}
+
+// SplashLogo.parse splits the logo into coloured runs.
+//
+// Colour carries across lines. render_logo sets pink once before drawing and
+// the directives mutate it as the logo is drawn top to bottom, so a line with
+// no directive of its own inherits whatever colour the line above left set.
+// Parsing therefore has to walk the lines in order, threading the colour
+// through, which is also why it cannot be done a line at a time on demand.
+fn SplashLogo.parse(contents string) SplashLogo {
+	data := contents.split_into_lines()
+	mut lines := []LogoLine{cap: data.len}
+	mut colour := LogoColour.pink
+	mut width := 0
+	for line in data {
+		mut runs := []LogoRun{}
+		mut buf := []rune{}
+		mut run_start := 0
+		for i, r in line.runes() {
+			if r == `g` || r == `p` {
+				if buf.len > 0 {
+					runs << LogoRun{
+						x:      run_start
+						text:   buf.string()
+						colour: colour
+					}
+					buf = []rune{}
+				}
+				colour = if r == `g` { LogoColour.green } else { LogoColour.pink }
+				// the directive occupies a cell, drawn blank in the colour it
+				// just selected, which is what opens the next run
+				run_start = i
+				buf << ` `
+				continue
+			}
+			if buf.len == 0 {
+				run_start = i
+			}
+			buf << r
+		}
+		if buf.len > 0 {
+			runs << LogoRun{
+				x:      run_start
+				text:   buf.string()
+				colour: colour
+			}
+		}
+		visible_len := tea.visible_len(line)
+		if visible_len > width {
+			width = visible_len
+		}
+		lines << LogoLine{
+			visible_len: visible_len
+			runs:        runs
+		}
+	}
+	return SplashLogo{
+		lines: lines
+		width: width
+	}
 }
 
 @[params]
@@ -70,9 +157,7 @@ fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
 	return SplashScreenModel{
 		config:            opts.config
 		version:           opts.version
-		logo:              SplashLogo{
-			data: logo_contents.to_string().split_into_lines()
-		}
+		logo:              SplashLogo.parse(logo_contents.to_string())
 		doc_controller:    opts.doc_controller
 		doc_controller2:   opts.doc_controller2
 		cb:                opts.cb
@@ -357,6 +442,35 @@ fn format_keybind_help(label string, combo string) string {
 	return '${label}${' '.repeat(spacing)}${combo}'
 }
 
+// The help rows and their widths are fixed, so they are laid out once at
+// startup rather than reformatted and re-measured on every frame.
+const keybind_help_rows = build_keybind_help_rows()
+
+const keybind_help_widths = measure_widths(keybind_help_rows)
+
+const disabled_command_help_widths = measure_widths(disabled_command_help)
+
+fn build_keybind_help_rows() []string {
+	mut rows := []string{cap: basic_command_help_labels.len}
+	for i, label in basic_command_help_labels {
+		rows << format_keybind_help(label, basic_command_help_combos[i])
+	}
+	return rows
+}
+
+fn measure_widths(rows []string) []int {
+	mut widths := []int{cap: rows.len}
+	for r in rows {
+		widths << tea.visible_len(r)
+	}
+	return widths
+}
+
+// keybinds_list_height is what the list advances the caller's cursor by. The
+// original arrived at it by pushing a y offset both before and after every
+// row, which double-spaced the list and left the sum as the return value.
+const keybinds_list_height = 2 + (2 * (basic_command_help_labels.len + disabled_command_help.len))
+
 const pending_match_color = tea.Color.ansi(244)
 
 @[params]
@@ -368,122 +482,99 @@ struct RenderKeybindsListParams {
 	disabled_help_fg_color tea.Color
 }
 
+// render_keybinds_list draws the help rows and returns the height it occupied.
+//
+// Rows are positioned by explicit coordinate for the same reason the logo is:
+// the original pushed two offsets per row and never popped the vertical one,
+// so the offset stack grew as the list was drawn and every subsequent draw paid
+// to sum it. Rows land on odd rows, which is the double spacing the old
+// push-before-and-after pattern produced.
 fn render_keybinds_list(mut ctx tea.Context,
 	opts RenderKeybindsListParams) tea.Offset {
-	offset_from_id := ctx.push_offset(tea.Offset{ y: 1 })
-	defer { ctx.clear_offsets_from(offset_from_id) }
-
 	leader_key_label := "leader = '${opts.leader_key}'"
-	ctx.draw_text(-(tea.visible_len(leader_key_label) / 2), 0, leader_key_label)
-	ctx.push_offset(tea.Offset{ y: 1 })
+	ctx.draw_text(-(tea.visible_len(leader_key_label) / 2), 1, leader_key_label)
 
-	for i, label in basic_command_help_labels {
-		combo := basic_command_help_combos[i]
-		suffix := basic_command_help_suffixes[i]
-		display_text := format_keybind_help(label, combo)
-		ctx.push_offset(tea.Offset{ y: 1 })
-		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(display_text) / 2) })
+	mut y := 3
+	for i, row in keybind_help_rows {
 		if opts.in_leader_mode {
+			suffix := basic_command_help_suffixes[i]
 			if opts.leader_data.len > 0 && suffix.starts_with(opts.leader_data) {
 				ctx.set_color(opts.closest_match_color)
 			} else {
 				ctx.set_color(pending_match_color)
 			}
 		}
-		ctx.draw_text(0, 0, display_text)
+		ctx.draw_text(-(keybind_help_widths[i] / 2), y, row)
 		if opts.in_leader_mode {
 			ctx.reset_color()
 		}
-		ctx.pop_offset()
-		ctx.push_offset(tea.Offset{ y: 1 })
+		y += 2
 	}
 
-	for l in disabled_command_help {
-		ctx.push_offset(tea.Offset{ y: 1 })
-		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(l) / 2) })
-		ctx.set_style(.strikethrough)
-		ctx.set_color(opts.disabled_help_fg_color)
-		ctx.draw_text(0, 0, l)
-		ctx.reset_color()
-		ctx.clear_style()
-		ctx.pop_offset()
-		ctx.push_offset(tea.Offset{ y: 1 })
+	ctx.set_style(.strikethrough)
+	ctx.set_color(opts.disabled_help_fg_color)
+	for i, row in disabled_command_help {
+		ctx.draw_text(-(disabled_command_help_widths[i] / 2), y, row)
+		y += 2
 	}
-	return ctx.compact_offsets_from(offset_from_id)
+	ctx.reset_color()
+	ctx.clear_style()
+
+	return tea.Offset{
+		y: keybinds_list_height
+	}
 }
 
 @[params]
 struct RenderLogoParams {
-	RenderLogoLineParams
+	RenderLogoColoursParams
 	logo SplashLogo
 }
 
+// render_logo draws the prepared logo, centred, and returns the offset the
+// caller stacks the next block beneath.
+//
+// Every line is positioned by an explicit coordinate rather than by pushing an
+// offset per line. draw_text resolves a position by summing the whole offset
+// stack, so an offset per line made that stack grow as the logo was drawn and
+// charged every later draw for it; the arithmetic is the same either way, and
+// doing it here keeps the stack one deep.
 fn render_logo(mut ctx tea.Context, opts RenderLogoParams) tea.Offset {
 	// NOTE(tauraamui) [25/10/25]: this can be reduced to a style container which basically
 	//                  makes the y offset be down by 10% of the parent. in this
 	//                  case the parent is just the window itself, but could be anything
-
-	// NOTE(tauraamui) [26/10/25]: basically each logo line by default renders as the full string per
-	//                             line at once with the light pink color set, but some lines of the logo
-	//                             contain both green and pink, so they need to be rendered per character
-	//                             with the correct palette option/fg set
-	// ctx.set_color(palette.petal_pink_color)
-	ctx.set_color(opts.petal_pink)
 	offset_from_id := ctx.push_offset(tea.Offset{})
 	defer { ctx.clear_offsets_from(offset_from_id) }
-	for _, l in opts.logo.data {
-		// NOTE(tauraamui) [26/10/25] by splitting these offset pushes into two separate calls
-		//                            we're only continuously removing the offset for the X position
-		//                            each loop iter, so by the end `compact_offsets` is a combination of
-		//                            the full height of the logo once its been completely rendered
-		ctx.push_offset(tea.Offset{ y: 1 })
-		ctx.push_offset(tea.Offset{ x: -(tea.visible_len(l) / 2) })
-		render_logo_line(mut ctx, l, opts.RenderLogoLineParams)
-		ctx.pop_offset()
+
+	mut colour := LogoColour.pink
+	ctx.set_color(opts.petal_pink)
+	for i, line in opts.logo.lines {
+		centre := -(line.visible_len / 2)
+		for run in line.runs {
+			if run.colour != colour {
+				colour = run.colour
+				match colour {
+					.pink { ctx.set_color(opts.petal_pink) }
+					.green { ctx.set_color(opts.petal_green) }
+				}
+			}
+			// y is i + 1 because the original pushed its first line offset
+			// before drawing, putting the top line one row below the base
+			ctx.draw_text(centre + run.x, i + 1, run.text)
+		}
 	}
 	ctx.reset_color()
-	return ctx.compact_offsets_from(offset_from_id)
+	return tea.Offset{
+		y: opts.logo.lines.len
+	}
 }
 
+// RenderLogoColoursParams carries the two theme colours the logo's runs are
+// resolved against at draw time.
 @[params]
-struct RenderLogoLineParams {
+struct RenderLogoColoursParams {
 	petal_pink  tea.Color
 	petal_green tea.Color
-}
-
-fn render_logo_line(mut ctx tea.Context, line string, opts RenderLogoLineParams) {
-	if has_colouring_directives(line) {
-		render_logo_line_char_by_char(mut ctx, line, opts.petal_pink, opts.petal_green)
-		return
-	}
-	ctx.draw_text(0, 0, line)
-}
-
-fn render_logo_line_char_by_char(mut ctx tea.Context,
-	line string,
-	petal_pink tea.Color,
-	petal_green tea.Color) {
-	for j, c in line.runes() {
-		mut to_draw := '${c}'
-		if to_draw == 'g' {
-			to_draw = ' '
-			ctx.set_color(petal_green)
-		}
-		if to_draw == 'p' {
-			to_draw = ' '
-			ctx.set_color(petal_pink)
-		}
-		ctx.draw_text(j, 0, to_draw)
-	}
-}
-
-fn has_colouring_directives(line string) bool {
-	for c in line.split('') {
-		if c == 'g' || c == 'p' {
-			return true
-		}
-	}
-	return false
 }
 
 fn (m SplashScreenModel) debug_data() DebugData {

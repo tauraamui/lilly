@@ -30,3 +30,5 @@ src/.githash
 make
 xpty_frames/
 cmd/xpty/xpty.dSYM/Contents
+profile/
+lilly-profile

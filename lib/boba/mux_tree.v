@@ -310,6 +310,78 @@ pub fn (t Tree[T]) each_divider(max_width int, max_height int, visit DividerVisi
 	t.root.each_divider(0, 0, max_width, max_height, 0, visit)
 }
 
+// Divider is one divider cell, as each_divider reports it.
+pub struct Divider {
+pub:
+	x     int
+	y     int
+	up    bool
+	down  bool
+	left  bool
+	right bool
+}
+
+// dividers collects what each_divider reports, for a caller that needs its own
+// state while drawing.
+//
+// A visitor would have to be a closure over that state, and V keeps every
+// closure's captured context in a process-wide table it never empties, so a
+// visitor built per frame pins its context for the life of the process. The
+// array this returns is ordinary garbage and costs one allocation a frame.
+pub fn (t Tree[T]) dividers(max_width int, max_height int) []Divider {
+	mut out := []Divider{}
+	t.root.collect_dividers(0, 0, max_width, max_height, 0, mut out)
+	return out
+}
+
+fn (n &Node[T]) collect_dividers(x int, y int, width int, height int, edges u8, mut out []Divider) {
+	if n.is_leaf() {
+		return
+	}
+	match n.direction {
+		.horizontal {
+			lw := width / 2
+			dx := x + lw
+			top_join := edges & edge_top != 0
+			bottom_join := edges & edge_bottom != 0
+			for ry in y .. y + height {
+				join := (ry == y && top_join) || (ry == y + height - 1 && bottom_join)
+				out << Divider{
+					x:     dx
+					y:     ry
+					up:    ry > y
+					down:  ry < y + height - 1
+					left:  join
+					right: join
+				}
+			}
+			n.first_child.collect_dividers(x, y, lw, height, edges | edge_right, mut out)
+			n.second_child.collect_dividers(dx, y, width - lw, height, edges | edge_left, mut
+				out)
+		}
+		.vertical {
+			lh := height / 2
+			dy := y + lh
+			left_join := edges & edge_left != 0
+			right_join := edges & edge_right != 0
+			for cx in x .. x + width {
+				join := (cx == x && left_join) || (cx == x + width - 1 && right_join)
+				out << Divider{
+					x:     cx
+					y:     dy
+					up:    join
+					down:  join
+					left:  cx > x
+					right: cx < x + width - 1
+				}
+			}
+			n.first_child.collect_dividers(x, y, width, lh, edges | edge_bottom, mut out)
+			n.second_child.collect_dividers(x, dy, width, height - lh, edges | edge_top, mut
+				out)
+		}
+	}
+}
+
 fn (n &Node[T]) each_divider(x int, y int, width int, height int, edges u8, visit DividerVisitor) {
 	if n.is_leaf() {
 		return

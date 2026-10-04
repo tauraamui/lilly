@@ -63,12 +63,29 @@ pub:
 	time time.Time
 }
 
+// cursor_blink_interval is how often the cursor's colour is advanced. The
+// blink is a sine fade over frames_per_cycle frames, so this and that constant
+// together set the cycle length.
+const cursor_blink_interval = 33 * time.millisecond
+
+// cursor_blink_cmd re-arms the blink. It deliberately returns a plain function
+// rather than a closure: the cursor re-arms about thirty times a second for as
+// long as a field is focused, and V registers every closure's captured context
+// in a table it never empties, so a captured tick would pin its context - and
+// whatever that reaches - once per blink, for the life of the process. Nothing
+// here needs capturing, so nothing is captured.
 pub fn cursor_blink_cmd() tea.Cmd {
-	return tea.tick(33 * time.millisecond, fn (t time.Time) tea.Msg {
-		return CursorBlinkMsg{
-			time: t
-		}
-	})
+	return cursor_blink_tick
+}
+
+fn cursor_blink_tick() tea.Msg {
+	return tea.tick_msg(cursor_blink_interval, cursor_blink_fired)
+}
+
+fn cursor_blink_fired(t time.Time) tea.Msg {
+	return CursorBlinkMsg{
+		time: t
+	}
 }
 
 pub fn (mut m InputField) update(msg tea.Msg) (InputField, fn () tea.Msg) {
@@ -167,7 +184,19 @@ pub fn (m InputField) view(mut r_ctx tea.Context) {
 	prefix_padding := m.prefix_padding
 
 	height := if m.layout.border == .none { 1 } else { 3 }
-	m.layout.size(width, height).render(mut r_ctx, fn [cursor_pos, cursor_color, width, value_runes, input_prefix, prefix_padding] (mut l_ctx tea.Context) {
+	// drawn inline rather than through a render callback: the callback would
+	// capture the value's runes and the prefix, and V pins a closure's
+	// captured context for the life of the process, so a field that redraws on
+	// every blink would leak a copy of its contents thirty times a second
+	layout := m.layout.size(width, height)
+	layout.render_begin(mut r_ctx)
+	defer { layout.render_end(mut r_ctx) }
+	draw_input_field(mut r_ctx, cursor_pos, cursor_color, width, value_runes, input_prefix,
+		prefix_padding)
+}
+
+fn draw_input_field(mut l_ctx tea.Context, cursor_pos int, cursor_color tea.Color, width int, value_runes []rune, input_prefix string, prefix_padding int) {
+	{
 		l_ctx.set_clip_area(tea.ClipArea{0, 0, width - 3, 1})
 		defer { l_ctx.clear_clip_area() }
 
@@ -195,7 +224,7 @@ pub fn (m InputField) view(mut r_ctx tea.Context) {
 			l_ctx.reset_bg_color()
 		}
 		l_ctx.clear_from_offset(input_text_offset)
-	})
+	}
 }
 
 fn calculate_cursor_color(blink_frame int) tea.Color {

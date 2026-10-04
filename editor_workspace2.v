@@ -116,6 +116,9 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		CloseEditor2Msg {
 			return m.close_editor_update(msg)
 		}
+		ResolveUnsavedChangesMsg {
+			return m.resolve_unsaved_changes_update(msg)
+		}
 		CloseDialogMsg {
 			m.dialog_model = ?DebuggableModel(none)
 			return m.clone(), tea.noop_cmd
@@ -385,6 +388,21 @@ fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, 
 // already open in the active pane resolves to the same id and this bails out
 // immediately rather than tearing down and rebuilding an identical editor.
 fn (mut m EditorWorkspaceModel2) open_file_update(msg OpenFileMsg) (tea.Model, fn () tea.Msg) {
+	// Opening a file retires the active editor, which puts the same unsaved
+	// work at risk as closing it would, so it asks the same question. Checked
+	// before the document is opened rather than after: loading the new file
+	// first would leave it in the controller with no editor if the prompt is
+	// then cancelled.
+	//
+	// Compared by path rather than by document id, which would mean opening the
+	// file to learn it. Two paths naming one file is the only thing that gets
+	// through, and that only costs a prompt that resolves into a no-op open.
+	if msg.file_path != m.editor_file_path(m.active_editor_id)
+		&& m.retiring_would_discard_edits(m.active_editor_id) {
+		return m.clone(), open_unsaved_changes_dialog(m.config.theme, m.active_editor_id,
+			m.editor_file_path(m.active_editor_id), msg.file_path)
+	}
+
 	doc_id := m.doc_controller.open_document(msg.file_path) or {
 		return m.clone(), debug_log('failed to open document ${msg.file_path}: ${err}')
 	}
@@ -411,6 +429,9 @@ fn (mut m EditorWorkspaceModel2) open_file_update(msg OpenFileMsg) (tea.Model, f
 
 	m.active_editor_id = editor_id
 	m.editors[editor_id] = e_model
+	// the editor that was replaced took its document out of use with it, unless
+	// a split still shows the same file
+	m.sweep_documents()
 	return m.clone(), tea.sequence(model_init_cmd, focus_editor2(m.active_editor_id),
 		tea.emit_resize)
 }
@@ -451,16 +472,111 @@ fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Mode
 
 fn (mut m EditorWorkspaceModel2) close_editor_update(msg CloseEditor2Msg) (tea.Model, fn () tea.Msg) {
 	if _ := m.editors[msg.editor_id_to_close] {
-		next_active_id := m.tree.remove(msg.editor_id_to_close) or { return m.clone(), shutdown }
+		if !msg.force && m.retiring_would_discard_edits(msg.editor_id_to_close) {
+			return m.clone(), open_unsaved_changes_dialog(m.config.theme, msg.editor_id_to_close,
+				m.editor_file_path(msg.editor_id_to_close), none)
+		}
+		next_active_id := m.tree.remove(msg.editor_id_to_close) or {
+			// the last editor is going, so the process is too: there is nothing
+			// left to hold a document and the sweep would only race the exit
+			return m.clone(), shutdown
+		}
 		m.editors.delete(msg.editor_id_to_close)
 		// remove() hands back the closed leaf's nearest surviving neighbour, so
 		// focus lands on the split that grew into the freed space.
 		if m.active_editor_id == msg.editor_id_to_close {
 			m.active_editor_id = next_active_id
 		}
+		m.sweep_documents()
 		return m.clone(), tea.sequence(focus_editor2(m.active_editor_id), tea.emit_resize)
 	}
 	return m.clone(), tea.noop_cmd
+}
+
+// resolve_unsaved_changes_update carries out what the dialog was told to do and
+// then retires the editor the way the interrupted action meant to.
+fn (mut m EditorWorkspaceModel2) resolve_unsaved_changes_update(msg ResolveUnsavedChangesMsg) (tea.Model, fn () tea.Msg) {
+	editor := m.editors[msg.editor_id] or { return m.clone(), tea.noop_cmd }
+	if editor is EditorModel2 {
+		if msg.save {
+			m.doc_controller.write_to_disk(editor.doc_id, editor.file_path) or {
+				// the editor keeps its edits and stays open: this is the whole
+				// reason the write is not a separate command in a sequence
+				return m.clone(), display_error_message('failed to write to disk: ${err}')
+			}
+		} else {
+			m.doc_controller.mark_clean(editor.doc_id)
+		}
+	}
+
+	if path := msg.then_open {
+		return m.open_file_update(OpenFileMsg{
+			file_path: path
+		})
+	}
+	return m.close_editor_update(CloseEditor2Msg{
+		active_editor_id:   msg.editor_id
+		editor_id_to_close: msg.editor_id
+		force:              true
+	})
+}
+
+// sweep_documents releases every document that no surviving editor refers to.
+//
+// Called wherever an editor is retired, which is on a close and on an open that
+// replaces one. A document does not go away on its own otherwise, so a session
+// that visits files holds every one of them until it exits.
+fn (mut m EditorWorkspaceModel2) sweep_documents() {
+	mut live := []nanoid.ID{cap: m.editors.len}
+	for _, editor in m.editors {
+		if editor is EditorModel2 {
+			live << editor.doc_id
+		}
+	}
+	if m.doc_controller.close_unreferenced(live) > 0 {
+		// a document's text is the largest single thing this process holds, so
+		// when one goes it is worth asking Boehm to hand the space back rather
+		// than leaving it free inside a heap it never shrinks. Gated on
+		// something actually having been closed: this is a full collection, and
+		// closing one of two splits onto the same file releases nothing.
+		release_free_heap_to_os()
+	}
+}
+
+// retiring_would_discard_edits reports whether taking this editor away would
+// throw out unwritten work.
+//
+// A document can be open in several splits, so its edits are only at risk when
+// this editor is the last one showing them: closing one of two views onto the
+// same document loses nothing.
+fn (m EditorWorkspaceModel2) retiring_would_discard_edits(editor_id nanoid.ID) bool {
+	editor := m.editors[editor_id] or { return false }
+	if editor !is EditorModel2 {
+		return false
+	}
+	doc_id := (editor as EditorModel2).doc_id
+	if !m.doc_controller.is_dirty(doc_id) {
+		return false
+	}
+	for other_id, other in m.editors {
+		if other_id == editor_id {
+			continue
+		}
+		if other is EditorModel2 && other.doc_id == doc_id {
+			return false
+		}
+	}
+	return true
+}
+
+// editor_file_path is the path an editor is showing, for a prompt that has to
+// name it and for an open that has to tell whether it is already here.
+fn (m EditorWorkspaceModel2) editor_file_path(editor_id nanoid.ID) string {
+	editor := m.editors[editor_id] or { return '' }
+	if editor is EditorModel2 {
+		return editor.file_path
+	}
+	return ''
 }
 
 fn (mut m EditorWorkspaceModel2) shutdown_update(msg ShutdownMsg) (tea.Model, fn () tea.Msg) {
@@ -507,17 +623,21 @@ fn (mut m EditorWorkspaceModel2) view(mut ctx tea.Context) {
 // the active colour when it lies on the active editor's own top/left frame.
 fn (m EditorWorkspaceModel2) render_dividers(mut ctx tea.Context, layouts map[nanoid.ID]boba.Layout) {
 	active := layouts[m.active_editor_id]
-	m.tree.each_divider(m.width, m.height - 2, fn [mut ctx, active] (x int, y int, up bool, down bool, left bool, right bool) {
+	// collected and looped rather than visited through a callback: the callback
+	// would capture the context and the active layout, and a captured context
+	// is pinned for the life of the process, so this would leak once a frame
+	for d in m.tree.dividers(m.width, m.height - 2) {
 		on_active :=
-			(active.x > 0 && x == active.x && y >= active.y && y < active.y + active.height)
-				|| (active.y > 0 && y == active.y && x >= active.x && x < active.x + active.width)
+			(active.x > 0 && d.x == active.x && d.y >= active.y && d.y < active.y + active.height)
+				|| (active.y > 0 && d.y == active.y && d.x >= active.x
+					&& d.x < active.x + active.width)
 		ctx.set_color(if on_active {
 			active_editor_border_color
 		} else {
 			inactive_editor_border_color
 		})
-		ctx.draw_text(x, y, glyphs.box_junction(up, down, left, right))
-	})
+		ctx.draw_text(d.x, d.y, glyphs.box_junction(d.up, d.down, d.left, d.right))
+	}
 	ctx.reset_color()
 }
 
@@ -725,6 +845,33 @@ fn open_editor_in_split_cmd(editor_id nanoid.ID, direction boba.SplitDirection) 
 struct CloseEditor2Msg {
 	active_editor_id   nanoid.ID
 	editor_id_to_close nanoid.ID
+	// force closes without asking about unsaved changes. Only the unsaved
+	// changes dialog sets it, having already asked.
+	force bool
+}
+
+// ResolveUnsavedChangesMsg carries what the unsaved changes dialog was told to
+// do. then_open names a file to open over the editor instead of closing it,
+// for the case where the editor was being retired by an open rather than a
+// quit.
+struct ResolveUnsavedChangesMsg {
+	editor_id nanoid.ID
+	save      bool
+	then_open ?string
+}
+
+// resolve_unsaved_changes is the dialog's answer. Write-then-act is one message
+// rather than a sequence of two so that the editor survives a failed write: a
+// sequence would retire it regardless, which is the one outcome the prompt
+// exists to prevent.
+fn resolve_unsaved_changes(editor_id nanoid.ID, save bool, then_open ?string) tea.Cmd {
+	return fn [editor_id, save, then_open] () tea.Msg {
+		return ResolveUnsavedChangesMsg{
+			editor_id: editor_id
+			save:      save
+			then_open: then_open
+		}
+	}
 }
 
 fn close_editor2(editor_id nanoid.ID) fn () tea.Msg {

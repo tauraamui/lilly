@@ -322,6 +322,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 @[params]
 struct RenderFilePathLineParams {
 	file_path          string
+	row                int
 	width              int
 	height             int
 	is_selected        bool
@@ -329,21 +330,37 @@ struct RenderFilePathLineParams {
 	cwd                string
 }
 
+// selected_row_prefix marks the selected row. Unselected rows used to draw two
+// spaces in its place, which is indistinguishable from the blank cells the pane
+// is already cleared to, so they now draw nothing and the path starts at the
+// same column either way.
+const selected_row_prefix = '» '
+
+const row_prefix_width = 2
+
 fn render_file_path_line(mut ctx tea.Context, opts RenderFilePathLineParams) {
-	mut prefix := '  '
+	// rows fill upwards from the bottom of the pane, which the caller used to
+	// express by pushing a -1 offset per row. Deriving y from the row index
+	// keeps the offset stack flat: draw_text and draw_rect each resolve a
+	// position by summing the whole stack, so a per-row offset charged every
+	// cell of every later row for the rows above it.
+	y := opts.height - 3 - opts.row
 	if opts.is_selected {
-		prefix = '» '
-		selected_path_highlight_bg_color := opts.selection_bg_color
-		ctx.set_color(palette.fg_color(selected_path_highlight_bg_color))
-		ctx.set_bg_color(selected_path_highlight_bg_color)
+		highlight_bg_color := opts.selection_bg_color
+		ctx.set_color(palette.fg_color(highlight_bg_color))
+		ctx.set_bg_color(highlight_bg_color)
+		// the fill is what paints the highlight across the row, so it is only
+		// needed for the selected one. Drawing it for every row meant painting
+		// a full pane width of blank cells per row per frame, which was the
+		// largest remaining source of allocation in the editor.
+		ctx.draw_rect(0, y, opts.width - 2, 1)
+		ctx.draw_text(0, y, selected_row_prefix)
 	}
-	ctx.draw_rect(0, opts.height - 3, opts.width - 2, 1)
-	ctx.draw_text(0, opts.height - 3, prefix + opts.file_path.replace(opts.cwd, '.'))
+	ctx.draw_text(row_prefix_width, y, opts.file_path.replace(opts.cwd, '.'))
 	if opts.is_selected {
 		ctx.reset_color()
 		ctx.reset_bg_color()
 	}
-	ctx.push_offset(tea.Offset{ y: -1 })
 }
 
 fn (m FilePickerModel) max_visible_items() int {
@@ -354,7 +371,18 @@ fn (m FilePickerModel) max_visible_items() int {
 
 fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int, height int, border_color tea.Color) {
 	cwd := m.cached_cwd
-	tea.new_layout().border(.normal).border_color(border_color).size(width, height).render(mut r_ctx, fn [m, width, height, cwd] (mut ctx tea.Context) {
+	// drawn between render_begin and render_end rather than in a callback: a
+	// callback would have to capture `m`, and a captured context is pinned for
+	// the life of the process, so a pane rendered at the cursor's blink rate
+	// would leak one copy of this model per frame
+	layout := tea.new_layout().border(.normal).border_color(border_color).size(width, height)
+	layout.render_begin(mut r_ctx)
+	defer { layout.render_end(mut r_ctx) }
+	m.draw_file_results(mut r_ctx, width, height, cwd)
+}
+
+fn (m FilePickerModel) draw_file_results(mut ctx tea.Context, width int, height int, cwd string) {
+	{
 		max_width := width - 2
 		max_height := height - 2
 		ctx.set_clip_area(tea.ClipArea{0, 0, max_width - 1, max_height})
@@ -371,11 +399,11 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 		}
 
 		max_items := max_height
-		list_offset_id := ctx.push_offset(tea.Offset{})
 		for i, file_path in clamp_files_list_to_scrolled(m.start_index, max_items, m.filtered_files) {
 			is_selected := (i + m.start_index) == m.selected_index
 			render_file_path_line(mut ctx,
 				file_path:          file_path
+				row:                i
 				width:              width
 				height:             height
 				is_selected:        is_selected
@@ -383,8 +411,7 @@ fn (m FilePickerModel) render_file_results_pane(mut r_ctx tea.Context, width int
 				cwd:                cwd
 			)
 		}
-		ctx.clear_offsets_from(list_offset_id)
-	})
+	}
 }
 
 fn sanitize_preview_line(line string, max_width int) string {
@@ -417,7 +444,15 @@ fn sanitize_preview_line(line string, max_width int) string {
 
 fn (m FilePickerModel) render_preview_pane(mut r_ctx tea.Context, width int, height int, border_color tea.Color) {
 	preview_lines := m.preview_lines
-	tea.new_layout().border(.normal).border_color(border_color).size(width, height).render(mut r_ctx, fn [m, preview_lines, width, height] (mut ctx tea.Context) {
+	// inline for the same reason as the results pane: see draw_file_results
+	layout := tea.new_layout().border(.normal).border_color(border_color).size(width, height)
+	layout.render_begin(mut r_ctx)
+	defer { layout.render_end(mut r_ctx) }
+	m.draw_preview(mut r_ctx, preview_lines, width, height)
+}
+
+fn (m FilePickerModel) draw_preview(mut ctx tea.Context, preview_lines []string, width int, height int) {
+	{
 		max_width := width - 2
 		max_height := height - 2
 		ctx.set_clip_area(tea.ClipArea{0, 0, max_width - 1, max_height})
@@ -437,7 +472,7 @@ fn (m FilePickerModel) render_preview_pane(mut r_ctx tea.Context, width int, hei
 		for i in 0 .. visible_lines {
 			ctx.draw_text(0, i, sanitize_preview_line(preview_lines[i], max_width))
 		}
-	})
+	}
 }
 
 fn clamp_files_list_to_scrolled(start int, max_items int, initial_files_list []string) []string {

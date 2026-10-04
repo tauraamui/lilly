@@ -112,10 +112,12 @@ fn error_log(message string) tea.Cmd {
 enum ScreenState as u8 {
 	data
 	logs
+	memory
 }
 
 struct DebugScreenModel {
-	logs []LogMsg
+	logs  []LogMsg
+	probe &MemoryProbe = unsafe { nil }
 mut:
 	state              ScreenState
 	wrapped_model      DebuggableModel
@@ -135,10 +137,11 @@ fn close_debug(prev_model tea.Model) tea.Cmd {
 	}
 }
 
-fn DebugScreenModel.new(wrapped_model DebuggableModel, logs []LogMsg, last_resize_width int, last_resize_height int) DebugScreenModel {
+fn DebugScreenModel.new(wrapped_model DebuggableModel, logs []LogMsg, probe &MemoryProbe, last_resize_width int, last_resize_height int) DebugScreenModel {
 	return DebugScreenModel{
 		wrapped_model:      wrapped_model
 		logs:               logs
+		probe:              probe
 		last_resize_width:  last_resize_width
 		last_resize_height: last_resize_height
 	}
@@ -188,6 +191,19 @@ fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 						}
 						'2' {
 							m.state = .logs
+						}
+						'3' {
+							m.state = .memory
+						}
+						'c' {
+							// a forced collection is the only way to separate
+							// retained bytes from garbage, so it is driven by
+							// hand rather than on a timer: collecting on every
+							// frame would change the thing being measured
+							if m.state == .memory && !isnil(m.probe) {
+								mut probe := m.probe
+								probe.collect_now()
+							}
 						}
 						else {}
 					}
@@ -240,12 +256,20 @@ fn (mut m DebugScreenModel) view(mut ctx tea.Context) {
 			ctx.draw_text((ctx.window_width() / 2) - tea.visible_len('LOGS') / 2, 2, 'LOGS')
 			render_logs(mut ctx, 0, 4, m.logs)
 		}
+		.memory {
+			render_memory(mut ctx, 0, 2, m.probe, m.logs, m.wrapped_model)
+		}
 	}
 
 	top_to_bottom_offset_id := ctx.push_offset(tea.Offset{ x: 1, y: ctx.window_height() - 1 })
 	defer { ctx.clear_offsets_from(top_to_bottom_offset_id) }
 	ctx.set_color(palette.help_fg_color)
-	ctx.draw_text(0, 0, 'q ${dot} esc ${dot} f12: close')
+	mut help := '1: data ${dot} 2: logs ${dot} 3: memory ${dot} q ${dot} esc ${dot} f12: close'
+	// the collect hint is only offered where there is a collector to ask
+	if m.state == .memory && gc_counters_available() {
+		help = '1: data ${dot} 2: logs ${dot} 3: memory ${dot} c: collect ${dot} q ${dot} esc ${dot} f12: close'
+	}
+	ctx.draw_text(0, 0, help)
 	ctx.reset_color()
 }
 

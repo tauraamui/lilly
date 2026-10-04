@@ -109,6 +109,17 @@ pub fn (mut tb TextBuffer) load(bytes []u8) {
 // inotify/FSEvents/ReadDirectoryChangesW backends this surfaces as a
 // rename/create rather than modify; consumers should treat a CREATE
 // for an already-known path as a content change.
+// release drops everything this buffer holds, leaving it empty.
+//
+// For an owner that is about to let the buffer go. V's map delete removes the
+// key but leaves the value's bytes in the map's backing store, so a map entry
+// whose value points at a megabyte of text keeps that megabyte reachable -
+// and therefore uncollectable - after the entry is deleted. Clearing the value
+// in place first is what actually releases it.
+pub fn (mut tb TextBuffer) release() {
+	tb = TextBuffer{}
+}
+
 pub fn (tb TextBuffer) write_to_path(path string) ! {
 	dir := os.dir(path)
 	tmp := os.join_path(dir, '.${os.file_name(path)}.${os.getpid()}.tmp')
@@ -155,7 +166,13 @@ const symbols_to_autoclose = {
 // insert_byte performs the raw insert with no autoclose behaviour
 fn (mut tb TextBuffer) insert_byte(c u8) {
 	tb.reset_goal_column()
-	tb.record(.insert, tb.data_buf.ccur(), [c])
+	// recording is checked here and not just inside record(): the argument is
+	// built before the call, so an unguarded record() still heap-allocates a
+	// one-element array per byte only to drop it. Loading a file inserts every
+	// byte with recording off, which made opening a 1MiB file churn ~48MiB.
+	if tb.history.recording {
+		tb.record(.insert, tb.data_buf.ccur(), [c])
+	}
 	tb.data_buf.insert(c)
 	tb.line_buf.apply_delta(1)
 	if c == newline_hex {
