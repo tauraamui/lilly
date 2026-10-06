@@ -51,6 +51,13 @@ pub fn (mut gb Buffer) backspace() {
 
 pub fn (mut gb Buffer) move_cur_left() {
 	if gb.ccur == 0 { return }
+	// with no gap there is nothing to swap, and the swap below would copy the
+	// byte onto itself and then zero it
+	if gb.ccur == gb.cend {
+		gb.ccur -= 1
+		gb.cend -= 1
+		return
+	}
 	gb.ccur -= 1
 	gb.buf[gb.cend - 1] = gb.buf[gb.ccur]
 	gb.buf[gb.ccur] = 0x0
@@ -59,6 +66,11 @@ pub fn (mut gb Buffer) move_cur_left() {
 
 pub fn (mut gb Buffer) move_cur_right() {
 	if gb.cend == u64(gb.buf.len) { return }
+	if gb.ccur == gb.cend {
+		gb.ccur += 1
+		gb.cend += 1
+		return
+	}
 	gb.buf[gb.ccur] = gb.buf[gb.cend]
 	gb.buf[gb.cend] = 0x0
 	gb.ccur += 1
@@ -66,21 +78,41 @@ pub fn (mut gb Buffer) move_cur_right() {
 }
 
 pub fn (mut gb Buffer) move_cur_to_start() {
-	if gb.ccur == 0 {
+	gb.move_cur_to(0)
+}
+
+// move_cur_to moves the cursor to logical offset pos, clamped to the content's
+// length, by moving the text between the two cursor positions across the gap
+// in one memmove rather than a byte at a time: a jump from one end of a large
+// file to the other moves all of it, which byte by byte took seconds.
+pub fn (mut gb Buffer) move_cur_to(pos u64) {
+	target := if pos > gb.logical_len() { gb.logical_len() } else { pos }
+	if target < gb.ccur {
+		n := gb.ccur - target
+		new_cend := gb.cend - n
+		copy(mut gb.buf[int(new_cend)..int(gb.cend)], gb.buf[int(target)..int(gb.ccur)])
+		// the gap is kept zeroed, as moving a byte at a time leaves it
+		vacated_end := if gb.ccur < new_cend { gb.ccur } else { new_cend }
+		gb.clear(target, vacated_end)
+		gb.ccur = target
+		gb.cend = new_cend
 		return
 	}
-	if gb.cend <= gb.ccur {
-		gb.cend = u64(gb.buf.len)
+
+	n := target - gb.ccur
+	new_cend := gb.cend + n
+	copy(mut gb.buf[int(gb.ccur)..int(target)], gb.buf[int(gb.cend)..int(new_cend)])
+	vacated_start := if target > gb.cend { target } else { gb.cend }
+	gb.clear(vacated_start, new_cend)
+	gb.ccur = target
+	gb.cend = new_cend
+}
+
+fn (mut gb Buffer) clear(start u64, end u64) {
+	if end <= start {
+		return
 	}
-	gap := int(gb.cend - gb.ccur)
-	pre_len := int(gb.ccur)
-	// one memmove rather than a byte at a time: after loading a file the
-	// cursor sits at its end, so this moves the whole file
-	copy(mut gb.buf[gap..gap + pre_len], gb.buf[..pre_len])
-	cleared := if pre_len < gap { pre_len } else { gap }
-	unsafe { vmemset(gb.buf.data, 0, cleared) }
-	gb.cend = u64(gap)
-	gb.ccur = 0
+	unsafe { vmemset(&u8(gb.buf.data) + start, 0, int(end - start)) }
 }
 
 // insert_bytes inserts a run of bytes at the cursor with one copy, growing the

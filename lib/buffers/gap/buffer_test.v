@@ -177,3 +177,57 @@ fn test_reserve_grows_gap_to_requested_size_once() {
 	gb.insert_bytes('bc'.bytes())
 	assert gb.str() == 'abc'
 }
+
+// builds 'abcdefghij' in a buffer whose gap (of gap_len bytes) sits at offset cur
+fn gap_buffer_at(cur int, gap_len int) Buffer {
+	mut gb := Buffer.new(10 + gap_len)
+	gb.insert_bytes('abcdefghij'.bytes())
+	for _ in 0 .. 10 - cur {
+		gb.move_cur_left()
+	}
+	return gb
+}
+
+fn test_move_cur_to_matches_moving_a_byte_at_a_time() {
+	// gap of 0 and 3 make the distance exceed the gap; 20 does not
+	for gap_len in [0, 3, 20] {
+		for from in 0 .. 11 {
+			for to in 0 .. 11 {
+				mut want := gap_buffer_at(from, gap_len)
+				for want.ccur < u64(to) {
+					want.move_cur_right()
+				}
+				for want.ccur > u64(to) {
+					want.move_cur_left()
+				}
+				mut got := gap_buffer_at(from, gap_len)
+				got.move_cur_to(u64(to))
+				assert got.ccur == want.ccur, 'gap ${gap_len} ${from}->${to}'
+				assert got.cend == want.cend, 'gap ${gap_len} ${from}->${to}'
+				assert got.buf == want.buf, 'gap ${gap_len} ${from}->${to}'
+			}
+		}
+	}
+}
+
+fn test_move_cur_to_past_the_end_clamps_to_the_end() {
+	mut gb := gap_buffer_at(2, 4)
+	gb.move_cur_to(99)
+	assert gb.ccur == 10
+	assert gb.cend == u64(gb.buf.len)
+	gb.insert(u8(`>`))
+	assert gb.str() == 'abcdefghij>'
+}
+
+fn test_move_cur_left_and_right_with_no_gap_keep_content() {
+	mut gb := Buffer.new(3)
+	gb.insert_bytes('abc'.bytes())
+	assert gb.gap_size() == 0
+	gb.move_cur_left()
+	assert gb.str() == 'abc'
+	gb.move_cur_left()
+	gb.move_cur_right()
+	assert gb.str() == 'abc'
+	gb.insert(u8(`>`))
+	assert gb.str() == 'ab>c'
+}

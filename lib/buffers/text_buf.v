@@ -557,16 +557,7 @@ fn (mut tb TextBuffer) move_cursor_vertical(direction int) {
 	// resolve target column (in codepoints) back to a byte offset
 	target_offset := tb.offset_at_column(target_start, content_end, current_col)
 
-	current_offset := tb.data_buf.ccur()
-	if target_offset > current_offset {
-		for _ in 0 .. target_offset - current_offset {
-			tb.data_buf.move_cur_right()
-		}
-	} else if target_offset < current_offset {
-		for _ in 0 .. current_offset - target_offset {
-			tb.data_buf.move_cur_left()
-		}
-	}
+	tb.data_buf.move_cur_to(target_offset)
 	tb.line_buf.move_to_line(target_line)
 	tb.goal_column = int(current_col)
 }
@@ -608,16 +599,7 @@ fn (mut tb TextBuffer) record(kind OpKind2, offset u64, bytes []u8) {
 
 fn (mut tb TextBuffer) move_cursor_to_offset(target u64) {
 	tb.reset_goal_column()
-	current := tb.data_buf.ccur()
-	if target > current {
-		for _ in 0 .. target - current {
-			tb.data_buf.move_cur_right()
-		}
-	} else if target < current {
-		for _ in 0 .. current - target {
-			tb.data_buf.move_cur_left()
-		}
-	}
+	tb.data_buf.move_cur_to(target)
 	tb.line_buf.move_to_line(tb.line_index_for_offset(target))
 }
 
@@ -904,16 +886,7 @@ fn (tb TextBuffer) is_blank_line(y u64) bool {
 fn (mut tb TextBuffer) move_cursor_to_line_start(y u64) {
 	tb.reset_goal_column()
 	line_start, _ := tb.get_line_start_and_end(y)
-	current_offset := tb.data_buf.ccur()
-	if line_start > current_offset {
-		for _ in 0 .. line_start - current_offset {
-			tb.data_buf.move_cur_right()
-		}
-	} else if line_start < current_offset {
-		for _ in 0 .. current_offset - line_start {
-			tb.data_buf.move_cur_left()
-		}
-	}
+	tb.data_buf.move_cur_to(line_start)
 	tb.line_buf.move_to_line(y)
 }
 
@@ -980,16 +953,7 @@ pub fn (mut tb TextBuffer) jump_cursor_to_line_end() {
 			}
 		}
 	}
-	current_offset := tb.data_buf.ccur()
-	if target > current_offset {
-		for _ in 0 .. target - current_offset {
-			tb.data_buf.move_cur_right()
-		}
-	} else if target < current_offset {
-		for _ in 0 .. current_offset - target {
-			tb.data_buf.move_cur_left()
-		}
-	}
+	tb.data_buf.move_cur_to(target)
 }
 
 // jump_cursor_to_text_start moves the cursor to the first non-blank
@@ -1023,16 +987,7 @@ pub fn (mut tb TextBuffer) jump_cursor_to_text_start() {
 	}
 
 	tb.reset_goal_column()
-	current_offset := tb.data_buf.ccur()
-	if target > current_offset {
-		for _ in 0 .. target - current_offset {
-			tb.data_buf.move_cur_right()
-		}
-	} else if target < current_offset {
-		for _ in 0 .. current_offset - target {
-			tb.data_buf.move_cur_left()
-		}
-	}
+	tb.data_buf.move_cur_to(target)
 }
 
 // jump_cursor_to_line moves the cursor to the first non-blank character of
@@ -1129,16 +1084,7 @@ fn (mut tb TextBuffer) move_cursor_to_position(y u64, x u64) {
 		}
 	}
 	target_offset := tb.offset_at_column(line_start, content_end, x)
-	current_offset := tb.data_buf.ccur()
-	if target_offset > current_offset {
-		for _ in 0 .. target_offset - current_offset {
-			tb.data_buf.move_cur_right()
-		}
-	} else if target_offset < current_offset {
-		for _ in 0 .. current_offset - target_offset {
-			tb.data_buf.move_cur_left()
-		}
-	}
+	tb.data_buf.move_cur_to(target_offset)
 	tb.line_buf.move_to_line(y)
 }
 
