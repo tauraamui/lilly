@@ -73,14 +73,14 @@ fn EditorWorkspaceModel2.new(config EditorWorkspaceConfig, doc_controller &docum
 	}
 }
 
-fn (mut m EditorWorkspaceModel2) init() fn () tea.Msg {
+fn (mut m EditorWorkspaceModel2) init() tea.Cmd {
 	m.input_field = boba.InputField.new_with_prefix(':', 0)
 	// the tree is planted when the first editor opens (open_file_update),
 	// using that editor's generated id; until then it holds no editor leaves.
-	return tea.sequence(tea.emit_resize, query_git_branch)
+	return tea.sequence(tea.emit_resize(), query_git_branch())
 }
 
-fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// ***** dialog related state *****
 	d_model, d_cmd := m.update_dialog(msg)
 	if cloned_model := d_model {
@@ -93,7 +93,7 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 			return m.shutdown_update(msg)
 		}
 		tea.FocusedMsg {
-			return m.clone(), query_git_branch
+			return m.clone(), query_git_branch()
 		}
 		tea.KeyMsg {
 			return m.key_update(msg)
@@ -121,7 +121,7 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		}
 		CloseDialogMsg {
 			m.dialog_model = ?DebuggableModel(none)
-			return m.clone(), tea.noop_cmd
+			return m.clone(), tea.no_cmd
 		}
 		SwitchModeMsg {
 			return m.switch_mode_update(msg)
@@ -137,11 +137,11 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 		} // TODO(tauraamui) rename query message result type to make it clear its a query result
 		EditorData2ResultMsg {
 			m.active_editor_data = msg.data
-			return m.clone(), tea.noop_cmd
+			return m.clone(), tea.no_cmd
 		}
 		GitBranchQueryResultMsg {
 			m.branch_name = msg.branch_name
-			return m.clone(), tea.noop_cmd
+			return m.clone(), tea.no_cmd
 		}
 		boba.CursorBlinkMsg {
 			match m.mode {
@@ -159,7 +159,7 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) 
 	return m.forward_msg_to_all_editors(msg)
 }
 
-fn (mut m EditorWorkspaceModel2) forward_msg_to_all_editors(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorWorkspaceModel2) forward_msg_to_all_editors(msg tea.Msg) (tea.Model, tea.Cmd) {
 	mut cmds := []tea.Cmd{}
 	for id, mut editor in m.editors {
 		new_editor, cmd := editor.update(msg)
@@ -171,10 +171,10 @@ fn (mut m EditorWorkspaceModel2) forward_msg_to_all_editors(msg tea.Msg) (tea.Mo
 	return m.clone(), tea.batch_array(cmds)
 }
 
-fn (mut m EditorWorkspaceModel2) update_dialog(msg tea.Msg) (?tea.Model, fn () tea.Msg) {
+fn (mut m EditorWorkspaceModel2) update_dialog(msg tea.Msg) (?tea.Model, tea.Cmd) {
 	if msg is CloseDialogMsg {
 		m.dialog_model = none
-		return m.clone(), tea.noop_cmd
+		return m.clone(), tea.no_cmd
 	}
 
 	if mut open_model := m.dialog_model {
@@ -195,14 +195,14 @@ fn (mut m EditorWorkspaceModel2) update_dialog(msg tea.Msg) (?tea.Model, fn () t
 		return m.clone(), cmd
 	}
 
-	return none, tea.noop_cmd
+	return none, tea.no_cmd
 }
 
-fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	match m.mode {
 		.normal {
 			model, cmd := m.normal_mode_key_update(msg)
-			if cmd != tea.noop_cmd {
+			if cmd !is tea.NoCmd {
 				return model, cmd // do not forward key event to editor in normal mode if consumed here
 			}
 		}
@@ -223,7 +223,7 @@ fn (mut m EditorWorkspaceModel2) key_update(msg tea.KeyMsg) (tea.Model, fn () te
 	return m_clone, tea.sequence(cmd, query_editor_data2(m.active_editor_id))
 }
 
-fn (mut m EditorWorkspaceModel2) normal_mode_key_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorWorkspaceModel2) normal_mode_key_update(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	if mut d_modal := m.dialog_model {
 		d_model, dialog_cmd := d_modal.update(msg)
 		if d_model is DebuggableModel {
@@ -236,7 +236,7 @@ fn (mut m EditorWorkspaceModel2) normal_mode_key_update(msg tea.KeyMsg) (tea.Mod
 		.special {
 			match msg.string() {
 				'escape' {
-					return m.clone(), hide_message
+					return m.clone(), hide_message()
 				}
 				'ctrl+w+h' {
 					return m.move_to_next_split_in_direction(.left)
@@ -258,7 +258,7 @@ fn (mut m EditorWorkspaceModel2) normal_mode_key_update(msg tea.KeyMsg) (tea.Mod
 				':' {
 					i_input, i_cmd := m.input_field.update(tea.FocusedMsg{})
 					m.input_field = i_input
-					return m.clone(), tea.sequence(hide_message, switch_mode(.command), i_cmd)
+					return m.clone(), tea.sequence(hide_message(), switch_mode(.command), i_cmd)
 				}
 				m.config.leader_key {
 					return m.clone(), switch_mode(.leader)
@@ -268,32 +268,32 @@ fn (mut m EditorWorkspaceModel2) normal_mode_key_update(msg tea.KeyMsg) (tea.Mod
 		}
 	}
 
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.no_cmd
 }
 
-fn (mut m EditorWorkspaceModel2) move_to_next_split_in_direction(direction boba.Direction) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorWorkspaceModel2) move_to_next_split_in_direction(direction boba.Direction) (tea.Model, tea.Cmd) {
 	if split_editor_id := m.tree.neighbour(m.active_editor_id, direction, m.width, m.height) {
 		m.active_editor_id = split_editor_id
-		return m.clone(), tea.sequence(focus_editor2(m.active_editor_id), tea.emit_resize)
+		return m.clone(), tea.sequence(focus_editor2(m.active_editor_id), tea.emit_resize())
 	}
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.no_cmd
 }
 
-fn (mut m EditorWorkspaceModel2) command_mode_key_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorWorkspaceModel2) command_mode_key_update(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	match msg.k_type {
 		.special {
 			cmd := match msg.string() {
 				'escape' {
-					tea.noop_cmd
+					tea.no_cmd
 				}
 				'enter' {
 					execute_command(m.active_editor_id, m.input_field.value())
 				}
 				'backspace' {
-					return m.clone(), tea.noop_cmd
+					return m.clone(), tea.no_cmd
 				}
 				else {
-					tea.noop_cmd
+					tea.no_cmd
 				}
 			}
 
@@ -308,10 +308,10 @@ fn (mut m EditorWorkspaceModel2) command_mode_key_update(msg tea.KeyMsg) (tea.Mo
 		}
 	}
 
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.no_cmd
 }
 
-fn (mut m EditorWorkspaceModel2) leader_mode_key_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorWorkspaceModel2) leader_mode_key_update(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	match msg.k_type {
 		.special {
 			match msg.string() {
@@ -333,10 +333,10 @@ fn (mut m EditorWorkspaceModel2) leader_mode_key_update(msg tea.KeyMsg) (tea.Mod
 		}
 	}
 
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.no_cmd
 }
 
-fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, tea.Cmd) {
 	m.width = msg.window_width
 	m.height = msg.window_height
 
@@ -366,7 +366,7 @@ fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, 
 		}
 	}
 
-	mut d_cmd := tea.noop_cmd
+	mut d_cmd := tea.no_cmd
 	if mut d_modal := m.dialog_model {
 		d_model, dialog_cmd := d_modal.update(tea.ResizedMsg{
 			window_width:  int(f64(msg.window_width) * .8)
@@ -387,7 +387,7 @@ fn (mut m EditorWorkspaceModel2) resized_update(msg tea.ResizedMsg) (tea.Model, 
 // doc controller derives doc_id deterministically from the path, so a file
 // already open in the active pane resolves to the same id and this bails out
 // immediately rather than tearing down and rebuilding an identical editor.
-fn (mut m EditorWorkspaceModel2) open_file_update(msg OpenFileMsg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorWorkspaceModel2) open_file_update(msg OpenFileMsg) (tea.Model, tea.Cmd) {
 	// Opening a file retires the active editor, which puts the same unsaved
 	// work at risk as closing it would, so it asks the same question. Checked
 	// before the document is opened rather than after: loading the new file
@@ -411,7 +411,7 @@ fn (mut m EditorWorkspaceModel2) open_file_update(msg OpenFileMsg) (tea.Model, f
 	if active_editor := m.editors[old_active_id] {
 		if active_editor is EditorModel2 {
 			if active_editor.doc_id == doc_id {
-				return m.clone(), tea.noop_cmd
+				return m.clone(), tea.no_cmd
 			}
 		}
 	}
@@ -433,15 +433,15 @@ fn (mut m EditorWorkspaceModel2) open_file_update(msg OpenFileMsg) (tea.Model, f
 	// a split still shows the same file
 	m.sweep_documents()
 	return m.clone(), tea.sequence(model_init_cmd, focus_editor2(m.active_editor_id),
-		tea.emit_resize)
+		tea.emit_resize())
 }
 
-fn (mut m EditorWorkspaceModel2) open_editor_in_split_update(msg OpenEditorInSplitMsg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorWorkspaceModel2) open_editor_in_split_update(msg OpenEditorInSplitMsg) (tea.Model, tea.Cmd) {
 	if active_editor := m.editors[msg.active_editor_id] {
 		if active_editor is EditorModel2 {
 			new_editor_id := nanoid.simple()
 			if !m.tree.split(msg.active_editor_id, new_editor_id, msg.direction) {
-				return m.clone(), tea.noop_cmd
+				return m.clone(), tea.no_cmd
 			}
 			mut e_model := EditorModel2.new(m.config, new_editor_id, active_editor.doc_id,
 				active_editor.file_path, m.doc_controller)
@@ -449,13 +449,13 @@ fn (mut m EditorWorkspaceModel2) open_editor_in_split_update(msg OpenEditorInSpl
 			m.active_editor_id = new_editor_id
 			m.editors[new_editor_id] = e_model
 			return m.clone(), tea.sequence(model_init_cmd, focus_editor2(m.active_editor_id),
-				tea.emit_resize)
+				tea.emit_resize())
 		}
 	}
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.no_cmd
 }
 
-fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, tea.Cmd) {
 	if m.mode == .leader {
 		m.leader_suffix = []
 	}
@@ -470,7 +470,7 @@ fn (mut m EditorWorkspaceModel2) switch_mode_update(msg SwitchModeMsg) (tea.Mode
 	return m.clone_with_mode(msg.mode), cmd
 }
 
-fn (mut m EditorWorkspaceModel2) close_editor_update(msg CloseEditor2Msg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorWorkspaceModel2) close_editor_update(msg CloseEditor2Msg) (tea.Model, tea.Cmd) {
 	if _ := m.editors[msg.editor_id_to_close] {
 		if !msg.force && m.retiring_would_discard_edits(msg.editor_id_to_close) {
 			return m.clone(), open_unsaved_changes_dialog(m.config.theme, msg.editor_id_to_close,
@@ -479,7 +479,7 @@ fn (mut m EditorWorkspaceModel2) close_editor_update(msg CloseEditor2Msg) (tea.M
 		next_active_id := m.tree.remove(msg.editor_id_to_close) or {
 			// the last editor is going, so the process is too: there is nothing
 			// left to hold a document and the sweep would only race the exit
-			return m.clone(), shutdown
+			return m.clone(), shutdown()
 		}
 		m.editors.delete(msg.editor_id_to_close)
 		// remove() hands back the closed leaf's nearest surviving neighbour, so
@@ -488,15 +488,15 @@ fn (mut m EditorWorkspaceModel2) close_editor_update(msg CloseEditor2Msg) (tea.M
 			m.active_editor_id = next_active_id
 		}
 		m.sweep_documents()
-		return m.clone(), tea.sequence(focus_editor2(m.active_editor_id), tea.emit_resize)
+		return m.clone(), tea.sequence(focus_editor2(m.active_editor_id), tea.emit_resize())
 	}
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.no_cmd
 }
 
 // resolve_unsaved_changes_update carries out what the dialog was told to do and
 // then retires the editor the way the interrupted action meant to.
-fn (mut m EditorWorkspaceModel2) resolve_unsaved_changes_update(msg ResolveUnsavedChangesMsg) (tea.Model, fn () tea.Msg) {
-	editor := m.editors[msg.editor_id] or { return m.clone(), tea.noop_cmd }
+fn (mut m EditorWorkspaceModel2) resolve_unsaved_changes_update(msg ResolveUnsavedChangesMsg) (tea.Model, tea.Cmd) {
+	editor := m.editors[msg.editor_id] or { return m.clone(), tea.no_cmd }
 	if editor is EditorModel2 {
 		if msg.save {
 			m.doc_controller.write_to_disk(editor.doc_id, editor.file_path) or {
@@ -579,8 +579,8 @@ fn (m EditorWorkspaceModel2) editor_file_path(editor_id nanoid.ID) string {
 	return ''
 }
 
-fn (mut m EditorWorkspaceModel2) shutdown_update(msg ShutdownMsg) (tea.Model, fn () tea.Msg) {
-	return m.clone(), tea.sequence(debug_log('${msg}...'), tea.quit)
+fn (mut m EditorWorkspaceModel2) shutdown_update(msg ShutdownMsg) (tea.Model, tea.Cmd) {
+	return m.clone(), tea.sequence(debug_log('${msg}...'), tea.quit())
 }
 
 fn (mut m EditorWorkspaceModel2) view(mut ctx tea.Context) {
@@ -833,13 +833,11 @@ struct OpenEditorInSplitMsg {
 	direction        boba.SplitDirection
 }
 
-fn open_editor_in_split_cmd(editor_id nanoid.ID, direction boba.SplitDirection) fn () tea.Msg {
-	return fn [editor_id, direction] () tea.Msg {
-		return OpenEditorInSplitMsg{
-			active_editor_id: editor_id
-			direction:        direction
-		}
-	}
+fn open_editor_in_split_cmd(editor_id nanoid.ID, direction boba.SplitDirection) tea.Cmd {
+	return tea.msg_cmd(OpenEditorInSplitMsg{
+		active_editor_id: editor_id
+		direction:        direction
+	})
 }
 
 struct CloseEditor2Msg {
@@ -865,31 +863,25 @@ struct ResolveUnsavedChangesMsg {
 // sequence would retire it regardless, which is the one outcome the prompt
 // exists to prevent.
 fn resolve_unsaved_changes(editor_id nanoid.ID, save bool, then_open ?string) tea.Cmd {
-	return fn [editor_id, save, then_open] () tea.Msg {
-		return ResolveUnsavedChangesMsg{
-			editor_id: editor_id
-			save:      save
-			then_open: then_open
-		}
-	}
+	return tea.msg_cmd(ResolveUnsavedChangesMsg{
+		editor_id: editor_id
+		save:      save
+		then_open: then_open
+	})
 }
 
-fn close_editor2(editor_id nanoid.ID) fn () tea.Msg {
-	return fn [editor_id] () tea.Msg {
-		return CloseEditor2Msg{
-			active_editor_id:   editor_id
-			editor_id_to_close: editor_id
-		}
-	}
+fn close_editor2(editor_id nanoid.ID) tea.Cmd {
+	return tea.msg_cmd(CloseEditor2Msg{
+		active_editor_id:   editor_id
+		editor_id_to_close: editor_id
+	})
 }
 
-fn focus_editor2(editor_id nanoid.ID) fn () tea.Msg {
-	return fn [editor_id] () tea.Msg {
-		return EditorModel2Msg{
-			active_id: editor_id
-			msg:       tea.FocusedMsg{}
-		}
-	}
+fn focus_editor2(editor_id nanoid.ID) tea.Cmd {
+	return tea.msg_cmd(EditorModel2Msg{
+		active_id: editor_id
+		msg:       tea.FocusedMsg{}
+	})
 }
 
 struct MessageLabel {
@@ -917,12 +909,10 @@ struct DisplayMessageMsg {
 }
 
 fn display_message(m_type DisplayMessageType, contents string) tea.Cmd {
-	return fn [m_type, contents] () tea.Msg {
-		return DisplayMessageMsg{
-			contents: contents
-			m_type:   m_type
-		}
-	}
+	return tea.msg_cmd(DisplayMessageMsg{
+		contents: contents
+		m_type:   m_type
+	})
 }
 
 fn display_error_message(contents string) tea.Cmd {
@@ -933,8 +923,8 @@ struct HideMessageMsg {
 	time time.Time
 }
 
-fn hide_message() tea.Msg {
-	return HideMessageMsg{}
+fn hide_message() tea.Cmd {
+	return tea.msg_cmd(HideMessageMsg{})
 }
 
 fn hide_message_after(duration time.Duration) tea.Cmd {
@@ -946,34 +936,51 @@ fn hide_message_after(duration time.Duration) tea.Cmd {
 }
 
 fn execute_command(active_editor_id nanoid.ID, cmd string) tea.Cmd {
-	match cmd {
+	return match cmd {
 		'qa' {
-			return shutdown
+			shutdown()
 		}
 		'q' {
-			return close_editor2(active_editor_id)
+			close_editor2(active_editor_id)
 		}
 		'w' {
-			return write_to_disk2(active_editor_id)
+			write_to_disk2(active_editor_id)
 		}
 		'vs' {
-			return open_editor_in_split_cmd(active_editor_id, .horizontal)
+			open_editor_in_split_cmd(active_editor_id, .horizontal)
 		}
 		'sp' {
-			return open_editor_in_split_cmd(active_editor_id, .vertical)
+			open_editor_in_split_cmd(active_editor_id, .vertical)
 		}
 		else {
-			return display_error_message('unrecognised command: ${cmd}')
+			// return display_error_message('unrecognised command: ${cmd}')
+			parse_line_num_target_or_return_unknown_cmd(active_editor_id, cmd)
 		}
 	}
+}
 
-	return tea.noop_cmd
+fn parse_line_num_target_or_return_unknown_cmd(active_editor_id nanoid.ID, cmd string) tea.Cmd {
+	target_line := cmd.parse_int(10, 64) or {
+		return display_error_message('unrecognised command: ${cmd}')
+	}
+	return jump_editor_to_line_cmd(active_editor_id, int(target_line))
+}
+
+// TODO(tauraamui): EditorModel2 does not handle GoToLineMsg yet, so this
+// dispatches but does not move the cursor. Mirrors goto_line in editor.v.
+fn jump_editor_to_line_cmd(editor_id nanoid.ID, line int) tea.Cmd {
+	return tea.msg_cmd(EditorModel2Msg{
+		active_id: editor_id
+		msg:       GoToLineMsg{
+			line: line
+		}
+	})
 }
 
 struct QueryGitBranchMsg {}
 
-fn query_git_branch() tea.Msg {
-	return QueryGitBranchMsg{}
+fn query_git_branch() tea.Cmd {
+	return tea.msg_cmd(QueryGitBranchMsg{})
 }
 
 struct GitBranchQueryResultMsg {
@@ -981,9 +988,7 @@ struct GitBranchQueryResultMsg {
 }
 
 fn git_branch_query_result(branch_name string) tea.Cmd {
-	return fn [branch_name] () tea.Msg {
-		return GitBranchQueryResultMsg{
-			branch_name: branch_name
-		}
-	}
+	return tea.msg_cmd(GitBranchQueryResultMsg{
+		branch_name: branch_name
+	})
 }

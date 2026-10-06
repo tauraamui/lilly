@@ -98,15 +98,11 @@ fn log(message string, level LogLevel) tea.Msg {
 }
 
 fn debug_log(message string) tea.Cmd {
-	return fn [message] () tea.Msg {
-		return log(message, .debug)
-	}
+	return tea.msg_cmd(log(message, .debug))
 }
 
 fn error_log(message string) tea.Cmd {
-	return fn [message] () tea.Msg {
-		return log(message, .error)
-	}
+	return tea.msg_cmd(log(message, .error))
 }
 
 enum ScreenState as u8 {
@@ -132,9 +128,7 @@ struct CloseDebugScreenMsg {
 }
 
 fn close_debug(prev_model tea.Model) tea.Cmd {
-	return fn [prev_model] () tea.Msg {
-		return CloseDebugScreenMsg{prev_model}
-	}
+	return tea.msg_cmd(CloseDebugScreenMsg{prev_model})
 }
 
 fn DebugScreenModel.new(wrapped_model DebuggableModel, logs []LogMsg, probe &MemoryProbe, last_resize_width int, last_resize_height int) DebugScreenModel {
@@ -147,11 +141,11 @@ fn DebugScreenModel.new(wrapped_model DebuggableModel, logs []LogMsg, probe &Mem
 	}
 }
 
-fn (mut m DebugScreenModel) init() fn () tea.Msg {
-	return tea.noop_cmd
+fn (mut m DebugScreenModel) init() tea.Cmd {
+	return tea.no_cmd
 }
 
-fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	match msg {
 		tea.KeyMsg {
 			match msg.k_type {
@@ -230,7 +224,7 @@ fn (mut m DebugScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	if wm is DebuggableModel {
 		m.wrapped_model = wm
 	}
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.no_cmd
 }
 
 fn (mut m DebugScreenModel) view(mut ctx tea.Context) {

@@ -86,20 +86,16 @@ struct OpenEditorMsg {
 }
 
 fn open_editor(file_path string) tea.Cmd {
-	return fn [file_path] () tea.Msg {
-		return OpenEditorMsg{file_path}
-	}
+	return tea.msg_cmd(OpenEditorMsg{file_path})
 }
 
 struct QueryEditorDataMsg {}
 
 fn query_editor_data(id int) tea.Cmd {
-	return fn [id] () tea.Msg {
-		return EditorModelMsg{
-			id:  id
-			msg: QueryEditorDataMsg{}
-		}
-	}
+	return tea.msg_cmd(EditorModelMsg{
+		id:  id
+		msg: QueryEditorDataMsg{}
+	})
 }
 
 struct EditorDataResultMsg {
@@ -107,20 +103,16 @@ struct EditorDataResultMsg {
 }
 
 fn editor_data(data EditorData) tea.Cmd {
-	return fn [data] () tea.Msg {
-		return EditorDataResultMsg{data}
-	}
+	return tea.msg_cmd(EditorDataResultMsg{data})
 }
 
 struct WriteToDiskMsg {}
 
 fn write_to_disk(id int) tea.Cmd {
-	return fn [id] () tea.Msg {
-		return EditorModelMsg{
-			id:  id
-			msg: WriteToDiskMsg{}
-		}
-	}
+	return tea.msg_cmd(EditorModelMsg{
+		id:  id
+		msg: WriteToDiskMsg{}
+	})
 }
 
 struct GoToLineMsg {
@@ -128,14 +120,12 @@ struct GoToLineMsg {
 }
 
 fn goto_line(id int, line int) tea.Cmd {
-	return fn [id, line] () tea.Msg {
-		return EditorModelMsg{
-			id:  id
-			msg: GoToLineMsg{
-				line: line
-			}
+	return tea.msg_cmd(EditorModelMsg{
+		id:  id
+		msg: GoToLineMsg{
+			line: line
 		}
-	}
+	})
 }
 
 @[params]
@@ -174,37 +164,39 @@ struct SyntaxLoadedMsg {
 	err_msg string
 }
 
+// load_syntax resolves the syntax definition for a path and hands back the
+// message announcing it.
+//
+// The resolution happens here rather than inside a command function, because a
+// command that carried editor_id and file_path would have to capture them, and
+// a V closure's captured context is pinned for the life of the process. This is
+// called once per file open, alongside reading the file itself, so doing the
+// lookup eagerly costs nothing worth keeping a closure for.
 fn load_syntax(editor_id int, file_path string) tea.Cmd {
-	return fn [editor_id, file_path] () tea.Msg {
-		syn := syntax.resolve_from_extension(file_path) or {
-			return EditorModelMsg{
-				id:  editor_id
-				msg: SyntaxLoadedMsg{
-					syn:     syntax.noop_syntax
-					err_msg: 'failed to load syntax for ${file_path}: ${err}'
-				}
-			}
+	syn, err_msg := resolve_syntax(file_path)
+	return tea.msg_cmd(EditorModelMsg{
+		id:  editor_id
+		msg: SyntaxLoadedMsg{
+			syn:     syn
+			err_msg: err_msg
 		}
-		if syn.name.len == 0 {
-			return EditorModelMsg{
-				id:  editor_id
-				msg: SyntaxLoadedMsg{
-					syn:     syn
-					err_msg: 'no syntax definition for ${file_path}, syntax highlighting disabled'
-				}
-			}
-		}
-		return EditorModelMsg{
-			id:  editor_id
-			msg: SyntaxLoadedMsg{
-				syn: syn
-			}
-		}
-	}
+	})
 }
 
-fn (mut m EditorModel) init() fn () tea.Msg {
-	return tea.batch(tea.emit_resize, load_syntax(m.id, m.file_path), query_editor_data(m.id))
+// resolve_syntax returns the syntax for a path and the message to report with
+// it, which is empty when the syntax loaded cleanly.
+fn resolve_syntax(file_path string) (syntax.Syntax, string) {
+	syn := syntax.resolve_from_extension(file_path) or {
+		return syntax.noop_syntax, 'failed to load syntax for ${file_path}: ${err}'
+	}
+	if syn.name.len == 0 {
+		return syn, 'no syntax definition for ${file_path}, syntax highlighting disabled'
+	}
+	return syn, ''
+}
+
+fn (mut m EditorModel) init() tea.Cmd {
+	return tea.batch(tea.emit_resize(), load_syntax(m.id, m.file_path), query_editor_data(m.id))
 }
 
 struct EditorModelMsg {
@@ -219,7 +211,7 @@ struct EditorModelKeyMsg {
 	mode      petal.Mode
 }
 
-fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	mut cmds := []tea.Cmd{}
 
 	if msg is EditorModelKeyMsg && m.focused {
@@ -566,7 +558,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		}
 		SwitchModeMsg {
 			if !m.focused {
-				return m.clone(), tea.noop_cmd
+				return m.clone(), tea.no_cmd
 			}
 			match msg.mode {
 				.insert {

@@ -36,5 +36,5 @@
 34 }                                                                                                                    
 35                                                                                                                      
 36 func (gb *GapBuffer) Delete(start, end int) {                                                                        
-█NORMAL██0003.txt██ master█                                                                              █1:0█
+█NORMAL██0003.txt██ master█                                                                              █0:8█
                                                                                                                         

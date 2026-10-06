@@ -25,37 +25,35 @@ struct VersionModel {
 }
 
 fn open_version_dialog(version string, ttheme theme.Theme) tea.Cmd {
-	return fn [version, ttheme] () tea.Msg {
-		return OpenDialogMsg{
-			model: VersionModel{
-				version: version
-				theme:   ttheme
-				width:   52
-				height:  5
-			}
+	return tea.msg_cmd(OpenDialogMsg{
+		model: VersionModel{
+			version: version
+			theme:   ttheme
+			width:   52
+			height:  5
 		}
-	}
+	})
 }
 
-fn close_version_dialog() tea.Msg {
-	return CloseDialogMsg{}
+fn close_version_dialog() tea.Cmd {
+	return tea.msg_cmd(CloseDialogMsg{})
 }
 
-fn (mut m VersionModel) init() fn () tea.Msg {
-	return tea.noop_cmd
+fn (mut m VersionModel) init() tea.Cmd {
+	return tea.no_cmd
 }
 
-fn (mut m VersionModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+fn (mut m VersionModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	match msg {
 		tea.KeyMsg {
 			match msg.k_type {
 				.special {
 					match msg.string() {
 						'escape' {
-							return m.clone(), close_version_dialog
+							return m.clone(), close_version_dialog()
 						}
 						'ctrl+c' {
-							return m.clone(), close_version_dialog
+							return m.clone(), close_version_dialog()
 						}
 						else {}
 					}
@@ -66,7 +64,7 @@ fn (mut m VersionModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		else {}
 	}
 
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.no_cmd
 }
 
 fn (m VersionModel) view(mut r_ctx tea.Context) {

@@ -153,7 +153,7 @@ fn test_line_jump_command_for_returns_goto_line_command() {
 	workspace.editors[editor.id] = editor
 
 	cmd := workspace.line_jump_command_for('12') or { panic('expected goto line command') }
-	msg := cmd()
+	msg := cmd.first_delivered_msg() or { panic('expected goto line command to deliver a message') }
 	assert msg is EditorModelMsg
 	if msg is EditorModelMsg {
 		assert msg.id == editor.id

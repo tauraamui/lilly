@@ -61,14 +61,14 @@ fn EditorModel2.new(config EditorWorkspaceConfig, id nanoid.ID, doc_id nanoid.ID
 	}
 }
 
-fn (mut m EditorModel2) init() fn () tea.Msg {
-	return tea.batch(tea.emit_resize, load_syntax2(m.id, m.file_path), query_editor_data2(m.id))
+fn (mut m EditorModel2) init() tea.Cmd {
+	return tea.batch(tea.emit_resize(), load_syntax2(m.id, m.file_path), query_editor_data2(m.id))
 }
 
-fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	match msg {
 		EditorModelKeyMsg {
-			if m.id != msg.active_id { return m.clone(), tea.noop_cmd }
+			if m.id != msg.active_id { return m.clone(), tea.no_cmd }
 			match msg.mode {
 				.normal {
 					return m.normal_mode_update(msg.key_msg)
@@ -91,10 +91,10 @@ fn (mut m EditorModel2) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		else {}
 	}
 
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.no_cmd
 }
 
-fn (mut m EditorModel2) editor_model_update(editor_id nanoid.ID, msg tea.Msg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorModel2) editor_model_update(editor_id nanoid.ID, msg tea.Msg) (tea.Model, tea.Cmd) {
 	match msg {
 		tea.FocusedMsg {
 			m.in_focus = editor_id == m.id
@@ -107,11 +107,11 @@ fn (mut m EditorModel2) editor_model_update(editor_id nanoid.ID, msg tea.Msg) (t
 			return m.switch_mode_update(msg)
 		}
 		QueryEditorData2Msg {
-			if editor_id != m.id { return m.clone(), tea.noop_cmd }
+			if editor_id != m.id { return m.clone(), tea.no_cmd }
 			return m.clone(), editor_data2(m.data())
 		}
 		SyntaxLoadedMsg {
-			if editor_id != m.id { return m.clone(), tea.noop_cmd }
+			if editor_id != m.id { return m.clone(), tea.no_cmd }
 			m.lang_syn = msg.syn
 			mut extra_id_chars := []rune{cap: m.lang_syn.identifier_chars.len}
 			for s in m.lang_syn.identifier_chars {
@@ -126,7 +126,7 @@ fn (mut m EditorModel2) editor_model_update(editor_id nanoid.ID, msg tea.Msg) (t
 			}
 		}
 		WriteToDiskMsg {
-			if editor_id != m.id { return m.clone(), tea.noop_cmd }
+			if editor_id != m.id { return m.clone(), tea.no_cmd }
 			m.doc_controller.write_to_disk(m.doc_id, m.file_path) or {
 				return m.clone(), raise_error('failed to write to disk: ${err}')
 			}
@@ -140,10 +140,10 @@ fn (mut m EditorModel2) editor_model_update(editor_id nanoid.ID, msg tea.Msg) (t
 	if editor_id == m.id {
 		m.scroll_to_cursor()
 	}
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.no_cmd
 }
 
-fn (mut m EditorModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, tea.Cmd) {
 	m.visual_sel_start_line = ?u64(none)
 	m.visual_sel_start_col = ?u64(none)
 	m.visual_linewise = false
@@ -175,7 +175,7 @@ fn (mut m EditorModel2) switch_mode_update(msg SwitchModeMsg) (tea.Model, fn () 
 		else {}
 	}
 
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.no_cmd
 }
 
 fn (mut m EditorModel2) switch_to_normal_mode_update(msg SwitchModeMsg) {
@@ -203,7 +203,7 @@ fn (mut m EditorModel2) switch_to_normal_mode_update(msg SwitchModeMsg) {
 	}
 }
 
-fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	mut cmds := []tea.Cmd{}
 	match msg.k_type {
 		.runes {
@@ -266,7 +266,7 @@ fn (mut m EditorModel2) normal_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	return m.clone(), tea.batch_array(cmds)
 }
 
-fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	mut cmds := []tea.Cmd{}
 	match msg.k_type {
 		.runes {
@@ -330,7 +330,7 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	return m.clone(), tea.batch_array(cmds)
 }
 
-fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea.Msg) {
+fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	mut cmds := []tea.Cmd{}
 	match msg.k_type {
 		.runes {
@@ -358,16 +358,14 @@ fn (mut m EditorModel2) visual_mode_update(msg tea.KeyMsg) (tea.Model, fn () tea
 	return m.clone(), tea.batch_array(cmds)
 }
 
-fn virtual_direction_key_press(direction string) fn () tea.Msg {
-	return fn [direction] () tea.Msg {
-		return tea.KeyMsg{
-			k_type: .special
-			runes:  direction.runes()
-		}
-	}
+fn virtual_direction_key_press(direction string) tea.Cmd {
+	return tea.msg_cmd(tea.KeyMsg{
+		k_type: .special
+		runes:  direction.runes()
+	})
 }
 
-fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg, bool) {
+fn (mut m EditorModel2) execute_action_normal(action ChordAction) (tea.Cmd, bool) {
 	count := if action.count == 0 { 1 } else { action.count }
 
 	// mode-bound things that aren't really motions; handled before the
@@ -407,12 +405,12 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg
 				m.doc_controller.delete_line(m.doc_id, cursor_line)
 			}
 			m.doc_controller.commit_undo_group(m.doc_id)
-			return tea.noop_cmd, false
+			return tea.no_cmd, false
 		}
 		'u' {
 			m.doc_controller.undo(m.doc_id)
 			m.invalidate_parser_cache()
-			return tea.noop_cmd, false
+			return tea.no_cmd, false
 		}
 		'x' {
 			m.invalidate_parser_cache()
@@ -421,7 +419,7 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg
 				m.doc_controller.delete_char_at(m.doc_id)
 			}
 			m.doc_controller.commit_undo_group(m.doc_id)
-			return tea.noop_cmd, false
+			return tea.no_cmd, false
 		}
 		'zz' {
 			// bare `zz` centers the viewport on the current line; an explicit
@@ -431,7 +429,7 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg
 				m.doc_controller.jump_cursor_to_line(m.doc_id, u64(count - 1))
 			}
 			m.center_viewport_on_cursor()
-			return tea.noop_cmd, false
+			return tea.no_cmd, false
 		}
 		else {}
 	}
@@ -441,18 +439,18 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (fn () tea.Msg
 		// `dd` arrives here as motion == 'line' (see chords.v) — left as a
 		// TODO until a linewise range helper exists on Controller2.
 		r := motion_range(m.doc_controller, m.doc_id, action.motion, count) or {
-			return tea.noop_cmd, false
+			return tea.no_cmd, false
 		}
 		apply_operator(m.doc_controller, m.doc_id, op, r)
 		m.doc_controller.commit_undo_group(m.doc_id)
-		return tea.noop_cmd, false
+		return tea.no_cmd, false
 	}
 
 	apply_motion(m.doc_controller, m.doc_id, action.motion, count)
-	return tea.noop_cmd, false
+	return tea.no_cmd, false
 }
 
-fn (mut m EditorModel2) execute_action_visual(action ChordAction) (fn () tea.Msg, bool) {
+fn (mut m EditorModel2) execute_action_visual(action ChordAction) (tea.Cmd, bool) {
 	count := if action.count == 0 { 1 } else { action.count }
 
 	if op := action.operator {
@@ -472,7 +470,7 @@ fn (mut m EditorModel2) execute_action_visual(action ChordAction) (fn () tea.Msg
 	// pure motion in visual mode = extend selection. The cursor moves;
 	// render_visual_selection derives the highlight from sel_start + cursor.
 	apply_motion(m.doc_controller, m.doc_id, action.motion, count)
-	return tea.noop_cmd, false
+	return tea.no_cmd, false
 }
 
 // apply_linewise_operator applies an operator across every full line spanned
@@ -1041,12 +1039,10 @@ struct EditorModel2Msg {
 struct QueryEditorData2Msg {}
 
 fn query_editor_data2(id nanoid.ID) tea.Cmd {
-	return fn [id] () tea.Msg {
-		return EditorModel2Msg{
-			active_id: id
-			msg:       QueryEditorData2Msg{}
-		}
-	}
+	return tea.msg_cmd(EditorModel2Msg{
+		active_id: id
+		msg:       QueryEditorData2Msg{}
+	})
 }
 
 struct EditorData2ResultMsg {
@@ -1054,45 +1050,26 @@ struct EditorData2ResultMsg {
 }
 
 fn editor_data2(data EditorData2) tea.Cmd {
-	return fn [data] () tea.Msg {
-		return EditorData2ResultMsg{data}
-	}
+	return tea.msg_cmd(EditorData2ResultMsg{data})
 }
 
 fn write_to_disk2(id nanoid.ID) tea.Cmd {
-	return fn [id] () tea.Msg {
-		return EditorModel2Msg{
-			active_id: id
-			msg:       WriteToDiskMsg{}
-		}
-	}
+	return tea.msg_cmd(EditorModel2Msg{
+		active_id: id
+		msg:       WriteToDiskMsg{}
+	})
 }
 
+// load_syntax2 is load_syntax for the rewritten editor. It resolves eagerly for
+// the same reason: a deferred lookup would need a closure over its arguments,
+// and those are never released. See load_syntax.
 fn load_syntax2(editor_id nanoid.ID, file_path string) tea.Cmd {
-	return fn [editor_id, file_path] () tea.Msg {
-		syn := syntax.resolve_from_extension(file_path) or {
-			return EditorModel2Msg{
-				active_id: editor_id
-				msg:       SyntaxLoadedMsg{
-					syn:     syntax.noop_syntax
-					err_msg: 'failed to load syntax for ${file_path}: ${err}'
-				}
-			}
+	syn, err_msg := resolve_syntax(file_path)
+	return tea.msg_cmd(EditorModel2Msg{
+		active_id: editor_id
+		msg:       SyntaxLoadedMsg{
+			syn:     syn
+			err_msg: err_msg
 		}
-		if syn.name.len == 0 {
-			return EditorModel2Msg{
-				active_id: editor_id
-				msg:       SyntaxLoadedMsg{
-					syn:     syn
-					err_msg: 'no syntax definition for ${file_path}, syntax highlighting disabled'
-				}
-			}
-		}
-		return EditorModel2Msg{
-			active_id: editor_id
-			msg:       SyntaxLoadedMsg{
-				syn: syn
-			}
-		}
-	}
+	})
 }

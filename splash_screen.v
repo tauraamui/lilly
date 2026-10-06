@@ -165,23 +165,23 @@ fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
 	}
 }
 
-fn (mut m SplashScreenModel) init() fn () tea.Msg {
+fn (mut m SplashScreenModel) init() tea.Cmd {
 	if file_path := m.initial_file_path {
-		return tea.batch(check_if_tmux_wrapped, open_editor_workspace(file_path))
+		return tea.batch(check_if_tmux_wrapped(), open_editor_workspace(file_path))
 	}
-	return check_if_tmux_wrapped
+	return check_if_tmux_wrapped()
 }
 
-fn (mut m SplashScreenModel) handle_escape() (tea.Model, fn () tea.Msg) {
+fn (mut m SplashScreenModel) handle_escape() (tea.Model, tea.Cmd) {
 	if !m.leader_mode {
-		return m.clone(), tea.quit
+		return m.clone(), tea.quit()
 	}
 	m.leader_mode = false
 	m.leader_data = ''
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.no_cmd
 }
 
-fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	mut cmds := []tea.Cmd{}
 	// handle dialog messages first
 	match msg {
@@ -252,7 +252,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 						else {
 							match msg.string() {
 								'q' {
-									return m.clone(), tea.quit
+									return m.clone(), tea.quit()
 								}
 								m.config.leader_key {
 									if !m.leader_mode {
@@ -311,7 +311,7 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		}
 		'xx' {
 			m.reset_leader_mode()
-			cmds << toggle_debug_screen
+			cmds << toggle_debug_screen()
 		}
 		else {}
 	}

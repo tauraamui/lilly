@@ -31,20 +31,13 @@ fn special_key(name string) tea.KeyMsg {
 	}
 }
 
-fn resolution_of(cmd fn () tea.Msg) ?ResolveUnsavedChangesMsg {
+fn resolution_of(cmd tea.Cmd) ?ResolveUnsavedChangesMsg {
 	// the dialog answers with a sequence: closing itself, then resolving. Only
 	// the resolution carries the decision, so the sequence is walked for it.
-	msg := cmd()
-	if msg is tea.SequenceMsg {
-		for c in []tea.Cmd(msg) {
-			inner := c()
-			if inner is ResolveUnsavedChangesMsg {
-				return inner
-			}
+	for msg in cmd.delivered_msgs() {
+		if msg is ResolveUnsavedChangesMsg {
+			return msg
 		}
-	}
-	if msg is ResolveUnsavedChangesMsg {
-		return msg
 	}
 	return none
 }
@@ -106,7 +99,7 @@ fn test_unsaved_changes_dialog_cancel_only_closes_the_dialog() {
 	for key in [rune_key('c'), special_key('escape')] {
 		_, cmd := m.update(key)
 		assert resolution_of(cmd) == none, 'cancel must not resolve the prompt'
-		assert cmd() is CloseDialogMsg
+		assert cmd.delivered_msgs().any(it is CloseDialogMsg)
 	}
 }
 
@@ -117,7 +110,7 @@ fn test_unsaved_changes_dialog_ignores_unrelated_keys() {
 		file_path: '/tmp/notes.txt'
 	}
 	_, cmd := m.update(rune_key('x'))
-	assert cmd == tea.noop_cmd
+	assert cmd is tea.NoCmd
 }
 
 fn test_truncate_to_width_leaves_a_line_that_fits_alone() {

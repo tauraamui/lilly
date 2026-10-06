@@ -59,46 +59,44 @@ pub:
 pub struct CloseDialogMsg {}
 
 pub fn open_file_picker(ttheme theme.Theme) tea.Cmd {
-	return fn [ttheme] () tea.Msg {
-		return OpenDialogMsg{
-			model: FilePickerModel{
-				theme:  ttheme
-				finder: files.new_finder()
-			}
+	return tea.msg_cmd(OpenDialogMsg{
+		model: FilePickerModel{
+			theme:  ttheme
+			finder: files.new_finder()
 		}
-	}
+	})
 }
 
-pub fn close_file_picker() tea.Msg {
-	return CloseDialogMsg{}
+pub fn close_file_picker() tea.Cmd {
+	return tea.msg_cmd(CloseDialogMsg{})
 }
 
-pub fn (mut m FilePickerModel) init() fn () tea.Msg {
+pub fn (mut m FilePickerModel) init() tea.Cmd {
 	m.loading = true
 	m.cached_cwd = os.getwd()
 	m.input_field = boba.BorderedInputField.new(m.theme.petal_pink)
 	m.input_field.focus()
 	mut cmds := []tea.Cmd{}
 	cmds << m.input_field.init()
-	cmds << [tea.emit_resize, load_files(m.cached_cwd)]
-	// return tea.batch(tea.emit_resize, input_init_cmd, load_files(os.getwd()))
+	// appended one at a time rather than as an array literal: the literal's
+	// element type is taken from its first entry, so starting it with a plain
+	// function would make it an array of functions and store the tea.Cmd that
+	// follows as a function pointer.
+	cmds << tea.emit_resize()
+	cmds << load_files(m.cached_cwd)
 	return tea.batch_array(cmds)
 }
 
 pub fn load_files(root string) tea.Cmd {
-	return fn [root] () tea.Msg {
-		return LoadFilesMsg{
-			root: root
-		}
-	}
+	return tea.msg_cmd(LoadFilesMsg{
+		root: root
+	})
 }
 
 pub fn filter_files_cmd(query string) tea.Cmd {
-	return fn [query] () tea.Msg {
-		return FilterFilesMsg{
-			query: query
-		}
-	}
+	return tea.msg_cmd(FilterFilesMsg{
+		query: query
+	})
 }
 
 @[inline]
@@ -207,18 +205,18 @@ fn (mut m FilePickerModel) load_preview() {
 
 pub struct ClearQueryFieldMsg {}
 
-fn clear_query_field() tea.Msg {
-	return ClearQueryFieldMsg{}
+fn clear_query_field() tea.Cmd {
+	return tea.msg_cmd(ClearQueryFieldMsg{})
 }
 
-fn (mut m FilePickerModel) on_cancel() (tea.Model, fn () tea.Msg) {
-	cmd := if m.input_field.rune_len() == 0 { close_file_picker } else { clear_query_field }
+fn (mut m FilePickerModel) on_cancel() (tea.Model, tea.Cmd) {
+	cmd := if m.input_field.rune_len() == 0 { close_file_picker() } else { clear_query_field() }
 	return m.clone(), cmd
 }
 
 const filter_trigger_special_keys = ['backspace', 'delete']! // fixed size array
 
-fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	mut cmds := []tea.Cmd{}
 
 	i_field, cmd := m.input_field.update(msg)
@@ -240,7 +238,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 							if m.filtered_files.len > 0 && m.selected_index < m.filtered_files.len {
 								selected_file := m.filtered_files[m.selected_index]
 								m.input_field.reset()
-								cmds << close_file_picker
+								cmds << close_file_picker()
 								cmds << open_file(selected_file)
 							}
 						}

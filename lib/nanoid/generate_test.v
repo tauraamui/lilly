@@ -38,7 +38,7 @@ fn test_custom_generation_with() {
 	custom_alpha_set := [u8(`*`), `+`, `|`, `~`, `2`, `v`, `p`]
 	ints := [6, 4, 2, 3, 1, 5, 0]
 
-	next := fn [mut idx, ints] () !int {
+	next := fn [mut idx, ints] (_max int) !int {
 		i := ints[idx]
 		idx += 1
 		return i

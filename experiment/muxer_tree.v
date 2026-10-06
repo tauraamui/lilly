@@ -73,31 +73,31 @@ fn (mut t Tree) split(direction SplitDirection) {
 @[noinit]
 struct AppModel {
 mut:
-	x         int
-	y         int
-	width     int
-	height    int
-	tree      Tree
+	x      int
+	y      int
+	width  int
+	height int
+	tree   Tree
 }
 
 fn AppModel.new(mut t Tree) AppModel {
 	return AppModel{ tree: t }
 }
 
-fn (mut m AppModel) init() fn () tea.Msg {
+fn (mut m AppModel) init() tea.Cmd {
 	m.tree.plant()
-	return tea.emit_resize
+	return tea.emit_resize()
 }
 
 struct SplitMsg {
 	direction SplitDirection
 }
 
-fn (mut m AppModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+fn (mut m AppModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	match msg {
 		SplitMsg {
 			m.tree.split(msg.direction)
-			return m.clone(), tea.noop_cmd
+			return m.clone(), tea.no_cmd
 		}
 		tea.ResizedMsg {
 			m.width = msg.window_width - 1
@@ -106,13 +106,13 @@ fn (mut m AppModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		tea.KeyMsg {
 			match msg.k_type {
 				.special {
-					if msg.string() == 'escape' { return m.clone(), tea.quit }
+					if msg.string() == 'escape' { return m.clone(), tea.quit() }
 				}
 				.runes {
 					match msg.string() {
-						'q' { return m.clone(), tea.quit }
-						's' { return m.clone(), fn () tea.Msg { return SplitMsg{ direction: .horizontal } } }
-						'v' { return m.clone(), fn () tea.Msg { return SplitMsg{ direction: .vertical } } }
+						'q' { return m.clone(), tea.quit() }
+						's' { return m.clone(), tea.msg_cmd(SplitMsg{ direction: .horizontal }) }
+						'v' { return m.clone(), tea.msg_cmd(SplitMsg{ direction: .vertical }) }
 						else {}
 					}
 				}
@@ -120,7 +120,7 @@ fn (mut m AppModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 		}
 		else {}
 	}
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.no_cmd
 }
 
 fn (m AppModel) view(mut ctx tea.Context) {
@@ -165,12 +165,12 @@ fn render_node(mut ctx tea.Context, x int, y int, width int, height int, node &N
 	}
 }
 
-const box_top_left_corner     = [u8(0xe2), 0x94, 0x8c]
-const box_top_right_corner    = [u8(0xe2), 0x94, 0x90]
+const box_top_left_corner = [u8(0xe2), 0x94, 0x8c]
+const box_top_right_corner = [u8(0xe2), 0x94, 0x90]
 const box_bottom_right_corner = [u8(0xe2), 0x94, 0x98]
-const box_bottom_left_corner  = [u8(0xe2), 0x94, 0x94]
-const box_horizontal          = [u8(0xe2), 0x94, 0x80]
-const box_vertical            = [u8(0xe2), 0x94, 0x82]
+const box_bottom_left_corner = [u8(0xe2), 0x94, 0x94]
+const box_horizontal = [u8(0xe2), 0x94, 0x80]
+const box_vertical = [u8(0xe2), 0x94, 0x82]
 
 const app_outline_color = tea.Color.ansi(45)
 const active_outline_color = tea.Color.ansi(27)

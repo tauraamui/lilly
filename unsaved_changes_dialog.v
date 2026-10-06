@@ -37,34 +37,32 @@ mut:
 }
 
 fn open_unsaved_changes_dialog(ttheme theme.Theme, editor_id nanoid.ID, file_path string, then_open ?string) tea.Cmd {
-	return fn [ttheme, editor_id, file_path, then_open] () tea.Msg {
-		return OpenDialogMsg{
-			model: UnsavedChangesDialogModel{
-				theme:     ttheme
-				editor_id: editor_id
-				file_path: file_path
-				then_open: then_open
-			}
+	return tea.msg_cmd(OpenDialogMsg{
+		model: UnsavedChangesDialogModel{
+			theme:     ttheme
+			editor_id: editor_id
+			file_path: file_path
+			then_open: then_open
 		}
-	}
+	})
 }
 
-fn close_unsaved_changes_dialog() tea.Msg {
-	return CloseDialogMsg{}
+fn close_unsaved_changes_dialog() tea.Cmd {
+	return tea.msg_cmd(CloseDialogMsg{})
 }
 
-fn (mut m UnsavedChangesDialogModel) init() fn () tea.Msg {
-	return tea.noop_cmd
+fn (mut m UnsavedChangesDialogModel) init() tea.Cmd {
+	return tea.no_cmd
 }
 
-fn (mut m UnsavedChangesDialogModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+fn (mut m UnsavedChangesDialogModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	match msg {
 		tea.KeyMsg {
 			match msg.k_type {
 				.special {
 					match msg.string() {
 						'escape', 'ctrl+c' {
-							return m.clone(), close_unsaved_changes_dialog
+							return m.clone(), close_unsaved_changes_dialog()
 						}
 						else {}
 					}
@@ -72,15 +70,15 @@ fn (mut m UnsavedChangesDialogModel) update(msg tea.Msg) (tea.Model, fn () tea.M
 				.runes {
 					match msg.string() {
 						's' {
-							return m.clone(), tea.sequence(close_unsaved_changes_dialog,
+							return m.clone(), tea.sequence(close_unsaved_changes_dialog(),
 								resolve_unsaved_changes(m.editor_id, true, m.then_open))
 						}
 						'd' {
-							return m.clone(), tea.sequence(close_unsaved_changes_dialog,
+							return m.clone(), tea.sequence(close_unsaved_changes_dialog(),
 								resolve_unsaved_changes(m.editor_id, false, m.then_open))
 						}
 						'c' {
-							return m.clone(), close_unsaved_changes_dialog
+							return m.clone(), close_unsaved_changes_dialog()
 						}
 						else {}
 					}
@@ -89,7 +87,7 @@ fn (mut m UnsavedChangesDialogModel) update(msg tea.Msg) (tea.Model, fn () tea.M
 		}
 		else {}
 	}
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.no_cmd
 }
 
 fn (m UnsavedChangesDialogModel) view(mut r_ctx tea.Context) {

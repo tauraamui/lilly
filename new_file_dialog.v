@@ -33,26 +33,22 @@ struct CreateAndOpenFileMsg {
 }
 
 fn create_and_open_file(path string) tea.Cmd {
-	return fn [path] () tea.Msg {
-		return CreateAndOpenFileMsg{path}
-	}
+	return tea.msg_cmd(CreateAndOpenFileMsg{path})
 }
 
 fn open_new_file_dialog(ttheme theme.Theme) tea.Cmd {
-	return fn [ttheme] () tea.Msg {
-		return OpenDialogMsg{
-			model: NewFileDialogModel{
-				theme: ttheme
-			}
+	return tea.msg_cmd(OpenDialogMsg{
+		model: NewFileDialogModel{
+			theme: ttheme
 		}
-	}
+	})
 }
 
-fn close_new_file_dialog() tea.Msg {
-	return CloseDialogMsg{}
+fn close_new_file_dialog() tea.Cmd {
+	return tea.msg_cmd(CloseDialogMsg{})
 }
 
-fn (mut m NewFileDialogModel) init() fn () tea.Msg {
+fn (mut m NewFileDialogModel) init() tea.Cmd {
 	m.input_field = boba.BorderedInputField.new(m.theme.petal_pink)
 	m.input_field.focus()
 	mut cmds := []tea.Cmd{}
@@ -66,7 +62,7 @@ fn (mut m NewFileDialogModel) init() fn () tea.Msg {
 	return tea.batch_array(cmds)
 }
 
-fn (mut m NewFileDialogModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+fn (mut m NewFileDialogModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	mut cmds := []tea.Cmd{}
 	field, field_cmd := m.input_field.update(msg)
 	cmds << field_cmd
@@ -87,10 +83,10 @@ fn (mut m NewFileDialogModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 				.special {
 					match msg.string() {
 						'escape' {
-							return m.clone(), close_new_file_dialog
+							return m.clone(), close_new_file_dialog()
 						}
 						'ctrl+c' {
-							return m.clone(), close_new_file_dialog
+							return m.clone(), close_new_file_dialog()
 						}
 						'enter' {
 							abs_path := validate_new_file_path(m.input_field.value()) or {
@@ -98,7 +94,7 @@ fn (mut m NewFileDialogModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 								return m.clone(), tea.batch_array(cmds)
 							}
 							m.error_msg = ''
-							cmds << tea.sequence(close_new_file_dialog,
+							cmds << tea.sequence(close_new_file_dialog(),
 								create_and_open_file(abs_path))
 							return m.clone(), tea.batch_array(cmds)
 						}

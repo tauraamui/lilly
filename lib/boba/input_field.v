@@ -54,7 +54,7 @@ pub fn InputField.new_with_prefix(input_prefix string, prefix_padding int) Input
 	}
 }
 
-pub fn (mut i InputField) init() fn () tea.Msg {
+pub fn (mut i InputField) init() tea.Cmd {
 	return cursor_blink_cmd()
 }
 
@@ -68,18 +68,15 @@ pub:
 // together set the cycle length.
 const cursor_blink_interval = 33 * time.millisecond
 
-// cursor_blink_cmd re-arms the blink. It deliberately returns a plain function
-// rather than a closure: the cursor re-arms about thirty times a second for as
-// long as a field is focused, and V registers every closure's captured context
-// in a table it never empties, so a captured tick would pin its context - and
-// whatever that reaches - once per blink, for the life of the process. Nothing
-// here needs capturing, so nothing is captured.
+// cursor_blink_cmd re-arms the blink.
+//
+// The cursor re-arms about thirty times a second for as long as a field is
+// focused, so nothing on this path may capture: V registers every closure's
+// captured context in a table it never empties. tea.tick is a plain TickCmd
+// value and cursor_blink_fired is a top-level function, so re-arming allocates
+// nothing that outlives the tick.
 pub fn cursor_blink_cmd() tea.Cmd {
-	return cursor_blink_tick
-}
-
-fn cursor_blink_tick() tea.Msg {
-	return tea.tick_msg(cursor_blink_interval, cursor_blink_fired)
+	return tea.tick(cursor_blink_interval, cursor_blink_fired)
 }
 
 fn cursor_blink_fired(t time.Time) tea.Msg {
@@ -88,9 +85,9 @@ fn cursor_blink_fired(t time.Time) tea.Msg {
 	}
 }
 
-pub fn (mut m InputField) update(msg tea.Msg) (InputField, fn () tea.Msg) {
+pub fn (mut m InputField) update(msg tea.Msg) (InputField, tea.Cmd) {
 	if !m.focused && msg is tea.KeyMsg {
-		return m.clone(), tea.noop_cmd
+		return m.clone(), tea.no_cmd
 	}
 
 	mut cmds := []tea.Cmd{}

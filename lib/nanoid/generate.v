@@ -77,16 +77,27 @@ pub fn safe_simple() ?ID {
 }
 
 pub fn custom(alphas []u8, size int) ID {
-	alpha_size := alphas.len - 1
-	return custom_with(alphas, size, fn [alpha_size] () !int {
-		return rand.int_in_range(0, alpha_size)
-	})
+	return custom_with(alphas, size, next_rand_int)
 }
 
-fn custom_with(alphas []u8, size int, next_int fn () !int) ID {
+// next_rand_int takes its exclusive upper bound as an argument rather than
+// capturing it. A capturing fn literal would be a closure, and V never
+// reclaims a closure's captured scope, so generating an ID would pin a little
+// memory for the rest of the process.
+//
+// NOTE(tauraamui): the bound is alphas.len - 1 and int_in_range's upper bound
+// is exclusive, so the last character of the alphabet is never generated. That
+// predates this change and is kept deliberately: widening it would alter every
+// ID this function has ever produced.
+fn next_rand_int(max int) !int {
+	return rand.int_in_range(0, max)
+}
+
+fn custom_with(alphas []u8, size int, next_int fn (int) !int) ID {
+	max := alphas.len - 1
 	mut id := []u8{len: size}
 	for i in 0 .. size {
-		random_num := next_int() or { 0 }
+		random_num := next_int(max) or { 0 }
 		id[i] = alphas[random_num]
 	}
 	return id.bytestr()

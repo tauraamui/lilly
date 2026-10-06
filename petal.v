@@ -64,22 +64,22 @@ fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.C
 	}
 }
 
-fn (mut m PetalModel) init() fn () tea.Msg {
+fn (mut m PetalModel) init() tea.Cmd {
 	return m.active_screen.init()
 }
 
 struct ToggleDebugScreenMsg {}
 
-fn toggle_debug_screen() tea.Msg {
-	return ToggleDebugScreenMsg{}
+fn toggle_debug_screen() tea.Cmd {
+	return tea.msg_cmd(ToggleDebugScreenMsg{})
 }
 
-fn (mut m PetalModel) on_toggle_debug_screen() (tea.Model, fn () tea.Msg) {
+fn (mut m PetalModel) on_toggle_debug_screen() (tea.Model, tea.Cmd) {
 	if m.active_screen !is DebugScreenModel {
 		m.active_screen = DebugScreenModel.new(m.active_screen, m.logs, m.probe, m.last_resize_width,
 			m.last_resize_height)
 	}
-	return m.clone(), tea.noop_cmd
+	return m.clone(), tea.no_cmd
 }
 
 struct SwapActiveScreenMsg {
@@ -87,21 +87,19 @@ struct SwapActiveScreenMsg {
 }
 
 fn swap_active_screen(screen DebuggableModel) tea.Cmd {
-	return fn [screen] () tea.Msg {
-		return SwapActiveScreenMsg{screen}
-	}
+	return tea.msg_cmd(SwapActiveScreenMsg{screen})
 }
 
 struct ShutdownMsg {}
 
-fn shutdown() tea.Msg {
-	return ShutdownMsg{}
+fn shutdown() tea.Cmd {
+	return tea.msg_cmd(ShutdownMsg{})
 }
 
 struct CheckIfTMUXWrappedMsg {}
 
-fn check_if_tmux_wrapped() tea.Msg {
-	return CheckIfTMUXWrappedMsg{}
+fn check_if_tmux_wrapped() tea.Cmd {
+	return tea.msg_cmd(CheckIfTMUXWrappedMsg{})
 }
 
 // update brackets the real handler with the allocation counter so every byte
@@ -109,7 +107,7 @@ fn check_if_tmux_wrapped() tea.Msg {
 // The counter is cumulative and monotonic, so the delta covers garbage as well
 // as retained bytes - which is the figure that explains heap growth, since the
 // collector grows the heap in response to allocation rate, not to the live set.
-fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if isnil(m.probe) {
 		return m.handle(msg)
 	}
@@ -121,12 +119,12 @@ fn (mut m PetalModel) update(msg tea.Msg) (tea.Model, fn () tea.Msg) {
 	return model, cmd
 }
 
-fn (mut m PetalModel) handle(msg tea.Msg) (tea.Model, fn () tea.Msg) {
+fn (mut m PetalModel) handle(msg tea.Msg) (tea.Model, tea.Cmd) {
 	mut cmds := []tea.Cmd{}
 	match msg {
 		tea.KeyMsg {
 			if msg.k_type == .special && msg.string() == 'f12' {
-				cmds << toggle_debug_screen
+				cmds << toggle_debug_screen()
 			}
 		}
 		ToggleDebugScreenMsg {
