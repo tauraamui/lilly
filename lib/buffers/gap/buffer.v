@@ -74,17 +74,44 @@ pub fn (mut gb Buffer) move_cur_to_start() {
 	}
 	gap := int(gb.cend - gb.ccur)
 	pre_len := int(gb.ccur)
-	for i := pre_len - 1; i >= 0; i-- {
-		gb.buf[gap + i] = gb.buf[i]
-		gb.buf[i] = 0x0
-	}
+	// one memmove rather than a byte at a time: after loading a file the
+	// cursor sits at its end, so this moves the whole file
+	copy(mut gb.buf[gap..gap + pre_len], gb.buf[..pre_len])
+	cleared := if pre_len < gap { pre_len } else { gap }
+	unsafe { vmemset(gb.buf.data, 0, cleared) }
 	gb.cend = u64(gap)
 	gb.ccur = 0
 }
 
+// insert_bytes inserts a run of bytes at the cursor with one copy, growing the
+// gap at most once.
+pub fn (mut gb Buffer) insert_bytes(bytes []u8) {
+	if gb.gap_size() < u64(bytes.len) {
+		needed := gb.buf.len + bytes.len - int(gb.gap_size())
+		doubled := gb.buf.len * 2
+		gb.grow_to(if doubled > needed { doubled } else { needed })
+	}
+	copy(mut gb.buf[int(gb.ccur)..int(gb.ccur) + bytes.len], bytes)
+	gb.ccur += u64(bytes.len)
+}
+
+// reserve makes the gap at least n bytes, in a single grow, so a caller that
+// knows how much it is about to insert avoids the run of doublings that
+// inserting it piecemeal would trigger.
+pub fn (mut gb Buffer) reserve(n u64) {
+	if gb.gap_size() >= n {
+		return
+	}
+	gb.grow_to(gb.buf.len + int(n - gb.gap_size()))
+}
+
 fn (mut gb Buffer) grow() {
 	old_len := gb.buf.len
-	new_size := if old_len == 0 { 1 } else { old_len * 2 }
+	gb.grow_to(if old_len == 0 { 1 } else { old_len * 2 })
+}
+
+fn (mut gb Buffer) grow_to(new_size int) {
+	old_len := gb.buf.len
 	mut copy_dst := []u8{len: new_size, cap: new_size}
 	copy(mut copy_dst[..int(gb.ccur)], gb.buf[..int(gb.ccur)])
 	additional := new_size - old_len

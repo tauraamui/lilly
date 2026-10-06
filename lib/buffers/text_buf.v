@@ -73,17 +73,35 @@ fn (mut tb TextBuffer) reset_goal_column() {
 }
 
 pub fn TextBuffer.new(mut r io.Reader) !TextBuffer { // TODO(tauraamui) [2026-06-03]: pass in reader into text buffer
+	return TextBuffer.new_with_size_hint(mut r, 0)
+}
+
+// load_block_size is how much of the reader is taken per read while loading.
+const load_block_size = 64 * 1024
+
+// load_headroom is the gap left free after loading a size-hinted reader, so
+// the first edits to a freshly opened file do not immediately double it.
+const load_headroom = u64(64 * 1024)
+
+// new_with_size_hint loads everything `r` yields, sizing the buffer up front
+// for `size_hint` bytes (a file's size, say). Without the hint the buffer
+// doubles its way up to the content's size, which on a 1GiB file is ~20
+// grows and briefly holds both the old and new copy. The hint is only a
+// hint: a reader yielding more than it still loads in full.
+pub fn TextBuffer.new_with_size_hint(mut r io.Reader, size_hint u64) !TextBuffer {
 	mut tb := TextBuffer{
 		data_buf: gap.Buffer.new(1024)
 		line_buf: line.Buffer.new()
 	}
 	tb.history.recording = false
-	mut single_byte := []u8{len: 1}
+	if size_hint > 0 {
+		tb.data_buf.reserve(size_hint + load_headroom)
+	}
+	mut block := []u8{len: load_block_size}
 	for {
-		read := r.read(mut single_byte) or {
-			if err is io.Eof {
-			}
-			{
+		read := r.read(mut block) or {
+			// os.File signals end of file with its own os.Eof, not io.Eof
+			if err is io.Eof || err is os.Eof {
 				break
 			}
 			return error('read error: ${err}')
@@ -91,11 +109,24 @@ pub fn TextBuffer.new(mut r io.Reader) !TextBuffer { // TODO(tauraamui) [2026-06
 		if read == 0 {
 			continue
 		}
-		tb.insert_byte(single_byte[0])
+		tb.load_block(block[..read])
 	}
 	tb.move_cursor_to_start()
 	tb.history = History{}
 	return tb
+}
+
+// load_block appends a block of file content at the cursor. It is the bulk
+// form of insert_byte for loading only: no history, no autoclose.
+fn (mut tb TextBuffer) load_block(block []u8) {
+	start := tb.data_buf.ccur()
+	tb.data_buf.insert_bytes(block)
+	tb.line_buf.apply_delta(block.len)
+	for i, c in block {
+		if c == newline_hex {
+			tb.line_buf.insert_after_current(start + u64(i) + 1)
+		}
+	}
 }
 
 pub fn (mut tb TextBuffer) load(bytes []u8) {

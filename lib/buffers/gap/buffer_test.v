@@ -129,3 +129,51 @@ fn test_insert_many_chars_grows_without_panic() {
 	}
 	assert gb.str().len == 20
 }
+
+fn test_move_cur_to_start_clears_vacated_bytes() {
+	mut gb := Buffer.new(test_gap_size)
+	gb.insert_bytes('abc'.bytes())
+	gb.move_cur_to_start()
+	assert gb.rawstr() == '_____abc'
+	assert gb.str() == 'abc'
+}
+
+fn test_move_cur_to_start_when_content_is_longer_than_gap() {
+	mut gb := Buffer.new(test_gap_size)
+	gb.insert_bytes('abcdef'.bytes())
+	gb.move_cur_to_start()
+	assert gb.rawstr() == '__abcdef'
+	gb.insert(u8(`>`))
+	assert gb.str() == '>abcdef'
+}
+
+fn test_insert_bytes_within_gap() {
+	mut gb := Buffer.new(test_gap_size)
+	gb.insert_bytes('abc'.bytes())
+	assert gb.ccur == 3
+	assert gb.rawstr() == 'abc_____'
+}
+
+fn test_insert_bytes_beyond_gap_grows_once_and_keeps_right_side() {
+	mut gb := Buffer.new(4)
+	gb.insert_bytes('xy'.bytes())
+	gb.move_cur_left()
+	gb.move_cur_left()
+	gb.insert_bytes('abcdefghij'.bytes())
+	assert gb.str() == 'abcdefghijxy'
+	assert gb.buf.len == 12
+	gb.insert(u8(`>`))
+	assert gb.str() == 'abcdefghij>xy'
+}
+
+fn test_reserve_grows_gap_to_requested_size_once() {
+	mut gb := Buffer.new(4)
+	gb.insert(u8(`a`))
+	gb.reserve(100)
+	assert gb.gap_size() == 100
+	assert gb.buf.len == 101
+	gb.reserve(50)
+	assert gb.buf.len == 101
+	gb.insert_bytes('bc'.bytes())
+	assert gb.str() == 'abc'
+}

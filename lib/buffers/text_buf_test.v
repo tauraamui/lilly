@@ -547,3 +547,55 @@ fn test_text_buffer_delete_range_noop_when_endpoints_equal() ! {
 	tb.delete_range(0, 4, 0, 4)
 	assert tb.get_line_bytes(0)? == 'unchanged'.bytes()
 }
+
+// large_load_content spans several load blocks, with lines straddling the
+// block boundaries, so a load has to carry line starts across blocks.
+fn large_load_content() []u8 {
+	mut content := []u8{}
+	for i in 0 .. 20000 {
+		content << 'line ${i} of the content\n'.bytes()
+	}
+	content << 'last line without newline'.bytes()
+	return content
+}
+
+fn assert_loaded_content(mut tb TextBuffer) {
+	assert tb.line_count() == 20001
+	assert (tb.get_line_bytes(0) or { [] }).bytestr() == 'line 0 of the content'
+	assert (tb.get_line_bytes(2730) or { [] }).bytestr() == 'line 2730 of the content'
+	assert (tb.get_line_bytes(19999) or { [] }).bytestr() == 'line 19999 of the content'
+	assert (tb.get_line_bytes(20000) or { [] }).bytestr() == 'last line without newline'
+	y, x := tb.cursor_line_and_x()
+	assert y == 0 && x == 0
+}
+
+fn test_text_buffer_loads_content_spanning_many_blocks() ! {
+	content := large_load_content()
+	assert content.len > 3 * load_block_size
+	mut reader := mock_reader(content)
+	mut tb := TextBuffer.new(mut reader)!
+	assert_loaded_content(mut tb)
+}
+
+fn test_text_buffer_loads_with_exact_size_hint() ! {
+	content := large_load_content()
+	mut reader := mock_reader(content)
+	mut tb := TextBuffer.new_with_size_hint(mut reader, u64(content.len))!
+	assert_loaded_content(mut tb)
+	tb.insert(u8(`>`))
+	assert tb.get_line_bytes(0)?.bytestr() == '>line 0 of the content'
+}
+
+fn test_text_buffer_loads_in_full_when_size_hint_is_too_small() ! {
+	content := large_load_content()
+	mut reader := mock_reader(content)
+	mut tb := TextBuffer.new_with_size_hint(mut reader, 10)!
+	assert_loaded_content(mut tb)
+}
+
+fn test_text_buffer_loads_when_size_hint_is_too_large() ! {
+	content := large_load_content()
+	mut reader := mock_reader(content)
+	mut tb := TextBuffer.new_with_size_hint(mut reader, u64(content.len) * 2)!
+	assert_loaded_content(mut tb)
+}

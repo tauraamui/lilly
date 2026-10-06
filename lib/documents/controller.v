@@ -46,15 +46,19 @@ pub fn (mut dc Controller2) open_document(path string) !nanoid.ID {
 	defer {
 		file.close()
 	}
-	return dc.load_document_from_reader(path, mut file)
+	return dc.load_document_sized(path, mut file, os.file_size(path))
 }
 
 pub fn (mut dc Controller2) load_document_from_reader(path string, mut r io.Reader) !nanoid.ID {
+	return dc.load_document_sized(path, mut r, 0)
+}
+
+fn (mut dc Controller2) load_document_sized(path string, mut r io.Reader, size_hint u64) !nanoid.ID {
 	doc_id := nanoid.simple_with_seed(path)
 	if _ := dc.docs[doc_id] { // if ID is present we already have a document with the same path open
 		return doc_id
 	}
-	mut text_buf := buffers.TextBuffer.new(mut r) or { return err }
+	mut text_buf := buffers.TextBuffer.new_with_size_hint(mut r, size_hint) or { return err }
 	dc.docs[doc_id] = text_buf
 	return doc_id
 }
