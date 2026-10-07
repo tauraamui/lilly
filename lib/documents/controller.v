@@ -32,12 +32,17 @@ mut:
 	// chain and keeping it valid across undo, redo and chain breaks, and the
 	// cost of being wrong the other way is a discarded edit.
 	dirty map[nanoid.ID]bool = map[nanoid.ID]bool{}
+	// revisions counts the edits made to each document, so a view that
+	// derives something from a document's text can tell when to derive it
+	// again. Unlike dirty, a write never resets it.
+	revisions map[nanoid.ID]u64 = map[nanoid.ID]u64{}
 }
 
 pub fn Controller2.new() Controller2 {
 	return Controller2{
-		docs:  map[nanoid.ID]buffers.TextBuffer{}
-		dirty: map[nanoid.ID]bool{}
+		docs:      map[nanoid.ID]buffers.TextBuffer{}
+		dirty:     map[nanoid.ID]bool{}
+		revisions: map[nanoid.ID]u64{}
 	}
 }
 
@@ -63,45 +68,56 @@ fn (mut dc Controller2) load_document_sized(path string, mut r io.Reader, size_h
 	return doc_id
 }
 
-pub fn (mut dc Controller2) insert(doc_id nanoid.ID, c u8) {
+fn (mut dc Controller2) mark_edited(doc_id nanoid.ID) {
 	dc.dirty[doc_id] = true
+	dc.revisions[doc_id] = dc.revisions[doc_id] + 1
+}
+
+// revision is the number of edits made to a document since it was opened.
+// Any edit changes it, so two equal readings mean the text has not changed.
+pub fn (dc Controller2) revision(doc_id nanoid.ID) u64 {
+	return dc.revisions[doc_id]
+}
+
+pub fn (mut dc Controller2) insert(doc_id nanoid.ID, c u8) {
+	dc.mark_edited(doc_id)
 	dc.docs[doc_id].insert(c)
 }
 
 pub fn (mut dc Controller2) insert_rune(doc_id nanoid.ID, cr rune) {
-	dc.dirty[doc_id] = true
+	dc.mark_edited(doc_id)
 	dc.docs[doc_id].insert_rune(cr)
 }
 
 pub fn (mut dc Controller2) insert_string(doc_id nanoid.ID, s string) {
-	dc.dirty[doc_id] = true
+	dc.mark_edited(doc_id)
 	for cr in s.runes() {
 		dc.docs[doc_id].insert_rune(cr)
 	}
 }
 
 pub fn (mut dc Controller2) backspace(doc_id nanoid.ID) {
-	dc.dirty[doc_id] = true
+	dc.mark_edited(doc_id)
 	dc.docs[doc_id].backspace()
 }
 
 pub fn (mut dc Controller2) delete(doc_id nanoid.ID) {
-	dc.dirty[doc_id] = true
+	dc.mark_edited(doc_id)
 	dc.docs[doc_id].delete()
 }
 
 pub fn (mut dc Controller2) delete_char_at(doc_id nanoid.ID) {
-	dc.dirty[doc_id] = true
+	dc.mark_edited(doc_id)
 	dc.docs[doc_id].delete_char_at()
 }
 
 pub fn (mut dc Controller2) delete_line(doc_id nanoid.ID, y u64) {
-	dc.dirty[doc_id] = true
+	dc.mark_edited(doc_id)
 	dc.docs[doc_id].delete_line(y)
 }
 
 pub fn (mut dc Controller2) delete_range(doc_id nanoid.ID, r cursor.Range) {
-	dc.dirty[doc_id] = true
+	dc.mark_edited(doc_id)
 	dc.docs[doc_id].delete_range(u64(r.start.y), u64(r.start.x), u64(r.end.y), u64(r.end.x))
 }
 
@@ -114,12 +130,12 @@ pub fn (mut dc Controller2) commit_undo_group(doc_id nanoid.ID) {
 }
 
 pub fn (mut dc Controller2) undo(doc_id nanoid.ID) {
-	dc.dirty[doc_id] = true
+	dc.mark_edited(doc_id)
 	dc.docs[doc_id].undo()
 }
 
 pub fn (mut dc Controller2) redo(doc_id nanoid.ID) {
-	dc.dirty[doc_id] = true
+	dc.mark_edited(doc_id)
 	dc.docs[doc_id].redo()
 }
 
@@ -241,6 +257,7 @@ pub fn (mut dc Controller2) close_unreferenced(live_doc_ids []nanoid.ID) int {
 		dc.docs[doc_id].release()
 		dc.docs.delete(doc_id)
 		dc.dirty.delete(doc_id)
+		dc.revisions.delete(doc_id)
 	}
 	return stale.len
 }

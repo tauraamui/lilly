@@ -48,6 +48,10 @@ mut:
 	// anything but backspace since. Any real keystroke clears it, so
 	// user-typed whitespace is left alone on leaving insert mode.
 	insert_line_pristine_indent bool
+	diff                        InlineDiff
+	// top_removed_skip is how many of the removed rows drawn above top_line
+	// are scrolled out of view, see scroll_to_cursor_with_diff
+	top_removed_skip int
 }
 
 fn EditorModel2.new(config EditorWorkspaceConfig, id nanoid.ID, doc_id nanoid.ID, file_path string, doc_controller &documents.Controller2) EditorModel2 {
@@ -124,6 +128,12 @@ fn (mut m EditorModel2) editor_model_update(editor_id nanoid.ID, msg tea.Msg) (t
 			if msg.err_msg.len > 0 {
 				return m.clone(), debug_log(msg.err_msg)
 			}
+		}
+		ToggleInlineDiffMsg {
+			if editor_id != m.id { return m.clone(), tea.no_cmd }
+			cmd := m.toggle_inline_diff_update(msg)
+			m.scroll_to_cursor()
+			return m.clone(), cmd
 		}
 		WriteToDiskMsg {
 			if editor_id != m.id { return m.clone(), tea.no_cmd }
@@ -535,6 +545,11 @@ fn (m EditorModel2) current_visual_range() ?cursor.Range {
 }
 
 fn (mut m EditorModel2) scroll_to_cursor() {
+	m.refresh_diff()
+	if m.diff_active() {
+		m.scroll_to_cursor_with_diff()
+		return
+	}
 	cursor_line_u, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
 	cursor_line := int(cursor_line_u)
 	line_count := int(m.doc_controller.line_count(m.doc_id))
@@ -563,6 +578,7 @@ fn (mut m EditorModel2) scroll_page_up() {
 	}
 	half := m.viewport_height / 2
 	m.top_line -= half
+	m.top_removed_skip = 0
 	if m.top_line < 0 {
 		m.top_line = 0
 	}
@@ -589,6 +605,7 @@ fn (mut m EditorModel2) scroll_page_down() {
 	}
 	half := m.viewport_height / 2
 	m.top_line += half
+	m.top_removed_skip = 0
 	target_line := m.top_line + m.viewport_height * 3 / 4
 	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
 	current_line := int(cursor_line)
@@ -611,6 +628,7 @@ fn (mut m EditorModel2) center_viewport_on_cursor() {
 	cursor_line := int(cursor_line_u)
 	if m.viewport_height <= 0 {
 		m.top_line = if cursor_line > 0 { cursor_line } else { 0 }
+		m.top_removed_skip = 0
 		return
 	}
 	line_count := int(m.doc_controller.line_count(m.doc_id))
@@ -623,6 +641,7 @@ fn (mut m EditorModel2) center_viewport_on_cursor() {
 		new_top = max_top
 	}
 	m.top_line = new_top
+	m.top_removed_skip = 0
 }
 
 fn (mut m EditorModel2) clamp_cursor_to_line_end() {
@@ -644,22 +663,23 @@ fn (mut m EditorModel2) clamp_cursor_to_line_end() {
 }
 
 fn (mut m EditorModel2) view(mut ctx tea.Context) {
+	m.refresh_diff()
+	m.layout_frame()
 	relative_line_numbers := if m.config.relative_line_numbers { m.in_focus } else { false }
 	offset_id := m.render_line_numbers(mut ctx, relative_line_numbers)
 	defer { ctx.clear_offsets_from(offset_id) }
 	m.render_syntax_highlighting(mut ctx)
+	m.render_diff_backgrounds(mut ctx)
 	m.render_cursor_line_highlight(mut ctx)
 	m.render_visual_selection(mut ctx)
 	m.render_cursor_block(mut ctx)
-	line_count := int(m.doc_controller.line_count(m.doc_id))
-	end := if m.top_line + m.viewport_height < line_count {
-		m.top_line + m.viewport_height
-	} else {
-		line_count
-	}
-	for y in m.top_line .. end {
+	for y in m.top_line .. m.visible_line_end() {
+		row := m.row_of(y)
+		if row < 0 {
+			continue
+		}
 		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
-		ctx.draw_text(0, y - m.top_line, expand_tabs(line_bytes, m.config.tab_width))
+		ctx.draw_text(0, row, expand_tabs(line_bytes, m.config.tab_width))
 	}
 }
 
@@ -670,23 +690,25 @@ fn expand_tabs(line_bytes []u8, width int) string {
 
 fn (m EditorModel2) render_line_numbers(mut ctx tea.Context, relative_line_numbers bool) int {
 	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
-	line_count := int(m.doc_controller.line_count(m.doc_id))
-	end := if m.top_line + m.viewport_height < line_count {
-		m.top_line + m.viewport_height
-	} else {
-		line_count
-	}
+	end := m.visible_line_end()
 	max_line_nr := m.top_line + end
-	gutter_width := num_digits(max_line_nr) + 1
+	// a diff takes one more column, for the sign of each changed row
+	sign_width := if m.diff_active() { 1 } else { 0 }
+	gutter_width := num_digits(max_line_nr) + 1 + sign_width
 
 	offset_id := ctx.push_offset(tea.Offset{ x: gutter_width })
 
 	ctx.set_color(m.config.theme.syntax_comment)
 	for y in m.top_line .. end {
+		row := m.row_of(y)
+		if row < 0 {
+			continue
+		}
 		line_nr := resolve_line_number_label(y, int(cursor_line), relative_line_numbers)
-		ctx.draw_text(-1 - line_nr.len, y - m.top_line, line_nr)
+		ctx.draw_text(-1 - line_nr.len, row, line_nr)
 	}
 	ctx.reset_color()
+	m.render_diff_signs(mut ctx, -gutter_width)
 
 	return offset_id
 }
@@ -706,12 +728,7 @@ fn (mut m EditorModel2) render_syntax_highlighting(mut ctx tea.Context) {
 		m.rebuild_parser_state_cache()
 	}
 
-	line_count := int(m.doc_controller.line_count(m.doc_id))
-	end := if m.top_line + m.viewport_height < line_count {
-		m.top_line + m.viewport_height
-	} else {
-		line_count
-	}
+	end := m.visible_line_end()
 
 	m.token_parser.reset()
 	if m.top_line < m.parser_line_states.len {
@@ -720,6 +737,7 @@ fn (mut m EditorModel2) render_syntax_highlighting(mut ctx tea.Context) {
 
 	mut rune_buf := []rune{}
 	for y in m.top_line .. end {
+		row := m.row_of(y)
 		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
 		// expand tabs to match the text actually drawn in view(), so token
 		// rune indices line up 1:1 with on-screen columns
@@ -737,7 +755,7 @@ fn (mut m EditorModel2) render_syntax_highlighting(mut ctx tea.Context) {
 			token_width := utf8_str_visible_length(token_str)
 			if color := m.color_for_token(t, token_str, rune_buf, line_tokens, i) {
 				ctx.set_color(color)
-				ctx.draw_rect(visual_x, y - m.top_line, token_width, 1)
+				ctx.draw_rect(visual_x, row, token_width, 1)
 				ctx.reset_color()
 			}
 			visual_x += token_width
@@ -809,8 +827,10 @@ fn (m EditorModel2) color_for_token(t syntax.Token, token_str string, rune_buf [
 fn (m EditorModel2) render_cursor_line_highlight(mut ctx tea.Context) {
 	if !m.in_focus { return }
 	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+	row := m.row_of(int(cursor_line))
+	if row < 0 { return }
 	ctx.set_bg_color(m.config.theme.cursor_line_bg)
-	ctx.draw_rect(0, int(cursor_line) - m.top_line, m.viewport_width, 1)
+	ctx.draw_rect(0, row, m.viewport_width, 1)
 	ctx.reset_bg_color()
 }
 
@@ -818,11 +838,13 @@ fn (m EditorModel2) render_cursor_block(mut ctx tea.Context) {
 	if !m.in_focus { return }
 	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
 	visual_x, cursor_width := m.visual_x_and_cluster_width_for(cursor_line, cursor_col)
+	row := m.row_of(int(cursor_line))
+	if row < 0 { return }
 
 	default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
 	ctx.set_bg_color(palette.fg_color(default_bg_color))
 	ctx.set_color(default_bg_color)
-	ctx.draw_rect(visual_x, int(cursor_line) - m.top_line, cursor_width, 1)
+	ctx.draw_rect(visual_x, row, cursor_width, 1)
 	ctx.reset_bg_color()
 	ctx.reset_color()
 }
@@ -844,19 +866,13 @@ fn (m EditorModel2) render_visual_selection(mut ctx tea.Context) {
 	ctx.set_color(palette.fg_color(m.config.theme.highlight_bg_color)) // set fg color to inverse shade of bg
 	defer { ctx.reset_color() }
 
-	line_count := int(m.doc_controller.line_count(m.doc_id))
-	view_end := if m.top_line + m.viewport_height < line_count {
-		m.top_line + m.viewport_height
-	} else {
-		line_count
-	}
-
 	if m.visual_linewise {
 		for y in int(start_line) .. int(end_line) + 1 {
-			if y < m.top_line || y >= view_end {
+			row := m.row_of(y)
+			if row < 0 {
 				continue
 			}
-			ctx.draw_rect(0, y - m.top_line, m.viewport_width, 1)
+			ctx.draw_rect(0, row, m.viewport_width, 1)
 		}
 		return
 	}
@@ -865,8 +881,8 @@ fn (m EditorModel2) render_visual_selection(mut ctx tea.Context) {
 	end_visual_x, end_cluster_width := m.visual_x_and_cluster_width_for(end_line, end_col)
 
 	if start_line == end_line {
-		screen_y := int(start_line) - m.top_line
-		if screen_y >= 0 && screen_y < m.viewport_height {
+		screen_y := m.row_of(int(start_line))
+		if screen_y >= 0 {
 			ctx.draw_rect(start_visual_x, screen_y, end_visual_x + end_cluster_width -
 				start_visual_x, 1)
 		}
@@ -874,20 +890,21 @@ fn (m EditorModel2) render_visual_selection(mut ctx tea.Context) {
 	}
 
 	// first line: from start_visual_x to end of viewport
-	first_sy := int(start_line) - m.top_line
-	if first_sy >= 0 && first_sy < m.viewport_height {
+	first_sy := m.row_of(int(start_line))
+	if first_sy >= 0 {
 		ctx.draw_rect(start_visual_x, first_sy, m.viewport_width - start_visual_x, 1)
 	}
 	// middle lines: full width
 	for y in int(start_line) + 1 .. int(end_line) {
-		if y < m.top_line || y >= view_end {
+		row := m.row_of(y)
+		if row < 0 {
 			continue
 		}
-		ctx.draw_rect(0, y - m.top_line, m.viewport_width, 1)
+		ctx.draw_rect(0, row, m.viewport_width, 1)
 	}
 	// last line: from 0 to end_visual_x + cluster_width
-	last_sy := int(end_line) - m.top_line
-	if last_sy >= 0 && last_sy < m.viewport_height {
+	last_sy := m.row_of(int(end_line))
+	if last_sy >= 0 {
 		ctx.draw_rect(0, last_sy, end_visual_x + end_cluster_width, 1)
 	}
 }

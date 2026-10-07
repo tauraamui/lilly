@@ -328,6 +328,10 @@ fn (mut m EditorWorkspaceModel2) leader_mode_key_update(msg tea.KeyMsg) (tea.Mod
 					return m.clone(), tea.sequence(switch_mode(.normal),
 						open_file_picker(m.config.theme))
 				}
+				'gd' {
+					return m.clone(), tea.sequence(switch_mode(.normal),
+						toggle_inline_diff(m.active_editor_id, ''))
+				}
 				else {}
 			}
 		}
@@ -936,7 +940,13 @@ fn hide_message_after(duration time.Duration) tea.Cmd {
 }
 
 fn execute_command(active_editor_id nanoid.ID, cmd string) tea.Cmd {
+	if cmd.starts_with('diff ') {
+		return toggle_inline_diff(active_editor_id, cmd.all_after('diff ').trim_space())
+	}
 	return match cmd {
+		'diff' {
+			toggle_inline_diff(active_editor_id, '')
+		}
 		'qa' {
 			shutdown()
 		}

@@ -46,6 +46,9 @@ pub:
 	syntax_builtin tea.Color @[required]
 
 	cursor_line_bg tea.Color @[required]
+
+	diff_added_bg   tea.Color @[required]
+	diff_removed_bg tea.Color @[required]
 }
 
 const dark_petal_pink = tea.Color.ansi(219)
@@ -76,6 +79,9 @@ pub const dark_theme = Theme{
 	syntax_builtin: dark_petal_red
 
 	cursor_line_bg: tea.Color.ansi(235)
+
+	diff_added_bg:   tea.Color.ansi(22)
+	diff_removed_bg: tea.Color.ansi(52)
 }
 
 const light_petal_pink = tea.Color.ansi(200)
@@ -107,4 +113,7 @@ pub const light_theme = Theme{
 	syntax_builtin: dark_theme.petal_red
 
 	cursor_line_bg: tea.Color.ansi(254)
+
+	diff_added_bg:   tea.Color.ansi(194)
+	diff_removed_bg: tea.Color.ansi(224)
 }
