@@ -22,7 +22,13 @@ import lib.palette
 import lib.petal.theme
 import lib.boba
 
-const max_preview_lines = 500
+// max_preview_scan_bytes bounds how far one preview read may scan for line
+// ends. A line is cut at the pane's width, but the rest of it still has to be
+// read past to reach the next line, and a file with no line breaks would
+// otherwise be read to its end every time it is selected.
+const max_preview_scan_bytes = 1024 * 1024
+
+const preview_read_block_size = 4096
 
 struct FilePickerModel {
 	theme theme.Theme
@@ -38,8 +44,20 @@ mut:
 	last_filtered_query string
 	loading             bool
 	cached_cwd          string
-	preview_lines       []string
 	preview_path        string
+	// preview_lines holds only what fits in the preview pane: at most
+	// the pane's rows of lines, each already sanitized and cut to preview_cols cells
+	preview_lines []string
+	// preview_ends[i] is the file offset just past preview_lines[i]'s line
+	// break, where reading resumes when the pane grows taller
+	preview_ends []u64
+	preview_cols int
+	// preview_cut is set when a line was cut to fit preview_cols, so a wider
+	// pane has to read the lines again to show more of them
+	preview_cut bool
+	// preview_done is set when there is nothing more to read: the end of the
+	// file, an unreadable file, or the scan limit
+	preview_done bool
 }
 
 pub struct OpenDialogMsg {
@@ -180,27 +198,281 @@ fn filter_file_paths(file_paths []string, query string, last_query string, last_
 	return all_scored.map(it.path)
 }
 
+// preview_size is the number of rows and cells inside the preview pane's
+// border, matching the layout in view
+fn (m FilePickerModel) preview_size() (int, int) {
+	rows := m.height - 3 - 2
+	cols := m.width - m.width / 2 - 2
+	return if rows > 0 { rows } else { 0 }, if cols > 0 { cols } else { 0 }
+}
+
+// load_preview keeps the preview to what the pane can show. A newly selected
+// file is read from its start only as far as the pane's rows; a resize reads
+// more lines to fill a taller pane, drops lines and cells a smaller one no
+// longer shows, and re-reads lines that were cut when the pane gets wider.
 fn (mut m FilePickerModel) load_preview() {
 	if m.filtered_files.len == 0 || m.selected_index >= m.filtered_files.len {
-		m.preview_lines = []
-		m.preview_path = ''
+		m.reset_preview('')
 		return
 	}
+	rows, cols := m.preview_size()
+	m.clamp_or_expand_preview_cols(cols)
+	m.clamp_or_expand_preview_rows(rows)
+}
+
+fn (mut m FilePickerModel) clamp_or_expand_preview_cols(cols int) {
 	selected := m.filtered_files[m.selected_index]
-	if selected == m.preview_path {
+	if m.preview_path != selected || (cols > m.preview_cols && m.preview_cut) {
+		m.reset_preview(selected)
+		m.preview_cols = cols
 		return
 	}
-	m.preview_path = selected
-	content := os.read_file(selected) or {
-		m.preview_lines = []
+
+	if cols == m.preview_cols {
 		return
 	}
-	lines := content.split_into_lines()
-	m.preview_lines = if lines.len > max_preview_lines {
-		lines[..max_preview_lines]
-	} else {
-		lines
+
+	if cols > m.preview_cols {
+		// nothing was cut, so the lines already read are whole
+		m.preview_cols = cols
+		return
 	}
+
+	mut trimmed := []string{cap: m.preview_lines.len}
+	for line in m.preview_lines {
+		cut := sanitize_preview_line(line, cols)
+		if cut.len < line.len {
+			m.preview_cut = true
+		}
+		trimmed << cut
+	}
+	m.preview_lines = trimmed
+	m.preview_cols = cols
+}
+
+fn (mut m FilePickerModel) clamp_or_expand_preview_rows(rows int) {
+	if rows == m.preview_lines.len {
+		return
+	}
+
+	if rows > m.preview_lines.len {
+		if !m.preview_done {
+			from := if m.preview_ends.len > 0 { m.preview_ends.last() } else { u64(0) }
+			read := read_preview_lines(m.preview_path, from, rows - m.preview_lines.len, m.preview_cols)
+			m.preview_lines << read.lines
+			m.preview_ends << read.ends
+			m.preview_cut = m.preview_cut || read.cut
+			m.preview_done = read.done
+		}
+		return
+	}
+
+	// cloned so the dropped lines are not kept alive by the shared backing
+	m.preview_lines = m.preview_lines[..rows].clone()
+	m.preview_ends = m.preview_ends[..rows].clone()
+	m.preview_done = false
+}
+
+fn (mut m FilePickerModel) reset_preview(path string) {
+	m.preview_path = path
+	m.preview_lines = []
+	m.preview_ends = []
+	m.preview_cols = 0
+	m.preview_cut = false
+	m.preview_done = path.len == 0
+}
+
+struct PreviewRead {
+mut:
+	lines []string
+	ends  []u64
+	cut   bool
+	done  bool
+}
+
+// read_preview_lines reads up to max_lines lines of path starting at byte
+// offset from, a block at a time, keeping only the first max_cols cells of
+// each: the rest of a long line is read past but not stored. Lines come back
+// as sanitize_preview_line would make them.
+fn read_preview_lines(path string, from u64, max_lines int, max_cols int) PreviewRead {
+	mut read := PreviewRead{}
+	if max_lines <= 0 {
+		return read
+	}
+	mut f := os.open(path) or {
+		read.done = true
+		return read
+	}
+	defer {
+		f.close()
+	}
+	f.seek(i64(from), .start) or {
+		read.done = true
+		return read
+	}
+	mut buf := []u8{len: preview_read_block_size}
+	mut line := new_preview_line(max_cols)
+	mut pos := from
+	mut line_start := from
+	// a multi-byte rune can straddle two blocks, so its bytes are gathered
+	// here until it is whole
+	mut pending := []u8{cap: 4}
+	mut pending_need := 0
+	mut scanned := 0
+	for read.lines.len < max_lines {
+		if scanned >= max_preview_scan_bytes {
+			read.done = true
+			break
+		}
+		n := f.read(mut buf) or { 0 }
+		if n <= 0 {
+			// os.File signals the end with os.Eof; any other error ends the
+			// preview just the same
+			if pos > line_start {
+				read.cut = read.cut || line.full
+				read.lines << line.str()
+				read.ends << pos
+			}
+			read.done = true
+			break
+		}
+		scanned += n
+		for i in 0 .. n {
+			b := buf[i]
+			pos++
+			if pending.len > 0 {
+				if b & 0xc0 == 0x80 {
+					pending << b
+					if pending.len == pending_need {
+						// the lead byte keeps 7 - need bits, the rest 6 each
+						mut r := u32(pending[0]) & (u32(0xff) >> (pending_need + 1))
+						for c in pending[1..] {
+							r = (r << 6) | u32(c & 0x3f)
+						}
+						line.add(rune(r))
+						pending.clear()
+					}
+					continue
+				}
+				// a truncated sequence: keep its lead byte as decode_rune_utf8
+				// in the renderer would, then handle b as usual
+				line.add(rune(pending[0]))
+				pending.clear()
+			}
+			if b == `\n` {
+				read.cut = read.cut || line.full
+				read.lines << line.str()
+				read.ends << pos
+				line_start = pos
+				line = new_preview_line(max_cols)
+				if read.lines.len == max_lines {
+					break
+				}
+				continue
+			}
+			if line.full || b < 0x80 {
+				line.add(rune(b))
+				continue
+			}
+			need := utf8_char_len(b)
+			if need <= 1 {
+				line.add(rune(b))
+				continue
+			}
+			pending << b
+			pending_need = need
+		}
+	}
+	return read
+}
+
+// rune_cells is how many terminal cells r takes. It follows the rule
+// bobatea's grid uses to place runes (rune_visual_width, which bobatea does
+// not export), since a preview line is only cut in the right place when it is
+// measured the same way it will be drawn.
+fn rune_cells(r rune) int {
+	if r < 0x300 {
+		return 1
+	}
+	if (r >= 0x0300 && r <= 0x036f) || r == 0x200d || (r >= 0xfe00 && r <= 0xfe0f)
+		|| (r >= 0xfe20 && r <= 0xfe2f) || (r >= 0x1f3fb && r <= 0x1f3ff)
+		|| (r >= 0xe0100 && r <= 0xe01ef) {
+		return 0
+	}
+	if r >= 0x1100 && (r <= 0x115f || r == 0x2329 || r == 0x232a
+		|| (r >= 0x2e80 && r <= 0xa4cf && r != 0x303f) || (r >= 0xac00 && r <= 0xd7a3)
+		|| (r >= 0xf900 && r <= 0xfaff) || (r >= 0xfe10 && r <= 0xfe19)
+		|| (r >= 0xfe30 && r <= 0xfe6f) || (r >= 0xff00 && r <= 0xff60)
+		|| (r >= 0xffe0 && r <= 0xffe6) || (r >= 0x1f300 && r <= 0x1f64f)
+		|| (r >= 0x1f680 && r <= 0x1f6ff) || (r >= 0x1f900 && r <= 0x1f9ff)
+		|| (r >= 0x1fa70 && r <= 0x1faff) || (r >= 0x20000 && r <= 0x3fffd)) {
+		return 2
+	}
+	return 1
+}
+
+// PreviewLine builds one line of the preview, keeping only what fits in
+// max_cells cells
+struct PreviewLine {
+	max_cells int
+mut:
+	sb    strings.Builder
+	cells int
+	// full is set once something did not fit, so the line was cut
+	full bool
+}
+
+fn new_preview_line(max_cells int) PreviewLine {
+	return PreviewLine{
+		max_cells: max_cells
+		sb:        strings.new_builder(max_cells)
+	}
+}
+
+fn (mut p PreviewLine) add(r rune) {
+	if p.full {
+		return
+	}
+	if r == `\t` {
+		// expanded to spaces, to a 4-space tab stop
+		spaces := 4 - (p.cells % 4)
+		for _ in 0 .. spaces {
+			if p.cells >= p.max_cells {
+				p.full = true
+				return
+			}
+			p.sb.write_u8(` `)
+			p.cells++
+		}
+		return
+	}
+	if r < 32 || r == 127 {
+		// control characters are dropped
+		return
+	}
+	width := rune_cells(r)
+	if width == 0 {
+		// a zero-width rune joins the cell before it, so it is kept with that
+		// cell, but only so many: they take no room, and a run of them must not
+		// grow the line without bound
+		if p.cells > 0 && p.sb.len < p.max_cells * 16 {
+			p.sb.write_rune(r)
+		}
+		return
+	}
+	// a wide rune that would straddle the last cell is left out rather than
+	// half drawn: the renderer's clip only checks a rune's first cell, so its
+	// second would be drawn over the pane's border
+	if p.cells + width > p.max_cells {
+		p.full = true
+		return
+	}
+	p.sb.write_rune(r)
+	p.cells += width
+}
+
+fn (mut p PreviewLine) str() string {
+	return p.sb.str()
 }
 
 pub struct ClearQueryFieldMsg {}
@@ -412,32 +684,17 @@ fn (m FilePickerModel) draw_file_results(mut ctx tea.Context, width int, height 
 	}
 }
 
+// sanitize_preview_line cuts line to the runes that fit in max_width cells,
+// with tabs expanded to spaces and control characters dropped
 fn sanitize_preview_line(line string, max_width int) string {
-	mut result := []rune{cap: max_width}
-	mut visual_width := 0
+	mut p := new_preview_line(max_width)
 	for r in line.runes() {
-		if visual_width >= max_width {
+		p.add(r)
+		if p.full {
 			break
 		}
-		if r == `\t` {
-			// Replace tab with spaces (4-space tab stop)
-			spaces := 4 - (visual_width % 4)
-			for _ in 0 .. spaces {
-				if visual_width >= max_width {
-					break
-				}
-				result << ` `
-				visual_width++
-			}
-		} else if r < 32 || r == 127 {
-			// Skip control characters
-			continue
-		} else {
-			result << r
-			visual_width++
-		}
 	}
-	return result.string()
+	return p.str()
 }
 
 fn (m FilePickerModel) render_preview_pane(mut r_ctx tea.Context, width int, height int, border_color tea.Color) {
