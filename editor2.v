@@ -285,7 +285,12 @@ fn (mut m EditorModel2) insert_mode_update(msg tea.KeyMsg) (tea.Model, tea.Cmd) 
 				'enter' {
 					m.invalidate_parser_cache()
 					m.insert_line_pristine_indent = false
+					prefix := m.doc_controller.resolve_prev_line_whitespace_prefix(m.doc_id)
 					m.doc_controller.insert(m.doc_id, `\n`)
+					for b in prefix {
+						m.doc_controller.insert(m.doc_id, b)
+					}
+					m.insert_line_pristine_indent = prefix.len > 0
 				}
 				'ctrl+i' { // TAB
 					m.invalidate_parser_cache()
