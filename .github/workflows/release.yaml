@@ -11,6 +11,17 @@ on:
   push:
     tags:
       - '*v[0-9]*.[0-9]*.[0-9]*'
+  # Rebuilds an existing tag with this workflow as it is on the branch it is
+  # dispatched from, so a fix to the release build can be retried without
+  # moving the tag -- which would also rebuild everything on the forge.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to build and release'
+        required: true
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
 
 permissions:
   contents: write
@@ -22,6 +33,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
 
       - name: Extract v.mod version
         id: vmod
@@ -31,7 +44,6 @@ jobs:
 
       - name: Check tag matches v.mod version
         run: |
-          TAG="${{ github.ref_name }}"
           VMOD_VERSION="${{ steps.vmod.outputs.version }}"
           echo "Tag:          $TAG"
           echo "v.mod version: $VMOD_VERSION"
@@ -60,6 +72,8 @@ jobs:
         password: ${{ secrets.CI_REGISTRY_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
 
       # Installs what v.mod lists, from git.catkin.dev. No ~/.vmodules cache:
       # `v install` leaves an installed module as it is, so a restored cache
@@ -86,7 +100,8 @@ jobs:
     name: Build (${{ matrix.artifact_suffix }})
     needs: validate-version
     strategy:
-      fail-fast: true
+      # one platform failing should not cancel the others' uploads
+      fail-fast: false
       matrix:
         include:
           # 24.04 rather than 22.04: V's bundled TCC needs glibc 2.38, and on
@@ -114,6 +129,7 @@ jobs:
       # that creates the forge's draft release
       - uses: actions/checkout@v4
         with:
+          ref: ${{ env.TAG }}
           fetch-depth: 0
 
       - name: Read pinned V commit
@@ -136,9 +152,14 @@ jobs:
           path: ~/v
           key: v-${{ matrix.runner }}-${{ steps.vref.outputs.ref }}
 
-      # the same fetch-and-make the Containerfile does
+      # The same fetch-and-make the Containerfile does. LC_ALL=C because on
+      # macOS the bootstrap pipes vc/v.c through BSD awk, which in the
+      # runner's UTF-8 locale aborts on bytes that are not valid UTF-8 and
+      # hands the compiler a truncated file ("_main" undefined).
       - name: Build V
         if: steps.vcache.outputs.cache-hit != 'true'
+        env:
+          LC_ALL: C
         run: |
           git init ~/v
           cd ~/v
@@ -169,7 +190,7 @@ jobs:
           FORGE_TOKEN: ${{ secrets.FORGE_RELEASE_TOKEN }}
         run: |
           shasum -a 256 lilly-${{ matrix.artifact_suffix }} | tee lilly-${{ matrix.artifact_suffix }}.sha256
-          node .forgejo/scripts/publish-release.mjs "${{ github.ref_name }}" lilly-${{ matrix.artifact_suffix }} lilly-${{ matrix.artifact_suffix }}.sha256
+          node .forgejo/scripts/publish-release.mjs "$TAG" lilly-${{ matrix.artifact_suffix }} lilly-${{ matrix.artifact_suffix }}.sha256
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -186,20 +207,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ env.TAG }}
           fetch-depth: 0
 
       - name: Generate changelog
         id: changelog
         run: |
-          CURRENT_TAG="${{ github.ref_name }}"
+          CURRENT_TAG="$TAG"
           PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -v "^${CURRENT_TAG}$" | head -1)
 
           if [ -z "$PREVIOUS_TAG" ]; then
             echo "No previous tag found — including all commits."
-            CHANGELOG=$(git log --pretty=format:"- %s (%h)" HEAD)
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" "$TAG")
           else
             echo "Changelog: $PREVIOUS_TAG → $CURRENT_TAG"
-            CHANGELOG=$(git log --pretty=format:"- %s (%h)" "${PREVIOUS_TAG}..HEAD")
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" "${PREVIOUS_TAG}..${TAG}")
           fi
 
           {
@@ -218,8 +240,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          name: "${{ github.ref_name }}"
-          tag_name: "${{ github.ref_name }}"
+          name: "${{ env.TAG }}"
+          tag_name: "${{ env.TAG }}"
           body: |
             ## Changes
 
