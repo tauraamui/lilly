@@ -103,7 +103,8 @@ fn (m EditorModel2) counted_bracket_pair(pos syntax.Pos, first int, last int) ?B
 		mut depth := 0
 		for y in pos.line .. last + 1 {
 			runes := m.doc_line_runes(y)
-			for col in (if y == pos.line { pos.col } else { 0 }) .. runes.len {
+			start := if y == pos.line { pos.col } else { 0 }
+			for col in start .. runes.len {
 				if runes[col] == r {
 					depth++
 				}
@@ -195,7 +196,8 @@ fn (mut m EditorModel2) matching_bracket() ?(BracketPair, syntax.Pos) {
 		}
 		at := syntax.Pos{pos.line, col}
 		if pair := m.bracket_pair_at(at, 0, last) {
-			return pair, if pair.open == at { pair.close } else { pair.open }
+			other := if pair.open == at { pair.close } else { pair.open }
+			return pair, other
 		}
 		// past brackets in strings and comments, but not one without a match
 		if !m.in_text(at) {

@@ -1,5 +1,12 @@
 name: Release
 
+# Releases are published on git.catkin.dev (see .forgejo/workflows/release.yaml),
+# which builds Linux amd64 and Windows itself. This mirror builds what the forge
+# cannot -- macOS, on GitHub's macOS runners, and Linux arm64 -- and uploads
+# those to the forge's draft release as well as keeping a draft release here.
+# The upload needs the FORGE_RELEASE_TOKEN secret, the same token the forge
+# workflow uses.
+
 on:
   push:
     tags:
@@ -33,6 +40,47 @@ jobs:
             exit 1
           fi
 
+  # The compiler matches the forge's CI exactly: linux-amd64 builds inside the
+  # same toolchain image, and the rest build V from the commit that image pins.
+  # The image cannot cover those -- GitHub only runs job containers on Linux
+  # runners, and the image is amd64 only. Reading V_REF from the Containerfile
+  # keeps one place to bump the compiler.
+  #
+  # Pulling the image needs the CI_REGISTRY_USER variable and CI_REGISTRY_TOKEN
+  # secret, as on the forge.
+  build-linux-amd64:
+    if: github.server_url == 'https://github.com'
+    name: Build (linux-amd64)
+    needs: validate-version
+    runs-on: ubuntu-latest
+    container:
+      image: registry.catkin.dev/tauraamui/lilly-ci:latest
+      credentials:
+        username: ${{ vars.CI_REGISTRY_USER }}
+        password: ${{ secrets.CI_REGISTRY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Installs what v.mod lists, from git.catkin.dev. No ~/.vmodules cache:
+      # `v install` leaves an installed module as it is, so a restored cache
+      # would build against stale copies of bobatea and kdlv.
+      - name: Install dependencies
+        run: v install
+
+      - name: Generate git hash
+        run: git log -n 1 --pretty=format:"%h" | tee ./.githash
+
+      # Same flags as the forge's linux-amd64 build; see the comment there for
+      # why it is static.
+      - name: Build
+        run: v -prod -cc gcc -cflags -static . -o lilly-linux-amd64
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lilly-linux-amd64
+          path: lilly-linux-amd64
+
   build:
     if: github.server_url == 'https://github.com'
     name: Build (${{ matrix.artifact_suffix }})
@@ -41,52 +89,87 @@ jobs:
       fail-fast: true
       matrix:
         include:
-          - runner: ubuntu-22.04
-            artifact_suffix: linux-amd64
-            v_flags: '-cc gcc'
-            extra_packages: ''
-          - runner: ubuntu-22.04-arm
+          # 24.04 rather than 22.04: V's bundled TCC needs glibc 2.38, and on
+          # anything older V's bootstrap takes the v1 fallback path the CI
+          # image's Containerfile describes. Static, as on linux-amd64, so the
+          # newer glibc does not raise the floor for users.
+          - runner: ubuntu-24.04-arm
             artifact_suffix: linux-arm64
-            v_flags: '-cc gcc'
-            extra_packages: ''
+            v_flags: '-prod -cc gcc -cflags -static'
           - runner: macos-15-intel
             artifact_suffix: darwin-amd64
-            v_flags: '-cc clang'
-            extra_packages: ''
+            v_flags: '-prod -cc clang'
           - runner: macos-15
             artifact_suffix: darwin-arm64
-            v_flags: '-cc clang'
-            extra_packages: ''
+            v_flags: '-prod -cc clang'
 
     runs-on: ${{ matrix.runner }}
 
+    env:
+      # as the CI image sets it: no uploads to bugs.vlang.io on a failed build
+      V_C_ERROR_BUG_REPORT_DISABLED: '1'
+
     steps:
+      # full history and tags, for the changelog should this job be the one
+      # that creates the forge's draft release
       - uses: actions/checkout@v4
-
-      - name: Setup V
-        uses: vlang/setup-v@v1.4
         with:
-          check-latest: true
+          fetch-depth: 0
 
-      - name: Install extra packages
-        if: matrix.extra_packages != ''
-        run: sudo apt-get install -y ${{ matrix.extra_packages }}
+      - name: Read pinned V commit
+        id: vref
+        run: |
+          V_REF=$(sed -n 's/^ARG V_REF=//p' .forgejo/ci-image/Containerfile)
+          if [ -z "$V_REF" ]; then
+            echo "::error::no ARG V_REF in .forgejo/ci-image/Containerfile"
+            exit 1
+          fi
+          echo "V_REF=$V_REF"
+          echo "ref=$V_REF" >> "$GITHUB_OUTPUT"
 
-      - name: Cache V modules
+      # Only useful while V_REF is a commit: a branch name would key the cache
+      # to whatever that branch was on the first build.
+      - name: Cache V
+        id: vcache
         uses: actions/cache@v4
         with:
-          path: ~/.vmodules
-          key: vmodules-${{ matrix.artifact_suffix }}-${{ hashFiles('v.mod') }}
-          restore-keys: vmodules-${{ matrix.artifact_suffix }}-
+          path: ~/v
+          key: v-${{ matrix.runner }}-${{ steps.vref.outputs.ref }}
 
+      # the same fetch-and-make the Containerfile does
+      - name: Build V
+        if: steps.vcache.outputs.cache-hit != 'true'
+        run: |
+          git init ~/v
+          cd ~/v
+          git remote add origin https://github.com/vlang/v
+          git fetch --depth=1 origin "${{ steps.vref.outputs.ref }}"
+          git checkout --detach FETCH_HEAD
+          make
+
+      - name: Add V to PATH
+        run: |
+          echo "$HOME/v" >> "$GITHUB_PATH"
+          "$HOME/v/v" version
+
+      # Installs what v.mod lists, from git.catkin.dev. No ~/.vmodules cache:
+      # `v install` leaves an installed module as it is, so a restored cache
+      # would build against stale copies of bobatea and kdlv.
       - name: Install dependencies
-        run: v install tauraamui.bobatea
+        run: v install
 
       - name: Generate git hash
         run: git log -n 1 --pretty=format:"%h" | tee ./.githash
 
       - name: Build
         run: v ${{ matrix.v_flags }} . -o lilly-${{ matrix.artifact_suffix }}
+
+      - name: Upload to forge release
+        env:
+          FORGE_TOKEN: ${{ secrets.FORGE_RELEASE_TOKEN }}
+        run: |
+          shasum -a 256 lilly-${{ matrix.artifact_suffix }} | tee lilly-${{ matrix.artifact_suffix }}.sha256
+          node .forgejo/scripts/publish-release.mjs "${{ github.ref_name }}" lilly-${{ matrix.artifact_suffix }} lilly-${{ matrix.artifact_suffix }}.sha256
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -97,7 +180,7 @@ jobs:
   release:
     if: github.server_url == 'https://github.com'
     name: Create draft release
-    needs: build
+    needs: [build-linux-amd64, build]
     runs-on: ubuntu-latest
 
     steps:

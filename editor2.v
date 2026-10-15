@@ -479,7 +479,7 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (tea.Cmd, bool
 		'line' {
 			// only `dd` for now: `yy` and `cc` wait on apply_operator growing
 			// yank and change, and mustn't delete the line meanwhile
-			if action.operator or { `d` } != `d` {
+			if action.operator or { rune(`d`) } != `d` {
 				return tea.no_cmd, false
 			}
 			cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
@@ -522,7 +522,7 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (tea.Cmd, bool
 			// with an operator, j and k take in whole lines, and a closed
 			// fold at either end is all taken in, as in Vim. Only `d` for
 			// now, as with dd.
-			if action.operator or { `d` } == `d` {
+			if action.operator or { rune(`d`) } == `d` {
 				m.delete_rows(if action.motion == 'j' { count } else { -count })
 			}
 			return tea.no_cmd, false

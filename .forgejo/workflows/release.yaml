@@ -1,0 +1,111 @@
+name: Release
+
+# Builds the Linux and Windows binaries for a version tag and attaches them to
+# a draft release here on the forge. macOS cannot be built in this image, so
+# the GitHub mirror's .github/workflows/release.yaml builds those on its macOS
+# runners and uploads them to the same draft release. Review and publish the
+# draft once every asset has arrived.
+#
+# The tag must match the version in v.mod. Each job calls
+# .forgejo/scripts/publish-release.mjs, which creates the draft if no job has
+# yet, so neither forge waits on the other.
+#
+# Requires the FORGE_RELEASE_TOKEN secret: an access token with
+# write:repository on this repo. The GitHub mirror needs the same token,
+# under the same name.
+on:
+  push:
+    tags:
+      - '*v[0-9]*.[0-9]*.[0-9]*'
+
+jobs:
+  validate-version:
+    name: Validate tag vs v.mod version
+    runs-on: ubuntu-latest
+    container:
+      image: registry.catkin.dev/tauraamui/lilly-ci:latest
+      credentials:
+        username: ${{ vars.CI_REGISTRY_USER }}
+        password: ${{ secrets.CI_REGISTRY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tag matches v.mod version
+        run: |
+          TAG="${{ github.ref_name }}"
+          VMOD_VERSION=$(sed -n "s/^[[:space:]]*version: '\([^']*\)'.*/\1/p" v.mod)
+          echo "Tag:           $TAG"
+          echo "v.mod version: $VMOD_VERSION"
+          if [ "$TAG" != "$VMOD_VERSION" ]; then
+            echo "::error::Tag '$TAG' does not match v.mod version '$VMOD_VERSION'. Update v.mod before tagging."
+            exit 1
+          fi
+
+  build:
+    name: Build (${{ matrix.artifact_suffix }})
+    needs: validate-version
+    runs-on: ubuntu-latest
+    container:
+      image: registry.catkin.dev/tauraamui/lilly-ci:latest
+      credentials:
+        username: ${{ vars.CI_REGISTRY_USER }}
+        password: ${{ secrets.CI_REGISTRY_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Statically linked. The image is Debian 13, whose glibc 2.41 and
+          # gcc 14 have strtol and friends resolve to the C23 symbols added in
+          # glibc 2.38, so a dynamic build would not start on Debian 12,
+          # Ubuntu 22.04 or anything else older. The cost of linking glibc
+          # statically is getaddrinfo, which still loads the host's NSS
+          # modules at runtime. That only affects the telemetry ping, which is
+          # best-effort anyway.
+          - artifact_suffix: linux-amd64
+            output: lilly-linux-amd64
+            v_flags: -prod -cc gcc -cflags -static
+            extra_packages: ''
+          # V3 only targets macOS, Linux and BSD, so this goes through the
+          # older compiler, and mingw-w64 is not in the image. Installing it
+          # here rather than baking it in keeps the image the regular CI jobs
+          # pull from growing for one job that runs only on a tag.
+          - artifact_suffix: windows-amd64
+            output: lilly-windows-amd64.exe
+            v_flags: -prod -os windows -cc x86_64-w64-mingw32-gcc
+            extra_packages: mingw-w64
+    steps:
+      # full history and tags, for the changelog in the release body
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install extra packages
+        if: matrix.extra_packages != ''
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ${{ matrix.extra_packages }}
+
+      # No ~/.vmodules cache, unlike ci.yaml: `v install` leaves an installed
+      # module as it is, so a restored cache would ship whatever bobatea and
+      # kdlv were when it was saved rather than what they are now.
+      - name: Install dependencies
+        run: v install
+
+      - name: Generate git hash
+        run: git log -n 1 --pretty=format:"%h" | tee ./.githash
+
+      - name: Build
+        timeout-minutes: 20
+        run: v ${{ matrix.v_flags }} . -o ${{ matrix.output }}
+
+      - name: Smoke test
+        if: matrix.artifact_suffix == 'linux-amd64'
+        run: ./${{ matrix.output }} -v
+
+      - name: Checksum
+        run: sha256sum ${{ matrix.output }} | tee ${{ matrix.output }}.sha256
+
+      - name: Upload to release
+        env:
+          FORGE_TOKEN: ${{ secrets.FORGE_RELEASE_TOKEN }}
+        run: node .forgejo/scripts/publish-release.mjs "${{ github.ref_name }}" ${{ matrix.output }} ${{ matrix.output }}.sha256
