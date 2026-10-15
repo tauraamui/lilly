@@ -29,6 +29,8 @@ on:
       tag:
         description: 'Existing tag to build and release'
         required: true
+        # Forgejo's dispatch form rejects an input without a type
+        type: string
 
 env:
   TAG: ${{ inputs.tag || github.ref_name }}
