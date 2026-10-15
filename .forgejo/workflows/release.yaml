@@ -203,11 +203,15 @@ jobs:
             echo "::error::ARG V_REF and ARG VC_REF must both be set in $containerfile"
             exit 1
           fi
+          # Built where it will stay: V records its own absolute path for the
+          # files it embeds, so a V built elsewhere and moved here panics
+          # ("EmbedFileData error") on its first compile. The .built marker
+          # tells a finished build from one interrupted part way.
           vdir="$HOME/Library/Caches/lilly-release/v-${{ matrix.arch }}-$V_REF-$VC_REF"
-          if [ ! -x "$vdir/v" ]; then
-            rm -rf "$vdir.partial"
-            LC_ALL=C ${{ matrix.run_as }} bash .release-tooling/.forgejo/ci-image/build-v.sh "$vdir.partial" "$V_REF" "$VC_REF"
-            mv "$vdir.partial" "$vdir"
+          if [ ! -f "$vdir/.built" ]; then
+            rm -rf "$vdir"
+            LC_ALL=C ${{ matrix.run_as }} bash .release-tooling/.forgejo/ci-image/build-v.sh "$vdir" "$V_REF" "$VC_REF"
+            touch "$vdir/.built"
           fi
           ${{ matrix.run_as }} "$vdir/v" version
           echo "VEXE=$vdir/v" >> "${FORGEJO_ENV:-$GITHUB_ENV}"
