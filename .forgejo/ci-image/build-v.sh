@@ -3,9 +3,9 @@
 #
 #   build-v.sh <dir> <v_ref> <vc_ref>
 #
-# Shared by the CI image (Containerfile) and the GitHub mirror's release
-# workflow, so every lilly build -- CI, forge releases, macOS releases --
-# compiles with the same V.
+# Shared by the CI image (Containerfile) and the macOS release jobs, which run
+# on a self-hosted Mac, so every lilly build -- CI, Linux, Windows and macOS
+# releases -- compiles with the same V.
 #
 # Why vc is pinned too: V's `make` bootstraps from vlang/vc, the generated C
 # of a recent V, and always pulls the latest snapshot. A pinned V source then

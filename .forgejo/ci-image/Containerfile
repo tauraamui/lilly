@@ -30,8 +30,8 @@ RUN apt-get update \
 # VC_REF pins the vlang/vc bootstrap snapshot to match; build-v.sh says why
 # and how to pick it. Bump the two together. Editing this file matches the
 # .forgejo/ci-image/** path filter in ci-image.yaml, so pushing the change
-# rebuilds the image. The GitHub mirror's release workflow reads both from
-# here, so macOS releases build with the same V.
+# rebuilds the image. The macOS release jobs read both from here, so macOS
+# releases build with the same V.
 ARG V_REF=3f930ed47584f90f2c3053fc393dcfa1084ddb75
 ARG VC_REF=8af812feb76c678abd86a8e682fd9ab2790e519c
 # V_CACHE_BUST is referenced inside the RUN so that changing it actually

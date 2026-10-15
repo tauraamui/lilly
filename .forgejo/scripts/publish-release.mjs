@@ -4,14 +4,14 @@
 //   node .forgejo/scripts/publish-release.mjs <tag> <file>...
 //
 // Every job that produces a binary calls this independently -- the Linux and
-// Windows jobs on the forge, and the macOS jobs on the GitHub mirror -- so
-// there is no single job that owns the release. Whichever arrives first
+// Windows jobs in the CI image, and the macOS jobs on the self-hosted Mac
+// runner -- so there is no single job that owns the release. Whichever arrives first
 // creates it; the rest find it and attach to it. Re-running a job replaces its
 // asset rather than failing on the duplicate name.
 //
-// Node rather than a shell script, because it is present in both places this
-// runs (the CI image is node:22-trixie, and GitHub's runners ship it) and its
-// built-in fetch avoids depending on jq being installed.
+// Node rather than a shell script, because it is present everywhere this runs
+// (the CI image is node:22-trixie, and the Mac runner needs it for
+// actions/checkout anyway) and its built-in fetch avoids depending on jq.
 //
 // Environment:
 //   FORGE_TOKEN  access token with write:repository on the repo (required)
@@ -70,7 +70,7 @@ function git(...args) {
 }
 
 // The previous tag by version order, matching the changelog the GitHub
-// workflow wrote before releases moved here. Needs the full history, so the
+// mirror's releases used before releases moved here. Needs the full history, so the
 // calling job checks out with fetch-depth: 0.
 function changelog() {
 	try {

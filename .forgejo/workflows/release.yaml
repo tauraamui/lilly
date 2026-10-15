@@ -1,22 +1,37 @@
 name: Release
 
-# Builds the Linux and Windows binaries for a version tag and attaches them to
-# a draft release here on the forge. macOS cannot be built in this image, so
-# the GitHub mirror's .github/workflows/release.yaml builds those on its macOS
-# runners and uploads them to the same draft release. Review and publish the
-# draft once every asset has arrived.
+# Builds lilly for a version tag and attaches every binary to a draft release
+# here on the forge. Review and publish the draft once every asset has arrived.
+#
+#   Linux amd64/arm64, Windows amd64   this forge's runner, in the CI image
+#   macOS arm64/amd64                  a self-hosted runner on a Mac, labelled
+#                                      `macos`, which runs jobs on the host
+#
+# The macOS jobs wait in the queue until that runner is online, and never hold
+# up the others. Forgejo abandons a job no runner has picked up within a day,
+# so if the Mac was off for longer, rebuild the tag with workflow_dispatch.
 #
 # The tag must match the version in v.mod. Each job calls
 # .forgejo/scripts/publish-release.mjs, which creates the draft if no job has
-# yet, so neither forge waits on the other.
+# yet, so the jobs need no ordering between them.
 #
 # Requires the FORGE_RELEASE_TOKEN secret: an access token with
-# write:repository on this repo. The GitHub mirror needs the same token,
-# under the same name.
+# write:repository on this repo.
 on:
   push:
     tags:
       - '*v[0-9]*.[0-9]*.[0-9]*'
+  # Rebuilds an existing tag, with the release tooling as it is on the branch
+  # dispatched from, so a fix to the release build can be retried without
+  # moving the tag. Assets already on the release are replaced.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to build and release'
+        required: true
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   validate-version:
@@ -29,10 +44,11 @@ jobs:
         password: ${{ secrets.CI_REGISTRY_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
 
       - name: Check tag matches v.mod version
         run: |
-          TAG="${{ github.ref_name }}"
           VMOD_VERSION=$(sed -n "s/^[[:space:]]*version: '\([^']*\)'.*/\1/p" v.mod)
           echo "Tag:           $TAG"
           echo "v.mod version: $VMOD_VERSION"
@@ -65,20 +81,41 @@ jobs:
             output: lilly-linux-amd64
             v_flags: -prod -cc gcc -cflags -static
             extra_packages: ''
+            smoke_test: ./lilly-linux-amd64 -v
+          # Cross-compiled, and static for the same reason as amd64. Being
+          # static, it runs under qemu-user without an arm64 sysroot.
+          - artifact_suffix: linux-arm64
+            output: lilly-linux-arm64
+            v_flags: -prod -arch arm64 -cc aarch64-linux-gnu-gcc -cflags -static
+            extra_packages: gcc-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user
+            smoke_test: qemu-aarch64 ./lilly-linux-arm64 -v
           # V3 only targets macOS, Linux and BSD, so this goes through the
-          # older compiler, and mingw-w64 is not in the image. Installing it
-          # here rather than baking it in keeps the image the regular CI jobs
-          # pull from growing for one job that runs only on a tag.
+          # older compiler. No smoke test: there is nothing here to run it.
           - artifact_suffix: windows-amd64
             output: lilly-windows-amd64.exe
             v_flags: -prod -os windows -cc x86_64-w64-mingw32-gcc
             extra_packages: mingw-w64
+            smoke_test: ''
     steps:
       # full history and tags, for the changelog in the release body
       - uses: actions/checkout@v4
         with:
+          ref: ${{ env.TAG }}
           fetch-depth: 0
 
+      # The upload script comes from the commit this workflow runs from, not
+      # the tag. On a tag push they are the same commit; on a dispatch it lets
+      # a tag cut before a tooling fix be rebuilt with that fix.
+      - name: Checkout release tooling
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: .release-tooling
+          sparse-checkout: .forgejo
+
+      # Cross toolchains are installed here rather than baked into the image,
+      # so the image every regular CI job pulls does not grow for jobs that
+      # only run on a tag.
       - name: Install extra packages
         if: matrix.extra_packages != ''
         run: |
@@ -99,8 +136,8 @@ jobs:
         run: v ${{ matrix.v_flags }} . -o ${{ matrix.output }}
 
       - name: Smoke test
-        if: matrix.artifact_suffix == 'linux-amd64'
-        run: ./${{ matrix.output }} -v
+        if: matrix.smoke_test != ''
+        run: ${{ matrix.smoke_test }}
 
       - name: Checksum
         run: sha256sum ${{ matrix.output }} | tee ${{ matrix.output }}.sha256
@@ -108,4 +145,98 @@ jobs:
       - name: Upload to release
         env:
           FORGE_TOKEN: ${{ secrets.FORGE_RELEASE_TOKEN }}
-        run: node .forgejo/scripts/publish-release.mjs "${{ github.ref_name }}" ${{ matrix.output }} ${{ matrix.output }}.sha256
+        run: node .release-tooling/.forgejo/scripts/publish-release.mjs "$TAG" ${{ matrix.output }} ${{ matrix.output }}.sha256
+
+  # Runs directly on the Mac, not in a container: building for macOS needs
+  # Apple's SDK, which is licensed for Apple hardware only. One Apple Silicon
+  # Mac builds both: arm64 natively, and amd64 with an x86_64 V toolchain run
+  # under Rosetta, so its compiler emits x86_64 without any cross flags.
+  #
+  # The Mac needs the Xcode Command Line Tools, Rosetta, git and node on the
+  # runner's PATH. See the runner setup note.
+  build-macos:
+    name: Build (darwin-${{ matrix.arch }})
+    needs: validate-version
+    runs-on: macos
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            run_as: ''
+          - arch: amd64
+            run_as: arch -x86_64
+    env:
+      OUTPUT: lilly-darwin-${{ matrix.arch }}
+      # The oldest macOS the binaries start on. 11 is the first with Apple
+      # Silicon support, and clang reads this for both architectures.
+      MACOSX_DEPLOYMENT_TARGET: '11.0'
+      # as the CI image sets it: no uploads to bugs.vlang.io on a failed build
+      V_C_ERROR_BUG_REPORT_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0
+
+      - name: Checkout release tooling
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: .release-tooling
+          sparse-checkout: .forgejo
+
+      # V is built once per architecture and pinned commit pair, from the same
+      # refs and script as the CI image, then reused by later releases, so it
+      # lives under ~/Library/Caches rather than the job's work directory.
+      # LC_ALL=C because the macOS bootstrap pipes
+      # vc/v.c through BSD awk, which aborts on non-UTF-8 bytes in a UTF-8
+      # locale and hands clang a truncated file ("_main" undefined).
+      - name: Build V
+        run: |
+          containerfile=.release-tooling/.forgejo/ci-image/Containerfile
+          V_REF=$(sed -n 's/^ARG V_REF=//p' "$containerfile")
+          VC_REF=$(sed -n 's/^ARG VC_REF=//p' "$containerfile")
+          if [ -z "$V_REF" ] || [ -z "$VC_REF" ]; then
+            echo "::error::ARG V_REF and ARG VC_REF must both be set in $containerfile"
+            exit 1
+          fi
+          vdir="$HOME/Library/Caches/lilly-release/v-${{ matrix.arch }}-$V_REF-$VC_REF"
+          if [ ! -x "$vdir/v" ]; then
+            rm -rf "$vdir.partial"
+            LC_ALL=C ${{ matrix.run_as }} bash .release-tooling/.forgejo/ci-image/build-v.sh "$vdir.partial" "$V_REF" "$VC_REF"
+            mv "$vdir.partial" "$vdir"
+          fi
+          ${{ matrix.run_as }} "$vdir/v" version
+          echo "VEXE=$vdir/v" >> "${FORGEJO_ENV:-$GITHUB_ENV}"
+
+      # A fresh module directory per job: a shared ~/.vmodules would be both
+      # stale (`v install` leaves installed modules alone) and raced by the two
+      # architectures building at once on a runner with capacity over 1.
+      - name: Install dependencies
+        run: |
+          export VMODULES="$PWD/.vmodules"
+          rm -rf "$VMODULES"
+          ${{ matrix.run_as }} "$VEXE" install
+
+      - name: Generate git hash
+        run: git log -n 1 --pretty=format:"%h" | tee ./.githash
+
+      - name: Build
+        timeout-minutes: 20
+        run: |
+          export VMODULES="$PWD/.vmodules"
+          ${{ matrix.run_as }} "$VEXE" -prod -cc clang . -o "$OUTPUT"
+          file "$OUTPUT"
+
+      # amd64 runs under Rosetta
+      - name: Smoke test
+        run: ./"$OUTPUT" -v
+
+      - name: Checksum
+        run: shasum -a 256 "$OUTPUT" | tee "$OUTPUT.sha256"
+
+      - name: Upload to release
+        env:
+          FORGE_TOKEN: ${{ secrets.FORGE_RELEASE_TOKEN }}
+        run: node .release-tooling/.forgejo/scripts/publish-release.mjs "$TAG" "$OUTPUT" "$OUTPUT.sha256"
