@@ -59,22 +59,22 @@ fn expected_parser_states(c &documents.Controller2, doc_id nanoid.ID) []string {
 
 // view_down_to extends an editor's states as far as a viewport whose top is
 // at a random line would, and checks the states it holds against `expected`
-fn view_down_to(mut m EditorModel2, expected []string, label string) {
-	m.ensure_parser_states(rand.intn(expected.len + 1) or { 0 })
+fn view_down_to(mut rng rand.PRNG, mut m EditorModel2, expected []string, label string) {
+	m.ensure_parser_states(rng.intn(expected.len + 1) or { 0 })
 	held := state_names(m)
 	assert held.len <= expected.len, label
 	assert held == expected[..held.len], label
 }
 
-fn random_parser_cache_edit(mut c documents.Controller2, doc_id nanoid.ID) {
+fn random_parser_cache_edit(mut rng rand.PRNG, mut c documents.Controller2, doc_id nanoid.ID) {
 	line_count := int(c.line_count(doc_id))
-	c.jump_cursor_to_line(doc_id, u64(rand.intn(line_count) or { 0 }))
-	for _ in 0 .. rand.intn(6) or { 0 } {
+	c.jump_cursor_to_line(doc_id, u64(rng.intn(line_count) or { 0 }))
+	for _ in 0 .. rng.intn(6) or { 0 } {
 		c.move_cursor_right(doc_id)
 	}
-	match rand.intn(9) or { 0 } {
+	match rng.intn(9) or { 0 } {
 		0, 1, 2 {
-			c.insert_string(doc_id, rand.element(parser_cache_snippets) or { '' })
+			c.insert_string(doc_id, rng.element(parser_cache_snippets) or { '' })
 		}
 		3 {
 			c.backspace(doc_id)
@@ -83,15 +83,15 @@ fn random_parser_cache_edit(mut c documents.Controller2, doc_id nanoid.ID) {
 			c.delete(doc_id)
 		}
 		5 {
-			y := u64(rand.intn(line_count) or { 0 })
+			y := u64(rng.intn(line_count) or { 0 })
 			c.delete_line(doc_id, y)
 		}
 		6 {
-			start_y := rand.intn(line_count) or { 0 }
-			end_y := start_y + (rand.intn(3) or { 0 })
+			start_y := rng.intn(line_count) or { 0 }
+			end_y := start_y + (rng.intn(3) or { 0 })
 			c.delete_range(doc_id, cursor.Range{
-				start: cursor.Pos.new(rand.intn(4) or { 0 }, start_y)
-				end:   cursor.Pos.new(rand.intn(6) or { 0 }, end_y)
+				start: cursor.Pos.new(rng.intn(4) or { 0 }, start_y)
+				end:   cursor.Pos.new(rng.intn(6) or { 0 }, end_y)
 			})
 		}
 		7 {
@@ -101,7 +101,7 @@ fn random_parser_cache_edit(mut c documents.Controller2, doc_id nanoid.ID) {
 			c.redo(doc_id)
 		}
 	}
-	if rand.intn(3) or { 0 } == 0 {
+	if rng.intn(3) or { 0 } == 0 {
 		c.commit_undo_group(doc_id)
 	}
 }
@@ -110,7 +110,10 @@ fn test_parser_state_cache_matches_full_rebuild_across_random_edits() {
 	file_path := make_parser_cache_test_file(parser_cache_sample)
 	defer { os.rm(file_path) or {} }
 
-	rand.seed([u32(733), 1])
+	// a generator of its own, not rand's shared one: opening a document
+	// reseeds that from the file's path (its ID is nanoid.simple_with_seed),
+	// and the temp path holds a timestamp, so the edits differed every run
+	mut rng := rand.new_default(seed_: [u32(750), 1])
 	mut c := documents.Controller2{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
@@ -123,7 +126,7 @@ fn test_parser_state_cache_matches_full_rebuild_across_random_edits() {
 
 	mut deepest := 0
 	for i in 0 .. 500 {
-		random_parser_cache_edit(mut c, doc_id)
+		random_parser_cache_edit(mut rng, mut c, doc_id)
 		expected := expected_parser_states(&c, doc_id)
 		for name in expected {
 			deepest = int_max(deepest, name.count(' > ') + 1)
@@ -138,15 +141,16 @@ fn test_parser_state_cache_matches_full_rebuild_across_random_edits() {
 			assert every_edit.relex_parser_state_cache(changes.change.first, changes.change.last,
 				changes.change.delta), 'after edit ${i}'
 		}
-		view_down_to(mut every_edit, expected, 'after edit ${i}')
+		view_down_to(mut rng, mut every_edit, expected, 'after edit ${i}')
 
-		if rand.intn(5) or { 0 } == 0 {
+		if rng.intn(5) or { 0 } == 0 {
 			now_and_then.sync_parser_state_cache()
-			view_down_to(mut now_and_then, expected, 'after edit ${i}')
+			view_down_to(mut rng, mut now_and_then, expected, 'after edit ${i}')
 		}
 	}
 	// stacks over two deep are interned rather than encoded, so the edits
-	// have to reach them for this test to cover interning
+	// have to reach them for this test to cover interning. About one seed in
+	// ten never does; this one reaches five deep.
 	assert deepest >= 3
 }
 
@@ -156,7 +160,7 @@ fn test_parser_state_cache_trimmed_past_the_view_matches_full_rebuild() {
 	file_path := make_parser_cache_test_file(parser_cache_sample.repeat(80))
 	defer { os.rm(file_path) or {} }
 
-	rand.seed([u32(739), 5])
+	mut rng := rand.new_default(seed_: [u32(739), 5])
 	mut c := documents.Controller2{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut m := new_parser_cache_test_editor(&c, doc_id)
@@ -168,9 +172,9 @@ fn test_parser_state_cache_trimmed_past_the_view_matches_full_rebuild() {
 		// the view anywhere, and every state held, so an edit above it relexes
 		// down to the view's limit and no further
 		line_count := int(c.line_count(doc_id))
-		m.top_line = rand.intn(line_count) or { 0 }
+		m.top_line = rng.intn(line_count) or { 0 }
 		m.ensure_parser_states(line_count - 1)
-		random_parser_cache_edit(mut c, doc_id)
+		random_parser_cache_edit(mut rng, mut c, doc_id)
 		expected := expected_parser_states(&c, doc_id)
 
 		changes := c.line_changes_since(doc_id, m.parser_gen)
@@ -183,7 +187,7 @@ fn test_parser_state_cache_trimmed_past_the_view_matches_full_rebuild() {
 		if m.parser_line_states.len == m.top_line + m.viewport_height + relex_slack + 1 {
 			trimmed++
 		}
-		view_down_to(mut m, expected, 'after edit ${i}')
+		view_down_to(mut rng, mut m, expected, 'after edit ${i}')
 	}
 	assert trimmed > 0, 'no relex reached the limit'
 }
@@ -265,24 +269,24 @@ fn test_syntax_tree_matches_a_fresh_tree_across_random_edits() {
 	file_path := make_parser_cache_test_file(parser_cache_sample.repeat(60))
 	defer { os.rm(file_path) or {} }
 
-	rand.seed([u32(737), 3])
+	mut rng := rand.new_default(seed_: [u32(737), 3])
 	mut c := documents.Controller2{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut m := new_parser_cache_test_editor(&c, doc_id)
 
 	mut deepest := 0
 	for i in 0 .. 300 {
-		random_parser_cache_edit(mut c, doc_id)
+		random_parser_cache_edit(mut rng, mut c, doc_id)
 		// sometimes several edits go by between queries
-		if rand.intn(3) or { 0 } == 0 {
+		if rng.intn(3) or { 0 } == 0 {
 			continue
 		}
 		mut fresh := new_parser_cache_test_editor(&c, doc_id)
 		line_count := int(c.line_count(doc_id))
 		for _ in 0 .. 3 {
-			y := rand.intn(line_count) or { 0 }
+			y := rng.intn(line_count) or { 0 }
 			line_len := (c.get_line_bytes(doc_id, u64(y)) or { []u8{} }).bytestr().runes().len
-			pos := syntax.Pos{y, rand.intn(line_len + 1) or { 0 }}
+			pos := syntax.Pos{y, rng.intn(line_len + 1) or { 0 }}
 			got := m.syntax_ancestors(pos)
 			deepest = int_max(deepest, got.len)
 			assert node_names(got) == node_names(fresh.syntax_ancestors(pos)), 'after edit ${i}'
