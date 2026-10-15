@@ -60,8 +60,16 @@ jobs:
       # in the 5-CPU job container. The old 3 minute cap killed the step
       # mid-run (reported as a bare "context canceled"), so it is sized to
       # catch a genuine hang rather than to bound a healthy run.
+      #
+      # VJOBS because V's test runner otherwise allows one compile per 8 GiB
+      # of memory, and the job container is capped at 4 GiB (the runner's
+      # container.options), so every file compiled one after another. A test
+      # compile peaks around 1.1 GB, so two fit under the cap with room for
+      # the test binaries themselves.
       - name: Run tests
         timeout-minutes: 15
+        env:
+          VJOBS: '2'
         run: v run ./make.vsh verbose-test
 
   visual_regression:
