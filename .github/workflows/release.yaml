@@ -132,16 +132,30 @@ jobs:
           ref: ${{ env.TAG }}
           fetch-depth: 0
 
-      - name: Read pinned V commit
+      # The release tooling -- the pinned V and vc, build-v.sh and the upload
+      # script -- comes from the commit this workflow runs from, not the tag.
+      # On a tag push they are the same commit; on a dispatch it lets a tag
+      # cut before a tooling fix be rebuilt with that fix.
+      - name: Checkout release tooling
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: .release-tooling
+          sparse-checkout: .forgejo
+
+      - name: Read pinned V and vc commits
         id: vref
         run: |
-          V_REF=$(sed -n 's/^ARG V_REF=//p' .forgejo/ci-image/Containerfile)
-          if [ -z "$V_REF" ]; then
-            echo "::error::no ARG V_REF in .forgejo/ci-image/Containerfile"
+          containerfile=.release-tooling/.forgejo/ci-image/Containerfile
+          V_REF=$(sed -n 's/^ARG V_REF=//p' "$containerfile")
+          VC_REF=$(sed -n 's/^ARG VC_REF=//p' "$containerfile")
+          if [ -z "$V_REF" ] || [ -z "$VC_REF" ]; then
+            echo "::error::ARG V_REF and ARG VC_REF must both be set in $containerfile"
             exit 1
           fi
-          echo "V_REF=$V_REF"
-          echo "ref=$V_REF" >> "$GITHUB_OUTPUT"
+          echo "V_REF=$V_REF VC_REF=$VC_REF"
+          echo "v=$V_REF" >> "$GITHUB_OUTPUT"
+          echo "vc=$VC_REF" >> "$GITHUB_OUTPUT"
 
       # Only useful while V_REF is a commit: a branch name would key the cache
       # to whatever that branch was on the first build.
@@ -150,23 +164,17 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/v
-          key: v-${{ matrix.runner }}-${{ steps.vref.outputs.ref }}
+          key: v-${{ matrix.runner }}-${{ steps.vref.outputs.v }}-${{ steps.vref.outputs.vc }}
 
-      # The same fetch-and-make the Containerfile does. LC_ALL=C because on
-      # macOS the bootstrap pipes vc/v.c through BSD awk, which in the
-      # runner's UTF-8 locale aborts on bytes that are not valid UTF-8 and
-      # hands the compiler a truncated file ("_main" undefined).
+      # The same build the CI image runs. LC_ALL=C because on macOS the
+      # bootstrap pipes vc/v.c through BSD awk, which in the runner's UTF-8
+      # locale aborts on bytes that are not valid UTF-8 and hands the compiler
+      # a truncated file ("_main" undefined).
       - name: Build V
         if: steps.vcache.outputs.cache-hit != 'true'
         env:
           LC_ALL: C
-        run: |
-          git init ~/v
-          cd ~/v
-          git remote add origin https://github.com/vlang/v
-          git fetch --depth=1 origin "${{ steps.vref.outputs.ref }}"
-          git checkout --detach FETCH_HEAD
-          make
+        run: bash .release-tooling/.forgejo/ci-image/build-v.sh ~/v "${{ steps.vref.outputs.v }}" "${{ steps.vref.outputs.vc }}"
 
       - name: Add V to PATH
         run: |
@@ -190,7 +198,7 @@ jobs:
           FORGE_TOKEN: ${{ secrets.FORGE_RELEASE_TOKEN }}
         run: |
           shasum -a 256 lilly-${{ matrix.artifact_suffix }} | tee lilly-${{ matrix.artifact_suffix }}.sha256
-          node .forgejo/scripts/publish-release.mjs "$TAG" lilly-${{ matrix.artifact_suffix }} lilly-${{ matrix.artifact_suffix }}.sha256
+          node .release-tooling/.forgejo/scripts/publish-release.mjs "$TAG" lilly-${{ matrix.artifact_suffix }} lilly-${{ matrix.artifact_suffix }}.sha256
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

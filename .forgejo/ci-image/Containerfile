@@ -27,27 +27,22 @@ RUN apt-get update \
 # on genuine V regressions, so a floating compiler means CI and a developer's
 # machine disagree about whether the tree is broken.
 #
-# To bump it, set V_REF to a new commit (or to `master` to resume tracking
-# master) -- editing this file matches the .forgejo/ci-image/** path filter in
-# ci-image.yaml, so pushing the change rebuilds the image.
-#
-# A ref rather than a clone of master, so this takes either a SHA or a branch
-# name. Shallow, since the history is never needed and is most of the fetch.
+# VC_REF pins the vlang/vc bootstrap snapshot to match; build-v.sh says why
+# and how to pick it. Bump the two together. Editing this file matches the
+# .forgejo/ci-image/** path filter in ci-image.yaml, so pushing the change
+# rebuilds the image. The GitHub mirror's release workflow reads both from
+# here, so macOS releases build with the same V.
 ARG V_REF=3f930ed47584f90f2c3053fc393dcfa1084ddb75
+ARG VC_REF=8af812feb76c678abd86a8e682fd9ab2790e519c
 # V_CACHE_BUST is referenced inside the RUN so that changing it actually
 # invalidates this layer. While V_REF is a pinned SHA the rebuild is
 # reproducible and this only picks up base-image updates; it matters when
 # V_REF is a moving branch, where otherwise the fetch would be a cached layer
 # that only rebuilds when the base image digest changes.
 ARG V_CACHE_BUST=unset
+COPY build-v.sh /usr/local/bin/build-v.sh
 RUN echo "V cache bust: ${V_CACHE_BUST}" \
-	&& git init /opt/v \
-	&& cd /opt/v \
-	&& git remote add origin https://github.com/vlang/v \
-	&& git fetch --depth=1 origin "${V_REF}" \
-	&& git checkout --detach FETCH_HEAD \
-	&& make \
-	&& ./v version
+	&& build-v.sh /opt/v "${V_REF}" "${VC_REF}"
 ENV PATH=/opt/v:$PATH
 
 # Guard the regression this image exists to prevent. If the bundled TCC is not
