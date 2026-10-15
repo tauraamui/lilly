@@ -92,7 +92,7 @@ fn swap_active_screen(screen DebuggableModel) tea.Cmd {
 
 struct ShutdownMsg {}
 
-fn shutdown() tea.Cmd {
+fn shutdown_app() tea.Cmd {
 	return tea.msg_cmd(ShutdownMsg{})
 }
 

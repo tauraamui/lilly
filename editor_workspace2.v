@@ -527,7 +527,7 @@ fn (mut m EditorWorkspaceModel2) close_editor_update(msg CloseEditor2Msg) (tea.M
 		next_active_id := m.tree.remove(msg.editor_id_to_close) or {
 			// the last editor is going, so the process is too: there is nothing
 			// left to hold a document and the sweep would only race the exit
-			return m.clone(), shutdown()
+			return m.clone(), shutdown_app()
 		}
 		m.editors.delete(msg.editor_id_to_close)
 		// remove() hands back the closed leaf's nearest surviving neighbour, so
@@ -1061,7 +1061,7 @@ fn hide_message_after(duration time.Duration) tea.Cmd {
 fn execute_command(active_editor_id nanoid.ID, cmd string) tea.Cmd {
 	return match cmd {
 		'qa' {
-			shutdown()
+			shutdown_app()
 		}
 		'q' {
 			close_editor2(active_editor_id)

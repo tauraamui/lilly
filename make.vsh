@@ -7,6 +7,11 @@ import term
 
 const app_name = 'lilly'
 
+// Lilly is always linked statically on Linux, so a build runs on any distro
+// regardless of its glibc. macOS does not support fully static binaries. cc
+// is named outright because tcc crashes linking with -static.
+const static_flags = $if darwin { '' } $else { '-cc cc -cflags -static' }
+
 struct Scenario {
 	name    string
 	command string
@@ -42,10 +47,7 @@ const scenarios = [
 // scripted session of a few seconds "leaked" is simply "allocated", and the
 // report becomes a complete, exact attribution of every byte.
 //
-// `-old-compiler` is needed until the v3 backend stops panicking with
-// "interface method telemetry__Provider.post not implemented" on the spawned
-// telemetry post when the GC is off; the default-GC build of the same source
-// is fine, so the workaround is scoped to this task.
+// Not linked statically: heaptrack hooks allocations with LD_PRELOAD.
 const profile_app_name = '${app_name}-profile'
 
 const profile_output_dir = './profile'
@@ -106,12 +108,12 @@ mut context := build.context(
 context.task(
 	name:    'build'
 	depends: ['_generate-git-hash']
-	run:     |self| build_step('build', $if darwin { 'v -cc cc . -o ${app_name}' } $else { 'v . -o ${app_name}' })
+	run:     |self| build_step('build', $if darwin { 'v -cc cc . -o ${app_name}' } $else { 'v ${static_flags} . -o ${app_name}' })
 )
 context.task(
 	name:    'prod'
 	depends: ['_generate-git-hash']
-	run:     |self| build_step('prod', $if darwin { 'v -cc cc -prod -g . -o ${app_name}' } $else { 'v -prod -g . -o ${app_name}' })
+	run:     |self| build_step('prod', $if darwin { 'v -cc cc -prod -g . -o ${app_name}' } $else { 'v -prod -g ${static_flags} . -o ${app_name}' })
 )
 context.task(
 	name:    'build-windows'
@@ -126,17 +128,17 @@ context.task(
 context.task(
 	name:    'run'
 	depends: ['_generate-git-hash']
-	run:     |self| system($if darwin { 'v -cc cc -g run .' } $else { 'v -g run .' })
+	run:     |self| system($if darwin { 'v -cc cc -g run .' } $else { 'v -g ${static_flags} run .' })
 )
 context.task(
 	name:    'run-d'
 	depends: ['_generate-git-hash']
-	run:     |self| system($if darwin { 'export LILLY_THEME=dark && v -cc cc -g run .' } $else { 'export LILLY_THEME=dark && v -g run .' })
+	run:     |self| system($if darwin { 'export LILLY_THEME=dark && v -cc cc -g run .' } $else { 'export LILLY_THEME=dark && v -g ${static_flags} run .' })
 )
 context.task(
 	name:    'run-l'
 	depends: ['_generate-git-hash']
-	run:     |self| system($if darwin { 'export LILLY_THEME=light && v -cc cc -g run .' } $else { 'export LILLY_THEME=light && v -g run .' })
+	run:     |self| system($if darwin { 'export LILLY_THEME=light && v -cc cc -g run .' } $else { 'export LILLY_THEME=light && v -g ${static_flags} run .' })
 )
 context.task(
 	name: 'compile-make'
@@ -263,7 +265,7 @@ context.task(
 	name:    'xpty-build'
 	help:    'build lilly with golden frame support enabled'
 	depends: ['_generate-git-hash']
-	run:     |self| build_step('xpty-build', 'v -d golden_frames -g . -o lilly')
+	run:     |self| build_step('xpty-build', 'v -d golden_frames -g ${static_flags} . -o lilly')
 )
 context.task(
 	name:    'xpty-capture'
@@ -306,7 +308,7 @@ context.task(
 	name:    'profile-mem-build'
 	help:    'build lilly with the GC off, so an allocation profiler can attribute every byte'
 	depends: ['_generate-git-hash']
-	run:     |self| build_step('profile-mem-build', 'v -old-compiler -gc none -g . -o ${profile_app_name}')
+	run:     |self| build_step('profile-mem-build', 'v -gc none -g . -o ${profile_app_name}')
 )
 
 context.task(
@@ -326,9 +328,7 @@ context.task(
 			out := '${profile_output_dir}/${s.name}'
 			eprintln('')
 			eprintln(term.bright_yellow('=== profiling: ${s.name} ==='))
-			// LILLY_NO_TELEMETRY keeps the run off the network, so the profile
-			// covers the editor rather than an HTTP client
-			rc := system("LILLY_NO_TELEMETRY=1 v -g run cmd/xpty/ 'heaptrack -o ${out} ${s.command}' '${s.keys}' --output-dir ${profile_output_dir}/${s.name}-frames")
+			rc := system("v -g run cmd/xpty/ 'heaptrack -o ${out} ${s.command}' '${s.keys}' --output-dir ${profile_output_dir}/${s.name}-frames")
 			if rc != 0 {
 				eprintln(term.failed('profile-mem: scenario ${s.name} failed to run'))
 				failed = true

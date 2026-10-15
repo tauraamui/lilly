@@ -21,7 +21,6 @@ import bobatea as tea
 import lib.cfg
 import lib.documents
 import lib.clipboard
-import lib.telemetry
 
 const mod_file_content = $embed_file('v.mod').to_string()
 
@@ -175,8 +174,6 @@ fn main() {
 	mut documents_controller2 := documents.Controller2.new()
 	defer { documents_controller.free() }
 
-	metrics_thread := emit_metrics_maybe(vmod_manifest)
-
 	mut cb := clipboard.new()
 	mut petal_model := PetalModel.new(version, cfg.Config.new(), &documents_controller,
 		&documents_controller2, &cb,
@@ -189,22 +186,4 @@ fn main() {
 	mut app_ref := &app
 	petal_model.app_send = app_ref.send
 	app.run() or { panic('something went wrong! ${err}') }
-	metrics_thread.wait() or {}
-}
-
-fn emit_metrics_maybe(manifest vmod.Manifest) thread ! {
-	tp := if os.getenv('LILLY_NO_TELEMETRY') != '' {
-		telemetry.Provider(telemetry.NoOpProvider{})
-	} else {
-		telemetry.Provider(telemetry.HttpProvider.new('https://tauraamui.website/api/v1/lilly-ping'))
-	}
-
-	payload := telemetry.encode_event(telemetry.Event{
-		kind:    .launch
-		version: manifest.version
-		os:      os.uname().sysname
-		arch:    os.uname().machine
-	})
-
-	return spawn tp.post(payload)
 }

@@ -106,8 +106,6 @@ fn spawn_in_pty(program []string, cols u16, rows u16, golden_dir string) !(int, 
 
 		// Set TERM so the child knows it has color support.
 		C.setenv(c'TERM', c'xterm-256color', 1)
-		// Disable telemetry for test runs.
-		C.setenv(c'LILLY_NO_TELEMETRY', c'1', 1)
 		// If golden frame capture is requested, tell lilly where to dump frames.
 		if golden_dir.len > 0 {
 			C.setenv(c'LILLY_GOLDEN_DIR', golden_dir.str, 1)

@@ -75,10 +75,10 @@ jobs:
           # Statically linked. The image is Debian 13, whose glibc 2.41 and
           # gcc 14 have strtol and friends resolve to the C23 symbols added in
           # glibc 2.38, so a dynamic build would not start on Debian 12,
-          # Ubuntu 22.04 or anything else older. The cost of linking glibc
-          # statically is getaddrinfo, which still loads the host's NSS
-          # modules at runtime. That only affects the telemetry ping, which is
-          # best-effort anyway.
+          # Ubuntu 22.04 or anything else older. Static glibc still loads the
+          # host's NSS modules for getaddrinfo and getpw*, and a host module
+          # drags in a second, mismatched libc that crashes the process. Lilly
+          # must not resolve hostnames or look up users through NSS.
           - artifact_suffix: linux-amd64
             output: lilly-linux-amd64
             v_flags: -prod -cc gcc -cflags -static
