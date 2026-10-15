@@ -1,0 +1,59 @@
+name "TypeScript"
+extensions ".ts" ".tsx" ".mts" ".cts"
+
+words "keyword" abstract as asserts async class const debugger declare delete enum export extends function get implements import in infer instanceof interface is keyof let module namespace new of override private protected public readonly require satisfies set static type typeof unique var void with
+words "keyword.control" await break case catch continue default do else finally for if return switch throw try while yield
+words "literal" Infinity NaN false null true undefined
+words "variable.special" arguments globalThis super this
+words "storage.type.builtin" any bigint boolean never number object string symbol unknown
+words "builtin" decodeURI decodeURIComponent encodeURI encodeURIComponent escape eval isFinite isNaN parseFloat parseInt unescape
+
+context "main" {
+    rule #"//.*"# scope="comment"
+    rule #"/\*\*(?!/)"# scope="comment.doc" push="doc_comment"
+    rule #"/\*"# scope="comment" push="block_comment"
+    rule "\"" scope="string" push="double"
+    rule "'" scope="string" push="single"
+    rule "`" scope="string" push="template"
+    rule #"[A-Za-z_$][\w$]*"# words=#true
+    rule #"[A-Za-z_$][\w$]*(?=\s*\()"# scope="function"
+    rule #"(?=[A-Z])[A-Za-z_$][\w$]*"# scope="storage.type"
+    rule #"[A-Za-z_$][\w$]*"# scope="variable"
+    rule #"0[xX][\h_]+n?|0[bB][01_]+n?|0[oO][0-7_]+n?|\d[\d_]*(\.\d[\d_]*)?([eE][+\-]?\d+)?n?|\.\d[\d_]*([eE][+\-]?\d+)?"# scope="number"
+}
+
+context "block_comment" scope="comment" {
+    rule #"\*/"# pop=#true
+}
+
+context "doc_comment" scope="comment.doc" {
+    rule #"\*/"# pop=#true
+}
+
+context "double" scope="string" pop_at_eol=#true {
+    rule #"\\."# scope="string.escape"
+    rule "\"" pop=#true
+}
+
+context "single" scope="string" pop_at_eol=#true {
+    rule #"\\."# scope="string.escape"
+    rule "'" pop=#true
+}
+
+context "template" scope="string" {
+    rule #"\\."# scope="string.escape"
+    rule #"\$\{"# scope="punctuation" push="interpolation"
+    rule "`" pop=#true
+}
+
+context "interpolation" {
+    rule #"\}"# scope="punctuation" pop=#true
+    rule #"\{"# push="braces"
+    include "main"
+}
+
+context "braces" {
+    rule #"\}"# pop=#true
+    rule #"\{"# push="braces"
+    include "main"
+}

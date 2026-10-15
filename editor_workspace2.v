@@ -45,6 +45,11 @@ mut:
 	active_editor_id   nanoid.ID
 	editors            map[nanoid.ID]DebuggableModel
 	tree               boba.Tree[nanoid.ID]
+	// lex_ticking is set while a BackgroundLexTickMsg is on its way
+	lex_ticking bool
+	// last_key_mono is when the last key arrived, by time.sys_mono_now, which
+	// background lexing keeps its slices short for while keys keep coming
+	last_key_mono u64
 }
 
 struct EditorWorkspaceConfig {
@@ -80,7 +85,32 @@ fn (mut m EditorWorkspaceModel2) init() tea.Cmd {
 	return tea.sequence(tea.emit_resize(), query_git_branch())
 }
 
+// update handles `msg`, then keeps background lexing going while what it did,
+// or anything before it, left an editor with lexing to do: a file opened, or
+// an edit that changed how the lines below it lex
 fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// background lexing goes on under a dialog too
+	if msg is BackgroundLexTickMsg {
+		m.background_lex_update()
+		// the tick is the workspace's alone: passed on, every editor and
+		// dialog would clone itself for nothing on each one
+		lex_cmd := m.keep_lexing()
+		return m.clone(), lex_cmd
+	}
+	if msg is tea.KeyMsg {
+		m.last_key_mono = time.sys_mono_now()
+	}
+	mut model, cmd := m.dispatch_update(msg)
+	if mut model is EditorWorkspaceModel2 {
+		lex_cmd := model.keep_lexing()
+		if lex_cmd !is tea.NoCmd {
+			return model.clone(), tea.batch(cmd, lex_cmd)
+		}
+	}
+	return model, cmd
+}
+
+fn (mut m EditorWorkspaceModel2) dispatch_update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// ***** dialog related state *****
 	d_model, d_cmd := m.update_dialog(msg)
 	if cloned_model := d_model {
@@ -115,6 +145,17 @@ fn (mut m EditorWorkspaceModel2) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		CloseEditor2Msg {
 			return m.close_editor_update(msg)
+		}
+		ToggleSyntaxTreeMsg {
+			return m.toggle_syntax_tree_update(msg)
+		}
+		ActivateEditorMsg {
+			if msg.editor_id in m.editors {
+				m.active_editor_id = msg.editor_id
+				return m.clone(), tea.sequence(focus_editor2(m.active_editor_id), tea.emit_resize(),
+					query_editor_data2(m.active_editor_id))
+			}
+			return m.clone(), tea.no_cmd
 		}
 		ResolveUnsavedChangesMsg {
 			return m.resolve_unsaved_changes_update(msg)
@@ -429,6 +470,10 @@ fn (mut m EditorWorkspaceModel2) open_file_update(msg OpenFileMsg) (tea.Model, t
 
 	m.active_editor_id = editor_id
 	m.editors[editor_id] = e_model
+	// a syntax tree view of the editor replaced shows the new file instead
+	for view_id in m.syntax_trees_of(old_active_id) {
+		m.editors[view_id] = SyntaxTreeModel.new(view_id, e_model)
+	}
 	// the editor that was replaced took its document out of use with it, unless
 	// a split still shows the same file
 	m.sweep_documents()
@@ -476,6 +521,9 @@ fn (mut m EditorWorkspaceModel2) close_editor_update(msg CloseEditor2Msg) (tea.M
 			return m.clone(), open_unsaved_changes_dialog(m.config.theme, msg.editor_id_to_close,
 				m.editor_file_path(msg.editor_id_to_close), none)
 		}
+		// a syntax tree view goes with the editor it shows the tree of. It
+		// goes first, so the neighbour remove() hands back is never one
+		m.close_syntax_trees_of(msg.editor_id_to_close)
 		next_active_id := m.tree.remove(msg.editor_id_to_close) or {
 			// the last editor is going, so the process is too: there is nothing
 			// left to hold a document and the sweep would only race the exit
@@ -483,14 +531,66 @@ fn (mut m EditorWorkspaceModel2) close_editor_update(msg CloseEditor2Msg) (tea.M
 		}
 		m.editors.delete(msg.editor_id_to_close)
 		// remove() hands back the closed leaf's nearest surviving neighbour, so
-		// focus lands on the split that grew into the freed space.
+		// focus lands on the split that grew into the freed space. A syntax
+		// tree view there passes focus to the editor it shows, as opening one
+		// leaves the editor focused.
 		if m.active_editor_id == msg.editor_id_to_close {
 			m.active_editor_id = next_active_id
+			if view := m.editors[next_active_id] {
+				if view is SyntaxTreeModel {
+					m.active_editor_id = view.source_id
+				}
+			}
 		}
 		m.sweep_documents()
 		return m.clone(), tea.sequence(focus_editor2(m.active_editor_id), tea.emit_resize())
 	}
 	return m.clone(), tea.no_cmd
+}
+
+// toggle_syntax_tree_update opens a syntax tree view of the active editor
+// beside it, or closes the one it has. With a view active, it closes that.
+fn (mut m EditorWorkspaceModel2) toggle_syntax_tree_update(msg ToggleSyntaxTreeMsg) (tea.Model, tea.Cmd) {
+	active := m.editors[msg.editor_id] or { return m.clone(), tea.no_cmd }
+	if active is SyntaxTreeModel {
+		return m.close_editor_update(CloseEditor2Msg{
+			active_editor_id:   msg.editor_id
+			editor_id_to_close: msg.editor_id
+		})
+	}
+	if active !is EditorModel2 {
+		return m.clone(), tea.no_cmd
+	}
+	open_views := m.syntax_trees_of(msg.editor_id)
+	if open_views.len > 0 {
+		m.close_syntax_trees_of(msg.editor_id)
+		return m.clone(), tea.emit_resize()
+	}
+	view_id := nanoid.simple()
+	if !m.tree.split(msg.editor_id, view_id, .horizontal) {
+		return m.clone(), tea.no_cmd
+	}
+	// the editor keeps focus, so the view follows the cursor as it moves
+	m.editors[view_id] = SyntaxTreeModel.new(view_id, active as EditorModel2)
+	return m.clone(), tea.emit_resize()
+}
+
+// syntax_trees_of lists the syntax tree views showing an editor's document
+fn (m EditorWorkspaceModel2) syntax_trees_of(editor_id nanoid.ID) []nanoid.ID {
+	mut views := []nanoid.ID{}
+	for id, editor in m.editors {
+		if editor is SyntaxTreeModel && editor.source_id == editor_id {
+			views << id
+		}
+	}
+	return views
+}
+
+fn (mut m EditorWorkspaceModel2) close_syntax_trees_of(editor_id nanoid.ID) {
+	for view_id in m.syntax_trees_of(editor_id) {
+		m.tree.remove(view_id) or {}
+		m.editors.delete(view_id)
+	}
 }
 
 // resolve_unsaved_changes_update carries out what the dialog was told to do and
@@ -870,6 +970,29 @@ fn resolve_unsaved_changes(editor_id nanoid.ID, save bool, then_open ?string) te
 	})
 }
 
+// ToggleSyntaxTreeMsg opens or closes the syntax tree view of an editor
+struct ToggleSyntaxTreeMsg {
+	editor_id nanoid.ID
+}
+
+fn toggle_syntax_tree(editor_id nanoid.ID) tea.Cmd {
+	return tea.msg_cmd(ToggleSyntaxTreeMsg{
+		editor_id: editor_id
+	})
+}
+
+// ActivateEditorMsg makes a split the active one, for a split that hands
+// focus to another, like the syntax tree view jumping to a node
+struct ActivateEditorMsg {
+	editor_id nanoid.ID
+}
+
+fn activate_editor(editor_id nanoid.ID) tea.Cmd {
+	return tea.msg_cmd(ActivateEditorMsg{
+		editor_id: editor_id
+	})
+}
+
 fn close_editor2(editor_id nanoid.ID) tea.Cmd {
 	return tea.msg_cmd(CloseEditor2Msg{
 		active_editor_id:   editor_id
@@ -951,6 +1074,9 @@ fn execute_command(active_editor_id nanoid.ID, cmd string) tea.Cmd {
 		}
 		'sp' {
 			open_editor_in_split_cmd(active_editor_id, .vertical)
+		}
+		'InspectTree', 'inspecttree' {
+			toggle_syntax_tree(active_editor_id)
 		}
 		else {
 			// return display_error_message('unrecognised command: ${cmd}')

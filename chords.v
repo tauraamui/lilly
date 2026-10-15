@@ -18,6 +18,9 @@ struct ChordAction {
 	count    int // effective repeat count (pre_count * post_count, minimum 1)
 	operator ?u8 // none = pure motion, `d` = delete, etc.
 	motion   string
+	// counted is set when a count was typed, which `%` needs to tell `1%`,
+	// the first line, from a bare `%`
+	counted bool
 }
 
 enum ChordState {
@@ -28,6 +31,7 @@ enum ChordState {
 	motion_prefix // got a multi-char motion prefix like 'g'
 	z_motion_prefix
 	op_motion_prefix // got operator + 'g', expecting second char
+	text_object      // got `i` or `a` after an operator or in visual mode, expecting the object
 }
 
 struct Chord {
@@ -36,6 +40,7 @@ mut:
 	pre_count  int
 	post_count int
 	operator   ?u8
+	object     u8 // `i` or `a`, while a text object is pending
 	state      ChordState = .empty
 }
 
@@ -59,6 +64,11 @@ fn (mut c Chord) feed_internal(key string, in_visual bool) ?ChordAction {
 			if c.is_count_digit(ch, c.pre_count) {
 				c.pre_count = c.pre_count * 10 + int(ch - `0`)
 				c.state = .pre_count
+				return none
+			}
+			if in_visual && ch in [`i`, `a`] {
+				c.object = ch
+				c.state = .text_object
 				return none
 			}
 			if c.is_operator(ch) {
@@ -88,6 +98,7 @@ fn (mut c Chord) feed_internal(key string, in_visual bool) ?ChordAction {
 					count:    c.effective_count()
 					operator: none
 					motion:   motion
+					counted:  c.pre_count > 0
 				}
 			}
 			// unrecognised key, abort current chord
@@ -115,12 +126,18 @@ fn (mut c Chord) feed_internal(key string, in_visual bool) ?ChordAction {
 				c.state = .op_motion_prefix
 				return none
 			}
+			if ch in [`i`, `a`] {
+				c.object = ch
+				c.state = .text_object
+				return none
+			}
 			if motion := c.single_char_motion(ch) {
 				defer { c.reset() }
 				return ChordAction{
 					count:    c.effective_count()
 					operator: c.operator
 					motion:   motion
+					counted:  c.pre_count > 0 || c.post_count > 0
 				}
 			}
 			c.reset()
@@ -147,14 +164,24 @@ fn (mut c Chord) feed_internal(key string, in_visual bool) ?ChordAction {
 		}
 		.z_motion_prefix {
 			defer { c.reset() }
-			if ch == `z` {
+			// zz, and the fold commands
+			if ch in [`z`, `o`, `O`, `c`, `C`, `a`, `A`, `R`, `M`, `j`, `k`] {
 				return ChordAction{
 					count:    c.effective_count()
 					operator: none
-					motion:   'zz'
+					motion:   'z${rune(ch)}'
 				}
 			}
 			return none
+		}
+		.text_object {
+			defer { c.reset() }
+			object := c.text_object(ch)?
+			return ChordAction{
+				count:    c.effective_count()
+				operator: c.operator
+				motion:   '${rune(c.object)}${rune(object)}'
+			}
 		}
 		.op_motion_prefix {
 			defer { c.reset() }
@@ -179,6 +206,7 @@ fn (mut c Chord) reset() {
 	c.pre_count = 0
 	c.post_count = 0
 	c.operator = none
+	c.object = 0
 	c.state = .empty
 }
 
@@ -189,6 +217,24 @@ fn (c Chord) is_count_digit(ch u8, current_count int) bool {
 
 fn (c Chord) is_operator(ch u8) bool {
 	return ch in [`d`, `c`, `y`]
+}
+
+// pending_operator reports whether an operator is waiting for its motion or
+// text object, so the next key is the chord's, not a mode switch
+fn (c Chord) pending_operator() bool {
+	return c.state in [.have_operator, .post_count, .op_motion_prefix, .text_object]
+}
+
+// text_object gives the delimiter a text object is named by, the opening one
+// for a bracket, whichever of the pair or Vim's `b` and `B` names it
+fn (c Chord) text_object(ch u8) ?u8 {
+	return match ch {
+		`(`, `)`, `b` { `(` }
+		`[`, `]` { `[` }
+		`{`, `}`, `B` { `{` }
+		`"`, `'`, `\`` { ch }
+		else { none }
+	}
 }
 
 fn (c Chord) single_char_motion(ch u8) ?string {
@@ -216,6 +262,7 @@ fn (c Chord) single_char_motion(ch u8) ?string {
 		`G` { 'G' }
 		`u` { 'u' }
 		`^` { '^' }
+		`%` { '%' }
 		else { none }
 	}
 }

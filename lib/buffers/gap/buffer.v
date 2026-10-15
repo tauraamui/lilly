@@ -175,6 +175,24 @@ pub fn (gb Buffer) get(pos u64) ?u8 {
 	return gb.buf[offset]
 }
 
+// copy_range copies the bytes from logical position `start` up to `end` into
+// `out`, replacing what it held
+pub fn (gb Buffer) copy_range(start u64, end u64, mut out []u8) {
+	out.clear()
+	if end <= start {
+		return
+	}
+	if start < gb.ccur {
+		left_end := if end < gb.ccur { end } else { gb.ccur }
+		out << gb.buf[int(start)..int(left_end)]
+	}
+	if end > gb.ccur {
+		gap := gb.gap_size()
+		right_start := if start > gb.ccur { start } else { gb.ccur }
+		out << gb.buf[int(right_start + gap)..int(end + gap)]
+	}
+}
+
 pub fn (gb Buffer) rawstr() string {
 	return gb.buf.map(if it == 0x0 { u8(`_`) } else { it }).bytestr()
 }

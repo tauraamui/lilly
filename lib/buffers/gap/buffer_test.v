@@ -231,3 +231,25 @@ fn test_move_cur_left_and_right_with_no_gap_keep_content() {
 	gb.insert(u8(`>`))
 	assert gb.str() == 'ab>c'
 }
+
+fn test_copy_range_reads_around_the_gap() {
+	mut gb := Buffer.new(test_gap_size)
+	gb.insert_bytes('hello world'.bytes())
+	// the gap sits between `hello` and ` world`
+	gb.move_cur_to(5)
+	assert gb.ccur == 5 && gb.gap_size() > 0
+	text := gb.str()
+	mut out := []u8{}
+	for start in 0 .. text.len + 1 {
+		for end in start .. text.len + 1 {
+			gb.copy_range(u64(start), u64(end), mut out)
+			assert out.bytestr() == text[start..end], '${start}..${end}'
+		}
+	}
+	// what out held before is replaced
+	gb.copy_range(0, 5, mut out)
+	gb.copy_range(6, 8, mut out)
+	assert out.bytestr() == 'wo'
+	gb.copy_range(4, 2, mut out)
+	assert out.len == 0
+}

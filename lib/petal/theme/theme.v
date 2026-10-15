@@ -40,10 +40,16 @@ pub:
 	status_orange tea.Color @[required]
 	status_lilac  tea.Color @[required]
 
-	syntax_comment tea.Color @[required]
-	syntax_string  tea.Color @[required]
-	syntax_literal tea.Color @[required]
-	syntax_builtin tea.Color @[required]
+	// syntax_<scope> colours tokens of that syntax.Scope. A scope without a
+	// field of its own takes its parent's colour (keyword_control takes
+	// syntax_keyword), and a scope with no field above it isn't coloured.
+	syntax_comment              tea.Color @[required]
+	syntax_string               tea.Color @[required]
+	syntax_number               tea.Color @[required]
+	syntax_literal              tea.Color @[required]
+	syntax_keyword              tea.Color @[required]
+	syntax_builtin              tea.Color @[required]
+	syntax_storage_type_builtin tea.Color @[required]
 
 	cursor_line_bg tea.Color @[required]
 }
@@ -70,10 +76,13 @@ pub const dark_theme = Theme{
 	status_orange: tea.Color.ansi(222)
 	status_lilac:  tea.Color.ansi(134)
 
-	syntax_comment: tea.Color.ansi(241)
-	syntax_string:  dark_petal_pink
-	syntax_literal: tea.Color.ansi(84)
-	syntax_builtin: dark_petal_red
+	syntax_comment:              tea.Color.ansi(241)
+	syntax_string:               dark_petal_pink
+	syntax_number:               tea.Color.ansi(199)
+	syntax_literal:              tea.Color.ansi(84)
+	syntax_keyword:              dark_petal_red
+	syntax_builtin:              dark_petal_red
+	syntax_storage_type_builtin: tea.Color.ansi(84)
 
 	cursor_line_bg: tea.Color.ansi(235)
 }
@@ -101,10 +110,13 @@ pub const light_theme = Theme{
 	status_orange: tea.Color.ansi(222)
 	status_lilac:  tea.Color.ansi(134)
 
-	syntax_comment: light_subtle_light_grey
-	syntax_string:  light_petal_pink
-	syntax_literal: light_petal_green
-	syntax_builtin: dark_theme.petal_red
+	syntax_comment:              light_subtle_light_grey
+	syntax_string:               light_petal_pink
+	syntax_number:               tea.Color.ansi(199)
+	syntax_literal:              light_petal_green
+	syntax_keyword:              dark_theme.petal_red
+	syntax_builtin:              dark_theme.petal_red
+	syntax_storage_type_builtin: light_petal_green
 
 	cursor_line_bg: tea.Color.ansi(254)
 }

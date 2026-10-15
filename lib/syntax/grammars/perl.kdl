@@ -1,0 +1,39 @@
+name "Perl"
+extensions ".pl" ".pm" ".t"
+
+words "keyword" CORE __DATA__ __END__ __FILE__ __LINE__ __PACKAGE__ local lock my no our package q qq qr qw qx s sub tr use y
+words "keyword.control" continue do else elsif for foreach if last next redo return unless until while
+words "keyword.operator" and cmp eq ge gt le lt ne not or xor
+
+context "main" {
+    rule #"#.*"# scope="comment"
+    // POD documentation runs from a =word line to =cut
+    rule #"^=[A-Za-z]\w*.*"# scope="comment.doc" push="pod"
+    rule "\"" scope="string" push="double"
+    rule "'" scope="string" push="single"
+    rule "`" scope="string" push="backtick"
+    rule #"[$@%&]#?\{?\^?[A-Za-z_][\w:]*|\$[0-9_!@/\;,.]"# scope="variable"
+    rule #"[A-Za-z_]\w*"# words=#true
+    rule #"[A-Za-z_]\w*(?=\s*\()"# scope="function"
+    rule #"[A-Za-z_][\w:]*"# scope="variable"
+    rule #"0[xX][\h_]+|0[bB][01_]+|\d[\d_]*(\.\d[\d_]*)?([eE][+\-]?\d+)?"# scope="number"
+}
+
+context "pod" scope="comment.doc" {
+    rule #"^=cut.*"# pop=#true
+}
+
+context "double" scope="string" {
+    rule #"\\."# scope="string.escape"
+    rule "\"" pop=#true
+}
+
+context "single" scope="string" {
+    rule #"\\."# scope="string.escape"
+    rule "'" pop=#true
+}
+
+context "backtick" scope="string" {
+    rule #"\\."# scope="string.escape"
+    rule "`" pop=#true
+}

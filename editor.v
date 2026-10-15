@@ -635,13 +635,7 @@ fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				SyntaxLoadedMsg {
 					if msg.id == m.id {
 						m.lang_syn = msg.msg.syn
-						mut extra_id_chars := []rune{cap: m.lang_syn.identifier_chars.len}
-						for s in m.lang_syn.identifier_chars {
-							for r in s.runes() {
-								extra_id_chars << r
-							}
-						}
-						m.token_parser.set_extra_identifier_chars(extra_id_chars)
+						m.token_parser.set_syntax(m.lang_syn)
 						m.invalidate_parser_cache()
 						if msg.msg.err_msg.len > 0 {
 							cmds << debug_log(msg.msg.err_msg)
@@ -761,7 +755,7 @@ fn (mut m EditorModel) view(mut ctx tea.Context) {
 		defer { ctx.clear_offsets_from(offset_id) }
 		line_str := l.string()
 		line_content := m.arena.expand_tabs(line_str, m.tab_width)
-		line_tokens := m.token_parser.parse_line(y, line_content)
+		line_tokens := m.token_parser.parse_line(line_content)
 		// fill reusable rune buffer instead of allocating via .runes()
 		m.rune_buf.clear()
 		for r in line_content.runes_iterator() {

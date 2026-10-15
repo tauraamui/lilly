@@ -50,6 +50,10 @@ jobs:
         run: rm -rf vlang/
 
       - run: v run ./make.vsh build
+
+      - name: Check generated lexers are up to date
+        run: v run ./make.vsh verify-syntax-gen
+
       # Each of the seven main-module test files relinks the whole editor, so
       # most of the wall time here is comptime, not test runtime: ~130s of
       # compile across 30 files on a 3-job local machine, and appreciably more

@@ -123,6 +123,12 @@ pub fn (mut dc Controller2) redo(doc_id nanoid.ID) {
 	dc.docs[doc_id].redo()
 }
 
+// line_changes_since reports which lines of the document changed after
+// generation `gen`, for readers keeping per-line state. Pass 0 the first time.
+pub fn (mut dc Controller2) line_changes_since(doc_id nanoid.ID, gen u64) buffers.LineChanges {
+	return dc.docs[doc_id].line_changes_since(gen)
+}
+
 pub fn (mut dc Controller2) move_cursor_left(doc_id nanoid.ID) {
 	dc.docs[doc_id].move_cursor_left()
 }
@@ -149,6 +155,12 @@ pub fn (mut dc Controller2) move_cursor_up(doc_id nanoid.ID) {
 
 pub fn (mut dc Controller2) move_cursor_down(doc_id nanoid.ID) {
 	dc.docs[doc_id].move_cursor_down()
+}
+
+// move_cursor_lines moves the cursor `n` lines down, or up for a negative `n`,
+// as that many presses of j or k would
+pub fn (mut dc Controller2) move_cursor_lines(doc_id nanoid.ID, n int) {
+	dc.docs[doc_id].move_cursor_lines(n)
 }
 
 pub fn (mut dc Controller2) move_cursor_to_previous_blank_line(doc_id nanoid.ID) {
@@ -251,6 +263,13 @@ pub fn (dc Controller2) resolve_prev_line_whitespace_prefix(doc_id nanoid.ID) []
 
 pub fn (mut dc Controller2) get_line_bytes(doc_id nanoid.ID, y u64) ?[]u8 {
 	return dc.docs[doc_id].get_line_bytes(y)
+}
+
+// line_runes_into decodes line `y` into `out`, with `scratch` holding its
+// bytes on the way, allocating nothing once the two have grown. It returns
+// false past the last line.
+pub fn (mut dc Controller2) line_runes_into(doc_id nanoid.ID, y u64, mut scratch []u8, mut out []rune) bool {
+	return dc.docs[doc_id].line_runes_into(y, mut scratch, mut out)
 }
 
 pub fn (dc Controller2) cursor_line_and_x(doc_id nanoid.ID) (u64, u64) {

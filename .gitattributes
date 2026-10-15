@@ -3,3 +3,7 @@
 *.v linguist-language=V
 *.c.v linguist-language=V
 *.vsh linguist-language=V
+
+# The lexers are generated from lib/syntax/grammars by cmd/syntaxgen, so diffs
+# and reviews collapse them
+lib/syntax/lexer_*.v linguist-generated=true

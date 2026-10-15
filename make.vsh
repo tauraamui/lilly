@@ -156,6 +156,12 @@ context.task(
 	run:     |self| exit(system($if darwin { 'v -cc cc -g -stats test .' } $else { 'v -g -stats test .' }))
 )
 
+// SYNTAX TASKS
+// the lexers in lib/syntax are generated from lib/syntax/grammars and
+// committed; regenerate them after editing a grammar
+context.task(name: 'syntax-gen', run: |self| exit(system('v run cmd/syntaxgen')))
+context.task(name: 'verify-syntax-gen', run: |self| exit(system('v run cmd/syntaxgen --check')))
+
 // UTIL TASKS
 context.task(name: 'format', run: |self| system('v fmt -w *.v lib/'))
 context.task(name: 'verify-format', run: |self| exit(system('v fmt -inprocess -verify *.v lib/')))

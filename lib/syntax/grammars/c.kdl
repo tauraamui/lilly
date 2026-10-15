@@ -1,0 +1,34 @@
+name "C"
+extensions ".c" ".h" ".cpp" ".hh" ".hpp" ".cc"
+
+words "keyword" auto const enum extern inline register restrict sizeof static struct typedef union volatile
+words "keyword.control" break case continue default do else for goto if return switch while
+words "literal" true false NULL
+words "storage.type.builtin" bool char double float int long short signed unsigned void size_t
+
+context "main" {
+    rule #"//.*"# scope="comment"
+    rule #"/\*"# scope="comment" push="block_comment"
+    rule #"^\s*#\s*\w*"# scope="keyword.directive" push="directive"
+    rule "\"" scope="string" push="double"
+    rule #"'(\\.[^']*|[^'\\])'"# scope="string"
+    rule #"[A-Za-z_]\w*"# words=#true
+    rule #"[A-Za-z_]\w*(?=\s*\()"# scope="function"
+    rule #"[A-Za-z_]\w*"# scope="variable"
+    rule #"0[xX][\h']+[uUlL]*|\d[\d']*(\.\d*)?([eE][+\-]?\d+)?[uUlLfF]*|\.\d+([eE][+\-]?\d+)?[fFlL]?"# scope="number"
+}
+
+context "block_comment" scope="comment" {
+    rule #"\*/"# pop=#true
+}
+
+context "double" scope="string" pop_at_eol=#true {
+    rule #"\\."# scope="string.escape"
+    rule "\"" pop=#true
+}
+
+// the rest of a preprocessor line: #include <file> names a file
+context "directive" pop_at_eol=#true {
+    rule "<[^>]*>" scope="string"
+    include "main"
+}

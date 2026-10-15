@@ -1,0 +1,57 @@
+// Markdown (CommonMark). The code in a fenced block whose info string names a
+// language lilly knows is lexed by that language's grammar, embedded until
+// the closing fence.
+name "Markdown"
+extensions ".md" ".markdown"
+
+context "main" {
+    // A fence closes at the first fence line after it, whichever of ``` and
+    // ~~~ it is and however long, where CommonMark wants the opener's
+    // character and at least its length. The info string can't contain
+    // backticks after a backtick fence, which isn't checked either.
+    rule #"^ {0,3}(`{3,}|~{3,})\s*(c|h)(?![\w+#\-]).*"# scope="punctuation" embed="c" escape=#"^ {0,3}(`{3,}|~{3,})\s*$"#
+    rule #"^ {0,3}(`{3,}|~{3,})\s*gleam(?![\w+#\-]).*"# scope="punctuation" embed="gleam" escape=#"^ {0,3}(`{3,}|~{3,})\s*$"#
+    rule #"^ {0,3}(`{3,}|~{3,})\s*(golang|go)(?![\w+#\-]).*"# scope="punctuation" embed="golang" escape=#"^ {0,3}(`{3,}|~{3,})\s*$"#
+    rule #"^ {0,3}(`{3,}|~{3,})\s*(javascript|jsx|mjs|js)(?![\w+#\-]).*"# scope="punctuation" embed="javascript" escape=#"^ {0,3}(`{3,}|~{3,})\s*$"#
+    rule #"^ {0,3}(`{3,}|~{3,})\s*(perl|pl)(?![\w+#\-]).*"# scope="punctuation" embed="perl" escape=#"^ {0,3}(`{3,}|~{3,})\s*$"#
+    rule #"^ {0,3}(`{3,}|~{3,})\s*(python3|python|py)(?![\w+#\-]).*"# scope="punctuation" embed="python" escape=#"^ {0,3}(`{3,}|~{3,})\s*$"#
+    rule #"^ {0,3}(`{3,}|~{3,})\s*(rust|rs)(?![\w+#\-]).*"# scope="punctuation" embed="rust" escape=#"^ {0,3}(`{3,}|~{3,})\s*$"#
+    rule #"^ {0,3}(`{3,}|~{3,})\s*(typescript|tsx|ts)(?![\w+#\-]).*"# scope="punctuation" embed="typescript" escape=#"^ {0,3}(`{3,}|~{3,})\s*$"#
+    rule #"^ {0,3}(`{3,}|~{3,})\s*(vlang|vsh|v)(?![\w+#\-]).*"# scope="punctuation" embed="v" escape=#"^ {0,3}(`{3,}|~{3,})\s*$"#
+    rule #"^ {0,3}(`{3,}|~{3,})\s*zig(?![\w+#\-]).*"# scope="punctuation" embed="zig" escape=#"^ {0,3}(`{3,}|~{3,})\s*$"#
+    // any other fence, or one with no info string
+    rule #"^ {0,3}(`{3,}|~{3,}).*"# scope="punctuation" push="fence"
+    rule #"^ {0,3}#{1,6}(?=\s|$)"# scope="punctuation" push="heading"
+    rule #"^ {0,3}\[[^\]]+\]:"# scope="label"
+    rule #"^\s*>"# scope="punctuation"
+    rule #"^\s*([*+\-]|\d{1,9}[.)])(?=\s|$)"# scope="punctuation"
+    include "inline"
+}
+
+context "inline" {
+    rule #"\\[!-/:-@\[-`{-~]"# scope="string.escape"
+    rule #"``([^`]|`(?!`))+``"# scope="string"
+    rule #"`[^`]+`"# scope="string"
+    rule #"\]\("# scope="punctuation" push="link_destination"
+    rule #"<[A-Za-z][A-Za-z0-9+.\-]{1,31}:[^\s<>]*>"# scope="string"
+    rule "<!--" scope="comment" push="html_comment"
+}
+
+// an ATX heading, `#` to `######`, is one line
+context "heading" scope="keyword" pop_at_eol=#true {
+    include "inline"
+}
+
+// a fenced block in a language lilly doesn't know
+context "fence" scope="string" {
+    rule #"^ {0,3}(`{3,}|~{3,})\s*$"# scope="punctuation" pop=#true
+}
+
+// where a link goes, after its text: `[text](destination "title")`
+context "link_destination" scope="string" pop_at_eol=#true {
+    rule #"\)"# scope="punctuation" pop=#true
+}
+
+context "html_comment" scope="comment" {
+    rule "-->" pop=#true
+}

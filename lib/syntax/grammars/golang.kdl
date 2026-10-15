@@ -1,0 +1,34 @@
+name "Go"
+extensions ".go"
+
+words "keyword" chan const func import interface map package struct type var
+words "keyword.control" break case continue default defer else fallthrough for go goto if range return select switch
+words "literal" nil true false iota
+words "storage.type.builtin" any bool byte comparable complex64 complex128 error float32 float64 int int8 int16 int32 int64 rune string uint uint8 uint16 uint32 uint64 uintptr
+words "builtin" append cap clear close complex copy delete imag len make max min new panic print println real recover
+
+context "main" {
+    rule #"//.*"# scope="comment"
+    rule #"/\*"# scope="comment" push="block_comment"
+    rule "\"" scope="string" push="double"
+    rule "`" scope="string" push="raw"
+    rule #"'(\\.[^']*|[^'\\])'"# scope="string"
+    rule #"[A-Za-z_]\w*"# words=#true
+    rule #"[A-Za-z_]\w*(?=\()"# scope="function"
+    rule #"[A-Za-z_]\w*"# scope="variable"
+    rule #"0[xX][\h_]+(\.[\h_]*)?([pP][+\-]?\d+)?i?|0[bB][01_]+|0[oO][0-7_]+|\d[\d_]*(\.\d[\d_]*)?([eE][+\-]?\d+)?i?|\.\d[\d_]*([eE][+\-]?\d+)?i?"# scope="number"
+}
+
+context "block_comment" scope="comment" {
+    rule #"\*/"# pop=#true
+}
+
+// interpreted strings end with their line
+context "double" scope="string" pop_at_eol=#true {
+    rule #"\\."# scope="string.escape"
+    rule "\"" pop=#true
+}
+
+context "raw" scope="string" {
+    rule "`" pop=#true
+}

@@ -102,18 +102,12 @@ fn test_resolve_from_extension_resolves_perl_syntax() {
 
 @[assert_continues]
 fn test_loads_builtin_syntax() {
-	builtins := load_builtin_syntaxes()
-	assert builtins.len == 10
-	assert builtins[0].name == 'V'
-	assert builtins[1].name == 'Go'
-	assert builtins[2].name == 'C'
-	assert builtins[3].name == 'Rust'
-	assert builtins[4].name == 'JavaScript'
-	assert builtins[5].name == 'TypeScript'
-	assert builtins[6].name == 'Python'
-	assert builtins[7].name == 'Perl'
-	assert builtins[8].name == 'Zig'
-	assert builtins[9].name == 'Gleam'
+	names := load_builtin_syntaxes().map(it.name)
+	assert names.len == 11
+	for name in ['V', 'Go', 'C', 'Rust', 'JavaScript', 'TypeScript', 'Python', 'Perl', 'Zig', 'Gleam',
+		'Markdown'] {
+		assert name in names
+	}
 }
 
 @[assert_continues]
@@ -123,7 +117,6 @@ fn test_resolve_from_extension_resolves_zig_syntax() {
 		return
 	}
 	assert syn.name == 'Zig'
-	assert '@' in syn.identifier_chars
 	assert '@import' in syn.builtins
 }
 
@@ -135,4 +128,9 @@ fn test_resolve_from_extension_resolves_gleam_syntax() {
 	}
 	assert syn.name == 'Gleam'
 	assert 'binary' in syn.builtins
+}
+
+fn test_resolve_from_extension_resolves_markdown_syntax() {
+	assert resolve_from_extension('README.md')!.name == 'Markdown'
+	assert resolve_from_extension('notes.markdown')!.lang == .markdown
 }

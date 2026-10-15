@@ -1,40 +1,40 @@
- 37         }                                                                                                           
- 36     }                                                                                                               
- 35     gb.gap = position                                                                                               
- 34 }                                                                                                                   
- 33                                                                                                                     
- 32 func (gb *GapBuffer) Delete(start, end int) {                                                                       
- 31     if start < 0 || end > gb.size || start >= end {                                                                 
- 30         return                                                                                                      
- 29     }                                                                                                               
- 28     copy(gb.data[start:], gb.data[end:gb.size])                                                                     
- 27     gb.size -= (end - start)                                                                                        
- 26     gb.gap -= (end - start)                                                                                         
- 25 }                                                                                                                   
- 24                                                                                                                     
- 23 func (gb *GapBuffer) Insert(runes []rune) {                                                                         
- 22     for _, r := range runes {                                                                                       
- 21         if gb.size < len(gb.data) {                                                                                 
- 20             gb.data[gb.gap] = r                                                                                     
- 19             gb.gap++                                                                                                
- 18             gb.size++                                                                                               
- 17         }                                                                                                           
- 16     }                                                                                                               
- 15 }                                                                                                                   
- 14                                                                                                                     
- 13 func (gb *GapBuffer) String() string {                                                                              
- 12     return string(gb.data[:gb.size])                                                                                
- 11 }                                                                                                                   
- 10                                                                                                                     
-  9 func main() {                                                                                                       
-  8     gb := NewGapBuffer(10)                                                                                          
-  7     gb.Insert([]rune("Hello"))                                                                                      
-  6     gb.MoveGap(5)                                                                                                   
-  5     gb.Insert([]rune(" World"))                                                                                     
-  4     gb.Delete(5, 11)                                                                                                
-  3     fmt.Println(gb.String()) // Output: Hello                                                                       
-  2 }                                                                                                                   
-  1                                                                                                                     
- 70                                                                                                                     
+37         }                                                                                                            
+36     }                                                                                                                
+35     gb.gap = position                                                                                                
+34 }                                                                                                                    
+33                                                                                                                      
+32 func (gb *GapBuffer) Delete(start, end int) {                                                                        
+31     if start < 0 || end > gb.size || start >= end {                                                                  
+30         return                                                                                                       
+29     }                                                                                                                
+28     copy(gb.data[start:], gb.data[end:gb.size])                                                                      
+27     gb.size -= (end - start)                                                                                         
+26     gb.gap -= (end - start)                                                                                          
+25 }                                                                                                                    
+24                                                                                                                      
+23 func (gb *GapBuffer) Insert(runes []rune) {                                                                          
+22     for _, r := range runes {                                                                                        
+21         if gb.size < len(gb.data) {                                                                                  
+20             gb.data[gb.gap] = r                                                                                      
+19             gb.gap++                                                                                                 
+18             gb.size++                                                                                                
+17         }                                                                                                            
+16     }                                                                                                                
+15 }                                                                                                                    
+14                                                                                                                      
+13 func (gb *GapBuffer) String() string {                                                                               
+12     return string(gb.data[:gb.size])                                                                                 
+11 }                                                                                                                    
+10                                                                                                                      
+ 9 func main() {                                                                                                        
+ 8     gb := NewGapBuffer(10)                                                                                           
+ 7     gb.Insert([]rune("Hello"))                                                                                       
+ 6     gb.MoveGap(5)                                                                                                    
+ 5     gb.Insert([]rune(" World"))                                                                                      
+ 4     gb.Delete(5, 11)                                                                                                 
+ 3     fmt.Println(gb.String()) // Output: Hello                                                                        
+ 2 }                                                                                                                    
+ 1                                                                                                                      
+70                                                                                                                      
 █COMMAND██0003.txt██ master█                                                                            █69:0█
 :                                                                                                                       

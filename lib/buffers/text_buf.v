@@ -57,6 +57,9 @@ mut:
 	data_buf gap.Buffer
 	line_buf line.Buffer
 	history  History
+	// line_changes records which lines each edit touched, for readers that
+	// keep per-line state (see line_changes_since)
+	line_changes LineChangeLog
 	// goal_column is the sticky "curswant" column (in graphemes) remembered
 	// across a run of consecutive vertical moves, so passing through a
 	// shorter line and back doesn't lose the original column. -1 means
@@ -204,11 +207,15 @@ fn (mut tb TextBuffer) insert_byte(c u8) {
 	if tb.history.recording {
 		tb.record(.insert, tb.data_buf.ccur(), [c])
 	}
+	y := tb.edit_line()
 	tb.data_buf.insert(c)
 	tb.line_buf.apply_delta(1)
-	if c == newline_hex {
-		tb.line_buf.insert_after_current(tb.data_buf.ccur())
+	if c != newline_hex {
+		tb.line_changes.add(first: y, last: y)
+		return
 	}
+	tb.line_buf.insert_after_current(tb.data_buf.ccur())
+	tb.line_changes.add(first: y, last: y + 1, delta: 1)
 }
 
 pub fn (mut tb TextBuffer) insert(c u8) {
@@ -231,6 +238,9 @@ pub fn (mut tb TextBuffer) backspace() {
 		removed[i] = tb.data_buf.get(start + u64(i)) or { 0 }
 	}
 	tb.record(.delete, start, removed)
+	removed_newlines := count_newlines(removed)
+	y := tb.edit_line() - removed_newlines
+	tb.line_changes.add(first: y, last: y, delta: -removed_newlines)
 	deleted_newline := tb.data_buf.get(start) or { 0 } == newline_hex
 	for _ in start .. cur {
 		tb.data_buf.backspace()
@@ -251,6 +261,8 @@ pub fn (mut tb TextBuffer) delete() {
 		removed[i] = tb.data_buf.get(cur + u64(i)) or { 0 }
 	}
 	tb.record(.delete, cur, removed)
+	y := tb.edit_line()
+	tb.line_changes.add(first: y, last: y, delta: -count_newlines(removed))
 	for _ in cur .. end {
 		tb.data_buf.delete()
 	}
@@ -356,14 +368,30 @@ pub fn (mut tb TextBuffer) delete_range(start_y u64, start_x u64, end_y u64, end
 // recorded ops. Does NOT record history; callers manage that.
 fn (mut tb TextBuffer) delete_bytes_at(offset u64, n int) {
 	tb.move_cursor_to_offset(offset)
+	y := tb.edit_line()
+	mut removed_newlines := 0
 	for _ in 0 .. n {
 		deleted := tb.data_buf.get(offset) or { break }
 		tb.data_buf.delete()
 		tb.line_buf.apply_delta(-1)
 		if deleted == newline_hex {
 			tb.line_buf.remove_line_after_current()
+			removed_newlines++
 		}
 	}
+	tb.line_changes.add(first: y, last: y, delta: -removed_newlines)
+}
+
+// edit_line is the line an edit at the cursor lands on
+fn (tb TextBuffer) edit_line() int {
+	line_count := tb.line_buf.len()
+	if line_count == 0 {
+		return 0
+	}
+	if tb.line_buf.current_line >= u64(line_count) {
+		return line_count - 1
+	}
+	return int(tb.line_buf.current_line)
 }
 
 fn (tb TextBuffer) byte_offset_at(y u64, x u64) u64 {
@@ -426,6 +454,13 @@ pub fn (mut tb TextBuffer) move_cursor_up() {
 
 pub fn (mut tb TextBuffer) move_cursor_down() {
 	tb.move_cursor_vertical(1)
+}
+
+// move_cursor_lines moves the cursor `n` lines down, or up for a negative
+// `n`, as that many j or k presses would but in one step, keeping to the goal
+// column. It stops at the first or last line.
+pub fn (mut tb TextBuffer) move_cursor_lines(n int) {
+	tb.move_cursor_vertical(n)
 }
 
 pub fn (mut tb TextBuffer) begin_undo_group() {
@@ -524,10 +559,14 @@ fn (mut tb TextBuffer) move_cursor_vertical(direction int) {
 		return
 	}
 	current_line, _ := tb.cursor_line_and_x()
-	if direction < 0 && current_line == 0 {
-		return
+	mut target_line := i64(current_line) + direction
+	if target_line < 0 {
+		target_line = 0
 	}
-	if direction > 0 && current_line + 1 >= u64(line_count) {
+	if target_line >= i64(line_count) {
+		target_line = i64(line_count) - 1
+	}
+	if u64(target_line) == current_line {
 		return
 	}
 
@@ -541,8 +580,7 @@ fn (mut tb TextBuffer) move_cursor_vertical(direction int) {
 	// to a longer line restores the original column
 	current_col := if tb.goal_column >= 0 { u64(tb.goal_column) } else { actual_col }
 
-	target_line := if direction < 0 { current_line - 1 } else { current_line + 1 }
-	target_start, target_end := tb.get_line_start_and_end(target_line)
+	target_start, target_end := tb.get_line_start_and_end(u64(target_line))
 
 	// trim trailing newline from the target line's content
 	mut content_end := target_end
@@ -558,7 +596,7 @@ fn (mut tb TextBuffer) move_cursor_vertical(direction int) {
 	target_offset := tb.offset_at_column(target_start, content_end, current_col)
 
 	tb.data_buf.move_cur_to(target_offset)
-	tb.line_buf.move_to_line(target_line)
+	tb.line_buf.move_to_line(u64(target_line))
 	tb.goal_column = int(current_col)
 }
 
@@ -794,6 +832,41 @@ pub fn (tb TextBuffer) get_line_bytes(y u64) ?[]u8 {
 		return line_bytes[..line_bytes.len - 1]
 	}
 	return line_bytes
+}
+
+// line_runes_into decodes line `y`, without its newline, into `out`, with
+// `scratch` holding its bytes on the way, so reading line after line allocates
+// nothing once the two have grown. It returns false past the last line.
+pub fn (tb TextBuffer) line_runes_into(y u64, mut scratch []u8, mut out []rune) bool {
+	if y >= u64(tb.line_buf.len()) {
+		out.clear()
+		return false
+	}
+	line_start, line_end := tb.get_line_start_and_end(y)
+	tb.data_buf.copy_range(line_start, line_end, mut scratch)
+	if scratch.len > 0 && scratch.last() == newline_hex {
+		scratch.trim(scratch.len - 1)
+	}
+	decode_runes_into(scratch, mut out)
+	return true
+}
+
+// decode_runes_into decodes UTF-8 `bytes` into `out`, replacing what it held,
+// as `bytes.bytestr().runes()` would
+@[direct_array_access]
+pub fn decode_runes_into(bytes []u8, mut out []rune) {
+	out.clear()
+	for b in bytes {
+		if b >= 0x80 {
+			// rare enough in code to leave to the builtin decoder
+			out << unsafe { tos(bytes.data, bytes.len) }.runes()
+			return
+		}
+	}
+	unsafe { out.grow_len(bytes.len) }
+	for i, b in bytes {
+		out[i] = rune(b)
+	}
 }
 
 pub fn (tb TextBuffer) cursor_line_and_x() (u64, u64) {
@@ -1508,6 +1581,16 @@ fn (mut s CharScanner) next_diff() ?ScanResult {
 		}
 	}
 	return none
+}
+
+fn count_newlines(bytes []u8) int {
+	mut n := 0
+	for b in bytes {
+		if b == newline_hex {
+			n++
+		}
+	}
+	return n
 }
 
 fn is_utf8_continuation_byte(b u8) bool {

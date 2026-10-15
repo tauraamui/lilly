@@ -14,15 +14,31 @@
 
 module syntax
 
-pub enum State {
-	default
-	in_comment
-	in_block_comment
-	in_double_quote
-	in_single_quote
-	in_backtick
-}
+// State identifies the stack of grammar contexts open at the start of a line,
+// so a line can be lexed without lexing the lines above it. 0 is a line that
+// starts outside every string and comment.
+//
+// Stacks one or two deep, which is nearly all of them (inside a block comment
+// is `main > block_comment`), are encoded directly. Deeper ones are interned
+// by the parser that saw them, so states from different parsers can't be
+// compared.
+pub type State = u16
 
+// deep_state_base is the first interned state: below it are stacks of one
+// context (0..255) and of main plus one context (256..511)
+const deep_state_base = 512
+const max_deep_states = 65535 - deep_state_base
+
+// max_stack_depth bounds how deeply contexts nest, e.g. Rust's nested block
+// comments. Pushes past it are ignored.
+const max_stack_depth = 32
+
+// max_stalls bounds how many zero-length matches can change the stack at one
+// position, so a grammar whose lookaheads push and pop in a cycle can't hang.
+const max_stalls = 8
+
+// TokenType is the coarse kind of a token, kept for the original editor's
+// keyword-list colouring. New code uses Token.scope.
 pub enum TokenType {
 	identifier
 	operator
@@ -41,7 +57,8 @@ pub enum TokenType {
 }
 
 pub struct Token {
-	t_type TokenType
+pub:
+	scope Scope
 mut:
 	start int
 	end   int
@@ -55,250 +72,418 @@ pub fn (t Token) end() int {
 	return t.end
 }
 
-pub fn (t Token) t_type() TokenType {
-	return t.t_type
+pub fn (t Token) scope() Scope {
+	return t.scope
 }
 
-struct LineInfo {
-	start_token_index int
-	token_count       int
+pub fn (t Token) t_type() TokenType {
+	return match t.scope {
+		.comment, .comment_doc { .comment }
+		.string, .string_escape { .string }
+		.number { .number }
+		.keyword, .keyword_control, .keyword_directive, .keyword_operator { .keyword }
+		.literal { .literal }
+		.builtin { .builtin }
+		.operator { .operator }
+		else { .other }
+	}
 }
+
+// Op is what a matched rule does to the context stack. pop_through pops
+// like pop, but in the tree the context's node runs on through the bracket
+// the rule matched, closing when it does, e.g. a function from `fn` through
+// its body's braces, while the lexer is back in the context around it.
+// escape leaves an embedded grammar: it pops every context down to and
+// including the target, the root of the embedded grammar's contexts.
+enum Op as u8 {
+	none
+	push
+	pop
+	set
+	pop_through
+	escape
+}
+
+// Match is a generated context's answer at one position. When no rule
+// matches, end is -1 and next is the first later position a rule could
+// match at, so the runes in between are plain text of the context.
+struct Match {
+	end    int = -1
+	next   int
+	scope  Scope
+	op     Op
+	target u8
+}
+
+// LangInfo is the per-context data the driver needs from a generated lexer
+struct LangInfo {
+	names       []string
+	scopes      []Scope
+	pops_at_eol []bool
+}
+
+const plain_info = LangInfo{
+	names:       ['main']
+	scopes:      [Scope.none]
+	pops_at_eol: [false]
+}
+
+// TreeEvent is a node of the context tree opening or closing, recorded by lex
+// when the parser's `record` is set. An open's col is where its first rune
+// is; a close's col is just past its last rune, so a node covers
+// [open col, close col).
+struct TreeEvent {
+	col     int
+	open    bool
+	bracket bool
+	// ties marks a bracket opened by a rule popping through it: the context
+	// inside which it opens closes when it does
+	ties bool
+	// id is the context opened or closed, or for a bracket its index in
+	// `([{` or `)]}`
+	id u8
+}
+
+const bracket_opens = [`(`, `[`, `{`]
+const bracket_closes = [`)`, `]`, `}`]
 
 pub struct Parser {
 mut:
-	state                  State
-	pending_token          ?Token
-	tokens                 []Token
-	line_info              []LineInfo
-	extra_identifier_chars []rune
+	lang   Lang
+	info   LangInfo = plain_info
+	stack  []u8     = [u8(0)]
+	tokens []Token
+	// deep_states and deep_ids intern stacks too deep to encode in a State
+	deep_states [][]u8
+	deep_ids    map[string]State
+	// code says, for each context, whether brackets in it count, which they
+	// don't in strings and comments
+	code []bool = [true]
+	// record makes lex fill events with the line's opens and closes
+	record bool
+	events []TreeEvent
 }
 
-// set_extra_identifier_chars configures additional runes that should be
-// classified as identifier characters, on top of the default a-z/A-Z range.
-// Pass the runes derived from a Syntax's identifier_chars field.
-pub fn (mut parser Parser) set_extra_identifier_chars(chars []rune) {
-	parser.extra_identifier_chars = chars
+// set_syntax switches the parser to the generated lexer for `syn`. States
+// from before the switch mean nothing afterwards.
+pub fn (mut parser Parser) set_syntax(syn Syntax) {
+	parser.lang = syn.lang
+	parser.info = lang_info(syn.lang)
+	parser.deep_states = [][]u8{}
+	parser.deep_ids = map[string]State{}
+	parser.code = parser.info.scopes.map(it !in [.comment, .comment_doc, .string, .string_escape])
+	parser.reset()
 }
 
 pub fn (mut parser Parser) reset() {
-	parser.state = .default
-	parser.pending_token = none
+	parser.stack.clear()
+	parser.stack << 0
 	parser.tokens.clear()
-	parser.line_info.clear()
 }
 
-pub fn (parser Parser) current_state() State {
-	return parser.state
+pub fn (parser &Parser) current_state() State {
+	stack := parser.stack
+	if stack.len == 1 {
+		return State(stack[0])
+	}
+	if stack.len == 2 && stack[0] == 0 {
+		return State(256 + int(stack[1]))
+	}
+	// lex interns the stack before a line ends, and set_state only loads
+	// interned stacks, so a deep stack is always found here
+	return parser.deep_ids[stack.bytestr()] or { 0 }
 }
 
 pub fn (mut parser Parser) set_state(s State) {
-	parser.state = s
-}
-
-pub fn (parser Parser) get_line_tokens(line_num int) []Token {
-	if line_num < 0 || line_num >= parser.line_info.len {
-		return []Token{}
+	parser.stack.clear()
+	if s < 256 {
+		parser.stack << u8(s)
+		return
 	}
-	line_info := parser.line_info[line_num]
-	start_index := line_info.start_token_index
-	end_index := start_index + line_info.token_count
-	return parser.tokens[start_index..end_index]
+	if s < deep_state_base {
+		parser.stack << 0
+		parser.stack << u8(s - 256)
+		return
+	}
+	if int(s) - deep_state_base < parser.deep_states.len {
+		parser.stack << parser.deep_states[int(s) - deep_state_base]
+		return
+	}
+	parser.stack << 0
 }
 
-// advance_state_runes updates the parser state machine (block comments, strings, etc.)
-// without producing tokens or allocating. Use this for lines that don't need tokenisation,
-// e.g. non-visible lines above the viewport where only the carry-over state matters.
+// state_name describes a state as its stack of context names, e.g.
+// `main > string > interpolation`. Unlike the State itself, the name can be
+// compared between parsers.
+pub fn (parser Parser) state_name(s State) string {
+	mut p := Parser{
+		lang:        parser.lang
+		info:        parser.info
+		deep_states: parser.deep_states
+	}
+	p.set_state(s)
+	return p.stack.map(parser.info.names[it]).join(' > ')
+}
+
+// intern_state makes sure the current stack has a State, for stacks too deep
+// to encode directly
+fn (mut parser Parser) intern_state() {
+	stack := parser.stack
+	if stack.len == 1 || (stack.len == 2 && stack[0] == 0) {
+		return
+	}
+	key := stack.bytestr()
+	if key in parser.deep_ids {
+		return
+	}
+	if parser.deep_states.len >= max_deep_states {
+		// out of ids: keep just the innermost context, which colours the
+		// next line right until it pops
+		top := stack.last()
+		parser.stack.clear()
+		parser.stack << 0
+		if top != 0 {
+			parser.stack << top
+		}
+		return
+	}
+	parser.deep_ids[key] = State(deep_state_base + parser.deep_states.len)
+	parser.deep_states << stack.clone()
+}
+
+// advance_state_runes moves the parser past a line without producing tokens,
+// for lines whose state matters but which aren't drawn
 pub fn (mut parser Parser) advance_state_runes(runes []rune) {
-	if parser.state == .in_comment {
-		parser.state = .default
+	parser.lex(runes, false)
+}
+
+// parse_line lexes the next line, giving its tokens and leaving the parser
+// in the state the line after it starts in
+pub fn (mut parser Parser) parse_line(line string) []Token {
+	return parser.parse_line_runes(line.runes())
+}
+
+// parse_line_runes is parse_line for a line already decoded into runes
+pub fn (mut parser Parser) parse_line_runes(runes []rune) []Token {
+	start := parser.tokens.len
+	parser.lex(runes, true)
+	return parser.tokens[start..]
+}
+
+// lex runs one line through the generated lexer, appending its tokens when
+// `emit` is set. parse_line and advance_state_runes both come through here,
+// so the per-line states the editor caches always agree with the tokens drawn.
+@[direct_array_access]
+fn (mut parser Parser) lex(runes []rune, emit bool) {
+	if parser.stack.len == 0 {
+		parser.stack << 0
 	}
-	for i, c_char in runes {
-		mut l_char := rune(0)
-		if i > 0 {
-			l_char = runes[i - 1]
+	line_start := parser.tokens.len
+	if parser.record {
+		parser.events.clear()
+	}
+	mut i := 0
+	mut stalls := 0
+	for i < runes.len {
+		m := lang_step(parser.lang, parser.stack.last(), runes, i, emit)
+		if m.end < 0 || (m.end == i && (m.op == .none || stalls >= max_stalls)) {
+			// plain text of the current context, up to where a rule could
+			// next match
+			j := if m.end < 0 && m.next > i { m.next } else { i + 1 }
+			if emit {
+				parser.emit(line_start, parser.info.scopes[parser.stack.last()], i, j)
+			}
+			if parser.record && parser.code[parser.stack.last()] {
+				parser.record_brackets(runes, i, j)
+			}
+			i = j
+			stalls = 0
+			continue
 		}
-		parser.state = match parser.state {
-			.default {
-				match true {
-					l_char == `/` && c_char == `/` { .in_comment }
-					l_char == `/` && c_char == `*` { .in_block_comment }
-					c_char == `"` { .in_double_quote }
-					c_char == `'` { .in_single_quote }
-					c_char == 96 { .in_backtick }
-					else { State.default }
+		if emit {
+			parser.emit(line_start, m.scope, i, m.end)
+		}
+		if parser.record {
+			parser.record_match(runes, i, m)
+		}
+		stalls = if m.end == i { stalls + 1 } else { 0 }
+		i = m.end
+		match m.op {
+			// TODO(tauraamui) [14/10/2026]: look into defining exception to highlighting 'none' when used as
+			// case definition
+			.none {}
+			.push {
+				if parser.stack.len < max_stack_depth {
+					parser.stack << m.target
 				}
 			}
-			.in_double_quote {
-				if c_char == `"` && l_char != `\\` { State.default } else { State.in_double_quote }
-			}
-			.in_single_quote {
-				if c_char == `'` && l_char != `\\` { State.default } else { State.in_single_quote }
-			}
-			.in_backtick {
-				if c_char == 96 { State.default } else { State.in_backtick }
-			}
-			.in_block_comment {
-				match true {
-					l_char == `*` && c_char == `/` { State.default }
-					else { State.in_block_comment }
+			.pop, .pop_through {
+				if parser.stack.len > 1 {
+					parser.stack.delete_last()
 				}
 			}
-			else {
-				parser.state
+			.set {
+				parser.stack[parser.stack.len - 1] = m.target
 			}
-		}
-	}
-}
-
-pub fn (mut parser Parser) parse_lines(lines []string) {
-	for i, line in lines {
-		parser.parse_line(i, line)
-	}
-}
-
-fn resolve_char_type(c_char rune, extra_id_chars []rune) TokenType {
-	// Default classification
-	default_type := match c_char {
-		` `, `\t` { TokenType.whitespace }
-		`a`...`z`, `A`...`Z` { .identifier }
-		`0`...`9` { .number }
-		`"`, `'`, 96 { .string } // quotes/backticks should be string tokens
-		else { .other }
-	}
-
-	if default_type == .other && c_char in extra_id_chars {
-		return .identifier
-	}
-	return default_type
-}
-
-struct CharResult {
-	char_type  TokenType
-	rune_count int
-}
-
-fn for_each_char(index int,
-	l_char rune, c_char rune,
-	rune_count int,
-	mut tokens []Token,
-	parser_state State,
-	extra_id_chars []rune) CharResult {
-	mut next_rune_count := rune_count
-	current_char_type := resolve_char_type(c_char, extra_id_chars)
-	if l_char != rune(0) {
-		last_char_type := resolve_char_type(l_char, extra_id_chars)
-
-		mut token_type := last_char_type
-		if last_char_type != .whitespace {
-			token_type = match parser_state {
-				.in_comment { TokenType.comment }
-				.in_block_comment { TokenType.comment }
-				.in_double_quote { TokenType.string }
-				.in_single_quote { TokenType.string }
-				.in_backtick { TokenType.string }
-				.default { last_char_type }
-			}
-		}
-
-		transition_occurred := last_char_type != current_char_type
-		if transition_occurred {
-			token := Token{
-				t_type: token_type
-				start:  index - rune_count
-				end:    index
-			}
-			tokens << token
-			next_rune_count = 0
-		}
-	}
-
-	next_rune_count += 1
-	return CharResult{
-		char_type:  current_char_type
-		rune_count: next_rune_count
-	}
-}
-
-pub fn (mut parser Parser) parse_line(index int, line string) []Token {
-	mut start_token_index := parser.tokens.len
-	mut rune_count := 0
-	runes := line.runes()
-	if parser.state == .in_comment {
-		parser.state = .default
-	}
-	// single line comments terminate at the end of the line
-
-	mut token_type := TokenType.other
-	for i, c_char in runes {
-		mut l_char := rune(0)
-		if i > 0 {
-			l_char = runes[i - 1]
-		}
-
-		// store the previous state before updating
-		previous_state := parser.state
-
-		parser.state = match parser.state {
-			.default {
-				match true {
-					l_char == `/` && c_char == `/` { .in_comment }
-					l_char == `/` && c_char == `*` { .in_block_comment }
-					c_char == `"` { .in_double_quote }
-					c_char == `'` { .in_single_quote }
-					c_char == 96 { .in_backtick } // 96 == backtick rune
-					else { State.default }
+			.escape {
+				for parser.stack.len > 1 {
+					top := parser.stack.pop()
+					if top == m.target {
+						break
+					}
 				}
 			}
-			.in_double_quote {
-				if c_char == `"` && l_char != `\\` { State.default } else { State.in_double_quote }
+		}
+	}
+	for parser.stack.len > 1 && parser.info.pops_at_eol[parser.stack.last()] {
+		if parser.record {
+			parser.events << TreeEvent{
+				col: runes.len
+				id:  parser.stack.last()
 			}
-			.in_single_quote {
-				if c_char == `'` && l_char != `\\` { State.default } else { State.in_single_quote }
+		}
+		parser.stack.delete_last()
+	}
+	parser.intern_state()
+}
+
+// emit appends a token, folding it into the one before when they touch and
+// share a scope, so a string's quotes and contents draw as one token
+@[direct_array_access]
+fn (mut parser Parser) emit(line_start int, scope Scope, start int, end int) {
+	if end <= start {
+		return
+	}
+	last := parser.tokens.len - 1
+	if last >= line_start && parser.tokens[last].scope == scope && parser.tokens[last].end == start {
+		parser.tokens[last].end = end
+		return
+	}
+	parser.tokens << Token{
+		scope: scope
+		start: start
+		end:   end
+	}
+}
+
+// record_match records what a rule matched at `start` opens or closes,
+// mirroring the stack change lex is about to make. Brackets a rule matched as
+// punctuation or operators count, but not ones inside a token like an
+// attribute. A context pushed by a bracket, like a parameter list, is a
+// bracket node too, inside the context's node, so bracket matching works on
+// it as it would without the context. That goes for a code context pushed
+// from a string too, like the `${` of an interpolation.
+fn (mut parser Parser) record_match(runes []rune, start int, m Match) {
+	top := parser.stack.last()
+	brackets := parser.code[top] && m.scope in [.none, .punctuation, .operator]
+	match m.op {
+		.none {
+			if brackets {
+				parser.record_brackets(runes, start, m.end)
 			}
-			.in_backtick {
-				if c_char == 96 { State.default } else { State.in_backtick } // 96 == backtick rune
-			}
-			.in_block_comment {
-				match true {
-					l_char == `*` && c_char == `/` { State.default }
-					else { State.in_block_comment }
+		}
+		.push {
+			if parser.stack.len < max_stack_depth {
+				parser.events << TreeEvent{
+					col:  start
+					open: true
+					id:   m.target
+				}
+				// a string's interpolation, pushed by `${`, opens code inside
+				// the string, so its brace is a bracket as it would be in code
+				pushes_code := parser.code[m.target]
+					&& m.scope in [.none, .punctuation, .operator]
+				if brackets || pushes_code {
+					parser.record_brackets(runes, start, m.end)
 				}
 			}
-			else {
-				parser.state
+		}
+		.pop {
+			if parser.stack.len > 1 {
+				// a bracket closing it is closed with it
+				parser.events << TreeEvent{
+					col: m.end
+					id:  top
+				}
 			}
 		}
-
-		// use previous_state for classifying the previous character
-		result := for_each_char(i, l_char, c_char, rune_count, mut parser.tokens, previous_state,
-			parser.extra_identifier_chars)
-		token_type = result.char_type
-		rune_count = result.rune_count
-	}
-
-	token_type = match parser.state {
-		.in_comment { TokenType.comment }
-		.in_block_comment { TokenType.comment }
-		.in_double_quote { TokenType.string }
-		.in_single_quote { TokenType.string }
-		.in_backtick { TokenType.string }
-		else { token_type }
-	}
-
-	if rune_count > 0 {
-		token := Token{
-			t_type: token_type
-			start:  runes.len - rune_count
-			end:    runes.len
+		.pop_through {
+			if parser.stack.len > 1 {
+				parser.record_pop_through(runes, start, m.end, top)
+			}
 		}
-		parser.tokens << token
+		.escape {
+			// closing the embedded grammar's root closes whatever it left
+			// open inside it
+			if parser.stack.len > 1 {
+				parser.events << TreeEvent{
+					col: m.end
+					id:  m.target
+				}
+			}
+		}
+		.set {
+			// as with pop, the root is no node to close, nor what replaces it
+			if parser.stack.len > 1 {
+				parser.events << TreeEvent{
+					col: m.end
+					id:  top
+				}
+				parser.events << TreeEvent{
+					col:  m.end
+					open: true
+					id:   m.target
+				}
+			}
+		}
 	}
+}
 
-	token_count := parser.tokens.len - start_token_index
-
-	parser.line_info << LineInfo{
-		start_token_index: start_token_index
-		token_count:       token_count
+// record_pop_through records context `top` popping through the first bracket
+// opening among runes `start` to `end`, or just popping without one
+@[direct_array_access]
+fn (mut parser Parser) record_pop_through(runes []rune, start int, end int, top u8) {
+	for k in start .. end {
+		opens := bracket_opens.index(runes[k])
+		if opens >= 0 {
+			parser.events << TreeEvent{
+				col:     k
+				open:    true
+				bracket: true
+				ties:    true
+				id:      u8(opens)
+			}
+			return
+		}
 	}
-	return parser.tokens[start_token_index..start_token_index + token_count]
+	parser.events << TreeEvent{
+		col: end
+		id:  top
+	}
+}
+
+// record_brackets records the brackets among runes `start` to `end`
+@[direct_array_access]
+fn (mut parser Parser) record_brackets(runes []rune, start int, end int) {
+	for k in start .. end {
+		r := runes[k]
+		opens := bracket_opens.index(r)
+		if opens >= 0 {
+			parser.events << TreeEvent{
+				col:     k
+				open:    true
+				bracket: true
+				id:      u8(opens)
+			}
+			continue
+		}
+		closes := bracket_closes.index(r)
+		if closes >= 0 {
+			parser.events << TreeEvent{
+				col:     k + 1
+				bracket: true
+				id:      u8(closes)
+			}
+		}
+	}
 }

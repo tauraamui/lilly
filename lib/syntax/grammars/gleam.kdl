@@ -1,0 +1,23 @@
+name "Gleam"
+extensions ".gleam"
+
+words "keyword" as assert auto const delegate derive echo fn implement import let macro opaque pub test type
+words "keyword.control" case else if panic todo use
+words "literal" False Nil True
+words "builtin" big binary bit_array bit_string bits bytes float int little native signed size unit unsigned utf16 utf16_codepoint utf32 utf32_codepoint utf8 utf8_codepoint
+
+context "main" {
+    rule #"///?/?.*"# scope="comment"
+    rule "\"" scope="string" push="double"
+    rule #"@[a-z_]\w*"# scope="attribute"
+    rule #"[A-Za-z_]\w*"# words=#true
+    rule #"[a-z_]\w*(?=\()"# scope="function"
+    rule #"[A-Z]\w*"# scope="storage.type"
+    rule #"[a-z_]\w*"# scope="variable"
+    rule #"0[xX][\h_]+|0[bB][01_]+|0[oO][0-7_]+|\d[\d_]*(\.[\d_]*)?([eE][+\-]?\d+)?"# scope="number"
+}
+
+context "double" scope="string" {
+    rule #"\\."# scope="string.escape"
+    rule "\"" pop=#true
+}

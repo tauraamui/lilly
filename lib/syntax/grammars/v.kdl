@@ -1,0 +1,130 @@
+// V. Patterns are PEG-style regular expressions, see cmd/syntaxgen/pattern.v.
+// Contexts are tried in the order their rules are written; the first rule
+// that matches at a position wins.
+name "V"
+extensions ".v" ".vv" ".vsh"
+
+words "keyword" as asm assert atomic const enum fn global import interface is isreftype lock module mut pub rlock shared sizeof static struct type typeof union unsafe volatile __offsetof
+words "keyword.control" break continue defer else for go goto if in match or return select spawn
+words "literal" none nil true false
+words "builtin" print println eprint eprintln exit panic print_backtrace
+
+context "main" {
+    rule #"//.*"# scope="comment"
+    rule #"/\*"# scope="comment" push="block_comment"
+    rule "r'" scope="string" push="raw_single"
+    rule "r\"" scope="string" push="raw_double"
+    rule "c?'" scope="string" push="single"
+    rule "c?\"" scope="string" push="double"
+    // a rune literal: `a`, `\n`, `\``
+    rule #"`(\\.[^`]*|[^`\\])`"# scope="string"
+    rule #"@\[[^\]]*\]?"# scope="attribute"
+    rule #"fn(?!\w)"# scope="keyword" push="function"
+    rule #"(struct|union)(?!\w)"# scope="keyword" push="struct"
+    rule #"enum(?!\w)"# scope="keyword" push="enum"
+    rule #"interface(?!\w)"# scope="keyword" push="interface"
+    rule #"type(?=\s+[A-Za-z_])"# scope="keyword" push="type_alias"
+    // a variable declared with :=, alone or in a list: `a, mut b := f()`
+    rule #"[A-Za-z_]\w*(?=(\s*,\s*(mut\s+)?[A-Za-z_]\w*)*\s*:=)"# scope="variable.definition"
+    rule #"\$[A-Za-z_]\w*"# scope="keyword.directive"
+    rule #"@[A-Za-z_]\w*"# scope="variable.special"
+    rule #"[A-Za-z_]\w*"# words=#true
+    rule #"[A-Za-z_]\w*(?=\()"# scope="function"
+    rule #"(?=[A-Z])[A-Za-z_]\w*"# scope="storage.type"
+    rule #"[A-Za-z_]\w*"# scope="variable"
+    rule #"0[xX][\h_]+|0[bB][01_]+|0[oO][0-7_]+|\d[\d_]*(\.\d[\d_]*)?([eE][+\-]?\d+)?"# scope="number"
+}
+
+// V's block comments nest
+context "block_comment" scope="comment" {
+    rule #"/\*"# push="block_comment"
+    rule #"\*/"# pop=#true
+}
+
+context "double" scope="string" {
+    rule #"\\."# scope="string.escape"
+    rule #"\$\{"# scope="punctuation" push="interpolation"
+    rule "\"" pop=#true
+}
+
+context "single" scope="string" {
+    rule #"\\."# scope="string.escape"
+    rule #"\$\{"# scope="punctuation" push="interpolation"
+    rule "'" pop=#true
+}
+
+context "raw_double" scope="string" {
+    rule "\"" pop=#true
+}
+
+context "raw_single" scope="string" {
+    rule "'" pop=#true
+}
+
+// the code inside ${...}, which ends at the brace that closes it
+context "interpolation" {
+    rule #"\}"# scope="punctuation" pop=#true
+    rule #"\{"# push="braces"
+    include "main"
+}
+
+context "braces" {
+    rule #"\}"# pop=#true
+    rule #"\{"# push="braces"
+    include "main"
+}
+
+// A function, from `fn` through the braces of its body. Its name is a
+// definition, and each parenthesised list in its signature (receiver,
+// parameters, multiple returns) is a "params" node. Without a body, as in an
+// interface or a C declaration, it ends with its line, and a `fn` type ends
+// where what it's in goes on: a parameter list, or a field's default.
+context "function" pop_at_eol=#true {
+    rule #"\{"# pop=#true through=#true
+    rule #"(?=[)},;=])"# pop=#true
+    rule #"\("# push="params"
+    rule #"[A-Za-z_][\w.]*(?=(\[[^\]]*\])?\()"# scope="function.definition"
+    // a `fn` type returned stays part of this signature
+    rule #"fn(?!\w)"# scope="keyword"
+    include "main"
+}
+
+// a parameter list has no braces, so one left open ends at the body
+context "params" {
+    rule #"\)"# pop=#true
+    rule #"(?=[{}])"# pop=#true
+    rule #"\("# push="params"
+    include "main"
+}
+
+// struct, union, enum and interface each run from their keyword through
+// their braces, and name a type
+context "struct" pop_at_eol=#true {
+    include "type_head"
+}
+
+context "enum" pop_at_eol=#true {
+    include "type_head"
+}
+
+context "interface" pop_at_eol=#true {
+    include "type_head"
+}
+
+context "type_head" {
+    rule #"\{"# pop=#true through=#true
+    rule #"(?=[)},;=])"# pop=#true
+    // the name, not an enum's integer type after `as`
+    rule #"(?!(u8|u16|u32|u64|i8|i16|i32|i64|int|isize|usize)(?!\w))[A-Za-z_][\w.]*(?=\s*(\[[^\]]*\])?\s*(as\s+\w+\s*)?\{)"# scope="storage.type.definition"
+    // just enough of main for what comes between the keyword and the brace:
+    // generic parameters, and an enum's `as u8`
+    rule #"//.*"# scope="comment"
+    rule #"as(?!\w)"# scope="keyword"
+    rule #"[A-Za-z_]\w*"# words=#true
+    rule #"(?=[A-Z])[A-Za-z_]\w*"# scope="storage.type"
+}
+
+// `type Name = ...` names a type; the node is `type` and the name
+context "type_alias" pop_at_eol=#true {
+    rule #"[A-Za-z_][\w.]*"# scope="storage.type.definition" pop=#true
+}

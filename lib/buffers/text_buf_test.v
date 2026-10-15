@@ -367,6 +367,33 @@ fn test_text_buffer_move_cursor_vertical_restores_goal_column_through_short_line
 	assert x == u64(4)
 }
 
+fn test_text_buffer_move_cursor_lines_keeps_the_goal_column_and_stops_at_the_ends() ! {
+	mut reader := mock_reader('hello\n\nworld\nab\nlonger'.bytes())
+	mut tb := TextBuffer.new(mut reader)!
+
+	tb.move_cursor_to_position(0, 4)
+	// over the blank line in one move, as two presses of j would
+	tb.move_cursor_lines(2)
+	line, x := tb.cursor_line_and_x()
+	assert line == u64(2)
+	assert x == u64(4)
+
+	tb.move_cursor_lines(10)
+	last, last_x := tb.cursor_line_and_x()
+	assert last == u64(4), 'stops at the last line'
+	assert last_x == u64(4)
+
+	tb.move_cursor_lines(-3)
+	up, up_x := tb.cursor_line_and_x()
+	assert up == u64(1)
+	assert up_x == u64(0), 'clamped on the blank line'
+
+	tb.move_cursor_lines(-10)
+	first, first_x := tb.cursor_line_and_x()
+	assert first == u64(0), 'stops at the first line'
+	assert first_x == u64(4), 'the goal column comes back'
+}
+
 fn test_text_buffer_move_cursor_vertical_goal_column_resets_on_horizontal_move() ! {
 	mut reader := mock_reader('hello\n\nworld'.bytes())
 	mut tb := TextBuffer.new(mut reader)!
@@ -598,4 +625,46 @@ fn test_text_buffer_loads_when_size_hint_is_too_large() ! {
 	mut reader := mock_reader(content)
 	mut tb := TextBuffer.new_with_size_hint(mut reader, u64(content.len) * 2)!
 	assert_loaded_content(mut tb)
+}
+
+fn test_line_runes_into_decodes_each_line_as_runes_would() ! {
+	content := 'plain ascii\n\tcafé ☕ 🌸\n\nbad \xff\xfe bytes\nlast'
+	mut reader := mock_reader(content.bytes())
+	mut tb := TextBuffer.new(mut reader)!
+	mut scratch := []u8{}
+	mut out := []rune{}
+	// a long line then a short one: the buffers are reused, not appended to
+	for y in [u64(1), 0, 2, 3, 4, 1] {
+		assert tb.line_runes_into(y, mut scratch, mut out)
+		assert out == tb.get_line_bytes(y)?.bytestr().runes(), 'line ${y}'
+	}
+	assert !tb.line_runes_into(5, mut scratch, mut out)
+	assert out.len == 0
+}
+
+fn test_line_runes_into_reads_a_line_the_gap_is_in() ! {
+	mut reader := mock_reader('first\nsecond line\nthird'.bytes())
+	mut tb := TextBuffer.new(mut reader)!
+	tb.jump_cursor_to_line(1)
+	tb.move_cursor_right()
+	tb.move_cursor_right()
+	tb.insert_rune(`é`)
+	tb.insert(u8(`x`))
+	mut scratch := []u8{}
+	mut out := []rune{}
+	for y in 0 .. 3 {
+		assert tb.line_runes_into(u64(y), mut scratch, mut out)
+		assert out == tb.get_line_bytes(u64(y))?.bytestr().runes()
+	}
+	assert out.string() == 'third'
+	tb.line_runes_into(1, mut scratch, mut out)
+	assert out.string() == 'seéxcond line'
+}
+
+fn test_decode_runes_into_matches_runes() {
+	mut out := []rune{len: 10}
+	for s in ['', 'abc', 'é', '日本語', 'a\xc3', '\xf0\x9f\x8c\xb8!'] {
+		decode_runes_into(s.bytes(), mut out)
+		assert out == s.runes(), s
+	}
 }
