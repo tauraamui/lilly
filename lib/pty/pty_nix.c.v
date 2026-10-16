@@ -14,6 +14,7 @@
 
 module pty
 
+import os
 import time
 
 #include <sys/ioctl.h>
@@ -29,6 +30,7 @@ $if macos {
 }
 $if linux {
 	#include <pty.h>
+	#include <sys/prctl.h>
 }
 
 fn C.openpty(amaster &int, aslave &int, name &char, termp voidptr, winp voidptr) int
@@ -44,6 +46,8 @@ fn C.waitpid(pid int, wstatus &int, options int) int
 fn C.fcntl(fd int, cmd int, arg ...int) int
 fn C.ioctl(fd int, request u64, arg ...voidptr) int
 fn C._exit(status int)
+fn C.getppid() int
+fn C.prctl(option int, args ...u64) int
 fn C.WIFEXITED(status int) bool
 fn C.WEXITSTATUS(status int) int
 fn C.WIFSIGNALED(status int) bool
@@ -102,6 +106,11 @@ pub fn spawn(argv []string, cols u16, rows u16) !&Process {
 	}
 	if pid == 0 {
 		C.close(master_fd)
+		$if linux {
+			// let the fuzzer and what it starts, gdb for stacks, attach to the
+			// child: Yama's default ptrace_scope only allows an ancestor
+			C.prctl(C.PR_SET_PTRACER, u64(C.getppid()), 0, 0, 0)
+		}
 		C.setsid()
 		C.ioctl(slave_fd, u64(C.TIOCSCTTY), voidptr(unsafe { nil }))
 		C.dup2(slave_fd, 0)
@@ -197,6 +206,46 @@ pub fn (mut p Process) exited() ?ExitStatus {
 	}
 	p.status = s
 	return s
+}
+
+// stacks describes where every thread of a child that is still running is,
+// for a failure that would otherwise show only that it stopped. The child's
+// own threads, not those of anything it started; best effort, empty when
+// nothing here can look.
+pub fn (p &Process) stacks() string {
+	$if macos {
+		// sample ships with macOS and reads a process of the same user
+		out := os.join_path(os.temp_dir(), 'lilly-pty-sample-${p.pid}.txt')
+		os.execute('sample ${p.pid} 1 -mayDie -file ${os.quoted_path(out)}')
+		defer {
+			os.rm(out) or {}
+		}
+		return os.read_file(out) or { '' }
+	}
+	$if linux {
+		mut report := []string{}
+		if os.exists_in_system_path('gdb') {
+			gdb := os.execute('timeout 60 gdb -p ${p.pid} -batch -nx -ex "set debuginfod enabled off" -ex "thread apply all bt"')
+			report << gdb.output
+		}
+		// what the kernel says of each thread, which needs no debugger
+		task_dir := '/proc/${p.pid}/task'
+		tids := os.ls(task_dir) or { []string{} }
+		for tid in tids {
+			dir := os.join_path(task_dir, tid)
+			comm := (os.read_file(os.join_path(dir, 'comm')) or { '' }).trim_space()
+			stat := os.read_file(os.join_path(dir, 'stat')) or { '' }
+			// the state follows the command name, which is in parentheses
+			state := stat.all_after_last(') ').all_before(' ')
+			wchan := os.read_file(os.join_path(dir, 'wchan')) or { '' }
+			report << 'thread ${tid} (${comm}) state ${state} wchan ${wchan}'
+			if kstack := os.read_file(os.join_path(dir, 'stack')) {
+				report << kstack
+			}
+		}
+		return report.join('\n')
+	}
+	return ''
 }
 
 // kill ends the child and everything in its session, and releases the pty

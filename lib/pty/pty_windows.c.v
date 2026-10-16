@@ -125,6 +125,12 @@ pub fn (mut p Process) exited() ?ExitStatus {
 	return s
 }
 
+// stacks would describe where a running child's threads are. Nothing
+// collects them on Windows yet.
+pub fn (p &Process) stacks() string {
+	return ''
+}
+
 // kill ends the child if it is still running, and releases the console
 pub fn (mut p Process) kill() {
 	if p.closed {

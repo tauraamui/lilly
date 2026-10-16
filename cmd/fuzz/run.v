@@ -62,6 +62,7 @@ struct Result {
 	detail  string
 	tail    []u8
 	log     string
+	stacks  string
 }
 
 fn (mut g Gen) setup(corpus []CorpusFile) Setup {
@@ -312,6 +313,12 @@ fn execute(c Config, setup Setup, steps []Step) Result {
 		p:     p
 	}
 	mut result := r.drive(steps)
+	// where a lilly that stopped is stuck, read while it is still there to read
+	stacks := if result.verdict in [.hang, .stuck] && p.exited() == none {
+		p.stacks()
+	} else {
+		''
+	}
 	p.kill()
 
 	log := os.read_file(os.join_path(state_dir, 'lilly', 'lilly.log')) or { '' }
@@ -323,7 +330,8 @@ fn execute(c Config, setup Setup, steps []Step) Result {
 	}
 	return Result{
 		...result
-		tail: r.tail
-		log:  log
+		tail:   r.tail
+		log:    log
+		stacks: stacks
 	}
 }

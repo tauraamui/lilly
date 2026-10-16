@@ -16,7 +16,13 @@ name: Fuzz release
 # files, failing a run if lilly dies, logs a panic, or stops redrawing. Every
 # failing run is saved, with what it was given and the steps that broke it,
 # and uploaded as the job's artifact; replay one locally with the command in
-# its info.txt.
+# its info.txt. A hang also saves stacks.txt, where each of lilly's threads
+# was when it stopped.
+#
+# The release binaries are built with -prod and no glibc backtrace support,
+# so a panic in one says what went wrong but not where. fuzz-linux-debug
+# builds the tag's source with -g alongside, whose panics resolve to source
+# lines in backtrace.txt.
 #
 # The fuzzer and its corpus come from the commit this workflow runs from, not
 # the tag, so a better fuzzer can be pointed at an older release with
@@ -96,6 +102,80 @@ jobs:
           path: |
             fuzz_out/summary.txt
             fuzz_out/failures/
+
+  # The tag's source built for debugging rather than as released: -g without
+  # -prod, so frames are not inlined away, and -d glibc, so V prints a
+  # backtrace on a panic. Static like the release, and unoptimised, so slower,
+  # hence the larger timeout scales. gdb is for the stacks a hang saves.
+  fuzz-linux-debug:
+    name: Fuzz (lilly-linux-${{ matrix.arch }}, debug build)
+    runs-on: ubuntu-latest
+    container:
+      image: registry.catkin.dev/tauraamui/lilly-ci:latest
+      credentials:
+        username: ${{ vars.CI_REGISTRY_USER }}
+        password: ${{ secrets.CI_REGISTRY_TOKEN }}
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            v_flags: -g -d glibc -cc gcc -cflags -static
+            run_as: ''
+            timeout_scale: '2'
+            extra_packages: gdb
+            addr2line: addr2line
+          - arch: arm64
+            v_flags: -g -d glibc -arch arm64 -cc aarch64-linux-gnu-gcc -cflags -static
+            run_as: qemu-aarch64
+            timeout_scale: '8'
+            extra_packages: gcc-aarch64-linux-gnu libc6-dev-arm64-cross binutils-aarch64-linux-gnu qemu-user
+            addr2line: aarch64-linux-gnu-addr2line
+    env:
+      BINARY: lilly-linux-${{ matrix.arch }}-debug
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout the tag's source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          path: tag-src
+
+      - name: Install extra packages
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ${{ matrix.extra_packages }}
+
+      # as release.yaml builds it: fresh dependencies, and the tag's hash for -v
+      - name: Build debug binary
+        working-directory: tag-src
+        run: |
+          v install
+          git log -n 1 --pretty=format:"%h" > .githash
+          v ${{ matrix.v_flags }} . -o "../$BINARY"
+
+      - name: Build fuzzer
+        run: v -prod cmd/fuzz -o fuzz
+
+      - name: Fuzz
+        run: ./fuzz --duration "$DURATION" --timeout-scale ${{ matrix.timeout_scale }} --out fuzz_out -- ${{ matrix.run_as }} ./"$BINARY"
+
+      - name: Symbolize backtraces
+        if: failure()
+        run: sh .forgejo/scripts/symbolize-backtraces.sh "./$BINARY" ${{ matrix.addr2line }} fuzz_out/failures
+
+      # the binary too, so any address in a failure can be looked up later
+      - name: Upload failures
+        if: failure()
+        uses: https://code.forgejo.org/forgejo/upload-artifact@v4
+        with:
+          name: fuzz-${{ env.BINARY }}
+          path: |
+            fuzz_out/summary.txt
+            fuzz_out/failures/
+            ${{ env.BINARY }}
 
   # Runs directly on the Mac, as release.yaml's macOS jobs do. One arm64
   # fuzzer drives both binaries: the amd64 one runs under Rosetta when the

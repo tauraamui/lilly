@@ -27,6 +27,8 @@ import os
 //   files/      the files lilly was given, before it edited any of them
 //   screen.bin  the last of what lilly drew; `cat` it in a terminal
 //   lilly.log   lilly's own log, with any panic and its backtrace
+//   stacks.txt  for a hang, where each of lilly's threads was: sample's
+//               report on macOS, gdb's and the kernel's on Linux
 
 fn save_failure(c Config, seed u64, setup Setup, steps []Step, result Result) !string {
 	dir := os.join_path(c.out, 'failures', '${result.verdict}-${seed}')
@@ -40,6 +42,9 @@ fn save_failure(c Config, seed u64, setup Setup, steps []Step, result Result) !s
 	os.write_file(os.join_path(dir, 'steps.txt'), steps.map(encode_step(it)).join('\n') + '\n')!
 	os.write_file_array(os.join_path(dir, 'screen.bin'), result.tail)!
 	os.write_file(os.join_path(dir, 'lilly.log'), result.log)!
+	if result.stacks != '' {
+		os.write_file(os.join_path(dir, 'stacks.txt'), result.stacks)!
+	}
 	os.write_file(os.join_path(dir, 'info.txt'), 'verdict: ${result.verdict}
 detail:  ${result.detail}
 program: ${c.program.join(' ')}
