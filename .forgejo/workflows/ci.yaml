@@ -40,11 +40,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.vmodules
-          key: vmodules-v4-${{ hashFiles('v.mod') }}
-          restore-keys: vmodules-v4-
+          key: vmodules-v5-${{ hashFiles('v.mod') }}
+          restore-keys: vmodules-v5-
 
       - name: Install dependencies
-        run: v install
+        run: |
+          v install
+          v update
 
       - name: Remove V source from workspace
         run: rm -rf vlang/
@@ -87,11 +89,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.vmodules
-          key: vmodules-xpty3-${{ hashFiles('v.mod') }}
-          restore-keys: vmodules-xpty3-
+          key: vmodules-xpty4-${{ hashFiles('v.mod') }}
+          restore-keys: vmodules-xpty4-
 
       - name: Install dependencies
-        run: v install
+        run: |
+          v install
+          v update
 
       - name: Check for golden frames
         id: check_golden
@@ -125,11 +129,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.vmodules
-          key: vmodules-prod3-${{ hashFiles('v.mod') }}
-          restore-keys: vmodules-prod3-
+          key: vmodules-prod4-${{ hashFiles('v.mod') }}
+          restore-keys: vmodules-prod4-
 
       - name: Install dependencies
-        run: v install
+        run: |
+          v install
+          v update
 
       - name: Generate git hash
         run: git log -n 1 --pretty=format:"%h" | tee ./.githash
