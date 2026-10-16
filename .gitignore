@@ -32,3 +32,6 @@ xpty_frames/
 cmd/xpty/xpty.dSYM/Contents
 profile/
 lilly-profile
+fuzz_out/
+fuzz_out-windows/
+/fuzz

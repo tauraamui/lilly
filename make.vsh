@@ -108,6 +108,33 @@ fn windows_vm() (string, string) {
 
 const windows_vm_ssh_opts = '-o BatchMode=yes -o ConnectTimeout=10 -o LogLevel=ERROR'
 
+// require_windows_vm returns the VM's ssh destination and port, and fails the
+// task, saying how to start the VM, if it cannot be reached
+fn require_windows_vm(task string) (string, string) {
+	dest, port := windows_vm()
+	if system('ssh -p ${port} ${windows_vm_ssh_opts} ${dest} exit') != 0 {
+		eprintln(term.failed('${task}: cannot reach ${dest} on port ${port} with key-based ssh'))
+		eprintln('  start the VM:  cd ~/vms && quickemu --vm windows-11.conf')
+		exit(1)
+	}
+	return dest, port
+}
+
+// FUZZING
+//
+// cmd/fuzz drives a lilly binary with random keys on random and mutated files,
+// through a pty (ConPTY on Windows), and saves every run that crashes or hangs
+// it under <out>/failures, each with the replay command in its info.txt. The
+// release binaries for Linux and macOS are fuzzed by
+// .forgejo/workflows/fuzz-release.yaml once a release is published; these run
+// the same fuzzer here, and against the Windows build, which CI cannot run.
+// LILLY_FUZZ_DURATION sets how long, e.g. 90s or 1h.
+fn fuzz_duration() string {
+	return getenv_opt('LILLY_FUZZ_DURATION') or { '5m' }
+}
+
+const windows_fuzz_exe = 'fuzz-windows-amd64.exe'
+
 // Runs a build command and fails the task if the compiler does. A bare
 // system() call discards the exit code, which silently turns a compile error
 // into a confusing downstream failure -- xpty comparing against a stale lilly
@@ -167,17 +194,48 @@ context.task(
 	help:    'copy the Windows release build to the local Windows VM and smoke test it there'
 	depends: ['windows-release']
 	run:     fn (self build.Task) ! {
-		dest, port := windows_vm()
-		if system('ssh -p ${port} ${windows_vm_ssh_opts} ${dest} exit') != 0 {
-			eprintln(term.failed('windows-vm: cannot reach ${dest} on port ${port} with key-based ssh'))
-			eprintln('  start the VM:  cd ~/vms && quickemu --vm windows-11.conf')
-			exit(1)
-		}
+		dest, port := require_windows_vm('windows-vm')
 		build_step('windows-vm copy', 'scp -P ${port} ${windows_vm_ssh_opts} ${windows_release_exe} ${dest}:')
 		// over ssh lilly has no real console, so this proves only that the
 		// binary loads and runs; test the editor itself in Windows Terminal
 		build_step('windows-vm smoke test', 'ssh -p ${port} ${windows_vm_ssh_opts} ${dest} ${windows_release_exe} -v')
 		println('In the VM, open Windows Terminal and run: %USERPROFILE%\\${windows_release_exe}')
+	}
+)
+
+// FUZZING TASKS. See FUZZING above.
+context.task(
+	name:    'fuzz'
+	help:    'fuzz a prod build of lilly with random keys and files (LILLY_FUZZ_DURATION, default 5m)'
+	depends: ['prod']
+	run:     fn (self build.Task) ! {
+		build_step('fuzz build', 'v -prod cmd/fuzz -o fuzz')
+		exit(system('./fuzz --duration ${fuzz_duration()} --out fuzz_out -- ./${app_name}'))
+	}
+)
+context.task(
+	name:    'windows-vm-fuzz'
+	help:    'fuzz the Windows release build in the local Windows VM (LILLY_FUZZ_DURATION, default 5m)'
+	depends: ['windows-release']
+	run:     fn (self build.Task) ! {
+		build_step('windows-vm-fuzz build', 'podman run --rm -v "\$PWD":/src -w /src ${windows_build_image} v -prod -os windows -cc x86_64-w64-mingw32-gcc cmd/fuzz -o ${windows_fuzz_exe}')
+		dest, port := require_windows_vm('windows-vm-fuzz')
+		ssh := 'ssh -p ${port} ${windows_vm_ssh_opts} ${dest}'
+		scp := 'scp -P ${port} ${windows_vm_ssh_opts}'
+		// the remote shell is cmd.exe
+		build_step('windows-vm-fuzz clean', '${ssh} "if exist lilly-fuzz rmdir /s /q lilly-fuzz & mkdir lilly-fuzz\\corpus"')
+		build_step('windows-vm-fuzz copy', '${scp} ${windows_release_exe} ${windows_fuzz_exe} ${dest}:lilly-fuzz/')
+		build_step('windows-vm-fuzz copy corpus', '${scp} testdata/syntax/* testdata/fakefiles/* ${dest}:lilly-fuzz/corpus/')
+		rc := system('${ssh} "cd lilly-fuzz && ${windows_fuzz_exe} --duration ${fuzz_duration()} --corpus corpus --out out -- ${windows_release_exe}"')
+		if rc == 0 {
+			return
+		}
+		rmdir_all('fuzz_out-windows') or {}
+		mkdir_all('fuzz_out-windows')!
+		system('${scp} -r ${dest}:lilly-fuzz/out/failures fuzz_out-windows/')
+		eprintln(term.failed('windows-vm-fuzz: failures copied to fuzz_out-windows/failures'))
+		eprintln('  replay one in the VM, in lilly-fuzz, with the replay line from its info.txt')
+		exit(rc)
 	}
 )
 context.task(

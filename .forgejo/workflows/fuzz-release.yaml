@@ -1,0 +1,158 @@
+name: Fuzz release
+
+# Fuzzes the binaries attached to a release, as users download them, on each
+# platform they are built for. Runs once the draft release.yaml made is
+# published, so it never holds a release up; a failure here means a release
+# is out with a crash or hang in it, to fix in the next one.
+#
+#   Linux amd64     this forge's runner, in the CI image
+#   Linux arm64     the same, under qemu-user
+#   macOS arm64     the self-hosted Mac runner
+#   macOS amd64     the same, under Rosetta
+#   Windows amd64   not here: no runner can host it. `v run make.vsh
+#                   windows-vm-fuzz` runs the same fuzzer in a local VM
+#
+# cmd/fuzz drives each binary in a pty with random keys on random and mutated
+# files, failing a run if lilly dies, logs a panic, or stops redrawing. Every
+# failing run is saved, with what it was given and the steps that broke it,
+# and uploaded as the job's artifact; replay one locally with the command in
+# its info.txt.
+#
+# The fuzzer and its corpus come from the commit this workflow runs from, not
+# the tag, so a better fuzzer can be pointed at an older release with
+# workflow_dispatch.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to fuzz (drafts too)'
+        required: true
+        type: string
+      duration:
+        description: 'How long to fuzz each binary, e.g. 20m or 1h'
+        required: false
+        type: string
+        default: '20m'
+
+env:
+  TAG: ${{ inputs.tag || github.event.release.tag_name }}
+  DURATION: ${{ inputs.duration || '20m' }}
+
+jobs:
+  fuzz-linux:
+    name: Fuzz (${{ matrix.asset }})
+    runs-on: ubuntu-latest
+    container:
+      image: registry.catkin.dev/tauraamui/lilly-ci:latest
+      credentials:
+        username: ${{ vars.CI_REGISTRY_USER }}
+        password: ${{ secrets.CI_REGISTRY_TOKEN }}
+    # covers a dispatch of a few hours; the fuzzing stops itself at DURATION
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - asset: lilly-linux-amd64
+            run_as: ''
+            timeout_scale: '1'
+            extra_packages: ''
+          # The binary is static, so qemu-user runs it without an arm64
+          # sysroot. Emulation is several times slower, hence the scale.
+          - asset: lilly-linux-arm64
+            run_as: qemu-aarch64
+            timeout_scale: '4'
+            extra_packages: qemu-user
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install extra packages
+        if: matrix.extra_packages != ''
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ${{ matrix.extra_packages }}
+
+      # The token is only needed to find a draft, when dispatched for one
+      - name: Fetch release binary
+        env:
+          FORGE_TOKEN: ${{ secrets.FORGE_RELEASE_TOKEN }}
+        run: node .forgejo/scripts/fetch-release-assets.mjs "$TAG" ${{ matrix.asset }}
+
+      - name: Build fuzzer
+        run: v -prod cmd/fuzz -o fuzz
+
+      - name: Fuzz
+        run: ./fuzz --duration "$DURATION" --timeout-scale ${{ matrix.timeout_scale }} --out fuzz_out -- ${{ matrix.run_as }} ./${{ matrix.asset }}
+
+      - name: Upload failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-${{ matrix.asset }}
+          path: |
+            fuzz_out/summary.txt
+            fuzz_out/failures/
+
+  # Runs directly on the Mac, as release.yaml's macOS jobs do. One arm64
+  # fuzzer drives both binaries: the amd64 one runs under Rosetta when the
+  # fuzzer starts it.
+  fuzz-macos:
+    name: Fuzz (lilly-darwin-${{ matrix.arch }})
+    runs-on: macos
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            timeout_scale: '1'
+          - arch: amd64
+            timeout_scale: '2'
+    env:
+      ASSET: lilly-darwin-${{ matrix.arch }}
+      V_C_ERROR_BUG_REPORT_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      # The arm64 V release.yaml builds and caches, built here the same way
+      # if this Mac has not built one for the pinned refs yet. See the Build V
+      # step there for why it is built in place and under LC_ALL=C.
+      - name: Build V
+        run: |
+          containerfile=.forgejo/ci-image/Containerfile
+          V_REF=$(sed -n 's/^ARG V_REF=//p' "$containerfile")
+          VC_REF=$(sed -n 's/^ARG VC_REF=//p' "$containerfile")
+          if [ -z "$V_REF" ] || [ -z "$VC_REF" ]; then
+            echo "::error::ARG V_REF and ARG VC_REF must both be set in $containerfile"
+            exit 1
+          fi
+          vdir="$HOME/Library/Caches/lilly-release/v-arm64-$V_REF-$VC_REF"
+          if [ ! -f "$vdir/.built" ]; then
+            rm -rf "$vdir"
+            LC_ALL=C bash .forgejo/ci-image/build-v.sh "$vdir" "$V_REF" "$VC_REF"
+            touch "$vdir/.built"
+          fi
+          "$vdir/v" version
+          echo "VEXE=$vdir/v" >> "${FORGEJO_ENV:-$GITHUB_ENV}"
+
+      - name: Fetch release binary
+        env:
+          FORGE_TOKEN: ${{ secrets.FORGE_RELEASE_TOKEN }}
+        run: node .forgejo/scripts/fetch-release-assets.mjs "$TAG" "$ASSET"
+
+      - name: Build fuzzer
+        run: '"$VEXE" -prod -cc clang cmd/fuzz -o fuzz'
+
+      - name: Fuzz
+        run: ./fuzz --duration "$DURATION" --timeout-scale ${{ matrix.timeout_scale }} --out fuzz_out -- ./"$ASSET"
+
+      - name: Upload failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-${{ env.ASSET }}
+          path: |
+            fuzz_out/summary.txt
+            fuzz_out/failures/
