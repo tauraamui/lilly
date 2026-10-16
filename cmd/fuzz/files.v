@@ -29,10 +29,13 @@ struct CorpusFile {
 fn load_corpus(dirs []string) []CorpusFile {
 	mut out := []CorpusFile{}
 	for dir in dirs {
-		entries := os.ls(dir) or {
+		mut entries := os.ls(dir) or {
 			eprintln('fuzz: skipping corpus ${dir}: ${err}')
 			continue
 		}
+		// os.ls lists in the filesystem's order, so without sorting a session
+		// seed from CI picks different files here and replays nothing like it
+		entries.sort()
 		for entry in entries {
 			path := os.join_path(dir, entry)
 			if os.is_dir(path) {
