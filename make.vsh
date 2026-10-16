@@ -80,6 +80,34 @@ const profile_scenarios = [
 	},
 ]
 
+// WINDOWS RELEASE TESTING
+//
+// Nothing in CI can run the Windows build, so it is checked by hand in a local
+// Windows VM. The binary is built the way the release workflow builds it: in
+// the CI image, with the V it pins and mingw-w64, rather than with whatever V
+// and cross compiler the host has. mingw-w64 is layered onto the CI image in a
+// local image so it is installed once, not on every build.
+//
+// Podman, not Docker: under rootless Docker on the dev machine every process
+// in a container fails to fork. Rootless podman also gives the binary back
+// owned by the caller. The base image must be in podman's own store:
+//   podman login registry.catkin.dev
+//   podman pull registry.catkin.dev/tauraamui/lilly-ci:latest
+const windows_release_exe = '${app_name}-windows-amd64.exe'
+
+const windows_build_image = 'lilly-ci-windows:local'
+
+// The VM's sshd, which quickemu forwards from port 22220 on the host. Override
+// with LILLY_WINDOWS_VM (user@host) and LILLY_WINDOWS_VM_PORT. Login must be
+// key-based: these run ssh in batch mode, which never prompts for a password.
+fn windows_vm() (string, string) {
+	dest := getenv_opt('LILLY_WINDOWS_VM') or { 'Quickemu@localhost' }
+	port := getenv_opt('LILLY_WINDOWS_VM_PORT') or { '22220' }
+	return dest, port
+}
+
+const windows_vm_ssh_opts = '-o BatchMode=yes -o ConnectTimeout=10 -o LogLevel=ERROR'
+
 // Runs a build command and fails the task if the compiler does. A bare
 // system() call discards the exit code, which silently turns a compile error
 // into a confusing downstream failure -- xpty comparing against a stale lilly
@@ -124,6 +152,33 @@ context.task(
 	name:    'prod-windows'
 	depends: ['_generate-git-hash']
 	run:     |self| build_step('prod-windows', 'v -prod -g -os windows -o ${app_name}.exe .')
+)
+context.task(
+	name:    'windows-release'
+	help:    'build lilly-windows-amd64.exe exactly as the release workflow does, in the CI image'
+	depends: ['_generate-git-hash']
+	run:     fn (self build.Task) ! {
+		build_step('windows-release image', "printf 'FROM registry.catkin.dev/tauraamui/lilly-ci:latest\\nRUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends mingw-w64 && rm -rf /var/lib/apt/lists/*\\n' | podman build -q -t ${windows_build_image} -f - .forgejo/ci-image")
+		build_step('windows-release', 'podman run --rm -v "\$PWD":/src -w /src ${windows_build_image} sh -c \'v install && v -prod -os windows -cc x86_64-w64-mingw32-gcc . -o ${windows_release_exe}\'')
+	}
+)
+context.task(
+	name:    'windows-vm'
+	help:    'copy the Windows release build to the local Windows VM and smoke test it there'
+	depends: ['windows-release']
+	run:     fn (self build.Task) ! {
+		dest, port := windows_vm()
+		if system('ssh -p ${port} ${windows_vm_ssh_opts} ${dest} exit') != 0 {
+			eprintln(term.failed('windows-vm: cannot reach ${dest} on port ${port} with key-based ssh'))
+			eprintln('  start the VM:  cd ~/vms && quickemu --vm windows-11.conf')
+			exit(1)
+		}
+		build_step('windows-vm copy', 'scp -P ${port} ${windows_vm_ssh_opts} ${windows_release_exe} ${dest}:')
+		// over ssh lilly has no real console, so this proves only that the
+		// binary loads and runs; test the editor itself in Windows Terminal
+		build_step('windows-vm smoke test', 'ssh -p ${port} ${windows_vm_ssh_opts} ${dest} ${windows_release_exe} -v')
+		println('In the VM, open Windows Terminal and run: %USERPROFILE%\\${windows_release_exe}')
+	}
 )
 context.task(
 	name:    'run'
