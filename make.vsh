@@ -222,8 +222,9 @@ context.task(
 		dest, port := require_windows_vm('windows-vm-fuzz')
 		ssh := 'ssh -p ${port} ${windows_vm_ssh_opts} ${dest}'
 		scp := 'scp -P ${port} ${windows_vm_ssh_opts}'
-		// the remote shell is cmd.exe
-		build_step('windows-vm-fuzz clean', '${ssh} "if exist lilly-fuzz rmdir /s /q lilly-fuzz & mkdir lilly-fuzz\\corpus"')
+		// the remote shell is cmd.exe, where an unbracketed `if` swallows the
+		// rest of the line, so mkdir would only run when the directory existed
+		build_step('windows-vm-fuzz clean', '${ssh} "(if exist lilly-fuzz rmdir /s /q lilly-fuzz) & mkdir lilly-fuzz\\corpus"')
 		build_step('windows-vm-fuzz copy', '${scp} ${windows_release_exe} ${windows_fuzz_exe} ${dest}:lilly-fuzz/')
 		build_step('windows-vm-fuzz copy corpus', '${scp} testdata/syntax/* testdata/fakefiles/* ${dest}:lilly-fuzz/corpus/')
 		rc := system('${ssh} "cd lilly-fuzz && ${windows_fuzz_exe} --duration ${fuzz_duration()} --corpus corpus --out out -- ${windows_release_exe}"')
