@@ -14,6 +14,8 @@
 
 module main
 
+import math
+
 struct ChordAction {
 	count    int // effective repeat count (pre_count * post_count, minimum 1)
 	operator ?u8 // none = pure motion, `d` = delete, etc.
@@ -62,7 +64,7 @@ fn (mut c Chord) feed_internal(key string, in_visual bool) ?ChordAction {
 	match c.state {
 		.empty, .pre_count {
 			if c.is_count_digit(ch, c.pre_count) {
-				c.pre_count = c.pre_count * 10 + int(ch - `0`)
+				c.pre_count = grow_count(c.pre_count, ch)
 				c.state = .pre_count
 				return none
 			}
@@ -107,7 +109,7 @@ fn (mut c Chord) feed_internal(key string, in_visual bool) ?ChordAction {
 		}
 		.have_operator, .post_count {
 			if c.is_count_digit(ch, c.post_count) {
-				c.post_count = c.post_count * 10 + int(ch - `0`)
+				c.post_count = grow_count(c.post_count, ch)
 				c.state = .post_count
 				return none
 			}
@@ -270,5 +272,14 @@ fn (c Chord) single_char_motion(ch u8) ?string {
 fn (c Chord) effective_count() int {
 	pre := if c.pre_count == 0 { 1 } else { c.pre_count }
 	post := if c.post_count == 0 { 1 } else { c.post_count }
-	return pre * post
+	return math.min(pre * post, max_count)
+}
+
+// max_count caps a typed count, as Vim does, so a long run of digits can't
+// overflow it, and a count times a count can't either
+const max_count = 999_999_999
+
+// grow_count appends digit ch to a count being typed
+fn grow_count(count int, ch u8) int {
+	return math.min(count * 10 + int(ch - `0`), max_count)
 }

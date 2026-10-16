@@ -19,59 +19,59 @@ import lib.nanoid
 fn apply_motion(c &documents.Controller2, doc_id nanoid.ID, motion string, count int) bool {
 	match motion {
 		'h' {
-			for _ in 0 .. count {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
 				c.move_cursor_left(doc_id)
-			}
+			})
 		}
 		'j' {
-			for _ in 0 .. count {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
 				c.move_cursor_down(doc_id)
-			}
+			})
 		}
 		'k' {
-			for _ in 0 .. count {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
 				c.move_cursor_up(doc_id)
-			}
+			})
 		}
 		'l' {
-			for _ in 0 .. count {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
 				c.move_cursor_right(doc_id)
-			}
+			})
 		}
 		'{' {
-			for _ in 0 .. count {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
 				c.move_cursor_to_previous_blank_line(doc_id)
-			}
+			})
 		}
 		'}' {
-			for _ in 0 .. count {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
 				c.move_cursor_to_next_blank_line(doc_id)
-			}
+			})
 		}
 		'w' {
-			for _ in 0 .. count {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
 				c.move_cursor_to_next_word_start(doc_id)
-			}
+			})
 		}
 		'W' {
-			for _ in 0 .. count {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
 				c.move_cursor_to_next_big_word_start(doc_id)
-			}
+			})
 		}
 		'e' {
-			for _ in 0 .. count {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
 				c.move_cursor_to_next_word_end(doc_id)
-			}
+			})
 		}
 		'b' {
-			for _ in 0 .. count {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
 				c.move_cursor_to_previous_word_start(doc_id)
-			}
+			})
 		}
 		'ge' {
-			for _ in 0 .. count {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
 				c.move_cursor_to_previous_word_end(doc_id)
-			}
+			})
 		}
 		'0' {
 			c.jump_cursor_to_line_start(doc_id)
@@ -103,9 +103,9 @@ fn apply_motion(c &documents.Controller2, doc_id nanoid.ID, motion string, count
 			// count works like Neovim's $: go (count-1) lines down first,
 			// then to the end of that line - it does not mean "jump to
 			// end of line, count times".
-			for _ in 0 .. count - 1 {
+			repeat_motion(c, doc_id, count - 1, fn (c &documents.Controller2, doc_id nanoid.ID) {
 				c.move_cursor_down(doc_id)
-			}
+			})
 			// jump_cursor_to_line_end lands one past the last character
 			// (it doubles as the insert-position used by `o`); normal-mode
 			// $ instead sits on the last character itself, same as h/l.
@@ -172,6 +172,24 @@ fn apply_operator(c &documents.Controller2, doc_id nanoid.ID, op u8, r cursor.Ra
 		}
 		else {
 			return false
+		}
+	}
+}
+
+// repeat_motion runs a cursor motion count times, but stops as soon as one
+// leaves the cursor where it was: each step depends only on where the cursor
+// is, so none of the rest would move it either. A count far past the end of
+// the file, 999999999w say, then costs what reaching the end does, rather than
+// spinning through every step it asked for and freezing lilly.
+//
+// step must not capture anything: a closure is pinned for the life of the
+// process, and this runs for every counted motion.
+fn repeat_motion(c &documents.Controller2, doc_id nanoid.ID, count int, step fn (&documents.Controller2, nanoid.ID)) {
+	for _ in 0 .. count {
+		at := c.cursor_offset(doc_id)
+		step(c, doc_id)
+		if c.cursor_offset(doc_id) == at {
+			return
 		}
 	}
 }

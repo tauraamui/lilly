@@ -484,11 +484,17 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (tea.Cmd, bool
 			}
 			cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
 			for _ in 0 .. count {
+				lines_before := m.doc_controller.line_count(m.doc_id)
 				// a closed fold is one line to dd, as in Vim, so it all goes
 				for _ in cursor_line .. u64(m.fold_end(int(cursor_line))) + 1 {
 					// deleting the same line since each line delete will move
 					// the next line up, into the delete
 					m.doc_controller.delete_line(m.doc_id, cursor_line)
+				}
+				// nothing left below to delete: a count past the end of the
+				// file must not go on deleting nothing for every step of it
+				if m.doc_controller.line_count(m.doc_id) == lines_before {
+					break
 				}
 			}
 			m.doc_controller.commit_undo_group(m.doc_id)
@@ -501,7 +507,11 @@ fn (mut m EditorModel2) execute_action_normal(action ChordAction) (tea.Cmd, bool
 		'x' {
 			m.doc_controller.begin_undo_group(m.doc_id)
 			for _ in 0 .. count {
-				m.doc_controller.delete_char_at(m.doc_id)
+				// x stops at the end of the line, as in Vim; past it, every
+				// step left of a large count would delete nothing
+				if !m.doc_controller.delete_char_at(m.doc_id) {
+					break
+				}
 			}
 			m.doc_controller.commit_undo_group(m.doc_id)
 			return tea.no_cmd, false

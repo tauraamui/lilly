@@ -90,9 +90,11 @@ pub fn (mut dc Controller2) delete(doc_id nanoid.ID) {
 	dc.docs[doc_id].delete()
 }
 
-pub fn (mut dc Controller2) delete_char_at(doc_id nanoid.ID) {
+// delete_char_at deletes the character under the cursor, and reports
+// whether there was one to delete
+pub fn (mut dc Controller2) delete_char_at(doc_id nanoid.ID) bool {
 	dc.dirty[doc_id] = true
-	dc.docs[doc_id].delete_char_at()
+	return dc.docs[doc_id].delete_char_at()
 }
 
 pub fn (mut dc Controller2) delete_line(doc_id nanoid.ID, y u64) {
@@ -274,6 +276,10 @@ pub fn (mut dc Controller2) line_runes_into(doc_id nanoid.ID, y u64, mut scratch
 
 pub fn (dc Controller2) cursor_line_and_x(doc_id nanoid.ID) (u64, u64) {
 	return dc.docs[doc_id].cursor_line_and_x()
+}
+
+pub fn (dc Controller2) cursor_offset(doc_id nanoid.ID) u64 {
+	return dc.docs[doc_id].cursor_offset()
 }
 
 pub fn (dc Controller2) line_count(doc_id nanoid.ID) u64 {

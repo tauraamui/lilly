@@ -276,10 +276,12 @@ pub fn (mut tb TextBuffer) delete() {
 // current line (the `x` motion). Unlike delete(), it never joins with the
 // next line - on an empty line (nothing but the trailing newline) it is a
 // no-op, matching Neovim's `x`.
-pub fn (mut tb TextBuffer) delete_char_at() {
+// delete_char_at deletes the character under the cursor, never the newline
+// ending its line, and reports whether there was one to delete
+pub fn (mut tb TextBuffer) delete_char_at() bool {
 	line_count := tb.line_buf.len()
 	if line_count == 0 {
-		return
+		return false
 	}
 	mut line_idx := tb.line_buf.current_line
 	if line_idx >= u64(line_count) {
@@ -295,9 +297,10 @@ pub fn (mut tb TextBuffer) delete_char_at() {
 		}
 	}
 	if tb.data_buf.ccur() >= content_end {
-		return
+		return false
 	}
 	tb.delete()
+	return true
 }
 
 pub fn (mut tb TextBuffer) delete_line(y u64) {
@@ -886,6 +889,13 @@ pub fn (tb TextBuffer) cursor_line_and_x() (u64, u64) {
 		u64(0)
 	}
 	return line_idx, column
+}
+
+// cursor_offset is the cursor's byte offset into the document: unlike
+// cursor_line_and_x, it costs nothing to read, for telling whether a motion
+// moved the cursor at all
+pub fn (tb TextBuffer) cursor_offset() u64 {
+	return tb.data_buf.ccur()
 }
 
 pub fn (tb TextBuffer) line_count() u64 {
