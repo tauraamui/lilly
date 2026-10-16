@@ -304,3 +304,33 @@ fn test_read_preview_lines_decodes_runes_split_across_blocks() {
 		assert read.lines == ['${pad}🙂日', 'next']
 	}
 }
+
+// the picker's files load after it opens, so an up pressed straight away
+// meets an empty list. It left the selection at -1, and the files arriving
+// then indexed the list with it: a crash the fuzzer found on Windows
+fn test_up_before_the_files_load_keeps_the_selection_on_the_list() {
+	mut fp := FilePickerModel{
+		theme:  theme.light_theme
+		finder: MockFilesFinder{}
+	}
+
+	m, _ := fp.update(tea.KeyMsg{
+		k_type: .special
+		runes:  'up'.runes()
+	})
+	if m is FilePickerModel {
+		fp = *m
+	}
+	assert fp.selected_index == 0
+	assert fp.start_index == 0
+
+	loaded, _ := fp.update(LoadFilesMsg{
+		root: './fake-root-dir'
+	})
+	if loaded is FilePickerModel {
+		fp = *loaded
+	}
+	assert fp.filtered_files.len == 3
+	assert fp.selected_index == 0
+	fp.debug_data()
+}

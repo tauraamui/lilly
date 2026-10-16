@@ -211,7 +211,7 @@ fn (m FilePickerModel) preview_size() (int, int) {
 // more lines to fill a taller pane, drops lines and cells a smaller one no
 // longer shows, and re-reads lines that were cut when the pane gets wider.
 fn (mut m FilePickerModel) load_preview() {
-	if m.filtered_files.len == 0 || m.selected_index >= m.filtered_files.len {
+	if m.selected_index < 0 || m.selected_index >= m.filtered_files.len {
 		m.reset_preview('')
 		return
 	}
@@ -515,18 +515,7 @@ fn (mut m FilePickerModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							}
 						}
 						'up', 'ctrl+k' {
-							m.selected_index++
-							max_visible := m.max_visible_items()
-							if max_visible > 0 && m.selected_index >= m.start_index + max_visible {
-								m.start_index++
-								max_start := m.filtered_files.len - max_visible
-								if m.start_index > max_start {
-									m.start_index = max_start
-								}
-							}
-							if m.selected_index >= m.filtered_files.len {
-								m.selected_index = m.filtered_files.len - 1
-							}
+							m.select_next()
 						}
 						'down', 'ctrl+j' {
 							m.selected_index--
@@ -630,6 +619,28 @@ fn render_file_path_line(mut ctx tea.Context, opts RenderFilePathLineParams) {
 	if opts.is_selected {
 		ctx.reset_color()
 		ctx.reset_bg_color()
+	}
+}
+
+// select_next moves the selection one file along. An empty list, before its
+// files have loaded or when the query matches nothing, has nothing to move to:
+// clamping to its last index there set the selection to -1, which the list
+// filling in later then indexed.
+fn (mut m FilePickerModel) select_next() {
+	if m.filtered_files.len == 0 {
+		return
+	}
+	m.selected_index++
+	max_visible := m.max_visible_items()
+	if max_visible > 0 && m.selected_index >= m.start_index + max_visible {
+		m.start_index++
+		max_start := m.filtered_files.len - max_visible
+		if m.start_index > max_start {
+			m.start_index = max_start
+		}
+	}
+	if m.selected_index >= m.filtered_files.len {
+		m.selected_index = m.filtered_files.len - 1
 	}
 }
 
@@ -780,7 +791,7 @@ fn (m FilePickerModel) view(mut ctx tea.Context) {
 }
 
 fn (m FilePickerModel) debug_data() DebugData {
-	selected_path := if m.filtered_files.len == 0 {
+	selected_path := if m.selected_index < 0 || m.selected_index >= m.filtered_files.len {
 		'<no files>'
 	} else {
 		m.filtered_files[m.selected_index]
