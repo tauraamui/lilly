@@ -33,6 +33,11 @@ const probe_timeout = 10 * time.second
 
 const quit_timeout = 5 * time.second
 
+// for a lilly that seems to have stopped to finish exiting. A lilly that
+// quits closes its terminal before the kernel lets it be reaped, and a key
+// written in between fails, so a quit can look like it stopped reading
+const exit_grace = 2 * time.second
+
 enum Verdict {
 	ok
 	stuck   // alive and redrawing, but would not quit on :qa; a hang on Windows, see Runner.quit
@@ -182,8 +187,15 @@ fn (r Runner) ended(s pty.ExitStatus, when string) Result {
 }
 
 fn (mut r Runner) gone_or(verdict Verdict, detail string) Result {
-	if s := r.p.exited() {
-		return r.ended(s, detail)
+	deadline := time.now().add(r.timeout(exit_grace))
+	for {
+		if s := r.p.exited() {
+			return r.ended(s, detail)
+		}
+		if time.now() >= deadline {
+			break
+		}
+		time.sleep(20 * time.millisecond)
 	}
 	return Result{
 		verdict: verdict
@@ -197,7 +209,9 @@ fn (mut r Runner) quit() Result {
 		// a key at a time: bytes that arrive together reach lilly as one
 		// multi-rune key, which no binding matches
 		for key in ['\x1b', '\x1b', ':', 'q', 'a', '\r'] {
-			r.p.write(key.bytes()) or { return r.gone_or(.hang, 'stopped reading input at quit') }
+			r.p.write(key.bytes()) or {
+				return r.gone_or(.hang, 'stopped reading input at quit: ${err}')
+			}
 			time.sleep(100 * time.millisecond)
 		}
 		deadline := time.now().add(r.timeout(quit_timeout))
@@ -244,7 +258,7 @@ fn (mut r Runner) drive(steps []Step) Result {
 		match step.kind {
 			.keys {
 				r.p.write(step.bytes) or {
-					return r.gone_or(.hang, 'stopped reading input at step ${i}')
+					return r.gone_or(.hang, 'stopped reading input at step ${i}: ${err}')
 				}
 			}
 			.resize {
