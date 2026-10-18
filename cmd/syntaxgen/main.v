@@ -25,6 +25,7 @@ import os
 const grammars_dir = 'lib/syntax/grammars'
 const out_dir = 'lib/syntax'
 const registry_file = 'lexers.v'
+const matchers_file = 'lexer_matchers.v'
 const scope_file = 'lib/syntax/scope.v'
 
 fn main() {
@@ -105,6 +106,7 @@ fn generate_all(dir string) ![]string {
 	mut context_emit := map[string][]bool{}
 	mut takes_emit := []bool{len: grammars.len}
 	mut written := []string{}
+	mut matchers := map[string]string{}
 	for i in order {
 		g := grammars[i]
 		generated := generate(g, license, context_emit) or {
@@ -115,7 +117,18 @@ fn generate_all(dir string) ![]string {
 		written << out
 		context_emit[g.id] = generated.context_emit
 		takes_emit[i] = generated.takes_emit
+		for name, f in generated.matchers {
+			if have := matchers[name] {
+				if have != f {
+					return error('two pattern matchers hash to ${name}, change how pattern_fn names them')
+				}
+			}
+			matchers[name] = f
+		}
 	}
+	shared := os.join_path(dir, matchers_file)
+	os.write_file(shared, generate_matchers(matchers, license))!
+	written << shared
 	registry := os.join_path(dir, registry_file)
 	os.write_file(registry, generate_registry(grammars, takes_emit, license))!
 	written << registry

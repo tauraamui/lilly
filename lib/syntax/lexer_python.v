@@ -67,7 +67,7 @@ fn lex_python_ctx_main(r []rune, i int, emit bool) Match {
 	mut h2 := -2
 	// #.*
 	if f & 1 != 0 {
-		e := lex_python_m0(r, i)
+		e := lex_m_d74af12b(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -78,9 +78,9 @@ fn lex_python_ctx_main(r []rune, i int, emit bool) Match {
 	// [rRbBuUfF]{0,2}"""
 	if f & 2 != 0 {
 		if h0 == -2 {
-			h0 = lex_python_m1(r, i)
+			h0 = lex_m_b3f9456c(r, i)
 		}
-		e := if h0 >= 0 { lex_python_m2(r, h0) } else { -1 }
+		e := if h0 >= 0 { lex_m_64e68966(r, h0) } else { -1 }
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -93,9 +93,9 @@ fn lex_python_ctx_main(r []rune, i int, emit bool) Match {
 	// [rRbBuUfF]{0,2}'''
 	if f & 4 != 0 {
 		if h1 == -2 {
-			h1 = lex_python_m3(r, i)
+			h1 = lex_m_49f8692d(r, i)
 		}
-		e := if h1 >= 0 { lex_python_m4(r, h1) } else { -1 }
+		e := if h1 >= 0 { lex_m_ed8d5774(r, h1) } else { -1 }
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -107,7 +107,7 @@ fn lex_python_ctx_main(r []rune, i int, emit bool) Match {
 	}
 	// [rRbBuUfF]{0,2}"
 	if f & 8 != 0 {
-		e := lex_python_m1(r, i)
+		e := lex_m_b3f9456c(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -119,7 +119,7 @@ fn lex_python_ctx_main(r []rune, i int, emit bool) Match {
 	}
 	// [rRbBuUfF]{0,2}'
 	if f & 16 != 0 {
-		e := lex_python_m3(r, i)
+		e := lex_m_49f8692d(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -131,7 +131,7 @@ fn lex_python_ctx_main(r []rune, i int, emit bool) Match {
 	}
 	// ^\s*@[\w.]+
 	if i == 0 && f & 32 != 0 {
-		e := lex_python_m5(r, i)
+		e := lex_m_b849e6ed(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -142,7 +142,7 @@ fn lex_python_ctx_main(r []rune, i int, emit bool) Match {
 	// [A-Za-z_]\w*
 	if f & 64 != 0 {
 		if h2 == -2 {
-			h2 = lex_python_m6(r, i)
+			h2 = lex_m_73938ba1(r, i)
 		}
 		e := h2
 		if e >= 0 {
@@ -163,9 +163,9 @@ fn lex_python_ctx_main(r []rune, i int, emit bool) Match {
 	// [A-Za-z_]\w*(?=\()
 	if f & 128 != 0 {
 		if h2 == -2 {
-			h2 = lex_python_m6(r, i)
+			h2 = lex_m_73938ba1(r, i)
 		}
-		e := if h2 >= 0 { lex_python_m7(r, h2) } else { -1 }
+		e := if h2 >= 0 { lex_m_647a2c53(r, h2) } else { -1 }
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -175,10 +175,10 @@ fn lex_python_ctx_main(r []rune, i int, emit bool) Match {
 	}
 	// (?=[A-Z])[A-Za-z_]\w*
 	if f & 256 != 0 {
-		if lex_python_m9(r, i) >= 0 && h2 == -2 {
-			h2 = lex_python_m6(r, i)
+		if lex_m_461b03a7(r, i) >= 0 && h2 == -2 {
+			h2 = lex_m_73938ba1(r, i)
 		}
-		e := if lex_python_m9(r, i) >= 0 && h2 >= 0 { h2 } else { -1 }
+		e := if lex_m_461b03a7(r, i) >= 0 && h2 >= 0 { h2 } else { -1 }
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -189,7 +189,7 @@ fn lex_python_ctx_main(r []rune, i int, emit bool) Match {
 	// [A-Za-z_]\w*
 	if f & 512 != 0 {
 		if h2 == -2 {
-			h2 = lex_python_m6(r, i)
+			h2 = lex_m_73938ba1(r, i)
 		}
 		e := h2
 		if e >= 0 {
@@ -201,7 +201,7 @@ fn lex_python_ctx_main(r []rune, i int, emit bool) Match {
 	}
 	// 0[xX][\h_]+|0[bB][01_]+|0[oO][0-7_]+|\d[\d_]*(\.[\d_]*)?([eE][+\-]?\d+)?[jJ]?|\.\d[\d_]*([eE][+\-]?\d+)?[jJ]?
 	if f & 1024 != 0 {
-		e := lex_python_m11(r, i)
+		e := lex_m_f2c57c24(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -228,7 +228,7 @@ fn lex_python_ctx_double(r []rune, i int) Match {
 	c := r[i]
 	// \\.
 	if c == rune(92) {
-		e := lex_python_m20(r, i)
+		e := lex_m_d7bf527c(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -238,7 +238,7 @@ fn lex_python_ctx_double(r []rune, i int) Match {
 	}
 	// "
 	if c == `"` {
-		e := lex_python_m21(r, i)
+		e := lex_m_09e5985a(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -266,7 +266,7 @@ fn lex_python_ctx_single(r []rune, i int) Match {
 	c := r[i]
 	// \\.
 	if c == rune(92) {
-		e := lex_python_m20(r, i)
+		e := lex_m_d7bf527c(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -276,7 +276,7 @@ fn lex_python_ctx_single(r []rune, i int) Match {
 	}
 	// '
 	if c == `'` {
-		e := lex_python_m22(r, i)
+		e := lex_m_2a9f4d5b(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -304,7 +304,7 @@ fn lex_python_ctx_triple_double(r []rune, i int) Match {
 	c := r[i]
 	// \\.
 	if c == rune(92) {
-		e := lex_python_m20(r, i)
+		e := lex_m_d7bf527c(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -314,7 +314,7 @@ fn lex_python_ctx_triple_double(r []rune, i int) Match {
 	}
 	// """
 	if c == `"` {
-		e := lex_python_m23(r, i)
+		e := lex_m_082d049a(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -342,7 +342,7 @@ fn lex_python_ctx_triple_single(r []rune, i int) Match {
 	c := r[i]
 	// \\.
 	if c == rune(92) {
-		e := lex_python_m20(r, i)
+		e := lex_m_d7bf527c(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -352,7 +352,7 @@ fn lex_python_ctx_triple_single(r []rune, i int) Match {
 	}
 	// '''
 	if c == `'` {
-		e := lex_python_m24(r, i)
+		e := lex_m_80d25ab5(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -1159,361 +1159,6 @@ fn lex_python_words(r []rune, start int, end int) Scope {
 	}
 }
 
-@[direct_array_access]
-fn lex_python_m0(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `#`) {
-		return -1
-	}
-	p++
-	for p < r.len {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m1(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && n1 < 2 && (r[p] == `r` || r[p] == `R` || r[p] == `b` || r[p] == `B` || r[p] == `u` || r[p] == `U` || r[p] == `f` || r[p] == `F`) {
-		p++
-		n1++
-	}
-	if p >= r.len || !(r[p] == `"`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m2(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `"`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `"`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m3(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && n1 < 2 && (r[p] == `r` || r[p] == `R` || r[p] == `b` || r[p] == `B` || r[p] == `u` || r[p] == `U` || r[p] == `f` || r[p] == `F`) {
-		p++
-		n1++
-	}
-	if p >= r.len || !(r[p] == `'`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m4(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `'`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `'`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m5(r []rune, start int) int {
-	mut p := start
-	if p != 0 {
-		return -1
-	}
-	for p < r.len && (r[p] == ` ` || r[p] == rune(9)) {
-		p++
-	}
-	if p >= r.len || !(r[p] == `@`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_` || r[p] == `.`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_` || r[p] == `.`) {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m6(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !((r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `a` && r[p] <= `z`) || r[p] == `_`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_`) {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m8(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `(`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m7(r []rune, start int) int {
-	p := start
-	if lex_python_m8(r, p) < 0 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m10(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] >= `A` && r[p] <= `Z`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m9(r []rune, start int) int {
-	p := start
-	if lex_python_m10(r, p) < 0 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m12(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `0`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `x` || r[p] == `X`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !((r[p] >= `0` && r[p] <= `9`) || (r[p] >= `a` && r[p] <= `f`) || (r[p] >= `A` && r[p] <= `F`) || r[p] == `_`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `0` && r[p] <= `9`) || (r[p] >= `a` && r[p] <= `f`) || (r[p] >= `A` && r[p] <= `F`) || r[p] == `_`) {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m13(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `0`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `b` || r[p] == `B`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `0` || r[p] == `1` || r[p] == `_`) {
-		return -1
-	}
-	p++
-	for p < r.len && (r[p] == `0` || r[p] == `1` || r[p] == `_`) {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m14(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `0`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `o` || r[p] == `O`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !((r[p] >= `0` && r[p] <= `7`) || r[p] == `_`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `0` && r[p] <= `7`) || r[p] == `_`) {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m16(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `.`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `0` && r[p] <= `9`) || r[p] == `_`) {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m17(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `e` || r[p] == `E`) {
-		return -1
-	}
-	p++
-	mut n1 := 0
-	for p < r.len && n1 < 1 && (r[p] == `+` || r[p] == `-`) {
-		p++
-		n1++
-	}
-	if p >= r.len || !(r[p] >= `0` && r[p] <= `9`) {
-		return -1
-	}
-	p++
-	for p < r.len && r[p] >= `0` && r[p] <= `9` {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m15(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] >= `0` && r[p] <= `9`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `0` && r[p] <= `9`) || r[p] == `_`) {
-		p++
-	}
-	mut n1 := 0
-	for n1 < 1 {
-		q2 := lex_python_m16(r, p)
-		if q2 < 0 || q2 == p {
-			break
-		}
-		p = q2
-		n1++
-	}
-	mut n3 := 0
-	for n3 < 1 {
-		q4 := lex_python_m17(r, p)
-		if q4 < 0 || q4 == p {
-			break
-		}
-		p = q4
-		n3++
-	}
-	mut n5 := 0
-	for p < r.len && n5 < 1 && (r[p] == `j` || r[p] == `J`) {
-		p++
-		n5++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m19(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `e` || r[p] == `E`) {
-		return -1
-	}
-	p++
-	mut n1 := 0
-	for p < r.len && n1 < 1 && (r[p] == `+` || r[p] == `-`) {
-		p++
-		n1++
-	}
-	if p >= r.len || !(r[p] >= `0` && r[p] <= `9`) {
-		return -1
-	}
-	p++
-	for p < r.len && r[p] >= `0` && r[p] <= `9` {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m18(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `.`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] >= `0` && r[p] <= `9`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `0` && r[p] <= `9`) || r[p] == `_`) {
-		p++
-	}
-	mut n1 := 0
-	for n1 < 1 {
-		q2 := lex_python_m19(r, p)
-		if q2 < 0 || q2 == p {
-			break
-		}
-		p = q2
-		n1++
-	}
-	mut n3 := 0
-	for p < r.len && n3 < 1 && (r[p] == `j` || r[p] == `J`) {
-		p++
-		n3++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m11(r []rune, start int) int {
-	mut p := start
-	mut q1 := lex_python_m12(r, p)
-	if q1 < 0 {
-		q1 = lex_python_m13(r, p)
-	}
-	if q1 < 0 {
-		q1 = lex_python_m14(r, p)
-	}
-	if q1 < 0 {
-		q1 = lex_python_m15(r, p)
-	}
-	if q1 < 0 {
-		q1 = lex_python_m18(r, p)
-	}
-	if q1 < 0 {
-		return -1
-	}
-	p = q1
-	return p
-}
-
 const lex_python_first_main = [u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
 	u32(0), u32(32), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
 	u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
@@ -1527,73 +1172,3 @@ const lex_python_first_main = [u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u
 	u32(960), u32(960), u32(960), u32(960), u32(960), u32(960), u32(960), u32(960), u32(960), u32(960),
 	u32(960), u32(990), u32(960), u32(960), u32(990), u32(960), u32(960), u32(960), u32(960), u32(960),
 	u32(0), u32(0), u32(0), u32(0), u32(0)]!
-
-@[direct_array_access]
-fn lex_python_m20(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == rune(92)) {
-		return -1
-	}
-	p++
-	if p >= r.len {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m21(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `"`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m22(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `'`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m23(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `"`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `"`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `"`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_python_m24(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `'`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `'`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `'`) {
-		return -1
-	}
-	p++
-	return p
-}

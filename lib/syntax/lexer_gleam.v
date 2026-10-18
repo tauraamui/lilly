@@ -56,7 +56,7 @@ fn lex_gleam_ctx_main(r []rune, i int) Match {
 	mut h0 := -2
 	// ///?/?.*
 	if f & 1 != 0 {
-		e := lex_gleam_m0(r, i)
+		e := lex_m_2e7b0cdf(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -66,7 +66,7 @@ fn lex_gleam_ctx_main(r []rune, i int) Match {
 	}
 	// "
 	if f & 2 != 0 {
-		e := lex_gleam_m1(r, i)
+		e := lex_m_09e5985a(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -78,7 +78,7 @@ fn lex_gleam_ctx_main(r []rune, i int) Match {
 	}
 	// @[a-z_]\w*
 	if f & 4 != 0 {
-		e := lex_gleam_m2(r, i)
+		e := lex_m_0d3a5727(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -88,7 +88,7 @@ fn lex_gleam_ctx_main(r []rune, i int) Match {
 	}
 	// [A-Za-z_]\w*
 	if f & 8 != 0 {
-		e := lex_gleam_m3(r, i)
+		e := lex_m_73938ba1(r, i)
 		if e >= 0 {
 			s := lex_gleam_words(r, i, e)
 			if s != .none {
@@ -102,9 +102,9 @@ fn lex_gleam_ctx_main(r []rune, i int) Match {
 	// [a-z_]\w*(?=\()
 	if f & 16 != 0 {
 		if h0 == -2 {
-			h0 = lex_gleam_m4(r, i)
+			h0 = lex_m_9c637009(r, i)
 		}
-		e := if h0 >= 0 { lex_gleam_m5(r, h0) } else { -1 }
+		e := if h0 >= 0 { lex_m_647a2c53(r, h0) } else { -1 }
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -114,7 +114,7 @@ fn lex_gleam_ctx_main(r []rune, i int) Match {
 	}
 	// [A-Z]\w*
 	if f & 32 != 0 {
-		e := lex_gleam_m7(r, i)
+		e := lex_m_e8186821(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -124,7 +124,7 @@ fn lex_gleam_ctx_main(r []rune, i int) Match {
 	}
 	// [a-z_]\w*
 	if f & 64 != 0 {
-		e := lex_gleam_m4(r, i)
+		e := lex_m_9c637009(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -134,7 +134,7 @@ fn lex_gleam_ctx_main(r []rune, i int) Match {
 	}
 	// 0[xX][\h_]+|0[bB][01_]+|0[oO][0-7_]+|\d[\d_]*(\.[\d_]*)?([eE][+\-]?\d+)?
 	if f & 128 != 0 {
-		e := lex_gleam_m8(r, i)
+		e := lex_m_05bc6592(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -161,7 +161,7 @@ fn lex_gleam_ctx_double(r []rune, i int) Match {
 	c := r[i]
 	// \\.
 	if c == rune(92) {
-		e := lex_gleam_m15(r, i)
+		e := lex_m_d7bf527c(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -171,7 +171,7 @@ fn lex_gleam_ctx_double(r []rune, i int) Match {
 	}
 	// "
 	if c == `"` {
-		e := lex_gleam_m1(r, i)
+		e := lex_m_09e5985a(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -523,267 +523,6 @@ fn lex_gleam_words(r []rune, start int, end int) Scope {
 	}
 }
 
-@[direct_array_access]
-fn lex_gleam_m0(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `/`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `/`) {
-		return -1
-	}
-	p++
-	mut n1 := 0
-	for p < r.len && n1 < 1 && r[p] == `/` {
-		p++
-		n1++
-	}
-	mut n2 := 0
-	for p < r.len && n2 < 1 && r[p] == `/` {
-		p++
-		n2++
-	}
-	for p < r.len {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_gleam_m1(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `"`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_gleam_m2(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `@`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !((r[p] >= `a` && r[p] <= `z`) || r[p] == `_`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_`) {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_gleam_m3(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !((r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `a` && r[p] <= `z`) || r[p] == `_`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_`) {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_gleam_m4(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !((r[p] >= `a` && r[p] <= `z`) || r[p] == `_`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_`) {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_gleam_m6(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `(`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_gleam_m5(r []rune, start int) int {
-	p := start
-	if lex_gleam_m6(r, p) < 0 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_gleam_m7(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] >= `A` && r[p] <= `Z`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_`) {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_gleam_m9(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `0`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `x` || r[p] == `X`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !((r[p] >= `0` && r[p] <= `9`) || (r[p] >= `a` && r[p] <= `f`) || (r[p] >= `A` && r[p] <= `F`) || r[p] == `_`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `0` && r[p] <= `9`) || (r[p] >= `a` && r[p] <= `f`) || (r[p] >= `A` && r[p] <= `F`) || r[p] == `_`) {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_gleam_m10(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `0`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `b` || r[p] == `B`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `0` || r[p] == `1` || r[p] == `_`) {
-		return -1
-	}
-	p++
-	for p < r.len && (r[p] == `0` || r[p] == `1` || r[p] == `_`) {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_gleam_m11(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `0`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `o` || r[p] == `O`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !((r[p] >= `0` && r[p] <= `7`) || r[p] == `_`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `0` && r[p] <= `7`) || r[p] == `_`) {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_gleam_m13(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `.`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `0` && r[p] <= `9`) || r[p] == `_`) {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_gleam_m14(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `e` || r[p] == `E`) {
-		return -1
-	}
-	p++
-	mut n1 := 0
-	for p < r.len && n1 < 1 && (r[p] == `+` || r[p] == `-`) {
-		p++
-		n1++
-	}
-	if p >= r.len || !(r[p] >= `0` && r[p] <= `9`) {
-		return -1
-	}
-	p++
-	for p < r.len && r[p] >= `0` && r[p] <= `9` {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_gleam_m12(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] >= `0` && r[p] <= `9`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `0` && r[p] <= `9`) || r[p] == `_`) {
-		p++
-	}
-	mut n1 := 0
-	for n1 < 1 {
-		q2 := lex_gleam_m13(r, p)
-		if q2 < 0 || q2 == p {
-			break
-		}
-		p = q2
-		n1++
-	}
-	mut n3 := 0
-	for n3 < 1 {
-		q4 := lex_gleam_m14(r, p)
-		if q4 < 0 || q4 == p {
-			break
-		}
-		p = q4
-		n3++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_gleam_m8(r []rune, start int) int {
-	mut p := start
-	mut q1 := lex_gleam_m9(r, p)
-	if q1 < 0 {
-		q1 = lex_gleam_m10(r, p)
-	}
-	if q1 < 0 {
-		q1 = lex_gleam_m11(r, p)
-	}
-	if q1 < 0 {
-		q1 = lex_gleam_m12(r, p)
-	}
-	if q1 < 0 {
-		return -1
-	}
-	p = q1
-	return p
-}
-
 const lex_gleam_first_main = [u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
 	u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
 	u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
@@ -796,17 +535,3 @@ const lex_gleam_first_main = [u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u3
 	u32(88), u32(88), u32(88), u32(88), u32(88), u32(88), u32(88), u32(88), u32(88), u32(88), u32(88),
 	u32(88), u32(88), u32(88), u32(88), u32(88), u32(88), u32(88), u32(88), u32(88), u32(88), u32(88),
 	u32(88), u32(88), u32(0), u32(0), u32(0), u32(0), u32(0)]!
-
-@[direct_array_access]
-fn lex_gleam_m15(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == rune(92)) {
-		return -1
-	}
-	p++
-	if p >= r.len {
-		return -1
-	}
-	p++
-	return p
-}

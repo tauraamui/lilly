@@ -68,7 +68,7 @@ fn lex_typescript_ctx_main(r []rune, i int, emit bool) Match {
 	mut h1 := -2
 	// //.*
 	if f & 1 != 0 {
-		e := lex_typescript_m0(r, i)
+		e := lex_m_e33fb31c(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -79,9 +79,9 @@ fn lex_typescript_ctx_main(r []rune, i int, emit bool) Match {
 	// /\*\*(?!/)
 	if f & 2 != 0 {
 		if h0 == -2 {
-			h0 = lex_typescript_m1(r, i)
+			h0 = lex_m_92807765(r, i)
 		}
-		e := if h0 >= 0 { lex_typescript_m2(r, h0) } else { -1 }
+		e := if h0 >= 0 { lex_m_b614c2a2(r, h0) } else { -1 }
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -93,7 +93,7 @@ fn lex_typescript_ctx_main(r []rune, i int, emit bool) Match {
 	}
 	// /\*
 	if f & 4 != 0 {
-		e := lex_typescript_m1(r, i)
+		e := lex_m_92807765(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -105,7 +105,7 @@ fn lex_typescript_ctx_main(r []rune, i int, emit bool) Match {
 	}
 	// "
 	if f & 8 != 0 {
-		e := lex_typescript_m4(r, i)
+		e := lex_m_09e5985a(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -117,7 +117,7 @@ fn lex_typescript_ctx_main(r []rune, i int, emit bool) Match {
 	}
 	// '
 	if f & 16 != 0 {
-		e := lex_typescript_m5(r, i)
+		e := lex_m_2a9f4d5b(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -129,7 +129,7 @@ fn lex_typescript_ctx_main(r []rune, i int, emit bool) Match {
 	}
 	// `
 	if f & 32 != 0 {
-		e := lex_typescript_m6(r, i)
+		e := lex_m_953bb9c6(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -142,7 +142,7 @@ fn lex_typescript_ctx_main(r []rune, i int, emit bool) Match {
 	// [A-Za-z_$][\w$]*
 	if f & 64 != 0 {
 		if h1 == -2 {
-			h1 = lex_typescript_m7(r, i)
+			h1 = lex_m_f1e25607(r, i)
 		}
 		e := h1
 		if e >= 0 {
@@ -163,9 +163,9 @@ fn lex_typescript_ctx_main(r []rune, i int, emit bool) Match {
 	// [A-Za-z_$][\w$]*(?=\s*\()
 	if f & 128 != 0 {
 		if h1 == -2 {
-			h1 = lex_typescript_m7(r, i)
+			h1 = lex_m_f1e25607(r, i)
 		}
-		e := if h1 >= 0 { lex_typescript_m8(r, h1) } else { -1 }
+		e := if h1 >= 0 { lex_m_9b1f5889(r, h1) } else { -1 }
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -175,10 +175,10 @@ fn lex_typescript_ctx_main(r []rune, i int, emit bool) Match {
 	}
 	// (?=[A-Z])[A-Za-z_$][\w$]*
 	if f & 256 != 0 {
-		if lex_typescript_m10(r, i) >= 0 && h1 == -2 {
-			h1 = lex_typescript_m7(r, i)
+		if lex_m_461b03a7(r, i) >= 0 && h1 == -2 {
+			h1 = lex_m_f1e25607(r, i)
 		}
-		e := if lex_typescript_m10(r, i) >= 0 && h1 >= 0 { h1 } else { -1 }
+		e := if lex_m_461b03a7(r, i) >= 0 && h1 >= 0 { h1 } else { -1 }
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -189,7 +189,7 @@ fn lex_typescript_ctx_main(r []rune, i int, emit bool) Match {
 	// [A-Za-z_$][\w$]*
 	if f & 512 != 0 {
 		if h1 == -2 {
-			h1 = lex_typescript_m7(r, i)
+			h1 = lex_m_f1e25607(r, i)
 		}
 		e := h1
 		if e >= 0 {
@@ -201,7 +201,7 @@ fn lex_typescript_ctx_main(r []rune, i int, emit bool) Match {
 	}
 	// 0[xX][\h_]+n?|0[bB][01_]+n?|0[oO][0-7_]+n?|\d[\d_]*(\.\d[\d_]*)?([eE][+\-]?\d+)?n?|\.\d[\d_]*([eE][+\-]?\d+)?
 	if f & 1024 != 0 {
-		e := lex_typescript_m12(r, i)
+		e := lex_m_0df60a33(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -228,7 +228,7 @@ fn lex_typescript_ctx_block_comment(r []rune, i int) Match {
 	c := r[i]
 	// \*/
 	if c == `*` {
-		e := lex_typescript_m21(r, i)
+		e := lex_m_470de1ff(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -256,7 +256,7 @@ fn lex_typescript_ctx_doc_comment(r []rune, i int) Match {
 	c := r[i]
 	// \*/
 	if c == `*` {
-		e := lex_typescript_m21(r, i)
+		e := lex_m_470de1ff(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -284,7 +284,7 @@ fn lex_typescript_ctx_double(r []rune, i int) Match {
 	c := r[i]
 	// \\.
 	if c == rune(92) {
-		e := lex_typescript_m22(r, i)
+		e := lex_m_d7bf527c(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -294,7 +294,7 @@ fn lex_typescript_ctx_double(r []rune, i int) Match {
 	}
 	// "
 	if c == `"` {
-		e := lex_typescript_m4(r, i)
+		e := lex_m_09e5985a(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -322,7 +322,7 @@ fn lex_typescript_ctx_single(r []rune, i int) Match {
 	c := r[i]
 	// \\.
 	if c == rune(92) {
-		e := lex_typescript_m22(r, i)
+		e := lex_m_d7bf527c(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -332,7 +332,7 @@ fn lex_typescript_ctx_single(r []rune, i int) Match {
 	}
 	// '
 	if c == `'` {
-		e := lex_typescript_m5(r, i)
+		e := lex_m_2a9f4d5b(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -361,7 +361,7 @@ fn lex_typescript_ctx_template(r []rune, i int) Match {
 	f := if c < 128 { lex_typescript_first_template[c] } else { u32(0) }
 	// \\.
 	if f & 1 != 0 {
-		e := lex_typescript_m22(r, i)
+		e := lex_m_d7bf527c(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -371,7 +371,7 @@ fn lex_typescript_ctx_template(r []rune, i int) Match {
 	}
 	// \$\{
 	if f & 2 != 0 {
-		e := lex_typescript_m23(r, i)
+		e := lex_m_a4a6c5ad(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -383,7 +383,7 @@ fn lex_typescript_ctx_template(r []rune, i int) Match {
 	}
 	// `
 	if f & 4 != 0 {
-		e := lex_typescript_m6(r, i)
+		e := lex_m_953bb9c6(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -414,7 +414,7 @@ fn lex_typescript_ctx_interpolation(r []rune, i int, emit bool) Match {
 	mut h1 := -2
 	// \}
 	if f & 1 != 0 {
-		e := lex_typescript_m24(r, i)
+		e := lex_m_531f9b65(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -425,7 +425,7 @@ fn lex_typescript_ctx_interpolation(r []rune, i int, emit bool) Match {
 	}
 	// \{
 	if f & 2 != 0 {
-		e := lex_typescript_m25(r, i)
+		e := lex_m_b89c7367(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -437,7 +437,7 @@ fn lex_typescript_ctx_interpolation(r []rune, i int, emit bool) Match {
 	}
 	// //.*
 	if f & 4 != 0 {
-		e := lex_typescript_m0(r, i)
+		e := lex_m_e33fb31c(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -448,9 +448,9 @@ fn lex_typescript_ctx_interpolation(r []rune, i int, emit bool) Match {
 	// /\*\*(?!/)
 	if f & 8 != 0 {
 		if h0 == -2 {
-			h0 = lex_typescript_m1(r, i)
+			h0 = lex_m_92807765(r, i)
 		}
-		e := if h0 >= 0 { lex_typescript_m2(r, h0) } else { -1 }
+		e := if h0 >= 0 { lex_m_b614c2a2(r, h0) } else { -1 }
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -462,7 +462,7 @@ fn lex_typescript_ctx_interpolation(r []rune, i int, emit bool) Match {
 	}
 	// /\*
 	if f & 16 != 0 {
-		e := lex_typescript_m1(r, i)
+		e := lex_m_92807765(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -474,7 +474,7 @@ fn lex_typescript_ctx_interpolation(r []rune, i int, emit bool) Match {
 	}
 	// "
 	if f & 32 != 0 {
-		e := lex_typescript_m4(r, i)
+		e := lex_m_09e5985a(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -486,7 +486,7 @@ fn lex_typescript_ctx_interpolation(r []rune, i int, emit bool) Match {
 	}
 	// '
 	if f & 64 != 0 {
-		e := lex_typescript_m5(r, i)
+		e := lex_m_2a9f4d5b(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -498,7 +498,7 @@ fn lex_typescript_ctx_interpolation(r []rune, i int, emit bool) Match {
 	}
 	// `
 	if f & 128 != 0 {
-		e := lex_typescript_m6(r, i)
+		e := lex_m_953bb9c6(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -511,7 +511,7 @@ fn lex_typescript_ctx_interpolation(r []rune, i int, emit bool) Match {
 	// [A-Za-z_$][\w$]*
 	if f & 256 != 0 {
 		if h1 == -2 {
-			h1 = lex_typescript_m7(r, i)
+			h1 = lex_m_f1e25607(r, i)
 		}
 		e := h1
 		if e >= 0 {
@@ -532,9 +532,9 @@ fn lex_typescript_ctx_interpolation(r []rune, i int, emit bool) Match {
 	// [A-Za-z_$][\w$]*(?=\s*\()
 	if f & 512 != 0 {
 		if h1 == -2 {
-			h1 = lex_typescript_m7(r, i)
+			h1 = lex_m_f1e25607(r, i)
 		}
-		e := if h1 >= 0 { lex_typescript_m8(r, h1) } else { -1 }
+		e := if h1 >= 0 { lex_m_9b1f5889(r, h1) } else { -1 }
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -544,10 +544,10 @@ fn lex_typescript_ctx_interpolation(r []rune, i int, emit bool) Match {
 	}
 	// (?=[A-Z])[A-Za-z_$][\w$]*
 	if f & 1024 != 0 {
-		if lex_typescript_m10(r, i) >= 0 && h1 == -2 {
-			h1 = lex_typescript_m7(r, i)
+		if lex_m_461b03a7(r, i) >= 0 && h1 == -2 {
+			h1 = lex_m_f1e25607(r, i)
 		}
-		e := if lex_typescript_m10(r, i) >= 0 && h1 >= 0 { h1 } else { -1 }
+		e := if lex_m_461b03a7(r, i) >= 0 && h1 >= 0 { h1 } else { -1 }
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -558,7 +558,7 @@ fn lex_typescript_ctx_interpolation(r []rune, i int, emit bool) Match {
 	// [A-Za-z_$][\w$]*
 	if f & 2048 != 0 {
 		if h1 == -2 {
-			h1 = lex_typescript_m7(r, i)
+			h1 = lex_m_f1e25607(r, i)
 		}
 		e := h1
 		if e >= 0 {
@@ -570,7 +570,7 @@ fn lex_typescript_ctx_interpolation(r []rune, i int, emit bool) Match {
 	}
 	// 0[xX][\h_]+n?|0[bB][01_]+n?|0[oO][0-7_]+n?|\d[\d_]*(\.\d[\d_]*)?([eE][+\-]?\d+)?n?|\.\d[\d_]*([eE][+\-]?\d+)?
 	if f & 4096 != 0 {
-		e := lex_typescript_m12(r, i)
+		e := lex_m_0df60a33(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -600,7 +600,7 @@ fn lex_typescript_ctx_braces(r []rune, i int, emit bool) Match {
 	mut h1 := -2
 	// \}
 	if f & 1 != 0 {
-		e := lex_typescript_m24(r, i)
+		e := lex_m_531f9b65(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -611,7 +611,7 @@ fn lex_typescript_ctx_braces(r []rune, i int, emit bool) Match {
 	}
 	// \{
 	if f & 2 != 0 {
-		e := lex_typescript_m25(r, i)
+		e := lex_m_b89c7367(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -623,7 +623,7 @@ fn lex_typescript_ctx_braces(r []rune, i int, emit bool) Match {
 	}
 	// //.*
 	if f & 4 != 0 {
-		e := lex_typescript_m0(r, i)
+		e := lex_m_e33fb31c(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -634,9 +634,9 @@ fn lex_typescript_ctx_braces(r []rune, i int, emit bool) Match {
 	// /\*\*(?!/)
 	if f & 8 != 0 {
 		if h0 == -2 {
-			h0 = lex_typescript_m1(r, i)
+			h0 = lex_m_92807765(r, i)
 		}
-		e := if h0 >= 0 { lex_typescript_m2(r, h0) } else { -1 }
+		e := if h0 >= 0 { lex_m_b614c2a2(r, h0) } else { -1 }
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -648,7 +648,7 @@ fn lex_typescript_ctx_braces(r []rune, i int, emit bool) Match {
 	}
 	// /\*
 	if f & 16 != 0 {
-		e := lex_typescript_m1(r, i)
+		e := lex_m_92807765(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -660,7 +660,7 @@ fn lex_typescript_ctx_braces(r []rune, i int, emit bool) Match {
 	}
 	// "
 	if f & 32 != 0 {
-		e := lex_typescript_m4(r, i)
+		e := lex_m_09e5985a(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -672,7 +672,7 @@ fn lex_typescript_ctx_braces(r []rune, i int, emit bool) Match {
 	}
 	// '
 	if f & 64 != 0 {
-		e := lex_typescript_m5(r, i)
+		e := lex_m_2a9f4d5b(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -684,7 +684,7 @@ fn lex_typescript_ctx_braces(r []rune, i int, emit bool) Match {
 	}
 	// `
 	if f & 128 != 0 {
-		e := lex_typescript_m6(r, i)
+		e := lex_m_953bb9c6(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -697,7 +697,7 @@ fn lex_typescript_ctx_braces(r []rune, i int, emit bool) Match {
 	// [A-Za-z_$][\w$]*
 	if f & 256 != 0 {
 		if h1 == -2 {
-			h1 = lex_typescript_m7(r, i)
+			h1 = lex_m_f1e25607(r, i)
 		}
 		e := h1
 		if e >= 0 {
@@ -718,9 +718,9 @@ fn lex_typescript_ctx_braces(r []rune, i int, emit bool) Match {
 	// [A-Za-z_$][\w$]*(?=\s*\()
 	if f & 512 != 0 {
 		if h1 == -2 {
-			h1 = lex_typescript_m7(r, i)
+			h1 = lex_m_f1e25607(r, i)
 		}
-		e := if h1 >= 0 { lex_typescript_m8(r, h1) } else { -1 }
+		e := if h1 >= 0 { lex_m_9b1f5889(r, h1) } else { -1 }
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -730,10 +730,10 @@ fn lex_typescript_ctx_braces(r []rune, i int, emit bool) Match {
 	}
 	// (?=[A-Z])[A-Za-z_$][\w$]*
 	if f & 1024 != 0 {
-		if lex_typescript_m10(r, i) >= 0 && h1 == -2 {
-			h1 = lex_typescript_m7(r, i)
+		if lex_m_461b03a7(r, i) >= 0 && h1 == -2 {
+			h1 = lex_m_f1e25607(r, i)
 		}
-		e := if lex_typescript_m10(r, i) >= 0 && h1 >= 0 { h1 } else { -1 }
+		e := if lex_m_461b03a7(r, i) >= 0 && h1 >= 0 { h1 } else { -1 }
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -744,7 +744,7 @@ fn lex_typescript_ctx_braces(r []rune, i int, emit bool) Match {
 	// [A-Za-z_$][\w$]*
 	if f & 2048 != 0 {
 		if h1 == -2 {
-			h1 = lex_typescript_m7(r, i)
+			h1 = lex_m_f1e25607(r, i)
 		}
 		e := h1
 		if e >= 0 {
@@ -756,7 +756,7 @@ fn lex_typescript_ctx_braces(r []rune, i int, emit bool) Match {
 	}
 	// 0[xX][\h_]+n?|0[bB][01_]+n?|0[oO][0-7_]+n?|\d[\d_]*(\.\d[\d_]*)?([eE][+\-]?\d+)?n?|\.\d[\d_]*([eE][+\-]?\d+)?
 	if f & 4096 != 0 {
-		e := lex_typescript_m12(r, i)
+		e := lex_m_0df60a33(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -1415,368 +1415,6 @@ fn lex_typescript_words(r []rune, start int, end int) Scope {
 	}
 }
 
-@[direct_array_access]
-fn lex_typescript_m0(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `/`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `/`) {
-		return -1
-	}
-	p++
-	for p < r.len {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m1(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `/`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `*`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m3(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `/`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m2(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `*`) {
-		return -1
-	}
-	p++
-	if lex_typescript_m3(r, p) >= 0 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m4(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `"`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m5(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `'`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m6(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == rune(96)) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m7(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !((r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `a` && r[p] <= `z`) || r[p] == `_` || r[p] == `$`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_` || r[p] == `$`) {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m9(r []rune, start int) int {
-	mut p := start
-	for p < r.len && (r[p] == ` ` || r[p] == rune(9)) {
-		p++
-	}
-	if p >= r.len || !(r[p] == `(`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m8(r []rune, start int) int {
-	p := start
-	if lex_typescript_m9(r, p) < 0 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m11(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] >= `A` && r[p] <= `Z`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m10(r []rune, start int) int {
-	p := start
-	if lex_typescript_m11(r, p) < 0 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m13(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `0`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `x` || r[p] == `X`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !((r[p] >= `0` && r[p] <= `9`) || (r[p] >= `a` && r[p] <= `f`) || (r[p] >= `A` && r[p] <= `F`) || r[p] == `_`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `0` && r[p] <= `9`) || (r[p] >= `a` && r[p] <= `f`) || (r[p] >= `A` && r[p] <= `F`) || r[p] == `_`) {
-		p++
-	}
-	mut n1 := 0
-	for p < r.len && n1 < 1 && r[p] == `n` {
-		p++
-		n1++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m14(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `0`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `b` || r[p] == `B`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `0` || r[p] == `1` || r[p] == `_`) {
-		return -1
-	}
-	p++
-	for p < r.len && (r[p] == `0` || r[p] == `1` || r[p] == `_`) {
-		p++
-	}
-	mut n1 := 0
-	for p < r.len && n1 < 1 && r[p] == `n` {
-		p++
-		n1++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m15(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `0`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `o` || r[p] == `O`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !((r[p] >= `0` && r[p] <= `7`) || r[p] == `_`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `0` && r[p] <= `7`) || r[p] == `_`) {
-		p++
-	}
-	mut n1 := 0
-	for p < r.len && n1 < 1 && r[p] == `n` {
-		p++
-		n1++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m17(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `.`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] >= `0` && r[p] <= `9`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `0` && r[p] <= `9`) || r[p] == `_`) {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m18(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `e` || r[p] == `E`) {
-		return -1
-	}
-	p++
-	mut n1 := 0
-	for p < r.len && n1 < 1 && (r[p] == `+` || r[p] == `-`) {
-		p++
-		n1++
-	}
-	if p >= r.len || !(r[p] >= `0` && r[p] <= `9`) {
-		return -1
-	}
-	p++
-	for p < r.len && r[p] >= `0` && r[p] <= `9` {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m16(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] >= `0` && r[p] <= `9`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `0` && r[p] <= `9`) || r[p] == `_`) {
-		p++
-	}
-	mut n1 := 0
-	for n1 < 1 {
-		q2 := lex_typescript_m17(r, p)
-		if q2 < 0 || q2 == p {
-			break
-		}
-		p = q2
-		n1++
-	}
-	mut n3 := 0
-	for n3 < 1 {
-		q4 := lex_typescript_m18(r, p)
-		if q4 < 0 || q4 == p {
-			break
-		}
-		p = q4
-		n3++
-	}
-	mut n5 := 0
-	for p < r.len && n5 < 1 && r[p] == `n` {
-		p++
-		n5++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m20(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `e` || r[p] == `E`) {
-		return -1
-	}
-	p++
-	mut n1 := 0
-	for p < r.len && n1 < 1 && (r[p] == `+` || r[p] == `-`) {
-		p++
-		n1++
-	}
-	if p >= r.len || !(r[p] >= `0` && r[p] <= `9`) {
-		return -1
-	}
-	p++
-	for p < r.len && r[p] >= `0` && r[p] <= `9` {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m19(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `.`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] >= `0` && r[p] <= `9`) {
-		return -1
-	}
-	p++
-	for p < r.len && ((r[p] >= `0` && r[p] <= `9`) || r[p] == `_`) {
-		p++
-	}
-	mut n1 := 0
-	for n1 < 1 {
-		q2 := lex_typescript_m20(r, p)
-		if q2 < 0 || q2 == p {
-			break
-		}
-		p = q2
-		n1++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m12(r []rune, start int) int {
-	mut p := start
-	mut q1 := lex_typescript_m13(r, p)
-	if q1 < 0 {
-		q1 = lex_typescript_m14(r, p)
-	}
-	if q1 < 0 {
-		q1 = lex_typescript_m15(r, p)
-	}
-	if q1 < 0 {
-		q1 = lex_typescript_m16(r, p)
-	}
-	if q1 < 0 {
-		q1 = lex_typescript_m19(r, p)
-	}
-	if q1 < 0 {
-		return -1
-	}
-	p = q1
-	return p
-}
-
 const lex_typescript_first_main = [u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
 	u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
 	u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
@@ -1791,48 +1429,6 @@ const lex_typescript_first_main = [u32(0), u32(0), u32(0), u32(0), u32(0), u32(0
 	u32(960), u32(960), u32(960), u32(960), u32(960), u32(960), u32(960), u32(960), u32(960), u32(960),
 	u32(0), u32(0), u32(0), u32(0), u32(0)]!
 
-@[direct_array_access]
-fn lex_typescript_m21(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `*`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `/`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m22(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == rune(92)) {
-		return -1
-	}
-	p++
-	if p >= r.len {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m23(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `$`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `{`) {
-		return -1
-	}
-	p++
-	return p
-}
-
 const lex_typescript_first_template = [u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
 	u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
 	u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
@@ -1845,26 +1441,6 @@ const lex_typescript_first_template = [u32(0), u32(0), u32(0), u32(0), u32(0), u
 	u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
 	u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
 	u32(0)]!
-
-@[direct_array_access]
-fn lex_typescript_m24(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `}`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_typescript_m25(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `{`) {
-		return -1
-	}
-	p++
-	return p
-}
 
 const lex_typescript_first_interpolation = [u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
 	u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),

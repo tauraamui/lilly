@@ -136,7 +136,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	f := if c < 128 { lex_markdown_first_main[c] } else { u32(0) }
 	// ^ {0,3}(`{3,}|~{3,})\s*(c|h)(?![\w+#\-]).*
 	if i == 0 && f & 1 != 0 {
-		e := lex_markdown_m0(r, i)
+		e := lex_m_1a46a897(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -148,7 +148,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// ^ {0,3}(`{3,}|~{3,})\s*gleam(?![\w+#\-]).*
 	if i == 0 && f & 2 != 0 {
-		e := lex_markdown_m6(r, i)
+		e := lex_m_3d174d30(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -160,7 +160,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// ^ {0,3}(`{3,}|~{3,})\s*(golang|go)(?![\w+#\-]).*
 	if i == 0 && f & 4 != 0 {
-		e := lex_markdown_m10(r, i)
+		e := lex_m_8ed6a89c(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -172,7 +172,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// ^ {0,3}(`{3,}|~{3,})\s*(javascript|jsx|mjs|js)(?![\w+#\-]).*
 	if i == 0 && f & 8 != 0 {
-		e := lex_markdown_m16(r, i)
+		e := lex_m_8f15e33c(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -184,7 +184,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// ^ {0,3}(`{3,}|~{3,})\s*(perl|pl)(?![\w+#\-]).*
 	if i == 0 && f & 16 != 0 {
-		e := lex_markdown_m24(r, i)
+		e := lex_m_7a521640(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -196,7 +196,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// ^ {0,3}(`{3,}|~{3,})\s*(python3|python|py)(?![\w+#\-]).*
 	if i == 0 && f & 32 != 0 {
-		e := lex_markdown_m30(r, i)
+		e := lex_m_50d997cd(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -208,7 +208,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// ^ {0,3}(`{3,}|~{3,})\s*(rust|rs)(?![\w+#\-]).*
 	if i == 0 && f & 64 != 0 {
-		e := lex_markdown_m37(r, i)
+		e := lex_m_8c2d269b(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -220,7 +220,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// ^ {0,3}(`{3,}|~{3,})\s*(typescript|tsx|ts)(?![\w+#\-]).*
 	if i == 0 && f & 128 != 0 {
-		e := lex_markdown_m43(r, i)
+		e := lex_m_120f5aae(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -232,7 +232,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// ^ {0,3}(`{3,}|~{3,})\s*(vlang|vsh|v)(?![\w+#\-]).*
 	if i == 0 && f & 256 != 0 {
-		e := lex_markdown_m50(r, i)
+		e := lex_m_9c2f95d6(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -244,7 +244,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// ^ {0,3}(`{3,}|~{3,})\s*zig(?![\w+#\-]).*
 	if i == 0 && f & 512 != 0 {
-		e := lex_markdown_m57(r, i)
+		e := lex_m_fb7e36e6(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -256,7 +256,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// ^ {0,3}(`{3,}|~{3,}).*
 	if i == 0 && f & 1024 != 0 {
-		e := lex_markdown_m61(r, i)
+		e := lex_m_6e6a4e52(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -268,7 +268,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// ^ {0,3}#{1,6}(?=\s|$)
 	if i == 0 && f & 2048 != 0 {
-		e := lex_markdown_m64(r, i)
+		e := lex_m_fab03848(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -280,7 +280,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// ^ {0,3}\[[^\]]+\]:
 	if i == 0 && f & 4096 != 0 {
-		e := lex_markdown_m68(r, i)
+		e := lex_m_e46e643f(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -290,7 +290,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// ^\s*>
 	if i == 0 && f & 8192 != 0 {
-		e := lex_markdown_m69(r, i)
+		e := lex_m_2e6a5616(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -300,7 +300,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// ^\s*([*+\-]|\d{1,9}[.)])(?=\s|$)
 	if i == 0 && f & 16384 != 0 {
-		e := lex_markdown_m70(r, i)
+		e := lex_m_8f2fb4db(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -310,7 +310,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// \\[!-/:-@\[-`{-~]
 	if f & 32768 != 0 {
-		e := lex_markdown_m76(r, i)
+		e := lex_m_1606b2e6(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -320,7 +320,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// ``([^`]|`(?!`))+``
 	if f & 65536 != 0 {
-		e := lex_markdown_m77(r, i)
+		e := lex_m_05698f6f(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -330,7 +330,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// `[^`]+`
 	if f & 131072 != 0 {
-		e := lex_markdown_m85(r, i)
+		e := lex_m_1b7f3bb2(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -340,7 +340,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// \]\(
 	if f & 262144 != 0 {
-		e := lex_markdown_m86(r, i)
+		e := lex_m_936d385d(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -352,7 +352,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// <[A-Za-z][A-Za-z0-9+.\-]{1,31}:[^\s<>]*>
 	if f & 524288 != 0 {
-		e := lex_markdown_m87(r, i)
+		e := lex_m_ee6f6a16(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -362,7 +362,7 @@ fn lex_markdown_ctx_main(r []rune, i int) Match {
 	}
 	// <!--
 	if f & 1048576 != 0 {
-		e := lex_markdown_m88(r, i)
+		e := lex_m_86621489(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -392,7 +392,7 @@ fn lex_markdown_ctx_inline(r []rune, i int) Match {
 	f := if c < 128 { lex_markdown_first_inline[c] } else { u32(0) }
 	// \\[!-/:-@\[-`{-~]
 	if f & 1 != 0 {
-		e := lex_markdown_m76(r, i)
+		e := lex_m_1606b2e6(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -402,7 +402,7 @@ fn lex_markdown_ctx_inline(r []rune, i int) Match {
 	}
 	// ``([^`]|`(?!`))+``
 	if f & 2 != 0 {
-		e := lex_markdown_m77(r, i)
+		e := lex_m_05698f6f(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -412,7 +412,7 @@ fn lex_markdown_ctx_inline(r []rune, i int) Match {
 	}
 	// `[^`]+`
 	if f & 4 != 0 {
-		e := lex_markdown_m85(r, i)
+		e := lex_m_1b7f3bb2(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -422,7 +422,7 @@ fn lex_markdown_ctx_inline(r []rune, i int) Match {
 	}
 	// \]\(
 	if f & 8 != 0 {
-		e := lex_markdown_m86(r, i)
+		e := lex_m_936d385d(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -434,7 +434,7 @@ fn lex_markdown_ctx_inline(r []rune, i int) Match {
 	}
 	// <[A-Za-z][A-Za-z0-9+.\-]{1,31}:[^\s<>]*>
 	if f & 16 != 0 {
-		e := lex_markdown_m87(r, i)
+		e := lex_m_ee6f6a16(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -444,7 +444,7 @@ fn lex_markdown_ctx_inline(r []rune, i int) Match {
 	}
 	// <!--
 	if f & 32 != 0 {
-		e := lex_markdown_m88(r, i)
+		e := lex_m_86621489(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -474,7 +474,7 @@ fn lex_markdown_ctx_heading(r []rune, i int) Match {
 	f := if c < 128 { lex_markdown_first_heading[c] } else { u32(0) }
 	// \\[!-/:-@\[-`{-~]
 	if f & 1 != 0 {
-		e := lex_markdown_m76(r, i)
+		e := lex_m_1606b2e6(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -484,7 +484,7 @@ fn lex_markdown_ctx_heading(r []rune, i int) Match {
 	}
 	// ``([^`]|`(?!`))+``
 	if f & 2 != 0 {
-		e := lex_markdown_m77(r, i)
+		e := lex_m_05698f6f(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -494,7 +494,7 @@ fn lex_markdown_ctx_heading(r []rune, i int) Match {
 	}
 	// `[^`]+`
 	if f & 4 != 0 {
-		e := lex_markdown_m85(r, i)
+		e := lex_m_1b7f3bb2(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -504,7 +504,7 @@ fn lex_markdown_ctx_heading(r []rune, i int) Match {
 	}
 	// \]\(
 	if f & 8 != 0 {
-		e := lex_markdown_m86(r, i)
+		e := lex_m_936d385d(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -516,7 +516,7 @@ fn lex_markdown_ctx_heading(r []rune, i int) Match {
 	}
 	// <[A-Za-z][A-Za-z0-9+.\-]{1,31}:[^\s<>]*>
 	if f & 16 != 0 {
-		e := lex_markdown_m87(r, i)
+		e := lex_m_ee6f6a16(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -526,7 +526,7 @@ fn lex_markdown_ctx_heading(r []rune, i int) Match {
 	}
 	// <!--
 	if f & 32 != 0 {
-		e := lex_markdown_m88(r, i)
+		e := lex_m_86621489(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -555,7 +555,7 @@ fn lex_markdown_ctx_fence(r []rune, i int) Match {
 	c := r[i]
 	// ^ {0,3}(`{3,}|~{3,})\s*$
 	if i == 0 && (c == ` ` || c == rune(96) || c == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -575,7 +575,7 @@ fn lex_markdown_ctx_link_destination(r []rune, i int) Match {
 	c := r[i]
 	// \)
 	if c == `)` {
-		e := lex_markdown_m92(r, i)
+		e := lex_m_18933069(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -603,7 +603,7 @@ fn lex_markdown_ctx_html_comment(r []rune, i int) Match {
 	c := r[i]
 	// -->
 	if c == `-` {
-		e := lex_markdown_m93(r, i)
+		e := lex_m_1e2b6e90(r, i)
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -629,7 +629,7 @@ fn lex_markdown_ctx_html_comment(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e0_c(r []rune, i int, emit bool) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -653,7 +653,7 @@ fn lex_markdown_ctx_e0_c(r []rune, i int, emit bool) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e0_block_comment(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -677,7 +677,7 @@ fn lex_markdown_ctx_e0_block_comment(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e0_double(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -701,7 +701,7 @@ fn lex_markdown_ctx_e0_double(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e0_directive(r []rune, i int, emit bool) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -725,7 +725,7 @@ fn lex_markdown_ctx_e0_directive(r []rune, i int, emit bool) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e1_gleam(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -749,7 +749,7 @@ fn lex_markdown_ctx_e1_gleam(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e1_double(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -773,7 +773,7 @@ fn lex_markdown_ctx_e1_double(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e2_golang(r []rune, i int, emit bool) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -797,7 +797,7 @@ fn lex_markdown_ctx_e2_golang(r []rune, i int, emit bool) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e2_block_comment(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -821,7 +821,7 @@ fn lex_markdown_ctx_e2_block_comment(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e2_double(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -845,7 +845,7 @@ fn lex_markdown_ctx_e2_double(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e2_raw(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -869,7 +869,7 @@ fn lex_markdown_ctx_e2_raw(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e3_javascript(r []rune, i int, emit bool) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -893,7 +893,7 @@ fn lex_markdown_ctx_e3_javascript(r []rune, i int, emit bool) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e3_block_comment(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -917,7 +917,7 @@ fn lex_markdown_ctx_e3_block_comment(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e3_doc_comment(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -941,7 +941,7 @@ fn lex_markdown_ctx_e3_doc_comment(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e3_double(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -965,7 +965,7 @@ fn lex_markdown_ctx_e3_double(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e3_single(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -989,7 +989,7 @@ fn lex_markdown_ctx_e3_single(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e3_template(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1013,7 +1013,7 @@ fn lex_markdown_ctx_e3_template(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e3_interpolation(r []rune, i int, emit bool) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1037,7 +1037,7 @@ fn lex_markdown_ctx_e3_interpolation(r []rune, i int, emit bool) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e3_braces(r []rune, i int, emit bool) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1061,7 +1061,7 @@ fn lex_markdown_ctx_e3_braces(r []rune, i int, emit bool) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e4_perl(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1085,7 +1085,7 @@ fn lex_markdown_ctx_e4_perl(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e4_pod(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1109,7 +1109,7 @@ fn lex_markdown_ctx_e4_pod(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e4_double(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1133,7 +1133,7 @@ fn lex_markdown_ctx_e4_double(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e4_single(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1157,7 +1157,7 @@ fn lex_markdown_ctx_e4_single(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e4_backtick(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1181,7 +1181,7 @@ fn lex_markdown_ctx_e4_backtick(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e5_python(r []rune, i int, emit bool) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1205,7 +1205,7 @@ fn lex_markdown_ctx_e5_python(r []rune, i int, emit bool) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e5_double(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1229,7 +1229,7 @@ fn lex_markdown_ctx_e5_double(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e5_single(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1253,7 +1253,7 @@ fn lex_markdown_ctx_e5_single(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e5_triple_double(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1277,7 +1277,7 @@ fn lex_markdown_ctx_e5_triple_double(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e5_triple_single(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1301,7 +1301,7 @@ fn lex_markdown_ctx_e5_triple_single(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e6_rust(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1325,7 +1325,7 @@ fn lex_markdown_ctx_e6_rust(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e6_block_comment(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1349,7 +1349,7 @@ fn lex_markdown_ctx_e6_block_comment(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e6_double(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1373,7 +1373,7 @@ fn lex_markdown_ctx_e6_double(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e6_raw(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1397,7 +1397,7 @@ fn lex_markdown_ctx_e6_raw(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e6_raw_hash1(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1421,7 +1421,7 @@ fn lex_markdown_ctx_e6_raw_hash1(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e6_raw_hash2(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1445,7 +1445,7 @@ fn lex_markdown_ctx_e6_raw_hash2(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e7_typescript(r []rune, i int, emit bool) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1469,7 +1469,7 @@ fn lex_markdown_ctx_e7_typescript(r []rune, i int, emit bool) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e7_block_comment(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1493,7 +1493,7 @@ fn lex_markdown_ctx_e7_block_comment(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e7_doc_comment(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1517,7 +1517,7 @@ fn lex_markdown_ctx_e7_doc_comment(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e7_double(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1541,7 +1541,7 @@ fn lex_markdown_ctx_e7_double(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e7_single(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1565,7 +1565,7 @@ fn lex_markdown_ctx_e7_single(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e7_template(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1589,7 +1589,7 @@ fn lex_markdown_ctx_e7_template(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e7_interpolation(r []rune, i int, emit bool) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1613,7 +1613,7 @@ fn lex_markdown_ctx_e7_interpolation(r []rune, i int, emit bool) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e7_braces(r []rune, i int, emit bool) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1637,7 +1637,7 @@ fn lex_markdown_ctx_e7_braces(r []rune, i int, emit bool) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e8_v(r []rune, i int, emit bool) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1661,7 +1661,7 @@ fn lex_markdown_ctx_e8_v(r []rune, i int, emit bool) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e8_block_comment(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1685,7 +1685,7 @@ fn lex_markdown_ctx_e8_block_comment(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e8_double(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1709,7 +1709,7 @@ fn lex_markdown_ctx_e8_double(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e8_single(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1733,7 +1733,7 @@ fn lex_markdown_ctx_e8_single(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e8_raw_double(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1757,7 +1757,7 @@ fn lex_markdown_ctx_e8_raw_double(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e8_raw_single(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1781,7 +1781,7 @@ fn lex_markdown_ctx_e8_raw_single(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e8_interpolation(r []rune, i int, emit bool) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1805,7 +1805,7 @@ fn lex_markdown_ctx_e8_interpolation(r []rune, i int, emit bool) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e8_braces(r []rune, i int, emit bool) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1829,7 +1829,7 @@ fn lex_markdown_ctx_e8_braces(r []rune, i int, emit bool) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e8_function(r []rune, i int, emit bool) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1853,7 +1853,7 @@ fn lex_markdown_ctx_e8_function(r []rune, i int, emit bool) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e8_params(r []rune, i int, emit bool) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1877,7 +1877,7 @@ fn lex_markdown_ctx_e8_params(r []rune, i int, emit bool) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e8_struct(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1901,7 +1901,7 @@ fn lex_markdown_ctx_e8_struct(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e8_enum(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1925,7 +1925,7 @@ fn lex_markdown_ctx_e8_enum(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e8_interface(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1949,7 +1949,7 @@ fn lex_markdown_ctx_e8_interface(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e8_type_head(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1973,7 +1973,7 @@ fn lex_markdown_ctx_e8_type_head(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e8_type_alias(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -1997,7 +1997,7 @@ fn lex_markdown_ctx_e8_type_alias(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e9_zig(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -2021,7 +2021,7 @@ fn lex_markdown_ctx_e9_zig(r []rune, i int) Match {
 @[direct_array_access]
 fn lex_markdown_ctx_e9_double(r []rune, i int) Match {
 	if i == 0 && (r[i] == ` ` || r[i] == rune(96) || r[i] == `~`) {
-		e := lex_markdown_m89(r, i)
+		e := lex_m_b9c9f721(r, i)
 		if e >= 0 {
 			return Match{
 				end:    e
@@ -2039,1714 +2039,6 @@ fn lex_markdown_ctx_e9_double(r []rune, i int) Match {
 		}
 	}
 	return m
-}
-
-@[direct_array_access]
-fn lex_markdown_m1(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == rune(96) {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m2(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == `~` {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m3(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `c`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m4(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `h`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m5(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_` || r[p] == `+` || r[p] == `#` || r[p] == `-`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m0(r []rune, start int) int {
-	mut p := start
-	if p != 0 {
-		return -1
-	}
-	mut n1 := 0
-	for p < r.len && n1 < 3 && r[p] == ` ` {
-		p++
-		n1++
-	}
-	mut q2 := lex_markdown_m1(r, p)
-	if q2 < 0 {
-		q2 = lex_markdown_m2(r, p)
-	}
-	if q2 < 0 {
-		return -1
-	}
-	p = q2
-	for p < r.len && (r[p] == ` ` || r[p] == rune(9)) {
-		p++
-	}
-	mut q3 := lex_markdown_m3(r, p)
-	if q3 < 0 {
-		q3 = lex_markdown_m4(r, p)
-	}
-	if q3 < 0 {
-		return -1
-	}
-	p = q3
-	if lex_markdown_m5(r, p) >= 0 {
-		return -1
-	}
-	for p < r.len {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m7(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == rune(96) {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m8(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == `~` {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m9(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_` || r[p] == `+` || r[p] == `#` || r[p] == `-`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m6(r []rune, start int) int {
-	mut p := start
-	if p != 0 {
-		return -1
-	}
-	mut n1 := 0
-	for p < r.len && n1 < 3 && r[p] == ` ` {
-		p++
-		n1++
-	}
-	mut q2 := lex_markdown_m7(r, p)
-	if q2 < 0 {
-		q2 = lex_markdown_m8(r, p)
-	}
-	if q2 < 0 {
-		return -1
-	}
-	p = q2
-	for p < r.len && (r[p] == ` ` || r[p] == rune(9)) {
-		p++
-	}
-	if p >= r.len || !(r[p] == `g`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `l`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `e`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `a`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `m`) {
-		return -1
-	}
-	p++
-	if lex_markdown_m9(r, p) >= 0 {
-		return -1
-	}
-	for p < r.len {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m11(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == rune(96) {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m12(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == `~` {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m13(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `g`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `o`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `l`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `a`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `n`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `g`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m14(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `g`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `o`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m15(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_` || r[p] == `+` || r[p] == `#` || r[p] == `-`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m10(r []rune, start int) int {
-	mut p := start
-	if p != 0 {
-		return -1
-	}
-	mut n1 := 0
-	for p < r.len && n1 < 3 && r[p] == ` ` {
-		p++
-		n1++
-	}
-	mut q2 := lex_markdown_m11(r, p)
-	if q2 < 0 {
-		q2 = lex_markdown_m12(r, p)
-	}
-	if q2 < 0 {
-		return -1
-	}
-	p = q2
-	for p < r.len && (r[p] == ` ` || r[p] == rune(9)) {
-		p++
-	}
-	mut q3 := lex_markdown_m13(r, p)
-	if q3 < 0 {
-		q3 = lex_markdown_m14(r, p)
-	}
-	if q3 < 0 {
-		return -1
-	}
-	p = q3
-	if lex_markdown_m15(r, p) >= 0 {
-		return -1
-	}
-	for p < r.len {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m17(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == rune(96) {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m18(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == `~` {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m19(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `j`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `a`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `v`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `a`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `s`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `c`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `r`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `i`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `p`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `t`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m20(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `j`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `s`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `x`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m21(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `m`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `j`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `s`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m22(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `j`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `s`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m23(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_` || r[p] == `+` || r[p] == `#` || r[p] == `-`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m16(r []rune, start int) int {
-	mut p := start
-	if p != 0 {
-		return -1
-	}
-	mut n1 := 0
-	for p < r.len && n1 < 3 && r[p] == ` ` {
-		p++
-		n1++
-	}
-	mut q2 := lex_markdown_m17(r, p)
-	if q2 < 0 {
-		q2 = lex_markdown_m18(r, p)
-	}
-	if q2 < 0 {
-		return -1
-	}
-	p = q2
-	for p < r.len && (r[p] == ` ` || r[p] == rune(9)) {
-		p++
-	}
-	mut q3 := lex_markdown_m19(r, p)
-	if q3 < 0 {
-		q3 = lex_markdown_m20(r, p)
-	}
-	if q3 < 0 {
-		q3 = lex_markdown_m21(r, p)
-	}
-	if q3 < 0 {
-		q3 = lex_markdown_m22(r, p)
-	}
-	if q3 < 0 {
-		return -1
-	}
-	p = q3
-	if lex_markdown_m23(r, p) >= 0 {
-		return -1
-	}
-	for p < r.len {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m25(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == rune(96) {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m26(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == `~` {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m27(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `p`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `e`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `r`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `l`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m28(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `p`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `l`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m29(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_` || r[p] == `+` || r[p] == `#` || r[p] == `-`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m24(r []rune, start int) int {
-	mut p := start
-	if p != 0 {
-		return -1
-	}
-	mut n1 := 0
-	for p < r.len && n1 < 3 && r[p] == ` ` {
-		p++
-		n1++
-	}
-	mut q2 := lex_markdown_m25(r, p)
-	if q2 < 0 {
-		q2 = lex_markdown_m26(r, p)
-	}
-	if q2 < 0 {
-		return -1
-	}
-	p = q2
-	for p < r.len && (r[p] == ` ` || r[p] == rune(9)) {
-		p++
-	}
-	mut q3 := lex_markdown_m27(r, p)
-	if q3 < 0 {
-		q3 = lex_markdown_m28(r, p)
-	}
-	if q3 < 0 {
-		return -1
-	}
-	p = q3
-	if lex_markdown_m29(r, p) >= 0 {
-		return -1
-	}
-	for p < r.len {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m31(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == rune(96) {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m32(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == `~` {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m33(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `p`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `y`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `t`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `h`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `o`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `n`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `3`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m34(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `p`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `y`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `t`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `h`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `o`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `n`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m35(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `p`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `y`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m36(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_` || r[p] == `+` || r[p] == `#` || r[p] == `-`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m30(r []rune, start int) int {
-	mut p := start
-	if p != 0 {
-		return -1
-	}
-	mut n1 := 0
-	for p < r.len && n1 < 3 && r[p] == ` ` {
-		p++
-		n1++
-	}
-	mut q2 := lex_markdown_m31(r, p)
-	if q2 < 0 {
-		q2 = lex_markdown_m32(r, p)
-	}
-	if q2 < 0 {
-		return -1
-	}
-	p = q2
-	for p < r.len && (r[p] == ` ` || r[p] == rune(9)) {
-		p++
-	}
-	mut q3 := lex_markdown_m33(r, p)
-	if q3 < 0 {
-		q3 = lex_markdown_m34(r, p)
-	}
-	if q3 < 0 {
-		q3 = lex_markdown_m35(r, p)
-	}
-	if q3 < 0 {
-		return -1
-	}
-	p = q3
-	if lex_markdown_m36(r, p) >= 0 {
-		return -1
-	}
-	for p < r.len {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m38(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == rune(96) {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m39(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == `~` {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m40(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `r`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `u`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `s`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `t`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m41(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `r`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `s`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m42(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_` || r[p] == `+` || r[p] == `#` || r[p] == `-`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m37(r []rune, start int) int {
-	mut p := start
-	if p != 0 {
-		return -1
-	}
-	mut n1 := 0
-	for p < r.len && n1 < 3 && r[p] == ` ` {
-		p++
-		n1++
-	}
-	mut q2 := lex_markdown_m38(r, p)
-	if q2 < 0 {
-		q2 = lex_markdown_m39(r, p)
-	}
-	if q2 < 0 {
-		return -1
-	}
-	p = q2
-	for p < r.len && (r[p] == ` ` || r[p] == rune(9)) {
-		p++
-	}
-	mut q3 := lex_markdown_m40(r, p)
-	if q3 < 0 {
-		q3 = lex_markdown_m41(r, p)
-	}
-	if q3 < 0 {
-		return -1
-	}
-	p = q3
-	if lex_markdown_m42(r, p) >= 0 {
-		return -1
-	}
-	for p < r.len {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m44(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == rune(96) {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m45(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == `~` {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m46(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `t`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `y`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `p`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `e`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `s`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `c`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `r`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `i`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `p`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `t`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m47(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `t`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `s`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `x`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m48(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `t`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `s`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m49(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_` || r[p] == `+` || r[p] == `#` || r[p] == `-`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m43(r []rune, start int) int {
-	mut p := start
-	if p != 0 {
-		return -1
-	}
-	mut n1 := 0
-	for p < r.len && n1 < 3 && r[p] == ` ` {
-		p++
-		n1++
-	}
-	mut q2 := lex_markdown_m44(r, p)
-	if q2 < 0 {
-		q2 = lex_markdown_m45(r, p)
-	}
-	if q2 < 0 {
-		return -1
-	}
-	p = q2
-	for p < r.len && (r[p] == ` ` || r[p] == rune(9)) {
-		p++
-	}
-	mut q3 := lex_markdown_m46(r, p)
-	if q3 < 0 {
-		q3 = lex_markdown_m47(r, p)
-	}
-	if q3 < 0 {
-		q3 = lex_markdown_m48(r, p)
-	}
-	if q3 < 0 {
-		return -1
-	}
-	p = q3
-	if lex_markdown_m49(r, p) >= 0 {
-		return -1
-	}
-	for p < r.len {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m51(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == rune(96) {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m52(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == `~` {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m53(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `v`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `l`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `a`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `n`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `g`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m54(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `v`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `s`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `h`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m55(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `v`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m56(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_` || r[p] == `+` || r[p] == `#` || r[p] == `-`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m50(r []rune, start int) int {
-	mut p := start
-	if p != 0 {
-		return -1
-	}
-	mut n1 := 0
-	for p < r.len && n1 < 3 && r[p] == ` ` {
-		p++
-		n1++
-	}
-	mut q2 := lex_markdown_m51(r, p)
-	if q2 < 0 {
-		q2 = lex_markdown_m52(r, p)
-	}
-	if q2 < 0 {
-		return -1
-	}
-	p = q2
-	for p < r.len && (r[p] == ` ` || r[p] == rune(9)) {
-		p++
-	}
-	mut q3 := lex_markdown_m53(r, p)
-	if q3 < 0 {
-		q3 = lex_markdown_m54(r, p)
-	}
-	if q3 < 0 {
-		q3 = lex_markdown_m55(r, p)
-	}
-	if q3 < 0 {
-		return -1
-	}
-	p = q3
-	if lex_markdown_m56(r, p) >= 0 {
-		return -1
-	}
-	for p < r.len {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m58(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == rune(96) {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m59(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == `~` {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m60(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_` || r[p] == `+` || r[p] == `#` || r[p] == `-`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m57(r []rune, start int) int {
-	mut p := start
-	if p != 0 {
-		return -1
-	}
-	mut n1 := 0
-	for p < r.len && n1 < 3 && r[p] == ` ` {
-		p++
-		n1++
-	}
-	mut q2 := lex_markdown_m58(r, p)
-	if q2 < 0 {
-		q2 = lex_markdown_m59(r, p)
-	}
-	if q2 < 0 {
-		return -1
-	}
-	p = q2
-	for p < r.len && (r[p] == ` ` || r[p] == rune(9)) {
-		p++
-	}
-	if p >= r.len || !(r[p] == `z`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `i`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `g`) {
-		return -1
-	}
-	p++
-	if lex_markdown_m60(r, p) >= 0 {
-		return -1
-	}
-	for p < r.len {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m62(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == rune(96) {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m63(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == `~` {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m61(r []rune, start int) int {
-	mut p := start
-	if p != 0 {
-		return -1
-	}
-	mut n1 := 0
-	for p < r.len && n1 < 3 && r[p] == ` ` {
-		p++
-		n1++
-	}
-	mut q2 := lex_markdown_m62(r, p)
-	if q2 < 0 {
-		q2 = lex_markdown_m63(r, p)
-	}
-	if q2 < 0 {
-		return -1
-	}
-	p = q2
-	for p < r.len {
-		p++
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m66(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == ` ` || r[p] == rune(9)) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m67(r []rune, start int) int {
-	p := start
-	if p != r.len {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m65(r []rune, start int) int {
-	mut p := start
-	mut q1 := lex_markdown_m66(r, p)
-	if q1 < 0 {
-		q1 = lex_markdown_m67(r, p)
-	}
-	if q1 < 0 {
-		return -1
-	}
-	p = q1
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m64(r []rune, start int) int {
-	mut p := start
-	if p != 0 {
-		return -1
-	}
-	mut n1 := 0
-	for p < r.len && n1 < 3 && r[p] == ` ` {
-		p++
-		n1++
-	}
-	mut n2 := 0
-	for p < r.len && n2 < 6 && r[p] == `#` {
-		p++
-		n2++
-	}
-	if n2 < 1 {
-		return -1
-	}
-	if lex_markdown_m65(r, p) < 0 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m68(r []rune, start int) int {
-	mut p := start
-	if p != 0 {
-		return -1
-	}
-	mut n1 := 0
-	for p < r.len && n1 < 3 && r[p] == ` ` {
-		p++
-		n1++
-	}
-	if p >= r.len || !(r[p] == `[`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(!(r[p] == `]`)) {
-		return -1
-	}
-	p++
-	for p < r.len && !(r[p] == `]`) {
-		p++
-	}
-	if p >= r.len || !(r[p] == `]`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `:`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m69(r []rune, start int) int {
-	mut p := start
-	if p != 0 {
-		return -1
-	}
-	for p < r.len && (r[p] == ` ` || r[p] == rune(9)) {
-		p++
-	}
-	if p >= r.len || !(r[p] == `>`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m71(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `*` || r[p] == `+` || r[p] == `-`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m72(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && n1 < 9 && r[p] >= `0` && r[p] <= `9` {
-		p++
-		n1++
-	}
-	if n1 < 1 {
-		return -1
-	}
-	if p >= r.len || !(r[p] == `.` || r[p] == `)`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m74(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == ` ` || r[p] == rune(9)) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m75(r []rune, start int) int {
-	p := start
-	if p != r.len {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m73(r []rune, start int) int {
-	mut p := start
-	mut q1 := lex_markdown_m74(r, p)
-	if q1 < 0 {
-		q1 = lex_markdown_m75(r, p)
-	}
-	if q1 < 0 {
-		return -1
-	}
-	p = q1
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m70(r []rune, start int) int {
-	mut p := start
-	if p != 0 {
-		return -1
-	}
-	for p < r.len && (r[p] == ` ` || r[p] == rune(9)) {
-		p++
-	}
-	mut q1 := lex_markdown_m71(r, p)
-	if q1 < 0 {
-		q1 = lex_markdown_m72(r, p)
-	}
-	if q1 < 0 {
-		return -1
-	}
-	p = q1
-	if lex_markdown_m73(r, p) < 0 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m76(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == rune(92)) {
-		return -1
-	}
-	p++
-	if p >= r.len || !((r[p] >= `!` && r[p] <= `/`) || (r[p] >= `:` && r[p] <= `@`) || (r[p] >= `[` && r[p] <= rune(96)) || (r[p] >= `{` && r[p] <= `~`)) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m78(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(!(r[p] == rune(96))) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m80(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == rune(96)) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m79(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == rune(96)) {
-		return -1
-	}
-	p++
-	if lex_markdown_m80(r, p) >= 0 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m82(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(!(r[p] == rune(96))) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m84(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == rune(96)) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m83(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == rune(96)) {
-		return -1
-	}
-	p++
-	if lex_markdown_m84(r, p) >= 0 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m81(r []rune, start int) int {
-	mut p := start
-	mut q1 := lex_markdown_m82(r, p)
-	if q1 < 0 {
-		q1 = lex_markdown_m83(r, p)
-	}
-	if q1 < 0 {
-		return -1
-	}
-	p = q1
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m77(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == rune(96)) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == rune(96)) {
-		return -1
-	}
-	p++
-	mut q1 := lex_markdown_m78(r, p)
-	if q1 < 0 {
-		q1 = lex_markdown_m79(r, p)
-	}
-	if q1 < 0 {
-		return -1
-	}
-	p = q1
-	for {
-		q2 := lex_markdown_m81(r, p)
-		if q2 < 0 || q2 == p {
-			break
-		}
-		p = q2
-	}
-	if p >= r.len || !(r[p] == rune(96)) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == rune(96)) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m85(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == rune(96)) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(!(r[p] == rune(96))) {
-		return -1
-	}
-	p++
-	for p < r.len && !(r[p] == rune(96)) {
-		p++
-	}
-	if p >= r.len || !(r[p] == rune(96)) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m86(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `]`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `(`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m87(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `<`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !((r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `a` && r[p] <= `z`)) {
-		return -1
-	}
-	p++
-	mut n1 := 0
-	for p < r.len && n1 < 31 && ((r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `a` && r[p] <= `z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `+` || r[p] == `.` || r[p] == `-`) {
-		p++
-		n1++
-	}
-	if n1 < 1 {
-		return -1
-	}
-	if p >= r.len || !(r[p] == `:`) {
-		return -1
-	}
-	p++
-	for p < r.len && (!(r[p] == ` ` || r[p] == rune(9) || r[p] == `<` || r[p] == `>`)) {
-		p++
-	}
-	if p >= r.len || !(r[p] == `>`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m88(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `<`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `!`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `-`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `-`) {
-		return -1
-	}
-	p++
-	return p
 }
 
 const lex_markdown_first_main = [u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
@@ -3786,87 +2078,3 @@ const lex_markdown_first_heading = [u32(0), u32(0), u32(0), u32(0), u32(0), u32(
 	u32(1), u32(8), u32(0), u32(0), u32(6), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
 	u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0),
 	u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0), u32(0)]!
-
-@[direct_array_access]
-fn lex_markdown_m90(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == rune(96) {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m91(r []rune, start int) int {
-	mut p := start
-	mut n1 := 0
-	for p < r.len && r[p] == `~` {
-		p++
-		n1++
-	}
-	if n1 < 3 {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m89(r []rune, start int) int {
-	mut p := start
-	if p != 0 {
-		return -1
-	}
-	mut n1 := 0
-	for p < r.len && n1 < 3 && r[p] == ` ` {
-		p++
-		n1++
-	}
-	mut q2 := lex_markdown_m90(r, p)
-	if q2 < 0 {
-		q2 = lex_markdown_m91(r, p)
-	}
-	if q2 < 0 {
-		return -1
-	}
-	p = q2
-	for p < r.len && (r[p] == ` ` || r[p] == rune(9)) {
-		p++
-	}
-	if p != r.len {
-		return -1
-	}
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m92(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `)`) {
-		return -1
-	}
-	p++
-	return p
-}
-
-@[direct_array_access]
-fn lex_markdown_m93(r []rune, start int) int {
-	mut p := start
-	if p >= r.len || !(r[p] == `-`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `-`) {
-		return -1
-	}
-	p++
-	if p >= r.len || !(r[p] == `>`) {
-		return -1
-	}
-	p++
-	return p
-}
