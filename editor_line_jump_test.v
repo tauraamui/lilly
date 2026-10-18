@@ -18,259 +18,215 @@ import os
 import time
 import bobatea as tea
 import lib.documents
-import lib.documents.cursor
-import lib.clipboard
-import lib.petal.theme
+import lib.cfg
 
-fn make_temp_file(label string, line_count int) string {
+fn make_zz_test_file(label string, line_count int) string {
 	mut lines := []string{cap: line_count}
 	for i in 0 .. line_count {
 		lines << 'line ${i}'
 	}
-	path := os.join_path(os.temp_dir(), 'lilly_${label}_${time.now().unix_nano()}')
+	path := os.join_path(os.temp_dir(), 'lilly_zz_${label}_${time.now().unix_nano()}')
 	os.write_file(path, lines.join('\n')) or { panic('failed to write temp file: ${err}') }
 	return path
 }
 
-fn test_editor_model_goto_line_centers_view() {
-	file_path := make_temp_file('center', 40)
+fn test_execute_action_normal_zz_centers_current_line() {
+	file_path := make_zz_test_file('center', 40)
 	defer { os.rm(file_path) or {} }
 
-	mut ctrl := documents.Controller{}
-	mut ctrl2 := documents.Controller2{}
-	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
-	mut cb := clipboard.new()
-	mut editor := EditorModel.new(
-		id:              1
-		theme:           theme.dark_theme
-		file_path:       file_path
-		doc_id:          doc_id
-		doc_controller:  &ctrl
-		doc_controller2: &ctrl2
-		cb:              &cb
-		expand_tabs:     false
-		tab_width:       4
-	)
-	editor.height = 7
+	mut c := documents.Controller{}
+	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
-	editor.goto_line(10)
-
-	assert editor.cursor_pos == cursor.Pos.new(0, 9)
-	expected_min := 9 - editor.height / 2
-	assert editor.min_y == expected_min
-}
-
-fn test_editor_model_goto_line_clamps_to_document_end() {
-	file_path := make_temp_file('clamp', 40)
-	defer { os.rm(file_path) or {} }
-
-	mut ctrl := documents.Controller{}
-	mut ctrl2 := documents.Controller2{}
-	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
-	mut cb := clipboard.new()
-	mut editor := EditorModel.new(
-		id:              2
-		theme:           theme.dark_theme
-		file_path:       file_path
-		doc_id:          doc_id
-		doc_controller:  &ctrl
-		doc_controller2: &ctrl2
-		cb:              &cb
-		expand_tabs:     false
-		tab_width:       4
-	)
-	editor.height = 7
-
-	editor.goto_line(1000)
-
-	expected_line := ctrl.line_count(doc_id) - 1
-	assert editor.cursor_pos == cursor.Pos.new(0, expected_line)
-	mut expected_min := ctrl.line_count(doc_id) - editor.height
-	if expected_min < 0 {
-		expected_min = 0
+	mut m := EditorModel{
+		config:         EditorWorkspaceConfig.new(cfg.default_config)
+		doc_id:         doc_id
+		doc_controller: &c
 	}
-	assert editor.min_y == expected_min
-}
+	m.viewport_height = 7
 
-fn test_editor_model_goto_line_with_large_viewport_sets_min_y_to_zero() {
-	file_path := make_temp_file('large_view', 4)
-	defer { os.rm(file_path) or {} }
+	assert apply_motion(&c, doc_id, 'j', 15)
 
-	mut ctrl := documents.Controller{}
-	mut ctrl2 := documents.Controller2{}
-	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
-	mut cb := clipboard.new()
-	mut editor := EditorModel.new(
-		id:              3
-		theme:           theme.dark_theme
-		file_path:       file_path
-		doc_id:          doc_id
-		doc_controller:  &ctrl
-		doc_controller2: &ctrl2
-		cb:              &cb
-		expand_tabs:     false
-		tab_width:       4
-	)
-	editor.height = 20
-
-	editor.goto_line(3)
-
-	assert editor.min_y == 0
-}
-
-fn test_line_jump_command_for_returns_goto_line_command() {
-	file_path := make_temp_file('workspace', 10)
-	defer { os.rm(file_path) or {} }
-
-	mut ctrl := documents.Controller{}
-	mut ctrl2 := documents.Controller2{}
-	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
-	mut cb := clipboard.new()
-	mut editor := EditorModel.new(
-		id:              4
-		theme:           theme.dark_theme
-		file_path:       file_path
-		doc_id:          doc_id
-		doc_controller:  &ctrl
-		doc_controller2: &ctrl2
-		cb:              &cb
-		expand_tabs:     false
-		tab_width:       4
-	)
-
-	mut workspace := EditorWorkspaceModel.new(EditorWorkspaceModelParams{
-		version:           'test'
-		ttheme:            theme.dark_theme
-		leader_key:        ' '
-		initial_file_path: file_path
-		doc_controller:    &ctrl
-		doc_controller2:   &ctrl2
-		clip_manager:      &cb
-		expand_tabs:       false
-		tab_width:         4
+	_, switching_mode := m.execute_action_normal(ChordAction{
+		count:  1
+		motion: 'zz'
 	})
-	workspace.active_editor_id = editor.id
-	workspace.editors[editor.id] = editor
+	assert !switching_mode
 
-	cmd := workspace.line_jump_command_for('12') or { panic('expected goto line command') }
-	msg := cmd.first_delivered_msg() or { panic('expected goto line command to deliver a message') }
-	assert msg is EditorModelMsg
-	if msg is EditorModelMsg {
-		assert msg.id == editor.id
-		assert msg.msg is GoToLineMsg
-		if msg.msg is GoToLineMsg {
-			assert msg.msg.line == 12
-		}
+	line, _ := c.cursor_line_and_x(doc_id)
+	assert line == 15
+
+	mut expected_top := int(line) - m.viewport_height / 2
+	if expected_top < 0 {
+		expected_top = 0
 	}
+	line_count := int(c.line_count(doc_id))
+	max_top := if line_count > m.viewport_height { line_count - m.viewport_height } else { 0 }
+	if expected_top > max_top {
+		expected_top = max_top
+	}
+
+	assert m.top_line == expected_top
 }
 
-fn test_line_jump_command_for_rejects_non_numeric_commands() {
-	mut ctrl := documents.Controller{}
-	mut ctrl2 := documents.Controller2{}
-	mut cb := clipboard.new()
-	mut workspace := EditorWorkspaceModel.new(EditorWorkspaceModelParams{
-		version:           'test'
-		ttheme:            theme.dark_theme
-		leader_key:        ' '
-		initial_file_path: ''
-		doc_controller:    &ctrl
-		doc_controller2:   &ctrl2
-		clip_manager:      &cb
-		expand_tabs:       false
-		tab_width:         4
+fn test_execute_action_normal_zz_with_count_moves_and_centers() {
+	file_path := make_zz_test_file('count', 40)
+	defer { os.rm(file_path) or {} }
+
+	mut c := documents.Controller{}
+	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
+
+	mut m := EditorModel{
+		config:         EditorWorkspaceConfig.new(cfg.default_config)
+		doc_id:         doc_id
+		doc_controller: &c
+	}
+	m.viewport_height = 7
+
+	_, switching_mode := m.execute_action_normal(ChordAction{
+		count:  5
+		motion: 'zz'
 	})
-	if _ := workspace.line_jump_command_for('wq') {
-		assert false
-	} else {
-		assert true
+	assert !switching_mode
+
+	line, _ := c.cursor_line_and_x(doc_id)
+	assert line == 4 // 1-indexed count 5 -> zero-indexed line 4
+
+	mut expected_top := int(line) - m.viewport_height / 2
+	if expected_top < 0 {
+		expected_top = 0
 	}
+	line_count := int(c.line_count(doc_id))
+	max_top := if line_count > m.viewport_height { line_count - m.viewport_height } else { 0 }
+	if expected_top > max_top {
+		expected_top = max_top
+	}
+
+	assert m.top_line == expected_top
 }
 
-fn test_editor_model_zz_centers_current_line() {
-	file_path := make_temp_file('zz_center', 40)
+fn test_execute_action_normal_zz_clamps_to_document_end() {
+	file_path := make_zz_test_file('clamp', 40)
 	defer { os.rm(file_path) or {} }
 
-	mut ctrl := documents.Controller{}
-	mut ctrl2 := documents.Controller2{}
-	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
-	mut cb := clipboard.new()
-	mut editor := EditorModel.new(
-		id:              5
-		theme:           theme.dark_theme
-		file_path:       file_path
-		doc_id:          doc_id
-		doc_controller:  &ctrl
-		doc_controller2: &ctrl2
-		cb:              &cb
-		expand_tabs:     false
-		tab_width:       4
-	)
-	editor.height = 7
-	editor.cursor_pos = cursor.Pos.new(0, 15)
-	editor.min_y = 0
+	mut c := documents.Controller{}
+	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
-	mut cmds := []tea.Cmd{}
-	editor.execute_action(ChordAction{
-		count:    1
-		operator: none
-		motion:   'zz'
-	}, mut cmds)
-
-	mut expected_min := editor.cursor_pos.y - editor.height / 2
-	if expected_min < 0 {
-		expected_min = 0
+	mut m := EditorModel{
+		config:         EditorWorkspaceConfig.new(cfg.default_config)
+		doc_id:         doc_id
+		doc_controller: &c
 	}
-	line_count := ctrl.line_count(doc_id)
-	max_top := if line_count > editor.height { line_count - editor.height } else { 0 }
-	if expected_min > max_top {
-		expected_min = max_top
-	}
+	m.viewport_height = 7
 
-	assert editor.min_y == expected_min
-	assert editor.cursor_pos == cursor.Pos.new(0, 15)
+	assert apply_motion(&c, doc_id, 'G', 1)
+
+	_, switching_mode := m.execute_action_normal(ChordAction{
+		count:  1
+		motion: 'zz'
+	})
+	assert !switching_mode
+
+	line_count := int(c.line_count(doc_id))
+	expected_top := line_count - m.viewport_height
+	assert m.top_line == expected_top
 }
 
-fn test_editor_model_zz_with_count_moves_and_centers() {
-	file_path := make_temp_file('zz_count', 40)
+fn test_execute_action_normal_zz_with_large_viewport_sets_top_line_to_zero() {
+	file_path := make_zz_test_file('large_view', 4)
 	defer { os.rm(file_path) or {} }
 
-	mut ctrl := documents.Controller{}
-	mut ctrl2 := documents.Controller2{}
-	doc_id := ctrl.open_document(file_path) or { panic('failed to open temp document: ${err}') }
-	mut cb := clipboard.new()
-	mut editor := EditorModel.new(
-		id:              6
-		theme:           theme.dark_theme
-		file_path:       file_path
-		doc_id:          doc_id
-		doc_controller:  &ctrl
-		doc_controller2: &ctrl2
-		cb:              &cb
-		expand_tabs:     false
-		tab_width:       4
-	)
-	editor.height = 7
-	editor.cursor_pos = cursor.Pos.new(0, 0)
-	editor.min_y = 0
+	mut c := documents.Controller{}
+	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
-	mut cmds := []tea.Cmd{}
-	editor.execute_action(ChordAction{
-		count:    5
-		operator: none
-		motion:   'zz'
-	}, mut cmds)
-
-	assert editor.cursor_pos == cursor.Pos.new(0, 4)
-
-	mut expected_min := editor.cursor_pos.y - editor.height / 2
-	if expected_min < 0 {
-		expected_min = 0
+	mut m := EditorModel{
+		config:         EditorWorkspaceConfig.new(cfg.default_config)
+		doc_id:         doc_id
+		doc_controller: &c
 	}
-	line_count := ctrl.line_count(doc_id)
-	max_top := if line_count > editor.height { line_count - editor.height } else { 0 }
-	if expected_min > max_top {
-		expected_min = max_top
-	}
+	m.viewport_height = 20
 
-	assert editor.min_y == expected_min
+	assert apply_motion(&c, doc_id, 'j', 2)
+
+	_, switching_mode := m.execute_action_normal(ChordAction{
+		count:  1
+		motion: 'zz'
+	})
+	assert !switching_mode
+
+	assert m.top_line == 0
+}
+
+fn test_normal_mode_ctrl_d_scrolls_and_moves_cursor() {
+	file_path := make_zz_test_file('ctrl_d', 40)
+	defer { os.rm(file_path) or {} }
+
+	mut c := documents.Controller{}
+	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
+
+	mut m := EditorModel{
+		config:         EditorWorkspaceConfig.new(cfg.default_config)
+		doc_id:         doc_id
+		doc_controller: &c
+	}
+	m.viewport_height = 10
+
+	m.normal_mode_update(tea.KeyMsg{
+		k_type: .special
+		runes:  'ctrl+d'.runes()
+	})
+
+	assert m.top_line == 5
+	line, _ := c.cursor_line_and_x(doc_id)
+	assert line == 12
+}
+
+fn test_normal_mode_ctrl_u_scrolls_and_moves_cursor() {
+	file_path := make_zz_test_file('ctrl_u', 40)
+	defer { os.rm(file_path) or {} }
+
+	mut c := documents.Controller{}
+	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
+
+	mut m := EditorModel{
+		config:         EditorWorkspaceConfig.new(cfg.default_config)
+		doc_id:         doc_id
+		doc_controller: &c
+	}
+	m.viewport_height = 10
+	m.top_line = 2
+
+	assert apply_motion(&c, doc_id, 'j', 3)
+
+	m.normal_mode_update(tea.KeyMsg{
+		k_type: .special
+		runes:  'ctrl+u'.runes()
+	})
+
+	assert m.top_line == 0
+	line, _ := c.cursor_line_and_x(doc_id)
+	assert line == 2
+}
+
+fn test_normal_mode_ctrl_d_clamps_at_document_end() {
+	file_path := make_zz_test_file('ctrl_d_clamp', 12)
+	defer { os.rm(file_path) or {} }
+
+	mut c := documents.Controller{}
+	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
+
+	mut m := EditorModel{
+		config:         EditorWorkspaceConfig.new(cfg.default_config)
+		doc_id:         doc_id
+		doc_controller: &c
+	}
+	m.viewport_height = 10
+
+	m.normal_mode_update(tea.KeyMsg{
+		k_type: .special
+		runes:  'ctrl+d'.runes()
+	})
+
+	assert m.top_line == 2
+	line, _ := c.cursor_line_and_x(doc_id)
+	assert line == 11
 }

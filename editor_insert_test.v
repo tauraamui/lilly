@@ -16,10 +16,10 @@ fn test_insert_enter_injects_prev_line_prefix() {
 	file_path := make_insert_test_file('prefix', 'This is a line.\n\tA padded line.')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
-	mut m := EditorModel2{
+	mut m := EditorModel{
 		config:         EditorWorkspaceConfig.new(cfg.default_config)
 		doc_id:         doc_id
 		doc_controller: &c

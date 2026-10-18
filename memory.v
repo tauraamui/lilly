@@ -52,21 +52,16 @@ fn msg_label(msg tea.Msg) string {
 		// the heavyweight operations, where a jump in the live set comes from
 		OpenFileMsg { 'OpenFileMsg' }
 		CreateAndOpenFileMsg { 'CreateAndOpenFileMsg' }
-		OpenEditorMsg { 'OpenEditorMsg' }
 		OpenEditorWorkspaceMsg { 'OpenEditorWorkspaceMsg' }
 		OpenEditorInSplitMsg { 'OpenEditorInSplitMsg' }
-		VerticalSplitMsg { 'VerticalSplitMsg' }
 		WriteToDiskMsg { 'WriteToDiskMsg' }
 		SyntaxLoadedMsg { 'SyntaxLoadedMsg' }
 		LoadFilesMsg { 'LoadFilesMsg' }
 		FilterFilesMsg { 'FilterFilesMsg' }
 		EditorModelKeyMsg { 'EditorModelKeyMsg' }
-		EditorModel2Msg { 'EditorModel2Msg' }
+		EditorModelMsg { 'EditorModelMsg' }
 		EditorDataResultMsg { 'EditorDataResultMsg' }
-		EditorData2ResultMsg { 'EditorData2ResultMsg' }
 		QueryEditorDataMsg { 'QueryEditorDataMsg' }
-		QueryEditorData2Msg { 'QueryEditorData2Msg' }
-		CommandMsg { 'CommandMsg' }
 		GoToLineMsg { 'GoToLineMsg' }
 		LogMsg { 'LogMsg' }
 		else { 'unlabelled' }
@@ -93,8 +88,7 @@ mut:
 // message plus one syscall every 250ms.
 @[heap]
 struct MemoryProbe {
-	doc_controller  &documents.Controller  = unsafe { nil }
-	doc_controller2 &documents.Controller2 = unsafe { nil }
+	doc_controller &documents.Controller = unsafe { nil }
 mut:
 	// process-level
 	rss                u64
@@ -133,10 +127,9 @@ mut:
 	ops map[string]OpStat
 }
 
-fn MemoryProbe.new(doc_controller &documents.Controller, doc_controller2 &documents.Controller2) &MemoryProbe {
+fn MemoryProbe.new(doc_controller &documents.Controller) &MemoryProbe {
 	mut p := &MemoryProbe{
-		doc_controller:  doc_controller
-		doc_controller2: doc_controller2
+		doc_controller: doc_controller
 	}
 	p.refresh_counters()
 	p.last_frame_total = p.total_allocated
@@ -271,15 +264,14 @@ fn (p &MemoryProbe) avg_frame_churn() u64 {
 // against the collector's live set is what separates "we are retaining a lot"
 // from "we are churning a lot", which the process RSS alone cannot tell you.
 struct Accounting {
-	docs_v1 documents.Footprint
-	docs_v2 documents.Footprint
+	docs    documents.Footprint
 	grid    u64
 	screens u64
 	logs    u64
 }
 
 fn (a Accounting) total() u64 {
-	return a.docs_v1.total() + a.docs_v2.total() + a.grid + a.screens + a.logs
+	return a.docs.total() + a.grid + a.screens + a.logs
 }
 
 // MemoryAccountable is implemented by the screens that retain enough for the
@@ -311,21 +303,16 @@ fn (p &MemoryProbe) accounting(logs []LogMsg, screen Debuggable) Accounting {
 	for l in logs {
 		log_bytes += u64(l.message.len)
 	}
-	mut docs_v1 := documents.Footprint{}
+	mut docs := documents.Footprint{}
 	if !isnil(p.doc_controller) {
-		docs_v1 = p.doc_controller.footprint()
-	}
-	mut docs_v2 := documents.Footprint{}
-	if !isnil(p.doc_controller2) {
-		docs_v2 = p.doc_controller2.footprint()
+		docs = p.doc_controller.footprint()
 	}
 	mut screen_bytes := u64(0)
 	if screen is MemoryAccountable {
 		screen_bytes = screen.footprint_bytes()
 	}
 	return Accounting{
-		docs_v1: docs_v1
-		docs_v2: docs_v2
+		docs:    docs
 		grid:    tea.grid_footprint_bytes(p.grid_width, p.grid_height)
 		screens: screen_bytes
 		logs:    log_bytes
@@ -402,9 +389,7 @@ fn render_memory_accounting(mut ctx tea.Context, x int, y int, p &MemoryProbe, l
 	mut row := y
 	draw_mem_section(mut ctx, x, row, 'ACCOUNTED BYTES')
 	row += 1
-	draw_mem_row(mut ctx, x, row, 'documents, v2 (${acc.docs_v2.doc_count})', '${fmt_bytes(acc.docs_v2.total())}  text ${fmt_bytes(acc.docs_v2.text_bytes)} / index ${fmt_bytes(acc.docs_v2.line_index_bytes)} / history ${fmt_bytes(acc.docs_v2.history_bytes)} (${acc.docs_v2.history_groups} groups)')
-	row += 1
-	draw_mem_row(mut ctx, x, row, 'documents, v1 (${acc.docs_v1.doc_count})', '${fmt_bytes(acc.docs_v1.total())}  text ${fmt_bytes(acc.docs_v1.text_bytes)} / history ${fmt_bytes(acc.docs_v1.history_bytes)} (${acc.docs_v1.history_groups} entries)')
+	draw_mem_row(mut ctx, x, row, 'documents (${acc.docs.doc_count})', '${fmt_bytes(acc.docs.total())}  text ${fmt_bytes(acc.docs.text_bytes)} / index ${fmt_bytes(acc.docs.line_index_bytes)} / history ${fmt_bytes(acc.docs.history_bytes)} (${acc.docs.history_groups} groups)')
 	row += 1
 	draw_mem_row(mut ctx, x, row, 'render grid (${p.grid_width}x${p.grid_height})', '${fmt_bytes(acc.grid)}  two buffers of ${u64(p.grid_width) * u64(p.grid_height)} cells')
 	row += 1

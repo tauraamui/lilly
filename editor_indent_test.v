@@ -12,8 +12,8 @@ struct IndentTest {
 	path   string
 	doc_id nanoid.ID
 mut:
-	c &documents.Controller2
-	m EditorModel2
+	c &documents.Controller
+	m EditorModel
 }
 
 // indent_test opens `content` as a V file, with the cursor `x` graphemes into
@@ -21,11 +21,11 @@ mut:
 fn indent_test(content string, y int, x int, tabs bool) IndentTest {
 	path := os.join_path(os.temp_dir(), 'lilly_indent_${time.now().unix_nano()}.v')
 	os.write_file(path, content) or { panic('failed to write temp file: ${err}') }
-	mut c := &documents.Controller2{}
+	mut c := &documents.Controller{}
 	doc_id := c.open_document(path) or { panic('failed to open temp document: ${err}') }
 	v_syntax := syntax.resolve_from_extension('main.v') or { panic(err) }
 	base := EditorWorkspaceConfig.new(cfg.default_config)
-	mut m := EditorModel2{
+	mut m := EditorModel{
 		config:         EditorWorkspaceConfig{
 			theme:                  base.theme
 			leader_key:             base.leader_key

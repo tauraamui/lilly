@@ -21,7 +21,7 @@ import lib.nanoid
 import lib.documents.cursor
 
 @[heap]
-pub struct Controller2 {
+pub struct Controller {
 mut:
 	docs map[nanoid.ID]buffers.TextBuffer = map[nanoid.ID]buffers.TextBuffer{}
 	// dirty holds the ids of documents edited since they were last written.
@@ -34,14 +34,14 @@ mut:
 	dirty map[nanoid.ID]bool = map[nanoid.ID]bool{}
 }
 
-pub fn Controller2.new() Controller2 {
-	return Controller2{
+pub fn Controller.new() Controller {
+	return Controller{
 		docs:  map[nanoid.ID]buffers.TextBuffer{}
 		dirty: map[nanoid.ID]bool{}
 	}
 }
 
-pub fn (mut dc Controller2) open_document(path string) !nanoid.ID {
+pub fn (mut dc Controller) open_document(path string) !nanoid.ID {
 	mut file := os.open(path) or { return error('failed to open ${path}: ${err}') }
 	defer {
 		file.close()
@@ -49,11 +49,11 @@ pub fn (mut dc Controller2) open_document(path string) !nanoid.ID {
 	return dc.load_document_sized(path, mut file, os.file_size(path))
 }
 
-pub fn (mut dc Controller2) load_document_from_reader(path string, mut r io.Reader) !nanoid.ID {
+pub fn (mut dc Controller) load_document_from_reader(path string, mut r io.Reader) !nanoid.ID {
 	return dc.load_document_sized(path, mut r, 0)
 }
 
-fn (mut dc Controller2) load_document_sized(path string, mut r io.Reader, size_hint u64) !nanoid.ID {
+fn (mut dc Controller) load_document_sized(path string, mut r io.Reader, size_hint u64) !nanoid.ID {
 	doc_id := nanoid.simple_with_seed(path)
 	if _ := dc.docs[doc_id] { // if ID is present we already have a document with the same path open
 		return doc_id
@@ -63,79 +63,79 @@ fn (mut dc Controller2) load_document_sized(path string, mut r io.Reader, size_h
 	return doc_id
 }
 
-pub fn (mut dc Controller2) insert(doc_id nanoid.ID, c u8) {
+pub fn (mut dc Controller) insert(doc_id nanoid.ID, c u8) {
 	dc.dirty[doc_id] = true
 	dc.docs[doc_id].insert(c)
 }
 
-pub fn (mut dc Controller2) insert_rune(doc_id nanoid.ID, cr rune) {
+pub fn (mut dc Controller) insert_rune(doc_id nanoid.ID, cr rune) {
 	dc.dirty[doc_id] = true
 	dc.docs[doc_id].insert_rune(cr)
 }
 
-pub fn (mut dc Controller2) insert_string(doc_id nanoid.ID, s string) {
+pub fn (mut dc Controller) insert_string(doc_id nanoid.ID, s string) {
 	dc.dirty[doc_id] = true
 	for cr in s.runes() {
 		dc.docs[doc_id].insert_rune(cr)
 	}
 }
 
-pub fn (mut dc Controller2) backspace(doc_id nanoid.ID) {
+pub fn (mut dc Controller) backspace(doc_id nanoid.ID) {
 	dc.dirty[doc_id] = true
 	dc.docs[doc_id].backspace()
 }
 
-pub fn (mut dc Controller2) delete(doc_id nanoid.ID) {
+pub fn (mut dc Controller) delete(doc_id nanoid.ID) {
 	dc.dirty[doc_id] = true
 	dc.docs[doc_id].delete()
 }
 
 // delete_char_at deletes the character under the cursor, and reports
 // whether there was one to delete
-pub fn (mut dc Controller2) delete_char_at(doc_id nanoid.ID) bool {
+pub fn (mut dc Controller) delete_char_at(doc_id nanoid.ID) bool {
 	dc.dirty[doc_id] = true
 	return dc.docs[doc_id].delete_char_at()
 }
 
-pub fn (mut dc Controller2) delete_line(doc_id nanoid.ID, y u64) {
+pub fn (mut dc Controller) delete_line(doc_id nanoid.ID, y u64) {
 	dc.dirty[doc_id] = true
 	dc.docs[doc_id].delete_line(y)
 }
 
-pub fn (mut dc Controller2) delete_range(doc_id nanoid.ID, r cursor.Range) {
+pub fn (mut dc Controller) delete_range(doc_id nanoid.ID, r cursor.Range) {
 	dc.dirty[doc_id] = true
 	dc.docs[doc_id].delete_range(u64(r.start.y), u64(r.start.x), u64(r.end.y), u64(r.end.x))
 }
 
-pub fn (mut dc Controller2) begin_undo_group(doc_id nanoid.ID) {
+pub fn (mut dc Controller) begin_undo_group(doc_id nanoid.ID) {
 	dc.docs[doc_id].begin_undo_group()
 }
 
-pub fn (mut dc Controller2) commit_undo_group(doc_id nanoid.ID) {
+pub fn (mut dc Controller) commit_undo_group(doc_id nanoid.ID) {
 	dc.docs[doc_id].commit_undo_group()
 }
 
-pub fn (mut dc Controller2) undo(doc_id nanoid.ID) {
+pub fn (mut dc Controller) undo(doc_id nanoid.ID) {
 	dc.dirty[doc_id] = true
 	dc.docs[doc_id].undo()
 }
 
-pub fn (mut dc Controller2) redo(doc_id nanoid.ID) {
+pub fn (mut dc Controller) redo(doc_id nanoid.ID) {
 	dc.dirty[doc_id] = true
 	dc.docs[doc_id].redo()
 }
 
 // line_changes_since reports which lines of the document changed after
 // generation `gen`, for readers keeping per-line state. Pass 0 the first time.
-pub fn (mut dc Controller2) line_changes_since(doc_id nanoid.ID, gen u64) buffers.LineChanges {
+pub fn (mut dc Controller) line_changes_since(doc_id nanoid.ID, gen u64) buffers.LineChanges {
 	return dc.docs[doc_id].line_changes_since(gen)
 }
 
-pub fn (mut dc Controller2) move_cursor_left(doc_id nanoid.ID) {
+pub fn (mut dc Controller) move_cursor_left(doc_id nanoid.ID) {
 	dc.docs[doc_id].move_cursor_left()
 }
 
-pub fn (mut dc Controller2) move_cursor_right(doc_id nanoid.ID) {
+pub fn (mut dc Controller) move_cursor_right(doc_id nanoid.ID) {
 	dc.docs[doc_id].move_cursor_right()
 }
 
@@ -143,73 +143,73 @@ pub fn (mut dc Controller2) move_cursor_right(doc_id nanoid.ID) {
 // pulling the cursor back onto the last char in normal mode) - they don't
 // reset the sticky goal column the way real user-triggered moves do, so
 // don't wire these to actual key input.
-pub fn (mut dc Controller2) internal_move_cursor_left(doc_id nanoid.ID) {
+pub fn (mut dc Controller) internal_move_cursor_left(doc_id nanoid.ID) {
 	dc.docs[doc_id].internal_move_cursor_left()
 }
 
-pub fn (mut dc Controller2) internal_move_cursor_right(doc_id nanoid.ID) {
+pub fn (mut dc Controller) internal_move_cursor_right(doc_id nanoid.ID) {
 	dc.docs[doc_id].internal_move_cursor_right()
 }
 
-pub fn (mut dc Controller2) move_cursor_up(doc_id nanoid.ID) {
+pub fn (mut dc Controller) move_cursor_up(doc_id nanoid.ID) {
 	dc.docs[doc_id].move_cursor_up()
 }
 
-pub fn (mut dc Controller2) move_cursor_down(doc_id nanoid.ID) {
+pub fn (mut dc Controller) move_cursor_down(doc_id nanoid.ID) {
 	dc.docs[doc_id].move_cursor_down()
 }
 
 // move_cursor_lines moves the cursor `n` lines down, or up for a negative `n`,
 // as that many presses of j or k would
-pub fn (mut dc Controller2) move_cursor_lines(doc_id nanoid.ID, n int) {
+pub fn (mut dc Controller) move_cursor_lines(doc_id nanoid.ID, n int) {
 	dc.docs[doc_id].move_cursor_lines(n)
 }
 
-pub fn (mut dc Controller2) move_cursor_to_previous_blank_line(doc_id nanoid.ID) {
+pub fn (mut dc Controller) move_cursor_to_previous_blank_line(doc_id nanoid.ID) {
 	dc.docs[doc_id].move_cursor_to_previous_blank_line()
 }
 
-pub fn (mut dc Controller2) move_cursor_to_next_blank_line(doc_id nanoid.ID) {
+pub fn (mut dc Controller) move_cursor_to_next_blank_line(doc_id nanoid.ID) {
 	dc.docs[doc_id].move_cursor_to_next_blank_line()
 }
 
-pub fn (mut dc Controller2) move_cursor_to_next_word_start(doc_id nanoid.ID) {
+pub fn (mut dc Controller) move_cursor_to_next_word_start(doc_id nanoid.ID) {
 	dc.docs[doc_id].move_cursor_to_next_word_start()
 }
 
-pub fn (mut dc Controller2) move_cursor_to_previous_word_start(doc_id nanoid.ID) {
+pub fn (mut dc Controller) move_cursor_to_previous_word_start(doc_id nanoid.ID) {
 	dc.docs[doc_id].move_cursor_to_previous_word_start()
 }
 
-pub fn (mut dc Controller2) move_cursor_to_next_word_end(doc_id nanoid.ID) {
+pub fn (mut dc Controller) move_cursor_to_next_word_end(doc_id nanoid.ID) {
 	dc.docs[doc_id].move_cursor_to_next_word_end()
 }
 
-pub fn (mut dc Controller2) move_cursor_to_previous_word_end(doc_id nanoid.ID) {
+pub fn (mut dc Controller) move_cursor_to_previous_word_end(doc_id nanoid.ID) {
 	dc.docs[doc_id].move_cursor_to_previous_word_end()
 }
 
-pub fn (mut dc Controller2) move_cursor_to_next_big_word_start(doc_id nanoid.ID) {
+pub fn (mut dc Controller) move_cursor_to_next_big_word_start(doc_id nanoid.ID) {
 	dc.docs[doc_id].move_cursor_to_next_big_word_start()
 }
 
-pub fn (mut dc Controller2) jump_cursor_to_line_end(doc_id nanoid.ID) {
+pub fn (mut dc Controller) jump_cursor_to_line_end(doc_id nanoid.ID) {
 	dc.docs[doc_id].jump_cursor_to_line_end()
 }
 
-pub fn (mut dc Controller2) jump_cursor_to_line_start(doc_id nanoid.ID) {
+pub fn (mut dc Controller) jump_cursor_to_line_start(doc_id nanoid.ID) {
 	dc.docs[doc_id].jump_cursor_to_line_start()
 }
 
-pub fn (mut dc Controller2) jump_cursor_to_text_start(doc_id nanoid.ID) {
+pub fn (mut dc Controller) jump_cursor_to_text_start(doc_id nanoid.ID) {
 	dc.docs[doc_id].jump_cursor_to_text_start()
 }
 
-pub fn (mut dc Controller2) jump_cursor_to_line(doc_id nanoid.ID, y u64) {
+pub fn (mut dc Controller) jump_cursor_to_line(doc_id nanoid.ID, y u64) {
 	dc.docs[doc_id].jump_cursor_to_line(y)
 }
 
-pub fn (mut dc Controller2) write_to_disk(doc_id nanoid.ID, target string) ! {
+pub fn (mut dc Controller) write_to_disk(doc_id nanoid.ID, target string) ! {
 	dc.docs[doc_id].write_to_path(target)!
 	dc.dirty.delete(doc_id)
 }
@@ -218,13 +218,13 @@ pub fn (mut dc Controller2) write_to_disk(doc_id nanoid.ID, target string) ! {
 // them. For a caller that has asked and been told to discard: the edits go
 // when the document does, and the flag has to go with them or the next close
 // would ask about them again.
-pub fn (mut dc Controller2) mark_clean(doc_id nanoid.ID) {
+pub fn (mut dc Controller) mark_clean(doc_id nanoid.ID) {
 	dc.dirty.delete(doc_id)
 }
 
 // is_dirty reports whether this document has been edited since it was last
 // written to disk. An id that is not open reads clean.
-pub fn (dc Controller2) is_dirty(doc_id nanoid.ID) bool {
+pub fn (dc Controller) is_dirty(doc_id nanoid.ID) bool {
 	return dc.dirty[doc_id]
 }
 
@@ -240,7 +240,7 @@ pub fn (dc Controller2) is_dirty(doc_id nanoid.ID) bool {
 // Sweeping the whole map is deliberate in place of a reference count per
 // document: it is less state, it cannot drift out of step with the editors
 // that are actually open, and the map holds one entry per open file.
-pub fn (mut dc Controller2) close_unreferenced(live_doc_ids []nanoid.ID) int {
+pub fn (mut dc Controller) close_unreferenced(live_doc_ids []nanoid.ID) int {
 	mut stale := []nanoid.ID{}
 	for doc_id, _ in dc.docs {
 		if doc_id !in live_doc_ids {
@@ -259,29 +259,29 @@ pub fn (mut dc Controller2) close_unreferenced(live_doc_ids []nanoid.ID) int {
 	return stale.len
 }
 
-pub fn (dc Controller2) resolve_prev_line_whitespace_prefix(doc_id nanoid.ID) []u8 {
+pub fn (dc Controller) resolve_prev_line_whitespace_prefix(doc_id nanoid.ID) []u8 {
 	return dc.docs[doc_id].resolve_prev_line_whitespace_prefix()
 }
 
-pub fn (mut dc Controller2) get_line_bytes(doc_id nanoid.ID, y u64) ?[]u8 {
+pub fn (mut dc Controller) get_line_bytes(doc_id nanoid.ID, y u64) ?[]u8 {
 	return dc.docs[doc_id].get_line_bytes(y)
 }
 
 // line_runes_into decodes line `y` into `out`, with `scratch` holding its
 // bytes on the way, allocating nothing once the two have grown. It returns
 // false past the last line.
-pub fn (mut dc Controller2) line_runes_into(doc_id nanoid.ID, y u64, mut scratch []u8, mut out []rune) bool {
+pub fn (mut dc Controller) line_runes_into(doc_id nanoid.ID, y u64, mut scratch []u8, mut out []rune) bool {
 	return dc.docs[doc_id].line_runes_into(y, mut scratch, mut out)
 }
 
-pub fn (dc Controller2) cursor_line_and_x(doc_id nanoid.ID) (u64, u64) {
+pub fn (dc Controller) cursor_line_and_x(doc_id nanoid.ID) (u64, u64) {
 	return dc.docs[doc_id].cursor_line_and_x()
 }
 
-pub fn (dc Controller2) cursor_offset(doc_id nanoid.ID) u64 {
+pub fn (dc Controller) cursor_offset(doc_id nanoid.ID) u64 {
 	return dc.docs[doc_id].cursor_offset()
 }
 
-pub fn (dc Controller2) line_count(doc_id nanoid.ID) u64 {
+pub fn (dc Controller) line_count(doc_id nanoid.ID) u64 {
 	return dc.docs[doc_id].line_count()
 }

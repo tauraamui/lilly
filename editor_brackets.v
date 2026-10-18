@@ -32,7 +32,7 @@ struct BracketPair {
 // an opener no further up than line `first` and a closer no further down than
 // line `last`. Brackets in strings and comments, and ones without a match,
 // have none.
-fn (mut m EditorModel2) bracket_pair_at(pos syntax.Pos, first int, last int) ?BracketPair {
+fn (mut m EditorModel) bracket_pair_at(pos syntax.Pos, first int, last int) ?BracketPair {
 	if m.lang_syn.name.len == 0 {
 		return m.counted_bracket_pair(pos, first, last)
 	}
@@ -95,7 +95,7 @@ const bracket_closes_of_kind = [`)`, `]`, `}`]
 // counted_bracket_pair is bracket_pair_at for a file with no syntax, so no
 // tree: as Vim does, it counts brackets of the bracket's kind, the way it
 // faces, until one balances it
-fn (m EditorModel2) counted_bracket_pair(pos syntax.Pos, first int, last int) ?BracketPair {
+fn (m EditorModel) counted_bracket_pair(pos syntax.Pos, first int, last int) ?BracketPair {
 	r := m.rune_at(pos)
 	opens := bracket_opens_of_kind.index(r)
 	if opens >= 0 {
@@ -140,13 +140,13 @@ fn (m EditorModel2) counted_bracket_pair(pos syntax.Pos, first int, last int) ?B
 	return none
 }
 
-fn (m EditorModel2) rune_at(pos syntax.Pos) rune {
+fn (m EditorModel) rune_at(pos syntax.Pos) rune {
 	runes := m.doc_line_runes(pos.line)
 	return if pos.col >= 0 && pos.col < runes.len { runes[pos.col] } else { 0 }
 }
 
 // cursor_pos is the cursor as a context tree position, in runes
-fn (m EditorModel2) cursor_pos() syntax.Pos {
+fn (m EditorModel) cursor_pos() syntax.Pos {
 	cursor_line, cursor_x := m.doc_controller.cursor_line_and_x(m.doc_id)
 	runes := m.doc_line_runes(int(cursor_line))
 	return syntax.Pos{int(cursor_line), rune_index_after_graphemes(runes, int(cursor_x))}
@@ -154,7 +154,7 @@ fn (m EditorModel2) cursor_pos() syntax.Pos {
 
 // graphemes_before is how many graphemes come before rune `col` of line `y`,
 // the cursor's column for that rune
-fn (m EditorModel2) graphemes_before(y int, col int) int {
+fn (m EditorModel) graphemes_before(y int, col int) int {
 	return graphemes_before_rune(m.doc_line_runes(y), col)
 }
 
@@ -169,12 +169,12 @@ fn graphemes_before_rune(runes []rune, col int) int {
 	return n
 }
 
-fn (mut m EditorModel2) move_cursor_to_pos(pos syntax.Pos) {
+fn (mut m EditorModel) move_cursor_to_pos(pos syntax.Pos) {
 	move_doc_cursor(m.doc_controller, m.doc_id, pos.line, m.graphemes_before(pos.line, pos.col))
 }
 
 // move_doc_cursor puts a document's cursor `x` graphemes into line `y`
-fn move_doc_cursor(c &documents.Controller2, doc_id nanoid.ID, y int, x int) {
+fn move_doc_cursor(c &documents.Controller, doc_id nanoid.ID, y int, x int) {
 	c.jump_cursor_to_line(doc_id, u64(y))
 	c.jump_cursor_to_line_start(doc_id)
 	for _ in 0 .. x {
@@ -186,7 +186,7 @@ fn move_doc_cursor(c &documents.Controller2, doc_id nanoid.ID, y int, x int) {
 // the one under the cursor, or else the first after it on the line, with
 // the position of the bracket to jump to. It gives none if the first is
 // without a match.
-fn (mut m EditorModel2) matching_bracket() ?(BracketPair, syntax.Pos) {
+fn (mut m EditorModel) matching_bracket() ?(BracketPair, syntax.Pos) {
 	pos := m.cursor_pos()
 	runes := m.doc_line_runes(pos.line)
 	last := int(m.doc_controller.line_count(m.doc_id)) - 1
@@ -208,7 +208,7 @@ fn (mut m EditorModel2) matching_bracket() ?(BracketPair, syntax.Pos) {
 }
 
 // in_text reports whether `pos` is in a string or comment
-fn (mut m EditorModel2) in_text(pos syntax.Pos) bool {
+fn (mut m EditorModel) in_text(pos syntax.Pos) bool {
 	nodes := m.syntax_ancestors(pos)
 	return nodes.len > 0 && nodes.last().kind == .context
 		&& nodes.last().scope in [.comment, .comment_doc, .string, .string_escape]
@@ -216,7 +216,7 @@ fn (mut m EditorModel2) in_text(pos syntax.Pos) bool {
 
 // jump_to_matching_bracket is `%`: it moves the cursor onto the bracket
 // matching the one under or after it, leaving it be with none to match
-fn (mut m EditorModel2) jump_to_matching_bracket() {
+fn (mut m EditorModel) jump_to_matching_bracket() {
 	_, target := m.matching_bracket() or { return }
 	m.move_cursor_to_pos(target)
 }
@@ -224,7 +224,7 @@ fn (mut m EditorModel2) jump_to_matching_bracket() {
 // matching_bracket_range is what an operator with `%` acts on: from the
 // cursor through the bracket matching the one under or after it, both
 // brackets included, whichever way it goes
-fn (mut m EditorModel2) matching_bracket_range() ?cursor.Range {
+fn (mut m EditorModel) matching_bracket_range() ?cursor.Range {
 	_, target := m.matching_bracket()?
 	from := m.cursor_pos()
 	mut start, mut end := from, target
@@ -243,7 +243,7 @@ fn (mut m EditorModel2) matching_bracket_range() ?cursor.Range {
 // out on every frame, and a closer far below its opener costs a walk over
 // every line between. `rows` are the lines the view shows, as screen_lines
 // gives them.
-fn (mut m EditorModel2) visible_bracket_pair(rows []int) ?BracketPair {
+fn (mut m EditorModel) visible_bracket_pair(rows []int) ?BracketPair {
 	if !m.in_focus || rows.len == 0 {
 		return none
 	}
@@ -259,7 +259,7 @@ fn (mut m EditorModel2) visible_bracket_pair(rows []int) ?BracketPair {
 	return none
 }
 
-fn (mut m EditorModel2) render_matching_brackets(mut ctx tea.Context, rows []int) {
+fn (mut m EditorModel) render_matching_brackets(mut ctx tea.Context, rows []int) {
 	pair := m.visible_bracket_pair(rows) or { return }
 	ctx.set_bg_color(m.config.theme.highlight_bg_color)
 	ctx.set_color(palette.fg_color(m.config.theme.highlight_bg_color))

@@ -16,212 +16,200 @@ module main
 
 import os
 import time
-import math
 import bobatea as tea
 import lib.petal
-import lib.boba
 import lib.petal.theme
-import lib.palette
-import lib.glyphs
+import lib.boba
 import lib.documents
-import lib.clipboard
+import lib.glyphs
+import lib.palette
+import lib.cfg
+import lib.nanoid
 
 struct EditorWorkspaceModel {
-	version           string
-	initial_file_path string
-	// NOTE(tauraamui): forced mode to be immutable, this ensures we cannot randomly
-	// accidentally set the mode state without accounting for necessary checks and state changes,
-	// the only way we can change the mode is by exiting the current scope with a command to do so
-	mode        petal.Mode
-	theme       theme.Theme
-	expand_tabs bool
-	tab_width   int
+	mode           petal.Mode = .normal
+	doc_controller &documents.Controller
+	config         EditorWorkspaceConfig
 mut:
-	tmux_wrapped bool
-	dialog_model ?DebuggableModel
+	width         int
+	height        int
+	dialog_model  ?DebuggableModel
+	input_field   boba.InputField
+	message_label ?MessageLabel
+	branch_name   ?string
+	leader_suffix []rune
 
-	active_editor_id int
-
-	split_tree boba.SplitTree
-	editors    map[int]DebuggableModel
-
-	last_window_width  int
-	last_window_height int
-
-	doc_controller     &documents.Controller
-	doc_controller2    &documents.Controller2
-	cb                 &clipboard.Manager
+	active_modal ?DebuggableModel
+	// active_modal_data  ?ModalData // TODO(tauraamui) [2026-06-17]: wire this up to query and response messages
 	active_editor_data ?EditorData
-	branch_name        string
-	leader_key         string
-	leader_suffix      string
-	input_field        boba.InputField
-	message_label      ?MessageLabel
-	editor_id_count    int
+	active_editor_id   nanoid.ID
+	editors            map[nanoid.ID]DebuggableModel
+	tree               boba.Tree[nanoid.ID]
+	// lex_ticking is set while a BackgroundLexTickMsg is on its way
+	lex_ticking bool
+	// last_key_mono is when the last key arrived, by time.sys_mono_now, which
+	// background lexing keeps its slices short for while keys keep coming
+	last_key_mono u64
 }
 
-struct OpenFileMsg {
-	file_path string
+struct EditorWorkspaceConfig {
+	theme                  theme.Theme
+	leader_key             string
+	tab_width              int
+	relative_line_numbers  bool
+	convert_tabs_to_spaces bool
 }
 
-fn open_file(file_path string) tea.Cmd {
-	return tea.msg_cmd(OpenFileMsg{file_path})
+fn EditorWorkspaceConfig.new(base_cfg cfg.Config) EditorWorkspaceConfig {
+	return EditorWorkspaceConfig{
+		theme:                  base_cfg.theme
+		leader_key:             base_cfg.leader_key
+		tab_width:              base_cfg.tab_width
+		relative_line_numbers:  base_cfg.relative_line_numbers
+		convert_tabs_to_spaces: base_cfg.convert_tabs_to_spaces
+	}
 }
 
-struct OpenEditorWorkspaceMsg {
-	initial_file_path string
-}
-
-fn open_editor_workspace(initial_file_path string) tea.Cmd {
-	return tea.msg_cmd(OpenEditorWorkspaceMsg{initial_file_path})
-}
-
-@[params]
-struct EditorWorkspaceModelParams {
-	version           string
-	ttheme            theme.Theme
-	leader_key        string
-	initial_file_path string
-	doc_controller    &documents.Controller
-	doc_controller2   &documents.Controller2
-	clip_manager      &clipboard.Manager
-	expand_tabs       bool
-	tab_width         int
-}
-
-fn EditorWorkspaceModel.new(opts EditorWorkspaceModelParams) EditorWorkspaceModel {
+fn EditorWorkspaceModel.new(config EditorWorkspaceConfig, doc_controller &documents.Controller) EditorWorkspaceModel {
 	return EditorWorkspaceModel{
-		version:           opts.version
-		theme:             opts.ttheme
-		initial_file_path: opts.initial_file_path
-		split_tree:        boba.SplitTree.new()
-		doc_controller:    opts.doc_controller
-		doc_controller2:   opts.doc_controller2
-		leader_key:        opts.leader_key
-		cb:                opts.clip_manager
-		expand_tabs:       opts.expand_tabs
-		tab_width:         opts.tab_width
+		config:         config
+		doc_controller: doc_controller
+		tree:           boba.Tree[nanoid.ID]{}
 	}
 }
 
 fn (mut m EditorWorkspaceModel) init() tea.Cmd {
 	m.input_field = boba.InputField.new_with_prefix(':', 0)
-	return tea.batch(open_editor(m.initial_file_path), check_if_tmux_wrapped())
+	// the tree is planted when the first editor opens (open_file_update),
+	// using that editor's generated id; until then it holds no editor leaves.
+	return tea.sequence(tea.emit_resize(), query_git_branch())
 }
 
-struct SwitchModeMsg {
-	from petal.Mode
-	mode petal.Mode
-}
-
-fn switch_mode(mode petal.Mode) tea.Cmd {
-	return tea.msg_cmd(SwitchModeMsg{
-		mode: mode
-	})
-}
-
-struct CommandMsg {
-	command string
-}
-
-fn run_command(command string) tea.Cmd {
-	return tea.msg_cmd(CommandMsg{command})
-}
-
-fn focus_editor(editor_id int) tea.Cmd {
-	return tea.msg_cmd(EditorModelMsg{
-		id:  editor_id
-		msg: tea.FocusedMsg{}
-	})
-}
-
-fn unfocus_editor(editor_id int) tea.Cmd {
-	return tea.msg_cmd(EditorModelMsg{
-		id:  editor_id
-		msg: tea.BlurredMsg{}
-	})
-}
-
-struct ToggleEditorShowBorderMsg {
-	id   int
-	show bool
-}
-
-fn toggle_editor_show_border(editor_id int, show bool) tea.Cmd {
-	return tea.msg_cmd(ToggleEditorShowBorderMsg{
-		id:   editor_id
-		show: show
-	})
-}
-
-fn raise_error(error string) tea.Cmd {
-	return tea.sequence(display_message(.error, error), error_log(error),
-		hide_message_after(6 * time.second))
-}
-
-struct QueryPWDGitBranchMsg {}
-
-fn query_pwd_git_branch() tea.Cmd {
-	return tea.msg_cmd(QueryPWDGitBranchMsg{})
-}
-
-struct PWDGitBranchResultMsg {
-	branch_name string
-}
-
-fn resolve_git_branch_name(execute fn (cmd string) os.Result) string {
-	prefix := '\uE0A0'
-	$if darwin {
-		branch := read_git_branch_from_head_file()
-		if branch.len == 0 {
-			return ''
+// update handles `msg`, then keeps background lexing going while what it did,
+// or anything before it, left an editor with lexing to do: a file opened, or
+// an edit that changed how the lines below it lex
+fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// background lexing goes on under a dialog too
+	if msg is BackgroundLexTickMsg {
+		m.background_lex_update()
+		// the tick is the workspace's alone: passed on, every editor and
+		// dialog would clone itself for nothing on each one
+		lex_cmd := m.keep_lexing()
+		return m.clone(), lex_cmd
+	}
+	if msg is tea.KeyMsg {
+		m.last_key_mono = time.sys_mono_now()
+	}
+	mut model, cmd := m.dispatch_update(msg)
+	if mut model is EditorWorkspaceModel {
+		lex_cmd := model.keep_lexing()
+		if lex_cmd !is tea.NoCmd {
+			return model.clone(), tea.batch(cmd, lex_cmd)
 		}
-		return '${prefix} ${branch}'
 	}
-	wt := spawn currently_in_worktree(execute)
-	in_wt := wt.wait()
-	if in_wt {
-		gb := spawn get_branch(execute)
-		branch := gb.wait()
-		return '${prefix} ${branch}'
+	return model, cmd
+}
+
+fn (mut m EditorWorkspaceModel) dispatch_update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// ***** dialog related state *****
+	d_model, d_cmd := m.update_dialog(msg)
+	if cloned_model := d_model {
+		return cloned_model, d_cmd
 	}
-	return ''
+	// ********
+
+	match msg {
+		ShutdownMsg {
+			return m.shutdown_update(msg)
+		}
+		tea.FocusedMsg {
+			return m.clone(), query_git_branch()
+		}
+		tea.KeyMsg {
+			return m.key_update(msg)
+		}
+		tea.ResizedMsg {
+			return m.resized_update(msg)
+		}
+		OpenFileMsg {
+			return m.open_file_update(msg)
+		}
+		OpenEditorInSplitMsg {
+			return m.open_editor_in_split_update(msg)
+		}
+		OpenDialogMsg {
+			mut d_modal := msg.model
+			init_cmd := d_modal.init()
+			m.dialog_model = d_modal
+			return m.clone(), init_cmd
+		}
+		CloseEditorMsg {
+			return m.close_editor_update(msg)
+		}
+		ToggleSyntaxTreeMsg {
+			return m.toggle_syntax_tree_update(msg)
+		}
+		ActivateEditorMsg {
+			if msg.editor_id in m.editors {
+				m.active_editor_id = msg.editor_id
+				return m.clone(), tea.sequence(focus_editor(m.active_editor_id), tea.emit_resize(),
+					query_editor_data(m.active_editor_id))
+			}
+			return m.clone(), tea.no_cmd
+		}
+		ResolveUnsavedChangesMsg {
+			return m.resolve_unsaved_changes_update(msg)
+		}
+		CloseDialogMsg {
+			m.dialog_model = ?DebuggableModel(none)
+			return m.clone(), tea.no_cmd
+		}
+		SwitchModeMsg {
+			return m.switch_mode_update(msg)
+		}
+		DisplayMessageMsg {
+			m.message_label = MessageLabel{
+				contents: msg.contents
+				ccolor:   msg.m_type.color(m.config.theme)
+			}
+		}
+		HideMessageMsg {
+			m.message_label = ?MessageLabel(none)
+		} // TODO(tauraamui) rename query message result type to make it clear its a query result
+		EditorDataResultMsg {
+			m.active_editor_data = msg.data
+			return m.clone(), tea.no_cmd
+		}
+		GitBranchQueryResultMsg {
+			m.branch_name = msg.branch_name
+			return m.clone(), tea.no_cmd
+		}
+		boba.CursorBlinkMsg {
+			match m.mode {
+				.command {
+					i_input, i_cmd := m.input_field.update(msg)
+					m.input_field = i_input
+					return m.clone(), i_cmd
+				}
+				else {}
+			}
+		}
+		else {}
+	}
+
+	return m.forward_msg_to_all_editors(msg)
 }
 
-fn currently_in_worktree(execute fn (cmd string) os.Result) bool {
-	res := execute('git rev-parse --is-inside-work-tree')
-	return res.exit_code == 0
-}
-
-fn get_branch(execute fn (cmd string) os.Result) string {
-	res := execute('git branch --show-current')
-	return res.output.trim_space()
-}
-
-// NOTE(tauraamui) [08/01/26]: do these actually need to be public, not sure, doubt it check when have time
-pub struct VerticalSplitMsg {}
-
-pub fn split_vertically() tea.Cmd {
-	return tea.msg_cmd(VerticalSplitMsg{})
-}
-
-pub struct CloseActiveSplitMsg {}
-
-pub fn close_active_split() tea.Cmd {
-	return tea.msg_cmd(CloseActiveSplitMsg{})
-}
-
-enum SplitMoveDir {
-	left
-	right
-}
-
-struct SwitchActiveSplitMsg {
-	dir SplitMoveDir
-}
-
-fn switch_active_split(dir SplitMoveDir) tea.Cmd {
-	return tea.msg_cmd(SwitchActiveSplitMsg{dir})
+fn (mut m EditorWorkspaceModel) forward_msg_to_all_editors(msg tea.Msg) (tea.Model, tea.Cmd) {
+	mut cmds := []tea.Cmd{}
+	for id, mut editor in m.editors {
+		new_editor, cmd := editor.update(msg)
+		if new_editor is DebuggableModel {
+			m.editors[id] = new_editor
+			cmds << cmd
+		}
+	}
+	return m.clone(), tea.batch_array(cmds)
 }
 
 fn (mut m EditorWorkspaceModel) update_dialog(msg tea.Msg) (?tea.Model, tea.Cmd) {
@@ -251,484 +239,510 @@ fn (mut m EditorWorkspaceModel) update_dialog(msg tea.Msg) (?tea.Model, tea.Cmd)
 	return none, tea.no_cmd
 }
 
-fn (mut m EditorWorkspaceModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	mut cmds := []tea.Cmd{}
-
-	// ***** dialog related state *****
-	d_editor, d_cmd := m.update_dialog(msg)
-	if cloned_editor := d_editor {
-		return cloned_editor, d_cmd
-	}
-	// ********
-
-	if msg is tea.KeyMsg {
-		cmds << query_editor_data(m.active_editor_id)
-		match m.mode {
-			.leader {
-				match msg.k_type {
-					.special {
-						if msg.string() == 'escape' {
-							cmds << switch_mode(.normal)
-						}
-					}
-					.runes {
-						m.leader_suffix += msg.string()
-						match m.leader_suffix {
-							'ff' {
-								return m.clone(), tea.sequence(switch_mode(.normal),
-									open_file_picker(m.theme))
-							}
-							'nf' {
-								return m.clone(), tea.sequence(switch_mode(.normal),
-									open_new_file_dialog(m.theme))
-							}
-							else {}
-						}
-
-						return m.clone(), tea.batch_array(cmds)
-					}
-				}
-			}
-			// NOTE(tauraamui):
-			// This whole horrible event handling for 'nav' state is not intended to stay around. I cba to
-			// fully explain, but the reason this is here is, I personally configure my TMUX prefix bind to be
-			// C-w instead of C-b (the default), to allow me to use the same binds for navigating between (n)vim
-			// splits and TMUX splits seemlessly/together. However, I have no current method to distinguish forwarding
-			// C-w + h/j/k/l binds to Lilly or petal (Lilly v2), so for now it helps a lot if there's two methods/binds
-			// for petal to allow navigating between splits. Hope this helps.
-			.navigation {
-				match msg.k_type {
-					.special {
-						if msg.string() == 'escape' {
-							return m.clone(), switch_mode(.normal)
-						}
-					}
-					.runes {
-						match msg.string() {
-							'h' {
-								return m.clone(), switch_active_split(.left)
-							}
-							'l' {
-								return m.clone(), switch_active_split(.right)
-							}
-							else {}
-						}
-					}
-				}
-
-				return m.clone(), switch_mode(.normal)
-			}
-			.normal {
-				match msg.k_type {
-					.special {
-						match msg.string() {
-							'escape' {
-								cmds << hide_message()
-							}
-							'ctrl+b' {
-								return m.clone(), switch_mode(.navigation)
-							}
-							'ctrl+w+h' {
-								return m.clone(), switch_active_split(.left)
-							}
-							'ctrl+w+l' {
-								return m.clone(), switch_active_split(.right)
-							}
-							else {}
-						}
-					}
-					.runes {
-						match msg.string() {
-							m.leader_key {
-								return m.clone(), switch_mode(.leader)
-							}
-							':' {
-								return m.clone(), switch_mode(.command)
-							}
-							// 'i' {
-							// return m.clone(), switch_mode(.insert)
-							// }
-							else {}
-						}
-					}
-				}
-			}
-			.insert {
-				if msg.k_type == .special && msg.string() == 'escape' {
-					return m.clone(), switch_mode(.normal)
-				}
-			}
-			.command {
-				i_field, i_cmd := m.input_field.update(msg)
-				cmds << i_cmd
-				m.input_field = i_field
-
-				match msg.k_type {
-					.special {
-						match msg.string() {
-							'escape' {
-								return m.clone(), switch_mode(.normal)
-							}
-							'enter' {
-								cmds << switch_mode(.normal)
-								cmds << run_command(m.input_field.value())
-								return m.clone(), tea.batch_array(cmds)
-							}
-							else {}
-						}
-					}
-					else {}
-				}
-			}
-			else {}
-		}
-
-		for id, mut editor in m.editors {
-			e, cmd := editor.update(EditorModelKeyMsg{
-				key_msg: msg
-				mode:    m.mode
-			})
-			if e is DebuggableModel {
-				m.editors[id] = e
-			}
-			cmds << cmd
-		}
-	}
-
-	// TODO(tauraamui): no longer any reason whatsoever that the cases aren't immediately returning
-	// nothing in the scope below them to worry about, in the past I think there was but now it should be
-	// all tidied up
-	match msg {
-		// NOTE(tauraamui): focus and blurred respectfully should be where we emit further necessary cmds for
-		// re-querying current git branch names and updating the debug screen's active editor data
-		tea.FocusedMsg {
-			cmds << query_pwd_git_branch()
-		}
-		CheckIfTMUXWrappedMsg {
-			m.tmux_wrapped = os.getenv('TMUX').len > 0
-		}
-		OpenDialogMsg {
-			mut d_model := msg.model
-			cmds << d_model.init()
-			m.dialog_model = d_model
-		}
-		OpenFileMsg {
-			cmds << open_editor(msg.file_path)
-		}
-		OpenEditorMsg {
-			editor_id := m.next_editor_id()
-
-			doc_id := m.doc_controller.open_document(msg.file_path) or {
-				cmds << debug_log('failed to open document ${msg.file_path}: ${err}')
-				return m.clone(), tea.batch_array(cmds)
-			}
-
-			mut e_model := EditorModel.new(
-				id:              editor_id
-				theme:           m.theme
-				file_path:       msg.file_path
-				doc_id:          doc_id
-				doc_controller:  m.doc_controller
-				doc_controller2: m.doc_controller2
-				cb:              m.cb
-				expand_tabs:     m.expand_tabs
-				tab_width:       m.tab_width
-			)
-			cmd := e_model.init()
-
-			if m.split_tree.is_empty() {
-				m.split_tree.init_with_editor(editor_id, msg.file_path, doc_id)
-			} else {
-				old_id := m.split_tree.active_editor_id
-				m.split_tree.replace_active_editor(editor_id, msg.file_path, doc_id)
-				m.editors.delete(old_id)
-			}
-
-			m.editors[editor_id] = e_model
-			m.active_editor_id = m.split_tree.active_editor_id
-
-			cmds << cmd
-
-			cmds << tea.sequence(focus_editor(editor_id), toggle_editor_show_border(m.split_tree.get_leftmost_id(),
-				false), query_editor_data(editor_id), query_pwd_git_branch())
-			cmds << debug_log('opened file ${msg.file_path} into model of id ${editor_id}')
-		}
-		VerticalSplitMsg {
-			if info := m.split_tree.get_active_editor() {
-				old_id := info.id // get the old ID before inserting
-				new_id := m.next_editor_id()
-				mut new_editor := EditorModel.new(
-					id:              new_id
-					theme:           m.theme
-					file_path:       info.file_path
-					doc_id:          info.doc_id
-					doc_controller:  m.doc_controller
-					doc_controller2: m.doc_controller2
-					cb:              m.cb
-					expand_tabs:     m.expand_tabs
-					tab_width:       m.tab_width
-				)
-				// mut new_editor := EditorModel2.new(EditorWorkspaceConfig.new(m.config), new_id, info.doc_id, info.file_path, m.doc_controller2)
-				cmds << new_editor.init()
-
-				m.split_tree.insert_vertical_split(new_id, info.file_path)
-				m.editors[new_id] = new_editor
-
-				// sync active_editor_id with split_tree
-				m.active_editor_id = m.split_tree.active_editor_id
-
-				cmds << tea.sequence(unfocus_editor(old_id), toggle_editor_show_border(m.split_tree.get_leftmost_id(),
-					false), focus_editor(new_id), query_editor_data(new_id), query_pwd_git_branch(),
-					tea.emit_resize())
+fn (mut m EditorWorkspaceModel) key_update(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	match m.mode {
+		.normal {
+			model, cmd := m.normal_mode_key_update(msg)
+			if cmd !is tea.NoCmd {
+				return model, cmd // do not forward key event to editor in normal mode if consumed here
 			}
 		}
-		// TODO(tauraamui) [29/03/26]: should query editor data to check for dirty bit and if 1
-		// should ask for user confirmation re: saving and continuing to close or keep
-		// editor pane open instead
-		CloseActiveSplitMsg {
-			old_id := m.split_tree.active_editor_id
-			if m.split_tree.close_active_split() {
-				m.editors.delete(old_id)
-				// sync the new active editor after closing
-				m.active_editor_id = m.split_tree.active_editor_id
-				if m.split_tree.count() == 0 {
-					cmds << tea.quit()
-				} else {
-					// focus the new active editor
-					// TODO(tauraamui): the only cmd emission in this part should be just focus singularly, the "on focus detected",
-					// currently at the top of this match should be where these other cmds are invoked to avoid duplication
-					cmds << tea.sequence(focus_editor(m.active_editor_id), toggle_editor_show_border(m.split_tree.get_leftmost_id(),
-						false), query_editor_data(m.active_editor_id), query_pwd_git_branch(),
-						tea.emit_resize())
-				}
-			}
+		.command {
+			return m.command_mode_key_update(msg) // never forward key events to editor when in command mode
 		}
-		SwitchActiveSplitMsg {
-			match msg.dir {
-				.left {
-					// move to previous split (left)
-					if m.split_tree.count() > 1 {
-						old_id := m.split_tree.active_editor_id
-						moved := m.split_tree.navigate_prev(m.tmux_wrapped)
-
-						if moved == false {
-							os.execute('tmux select-pane -L')
-						} else {
-							new_id := m.split_tree.active_editor_id
-							m.active_editor_id = new_id
-
-							cmds << tea.sequence(unfocus_editor(old_id), focus_editor(new_id),
-								query_editor_data(new_id), query_pwd_git_branch(),
-								switch_mode(.normal))
-						}
-					} else {
-						if m.tmux_wrapped {
-							os.execute('tmux select-pane -L')
-						}
-					}
-				}
-				.right {
-					// move to next split (right)
-					if m.split_tree.count() > 1 {
-						old_id := m.split_tree.active_editor_id
-						moved := m.split_tree.navigate_next(m.tmux_wrapped)
-						if moved == false {
-							os.execute('tmux select-pane -R')
-						} else {
-							new_id := m.split_tree.active_editor_id
-							m.active_editor_id = new_id
-
-							cmds << tea.sequence(unfocus_editor(old_id), focus_editor(new_id),
-								query_editor_data(new_id), query_pwd_git_branch(),
-								switch_mode(.normal))
-						}
-					} else {
-						if m.tmux_wrapped {
-							os.execute('tmux select-pane -R')
-						}
-					}
-				}
-			}
-		}
-		EditorDataResultMsg {
-			m.active_editor_data = msg.data
-		}
-		PWDGitBranchResultMsg {
-			m.branch_name = msg.branch_name
-		}
-		CommandMsg {
-			match msg.command {
-				'debug' {
-					cmds << toggle_debug_screen()
-				}
-				'q' {
-					cmds << close_active_split()
-				}
-				'qa' {
-					cmds << tea.quit()
-				}
-				'version' {
-					cmds << open_version_dialog(m.version, m.theme)
-				}
-				'vs' {
-					cmds << split_vertically()
-				}
-				'w' {
-					cmds << write_to_disk(m.active_editor_id)
-				}
-				'wq', 'x' {
-					cmds << tea.sequence(write_to_disk(m.active_editor_id), close_active_split())
-				}
-				'new' {
-					cmds << open_new_file_dialog(m.theme)
-				}
-				else {
-					if line_cmd := m.line_jump_command_for(msg.command) {
-						cmds << line_cmd
-					} else {
-						cmds << raise_error("unknown command '${msg.command}'")
-					}
-				}
-			}
-		}
-		CreateAndOpenFileMsg {
-			cmds << open_editor(msg.path)
-		}
-		DisplayMessageMsg {
-			m.message_label = MessageLabel{
-				contents: msg.contents
-				ccolor:   msg.m_type.color(m.theme)
-			}
-		}
-		HideMessageMsg {
-			m.message_label = none
-		}
-		SwitchModeMsg {
-			match msg.mode {
-				.command {
-					m.input_field.focus()
-					cmds << m.input_field.init()
-					cmds << tea.emit_resize()
-					cmds << hide_message()
-				}
-				.leader {
-					cmds << hide_message()
-				}
-				else {
-					m.leader_suffix = ''
-					m.input_field.reset()
-					m.input_field.blur()
-				}
-			}
-
-			enriched_msg := SwitchModeMsg{
-				from: m.mode
-				mode: msg.mode
-			}
-			cmds << m.forward_msg_to_editors(enriched_msg)
-			return m.clone_with_mode(msg.mode), tea.batch_array(cmds)
-		}
-		tea.ResizedMsg {
-			m.last_window_width = msg.window_width
-			m.last_window_height = msg.window_height
-			i_field, i_cmd := m.input_field.update(msg)
-			cmds << i_cmd
-			m.input_field = i_field
-			cmds << m.recalculate_editor_layouts()
+		.leader {
+			return m.leader_mode_key_update(msg)
 		}
 		else {}
 	}
 
-	if msg !is tea.ResizedMsg && msg !is tea.KeyMsg {
-		cmds << m.forward_msg_to_editors(msg)
-	}
-
-	return m.clone(), tea.batch_array(cmds)
+	m_clone, cmd := m.forward_msg_to_all_editors(EditorModelKeyMsg{
+		active_id: m.active_editor_id
+		key_msg:   msg
+		mode:      m.mode
+	})
+	return m_clone, tea.sequence(cmd, query_editor_data(m.active_editor_id))
 }
 
-fn (m EditorWorkspaceModel) line_jump_command_for(command string) ?tea.Cmd {
-	if command.len == 0 || m.editors.len == 0 {
-		return none
-	}
-	editor_id := m.active_editor_id
-	if editor_id !in m.editors {
-		return none
-	}
-	for ch in command {
-		if ch < `0` || ch > `9` {
-			return none
+fn (mut m EditorWorkspaceModel) normal_mode_key_update(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if mut d_modal := m.dialog_model {
+		d_model, dialog_cmd := d_modal.update(msg)
+		if d_model is DebuggableModel {
+			m.dialog_model = d_model
 		}
+		return m.clone(), dialog_cmd
 	}
-	line_number := command.int()
-	target_line := if line_number <= 0 { 1 } else { line_number }
-	return goto_line(editor_id, target_line)
-}
 
-fn (mut m EditorWorkspaceModel) recalculate_editor_layouts() []tea.Cmd {
-	editor_area_height := m.last_window_height - 2
-	if editor_area_height <= 0 || m.last_window_width <= 0 {
-		return []tea.Cmd{}
-	}
-	layout := m.split_tree.get_layout(m.last_window_width, editor_area_height)
-	mut cmds := []tea.Cmd{}
-	for rect in layout {
-		if mut editor := m.editors[rect.editor_id] {
-			e, cmd := editor.update(tea.ResizedMsg{
-				window_width:  rect.width
-				window_height: rect.height
-			})
-			if e is DebuggableModel {
-				m.editors[rect.editor_id] = e
+	match msg.k_type {
+		.special {
+			match msg.string() {
+				'escape' {
+					return m.clone(), hide_message()
+				}
+				'ctrl+w+h' {
+					return m.move_to_next_split_in_direction(.left)
+				}
+				'ctrl+w+j' {
+					return m.move_to_next_split_in_direction(.down)
+				}
+				'ctrl+w+k' {
+					return m.move_to_next_split_in_direction(.up)
+				}
+				'ctrl+w+l' {
+					return m.move_to_next_split_in_direction(.right)
+				}
+				else {}
 			}
-			cmds << cmd
+		}
+		.runes {
+			match msg.string() {
+				':' {
+					i_input, i_cmd := m.input_field.update(tea.FocusedMsg{})
+					m.input_field = i_input
+					return m.clone(), tea.sequence(hide_message(), switch_mode(.command), i_cmd)
+				}
+				m.config.leader_key {
+					return m.clone(), switch_mode(.leader)
+				}
+				else {}
+			}
 		}
 	}
-	return cmds
+
+	return m.clone(), tea.no_cmd
 }
 
-fn (mut m EditorWorkspaceModel) forward_msg_to_editors(msg tea.Msg) tea.Cmd {
+fn (mut m EditorWorkspaceModel) move_to_next_split_in_direction(direction boba.Direction) (tea.Model, tea.Cmd) {
+	if split_editor_id := m.tree.neighbour(m.active_editor_id, direction, m.width, m.height) {
+		m.active_editor_id = split_editor_id
+		return m.clone(), tea.sequence(focus_editor(m.active_editor_id), tea.emit_resize())
+	}
+	return m.clone(), tea.no_cmd
+}
+
+fn (mut m EditorWorkspaceModel) command_mode_key_update(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	match msg.k_type {
+		.special {
+			cmd := match msg.string() {
+				'escape' {
+					tea.no_cmd
+				}
+				'enter' {
+					execute_command(m.active_editor_id, m.input_field.value())
+				}
+				'backspace' {
+					return m.clone(), tea.no_cmd
+				}
+				else {
+					tea.no_cmd
+				}
+			}
+
+			i_input, i_cmd := m.input_field.update(tea.BlurredMsg{})
+			m.input_field = i_input
+			return m.clone(), tea.sequence(switch_mode(.normal), i_cmd, cmd)
+		}
+		.runes {
+			i_field, i_cmd := m.input_field.update(msg)
+			m.input_field = i_field
+			return m.clone(), i_cmd
+		}
+	}
+
+	return m.clone(), tea.no_cmd
+}
+
+fn (mut m EditorWorkspaceModel) leader_mode_key_update(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	match msg.k_type {
+		.special {
+			match msg.string() {
+				'escape' {
+					return m.clone(), switch_mode(.normal)
+				}
+				else {}
+			}
+		}
+		.runes {
+			m.leader_suffix << msg.string().runes()
+			match m.leader_suffix.string() {
+				'ff' {
+					return m.clone(), tea.sequence(switch_mode(.normal),
+						open_file_picker(m.config.theme))
+				}
+				else {}
+			}
+		}
+	}
+
+	return m.clone(), tea.no_cmd
+}
+
+fn (mut m EditorWorkspaceModel) resized_update(msg tea.ResizedMsg) (tea.Model, tea.Cmd) {
+	m.width = msg.window_width
+	m.height = msg.window_height
+
+	i_field, i_cmd := m.input_field.update(msg)
+	m.input_field = i_field
+
 	mut cmds := []tea.Cmd{}
-	for id, mut editor in m.editors {
-		e, cmd := editor.update(msg)
-		if e is DebuggableModel {
-			m.editors[id] = e
+	for id, layout in m.tree.layouts(m.width, m.height - 2) {
+		if mut editor := m.editors[id] {
+			// mirror the divider insets applied in view(): a leaf with a
+			// neighbour above/left loses one cell to that divider, so the
+			// editor's usable viewport is that much smaller.
+			left_inset := if layout.x > 0 { 1 } else { 0 }
+			top_inset := if layout.y > 0 { 1 } else { 0 }
+			new_editor, cmd := editor.update(EditorModelMsg{
+				active_id: m.active_editor_id
+				mode:      m.mode
+				msg:       tea.ResizedMsg{
+					window_width:  layout.width - left_inset
+					window_height: layout.height - top_inset
+				}
+			})
+			if new_editor is DebuggableModel {
+				m.editors[id] = new_editor
+				cmds << cmd
+			}
 		}
-		cmds << cmd
 	}
 
-	return tea.batch_array(cmds)
+	mut d_cmd := tea.no_cmd
+	if mut d_modal := m.dialog_model {
+		d_model, dialog_cmd := d_modal.update(tea.ResizedMsg{
+			window_width:  int(f64(msg.window_width) * .8)
+			window_height: int(f64(msg.window_height) * .8)
+		})
+		if d_model is DebuggableModel {
+			m.dialog_model = d_model
+		}
+		d_cmd = dialog_cmd
+	}
+
+	return m.clone(), tea.sequence(i_cmd, tea.batch_array(cmds), d_cmd)
 }
 
-fn (m EditorWorkspaceModel) view(mut ctx tea.Context) {
-	editor_area_height := ctx.window_height() - 2
-	ctx.set_clip_area(tea.ClipArea{0, 0, ctx.window_width(), editor_area_height})
-	layout := m.split_tree.get_layout(ctx.window_width(), editor_area_height)
-	for rect in layout {
-		if mut editor := m.editors[rect.editor_id] {
-			// set clip area for this specific split
-			ctx.set_clip_area(tea.ClipArea{rect.x, rect.y, rect.width, rect.height})
-			offset_id := ctx.push_offset(tea.Offset{ x: rect.x, y: rect.y })
-			editor.view(mut ctx)
-			ctx.clear_offsets_from(offset_id)
-			ctx.clear_clip_area() // clear after each split
+// open_file_update is the single entry point for putting a file's contents
+// into the active pane, whether that's the very first editor planted into an
+// empty workspace or swapping the active pane over to a different file. The
+// doc controller derives doc_id deterministically from the path, so a file
+// already open in the active pane resolves to the same id and this bails out
+// immediately rather than tearing down and rebuilding an identical editor.
+fn (mut m EditorWorkspaceModel) open_file_update(msg OpenFileMsg) (tea.Model, tea.Cmd) {
+	// Opening a file retires the active editor, which puts the same unsaved
+	// work at risk as closing it would, so it asks the same question. Checked
+	// before the document is opened rather than after: loading the new file
+	// first would leave it in the controller with no editor if the prompt is
+	// then cancelled.
+	//
+	// Compared by path rather than by document id, which would mean opening the
+	// file to learn it. Two paths naming one file is the only thing that gets
+	// through, and that only costs a prompt that resolves into a no-op open.
+	if msg.file_path != m.editor_file_path(m.active_editor_id)
+		&& m.retiring_would_discard_edits(m.active_editor_id) {
+		return m.clone(), open_unsaved_changes_dialog(m.config.theme, m.active_editor_id,
+			m.editor_file_path(m.active_editor_id), msg.file_path)
+	}
+
+	doc_id := m.doc_controller.open_document(msg.file_path) or {
+		return m.clone(), debug_log('failed to open document ${msg.file_path}: ${err}')
+	}
+
+	old_active_id := m.active_editor_id
+	if active_editor := m.editors[old_active_id] {
+		if active_editor is EditorModel {
+			if active_editor.doc_id == doc_id {
+				return m.clone(), tea.no_cmd
+			}
 		}
 	}
+
+	editor_id := nanoid.simple()
+	mut e_model := EditorModel.new(m.config, editor_id, doc_id, msg.file_path, m.doc_controller)
+	model_init_cmd := e_model.init()
+
+	if _ := m.editors[old_active_id] {
+		m.tree.replace(old_active_id, editor_id)
+		m.editors.delete(old_active_id)
+	} else {
+		m.tree.plant(editor_id)
+	}
+
+	m.active_editor_id = editor_id
+	m.editors[editor_id] = e_model
+	// a syntax tree view of the editor replaced shows the new file instead
+	for view_id in m.syntax_trees_of(old_active_id) {
+		m.editors[view_id] = SyntaxTreeModel.new(view_id, e_model)
+	}
+	// the editor that was replaced took its document out of use with it, unless
+	// a split still shows the same file
+	m.sweep_documents()
+	return m.clone(), tea.sequence(model_init_cmd, focus_editor(m.active_editor_id),
+		tea.emit_resize())
+}
+
+fn (mut m EditorWorkspaceModel) open_editor_in_split_update(msg OpenEditorInSplitMsg) (tea.Model, tea.Cmd) {
+	if active_editor := m.editors[msg.active_editor_id] {
+		if active_editor is EditorModel {
+			new_editor_id := nanoid.simple()
+			if !m.tree.split(msg.active_editor_id, new_editor_id, msg.direction) {
+				return m.clone(), tea.no_cmd
+			}
+			mut e_model := EditorModel.new(m.config, new_editor_id, active_editor.doc_id,
+				active_editor.file_path, m.doc_controller)
+			model_init_cmd := e_model.init()
+			m.active_editor_id = new_editor_id
+			m.editors[new_editor_id] = e_model
+			return m.clone(), tea.sequence(model_init_cmd, focus_editor(m.active_editor_id),
+				tea.emit_resize())
+		}
+	}
+	return m.clone(), tea.no_cmd
+}
+
+fn (mut m EditorWorkspaceModel) switch_mode_update(msg SwitchModeMsg) (tea.Model, tea.Cmd) {
+	if m.mode == .leader {
+		m.leader_suffix = []
+	}
+	_, cmd := m.forward_msg_to_all_editors(EditorModelMsg{
+		active_id: m.active_editor_id // will be active editors when forwarding to all editor instances
+		mode:      m.mode
+		msg:       SwitchModeMsg{
+			from: m.mode // send current mode pre-change as mode moving from
+			mode: msg.mode
+		}
+	})
+	return m.clone_with_mode(msg.mode), cmd
+}
+
+fn (mut m EditorWorkspaceModel) close_editor_update(msg CloseEditorMsg) (tea.Model, tea.Cmd) {
+	if _ := m.editors[msg.editor_id_to_close] {
+		if !msg.force && m.retiring_would_discard_edits(msg.editor_id_to_close) {
+			return m.clone(), open_unsaved_changes_dialog(m.config.theme, msg.editor_id_to_close,
+				m.editor_file_path(msg.editor_id_to_close), none)
+		}
+		// a syntax tree view goes with the editor it shows the tree of. It
+		// goes first, so the neighbour remove() hands back is never one
+		m.close_syntax_trees_of(msg.editor_id_to_close)
+		next_active_id := m.tree.remove(msg.editor_id_to_close) or {
+			// the last editor is going, so the process is too: there is nothing
+			// left to hold a document and the sweep would only race the exit
+			return m.clone(), shutdown_app()
+		}
+		m.editors.delete(msg.editor_id_to_close)
+		// remove() hands back the closed leaf's nearest surviving neighbour, so
+		// focus lands on the split that grew into the freed space. A syntax
+		// tree view there passes focus to the editor it shows, as opening one
+		// leaves the editor focused.
+		if m.active_editor_id == msg.editor_id_to_close {
+			m.active_editor_id = next_active_id
+			if view := m.editors[next_active_id] {
+				if view is SyntaxTreeModel {
+					m.active_editor_id = view.source_id
+				}
+			}
+		}
+		m.sweep_documents()
+		return m.clone(), tea.sequence(focus_editor(m.active_editor_id), tea.emit_resize())
+	}
+	return m.clone(), tea.no_cmd
+}
+
+// toggle_syntax_tree_update opens a syntax tree view of the active editor
+// beside it, or closes the one it has. With a view active, it closes that.
+fn (mut m EditorWorkspaceModel) toggle_syntax_tree_update(msg ToggleSyntaxTreeMsg) (tea.Model, tea.Cmd) {
+	active := m.editors[msg.editor_id] or { return m.clone(), tea.no_cmd }
+	if active is SyntaxTreeModel {
+		return m.close_editor_update(CloseEditorMsg{
+			active_editor_id:   msg.editor_id
+			editor_id_to_close: msg.editor_id
+		})
+	}
+	if active !is EditorModel {
+		return m.clone(), tea.no_cmd
+	}
+	open_views := m.syntax_trees_of(msg.editor_id)
+	if open_views.len > 0 {
+		m.close_syntax_trees_of(msg.editor_id)
+		return m.clone(), tea.emit_resize()
+	}
+	view_id := nanoid.simple()
+	if !m.tree.split(msg.editor_id, view_id, .horizontal) {
+		return m.clone(), tea.no_cmd
+	}
+	// the editor keeps focus, so the view follows the cursor as it moves
+	m.editors[view_id] = SyntaxTreeModel.new(view_id, active as EditorModel)
+	return m.clone(), tea.emit_resize()
+}
+
+// syntax_trees_of lists the syntax tree views showing an editor's document
+fn (m EditorWorkspaceModel) syntax_trees_of(editor_id nanoid.ID) []nanoid.ID {
+	mut views := []nanoid.ID{}
+	for id, editor in m.editors {
+		if editor is SyntaxTreeModel && editor.source_id == editor_id {
+			views << id
+		}
+	}
+	return views
+}
+
+fn (mut m EditorWorkspaceModel) close_syntax_trees_of(editor_id nanoid.ID) {
+	for view_id in m.syntax_trees_of(editor_id) {
+		m.tree.remove(view_id) or {}
+		m.editors.delete(view_id)
+	}
+}
+
+// resolve_unsaved_changes_update carries out what the dialog was told to do and
+// then retires the editor the way the interrupted action meant to.
+fn (mut m EditorWorkspaceModel) resolve_unsaved_changes_update(msg ResolveUnsavedChangesMsg) (tea.Model, tea.Cmd) {
+	editor := m.editors[msg.editor_id] or { return m.clone(), tea.no_cmd }
+	if editor is EditorModel {
+		if msg.save {
+			m.doc_controller.write_to_disk(editor.doc_id, editor.file_path) or {
+				// the editor keeps its edits and stays open: this is the whole
+				// reason the write is not a separate command in a sequence
+				return m.clone(), display_error_message('failed to write to disk: ${err}')
+			}
+		} else {
+			m.doc_controller.mark_clean(editor.doc_id)
+		}
+	}
+
+	if path := msg.then_open {
+		return m.open_file_update(OpenFileMsg{
+			file_path: path
+		})
+	}
+	return m.close_editor_update(CloseEditorMsg{
+		active_editor_id:   msg.editor_id
+		editor_id_to_close: msg.editor_id
+		force:              true
+	})
+}
+
+// sweep_documents releases every document that no surviving editor refers to.
+//
+// Called wherever an editor is retired, which is on a close and on an open that
+// replaces one. A document does not go away on its own otherwise, so a session
+// that visits files holds every one of them until it exits.
+fn (mut m EditorWorkspaceModel) sweep_documents() {
+	mut live := []nanoid.ID{cap: m.editors.len}
+	for _, editor in m.editors {
+		if editor is EditorModel {
+			live << editor.doc_id
+		}
+	}
+	if m.doc_controller.close_unreferenced(live) > 0 {
+		// a document's text is the largest single thing this process holds, so
+		// when one goes it is worth asking Boehm to hand the space back rather
+		// than leaving it free inside a heap it never shrinks. Gated on
+		// something actually having been closed: this is a full collection, and
+		// closing one of two splits onto the same file releases nothing.
+		release_free_heap_to_os()
+	}
+}
+
+// retiring_would_discard_edits reports whether taking this editor away would
+// throw out unwritten work.
+//
+// A document can be open in several splits, so its edits are only at risk when
+// this editor is the last one showing them: closing one of two views onto the
+// same document loses nothing.
+fn (m EditorWorkspaceModel) retiring_would_discard_edits(editor_id nanoid.ID) bool {
+	editor := m.editors[editor_id] or { return false }
+	if editor !is EditorModel {
+		return false
+	}
+	doc_id := (editor as EditorModel).doc_id
+	if !m.doc_controller.is_dirty(doc_id) {
+		return false
+	}
+	for other_id, other in m.editors {
+		if other_id == editor_id {
+			continue
+		}
+		if other is EditorModel && other.doc_id == doc_id {
+			return false
+		}
+	}
+	return true
+}
+
+// editor_file_path is the path an editor is showing, for a prompt that has to
+// name it and for an open that has to tell whether it is already here.
+fn (m EditorWorkspaceModel) editor_file_path(editor_id nanoid.ID) string {
+	editor := m.editors[editor_id] or { return '' }
+	if editor is EditorModel {
+		return editor.file_path
+	}
+	return ''
+}
+
+fn (mut m EditorWorkspaceModel) shutdown_update(msg ShutdownMsg) (tea.Model, tea.Cmd) {
+	return m.clone(), tea.sequence(debug_log('${msg}...'), tea.quit())
+}
+
+fn (mut m EditorWorkspaceModel) view(mut ctx tea.Context) {
+	layouts := m.tree.layouts(m.width, m.height - 2)
+	for id, layout in layouts {
+		mut editor := m.editors[id] or { continue }
+		// a leaf owns the divider on any side where it has a neighbour: a left
+		// divider when it isn't flush to the left edge, a top divider when it
+		// isn't flush to the top. The divider eats one cell of the leaf, so the
+		// editor content is inset by the same amount (see resized_update, which
+		// must shrink the editor by these insets or it renders a row/col too many).
+		left_inset := if layout.x > 0 { 1 } else { 0 }
+		top_inset := if layout.y > 0 { 1 } else { 0 }
+		ctx.push_offset(tea.Offset{ x: layout.x, y: layout.y })
+		ctx.set_clip_area(tea.ClipArea{0, 0, layout.width, layout.height})
+		ctx.push_offset(tea.Offset{ x: left_inset, y: top_inset })
+		editor.view(mut ctx)
+		ctx.pop_offset()
+		ctx.clear_clip_area()
+		ctx.pop_offset()
+	}
+
+	m.render_dividers(mut ctx, layouts)
 
 	m.render_status_bar(mut ctx)
 
-	if mut open_model := m.dialog_model {
+	if mut open_modal := m.dialog_model {
 		id := ctx.push_offset(tea.Offset{
-			x: int(f64(ctx.window_width() / 2)) - int(f64(open_model.width() / 2))
-			y: int(f64(ctx.window_height() / 2)) - int(f64(open_model.height() / 2))
+			x: int(f64(m.width / 2)) - int(f64(open_modal.width() / 2))
+			y: int(f64(m.height / 2)) - int(f64(open_modal.height() / 2))
 		})
 		defer { ctx.clear_offsets_from(id) }
 
-		open_model.view(mut ctx)
+		open_modal.view(mut ctx)
 	}
 }
 
+// render_dividers paints the lines between panes. The tree resolves each cell's
+// connecting arms (so junctions render as proper tees), and a cell is drawn in
+// the active colour when it lies on the active editor's own top/left frame.
+fn (m EditorWorkspaceModel) render_dividers(mut ctx tea.Context, layouts map[nanoid.ID]boba.Layout) {
+	active := layouts[m.active_editor_id]
+	// collected and looped rather than visited through a callback: the callback
+	// would capture the context and the active layout, and a captured context
+	// is pinned for the life of the process, so this would leak once a frame
+	for d in m.tree.dividers(m.width, m.height - 2) {
+		on_active :=
+			(active.x > 0 && d.x == active.x && d.y >= active.y && d.y < active.y + active.height)
+				|| (active.y > 0 && d.y == active.y && d.x >= active.x
+					&& d.x < active.x + active.width)
+		ctx.set_color(if on_active {
+			active_editor_border_color
+		} else {
+			inactive_editor_border_color
+		})
+		ctx.draw_text(d.x, d.y, glyphs.box_junction(d.up, d.down, d.left, d.right))
+	}
+	ctx.reset_color()
+}
+
 fn (m EditorWorkspaceModel) render_status_bar(mut ctx tea.Context) {
-	ctx.set_bg_color(m.theme.status_bar_spacer)
+	ctx.set_bg_color(m.config.theme.status_bar_spacer)
 	ctx.draw_rect(0, ctx.window_height() - 2, ctx.window_width(), 1)
 	ctx.reset_bg_color()
 
@@ -740,7 +754,7 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 	status_bar_offset := ctx.push_offset(tea.Offset{ y: ctx.window_height() - 2 })
 	defer { ctx.clear_offsets_from(status_bar_offset) }
 
-	mode_color := m.mode.color(m.theme)
+	mode_color := m.mode.color(m.config.theme)
 	ctx.set_color(mode_color)
 	ctx.draw_text(0, 0, '${glyphs.left_rounded}${glyphs.block}')
 	ctx.reset_color()
@@ -760,7 +774,7 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 	ctx.reset_color()
 	ctx.push_offset(tea.Offset{ x: 2 })
 
-	file_name_bg_color := m.theme.status_file_name
+	file_name_bg_color := m.config.theme.status_file_name
 	ctx.set_color(file_name_bg_color)
 	ctx.draw_text(0, 0, '${glyphs.slant_left_flat_top}${glyphs.block}')
 	ctx.reset_color()
@@ -780,7 +794,7 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 	ctx.reset_color()
 	ctx.push_offset(tea.Offset{ x: 2 })
 
-	branch_name_bg_color := m.theme.status_branch_name
+	branch_name_bg_color := m.config.theme.status_branch_name
 	ctx.set_color(branch_name_bg_color)
 	ctx.draw_text(0, 0, '${glyphs.slant_left_flat_top}${glyphs.block}')
 	ctx.reset_color()
@@ -800,7 +814,7 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 	ctx.reset_color()
 
 	// status bar spacer left end cap
-	ctx.set_color(m.theme.status_bar_spacer)
+	ctx.set_color(m.config.theme.status_bar_spacer)
 	ctx.draw_text(2, 0, glyphs.slant_left_flat_top)
 	ctx.reset_color()
 	//
@@ -812,7 +826,7 @@ fn (m EditorWorkspaceModel) render_status_blocks(mut ctx tea.Context) {
 	ctx.push_offset(tea.Offset{ x: cursor_pos_segment_start })
 
 	// status bar spacer right end cap
-	ctx.set_color(m.theme.status_bar_spacer)
+	ctx.set_color(m.config.theme.status_bar_spacer)
 	ctx.draw_text(-1, 0, glyphs.slant_right_flat_top)
 	ctx.reset_color()
 	//
@@ -844,7 +858,7 @@ fn (m EditorWorkspaceModel) render_leader_or_command_user_input_text(mut ctx tea
 	match m.mode {
 		.leader {
 			ctx.set_color(palette.subtle_text_fg_color)
-			leader_data := '<leader>' + m.leader_suffix
+			leader_data := '${m.config.leader_key}${m.leader_suffix.string()}'
 			ctx.draw_text(ctx.window_width() - tea.visible_len(leader_data) - 1,
 				ctx.window_height() - 1, leader_data)
 			ctx.reset_color()
@@ -877,10 +891,7 @@ fn (m EditorWorkspaceModel) active_file_name() string {
 }
 
 fn (m EditorWorkspaceModel) active_branch_name() string {
-	if m.branch_name.len > 0 {
-		return m.branch_name
-	}
-	return '???'
+	return m.branch_name or { '???' }
 }
 
 fn (m EditorWorkspaceModel) active_cursor_pos() string {
@@ -890,49 +901,239 @@ fn (m EditorWorkspaceModel) active_cursor_pos() string {
 	return '???'
 }
 
-fn (m EditorWorkspaceModel) debug_data() DebugData {
-	return DebugData{
-		name: 'editor_workspace data'
-		data: {
-			'initial file path':    m.initial_file_path
-			'active editor width':  if d := m.active_editor_data { '${d.width}' } else { 'null' }
-			'active editor height': if d := m.active_editor_data { '${d.height}' } else { 'null' }
-		}
-	}
-}
-
 fn (m EditorWorkspaceModel) width() int {
-	return 0
+	return m.width
 }
 
 fn (m EditorWorkspaceModel) height() int {
-	return 0
+	return m.height
 }
 
-fn (mut m EditorWorkspaceModel) clone() tea.Model {
+fn (m EditorWorkspaceModel) debug_data() DebugData {
+	return DebugData{
+		name: 'editor workspace'
+	}
+}
+
+fn (m EditorWorkspaceModel) clone() tea.Model {
 	return EditorWorkspaceModel{
 		...m
 	}
 }
 
-fn (mut m EditorWorkspaceModel) prev_editor_id() int {
-	return hash_id(m.editor_id_count - 1)
-}
-
-fn (mut m EditorWorkspaceModel) next_editor_id() int {
-	m.editor_id_count += 1
-	return hash_id(m.editor_id_count)
-}
-
-fn hash_id(id int) int {
-	// constant is from Knuth's multiplicative hash
-	hash := (id * 2654435761) % 1000000
-	return math.abs(hash)
-}
-
-fn (mut m EditorWorkspaceModel) clone_with_mode(mode petal.Mode) tea.Model {
+fn (m EditorWorkspaceModel) clone_with_mode(mode petal.Mode) tea.Model {
 	return EditorWorkspaceModel{
 		...m
 		mode: mode
 	}
+}
+
+struct OpenEditorInSplitMsg {
+	active_editor_id nanoid.ID
+	direction        boba.SplitDirection
+}
+
+fn open_editor_in_split_cmd(editor_id nanoid.ID, direction boba.SplitDirection) tea.Cmd {
+	return tea.msg_cmd(OpenEditorInSplitMsg{
+		active_editor_id: editor_id
+		direction:        direction
+	})
+}
+
+struct CloseEditorMsg {
+	active_editor_id   nanoid.ID
+	editor_id_to_close nanoid.ID
+	// force closes without asking about unsaved changes. Only the unsaved
+	// changes dialog sets it, having already asked.
+	force bool
+}
+
+// ResolveUnsavedChangesMsg carries what the unsaved changes dialog was told to
+// do. then_open names a file to open over the editor instead of closing it,
+// for the case where the editor was being retired by an open rather than a
+// quit.
+struct ResolveUnsavedChangesMsg {
+	editor_id nanoid.ID
+	save      bool
+	then_open ?string
+}
+
+// resolve_unsaved_changes is the dialog's answer. Write-then-act is one message
+// rather than a sequence of two so that the editor survives a failed write: a
+// sequence would retire it regardless, which is the one outcome the prompt
+// exists to prevent.
+fn resolve_unsaved_changes(editor_id nanoid.ID, save bool, then_open ?string) tea.Cmd {
+	return tea.msg_cmd(ResolveUnsavedChangesMsg{
+		editor_id: editor_id
+		save:      save
+		then_open: then_open
+	})
+}
+
+// ToggleSyntaxTreeMsg opens or closes the syntax tree view of an editor
+struct ToggleSyntaxTreeMsg {
+	editor_id nanoid.ID
+}
+
+fn toggle_syntax_tree(editor_id nanoid.ID) tea.Cmd {
+	return tea.msg_cmd(ToggleSyntaxTreeMsg{
+		editor_id: editor_id
+	})
+}
+
+// ActivateEditorMsg makes a split the active one, for a split that hands
+// focus to another, like the syntax tree view jumping to a node
+struct ActivateEditorMsg {
+	editor_id nanoid.ID
+}
+
+fn activate_editor(editor_id nanoid.ID) tea.Cmd {
+	return tea.msg_cmd(ActivateEditorMsg{
+		editor_id: editor_id
+	})
+}
+
+fn close_editor(editor_id nanoid.ID) tea.Cmd {
+	return tea.msg_cmd(CloseEditorMsg{
+		active_editor_id:   editor_id
+		editor_id_to_close: editor_id
+	})
+}
+
+fn focus_editor(editor_id nanoid.ID) tea.Cmd {
+	return tea.msg_cmd(EditorModelMsg{
+		active_id: editor_id
+		msg:       tea.FocusedMsg{}
+	})
+}
+
+struct MessageLabel {
+	contents string
+	ccolor   tea.Color
+}
+
+enum DisplayMessageType {
+	normal
+	warning
+	error
+}
+
+fn (t DisplayMessageType) color(ttheme theme.Theme) tea.Color {
+	return match t {
+		.normal { ttheme.petal_green }
+		.warning { ttheme.status_orange }
+		.error { ttheme.petal_red }
+	}
+}
+
+struct DisplayMessageMsg {
+	contents string
+	m_type   DisplayMessageType
+}
+
+fn display_message(m_type DisplayMessageType, contents string) tea.Cmd {
+	return tea.msg_cmd(DisplayMessageMsg{
+		contents: contents
+		m_type:   m_type
+	})
+}
+
+fn display_error_message(contents string) tea.Cmd {
+	return tea.sequence(display_message(.error, contents), hide_message_after(6 * time.second))
+}
+
+struct HideMessageMsg {
+	time time.Time
+}
+
+fn hide_message() tea.Cmd {
+	return tea.msg_cmd(HideMessageMsg{})
+}
+
+fn hide_message_after(duration time.Duration) tea.Cmd {
+	return tea.tick(duration, fn (t time.Time) tea.Msg {
+		return HideMessageMsg{
+			time: t
+		}
+	})
+}
+
+fn execute_command(active_editor_id nanoid.ID, cmd string) tea.Cmd {
+	return match cmd {
+		'qa' {
+			shutdown_app()
+		}
+		'q' {
+			close_editor(active_editor_id)
+		}
+		'w' {
+			write_editor_to_disk_cmd(active_editor_id)
+		}
+		'vs' {
+			open_editor_in_split_cmd(active_editor_id, .horizontal)
+		}
+		'sp' {
+			open_editor_in_split_cmd(active_editor_id, .vertical)
+		}
+		'InspectTree', 'inspecttree' {
+			toggle_syntax_tree(active_editor_id)
+		}
+		else {
+			// return display_error_message('unrecognised command: ${cmd}')
+			parse_line_num_target_or_return_unknown_cmd(active_editor_id, cmd)
+		}
+	}
+}
+
+fn parse_line_num_target_or_return_unknown_cmd(active_editor_id nanoid.ID, cmd string) tea.Cmd {
+	target_line := cmd.parse_int(10, 64) or {
+		return display_error_message('unrecognised command: ${cmd}')
+	}
+	return jump_editor_to_line_cmd(active_editor_id, int(target_line))
+}
+
+// TODO(tauraamui): EditorModel does not handle GoToLineMsg yet, so this
+// dispatches but does not move the cursor.
+fn jump_editor_to_line_cmd(editor_id nanoid.ID, line int) tea.Cmd {
+	return tea.msg_cmd(EditorModelMsg{
+		active_id: editor_id
+		msg:       GoToLineMsg{
+			line: line
+		}
+	})
+}
+
+struct QueryGitBranchMsg {}
+
+fn query_git_branch() tea.Cmd {
+	return tea.msg_cmd(QueryGitBranchMsg{})
+}
+
+struct GitBranchQueryResultMsg {
+	branch_name string
+}
+
+fn git_branch_query_result(branch_name string) tea.Cmd {
+	return tea.msg_cmd(GitBranchQueryResultMsg{
+		branch_name: branch_name
+	})
+}
+
+const active_editor_border_color = palette.petal_pink_color
+const inactive_editor_border_color = palette.status_dark_lilac
+
+struct OpenFileMsg {
+	file_path string
+}
+
+fn open_file(file_path string) tea.Cmd {
+	return tea.msg_cmd(OpenFileMsg{file_path})
+}
+
+struct OpenEditorWorkspaceMsg {
+	initial_file_path string
+}
+
+fn open_editor_workspace(initial_file_path string) tea.Cmd {
+	return tea.msg_cmd(OpenEditorWorkspaceMsg{initial_file_path})
 }

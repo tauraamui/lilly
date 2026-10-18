@@ -89,7 +89,7 @@ fn sorted_folds(folds []Fold) []Fold {
 }
 
 // set_closed_folds closes `folds` and no others
-fn (mut m EditorModel2) set_closed_folds(folds []Fold) {
+fn (mut m EditorModel) set_closed_folds(folds []Fold) {
 	closed := sorted_folds(folds)
 	mut outer := []Fold{}
 	for f in closed {
@@ -104,7 +104,7 @@ fn (mut m EditorModel2) set_closed_folds(folds []Fold) {
 // sync_folds brings the folds up to date with the edits made to the document
 // since they were last synced, by any editor showing it, and after zM,
 // closes the folds of the view and the cursor's line
-fn (mut m EditorModel2) sync_folds() {
+fn (mut m EditorModel) sync_folds() {
 	m.move_folds_with_edits()
 	m.reach_view()
 }
@@ -112,7 +112,7 @@ fn (mut m EditorModel2) sync_folds() {
 // move_folds_with_edits moves the closed folds, and the lines zM has reached,
 // with the edits made since they were last synced. A fold around an edit
 // grows or shrinks with it, and one an edit reaches into opens.
-fn (mut m EditorModel2) move_folds_with_edits() {
+fn (mut m EditorModel) move_folds_with_edits() {
 	changes := m.doc_controller.line_changes_since(m.doc_id, m.fold_gen)
 	m.fold_gen = changes.gen
 	if !changes.changed {
@@ -209,7 +209,7 @@ fn gaps_in(ranges []LineRange, first int, last int) []LineRange {
 // already in reach was closed when they were, so it's left as it is: closed,
 // or opened since. Lines hidden in a closed fold aren't reached until it
 // opens, so a fold around the whole document doesn't cost all of it.
-fn (mut m EditorModel2) reach_folds(first int, last int) {
+fn (mut m EditorModel) reach_folds(first int, last int) {
 	if !m.folds_all {
 		return
 	}
@@ -236,7 +236,7 @@ fn (mut m EditorModel2) reach_folds(first int, last int) {
 
 // unreached gives the lines from `first` to `last` that are shown, but not
 // in reach yet
-fn (m EditorModel2) unreached(first int, last int) []LineRange {
+fn (m EditorModel) unreached(first int, last int) []LineRange {
 	mut shown := []LineRange{}
 	for gap in gaps_in(m.fold_reach, first, last) {
 		shown << m.shown_lines_of(gap)
@@ -245,7 +245,7 @@ fn (m EditorModel2) unreached(first int, last int) []LineRange {
 }
 
 // shown_lines_of gives the lines of `r` that aren't hidden in a closed fold
-fn (m EditorModel2) shown_lines_of(r LineRange) []LineRange {
+fn (m EditorModel) shown_lines_of(r LineRange) []LineRange {
 	mut shown := []LineRange{}
 	mut y := r.first
 	if f := m.closed_fold_at(y) {
@@ -271,7 +271,7 @@ fn (m EditorModel2) shown_lines_of(r LineRange) []LineRange {
 
 // outer_fold_from gives the index of the first of outer_folds that starts
 // on line `y` or below it
-fn (m EditorModel2) outer_fold_from(y int) int {
+fn (m EditorModel) outer_fold_from(y int) int {
 	mut lo, mut hi := 0, m.outer_folds.len
 	for lo < hi {
 		mid := (lo + hi) / 2
@@ -287,7 +287,7 @@ fn (m EditorModel2) outer_fold_from(y int) int {
 // reach_rows, after zM, puts in reach the lines `rows` rows either side of
 // line `y`'s, closing their folds first, so counting rows over them counts
 // the folds zM closed as one each
-fn (mut m EditorModel2) reach_rows(y int, rows int) {
+fn (mut m EditorModel) reach_rows(y int, rows int) {
 	if !m.folds_all {
 		return
 	}
@@ -311,7 +311,7 @@ fn (mut m EditorModel2) reach_rows(y int, rows int) {
 
 // reach_view, after zM, puts the cursor's line and a view's height either
 // side of the top of the view in reach
-fn (mut m EditorModel2) reach_view() {
+fn (mut m EditorModel) reach_view() {
 	if !m.folds_all {
 		return
 	}
@@ -321,7 +321,7 @@ fn (mut m EditorModel2) reach_view() {
 }
 
 // closed_fold_at gives the outermost closed fold line `y` is in
-fn (m EditorModel2) closed_fold_at(y int) ?Fold {
+fn (m EditorModel) closed_fold_at(y int) ?Fold {
 	// the last outer fold starting at or above y
 	mut lo, mut hi := 0, m.outer_folds.len
 	for lo < hi {
@@ -340,7 +340,7 @@ fn (m EditorModel2) closed_fold_at(y int) ?Fold {
 
 // shown_line gives the line that stands for line `y` on screen: the start of
 // the closed fold it's in, or `y`
-fn (m EditorModel2) shown_line(y int) int {
+fn (m EditorModel) shown_line(y int) int {
 	if f := m.closed_fold_at(y) {
 		return f.start
 	}
@@ -349,7 +349,7 @@ fn (m EditorModel2) shown_line(y int) int {
 
 // line_below gives the first line below line `y`'s row: the line after the
 // closed fold `y` starts, or after `y`
-fn (m EditorModel2) line_below(y int) int {
+fn (m EditorModel) line_below(y int) int {
 	if f := m.closed_fold_at(y) {
 		return f.end + 1
 	}
@@ -358,7 +358,7 @@ fn (m EditorModel2) line_below(y int) int {
 
 // rows_down gives the line shown `rows` rows below line `y`'s, or the last
 // line shown if there aren't that many
-fn (m EditorModel2) rows_down(y int, rows int) int {
+fn (m EditorModel) rows_down(y int, rows int) int {
 	last := int(m.doc_controller.line_count(m.doc_id)) - 1
 	if m.outer_folds.len == 0 {
 		return if y + rows < last { y + rows } else { last }
@@ -376,7 +376,7 @@ fn (m EditorModel2) rows_down(y int, rows int) int {
 
 // rows_up gives the line shown `rows` rows above line `y`'s, or the first
 // line if there aren't that many
-fn (m EditorModel2) rows_up(y int, rows int) int {
+fn (m EditorModel) rows_up(y int, rows int) int {
 	if m.outer_folds.len == 0 {
 		return if y - rows > 0 { y - rows } else { 0 }
 	}
@@ -393,7 +393,7 @@ fn (m EditorModel2) rows_up(y int, rows int) int {
 // fold_end gives the last line of the closed fold line `y` starts, or `y`
 // when it starts none: the last line an action on line `y` takes in, as one
 // on a closed fold acts on all of it
-fn (mut m EditorModel2) fold_end(y int) int {
+fn (mut m EditorModel) fold_end(y int) int {
 	m.sync_folds()
 	if f := m.closed_fold_at(y) {
 		if f.start == y {
@@ -404,7 +404,7 @@ fn (mut m EditorModel2) fold_end(y int) int {
 }
 
 // screen_lines gives the line shown on each row of the view, top to bottom
-fn (m EditorModel2) screen_lines() []int {
+fn (m EditorModel) screen_lines() []int {
 	line_count := int(m.doc_controller.line_count(m.doc_id))
 	mut rows := []int{cap: m.viewport_height}
 	mut line := m.shown_line(m.top_line)
@@ -435,7 +435,7 @@ fn screen_row(rows []int, y int) ?int {
 
 // move_cursor_rows moves the cursor `n` rows down, or up for a negative `n`,
 // stepping over each closed fold as one line, as j and k do
-fn (mut m EditorModel2) move_cursor_rows(n int) {
+fn (mut m EditorModel) move_cursor_rows(n int) {
 	m.sync_folds()
 	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
 	y := int(cursor_line)
@@ -448,7 +448,7 @@ fn (mut m EditorModel2) move_cursor_rows(n int) {
 // or up for a negative `n`, as dj and dk do: whole lines, with all of a
 // closed fold at either end. Like j and k, it does nothing if the cursor
 // can't move.
-fn (mut m EditorModel2) delete_rows(n int) {
+fn (mut m EditorModel) delete_rows(n int) {
 	m.sync_folds()
 	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
 	y := m.shown_line(int(cursor_line))
@@ -478,7 +478,7 @@ fn (mut m EditorModel2) delete_rows(n int) {
 // reveal_cursor opens the closed folds the cursor is hidden in, as Vim does
 // on most moves into one. One starting on the cursor's line shows it, and
 // stays closed.
-fn (mut m EditorModel2) reveal_cursor() {
+fn (mut m EditorModel) reveal_cursor() {
 	m.sync_folds()
 	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
 	y := int(cursor_line)
@@ -493,7 +493,7 @@ fn (mut m EditorModel2) reveal_cursor() {
 // fold command, on the line that shows the one it was on before the folds
 // closed around it: up to a closed fold's first line, or back to where it
 // was when the fold it was hidden in opens
-fn (mut m EditorModel2) settle_fold_cursor(y int, x int) {
+fn (mut m EditorModel) settle_fold_cursor(y int, x int) {
 	mut from_line, mut from_x := y, x
 	if r := m.fold_return {
 		if r.gen == m.fold_gen && r.placed_line == y && r.placed_x == x {
@@ -524,7 +524,7 @@ fn (mut m EditorModel2) settle_fold_cursor(y int, x int) {
 //   zc closes the innermost open fold around the cursor, zC every one
 //   za and zA do zo and zO on a closed fold, zc and zC on an open one
 //   zR opens every fold, zM closes every one
-fn (mut m EditorModel2) fold_command(command string) {
+fn (mut m EditorModel) fold_command(command string) {
 	m.sync_folds()
 	cursor_line, cursor_x := m.doc_controller.cursor_line_and_x(m.doc_id)
 	y := int(cursor_line)
@@ -570,7 +570,7 @@ fn (mut m EditorModel2) fold_command(command string) {
 // `last`, as Vim's do in visual mode: zo, zc and za act on each row as they
 // would on it alone, zO and zC on every fold around each, and zR and zM as
 // they do anywhere
-fn (mut m EditorModel2) fold_command_visual(command string, first int, last int) {
+fn (mut m EditorModel) fold_command_visual(command string, first int, last int) {
 	if command in ['zR', 'zM'] {
 		m.fold_command(command)
 		return
@@ -617,7 +617,7 @@ fn (mut m EditorModel2) fold_command_visual(command string, first int, last int)
 // it, as zj does, or with `up`, up to the end of the `count`th fold above
 // it, as zk does. A closed fold counts as one fold, and the cursor stays
 // put if there's none.
-fn (mut m EditorModel2) fold_jump(up bool, count int) {
+fn (mut m EditorModel) fold_jump(up bool, count int) {
 	m.sync_folds()
 	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
 	start := int(cursor_line)
@@ -644,7 +644,7 @@ const fold_search_window = 64
 // fold_start_below gives the first line below line `y` that a fold starts
 // on, or -1 if there's none. A closed fold counts, even one whose block has
 // changed since it closed.
-fn (mut m EditorModel2) fold_start_below(y int) int {
+fn (mut m EditorModel) fold_start_below(y int) int {
 	line_count := int(m.doc_controller.line_count(m.doc_id))
 	mut window := fold_search_window
 	mut from := y + 1
@@ -667,7 +667,7 @@ fn (mut m EditorModel2) fold_start_below(y int) int {
 // fold_end_above gives the last line above line `y` that a fold ends on, or
 // -1 if there's none. A closed fold counts, even one whose block has changed
 // since it closed.
-fn (mut m EditorModel2) fold_end_above(y int) int {
+fn (mut m EditorModel) fold_end_above(y int) int {
 	mut window := fold_search_window
 	mut to := y - 1
 	for to >= 0 {
@@ -713,7 +713,7 @@ fn first_start_below(folds []Fold, y int) int {
 // toggle_fold opens the closed fold on line `y`, `closed`, if there is one,
 // as zo does, or else closes one around it, as zc does. With `nested`, it
 // does zO or zC instead.
-fn (mut m EditorModel2) toggle_fold(y int, closed ?Fold, nested bool) {
+fn (mut m EditorModel) toggle_fold(y int, closed ?Fold, nested bool) {
 	if _ := closed {
 		m.open_fold(closed, nested)
 		return
@@ -722,7 +722,7 @@ fn (mut m EditorModel2) toggle_fold(y int, closed ?Fold, nested bool) {
 }
 
 // open_fold opens `fold`, and with `nested` the closed folds inside it too
-fn (mut m EditorModel2) open_fold(fold ?Fold, nested bool) {
+fn (mut m EditorModel) open_fold(fold ?Fold, nested bool) {
 	f := fold or { return }
 	if nested {
 		m.set_closed_folds(m.closed_folds.filter(!(f.start <= it.start && it.end <= f.end)))
@@ -734,7 +734,7 @@ fn (mut m EditorModel2) open_fold(fold ?Fold, nested bool) {
 
 // reach_whole, after zM, puts all of `f`'s lines in reach, for a fold opened
 // with every fold inside it, which mustn't close as its lines come into view
-fn (mut m EditorModel2) reach_whole(f Fold) {
+fn (mut m EditorModel) reach_whole(f Fold) {
 	if !m.folds_all {
 		return
 	}
@@ -745,7 +745,7 @@ fn (mut m EditorModel2) reach_whole(f Fold) {
 
 // close_fold closes the innermost fold around line `y` that `closed`, the
 // closed fold it's on, if any, is inside, or with `all` every fold around it
-fn (mut m EditorModel2) close_fold(y int, closed ?Fold, all bool) {
+fn (mut m EditorModel) close_fold(y int, closed ?Fold, all bool) {
 	mut folds := m.closed_folds.clone()
 	folds << innermost_to_close(m.folds_at(y), closed, all)
 	m.set_closed_folds(folds)
@@ -772,13 +772,13 @@ fn innermost_to_close(around []Fold, closed ?Fold, all bool) []Fold {
 }
 
 // folds_at gives the folds line `y` is in, outermost first
-fn (mut m EditorModel2) folds_at(y int) []Fold {
+fn (mut m EditorModel) folds_at(y int) []Fold {
 	return m.folds_in(y, y).filter(it.contains(y))
 }
 
 // folds_in gives the folds around line `first` and those starting on lines
 // `first` to `last`, outermost first
-fn (mut m EditorModel2) folds_in(first int, last int) []Fold {
+fn (mut m EditorModel) folds_in(first int, last int) []Fold {
 	m.sync_parser_state_cache()
 	line_count := int(m.doc_controller.line_count(m.doc_id))
 	mut lines := m.doc_lines()

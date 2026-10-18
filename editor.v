@@ -14,31 +14,1229 @@
 
 module main
 
+import time
 import bobatea as tea
-import lib.petal.theme
 import lib.petal
-import lib.palette
 import lib.documents
 import lib.documents.cursor
 import lib.syntax
-import lib.clipboard
+import lib.palette
 import lib.nanoid
 
-fn num_digits(n int) int {
-	if n <= 0 {
-		return 1
+struct EditorModel {
+	config         EditorWorkspaceConfig
+	id             nanoid.ID
+	file_path      string
+	doc_id         nanoid.ID
+	doc_controller &documents.Controller
+mut:
+	in_focus              bool
+	chord                 Chord
+	viewport_width        int
+	viewport_height       int
+	top_line              int
+	visual_sel_start_col  ?u64
+	visual_sel_start_line ?u64
+	visual_linewise       bool
+	lang_syn              syntax.Syntax = syntax.noop_syntax
+	token_parser          syntax.Parser
+	// scope_colours is the theme colour of each syntax scope, built on first
+	// render
+	scope_colours []ScopeColour
+	// parser_line_states holds the lexer state at the start of lines 0 to
+	// len-1. Drawing extends it, through ensure_parser_states, only down to
+	// the top of the view, so opening a file lexes the lines above the view
+	// and no more before the first frame. Background lexing extends it the
+	// rest of the way, and an edit that changes how the lines below it lex
+	// trims it a little past the view for background lexing to redo.
+	parser_line_states []syntax.State
+	// parser_gen is the document edit generation parser_line_states is up to
+	// date with. 0 means never synced, which forces a full rebuild.
+	parser_gen u64
+	// syntax_tree is the document's context tree, kept up to date with edits
+	// alongside parser_line_states and queried through syntax_ancestors and
+	// syntax_find
+	syntax_tree syntax.Tree
+	// closed_folds are the folds closed in this editor, by start line,
+	// outermost first. One inside another closed one stays closed when that
+	// one opens, as in Vim.
+	closed_folds []Fold
+	// outer_folds are the closed folds no other closed fold is around: the
+	// ones that hide lines
+	outer_folds []Fold
+	// fold_gen is the document edit generation closed_folds are up to date
+	// with
+	fold_gen u64
+	// fold_return is where the cursor was before a fold closed around it
+	fold_return ?FoldReturn
+	// folds_all is set by zM, until zR: every fold is closed, but only as its
+	// lines come into reach, which fold_reach records, so zM costs the lines
+	// around the view rather than the whole document (see reach_folds)
+	folds_all  bool
+	fold_reach []LineRange
+	// insert_line_pristine_indent mirrors Neovim's 'autoindent' semantics: true
+	// only while the current line's sole content is whitespace that *this*
+	// insert session auto-inserted (via `o`/`O`) and the user hasn't typed
+	// anything but backspace since. Any real keystroke clears it, so
+	// user-typed whitespace is left alone on leaving insert mode.
+	insert_line_pristine_indent bool
+	// mode is the mode the editor was last switched to
+	mode petal.Mode
+	// change_open is set by a change such as `ci{`, whose deletion and the
+	// insert that follows are undone as one, so the undo group it began is
+	// left open on going into insert mode
+	change_open bool
+}
+
+fn EditorModel.new(config EditorWorkspaceConfig, id nanoid.ID, doc_id nanoid.ID, file_path string, doc_controller &documents.Controller) EditorModel {
+	return EditorModel{
+		config:         config
+		id:             id
+		file_path:      file_path
+		doc_id:         doc_id
+		doc_controller: doc_controller
+		token_parser:   syntax.Parser{}
 	}
-	mut count := 0
-	mut v := n
-	for v > 0 {
-		count++
-		v /= 10
+}
+
+fn (mut m EditorModel) init() tea.Cmd {
+	return tea.batch(tea.emit_resize(), load_syntax(m.id, m.file_path), query_editor_data(m.id))
+}
+
+fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	match msg {
+		EditorModelKeyMsg {
+			if m.id != msg.active_id { return m.clone(), tea.no_cmd }
+			match msg.mode {
+				.normal {
+					return m.normal_mode_update(msg.key_msg)
+				}
+				.insert {
+					return m.insert_mode_update(msg.key_msg)
+				}
+				.visual {
+					return m.visual_mode_update(msg.key_msg)
+				}
+				.visual_line {
+					return m.visual_mode_update(msg.key_msg)
+				}
+				else {}
+			}
+		}
+		EditorModelMsg {
+			return m.editor_model_update(msg.active_id, msg.msg)
+		}
+		else {}
 	}
-	return count
+
+	return m.clone(), tea.no_cmd
+}
+
+fn (mut m EditorModel) editor_model_update(editor_id nanoid.ID, msg tea.Msg) (tea.Model, tea.Cmd) {
+	match msg {
+		tea.FocusedMsg {
+			m.in_focus = editor_id == m.id
+		}
+		tea.ResizedMsg {
+			m.viewport_width = msg.window_width // artificially shrunk by parent model EditorWorkspace
+			m.viewport_height = msg.window_height
+		}
+		SwitchModeMsg {
+			return m.switch_mode_update(msg)
+		}
+		QueryEditorDataMsg {
+			if editor_id != m.id { return m.clone(), tea.no_cmd }
+			return m.clone(), editor_data(m.data())
+		}
+		SyntaxLoadedMsg {
+			if editor_id != m.id { return m.clone(), tea.no_cmd }
+			m.lang_syn = msg.syn
+			m.token_parser.set_syntax(m.lang_syn)
+			m.invalidate_parser_cache()
+			if msg.err_msg.len > 0 {
+				return m.clone(), debug_log(msg.err_msg)
+			}
+		}
+		WriteToDiskMsg {
+			if editor_id != m.id { return m.clone(), tea.no_cmd }
+			m.doc_controller.write_to_disk(m.doc_id, m.file_path) or {
+				return m.clone(), raise_error('failed to write to disk: ${err}')
+			}
+			success_msg := 'written ${m.file_path} successfully'
+			return m.clone(), tea.sequence(debug_log(success_msg), display_message(.normal,
+				success_msg), hide_message_after(6 * time.second))
+		}
+		else {}
+	}
+
+	if editor_id == m.id {
+		m.scroll_to_cursor()
+	}
+	return m.clone(), tea.no_cmd
+}
+
+fn (mut m EditorModel) switch_mode_update(msg SwitchModeMsg) (tea.Model, tea.Cmd) {
+	// a chord left half typed doesn't carry over into the new mode, where its
+	// next key would finish it
+	m.chord.reset()
+	m.visual_sel_start_line = ?u64(none)
+	m.visual_sel_start_col = ?u64(none)
+	m.visual_linewise = false
+	m.mode = msg.mode
+
+	match msg.mode {
+		.normal {
+			if m.in_focus {
+				m.switch_to_normal_mode_update(msg)
+				m.insert_line_pristine_indent = false
+				// an insert is undone in one go with the indent leaving it
+				// takes out
+				m.doc_controller.commit_undo_group(m.doc_id)
+			}
+		}
+		.visual {
+			cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
+			m.visual_sel_start_line = cursor_line
+			m.visual_sel_start_col = cursor_col
+		}
+		.visual_line {
+			cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
+			m.visual_sel_start_line = cursor_line
+			m.visual_sel_start_col = cursor_col
+			m.visual_linewise = true
+		}
+		.insert {
+			if m.in_focus {
+				if !m.change_open {
+					m.doc_controller.commit_undo_group(m.doc_id)
+				}
+				m.doc_controller.begin_undo_group(m.doc_id)
+			}
+			m.change_open = false
+		}
+		else {}
+	}
+
+	return m.clone(), tea.no_cmd
+}
+
+fn (mut m EditorModel) switch_to_normal_mode_update(msg SwitchModeMsg) {
+	match msg.from {
+		.normal {
+			m.doc_controller.move_cursor_left(m.doc_id)
+			return
+		}
+		.insert {
+			if m.insert_line_pristine_indent {
+				cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+				line_bytes := m.doc_controller.get_line_bytes(m.doc_id, cursor_line) or { []u8{} }
+				if line_bytes.len > 0 && line_bytes.bytestr().trim_space().len == 0 {
+					m.doc_controller.delete_range(m.doc_id, cursor.Range{
+						start: cursor.Pos.new(0, int(cursor_line))
+						end:   cursor.Pos.new(line_bytes.len, int(cursor_line))
+					})
+					return
+				}
+			}
+			m.doc_controller.move_cursor_left(m.doc_id)
+		}
+		else {}
+	}
+}
+
+fn (mut m EditorModel) normal_mode_update(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	mut cmds := []tea.Cmd{}
+	match msg.k_type {
+		.runes {
+			// with an operator pending, `i` starts a text object, as in `di(`
+			key := if m.chord.pending_operator() { '' } else { msg.string() }
+			match key {
+				'i' {
+					m.insert_line_pristine_indent = false
+					cmds << switch_mode(.insert)
+				}
+				'v' {
+					cmds << switch_mode(.visual)
+				}
+				'V' {
+					cmds << switch_mode(.visual_line)
+				}
+				else {
+					if action := m.chord.feed(msg.string()) {
+						cmd, switching_mode := m.execute_action_normal(action)
+						if !switching_mode {
+							m.clamp_cursor_to_line_end()
+						}
+						m.scroll_to_cursor()
+						cmds << cmd
+					}
+				}
+			}
+		}
+		.special {
+			match msg.string() {
+				'delete' {
+					// undone on its own, as x is
+					m.doc_controller.begin_undo_group(m.doc_id)
+					m.doc_controller.delete_char_at(m.doc_id)
+					m.doc_controller.commit_undo_group(m.doc_id)
+				}
+				'left' {
+					m.doc_controller.move_cursor_left(m.doc_id)
+				}
+				'down' {
+					m.move_cursor_rows(1)
+				}
+				'right' {
+					m.doc_controller.move_cursor_right(m.doc_id)
+				}
+				'up' {
+					m.move_cursor_rows(-1)
+				}
+				'ctrl+r' {
+					m.doc_controller.redo(m.doc_id)
+				}
+				'ctrl+u' {
+					m.scroll_page_up()
+				}
+				'ctrl+d' {
+					m.scroll_page_down()
+				}
+				else {}
+			}
+		}
+	}
+
+	m.clamp_cursor_to_line_end()
+	m.scroll_to_cursor()
+	return m.clone(), tea.batch_array(cmds)
+}
+
+fn (mut m EditorModel) insert_mode_update(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	mut cmds := []tea.Cmd{}
+	match msg.k_type {
+		.runes {
+			m.insert_line_pristine_indent = false
+			for cr in msg.string().runes_iterator() {
+				m.doc_controller.insert_rune(m.doc_id, cr)
+				if cr in [`)`, `]`, `}`] {
+					m.align_closer()
+				}
+			}
+		}
+		.special {
+			match msg.string() {
+				'escape' {
+					cmds << switch_mode(.normal)
+				}
+				'enter' {
+					m.open_line()
+				}
+				'ctrl+i' { // TAB
+					m.insert_line_pristine_indent = false
+
+					if m.config.convert_tabs_to_spaces {
+						m.doc_controller.insert_string(m.doc_id, ' '.repeat(m.config.tab_width))
+					} else {
+						m.doc_controller.insert(m.doc_id, `\t`)
+					}
+				}
+				'backspace' {
+					// backspace is exempt (mirrors Neovim's <BS>/CTRL-D exemption):
+					// trimming auto-inserted indent back down doesn't disqualify
+					// the line from being cleared on leaving insert mode.
+					m.doc_controller.backspace(m.doc_id)
+				}
+				'delete' {
+					m.insert_line_pristine_indent = false
+					m.doc_controller.delete(m.doc_id)
+				}
+				'left' {
+					m.doc_controller.move_cursor_left(m.doc_id)
+				}
+				'down' {
+					m.move_cursor_rows(1)
+				}
+				'right' {
+					m.doc_controller.move_cursor_right(m.doc_id)
+				}
+				'up' {
+					m.move_cursor_rows(-1)
+				}
+				else {}
+			}
+		}
+	}
+
+	m.scroll_to_cursor()
+	return m.clone(), tea.batch_array(cmds)
+}
+
+fn (mut m EditorModel) visual_mode_update(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	mut cmds := []tea.Cmd{}
+	match msg.k_type {
+		.runes {
+			if action := m.chord.feed_visual(msg.string()) {
+				cmd, switching_mode := m.execute_action_visual(action)
+				if !switching_mode {
+					m.clamp_cursor_to_line_end()
+				}
+				m.scroll_to_cursor()
+				cmds << cmd
+			}
+		}
+		.special {
+			match msg.string() {
+				'escape' {
+					cmds << switch_mode(.normal)
+				}
+				else {}
+			}
+		}
+	}
+
+	m.clamp_cursor_to_line_end()
+	m.scroll_to_cursor()
+	return m.clone(), tea.batch_array(cmds)
+}
+
+fn virtual_direction_key_press(direction string) tea.Cmd {
+	return tea.msg_cmd(tea.KeyMsg{
+		k_type: .special
+		runes:  direction.runes()
+	})
+}
+
+fn (mut m EditorModel) execute_action_normal(action ChordAction) (tea.Cmd, bool) {
+	count := if action.count == 0 { 1 } else { action.count }
+
+	if op := action.operator {
+		if is_text_object(action.motion) {
+			return m.apply_text_object(op, action.motion, count)
+		}
+	}
+
+	// mode-bound things that aren't really motions; handled before the
+	// shared motion table so they can switch modes / insert text.
+	match action.motion {
+		'%' {
+			// with a count, `%` goes to that percentage of the way down the
+			// file, as in Vim. An operator with it, linewise there, waits on
+			// a linewise range helper, so it does nothing meanwhile.
+			if action.counted {
+				if action.operator == none {
+					m.jump_to_percent(count)
+				}
+				return tea.no_cmd, false
+			}
+			if op := action.operator {
+				r := m.matching_bracket_range() or { return tea.no_cmd, false }
+				apply_operator(m.doc_controller, m.doc_id, op, r)
+				m.doc_controller.commit_undo_group(m.doc_id)
+				return tea.no_cmd, false
+			}
+			m.jump_to_matching_bracket()
+			return tea.no_cmd, false
+		}
+		'o' {
+			// on a closed fold, the new line goes below all of it, and the
+			// fold stays closed, as in Vim
+			// the line opened is undone in one go with what's typed on it
+			m.doc_controller.commit_undo_group(m.doc_id)
+			m.doc_controller.begin_undo_group(m.doc_id)
+			m.change_open = true
+			cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+			y := int(cursor_line)
+			last := m.fold_end(y)
+			folded := m.closed_folds.filter(y <= it.start && it.end <= last)
+			m.doc_controller.jump_cursor_to_line(m.doc_id, u64(last))
+			m.doc_controller.jump_cursor_to_line_end(m.doc_id)
+			m.open_line()
+			if folded.len > 0 {
+				// the edit reached the fold's last line, which opens it, but
+				// only to add lines below it
+				m.sync_folds()
+				mut closed := m.closed_folds.clone()
+				closed << folded
+				m.set_closed_folds(closed)
+			}
+			// TODO(tauraamui) [2026-06-17]: investigate a better less hacky feeling alternative method
+			// to making the cursor be correctly positioned once we've manually inserted the previous line's
+			// whitespace prefix than virtually emulating cursor right press. for example perhaps we could
+			// make the cursor clamp method take the current mode into account? hmmm
+			return tea.sequence(switch_mode(.insert), virtual_direction_key_press('right')), true
+		}
+		'I' {
+			m.insert_line_pristine_indent = false
+			m.doc_controller.jump_cursor_to_text_start(m.doc_id)
+			return switch_mode(.insert), true
+		}
+		'A' {
+			m.insert_line_pristine_indent = false
+			m.doc_controller.jump_cursor_to_line_end(m.doc_id)
+			return switch_mode(.insert), true
+		}
+		'line' {
+			// only `dd` for now: `yy` and `cc` wait on apply_operator growing
+			// yank and change, and mustn't delete the line meanwhile
+			if action.operator or { rune(`d`) } != `d` {
+				return tea.no_cmd, false
+			}
+			cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+			for _ in 0 .. count {
+				lines_before := m.doc_controller.line_count(m.doc_id)
+				// a closed fold is one line to dd, as in Vim, so it all goes
+				for _ in cursor_line .. u64(m.fold_end(int(cursor_line))) + 1 {
+					// deleting the same line since each line delete will move
+					// the next line up, into the delete
+					m.doc_controller.delete_line(m.doc_id, cursor_line)
+				}
+				// nothing left below to delete: a count past the end of the
+				// file must not go on deleting nothing for every step of it
+				if m.doc_controller.line_count(m.doc_id) == lines_before {
+					break
+				}
+			}
+			m.doc_controller.commit_undo_group(m.doc_id)
+			return tea.no_cmd, false
+		}
+		'u' {
+			m.doc_controller.undo(m.doc_id)
+			return tea.no_cmd, false
+		}
+		'x' {
+			m.doc_controller.begin_undo_group(m.doc_id)
+			for _ in 0 .. count {
+				// x stops at the end of the line, as in Vim; past it, every
+				// step left of a large count would delete nothing
+				if !m.doc_controller.delete_char_at(m.doc_id) {
+					break
+				}
+			}
+			m.doc_controller.commit_undo_group(m.doc_id)
+			return tea.no_cmd, false
+		}
+		'zo', 'zO', 'zc', 'zC', 'za', 'zA', 'zR', 'zM' {
+			m.fold_command(action.motion)
+			return tea.no_cmd, false
+		}
+		'zj', 'zk' {
+			m.fold_jump(action.motion == 'zk', count)
+			return tea.no_cmd, false
+		}
+		'j', 'k' {
+			if action.operator == none {
+				m.move_cursor_rows(if action.motion == 'j' { count } else { -count })
+				return tea.no_cmd, false
+			}
+			// with an operator, j and k take in whole lines, and a closed
+			// fold at either end is all taken in, as in Vim. Only `d` for
+			// now, as with dd.
+			if action.operator or { rune(`d`) } == `d` {
+				m.delete_rows(if action.motion == 'j' { count } else { -count })
+			}
+			return tea.no_cmd, false
+		}
+		'zz' {
+			// bare `zz` centers the viewport on the current line; an explicit
+			// count jumps to that line first (the same `count > 1`
+			// convention `G` already uses here).
+			if count > 1 {
+				m.doc_controller.jump_cursor_to_line(m.doc_id, u64(count - 1))
+			}
+			m.center_viewport_on_cursor()
+			return tea.no_cmd, false
+		}
+		else {}
+	}
+
+	if op := action.operator {
+		// operator + motion: resolve the motion's range, then apply operator.
+		// `dd` arrives here as motion == 'line' (see chords.v) — left as a
+		// TODO until a linewise range helper exists on Controller.
+		r := motion_range(m.doc_controller, m.doc_id, action.motion, count) or {
+			return tea.no_cmd, false
+		}
+		apply_operator(m.doc_controller, m.doc_id, op, r)
+		m.doc_controller.commit_undo_group(m.doc_id)
+		return tea.no_cmd, false
+	}
+
+	apply_motion(m.doc_controller, m.doc_id, action.motion, count)
+	return tea.no_cmd, false
+}
+
+// jump_to_percent is `{count}%`: the first non-blank of the line `count`
+// percent of the way down the file. Over 100 percent, it stays put.
+fn (mut m EditorModel) jump_to_percent(count int) {
+	if count > 100 {
+		return
+	}
+	line_count := int(m.doc_controller.line_count(m.doc_id))
+	line := (count * line_count + 99) / 100
+	m.doc_controller.jump_cursor_to_line(m.doc_id, u64(if line > 0 { line - 1 } else { 0 }))
+	m.doc_controller.jump_cursor_to_text_start(m.doc_id)
+}
+
+fn (mut m EditorModel) execute_action_visual(action ChordAction) (tea.Cmd, bool) {
+	count := if action.count == 0 { 1 } else { action.count }
+
+	if op := action.operator {
+		// in visual mode the selection IS the range — apply the operator
+		// against it immediately and exit back to normal mode.
+		if m.visual_linewise {
+			m.apply_linewise_operator(op)
+		} else {
+			r := m.current_visual_range() or { return switch_mode(.normal), true }
+			apply_operator(m.doc_controller, m.doc_id, op, r)
+		}
+		m.doc_controller.commit_undo_group(m.doc_id)
+		return switch_mode(.normal), true
+	}
+
+	if is_text_object(action.motion) {
+		m.select_text_object(action.motion, count)
+		return tea.no_cmd, false
+	}
+
+	// pure motion in visual mode = extend selection. The cursor moves;
+	// render_visual_selection derives the highlight from sel_start + cursor.
+	if action.motion == '%' {
+		if action.counted {
+			m.jump_to_percent(count)
+			return tea.no_cmd, false
+		}
+		m.jump_to_matching_bracket()
+		return tea.no_cmd, false
+	}
+	if action.motion in ['j', 'k'] {
+		m.move_cursor_rows(if action.motion == 'j' { count } else { -count })
+		return tea.no_cmd, false
+	}
+	if action.motion in ['zj', 'zk'] {
+		m.fold_jump(action.motion == 'zk', count)
+		return tea.no_cmd, false
+	}
+	if action.motion in ['zo', 'zO', 'zc', 'zC', 'za', 'zA', 'zR', 'zM'] {
+		sel_start_line := m.visual_sel_start_line or { return switch_mode(.normal), true }
+		cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+		mut first, mut last := sel_start_line, cursor_line
+		if cursor_line < sel_start_line {
+			first, last = cursor_line, sel_start_line
+		}
+		m.fold_command_visual(action.motion, int(first), int(last))
+		return switch_mode(.normal), true
+	}
+	apply_motion(m.doc_controller, m.doc_id, action.motion, count)
+	return tea.no_cmd, false
+}
+
+// apply_linewise_operator applies an operator across every full line spanned
+// by the visual-line selection - same shape as the normal-mode `dd` handling
+// in execute_action_normal, just driven by sel_start instead of a count.
+fn (mut m EditorModel) apply_linewise_operator(op u8) {
+	sel_start_line := m.visual_sel_start_line or { return }
+	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+	start_line := if sel_start_line < cursor_line { sel_start_line } else { cursor_line }
+	last_line := if sel_start_line > cursor_line { sel_start_line } else { cursor_line }
+	// a closed fold on the last line is all taken in
+	end_line := u64(m.fold_end(int(last_line)))
+
+	match op {
+		`d` {
+			for _ in start_line .. end_line + 1 {
+				// deleting the same line repeatedly since each delete moves
+				// the next line up into the deleted one
+				m.doc_controller.delete_line(m.doc_id, start_line)
+			}
+		}
+		else {}
+	}
+}
+
+// invalidate_parser_cache throws away the line start states on the next
+// render. Edits don't need it: they are picked up from the document's
+// line change log by sync_parser_state_cache.
+fn (mut m EditorModel) invalidate_parser_cache() {
+	m.parser_gen = 0
+}
+
+// sync_parser_state_cache brings parser_line_states up to date with every edit
+// made to the document since it was last synced, by any editor showing it.
+fn (mut m EditorModel) sync_parser_state_cache() {
+	changes := m.doc_controller.line_changes_since(m.doc_id, m.parser_gen)
+	m.parser_gen = changes.gen
+	if !changes.changed {
+		return
+	}
+	if !changes.complete {
+		m.rebuild_parser_state_cache()
+		m.syntax_tree.reset()
+		return
+	}
+	m.syntax_tree.edited(changes.change.first, changes.change.last, changes.change.delta)
+	m.relex_parser_state_cache(changes.change.first, changes.change.last, changes.change.delta)
+}
+
+// DocLines gives the syntax tree a document's lines as they are in the
+// buffer, without tabs expanded, so tree columns are buffer columns. Each line
+// is decoded into the same buffer, which the tree reads only until it asks
+// for the next.
+struct DocLines {
+	doc_id nanoid.ID
+mut:
+	doc_controller &documents.Controller
+	scratch        []u8
+	runes          []rune
+}
+
+fn (mut d DocLines) line_count() int {
+	return int(d.doc_controller.line_count(d.doc_id))
+}
+
+fn (mut d DocLines) line_runes(y int) []rune {
+	d.doc_controller.line_runes_into(d.doc_id, u64(y), mut d.scratch, mut d.runes)
+	return d.runes
+}
+
+fn (m EditorModel) doc_lines() DocLines {
+	return DocLines{
+		doc_id:         m.doc_id
+		doc_controller: m.doc_controller
+	}
+}
+
+// syntax_ancestors gives the context tree nodes that contain `pos`,
+// outermost first: e.g. the braces of the function the cursor is in, then a
+// string inside it, then an interpolation inside that
+fn (mut m EditorModel) syntax_ancestors(pos syntax.Pos) []syntax.Node {
+	m.sync_parser_state_cache()
+	mut lines := m.doc_lines()
+	return m.syntax_tree.ancestors(mut m.token_parser, mut lines, pos)
+}
+
+// syntax_find gives the tokens on lines `first` to `last` whose text is
+// `word` and whose scope is one of `scopes` (any scope when empty), e.g. the
+// calls to a function with [.function]
+fn (mut m EditorModel) syntax_find(word string, scopes []syntax.Scope, first int, last int) []syntax.Occurrence {
+	m.sync_parser_state_cache()
+	mut lines := m.doc_lines()
+	return m.syntax_tree.find(mut m.token_parser, mut lines, word, scopes, first, last)
+}
+
+// syntax_token_at gives the token `pos` is in, e.g. a rune literal lexed as
+// one string token
+fn (mut m EditorModel) syntax_token_at(pos syntax.Pos) ?syntax.Token {
+	m.sync_parser_state_cache()
+	mut lines := m.doc_lines()
+	return m.syntax_tree.token_at(mut m.token_parser, mut lines, pos)
+}
+
+// rebuild_parser_state_cache forgets every line start state, so they are
+// lexed again as lines are drawn
+fn (mut m EditorModel) rebuild_parser_state_cache() {
+	m.parser_line_states.clear()
+}
+
+// ensure_parser_states extends parser_line_states until it holds the start
+// state of line `y`
+fn (mut m EditorModel) ensure_parser_states(y int) {
+	line_count := int(m.doc_controller.line_count(m.doc_id))
+	target := if y < line_count { y } else { line_count - 1 }
+	if target < m.parser_line_states.len {
+		return
+	}
+	m.token_parser.reset()
+	if m.parser_line_states.len == 0 {
+		m.parser_line_states << m.token_parser.current_state()
+	}
+	m.token_parser.set_state(m.parser_line_states.last())
+	mut lines := DrawnLines{}
+	for m.parser_line_states.len <= target {
+		m.token_parser.advance_state_runes(m.drawn_line(mut lines, m.parser_line_states.len - 1))
+		m.parser_line_states << m.token_parser.current_state()
+	}
+	m.token_parser.reset()
+}
+
+// DrawnLines holds the buffers drawn_line reads lines into, so reading line
+// after line allocates nothing once they're big enough
+struct DrawnLines {
+mut:
+	scratch  []u8
+	runes    []rune
+	expanded []rune
+}
+
+// drawn_line gives line `y` with its tabs expanded, as view() draws it, so
+// token rune indices line up 1:1 with on-screen columns. It's read into
+// `lines`, and good only until the next line is read into it.
+fn (m EditorModel) drawn_line(mut lines DrawnLines, y int) []rune {
+	m.doc_controller.line_runes_into(m.doc_id, u64(y), mut lines.scratch, mut lines.runes)
+	return expand_tab_runes(lines.runes, m.config.tab_width, mut lines.expanded)
+}
+
+// expand_tab_runes gives `runes` with each tab replaced by `width` spaces, as
+// expand_tabs does, building into `out` only when there's a tab to replace
+@[direct_array_access]
+fn expand_tab_runes(runes []rune, width int, mut out []rune) []rune {
+	if `\t` !in runes {
+		return runes
+	}
+	w := if width <= 0 { 1 } else { width }
+	out.clear()
+	for r in runes {
+		if r != `\t` {
+			out << r
+			continue
+		}
+		for _ in 0 .. w {
+			out << ` `
+		}
+	}
+	return out
+}
+
+// relex_slack is how many lines past the view an edit relexes before leaving
+// the rest to background lexing
+const relex_slack = 256
+
+// relex_parser_state_cache updates the line start states after lines `first`
+// to `last` (counted after the edit) changed and the lines below them moved by
+// `delta`. It relexes from `first` and stops at the first line below `last`
+// whose start state comes out the same as before the edit, since every line
+// after that one would too. A typed character costs one line; opening a block
+// comment costs every line down to where the old and new states agree again,
+// or to the end of the states held, whichever comes first.
+// It returns false if it had to forget the states instead.
+fn (mut m EditorModel) relex_parser_state_cache(first_changed int, last_changed int, delta int) bool {
+	line_count := int(m.doc_controller.line_count(m.doc_id))
+	known := m.parser_line_states.len
+	if first_changed + 1 >= known {
+		// an edit can't change the start state of the line it starts on, so
+		// every state held is still right
+		return true
+	}
+	first := if first_changed > 0 { first_changed } else { 0 }
+	// old index of the line now at last + 1, the first unchanged line
+	tail_start := last_changed + 1 - delta
+	if last_changed >= line_count - 1 || tail_start >= known {
+		// the edit reaches past the states held: keep the ones above it
+		m.parser_line_states.trim(first + 1)
+		return true
+	}
+	if last_changed < first || tail_start <= first || known + delta > line_count {
+		// the change doesn't fit the states held, so don't guess
+		m.rebuild_parser_state_cache()
+		return false
+	}
+
+	// make room for lines first+1 .. last, whose start states are recomputed
+	// below; everything after them keeps its old state as a candidate
+	old_mid := tail_start - (first + 1)
+	new_mid := last_changed - first
+	if new_mid > old_mid {
+		m.parser_line_states.insert(first + 1, []syntax.State{len: new_mid - old_mid})
+	}
+	if new_mid < old_mid {
+		m.parser_line_states.delete_many(first + 1, old_mid - new_mid)
+	}
+
+	// with states held for the whole document, opening a block comment would
+	// relex every line below it here, so past the view the states are let go
+	// for background lexing to redo. The view ends further down when closed
+	// folds are in it.
+	limit := m.rows_down(m.top_line, m.viewport_height) + relex_slack
+	m.token_parser.reset()
+	m.token_parser.set_state(m.parser_line_states[first])
+	mut lines := DrawnLines{}
+	for y in first .. m.parser_line_states.len - 1 {
+		m.token_parser.advance_state_runes(m.drawn_line(mut lines, y))
+		next := m.token_parser.current_state()
+		if y + 1 > last_changed && m.parser_line_states[y + 1] == next {
+			break
+		}
+		m.parser_line_states[y + 1] = next
+		if y + 1 >= limit {
+			m.parser_line_states.trim(y + 2)
+			break
+		}
+	}
+	m.token_parser.reset()
+	return true
+}
+
+fn (m EditorModel) current_visual_range() ?cursor.Range {
+	sel_start_line := m.visual_sel_start_line or { return none }
+	sel_start_col := m.visual_sel_start_col or { return none }
+	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
+
+	mut start_line, mut start_col := sel_start_line, sel_start_col
+	mut end_line, mut end_col := cursor_line, cursor_col
+	if cursor_line < sel_start_line || (cursor_line == sel_start_line && cursor_col < sel_start_col) {
+		start_line, start_col = cursor_line, cursor_col
+		end_line, end_col = sel_start_line, sel_start_col
+	}
+
+	// visual mode selection is always inclusive of the character under the
+	// cursor at both ends (unlike normal-mode motions, which are mostly
+	// exclusive) - bump the endpoint by one so it survives the exclusive
+	// delete_range/apply_operator boundary, same as `$` does for d$.
+	return cursor.Range{
+		start: cursor.Pos.new(int(start_col), int(start_line))
+		end:   cursor.Pos.new(int(end_col) + 1, int(end_line))
+	}
+}
+
+// scroll_to_cursor scrolls the view to show the cursor, opening any closed
+// fold it's hidden in
+fn (mut m EditorModel) scroll_to_cursor() {
+	m.reveal_cursor()
+	cursor_line_u, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+	cursor_line := int(cursor_line_u)
+	if m.viewport_height <= 0 {
+		m.top_line = cursor_line
+		return
+	}
+
+	m.reach_rows(cursor_line, m.viewport_height)
+	m.top_line = m.shown_line(m.top_line)
+	if cursor_line < m.top_line {
+		m.top_line = cursor_line
+	}
+	// the cursor's line is shown, so after the scroll up it's never past
+	// the bottom row
+	if cursor_line > m.rows_down(m.top_line, m.viewport_height - 1) {
+		m.top_line = m.rows_up(cursor_line, m.viewport_height - 1)
+	}
+	m.clamp_top_line()
+}
+
+// clamp_top_line keeps the view from scrolling further down than the end of
+// the document can fill
+fn (mut m EditorModel) clamp_top_line() {
+	line_count := int(m.doc_controller.line_count(m.doc_id))
+	// a view with lines below its last row is filled, and after zM, only a
+	// view near the end has the end's folds to reach
+	m.reach_rows(m.top_line, m.viewport_height)
+	if m.top_line >= 0 && m.top_line < line_count
+		&& m.line_below(m.rows_down(m.top_line, m.viewport_height - 1)) < line_count {
+		return
+	}
+	m.reach_rows(line_count - 1, m.viewport_height)
+	max_top := m.rows_up(line_count - 1, m.viewport_height - 1)
+	if m.top_line > max_top {
+		m.top_line = max_top
+	}
+	if m.top_line < 0 {
+		m.top_line = 0
+	}
+}
+
+// scroll_page_up implements ctrl+u: scrolls the viewport up by half a page
+// and moves the cursor to keep its position relative to the new viewport
+// (a quarter of the way down).
+fn (mut m EditorModel) scroll_page_up() {
+	if m.viewport_height <= 0 {
+		return
+	}
+	m.sync_folds()
+	m.reach_rows(m.top_line, m.viewport_height)
+	m.top_line = m.rows_up(m.top_line, m.viewport_height / 2)
+	target_line := m.rows_down(m.top_line, m.viewport_height / 4)
+	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+	m.doc_controller.move_cursor_lines(m.doc_id, target_line - int(cursor_line))
+}
+
+// scroll_page_down implements ctrl+d: scrolls the viewport down by half a
+// page and moves the cursor to keep its position relative to the new
+// viewport (three quarters of the way down).
+fn (mut m EditorModel) scroll_page_down() {
+	if m.viewport_height <= 0 {
+		return
+	}
+	m.sync_folds()
+	m.reach_rows(m.top_line, m.viewport_height * 2)
+	m.top_line = m.rows_down(m.top_line, m.viewport_height / 2)
+	target_line := m.rows_down(m.top_line, m.viewport_height * 3 / 4)
+	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+	m.doc_controller.move_cursor_lines(m.doc_id, target_line - int(cursor_line))
+}
+
+// center_viewport_on_cursor puts the current line in the middle of the viewport, clamped so top_line never
+// scrolls past what the buffer can fill.
+fn (mut m EditorModel) center_viewport_on_cursor() {
+	cursor_line_u, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+	cursor_line := int(cursor_line_u)
+	if m.viewport_height <= 0 {
+		m.top_line = if cursor_line > 0 { cursor_line } else { 0 }
+		return
+	}
+	m.reveal_cursor()
+	m.reach_rows(cursor_line, m.viewport_height)
+	m.top_line = m.rows_up(cursor_line, m.viewport_height / 2)
+	m.clamp_top_line()
+}
+
+fn (mut m EditorModel) clamp_cursor_to_line_end() {
+	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
+	line_bytes := m.doc_controller.get_line_bytes(m.doc_id, cursor_line) or { return }
+	runes := line_bytes.bytestr().runes()
+	mut grapheme_count := u64(0)
+	mut i := 0
+	for i < runes.len {
+		i = next_grapheme_rune_index(runes, i)
+		grapheme_count += 1
+	}
+	if grapheme_count == 0 {
+		return
+	}
+	if cursor_col >= grapheme_count {
+		m.doc_controller.internal_move_cursor_left(m.doc_id)
+	}
+}
+
+fn (mut m EditorModel) view(mut ctx tea.Context) {
+	m.sync_folds()
+	rows := m.screen_lines()
+	relative_line_numbers := if m.config.relative_line_numbers { m.in_focus } else { false }
+	offset_id := m.render_line_numbers(mut ctx, relative_line_numbers, rows)
+	defer { ctx.clear_offsets_from(offset_id) }
+	m.render_syntax_highlighting(mut ctx, rows)
+	m.render_cursor_line_highlight(mut ctx, rows)
+	m.render_matching_brackets(mut ctx, rows)
+	m.render_visual_selection(mut ctx, rows)
+	m.render_cursor_block(mut ctx, rows)
+	for row, y in rows {
+		line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { []u8{} }
+		text := expand_tabs(line_bytes, m.config.tab_width)
+		ctx.draw_text(0, row, text)
+		if f := m.closed_fold_at(y) {
+			m.render_fold_marker(mut ctx, row, utf8_str_visible_length(text), f)
+		}
+	}
+}
+
+// render_fold_marker draws, after the text of a closed fold's first line, how
+// many lines the fold holds
+fn (m EditorModel) render_fold_marker(mut ctx tea.Context, row int, x int, f Fold) {
+	ctx.set_color(m.config.theme.syntax_comment)
+	ctx.draw_text(x, row, ' ··· ${f.end - f.start + 1} lines')
+	ctx.reset_color()
+}
+
+// runes_visible_width is how many columns `runes` take on screen. Printable
+// ASCII takes one each, which is nearly all code, and is counted directly:
+// the builtin measure looks every rune up in Unicode's tables.
+@[direct_array_access]
+fn runes_visible_width(runes []rune) int {
+	for r in runes {
+		if r < ` ` || r > `~` {
+			return utf8_str_visible_length(runes.string())
+		}
+	}
+	return runes.len
+}
+
+fn expand_tabs(line_bytes []u8, width int) string {
+	w := if width <= 0 { 1 } else { width }
+	return line_bytes.bytestr().replace('\t', ' '.repeat(w))
+}
+
+fn (m EditorModel) render_line_numbers(mut ctx tea.Context, relative_line_numbers bool, rows []int) int {
+	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+	offset_id := ctx.push_offset(tea.Offset{ x: line_number_gutter_width(rows, m.top_line) })
+
+	// relative numbers count rows, so a closed fold counts as one line, as
+	// it does to j and k
+	cursor_row := screen_row(rows, int(cursor_line)) or { -1 }
+	ctx.set_color(m.config.theme.syntax_comment)
+	for row, y in rows {
+		line_nr := row_number_label(row, cursor_row, y, int(cursor_line), relative_line_numbers)
+		ctx.draw_text(-1 - line_nr.len, row, line_nr)
+	}
+	ctx.reset_color()
+
+	return offset_id
+}
+
+// line_number_gutter_width is how many columns the line numbers of `rows`
+// take, wide enough for the last of them, and a column after it. With no rows,
+// it's as wide as the number of `top_line`, the line the view starts on.
+fn line_number_gutter_width(rows []int, top_line int) int {
+	last := if rows.len > 0 { rows.last() } else { top_line }
+	return num_digits(last + 1) + 1
+}
+
+// row_number_label is the number drawn on row `row`, which shows line `y`.
+// Relative numbers count rows from the cursor's, `cursor_row`, or with the
+// cursor off the view, lines from its line.
+fn row_number_label(row int, cursor_row int, y int, cursor_line int, relative_line_numbers bool) string {
+	if !relative_line_numbers || cursor_row < 0 || row == cursor_row {
+		return resolve_line_number_label(y, cursor_line, relative_line_numbers)
+	}
+	if row < cursor_row {
+		return '${cursor_row - row}'
+	}
+	return '${row - cursor_row}'
+}
+
+fn resolve_line_number_label(y int, cursor_line int, relative_line_numbers bool) string {
+	if !relative_line_numbers || y == cursor_line { return '${y + 1}' }
+	if y < cursor_line { return '${cursor_line - y}' }
+	return '${y - cursor_line}'
+}
+
+fn (mut m EditorModel) render_syntax_highlighting(mut ctx tea.Context, rows []int) {
+	if m.lang_syn.name.len == 0 || rows.len == 0 {
+		return
+	}
+
+	m.sync_parser_state_cache()
+	if m.scope_colours.len == 0 {
+		m.scope_colours = scope_colours(m.config.theme)
+	}
+
+	m.token_parser.reset()
+	mut lines := DrawnLines{}
+	for row, y in rows {
+		// below a closed fold, the lexing picks up from the next line shown
+		if row == 0 || rows[row - 1] != y - 1 {
+			m.ensure_parser_states(y)
+			m.token_parser.reset()
+			if y < m.parser_line_states.len {
+				m.token_parser.set_state(m.parser_line_states[y])
+			}
+		}
+		line := m.drawn_line(mut lines, y)
+		line_tokens := m.token_parser.parse_line_runes(line)
+
+		mut visual_x := 0
+		for t in line_tokens {
+			token_width := runes_visible_width(line[t.start()..t.end()])
+			colour := m.scope_colours[int(t.scope())]
+			if colour.set {
+				ctx.set_color(colour.colour)
+				ctx.draw_rect(visual_x, row, token_width, 1)
+				ctx.reset_color()
+			}
+			visual_x += token_width
+		}
+	}
+
+	m.token_parser.reset()
+}
+
+fn (m EditorModel) render_cursor_line_highlight(mut ctx tea.Context, rows []int) {
+	if !m.in_focus { return }
+	cursor_line, _ := m.doc_controller.cursor_line_and_x(m.doc_id)
+	row := screen_row(rows, int(cursor_line)) or { return }
+	ctx.set_bg_color(m.config.theme.cursor_line_bg)
+	ctx.draw_rect(0, row, m.viewport_width, 1)
+	ctx.reset_bg_color()
+}
+
+fn (m EditorModel) render_cursor_block(mut ctx tea.Context, rows []int) {
+	if !m.in_focus { return }
+	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
+	row := screen_row(rows, int(cursor_line)) or { return }
+	visual_x, cursor_width := m.visual_x_and_cluster_width_for(cursor_line, cursor_col)
+
+	default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
+	ctx.set_bg_color(palette.fg_color(default_bg_color))
+	ctx.set_color(default_bg_color)
+	ctx.draw_rect(visual_x, row, cursor_width, 1)
+	ctx.reset_bg_color()
+	ctx.reset_color()
+}
+
+fn (m EditorModel) render_visual_selection(mut ctx tea.Context, rows []int) {
+	sel_start_line := m.visual_sel_start_line or { return }
+	sel_start_col := m.visual_sel_start_col or { return }
+	cursor_line, cursor_col := m.doc_controller.cursor_line_and_x(m.doc_id)
+
+	mut start_line, mut start_col := sel_start_line, sel_start_col
+	mut end_line, mut end_col := cursor_line, cursor_col
+	if cursor_line < sel_start_line || (cursor_line == sel_start_line && cursor_col < sel_start_col) {
+		start_line, start_col = cursor_line, cursor_col
+		end_line, end_col = sel_start_line, sel_start_col
+	}
+
+	ctx.set_bg_color(m.config.theme.highlight_bg_color)
+	defer { ctx.reset_bg_color() }
+	ctx.set_color(palette.fg_color(m.config.theme.highlight_bg_color)) // set fg color to inverse shade of bg
+	defer { ctx.reset_color() }
+
+	start_visual_x, _ := m.visual_x_and_cluster_width_for(start_line, start_col)
+	end_visual_x, end_cluster_width := m.visual_x_and_cluster_width_for(end_line, end_col)
+
+	for row, y in rows {
+		// a closed fold's row stands for all of its lines
+		last := if f := m.closed_fold_at(y) { f.end } else { y }
+		if last < int(start_line) || y > int(end_line) {
+			continue
+		}
+		if m.visual_linewise {
+			ctx.draw_rect(0, row, m.viewport_width, 1)
+			continue
+		}
+		// from the selection's start on its first line, to its end on its
+		// last, and the whole width between
+		from := if y == int(start_line) { start_visual_x } else { 0 }
+		to := if y == int(end_line) { end_visual_x + end_cluster_width } else { m.viewport_width }
+		ctx.draw_rect(from, row, to - from, 1)
+	}
+}
+
+fn (m EditorModel) visual_x_and_cluster_width_for(line u64, col u64) (int, int) {
+	line_bytes := m.doc_controller.get_line_bytes(m.doc_id, line) or { []u8{} }
+	runes := line_bytes.bytestr().runes()
+	c := int(col) // logical column == grapheme cluster index
+
+	// grapheme-cluster index -> rune prefix length, so visible-width
+	// measurement covers ZWJ sequences and variation selectors as one glyph.
+	prefix_end := rune_index_after_graphemes(runes, c)
+	prefix := runes[..prefix_end].string().replace('\t', ' '.repeat(if m.config.tab_width <= 0 {
+		1
+	} else {
+		m.config.tab_width
+	}))
+	visual_x := utf8_str_visible_length(prefix)
+
+	// width of the cluster at the column (min 1 so the block stays visible)
+	cluster_width := if prefix_end < runes.len {
+		cluster_end := next_grapheme_rune_index(runes, prefix_end)
+		if runes[prefix_end] == `\t` {
+			if m.config.tab_width <= 0 {
+				1
+			} else {
+				m.config.tab_width
+			}
+		} else {
+			w := utf8_str_visible_length(runes[prefix_end..cluster_end].string())
+			if w < 1 {
+				1
+			} else {
+				w
+			}
+		}
+	} else {
+		1
+	}
+
+	return visual_x, cluster_width
+}
+
+fn (m EditorModel) width() int {
+	return m.viewport_width
+}
+
+fn (m EditorModel) height() int {
+	return m.viewport_height
 }
 
 struct EditorData {
-	id            int
+	id            nanoid.ID
 	file_path     string
 	cursor_row    int
 	cursor_col    int
@@ -47,54 +1245,99 @@ struct EditorData {
 	height        int
 }
 
-struct EditorModel {
-	id     int
-	doc_id int
+fn (m EditorModel) data() EditorData {
+	cursor_line, cursor_x := m.doc_controller.cursor_line_and_x(m.doc_id)
+	return EditorData{
+		id:        m.id
+		file_path: m.file_path
 
-	theme     theme.Theme
-	file_path string
-mut:
-	focused          bool
-	show_border      bool = true
-	cursor_underline bool
+		cursor_row: int(cursor_line)
+		cursor_col: int(cursor_x)
 
-	width  int
-	height int
-	min_y  int
+		chord_display: m.chord.display()
 
-	cursor_pos         cursor.Pos
-	doc_controller     &documents.Controller
-	doc_controller2    &documents.Controller2
-	cb                 &clipboard.Manager
-	token_parser       syntax.Parser
-	lang_syn           syntax.Syntax
-	arena              Arena
-	rune_buf           []rune
-	parser_line_states []syntax.State
-	parser_cache_dirty bool = true
-
-	sel_start_pos ?cursor.Pos
-	sel_mode      petal.Mode = .normal // tracks which visual mode (.visual or .visual_line)
-	chord         Chord
-
-	expand_tabs bool
-	tab_width   int
+		width:  m.viewport_width
+		height: m.viewport_height
+	}
 }
 
-struct OpenEditorMsg {
-	file_path string
+fn (m EditorModel) debug_data() DebugData {
+	cursor_line, cursor_x := m.doc_controller.cursor_line_and_x(m.doc_id)
+	return DebugData{
+		name: 'active editor data'
+		data: {
+			'id':         '${m.id}'
+			'doc_id':     '${m.doc_id}'
+			'cursor_row': '${int(cursor_line)}'
+			'cursor_col': '${int(cursor_x)}'
+			'width':      '${m.viewport_width}'
+			'height':     '${m.viewport_height}'
+		}
+	}
 }
 
-fn open_editor(file_path string) tea.Cmd {
-	return tea.msg_cmd(OpenEditorMsg{file_path})
+fn (m EditorModel) clone() tea.Model {
+	return EditorModel{
+		...m
+	}
+}
+
+fn rune_index_after_graphemes(runes []rune, n int) int {
+	mut i := 0
+	mut count := 0
+	for i < runes.len && count < n {
+		i = next_grapheme_rune_index(runes, i)
+		count += 1
+	}
+	return i
+}
+
+fn next_grapheme_rune_index(runes []rune, start int) int {
+	if start >= runes.len {
+		return start
+	}
+	mut i := start + 1
+	for i < runes.len {
+		r := runes[i]
+		if r == rune(0x200D) {
+			// ZWJ glues to the following codepoint
+			i += 1
+			if i < runes.len {
+				i += 1
+			}
+			continue
+		}
+		if is_rune_extender(r) {
+			i += 1
+			continue
+		}
+		break
+	}
+	return i
+}
+
+fn is_rune_extender(r rune) bool {
+	if r >= rune(0x0300) && r <= rune(0x036F) {
+		return true
+	}
+	if r >= rune(0xFE00) && r <= rune(0xFE0F) {
+		return true
+	}
+	return false
+}
+
+struct EditorModelMsg {
+	active_id nanoid.ID
+	msg       tea.Msg
+	mode      petal.Mode
 }
 
 struct QueryEditorDataMsg {}
 
-fn query_editor_data(id int) tea.Cmd {
+fn query_editor_data(id nanoid.ID) tea.Cmd {
 	return tea.msg_cmd(EditorModelMsg{
-		id:  id
-		msg: QueryEditorDataMsg{}
+		active_id: id
+		msg:       QueryEditorDataMsg{}
 	})
 }
 
@@ -106,62 +1349,11 @@ fn editor_data(data EditorData) tea.Cmd {
 	return tea.msg_cmd(EditorDataResultMsg{data})
 }
 
-struct WriteToDiskMsg {}
-
-fn write_to_disk(id int) tea.Cmd {
+fn write_editor_to_disk_cmd(id nanoid.ID) tea.Cmd {
 	return tea.msg_cmd(EditorModelMsg{
-		id:  id
-		msg: WriteToDiskMsg{}
+		active_id: id
+		msg:       WriteToDiskMsg{}
 	})
-}
-
-struct GoToLineMsg {
-	line int
-}
-
-fn goto_line(id int, line int) tea.Cmd {
-	return tea.msg_cmd(EditorModelMsg{
-		id:  id
-		msg: GoToLineMsg{
-			line: line
-		}
-	})
-}
-
-@[params]
-struct EditorModelNewParams {
-	theme           theme.Theme
-	id              int
-	file_path       string
-	doc_id          int
-	doc_controller  &documents.Controller
-	doc_controller2 &documents.Controller2
-	cb              &clipboard.Manager
-	expand_tabs     bool
-	tab_width       int
-}
-
-fn EditorModel.new(opts EditorModelNewParams) EditorModel {
-	assert opts.file_path != ''
-	return EditorModel{
-		id:              opts.id
-		cursor_pos:      cursor.Pos.new(0, 0)
-		file_path:       opts.file_path
-		doc_id:          opts.doc_id
-		theme:           opts.theme
-		doc_controller:  opts.doc_controller
-		doc_controller2: opts.doc_controller2
-		cb:              opts.cb
-		token_parser:    syntax.Parser{}
-		lang_syn:        syntax.noop_syntax
-		expand_tabs:     opts.expand_tabs
-		tab_width:       opts.tab_width
-	}
-}
-
-struct SyntaxLoadedMsg {
-	syn     syntax.Syntax
-	err_msg string
 }
 
 // load_syntax resolves the syntax definition for a path and hands back the
@@ -172,15 +1364,20 @@ struct SyntaxLoadedMsg {
 // a V closure's captured context is pinned for the life of the process. This is
 // called once per file open, alongside reading the file itself, so doing the
 // lookup eagerly costs nothing worth keeping a closure for.
-fn load_syntax(editor_id int, file_path string) tea.Cmd {
+fn load_syntax(editor_id nanoid.ID, file_path string) tea.Cmd {
 	syn, err_msg := resolve_syntax(file_path)
 	return tea.msg_cmd(EditorModelMsg{
-		id:  editor_id
-		msg: SyntaxLoadedMsg{
+		active_id: editor_id
+		msg:       SyntaxLoadedMsg{
 			syn:     syn
 			err_msg: err_msg
 		}
 	})
+}
+
+struct SyntaxLoadedMsg {
+	syn     syntax.Syntax
+	err_msg string
 }
 
 // resolve_syntax returns the syntax for a path and the message to report with
@@ -195,14 +1392,10 @@ fn resolve_syntax(file_path string) (syntax.Syntax, string) {
 	return syn, ''
 }
 
-fn (mut m EditorModel) init() tea.Cmd {
-	return tea.batch(tea.emit_resize(), load_syntax(m.id, m.file_path), query_editor_data(m.id))
-}
+struct WriteToDiskMsg {}
 
-struct EditorModelMsg {
-	id   int
-	msg  tea.Msg
-	mode petal.Mode
+struct GoToLineMsg {
+	line int
 }
 
 struct EditorModelKeyMsg {
@@ -211,1268 +1404,31 @@ struct EditorModelKeyMsg {
 	mode      petal.Mode
 }
 
-fn (mut m EditorModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	mut cmds := []tea.Cmd{}
-
-	if msg is EditorModelKeyMsg && m.focused {
-		match msg.mode {
-			.insert {
-				match msg.key_msg.k_type {
-					.runes {
-						m.invalidate_parser_cache()
-						for cr in msg.key_msg.string().runes_iterator() {
-							m.insert_rune(cr)
-						}
-					}
-					.special {
-						match msg.key_msg.string() {
-							'enter' {
-								m.invalidate_parser_cache()
-								leading_whitespace := m.doc_controller.leading_whitespace_on_current_line(m.doc_id,
-									m.cursor_pos)
-								m.cursor_pos = m.doc_controller.insert_newline(m.doc_id,
-									m.cursor_pos)
-								for cr in leading_whitespace {
-									m.cursor_pos = m.doc_controller.insert_char(m.doc_id,
-										m.cursor_pos, cr)
-								}
-							}
-							'backspace' {
-								m.invalidate_parser_cache()
-								m.cursor_pos = m.doc_controller.backspace(m.doc_id, m.cursor_pos) or {
-									m.cursor_pos
-								}
-							}
-							'delete' {
-								m.invalidate_parser_cache()
-								m.doc_controller.delete(m.doc_id, m.cursor_pos)
-							}
-							'ctrl+i', 'tab' {
-								m.invalidate_parser_cache()
-								if m.expand_tabs {
-									for i := 0; i != m.tab_width; i++ {
-										m.cursor_pos = m.doc_controller.insert_char(m.doc_id,
-											m.cursor_pos, ` `)
-									}
-								} else {
-									m.cursor_pos = m.doc_controller.insert_char(m.doc_id,
-										m.cursor_pos, `\t`)
-								}
-							} // ctrl+i is apparently equiv to TAB
-							'left' {
-								m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id,
-									m.cursor_pos)
-								m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {
-									cmds << raise_error('error: ${err}')
-									m.ensure_cursor_visible()
-									return m.clone(), tea.batch_array(cmds)
-								}
-							}
-							'up' {
-								m.cursor_pos = m.doc_controller.move_cursor_up(m.doc_id,
-									m.cursor_pos, .insert)
-								m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {
-									cmds << raise_error('error: ${err}')
-									m.ensure_cursor_visible()
-									return m.clone(), tea.batch_array(cmds)
-								}
-							}
-							'right' {
-								m.cursor_pos = m.doc_controller.move_cursor_right(m.doc_id,
-									m.cursor_pos, .insert)
-								m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {
-									cmds << raise_error('error: ${err}')
-									m.ensure_cursor_visible()
-									return m.clone(), tea.batch_array(cmds)
-								}
-							}
-							'down' {
-								m.cursor_pos = m.doc_controller.move_cursor_down(m.doc_id,
-									m.cursor_pos, .insert)
-								m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {
-									cmds << raise_error('error: ${err}')
-									m.ensure_cursor_visible()
-									return m.clone(), tea.batch_array(cmds)
-								}
-							}
-							else {}
-						}
-					}
-				}
-			}
-			.visual {
-				match msg.key_msg.k_type {
-					.special {
-						match msg.key_msg.string() {
-							'escape' {
-								cmds << switch_mode(.normal)
-							}
-							'left' {
-								m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id,
-									m.cursor_pos)
-							}
-							'right' {
-								m.cursor_pos = m.doc_controller.move_cursor_right(m.doc_id,
-									m.cursor_pos, .visual)
-							}
-							'up' {
-								m.cursor_pos = m.doc_controller.move_cursor_up(m.doc_id,
-									m.cursor_pos, .visual)
-							}
-							'down' {
-								m.cursor_pos = m.doc_controller.move_cursor_down(m.doc_id,
-									m.cursor_pos, .visual)
-							}
-							else {}
-						}
-					}
-					.runes {
-						match msg.key_msg.string() {
-							'h' {
-								m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id,
-									m.cursor_pos)
-							}
-							'l' {
-								m.cursor_pos = m.doc_controller.move_cursor_right(m.doc_id,
-									m.cursor_pos, .visual)
-							}
-							'k' {
-								m.cursor_pos = m.doc_controller.move_cursor_up(m.doc_id,
-									m.cursor_pos, .visual)
-							}
-							'j' {
-								m.cursor_pos = m.doc_controller.move_cursor_down(m.doc_id,
-									m.cursor_pos, .visual)
-							}
-							'w' {
-								m.cursor_pos = m.doc_controller.move_cursor_to_next_word_start(m.doc_id,
-									m.cursor_pos)
-							}
-							'W' {
-								m.cursor_pos = m.doc_controller.move_cursor_to_next_big_word_start(m.doc_id,
-									m.cursor_pos)
-							}
-							'e' {
-								m.cursor_pos = m.doc_controller.move_cursor_to_next_word_end(m.doc_id,
-									m.cursor_pos)
-							}
-							'b' {
-								m.cursor_pos = m.doc_controller.move_cursor_to_previous_word_start(m.doc_id,
-									m.cursor_pos)
-							}
-							'$' {
-								m.cursor_pos = m.doc_controller.move_cursor_to_line_end(m.doc_id,
-									m.cursor_pos, .normal)
-							}
-							'{' {
-								m.cursor_pos = m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id,
-									m.cursor_pos)
-							}
-							'}' {
-								m.cursor_pos = m.doc_controller.move_cursor_to_next_blank_line(m.doc_id,
-									m.cursor_pos)
-							}
-							'd' {
-								if sel_start := m.sel_start_pos {
-									m.invalidate_parser_cache()
-									m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
-									m.yank_visual_selection(sel_start)
-									m.cursor_pos = m.doc_controller.delete_visual_range(m.doc_id, cursor.Range{
-										start: sel_start
-										end:   m.cursor_pos
-									})
-									m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
-									cmds << switch_mode(.normal)
-								}
-							}
-							'y' {
-								if sel_start := m.sel_start_pos {
-									m.yank_visual_selection(sel_start)
-									cmds << switch_mode(.normal)
-								}
-							}
-							else {}
-						}
-					}
-				}
-			}
-			.visual_line {
-				match msg.key_msg.k_type {
-					.special {
-						match msg.key_msg.string() {
-							'escape' {
-								cmds << switch_mode(.normal)
-							}
-							'up' {
-								m.cursor_pos = m.doc_controller.move_cursor_up(m.doc_id,
-									m.cursor_pos, .visual_line)
-							}
-							'down' {
-								m.cursor_pos = m.doc_controller.move_cursor_down(m.doc_id,
-									m.cursor_pos, .visual_line)
-							}
-							'k' {
-								m.cursor_pos = m.doc_controller.move_cursor_up(m.doc_id,
-									m.cursor_pos, .visual_line)
-							}
-							'j' {
-								m.cursor_pos = m.doc_controller.move_cursor_down(m.doc_id,
-									m.cursor_pos, .visual_line)
-							}
-							else {}
-						}
-					}
-					.runes {
-						match msg.key_msg.string() {
-							'k' {
-								m.cursor_pos = m.doc_controller.move_cursor_up(m.doc_id,
-									m.cursor_pos, .visual_line)
-							}
-							'j' {
-								m.cursor_pos = m.doc_controller.move_cursor_down(m.doc_id,
-									m.cursor_pos, .visual_line)
-							}
-							'{' {
-								m.cursor_pos = m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id,
-									m.cursor_pos)
-							}
-							'}' {
-								m.cursor_pos = m.doc_controller.move_cursor_to_next_blank_line(m.doc_id,
-									m.cursor_pos)
-							}
-							'd' {
-								if sel_start := m.sel_start_pos {
-									m.invalidate_parser_cache()
-									m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
-									m.yank_visual_line_selection(sel_start)
-									m.cursor_pos = m.doc_controller.delete_range(m.doc_id, cursor.Range{
-										start: sel_start
-										end:   m.cursor_pos
-									})
-									m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
-									cmds << switch_mode(.normal)
-								}
-							}
-							'y' {
-								if sel_start := m.sel_start_pos {
-									m.yank_visual_line_selection(sel_start)
-									cmds << switch_mode(.normal)
-								}
-							}
-							else {}
-						}
-					}
-				}
-			}
-			.normal {
-				match msg.key_msg.k_type {
-					.runes {
-						cmds << editor_data(m.data())
-						if action := m.chord.feed(msg.key_msg.string()) {
-							m.execute_action(action, mut cmds)
-						}
-					}
-					.special {
-						match msg.key_msg.string() {
-							'escape' {
-								m.chord.reset()
-								cmds << editor_data(m.data())
-							}
-							'ctrl+u' {
-								half := m.height / 2
-								m.min_y -= half
-								if m.min_y < 0 {
-									m.min_y = 0
-								}
-								target_y := m.min_y + m.height / 4
-								current_y := m.cursor_pos.y
-								if current_y > target_y {
-									m.cursor_pos = m.doc_controller.move_cursor_up_by(m.doc_id,
-										m.cursor_pos, current_y - target_y, .normal)
-								} else {
-									m.cursor_pos = m.doc_controller.move_cursor_down_by(m.doc_id,
-										m.cursor_pos, target_y - current_y, .normal)
-								}
-								m.ensure_cursor_visible()
-							}
-							'ctrl+r' {
-								if pos := m.doc_controller.redo(m.doc_id) {
-									m.invalidate_parser_cache()
-									m.cursor_pos = pos
-								}
-							}
-							'ctrl+d' {
-								half := m.height / 2
-								m.min_y += half
-								target_y := m.min_y + m.height * 3 / 4
-								current_y := m.cursor_pos.y
-								if current_y < target_y {
-									m.cursor_pos = m.doc_controller.move_cursor_down_by(m.doc_id,
-										m.cursor_pos, target_y - current_y, .normal)
-								} else {
-									m.cursor_pos = m.doc_controller.move_cursor_up_by(m.doc_id,
-										m.cursor_pos, current_y - target_y, .normal)
-								}
-								m.ensure_cursor_visible()
-							}
-							'delete' {
-								m.invalidate_parser_cache()
-								m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
-								m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {
-									cmds << raise_error('error: ${err}')
-									m.ensure_cursor_visible()
-									return m.clone(), tea.batch_array(cmds)
-								}
-								m.doc_controller.delete(m.doc_id, m.cursor_pos)
-								m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
-							}
-							'left' {
-								m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id,
-									m.cursor_pos)
-							}
-							'up' {
-								m.cursor_pos = m.doc_controller.move_cursor_up(m.doc_id,
-									m.cursor_pos, .normal)
-							}
-							'right' {
-								m.cursor_pos = m.doc_controller.move_cursor_right(m.doc_id,
-									m.cursor_pos, .normal)
-							}
-							'down' {
-								m.cursor_pos = m.doc_controller.move_cursor_down(m.doc_id,
-									m.cursor_pos, .normal)
-							}
-							else {}
-						}
-					}
-				}
-			}
-			else {}
-		}
-	}
-
-	match msg {
-		tea.ResizedMsg {
-			m.width = msg.window_width
-			m.height = msg.window_height
-		}
-		SwitchModeMsg {
-			if !m.focused {
-				return m.clone(), tea.no_cmd
-			}
-			match msg.mode {
-				.insert {
-					m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {
-						cmds << raise_error('switch mode error: ${err}')
-						return m.clone(), tea.batch_array(cmds)
-					}
-					m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
-				}
-				.normal {
-					// if msg.from != .command && msg.from != .pending_delete && msg.from != .pending_g {
-					if msg.from == .insert {
-						m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
-					}
-					if msg.from == .normal || msg.from == .insert {
-						current_line := m.doc_controller.get_line_at(m.doc_id, m.cursor_pos.y) or {
-							''
-						}
-						if current_line.len > 0 && current_line.trim_space().len == 0 {
-							m.invalidate_parser_cache()
-							m.cursor_pos = m.doc_controller.clear_line(m.doc_id, m.cursor_pos)
-						} else {
-							m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id, m.cursor_pos)
-						}
-					}
-					m.sel_start_pos = ?cursor.Pos(none)
-					m.sel_mode = .normal
-				}
-				.visual {
-					m.sel_start_pos = m.cursor_pos
-					m.sel_mode = .visual
-				}
-				.visual_line {
-					m.sel_start_pos = m.cursor_pos
-					m.sel_mode = .visual_line
-				}
-				else {}
-			}
-		}
-		EditorModelMsg {
-			match msg.msg {
-				tea.FocusedMsg {
-					m.focused = msg.id == m.id
-				}
-				tea.BlurredMsg {
-					if msg.id == m.id {
-						m.focused = false
-					}
-				}
-				QueryEditorDataMsg {
-					if msg.id == m.id {
-						cmds << editor_data(m.data())
-					}
-				}
-				WriteToDiskMsg {
-					if msg.id == m.id {
-						m.doc_controller.write_document(m.doc_id) or {
-							cmds << raise_error('failed to write to disk')
-							m.ensure_cursor_visible()
-							return m.clone(), tea.batch_array(cmds)
-						}
-						message_text := 'written to disk successfully'
-						cmds << tea.sequence(debug_log(message_text), display_message(.normal,
-							message_text))
-					}
-					m.ensure_cursor_visible()
-					return m.clone(), tea.batch_array(cmds)
-				}
-				GoToLineMsg {
-					if msg.id == m.id {
-						m.goto_line(msg.msg.line)
-					}
-				}
-				SyntaxLoadedMsg {
-					if msg.id == m.id {
-						m.lang_syn = msg.msg.syn
-						m.token_parser.set_syntax(m.lang_syn)
-						m.invalidate_parser_cache()
-						if msg.msg.err_msg.len > 0 {
-							cmds << debug_log(msg.msg.err_msg)
-						}
-					}
-				}
-				else {}
-			}
-		}
-		ToggleEditorShowBorderMsg {
-			if msg.id == m.id {
-				m.show_border = msg.show
-			} else {
-				if msg.show == false {
-					m.show_border = true
-				}
-			}
-		}
-		else {}
-	}
-
-	m.ensure_cursor_visible()
-	return m.clone(), tea.batch_array(cmds)
+struct SwitchModeMsg {
+	from petal.Mode
+	mode petal.Mode
 }
 
-fn (mut m EditorModel) insert_rune(cr rune) {
-	if m.lang_syn.name.len > 0 {
-		closing := match cr {
-			`(` { `)` }
-			`{` { `}` }
-			`'` { `'` }
-			`"` { `"` }
-			96 { rune(96) }
-			else { rune(0) }
-		}
-
-		if closing != 0 {
-			m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
-			m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, closing)
-			m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id, m.cursor_pos)
-			m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {}
-			return
-		}
-	}
-	m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
+fn switch_mode(mode petal.Mode) tea.Cmd {
+	return tea.msg_cmd(SwitchModeMsg{
+		mode: mode
+	})
 }
 
-const active_editor_border_color = palette.petal_pink_color
-const inactive_editor_border_color = palette.status_dark_lilac
-
-fn (mut m EditorModel) view(mut ctx tea.Context) {
-	ctx.set_clip_area(tea.ClipArea{0, 0, m.width, m.height})
-	defer { ctx.clear_clip_area() }
-
-	if m.show_border {
-		border_color := if m.focused {
-			active_editor_border_color
-		} else {
-			inactive_editor_border_color
-		}
-		ctx.set_color(border_color)
-		for y in 0 .. m.height {
-			ctx.draw_text(0, y, '│')
-		}
-		ctx.reset_color()
-		ctx.push_offset(tea.Offset{ x: 1 })
-	}
-
-	if m.arena.buf == unsafe { nil } {
-		m.arena = Arena.new(512 * 1024)
-	}
-	m.arena.reset()
-	m.token_parser.reset()
-
-	// rebuild parser state cache when document content has changed
-	if m.parser_cache_dirty {
-		m.rebuild_parser_state_cache()
-	}
-
-	// compute fixed gutter width based on the largest visible line number (1-based)
-	max_line_nr := m.min_y + m.height
-	gutter_width := num_digits(max_line_nr) + 1 // +1 for padding after the number
-
-	// push gutter offset so selections, cursor highlight, and cursor are all shifted right
-	ctx.push_offset(tea.Offset{ x: gutter_width })
-
-	cursor_vpos := m.doc_controller.visual_pos_for(m.doc_id, m.cursor_pos, m.tab_width)
-	if sel_start := m.sel_start_pos {
-		if m.sel_mode == .visual {
-			sel_start_vpos := m.doc_controller.visual_pos_for(m.doc_id, sel_start, m.tab_width)
-			m.render_visual_selection(mut ctx, sel_start_vpos, cursor_vpos)
-		} else {
-			m.render_visual_line_selection(mut ctx, sel_start.y, cursor_vpos.y)
-		}
-	} else {
-		m.render_cursor_line_highlight(mut ctx, cursor_vpos.y)
-	}
-
-	// restore cached parser state at viewport start instead of rescanning from line 0
-	if m.min_y < m.parser_line_states.len {
-		m.token_parser.set_state(m.parser_line_states[m.min_y])
-	}
-
-	for y, l in m.doc_controller.get_iterator(m.doc_id) {
-		if y < m.min_y {
-			continue // skip entirely — parser state is restored from cache
-		}
-		if y >= m.min_y + m.height {
-			break // past visible region, nothing more to render
-		}
-		// draw right-aligned line number in the gutter area (negative x to draw before the offset)
-		line_nr := '${y + 1}'
-		ctx.set_color(m.theme.syntax_comment)
-		ctx.draw_text(-1 - line_nr.len, y - m.min_y, line_nr)
-		ctx.reset_color()
-		offset_id := ctx.push_offset(tea.Offset{ x: 0 })
-		defer { ctx.clear_offsets_from(offset_id) }
-		line_str := l.string()
-		line_content := m.arena.expand_tabs(line_str, m.tab_width)
-		line_tokens := m.token_parser.parse_line(line_content)
-		// fill reusable rune buffer instead of allocating via .runes()
-		m.rune_buf.clear()
-		for r in line_content.runes_iterator() {
-			m.rune_buf << r
-		}
-		for i, t in line_tokens {
-			token_str := m.arena.runes_to_str(m.rune_buf, t.start(), t.end())
-			if m.lang_syn.name.len > 0 {
-				match t.t_type() {
-					.comment {
-						ctx.set_color(m.theme.syntax_comment)
-					}
-					.string {
-						ctx.set_color(m.theme.syntax_string)
-					}
-					.number {
-						ctx.set_color(tea.Color.ansi(199))
-					}
-					else {
-						match true {
-							token_str in m.lang_syn.keywords {
-								ctx.set_color(m.theme.petal_red)
-							}
-							token_str in m.lang_syn.literals {
-								ctx.set_color(m.theme.syntax_literal)
-							}
-							token_str in m.lang_syn.builtins {
-								ctx.set_color(m.theme.syntax_builtin)
-							}
-							else {}
-						}
-
-						prev_token := if i - 1 >= 0 {
-							?syntax.Token(line_tokens[i - 1])
-						} else {
-							?syntax.Token(none)
-						}
-						next_token := if i + 1 < line_tokens.len {
-							?syntax.Token(line_tokens[i + 1])
-						} else {
-							?syntax.Token(none)
-						}
-
-						if pt := prev_token {
-							if pt.t_type() != .whitespace && pt.end() - pt.start() == 1
-								&& m.rune_buf[pt.start()] == `_` {
-								ctx.reset_color()
-							}
-						} else {
-							if nt := next_token {
-								if nt.t_type() != .whitespace && nt.end() - nt.start() == 1
-									&& m.rune_buf[nt.start()] == `_` {
-									ctx.reset_color()
-								}
-							}
-						}
-					}
-				}
-			}
-			ctx.draw_text(0, y - m.min_y, token_str)
-			ctx.push_offset(tea.Offset{ x: utf8_str_visible_length(token_str) })
-			ctx.reset_color()
-		}
-	}
-
-	if m.focused {
-		m.render_cursor(mut ctx)
-	}
+fn raise_error(error string) tea.Cmd {
+	return tea.sequence(display_message(.error, error), error_log(error),
+		hide_message_after(6 * time.second))
 }
 
-fn (m EditorModel) render_cursor_line_highlight(mut ctx tea.Context, cursor_pos_y int) {
-	ctx.set_bg_color(m.theme.cursor_line_bg)
-	defer { ctx.reset_bg_color() }
-	ctx.draw_rect(0, cursor_pos_y - m.min_y, m.width, 1)
-}
-
-fn (m EditorModel) render_visual_line_selection(mut ctx tea.Context, sel_start_y int, cursor_y int) {
-	start_y := if sel_start_y < cursor_y { sel_start_y } else { cursor_y }
-	end_y := if sel_start_y > cursor_y { sel_start_y } else { cursor_y }
-	ctx.set_bg_color(m.theme.highlight_bg_color)
-	defer { ctx.reset_bg_color() }
-	for y in start_y .. end_y + 1 {
-		screen_y := y - m.min_y
-		if screen_y >= 0 && screen_y < m.height {
-			ctx.draw_rect(0, screen_y, m.width, 1)
-		}
+fn num_digits(n int) int {
+	if n <= 0 {
+		return 1
 	}
-}
-
-fn (m EditorModel) render_visual_selection(mut ctx tea.Context, sel_start cursor.Pos, cursor_pos cursor.Pos) {
-	// Normalize so start is before end
-	start := if sel_start.y < cursor_pos.y
-		|| (sel_start.y == cursor_pos.y && sel_start.x <= cursor_pos.x) {
-		sel_start
-	} else {
-		cursor_pos
+	mut count := 0
+	mut v := n
+	for v > 0 {
+		count++
+		v /= 10
 	}
-	end := if sel_start.y < cursor_pos.y
-		|| (sel_start.y == cursor_pos.y && sel_start.x <= cursor_pos.x) {
-		cursor_pos
-	} else {
-		sel_start
-	}
-
-	ctx.set_bg_color(m.theme.highlight_bg_color)
-	defer { ctx.reset_bg_color() }
-
-	if start.y == end.y {
-		// Single line selection
-		screen_y := start.y - m.min_y
-		if screen_y >= 0 && screen_y < m.height {
-			ctx.draw_rect(start.x, screen_y, end.x - start.x + 1, 1)
-		}
-	} else {
-		// Multi-line selection
-		// First line: from start.x to end of line
-		screen_y := start.y - m.min_y
-		if screen_y >= 0 && screen_y < m.height {
-			ctx.draw_rect(start.x, screen_y, m.width - start.x, 1)
-		}
-		// Middle lines: full width
-		for y in start.y + 1 .. end.y {
-			sy := y - m.min_y
-			if sy >= 0 && sy < m.height {
-				ctx.draw_rect(0, sy, m.width, 1)
-			}
-		}
-		// Last line: from start to end.x
-		last_sy := end.y - m.min_y
-		if last_sy >= 0 && last_sy < m.height {
-			ctx.draw_rect(0, last_sy, end.x + 1, 1)
-		}
-	}
-}
-
-fn (m EditorModel) render_cursor(mut ctx tea.Context) {
-	cursor_pos := m.doc_controller.visual_pos_for(m.doc_id, m.cursor_pos, m.tab_width)
-	char_at :=
-		m.doc_controller.get_char_at(m.doc_id, m.cursor_pos) or { ' ' }.expand_tabs(m.tab_width)
-	if m.cursor_underline {
-		default_fg_color := ctx.get_default_fg_color() or { palette.matte_white_fg_color }
-		ctx.set_color(default_fg_color)
-		ctx.set_style(.underline)
-		ctx.draw_text(cursor_pos.x, cursor_pos.y - m.min_y, char_at)
-		ctx.clear_style()
-		ctx.reset_color()
-	} else {
-		// basically we want the block cursor to be the inverse of the background shade
-		// and then the text/fg color to be the inverse of that/the same as background
-		default_bg_color := ctx.get_default_bg_color() or { palette.matte_black_bg_color }
-		ctx.set_bg_color(palette.fg_color(default_bg_color))
-		ctx.set_color(default_bg_color)
-		ctx.draw_text(cursor_pos.x, cursor_pos.y - m.min_y, char_at)
-		ctx.reset_bg_color()
-		ctx.reset_color()
-	}
-}
-
-fn (mut m EditorModel) rebuild_parser_state_cache() {
-	m.parser_line_states.clear()
-	m.token_parser.reset()
-	for _, l in m.doc_controller.get_iterator(m.doc_id) {
-		m.parser_line_states << m.token_parser.current_state()
-		m.token_parser.advance_state_runes(l)
-	}
-	m.parser_cache_dirty = false
-	m.token_parser.reset()
-}
-
-fn (mut m EditorModel) invalidate_parser_cache() {
-	m.parser_cache_dirty = true
-}
-
-fn (mut m EditorModel) ensure_cursor_visible() {
-	if m.height <= 0 {
-		return
-	}
-	if m.cursor_pos.y < m.min_y {
-		m.min_y = m.cursor_pos.y
-	} else if m.cursor_pos.y >= m.min_y + m.height {
-		m.min_y = m.cursor_pos.y - m.height + 1
-	}
-}
-
-fn (mut m EditorModel) goto_line(line int) {
-	line_count := m.doc_controller.line_count(m.doc_id)
-	if line_count == 0 {
-		m.cursor_pos = cursor.Pos.new(0, 0)
-		m.min_y = 0
-		return
-	}
-	mut target := line - 1
-	if target < 0 {
-		target = 0
-	} else if target >= line_count {
-		target = line_count - 1
-	}
-	current := m.cursor_pos.y
-	if target > current {
-		m.cursor_pos = m.doc_controller.move_cursor_down_by(m.doc_id, m.cursor_pos,
-			target - current, .normal)
-	} else if target < current {
-		m.cursor_pos = m.doc_controller.move_cursor_up_by(m.doc_id, m.cursor_pos, current - target,
-			.normal)
-	}
-	m.center_cursor_line()
-}
-
-fn (mut m EditorModel) center_cursor_line() {
-	if m.height <= 0 {
-		m.min_y = if m.cursor_pos.y > 0 { m.cursor_pos.y } else { 0 }
-		return
-	}
-	line_count := m.doc_controller.line_count(m.doc_id)
-	mut new_min := m.cursor_pos.y - m.height / 2
-	if new_min < 0 {
-		new_min = 0
-	}
-	max_top := if line_count > m.height { line_count - m.height } else { 0 }
-	if new_min > max_top {
-		new_min = max_top
-	}
-	m.min_y = new_min
-}
-
-fn (mut m EditorModel) execute_action(action ChordAction, mut cmds []tea.Cmd) {
-	count := action.count
-
-	if op := action.operator {
-		match op {
-			`d` {
-				m.invalidate_parser_cache()
-				match action.motion {
-					'line' {
-						m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
-						m.yank_lines(count)
-						for _ in 0 .. count {
-							m.cursor_pos = m.doc_controller.delete_line(m.doc_id, m.cursor_pos)
-						}
-						m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
-					}
-					'w' {
-						// TODO(tauraamui)
-						// delete word N times
-					}
-					else {}
-				}
-			}
-			`y` {
-				match action.motion {
-					'line' {
-						m.yank_lines(count)
-					}
-					else {}
-				}
-			}
-			else {}
-		}
-	} else {
-		// pure motion - no operator
-		match action.motion {
-			'u' {
-				for _ in 0 .. count {
-					if pos := m.doc_controller.undo(m.doc_id) {
-						m.invalidate_parser_cache()
-						m.cursor_pos = pos
-					}
-				}
-			}
-			'o' {
-				m.invalidate_parser_cache()
-				m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
-				m.cursor_pos = m.doc_controller.move_cursor_to_line_end(m.doc_id, m.cursor_pos,
-					.insert)
-				m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or {
-					cmds << raise_error('error: ${err}')
-					m.ensure_cursor_visible()
-					return
-				}
-				leading_whitespace := m.doc_controller.leading_whitespace_on_current_line(m.doc_id,
-					m.cursor_pos)
-				m.cursor_pos = m.doc_controller.insert_newline(m.doc_id, m.cursor_pos)
-				for cr in leading_whitespace {
-					m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
-				}
-				m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
-				cmds << switch_mode(.insert)
-				m.ensure_cursor_visible()
-			}
-			'w' {
-				for _ in 0 .. count {
-					m.cursor_pos = m.doc_controller.move_cursor_to_next_word_start(m.doc_id,
-						m.cursor_pos)
-				}
-			}
-			'W' {
-				for _ in 0 .. count {
-					m.cursor_pos = m.doc_controller.move_cursor_to_next_big_word_start(m.doc_id,
-						m.cursor_pos)
-				}
-			}
-			'e' {
-				for _ in 0 .. count {
-					m.cursor_pos = m.doc_controller.move_cursor_to_next_word_end(m.doc_id,
-						m.cursor_pos)
-				}
-			}
-			'b' {
-				for _ in 0 .. count {
-					m.cursor_pos = m.doc_controller.move_cursor_to_previous_word_start(m.doc_id,
-						m.cursor_pos)
-				}
-			}
-			'ge' {
-				for _ in 0 .. count {
-					m.cursor_pos = m.doc_controller.move_cursor_to_previous_word_end(m.doc_id,
-						m.cursor_pos)
-				}
-			}
-			'h' {
-				for _ in 0 .. count {
-					m.cursor_pos = m.doc_controller.move_cursor_left(m.doc_id, m.cursor_pos)
-				}
-			}
-			'j' {
-				m.cursor_pos = m.doc_controller.move_cursor_down_by(m.doc_id, m.cursor_pos, count,
-					.normal)
-			}
-			'k' {
-				m.cursor_pos = m.doc_controller.move_cursor_up_by(m.doc_id, m.cursor_pos, count,
-					.normal)
-			}
-			'l' {
-				m.cursor_pos = m.doc_controller.move_cursor_right(m.doc_id, m.cursor_pos, .normal)
-			}
-			'$' {
-				m.cursor_pos = m.doc_controller.move_cursor_to_line_end(m.doc_id, m.cursor_pos,
-					.normal)
-			}
-			'0' {
-				m.cursor_pos = m.doc_controller.move_cursor_to_line_start(m.doc_id, m.cursor_pos)
-			}
-			'^' {
-				m.cursor_pos = m.doc_controller.move_cursor_to_text_start(m.doc_id, m.cursor_pos)
-			}
-			'I' {
-				m.cursor_pos = m.doc_controller.move_cursor_to_text_start(m.doc_id, m.cursor_pos)
-				cmds << switch_mode(.insert)
-			}
-			'A' {
-				m.cursor_pos = m.doc_controller.move_cursor_to_line_end(m.doc_id, m.cursor_pos,
-					.insert)
-				cmds << switch_mode(.insert)
-			}
-			'{' {
-				for _ in 0 .. count {
-					m.cursor_pos = m.doc_controller.move_cursor_to_previous_blank_line(m.doc_id,
-						m.cursor_pos)
-				}
-			}
-			'}' {
-				for _ in 0 .. count {
-					m.cursor_pos = m.doc_controller.move_cursor_to_next_blank_line(m.doc_id,
-						m.cursor_pos)
-				}
-			}
-			'x' {
-				m.invalidate_parser_cache()
-				m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
-				for _ in 0 .. count {
-					m.doc_controller.delete_char_at(m.doc_id, m.cursor_pos)
-				}
-				m.cursor_pos = m.doc_controller.clamp_cursor_within_line(m.doc_id, m.cursor_pos)
-				m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
-			}
-			'gg' {
-				target := if action.count > 1 { action.count - 1 } else { 0 }
-				current_y := m.cursor_pos.y
-				if current_y > target {
-					m.cursor_pos = m.doc_controller.move_cursor_up_by(m.doc_id, m.cursor_pos,
-						current_y - target, .normal)
-				} else if current_y < target {
-					m.cursor_pos = m.doc_controller.move_cursor_down_by(m.doc_id, m.cursor_pos,
-						target - current_y, .normal)
-				}
-			}
-			'zz' {
-				if action.count > 1 {
-					m.goto_line(action.count)
-				} else {
-					m.center_cursor_line()
-				}
-			}
-			'G' {
-				current_y := m.cursor_pos.y
-				last_line := m.doc_controller.line_count(m.doc_id) - 1
-				if current_y < last_line {
-					m.cursor_pos = m.doc_controller.move_cursor_down_by(m.doc_id, m.cursor_pos,
-						last_line - current_y, .normal)
-				}
-			}
-			'v' {
-				cmds << switch_mode(.visual)
-			}
-			'V' {
-				cmds << switch_mode(.visual_line)
-			}
-			'p' {
-				m.invalidate_parser_cache()
-				m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
-				m.paste_after()
-				m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
-			}
-			'P' {
-				m.invalidate_parser_cache()
-				m.doc_controller.begin_undo_group(m.doc_id, m.cursor_pos)
-				m.paste_before()
-				m.doc_controller.commit_undo_group(m.doc_id, m.cursor_pos)
-			}
-			else {}
-		}
-	}
-}
-
-fn (mut m EditorModel) yank_visual_line_selection(sel_start cursor.Pos) {
-	current_pos := m.cursor_pos
-	start_y := if sel_start.y < current_pos.y { sel_start.y } else { current_pos.y }
-	end_y := if sel_start.y > current_pos.y { sel_start.y } else { current_pos.y }
-	mut lines := []string{}
-	for y in start_y .. end_y + 1 {
-		if line := m.doc_controller.get_line_at(m.doc_id, y) {
-			lines << line
-		}
-	}
-	if lines.len > 0 {
-		m.cb.set_content(clipboard.ClipboardContent{
-			data:  lines.join('\n')
-			@type: .block
-		})
-	}
-}
-
-fn (mut m EditorModel) yank_visual_selection(sel_start cursor.Pos) {
-	current_pos := m.cursor_pos
-	// Normalize so start is before end
-	start := if sel_start.y < current_pos.y
-		|| (sel_start.y == current_pos.y && sel_start.x <= current_pos.x) {
-		sel_start
-	} else {
-		current_pos
-	}
-	end := if sel_start.y < current_pos.y
-		|| (sel_start.y == current_pos.y && sel_start.x <= current_pos.x) {
-		current_pos
-	} else {
-		sel_start
-	}
-
-	if start.y == end.y {
-		// Single line: extract substring
-		if line := m.doc_controller.get_line_at(m.doc_id, start.y) {
-			runes := line.runes()
-			end_x := if end.x < runes.len { end.x } else { runes.len - 1 }
-			if start.x <= end_x {
-				m.cb.set_content(clipboard.ClipboardContent{
-					data:  runes[start.x..end_x + 1].string()
-					@type: .inline
-				})
-			}
-		}
-	} else {
-		// Multi-line: rest of first line + middle lines + start of last line
-		mut parts := []string{}
-		if first_line := m.doc_controller.get_line_at(m.doc_id, start.y) {
-			runes := first_line.runes()
-			parts << runes[start.x..].string()
-		}
-		for y in start.y + 1 .. end.y {
-			if mid_line := m.doc_controller.get_line_at(m.doc_id, y) {
-				parts << mid_line
-			}
-		}
-		if last_line := m.doc_controller.get_line_at(m.doc_id, end.y) {
-			runes := last_line.runes()
-			end_x := if end.x < runes.len { end.x } else { runes.len - 1 }
-			parts << runes[..end_x + 1].string()
-		}
-		if parts.len > 0 {
-			m.cb.set_content(clipboard.ClipboardContent{
-				data:  parts.join('\n')
-				@type: .inline
-			})
-		}
-	}
-}
-
-fn (mut m EditorModel) yank_lines(count int) {
-	cursor_pos := m.cursor_pos
-	mut lines := []string{}
-	for i in 0 .. count {
-		if line := m.doc_controller.get_line_at(m.doc_id, cursor_pos.y + i) {
-			lines << line
-		}
-	}
-	if lines.len > 0 {
-		m.cb.set_content(clipboard.ClipboardContent{
-			data:  lines.join('\n')
-			@type: .block
-		})
-	}
-}
-
-fn (mut m EditorModel) paste_after() {
-	content := m.cb.get_content() or { return }
-	if content.data.len == 0 {
-		return
-	}
-
-	match content.@type {
-		.block {
-			// Block paste: insert as new lines below current line
-			m.cursor_pos = m.doc_controller.move_cursor_to_line_end(m.doc_id, m.cursor_pos, .insert)
-			m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or { return }
-			for line in content.data.split('\n') {
-				m.cursor_pos = m.doc_controller.insert_newline(m.doc_id, m.cursor_pos)
-				for cr in line.runes() {
-					m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
-				}
-			}
-			// Move cursor to start of first pasted line
-			m.cursor_pos = m.doc_controller.move_cursor_down_by(m.doc_id, m.cursor_pos, 1, .normal)
-		}
-		.inline {
-			// Inline paste: insert text after cursor
-			m.cursor_pos = m.doc_controller.move_cursor_right(m.doc_id, m.cursor_pos, .insert)
-			start_pos := m.cursor_pos
-			m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or { return }
-			mut newline_count := 0
-			mut last_line_char_count := 0
-			for cr in content.data.runes() {
-				if cr == `\n` {
-					m.cursor_pos = m.doc_controller.insert_newline(m.doc_id, m.cursor_pos)
-					newline_count += 1
-					last_line_char_count = 0
-				} else {
-					m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
-					last_line_char_count += 1
-				}
-			}
-			// Reposition cursor on last character of pasted text
-			if newline_count > 0 {
-				final_x := if last_line_char_count > 0 { last_line_char_count - 1 } else { 0 }
-				final_y := start_pos.y + newline_count
-				m.cursor_pos = cursor.Pos.new(final_x, final_y)
-			} else if last_line_char_count > 0 {
-				// Single-line paste: cursor on last pasted character
-				final_x := start_pos.x + last_line_char_count - 1
-				m.cursor_pos = cursor.Pos.new(final_x, start_pos.y)
-			}
-		}
-		.none {
-			// Treat unknown as inline
-			m.cursor_pos = m.doc_controller.move_cursor_right(m.doc_id, m.cursor_pos, .insert)
-			start_pos := m.cursor_pos
-			m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or { return }
-			mut newline_count := 0
-			mut last_line_char_count := 0
-			for cr in content.data.runes() {
-				if cr == `\n` {
-					m.cursor_pos = m.doc_controller.insert_newline(m.doc_id, m.cursor_pos)
-					newline_count += 1
-					last_line_char_count = 0
-				} else {
-					m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
-					last_line_char_count += 1
-				}
-			}
-			// Reposition cursor on last character of pasted text
-			if newline_count > 0 {
-				final_x := if last_line_char_count > 0 { last_line_char_count - 1 } else { 0 }
-				final_y := start_pos.y + newline_count
-				m.cursor_pos = cursor.Pos.new(final_x, final_y)
-			} else if last_line_char_count > 0 {
-				final_x := start_pos.x + last_line_char_count - 1
-				m.cursor_pos = cursor.Pos.new(final_x, start_pos.y)
-			}
-		}
-	}
-}
-
-fn (mut m EditorModel) paste_before() {
-	content := m.cb.get_content() or { return }
-	if content.data.len == 0 {
-		return
-	}
-
-	match content.@type {
-		.block {
-			// Block paste: insert as new lines above current line
-			if m.cursor_pos.y == 0 {
-				// At first line: insert newline then move content up
-				m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or { return }
-				// Move to start of first line, insert content then a newline
-				for line in content.data.split('\n') {
-					for cr in line.runes() {
-						m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
-					}
-					m.cursor_pos = m.doc_controller.insert_newline(m.doc_id, m.cursor_pos)
-				}
-				// Move cursor back to start of first pasted line
-				m.cursor_pos = m.doc_controller.move_cursor_up_by(m.doc_id, m.cursor_pos,
-					content.data.split('\n').len, .normal)
-			} else {
-				// Move to end of previous line and insert new lines
-				m.cursor_pos = m.doc_controller.move_cursor_up(m.doc_id, m.cursor_pos, .normal)
-				m.cursor_pos = m.doc_controller.move_cursor_to_line_end(m.doc_id, m.cursor_pos,
-					.insert)
-				m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or { return }
-				for line in content.data.split('\n') {
-					m.cursor_pos = m.doc_controller.insert_newline(m.doc_id, m.cursor_pos)
-					for cr in line.runes() {
-						m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
-					}
-				}
-				// Move cursor to start of first pasted line
-				m.cursor_pos = m.doc_controller.move_cursor_up_by(m.doc_id, m.cursor_pos,
-					content.data.split('\n').len - 1, .normal)
-			}
-		}
-		.inline {
-			// Inline paste: insert text before cursor
-			start_pos := m.cursor_pos
-			m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or { return }
-			mut newline_count := 0
-			mut last_line_char_count := 0
-			for cr in content.data.runes() {
-				if cr == `\n` {
-					m.cursor_pos = m.doc_controller.insert_newline(m.doc_id, m.cursor_pos)
-					newline_count += 1
-					last_line_char_count = 0
-				} else {
-					m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
-					last_line_char_count += 1
-				}
-			}
-			// Reposition cursor on last character of pasted text
-			if newline_count > 0 {
-				final_x := if last_line_char_count > 0 { last_line_char_count - 1 } else { 0 }
-				final_y := start_pos.y + newline_count
-				m.cursor_pos = cursor.Pos.new(final_x, final_y)
-			} else if last_line_char_count > 0 {
-				final_x := start_pos.x + last_line_char_count - 1
-				m.cursor_pos = cursor.Pos.new(final_x, start_pos.y)
-			}
-		}
-		.none {
-			start_pos := m.cursor_pos
-			m.doc_controller.prepare_for_insertion_at(m.doc_id, m.cursor_pos) or { return }
-			mut newline_count := 0
-			mut last_line_char_count := 0
-			for cr in content.data.runes() {
-				if cr == `\n` {
-					m.cursor_pos = m.doc_controller.insert_newline(m.doc_id, m.cursor_pos)
-					newline_count += 1
-					last_line_char_count = 0
-				} else {
-					m.cursor_pos = m.doc_controller.insert_char(m.doc_id, m.cursor_pos, cr)
-					last_line_char_count += 1
-				}
-			}
-			if newline_count > 0 {
-				final_x := if last_line_char_count > 0 { last_line_char_count - 1 } else { 0 }
-				final_y := start_pos.y + newline_count
-				m.cursor_pos = cursor.Pos.new(final_x, final_y)
-			} else if last_line_char_count > 0 {
-				final_x := start_pos.x + last_line_char_count - 1
-				m.cursor_pos = cursor.Pos.new(final_x, start_pos.y)
-			}
-		}
-	}
-}
-
-fn (m EditorModel) debug_data() DebugData {
-	return DebugData{
-		name: 'active editor data'
-		data: {
-			'id':         '${m.id}'
-			'file path':  m.file_path
-			'cursor_row': '${m.cursor_pos.y}'
-			'cursor_col': '${m.cursor_pos.x}'
-		}
-	}
-}
-
-fn (m EditorModel) data() EditorData {
-	return EditorData{
-		id:        m.id
-		file_path: m.file_path
-
-		cursor_row: m.cursor_pos.y
-		cursor_col: m.cursor_pos.x
-
-		chord_display: m.chord.display()
-	}
-}
-
-fn (m EditorModel) width() int {
-	return m.width
-}
-
-fn (m EditorModel) height() int {
-	return m.height
-}
-
-fn (m EditorModel) clone() tea.Model {
-	assert m.file_path.len != 0
-	return EditorModel{
-		...m
-	}
+	return count
 }

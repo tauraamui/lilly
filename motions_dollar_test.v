@@ -29,7 +29,7 @@ fn test_apply_motion_dollar_moves_to_last_char_of_line() {
 	file_path := make_dollar_test_file('basic', 'hello\nworld')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
 	assert apply_motion(&c, doc_id, '$', 1)
@@ -42,7 +42,7 @@ fn test_apply_motion_dollar_on_empty_line_stays_put() {
 	file_path := make_dollar_test_file('empty_line', '\nworld')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
 	assert apply_motion(&c, doc_id, '$', 1)
@@ -55,7 +55,7 @@ fn test_apply_motion_dollar_with_count_moves_down_first() {
 	file_path := make_dollar_test_file('count', 'aa\nbbbb\nc')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
 	// 3$ == go down 2 lines, then to the end of THAT line, not
@@ -70,7 +70,7 @@ fn test_apply_motion_dollar_with_count_clamps_at_last_line() {
 	file_path := make_dollar_test_file('clamp', 'aa\nbbbb')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
 	assert apply_motion(&c, doc_id, '$', 10)
@@ -83,7 +83,7 @@ fn test_motion_range_dollar_is_inclusive() {
 	file_path := make_dollar_test_file('range', 'hello')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
 	r := motion_range(&c, doc_id, '$', 1) or { panic('expected a range') }
@@ -95,7 +95,7 @@ fn test_apply_operator_d_dollar_deletes_through_last_char() {
 	file_path := make_dollar_test_file('delete', 'hello\nworld')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
 	r := motion_range(&c, doc_id, '$', 1) or { panic('expected a range') }
@@ -109,7 +109,7 @@ fn test_apply_operator_d_dollar_on_empty_line_is_noop() {
 	file_path := make_dollar_test_file('delete_empty', '\nworld')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
 	r := motion_range(&c, doc_id, '$', 1) or { panic('expected a range') }

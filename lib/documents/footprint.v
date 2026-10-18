@@ -32,9 +32,9 @@ pub fn (f Footprint) total() u64 {
 	return f.text_bytes + f.line_index_bytes + f.history_bytes
 }
 
-// footprint walks the v2 documents, whose content and undo history both live
+// footprint walks the documents, whose content and undo history both live
 // in the text buffer.
-pub fn (c Controller2) footprint() Footprint {
+pub fn (c Controller) footprint() Footprint {
 	mut acc := buffers.Footprint{}
 	for _, doc in c.docs {
 		acc = acc + doc.footprint()
@@ -46,41 +46,4 @@ pub fn (c Controller2) footprint() Footprint {
 		history_bytes:    acc.history_bytes
 		history_groups:   acc.history_groups
 	}
-}
-
-// footprint walks the v1 documents, whose undo history is held by the
-// controller alongside the document rather than inside it.
-pub fn (c Controller) footprint() Footprint {
-	mut text_bytes := u64(0)
-	for _, doc in c.docs {
-		text_bytes += doc.data.footprint_bytes()
-	}
-	mut history_bytes := u64(0)
-	mut history_groups := 0
-	for _, um in c.undo_managers {
-		history_bytes += um.footprint_bytes()
-		history_groups += um.undo_stack.len + um.redo_stack.len
-	}
-	return Footprint{
-		doc_count:      c.docs.len
-		text_bytes:     text_bytes
-		history_bytes:  history_bytes
-		history_groups: history_groups
-	}
-}
-
-fn (um UndoManager) footprint_bytes() u64 {
-	mut total := u64(0)
-	for e in um.undo_stack {
-		total += e.footprint_bytes()
-	}
-	for e in um.redo_stack {
-		total += e.footprint_bytes()
-	}
-	total += u64(um.pending_content.cap) * sizeof(rune)
-	return total
-}
-
-fn (e UndoEntry) footprint_bytes() u64 {
-	return (u64(e.deleted.cap) + u64(e.inserted.cap)) * sizeof(rune)
 }

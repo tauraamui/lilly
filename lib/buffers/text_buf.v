@@ -24,30 +24,30 @@ const newline_hex = 0x0A
 const space_hex = 0x20
 const tab_hex = 0x09
 
-enum OpKind2 {
+enum OpKind {
 	insert
 	delete
 }
 
-struct EditOp2 {
+struct EditOp {
 mut:
-	kind   OpKind2
+	kind   OpKind
 	offset u64
 	bytes  []u8
 }
 
-struct UndoGroup2 {
+struct UndoGroup {
 mut:
-	ops           []EditOp2
+	ops           []EditOp
 	cursor_before u64 // byte offset valid at the moment the op applied
 	cursor_after  u64 // what was inserted / what was removed
 }
 
 struct History {
 mut:
-	groups    []UndoGroup2
+	groups    []UndoGroup
 	open      bool
-	cur       UndoGroup2
+	cur       UndoGroup
 	chain_idx int  = -1 // next group to undo; -1 = chain broken
 	recording bool = true
 }
@@ -471,7 +471,7 @@ pub fn (mut tb TextBuffer) begin_undo_group() {
 		return
 	}
 	tb.history.open = true
-	tb.history.cur = UndoGroup2{
+	tb.history.cur = UndoGroup{
 		cursor_before: tb.data_buf.ccur()
 	}
 }
@@ -520,11 +520,11 @@ pub fn (mut tb TextBuffer) redo() {
 	tb.history.chain_idx++
 }
 
-fn (mut tb TextBuffer) apply_inverse(grp UndoGroup2) UndoGroup2 {
+fn (mut tb TextBuffer) apply_inverse(grp UndoGroup) UndoGroup {
 	tb.history.recording = false
 	defer { tb.history.recording = true }
 
-	mut inv := UndoGroup2{
+	mut inv := UndoGroup{
 		cursor_before: grp.cursor_after
 		cursor_after:  grp.cursor_before
 	}
@@ -533,7 +533,7 @@ fn (mut tb TextBuffer) apply_inverse(grp UndoGroup2) UndoGroup2 {
 		match op.kind {
 			.insert {
 				tb.delete_bytes_at(op.offset, op.bytes.len)
-				inv.ops << EditOp2{
+				inv.ops << EditOp{
 					kind:   .delete
 					offset: op.offset
 					bytes:  op.bytes
@@ -544,7 +544,7 @@ fn (mut tb TextBuffer) apply_inverse(grp UndoGroup2) UndoGroup2 {
 				for b in op.bytes {
 					tb.insert_byte(b) // recording is off; line_buf stays in sync
 				}
-				inv.ops << EditOp2{
+				inv.ops << EditOp{
 					kind:   .insert
 					offset: op.offset
 					bytes:  op.bytes
@@ -603,7 +603,7 @@ fn (mut tb TextBuffer) move_cursor_vertical(direction int) {
 	tb.goal_column = int(current_col)
 }
 
-fn (mut tb TextBuffer) record(kind OpKind2, offset u64, bytes []u8) {
+fn (mut tb TextBuffer) record(kind OpKind, offset u64, bytes []u8) {
 	if !tb.history.recording {
 		return
 	}
@@ -631,7 +631,7 @@ fn (mut tb TextBuffer) record(kind OpKind2, offset u64, bytes []u8) {
 			return
 		}
 	}
-	grp.ops << EditOp2{
+	grp.ops << EditOp{
 		kind:   kind
 		offset: offset
 		bytes:  bytes

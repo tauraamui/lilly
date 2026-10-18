@@ -23,13 +23,13 @@ fn other() {
 
 // fold_test_editor opens `content` as a V file, with the cursor `x`
 // graphemes into line `y`
-fn fold_test_editor(content string, y int, x int) (EditorModel2, &documents.Controller2, string) {
+fn fold_test_editor(content string, y int, x int) (EditorModel, &documents.Controller, string) {
 	path := os.join_path(os.temp_dir(), 'lilly_folds_${time.now().unix_nano()}.v')
 	os.write_file(path, content) or { panic('failed to write temp file: ${err}') }
-	mut c := &documents.Controller2{}
+	mut c := &documents.Controller{}
 	doc_id := c.open_document(path) or { panic('failed to open temp document: ${err}') }
 	v_syntax := syntax.resolve_from_extension('main.v') or { panic(err) }
-	mut m := EditorModel2{
+	mut m := EditorModel{
 		config:          EditorWorkspaceConfig.new(cfg.default_config)
 		doc_id:          doc_id
 		doc_controller:  c
@@ -46,7 +46,7 @@ fn fold_test_editor(content string, y int, x int) (EditorModel2, &documents.Cont
 	return m, c, path
 }
 
-fn fold_keys(mut m EditorModel2, keys string) {
+fn fold_keys(mut m EditorModel, keys string) {
 	for k in keys.runes() {
 		m.normal_mode_update(tea.KeyMsg{
 			k_type: .runes
@@ -55,7 +55,7 @@ fn fold_keys(mut m EditorModel2, keys string) {
 	}
 }
 
-fn fold_cursor(m EditorModel2) (int, int) {
+fn fold_cursor(m EditorModel) (int, int) {
 	y, x := m.doc_controller.cursor_line_and_x(m.doc_id)
 	return int(y), int(x)
 }
@@ -261,7 +261,7 @@ fn test_the_view_scrolls_by_rows() {
 	assert m.top_line == 10
 }
 
-fn fold_visual_keys(mut m EditorModel2, keys string) {
+fn fold_visual_keys(mut m EditorModel, keys string) {
 	for k in keys.runes() {
 		m.visual_mode_update(tea.KeyMsg{
 			k_type: .runes

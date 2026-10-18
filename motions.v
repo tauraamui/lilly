@@ -16,60 +16,60 @@ import lib.nanoid
 // true if the motion key was recognised. Operators in both normal and visual
 // mode share this but visual mode reuses it as "extend selection" because the
 // selection range is derived from visual_sel_start + cursor.
-fn apply_motion(c &documents.Controller2, doc_id nanoid.ID, motion string, count int) bool {
+fn apply_motion(c &documents.Controller, doc_id nanoid.ID, motion string, count int) bool {
 	match motion {
 		'h' {
-			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller, doc_id nanoid.ID) {
 				c.move_cursor_left(doc_id)
 			})
 		}
 		'j' {
-			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller, doc_id nanoid.ID) {
 				c.move_cursor_down(doc_id)
 			})
 		}
 		'k' {
-			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller, doc_id nanoid.ID) {
 				c.move_cursor_up(doc_id)
 			})
 		}
 		'l' {
-			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller, doc_id nanoid.ID) {
 				c.move_cursor_right(doc_id)
 			})
 		}
 		'{' {
-			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller, doc_id nanoid.ID) {
 				c.move_cursor_to_previous_blank_line(doc_id)
 			})
 		}
 		'}' {
-			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller, doc_id nanoid.ID) {
 				c.move_cursor_to_next_blank_line(doc_id)
 			})
 		}
 		'w' {
-			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller, doc_id nanoid.ID) {
 				c.move_cursor_to_next_word_start(doc_id)
 			})
 		}
 		'W' {
-			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller, doc_id nanoid.ID) {
 				c.move_cursor_to_next_big_word_start(doc_id)
 			})
 		}
 		'e' {
-			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller, doc_id nanoid.ID) {
 				c.move_cursor_to_next_word_end(doc_id)
 			})
 		}
 		'b' {
-			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller, doc_id nanoid.ID) {
 				c.move_cursor_to_previous_word_start(doc_id)
 			})
 		}
 		'ge' {
-			repeat_motion(c, doc_id, count, fn (c &documents.Controller2, doc_id nanoid.ID) {
+			repeat_motion(c, doc_id, count, fn (c &documents.Controller, doc_id nanoid.ID) {
 				c.move_cursor_to_previous_word_end(doc_id)
 			})
 		}
@@ -88,7 +88,7 @@ fn apply_motion(c &documents.Controller2, doc_id nanoid.ID, motion string, count
 		'G' {
 			// bare `G` goes to the last line; an explicit count goes to that
 			// line number instead (matches the `count > 1` convention `zz`
-			// already uses in v1 to detect an explicit count).
+			// uses to detect an explicit count).
 			line_count := c.line_count(doc_id)
 			target := if count > 1 {
 				u64(count - 1)
@@ -103,7 +103,7 @@ fn apply_motion(c &documents.Controller2, doc_id nanoid.ID, motion string, count
 			// count works like Neovim's $: go (count-1) lines down first,
 			// then to the end of that line - it does not mean "jump to
 			// end of line, count times".
-			repeat_motion(c, doc_id, count - 1, fn (c &documents.Controller2, doc_id nanoid.ID) {
+			repeat_motion(c, doc_id, count - 1, fn (c &documents.Controller, doc_id nanoid.ID) {
 				c.move_cursor_down(doc_id)
 			})
 			// jump_cursor_to_line_end lands one past the last character
@@ -138,7 +138,7 @@ fn motion_is_inclusive(motion string) bool {
 // motion_range resolves a motion to the range it traverses, leaving the
 // cursor at the motion's endpoint. Used by normal mode when an operator
 // is paired with a motion (e.g. `dw`).
-fn motion_range(c &documents.Controller2, doc_id nanoid.ID, motion string, count int) ?cursor.Range {
+fn motion_range(c &documents.Controller, doc_id nanoid.ID, motion string, count int) ?cursor.Range {
 	start_line, start_col := c.cursor_line_and_x(doc_id)
 	if !apply_motion(c, doc_id, motion, count) {
 		return none
@@ -156,13 +156,13 @@ fn motion_range(c &documents.Controller2, doc_id nanoid.ID, motion string, count
 
 // apply_operator dispatches an operator against a resolved range. Returns
 // true if the operator was recognised.
-fn apply_operator(c &documents.Controller2, doc_id nanoid.ID, op u8, r cursor.Range) bool {
+fn apply_operator(c &documents.Controller, doc_id nanoid.ID, op u8, r cursor.Range) bool {
 	match op {
 		`d` {
 			c.delete_range(doc_id, r)
 			return true
 		}
-		// TODO(tauraamui) [2026-06-08]: wire up once Controller2 grows
+		// TODO(tauraamui) [2026-06-08]: wire up once Controller grows
 		// change / yank etc.
 		`c` {
 			return false
@@ -184,7 +184,7 @@ fn apply_operator(c &documents.Controller2, doc_id nanoid.ID, op u8, r cursor.Ra
 //
 // step must not capture anything: a closure is pinned for the life of the
 // process, and this runs for every counted motion.
-fn repeat_motion(c &documents.Controller2, doc_id nanoid.ID, count int, step fn (&documents.Controller2, nanoid.ID)) {
+fn repeat_motion(c &documents.Controller, doc_id nanoid.ID, count int, step fn (&documents.Controller, nanoid.ID)) {
 	for _ in 0 .. count {
 		at := c.cursor_offset(doc_id)
 		step(c, doc_id)

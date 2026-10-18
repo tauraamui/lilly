@@ -66,16 +66,10 @@ fn (h History) footprint_bytes() u64 {
 	return total
 }
 
-fn (g UndoGroup2) footprint_bytes() u64 {
+fn (g UndoGroup) footprint_bytes() u64 {
 	mut total := u64(0)
 	for op in g.ops {
 		total += u64(op.bytes.cap)
 	}
 	return total
-}
-
-// footprint_bytes reports the heap held by the rune-based gap buffer backing
-// the v1 document type.
-pub fn (g GapBuffer) footprint_bytes() u64 {
-	return u64(g.data.cap) * sizeof(rune)
 }

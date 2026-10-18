@@ -12,8 +12,8 @@ struct ObjectTest {
 	path   string
 	doc_id nanoid.ID
 mut:
-	c &documents.Controller2
-	m EditorModel2
+	c &documents.Controller
+	m EditorModel
 }
 
 // object_test opens `content` as a file named `name`, with the cursor `x`
@@ -21,11 +21,11 @@ mut:
 fn object_test(name string, content string, y int, x int) ObjectTest {
 	path := os.join_path(os.temp_dir(), 'lilly_objects_${time.now().unix_nano()}_${name}')
 	os.write_file(path, content) or { panic('failed to write temp file: ${err}') }
-	mut c := &documents.Controller2{}
+	mut c := &documents.Controller{}
 	doc_id := c.open_document(path) or { panic('failed to open temp document: ${err}') }
 	lang := syntax.resolve_from_extension(name) or { panic(err) }
 	base := EditorWorkspaceConfig.new(cfg.default_config)
-	mut m := EditorModel2{
+	mut m := EditorModel{
 		config:          EditorWorkspaceConfig{
 			theme:                  base.theme
 			leader_key:             base.leader_key

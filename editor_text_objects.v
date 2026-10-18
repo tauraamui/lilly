@@ -37,7 +37,7 @@ fn is_text_object(motion string) bool {
 
 // text_object finds the object `motion` names around the cursor. With a
 // count, a block object is the count'th block of its kind out.
-fn (mut m EditorModel2) text_object(motion string, count int) ?TextObject {
+fn (mut m EditorModel) text_object(motion string, count int) ?TextObject {
 	if m.lang_syn.name.len == 0 || !is_text_object(motion) {
 		return none
 	}
@@ -55,7 +55,7 @@ fn (mut m EditorModel2) text_object(motion string, count int) ?TextObject {
 // `name` the cursor is in, from the innermost out, passing over brackets
 // left open. `a` takes the brackets too; `i` takes what is between them, or
 // with a bracket alone at the end or start of its line, leaves that line be.
-fn (mut m EditorModel2) block_object(name string, inner bool, count int) ?TextObject {
+fn (mut m EditorModel) block_object(name string, inner bool, count int) ?TextObject {
 	pos := m.cursor_pos()
 	last := int(m.doc_controller.line_count(m.doc_id)) - 1
 	nodes := m.syntax_ancestors(pos)
@@ -88,7 +88,7 @@ fn (mut m EditorModel2) block_object(name string, inner bool, count int) ?TextOb
 // block_inside is what is between the bracket at `open` and its closer at
 // `close`. A line break straight after the opener, or the indent before a
 // closer starting its line, is left out, as Vim does.
-fn (m EditorModel2) block_inside(open syntax.Pos, close syntax.Pos) TextObject {
+fn (m EditorModel) block_inside(open syntax.Pos, close syntax.Pos) TextObject {
 	mut start := syntax.Pos{open.line, open.col + 1}
 	mut end := close
 	opener_ends_line := start.col >= m.doc_line_runes(open.line).len
@@ -128,7 +128,7 @@ struct QuotedSpan {
 // is quoted by `q`, or else the first after the cursor on its line. `i`
 // takes what is between the quotes; `a` takes the whole string, prefix
 // included, and the white space after it, or failing that, before it.
-fn (mut m EditorModel2) quote_object(q rune, inner bool) ?TextObject {
+fn (mut m EditorModel) quote_object(q rune, inner bool) ?TextObject {
 	pos := m.cursor_pos()
 	span := m.quoted_span_at(pos, q) or { m.next_quoted_span(pos, q)? }
 	if inner {
@@ -167,7 +167,7 @@ fn (mut m EditorModel2) quote_object(q rune, inner bool) ?TextObject {
 // a node of the tree, from the innermost out, since only a string's are
 // quoted at both ends, or else a string literal lexed as one token, as a
 // rune literal is
-fn (mut m EditorModel2) quoted_span_at(pos syntax.Pos, q rune) ?QuotedSpan {
+fn (mut m EditorModel) quoted_span_at(pos syntax.Pos, q rune) ?QuotedSpan {
 	last := int(m.doc_controller.line_count(m.doc_id)) - 1
 	nodes := m.syntax_ancestors(pos)
 	for i := nodes.len - 1; i >= 0; i-- {
@@ -187,7 +187,7 @@ fn (mut m EditorModel2) quoted_span_at(pos syntax.Pos, q rune) ?QuotedSpan {
 
 // next_quoted_span gives the first string quoted by `q` after `pos` on its
 // line, for a `pos` in none
-fn (mut m EditorModel2) next_quoted_span(pos syntax.Pos, q rune) ?QuotedSpan {
+fn (mut m EditorModel) next_quoted_span(pos syntax.Pos, q rune) ?QuotedSpan {
 	runes := m.doc_line_runes(pos.line)
 	for col in pos.col + 1 .. runes.len {
 		if runes[col] == q {
@@ -200,7 +200,7 @@ fn (mut m EditorModel2) next_quoted_span(pos syntax.Pos, q rune) ?QuotedSpan {
 // quoted_span finds the quotes of the string from `start` up to `end`, if it
 // is quoted by `q`: as many of them as both ends have, so `"""` quotes a
 // Python docstring, after a prefix of a rune or two such as `r` or `b`
-fn (m EditorModel2) quoted_span(start syntax.Pos, end syntax.Pos, q rune) ?QuotedSpan {
+fn (m EditorModel) quoted_span(start syntax.Pos, end syntax.Pos, q rune) ?QuotedSpan {
 	open_runes := m.doc_line_runes(start.line)
 	mut first := start.col
 	for first < open_runes.len && open_runes[first] != q && first - start.col < 2 {
@@ -236,7 +236,7 @@ fn (m EditorModel2) quoted_span(start syntax.Pos, end syntax.Pos, q rune) ?Quote
 }
 
 // text_object_range is a text object as a range for an operator
-fn (m EditorModel2) text_object_range(obj TextObject) cursor.Range {
+fn (m EditorModel) text_object_range(obj TextObject) cursor.Range {
 	return cursor.Range{
 		start: cursor.Pos.new(m.graphemes_before(obj.start.line, obj.start.col), obj.start.line)
 		end:   cursor.Pos.new(m.graphemes_before(obj.end.line, obj.end.col), obj.end.line)
@@ -247,7 +247,7 @@ fn (m EditorModel2) text_object_range(obj TextObject) cursor.Range {
 // inside of a block on lines of its own leaves one line open in it,
 // indented as Enter would indent it. A change is undone in one go with what
 // is typed after it.
-fn (mut m EditorModel2) apply_text_object(op u8, motion string, count int) (tea.Cmd, bool) {
+fn (mut m EditorModel) apply_text_object(op u8, motion string, count int) (tea.Cmd, bool) {
 	obj := m.text_object(motion, count) or { return tea.no_cmd, false }
 	r := m.text_object_range(obj)
 	match op {
@@ -284,14 +284,14 @@ fn (mut m EditorModel2) apply_text_object(op u8, motion string, count int) (tea.
 	}
 }
 
-fn (m EditorModel2) line_grapheme_count(y int) u64 {
+fn (m EditorModel) line_grapheme_count(y int) u64 {
 	return u64(m.graphemes_before(y, m.doc_line_runes(y).len))
 }
 
 // select_text_object makes the visual selection the text object `motion`.
 // A block is reached out from until it's more than the selection, so
 // repeating `i{` grows the selection a block at a time, as in Vim.
-fn (mut m EditorModel2) select_text_object(motion string, count int) {
+fn (mut m EditorModel) select_text_object(motion string, count int) {
 	mut n := if count < 1 { 1 } else { count }
 	mut obj := m.text_object(motion, n) or { return }
 	if motion[1] in [`(`, `[`, `{`] {
@@ -312,7 +312,7 @@ fn (mut m EditorModel2) select_text_object(motion string, count int) {
 // object_last is where a selection of `obj` ends: a selection takes in the
 // rune under the cursor, so on the last rune of the object, or the end of the
 // line before an object ending at the start of one
-fn (m EditorModel2) object_last(obj TextObject) (int, int) {
+fn (m EditorModel) object_last(obj TextObject) (int, int) {
 	if obj.end.col == 0 {
 		return obj.end.line - 1, int(m.line_grapheme_count(obj.end.line - 1)) - 1
 	}
@@ -322,7 +322,7 @@ fn (m EditorModel2) object_last(obj TextObject) (int, int) {
 // grows_selection reports whether selecting `obj` takes in more than the
 // visual selection does now. A selection of one rune, as visual mode starts
 // with, is taken as none yet, as in Vim, so `i(` in `(a)` selects the `a`.
-fn (mut m EditorModel2) grows_selection(obj TextObject) bool {
+fn (mut m EditorModel) grows_selection(obj TextObject) bool {
 	start_line := m.visual_sel_start_line or { return true }
 	start_col := m.visual_sel_start_col or { return true }
 	cursor_line, cursor_x := m.doc_controller.cursor_line_and_x(m.doc_id)

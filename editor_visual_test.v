@@ -29,10 +29,10 @@ fn test_current_visual_range_includes_char_under_cursor() {
 	file_path := make_visual_test_file('range', 'This is the first line of')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
-	mut m := EditorModel2{
+	mut m := EditorModel{
 		config:         EditorWorkspaceConfig.new(cfg.default_config)
 		doc_id:         doc_id
 		doc_controller: &c
@@ -61,10 +61,10 @@ fn test_current_visual_range_handles_reversed_selection() {
 	file_path := make_visual_test_file('reversed', 'This is the first line of')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
-	mut m := EditorModel2{
+	mut m := EditorModel{
 		config:         EditorWorkspaceConfig.new(cfg.default_config)
 		doc_id:         doc_id
 		doc_controller: &c
@@ -93,10 +93,10 @@ fn test_apply_linewise_operator_deletes_full_selected_lines() {
 	file_path := make_visual_test_file('linewise', 'one\ntwo\nthree\nfour')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
-	mut m := EditorModel2{
+	mut m := EditorModel{
 		config:          EditorWorkspaceConfig.new(cfg.default_config)
 		doc_id:          doc_id
 		doc_controller:  &c
@@ -121,10 +121,10 @@ fn test_execute_action_visual_delete_closes_undo_group_charwise() {
 	file_path := make_visual_test_file('undo_charwise', 'This is the first line of')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
-	mut m := EditorModel2{
+	mut m := EditorModel{
 		config:         EditorWorkspaceConfig.new(cfg.default_config)
 		doc_id:         doc_id
 		doc_controller: &c
@@ -155,10 +155,10 @@ fn test_execute_action_visual_delete_closes_undo_group_linewise() {
 	file_path := make_visual_test_file('undo_linewise', 'one\ntwo\nthree\nfour')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
-	mut m := EditorModel2{
+	mut m := EditorModel{
 		config:          EditorWorkspaceConfig.new(cfg.default_config)
 		doc_id:          doc_id
 		doc_controller:  &c
@@ -188,10 +188,10 @@ fn test_apply_linewise_operator_handles_reversed_selection() {
 	file_path := make_visual_test_file('linewise_reversed', 'one\ntwo\nthree\nfour')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
-	mut m := EditorModel2{
+	mut m := EditorModel{
 		config:          EditorWorkspaceConfig.new(cfg.default_config)
 		doc_id:          doc_id
 		doc_controller:  &c

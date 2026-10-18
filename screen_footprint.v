@@ -65,7 +65,7 @@ fn (m FilePickerModel) footprint_bytes() u64 {
 	return total
 }
 
-fn (m EditorWorkspaceModel2) footprint_bytes() u64 {
+fn (m EditorWorkspaceModel) footprint_bytes() u64 {
 	mut total := u64(0)
 	for _, editor in m.editors {
 		if editor is MemoryAccountable {
@@ -87,6 +87,6 @@ fn (m EditorWorkspaceModel2) footprint_bytes() u64 {
 
 // footprint_bytes accounts the syntax highlighter's per-line state cache,
 // which holds one entry per line of the open document and so scales with it.
-fn (m EditorModel2) footprint_bytes() u64 {
+fn (m EditorModel) footprint_bytes() u64 {
 	return u64(m.parser_line_states.cap) * u64(sizeof(syntax.State))
 }

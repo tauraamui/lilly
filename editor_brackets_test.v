@@ -9,13 +9,13 @@ import lib.syntax
 
 // bracket_test_editor opens `content` as a V file, with the cursor `x`
 // graphemes into line `y`
-fn bracket_test_editor(content string, y int, x int) (EditorModel2, &documents.Controller2, string) {
+fn bracket_test_editor(content string, y int, x int) (EditorModel, &documents.Controller, string) {
 	path := os.join_path(os.temp_dir(), 'lilly_brackets_${time.now().unix_nano()}.v')
 	os.write_file(path, content) or { panic('failed to write temp file: ${err}') }
-	mut c := &documents.Controller2{}
+	mut c := &documents.Controller{}
 	doc_id := c.open_document(path) or { panic('failed to open temp document: ${err}') }
 	v_syntax := syntax.resolve_from_extension('main.v') or { panic(err) }
-	mut m := EditorModel2{
+	mut m := EditorModel{
 		config:          EditorWorkspaceConfig.new(cfg.default_config)
 		doc_id:          doc_id
 		doc_controller:  c
@@ -32,12 +32,12 @@ fn bracket_test_editor(content string, y int, x int) (EditorModel2, &documents.C
 	return m, c, path
 }
 
-fn bracket_cursor(m EditorModel2) (int, int) {
+fn bracket_cursor(m EditorModel) (int, int) {
 	y, x := m.doc_controller.cursor_line_and_x(m.doc_id)
 	return int(y), int(x)
 }
 
-fn percent(mut m EditorModel2) {
+fn percent(mut m EditorModel) {
 	m.execute_action_normal(ChordAction{
 		count:  1
 		motion: '%'
@@ -272,7 +272,7 @@ fn test_without_a_syntax_brackets_are_matched_by_counting() {
 	assert y == 0 && x == 2
 }
 
-fn bracket_keys(mut m EditorModel2, keys string) {
+fn bracket_keys(mut m EditorModel, keys string) {
 	for k in keys.runes() {
 		m.normal_mode_update(tea.KeyMsg{
 			k_type: .runes

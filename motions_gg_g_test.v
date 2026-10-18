@@ -28,7 +28,7 @@ fn test_apply_motion_gg_moves_to_first_line_text_start() {
 	file_path := make_gg_g_test_file('basic', 'hello\n  world\nfoo')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
 	assert apply_motion(&c, doc_id, 'j', 2) // start somewhere down in the doc
@@ -42,7 +42,7 @@ fn test_apply_motion_gg_with_count_goes_to_that_line_first_non_blank() {
 	file_path := make_gg_g_test_file('count', 'hello\n  world\nfoo')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
 	assert apply_motion(&c, doc_id, 'gg', 2)
@@ -55,7 +55,7 @@ fn test_apply_motion_gg_with_count_clamps_at_last_line() {
 	file_path := make_gg_g_test_file('clamp', 'aa\nbb')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
 	assert apply_motion(&c, doc_id, 'gg', 10)
@@ -67,7 +67,7 @@ fn test_apply_motion_upper_g_moves_to_last_line_text_start() {
 	file_path := make_gg_g_test_file('last', 'hello\n  world\n  foo')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
 	assert apply_motion(&c, doc_id, 'G', 1)
@@ -80,7 +80,7 @@ fn test_apply_motion_upper_g_with_count_goes_to_that_line() {
 	file_path := make_gg_g_test_file('count_upper', 'hello\n  world\nfoo')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
 	assert apply_motion(&c, doc_id, 'G', 2)

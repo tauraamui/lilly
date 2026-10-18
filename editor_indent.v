@@ -38,7 +38,7 @@ struct NewLineIndent {
 }
 
 // indent_unit is one level of indentation, as the config sets it
-fn (m EditorModel2) indent_unit() string {
+fn (m EditorModel) indent_unit() string {
 	if m.config.convert_tabs_to_spaces {
 		return ' '.repeat(if m.config.tab_width > 0 { m.config.tab_width } else { 4 })
 	}
@@ -47,13 +47,13 @@ fn (m EditorModel2) indent_unit() string {
 
 // doc_line_runes gives line `y` of the document as it is in the buffer,
 // without tabs expanded, so its columns are the context tree's
-fn (m EditorModel2) doc_line_runes(y int) []rune {
+fn (m EditorModel) doc_line_runes(y int) []rune {
 	line_bytes := m.doc_controller.get_line_bytes(m.doc_id, u64(y)) or { return []rune{} }
 	return line_bytes.bytestr().runes()
 }
 
 // line_indent is the whitespace that line `y` starts with
-fn (m EditorModel2) line_indent(y int) string {
+fn (m EditorModel) line_indent(y int) string {
 	runes := m.doc_line_runes(y)
 	mut n := 0
 	for n < runes.len && (runes[n] == ` ` || runes[n] == `\t`) {
@@ -64,7 +64,7 @@ fn (m EditorModel2) line_indent(y int) string {
 
 // syntax_end_of gives the position just past `node`'s closing delimiter,
 // looking no further than line `last`
-fn (mut m EditorModel2) syntax_end_of(node syntax.Node, last int) ?syntax.Pos {
+fn (mut m EditorModel) syntax_end_of(node syntax.Node, last int) ?syntax.Pos {
 	m.sync_parser_state_cache()
 	mut lines := m.doc_lines()
 	return m.syntax_tree.end_of(mut m.token_parser, mut lines, node, last - node.start.line)
@@ -73,7 +73,7 @@ fn (mut m EditorModel2) syntax_end_of(node syntax.Node, last int) ?syntax.Pos {
 // innermost_bracket gives the innermost bracket node open at `pos`, leaving
 // out one opening right at it, since the cursor there is before it. It gives
 // none inside a string or comment, where indentation is the writer's own.
-fn (mut m EditorModel2) innermost_bracket(pos syntax.Pos) ?syntax.Node {
+fn (mut m EditorModel) innermost_bracket(pos syntax.Pos) ?syntax.Node {
 	nodes := m.syntax_ancestors(pos).filter(it.start != pos)
 	if nodes.len == 0 || nodes.last().scope in [.comment, .comment_doc, .string, .string_escape] {
 		return none
@@ -91,7 +91,7 @@ fn (mut m EditorModel2) innermost_bracket(pos syntax.Pos) ?syntax.Node {
 // in opened on, or level with it when the cursor is right before the
 // bracket's closer. Outside any bracket, or with no syntax for the file, the
 // line keeps the indentation of the one it is opened from.
-fn (mut m EditorModel2) new_line_indent() NewLineIndent {
+fn (mut m EditorModel) new_line_indent() NewLineIndent {
 	cursor_line, cursor_x := m.doc_controller.cursor_line_and_x(m.doc_id)
 	y := int(cursor_line)
 	fallback := NewLineIndent{
@@ -137,7 +137,7 @@ fn (mut m EditorModel2) new_line_indent() NewLineIndent {
 
 // closes_at reports whether the rune at `col` of line `y`, whose runes are
 // `runes`, is the closer that ends `bracket`
-fn (mut m EditorModel2) closes_at(bracket syntax.Node, runes []rune, y int, col int) bool {
+fn (mut m EditorModel) closes_at(bracket syntax.Node, runes []rune, y int, col int) bool {
 	if col >= runes.len || runes[col] != bracket_closers[bracket.name] {
 		return false
 	}
@@ -148,7 +148,7 @@ fn (mut m EditorModel2) closes_at(bracket syntax.Node, runes []rune, y int, col 
 // open_line breaks the line at the cursor, indenting the new line by
 // new_line_indent. Between a bracket and its closer it opens two, leaving the
 // closer below and the cursor on the line between.
-fn (mut m EditorModel2) open_line() {
+fn (mut m EditorModel) open_line() {
 	nl := m.new_line_indent()
 	for _ in 0 .. nl.trim_after {
 		m.doc_controller.delete(m.doc_id)
@@ -170,7 +170,7 @@ fn (mut m EditorModel2) open_line() {
 // align_closer re-indents the line the cursor is on, after a closing bracket
 // was typed as the first thing on it, to the indentation of the line its
 // bracket opened on
-fn (mut m EditorModel2) align_closer() {
+fn (mut m EditorModel) align_closer() {
 	if m.lang_syn.name.len == 0 {
 		return
 	}

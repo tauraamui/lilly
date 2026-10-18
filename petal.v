@@ -45,7 +45,7 @@ struct PetalModelOptions {
 	initial_file_path ?string
 }
 
-fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.Controller, doc_controller2 &documents.Controller2, cb &clipboard.Manager, opts PetalModelOptions) PetalModel {
+fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.Controller, cb &clipboard.Manager, opts PetalModelOptions) PetalModel {
 	return PetalModel{
 		version:       version
 		config:        config
@@ -55,12 +55,11 @@ fn PetalModel.new(version string, config cfg.Config, doc_controller &documents.C
 			config:            config
 			version:           version
 			doc_controller:    doc_controller
-			doc_controller2:   doc_controller2
 			cb:                cb
 			initial_file_path: opts.initial_file_path
 		)
 		golden_frames: GoldenFrameState.init()
-		probe:         MemoryProbe.new(doc_controller, doc_controller2)
+		probe:         MemoryProbe.new(doc_controller)
 	}
 }
 
@@ -148,16 +147,6 @@ fn (mut m PetalModel) handle(msg tea.Msg) (tea.Model, tea.Cmd) {
 		tea.ResizedMsg {
 			m.last_resize_width = msg.window_width
 			m.last_resize_height = msg.window_height
-		} // TODO(tauraamui): DEPRECATE THIS POST EDITOR REWRITE
-		QueryPWDGitBranchMsg {
-			if send := m.app_send {
-				spawn fn [send] () {
-					branch := resolve_git_branch_name(os.execute)
-					send(PWDGitBranchResultMsg{
-						branch_name: branch
-					})
-				}()
-			}
 		}
 		QueryGitBranchMsg {
 			if send := m.app_send {
@@ -203,4 +192,33 @@ fn (m PetalModel) clone() tea.Model {
 	return PetalModel{
 		...m
 	}
+}
+
+fn resolve_git_branch_name(execute fn (cmd string) os.Result) string {
+	prefix := '\uE0A0'
+	$if darwin {
+		branch := read_git_branch_from_head_file()
+		if branch.len == 0 {
+			return ''
+		}
+		return '${prefix} ${branch}'
+	}
+	wt := spawn currently_in_worktree(execute)
+	in_wt := wt.wait()
+	if in_wt {
+		gb := spawn get_branch(execute)
+		branch := gb.wait()
+		return '${prefix} ${branch}'
+	}
+	return ''
+}
+
+fn currently_in_worktree(execute fn (cmd string) os.Result) bool {
+	res := execute('git rev-parse --is-inside-work-tree')
+	return res.exit_code == 0
+}
+
+fn get_branch(execute fn (cmd string) os.Result) string {
+	res := execute('git branch --show-current')
+	return res.output.trim_space()
 }

@@ -28,17 +28,17 @@ struct CountTest {
 	path   string
 	doc_id nanoid.ID
 mut:
-	c &documents.Controller2
-	m EditorModel2
+	c &documents.Controller
+	m EditorModel
 }
 
 fn count_test(content string) CountTest {
 	path := os.join_path(os.temp_dir(), 'lilly_count_${time.now().unix_nano()}.txt')
 	os.write_file(path, content) or { panic('failed to write temp file: ${err}') }
-	mut c := &documents.Controller2{}
+	mut c := &documents.Controller{}
 	doc_id := c.open_document(path) or { panic('failed to open temp document: ${err}') }
 	lang := syntax.resolve_from_extension(path) or { panic(err) }
-	mut m := EditorModel2{
+	mut m := EditorModel{
 		config:          EditorWorkspaceConfig.new(cfg.default_config)
 		doc_id:          doc_id
 		doc_controller:  c

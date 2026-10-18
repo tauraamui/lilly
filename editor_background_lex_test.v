@@ -23,10 +23,10 @@ fn lex_test_file(lines int) string {
 	return path
 }
 
-fn lex_test_editor(c &documents.Controller2, path string) EditorModel2 {
+fn lex_test_editor(c &documents.Controller, path string) EditorModel {
 	doc_id := c.open_document(path) or { panic('failed to open temp document: ${err}') }
 	v_syntax := syntax.resolve_from_extension('main.v') or { panic(err) }
-	mut m := EditorModel2{
+	mut m := EditorModel{
 		id:              'lex-test'
 		config:          EditorWorkspaceConfig.new(cfg.default_config)
 		doc_id:          doc_id
@@ -39,19 +39,19 @@ fn lex_test_editor(c &documents.Controller2, path string) EditorModel2 {
 }
 
 // lex_states_of describes an editor's line states by their context stacks
-fn lex_states_of(m EditorModel2) []string {
+fn lex_states_of(m EditorModel) []string {
 	return m.parser_line_states.map(m.token_parser.state_name(it))
 }
 
 // fresh_lex_states is what lexing the whole document from scratch gives
-fn fresh_lex_states(c &documents.Controller2, path string) []string {
+fn fresh_lex_states(c &documents.Controller, path string) []string {
 	mut fresh := lex_test_editor(c, path)
 	fresh.ensure_parser_states(int(c.line_count(fresh.doc_id)) - 1)
 	return lex_states_of(fresh)
 }
 
 // lex_until_done runs slices until nothing is left, returning how many it took
-fn lex_until_done(mut m EditorModel2) int {
+fn lex_until_done(mut m EditorModel) int {
 	mut slices := 0
 	for m.lex_pending() {
 		m.background_lex(background_lex_budget)
@@ -64,7 +64,7 @@ fn lex_until_done(mut m EditorModel2) int {
 fn test_background_lexing_fills_the_line_states_and_the_tree() {
 	path := lex_test_file(3000)
 	defer { os.rm(path) or {} }
-	mut c := &documents.Controller2{}
+	mut c := &documents.Controller{}
 	mut m := lex_test_editor(c, path)
 	assert m.lex_pending()
 	lex_until_done(mut m)
@@ -79,7 +79,7 @@ fn test_background_lexing_fills_the_line_states_and_the_tree() {
 fn test_a_slice_stops_at_its_budget() {
 	path := lex_test_file(200_000)
 	defer { os.rm(path) or {} }
-	mut c := &documents.Controller2{}
+	mut c := &documents.Controller{}
 	mut m := lex_test_editor(c, path)
 	sw := time.new_stopwatch()
 	m.background_lex(background_lex_budget)
@@ -97,7 +97,7 @@ fn test_a_slice_of_long_lines_stops_near_its_budget() {
 		panic('failed to write temp file: ${err}')
 	}
 	defer { os.rm(path) or {} }
-	mut c := &documents.Controller2{}
+	mut c := &documents.Controller{}
 	mut m := lex_test_editor(c, path)
 	sw := time.new_stopwatch()
 	m.background_lex(background_lex_budget)
@@ -112,7 +112,7 @@ fn test_a_slice_of_long_lines_stops_near_its_budget() {
 fn test_without_a_syntax_there_is_nothing_to_lex() {
 	path := lex_test_file(100)
 	defer { os.rm(path) or {} }
-	mut c := &documents.Controller2{}
+	mut c := &documents.Controller{}
 	mut m := lex_test_editor(c, path)
 	m.lang_syn = syntax.noop_syntax
 	assert !m.lex_pending()
@@ -121,7 +121,7 @@ fn test_without_a_syntax_there_is_nothing_to_lex() {
 fn test_an_edit_relexes_no_further_than_the_view_and_background_lexing_redoes_the_rest() {
 	path := lex_test_file(5000)
 	defer { os.rm(path) or {} }
-	mut c := &documents.Controller2{}
+	mut c := &documents.Controller{}
 	mut m := lex_test_editor(c, path)
 	lex_until_done(mut m)
 
@@ -139,15 +139,15 @@ fn test_an_edit_relexes_no_further_than_the_view_and_background_lexing_redoes_th
 	assert m.syntax_tree.covers(5000)
 }
 
-fn lex_test_workspace(path string) (EditorWorkspaceModel2, &documents.Controller2) {
-	mut c := &documents.Controller2{}
-	mut w := EditorWorkspaceModel2.new(EditorWorkspaceConfig.new(cfg.default_config), c)
+fn lex_test_workspace(path string) (EditorWorkspaceModel, &documents.Controller) {
+	mut c := &documents.Controller{}
+	mut w := EditorWorkspaceModel.new(EditorWorkspaceConfig.new(cfg.default_config), c)
 	_, cmd := w.open_file_update(OpenFileMsg{
 		file_path: path
 	})
 	// the editor's syntax arrives in a message its init sends
 	for msg in cmd.delivered_msgs() {
-		if msg is EditorModel2Msg && msg.msg is SyntaxLoadedMsg {
+		if msg is EditorModelMsg && msg.msg is SyntaxLoadedMsg {
 			w, _ = workspace_update(mut w, msg)
 		}
 	}
@@ -155,9 +155,9 @@ fn lex_test_workspace(path string) (EditorWorkspaceModel2, &documents.Controller
 }
 
 // workspace_update updates `w` as the app does, keeping the model it gives
-fn workspace_update(mut w EditorWorkspaceModel2, msg tea.Msg) (EditorWorkspaceModel2, tea.Cmd) {
+fn workspace_update(mut w EditorWorkspaceModel, msg tea.Msg) (EditorWorkspaceModel, tea.Cmd) {
 	model, cmd := w.update(msg)
-	if model is EditorWorkspaceModel2 {
+	if model is EditorWorkspaceModel {
 		return model, cmd
 	}
 	panic('not a workspace')
@@ -173,9 +173,9 @@ fn ticks_in(cmd tea.Cmd) int {
 	}
 }
 
-fn workspace_editor(w EditorWorkspaceModel2) EditorModel2 {
+fn workspace_editor(w EditorWorkspaceModel) EditorModel {
 	editor := w.editors[w.active_editor_id] or { panic('no editor') }
-	if editor is EditorModel2 {
+	if editor is EditorModel {
 		return editor
 	}
 	panic('not an editor')

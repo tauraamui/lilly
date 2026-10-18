@@ -66,7 +66,7 @@ fn background_lex_tick() tea.Cmd {
 // lex_pending reports whether the line start states or the context tree's
 // checkpoints stop short of the end of the document, as they do on opening
 // a file and below an edit that changed how the lines after it lex
-fn (mut m EditorModel2) lex_pending() bool {
+fn (mut m EditorModel) lex_pending() bool {
 	if m.lang_syn.name.len == 0 {
 		return false
 	}
@@ -79,7 +79,7 @@ fn (mut m EditorModel2) lex_pending() bool {
 // which drawing needs, then the tree's checkpoints, which queries do. Once
 // both are done, jumping anywhere draws without lexing every line above it,
 // and a query anywhere walks no more than a checkpoint's lines.
-fn (mut m EditorModel2) background_lex(budget time.Duration) {
+fn (mut m EditorModel) background_lex(budget time.Duration) {
 	if !m.lex_pending() {
 		return
 	}
@@ -102,7 +102,7 @@ fn (mut m EditorModel2) background_lex(budget time.Duration) {
 // background_lex_step lexes `step` lines more: the line start states while
 // they stop short of the end of the document's `line_count` lines, then the
 // tree's checkpoints. It reports whether both are done.
-fn (mut m EditorModel2) background_lex_step(step int, line_count int) bool {
+fn (mut m EditorModel) background_lex_step(step int, line_count int) bool {
 	if m.parser_line_states.len < line_count {
 		target := m.parser_line_states.len - 1 + step
 		m.ensure_parser_states(if target < line_count { target } else { line_count - 1 })
@@ -140,12 +140,12 @@ fn lex_slice_budget(since_key time.Duration) time.Duration {
 
 // background_lex_update gives each editor with lexing left a slice, a short
 // one while keys are coming
-fn (mut m EditorWorkspaceModel2) background_lex_update() {
+fn (mut m EditorWorkspaceModel) background_lex_update() {
 	m.lex_ticking = false
 	budget := lex_slice_budget(time.Duration(i64(time.sys_mono_now() - m.last_key_mono)))
 	for id, editor in m.editors {
-		if editor is EditorModel2 {
-			mut e := EditorModel2{
+		if editor is EditorModel {
+			mut e := EditorModel{
 				...editor
 			}
 			e.background_lex(budget)
@@ -156,13 +156,13 @@ fn (mut m EditorWorkspaceModel2) background_lex_update() {
 
 // keep_lexing starts the tick that drives background lexing if an editor has
 // lexing left and the tick isn't already on its way
-fn (mut m EditorWorkspaceModel2) keep_lexing() tea.Cmd {
+fn (mut m EditorWorkspaceModel) keep_lexing() tea.Cmd {
 	if m.lex_ticking {
 		return tea.no_cmd
 	}
 	for id, editor in m.editors {
-		if editor is EditorModel2 {
-			mut e := EditorModel2{
+		if editor is EditorModel {
+			mut e := EditorModel{
 				...editor
 			}
 			pending := e.lex_pending()

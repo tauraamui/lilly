@@ -23,10 +23,10 @@ fn test_execute_action_normal_capital_i_moves_to_text_start_and_switches_to_inse
 	file_path := make_insert_append_test_file('capital_i', '   hello')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
-	mut m := EditorModel2{
+	mut m := EditorModel{
 		config:         EditorWorkspaceConfig.new(cfg.default_config)
 		doc_id:         doc_id
 		doc_controller: &c
@@ -49,10 +49,10 @@ fn test_execute_action_normal_capital_a_moves_to_line_end_and_switches_to_insert
 	file_path := make_insert_append_test_file('capital_a', 'hello')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
-	mut m := EditorModel2{
+	mut m := EditorModel{
 		config:         EditorWorkspaceConfig.new(cfg.default_config)
 		doc_id:         doc_id
 		doc_controller: &c

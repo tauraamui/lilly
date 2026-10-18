@@ -171,12 +171,9 @@ fn main() {
 		os.chdir)
 
 	mut documents_controller := documents.Controller.new()
-	mut documents_controller2 := documents.Controller2.new()
-	defer { documents_controller.free() }
 
 	mut cb := clipboard.new()
-	mut petal_model := PetalModel.new(version, cfg.Config.new(), &documents_controller,
-		&documents_controller2, &cb,
+	mut petal_model := PetalModel.new(version, cfg.Config.new(), &documents_controller, &cb,
 		initial_file_path: initial_file_path
 	)
 	mut app := tea.new_program(mut petal_model)

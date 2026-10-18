@@ -19,7 +19,7 @@ import os
 /*
 fn test_controller_backspace_on_given_document() {
 	mock_doc_id := 1
-	mut c := Controller2{
+	mut c := Controller{
 		docs: { mock_doc_id: buffers.TextBuffer.new() or { panic(err) } }
 	}
 	c.insert(mock_doc_id, u8(`a`))
@@ -31,7 +31,7 @@ fn test_controller_open_document_from_path() {
 	defer { os.rm(file_path) or { println('failed to delete ${file_path}: ${err}') } }
 	os.write_file(file_path, 'hello\nWoRlD<')!
 
-	mut c := Controller2{}
+	mut c := Controller{}
 	doc_id := c.open_document(file_path)!
 	assert doc_id != ''
 	assert c.get_line_bytes(doc_id, 0)? == [u8(`h`), `e`, `l`, `l`, `o`]
@@ -43,7 +43,7 @@ fn test_controller_open_document_from_path_subsequent_edits() {
 	defer { os.rm(file_path) or { println('failed to delete ${file_path}: ${err}') } }
 	os.write_file(file_path, 'hello\nWoRlD<')!
 
-	mut c := Controller2{}
+	mut c := Controller{}
 	doc_id := c.open_document(file_path)!
 	assert doc_id != ''
 	assert c.get_line_bytes(doc_id, 0)? == [u8(`h`), `e`, `l`, `l`, `o`]
@@ -65,7 +65,7 @@ fn test_controller_insert_after_load_goes_to_start() {
 	defer { os.rm(file_path) or { println('failed to delete ${file_path}: ${err}') } }
 	os.write_file(file_path, 'hello\nWoRlD<')!
 
-	mut c := Controller2{}
+	mut c := Controller{}
 	doc_id := c.open_document(file_path)!
 	c.insert(doc_id, u8(`>`))
 
@@ -78,7 +78,7 @@ fn test_controller_document_is_clean_until_edited() {
 	defer { os.rm(file_path) or { println('failed to delete ${file_path}: ${err}') } }
 	os.write_file(file_path, 'hello\nWoRlD<')!
 
-	mut c := Controller2{}
+	mut c := Controller{}
 	doc_id := c.open_document(file_path)!
 	assert !c.is_dirty(doc_id)
 
@@ -95,7 +95,7 @@ fn test_controller_write_to_disk_marks_document_clean() {
 	defer { os.rm(file_path) or { println('failed to delete ${file_path}: ${err}') } }
 	os.write_file(file_path, 'hello')!
 
-	mut c := Controller2{}
+	mut c := Controller{}
 	doc_id := c.open_document(file_path)!
 	c.insert(doc_id, u8(`>`))
 	assert c.is_dirty(doc_id)
@@ -112,7 +112,7 @@ fn test_controller_mark_clean_forgets_edits_without_writing() {
 	defer { os.rm(file_path) or { println('failed to delete ${file_path}: ${err}') } }
 	os.write_file(file_path, 'hello')!
 
-	mut c := Controller2{}
+	mut c := Controller{}
 	doc_id := c.open_document(file_path)!
 	c.insert(doc_id, u8(`>`))
 	c.mark_clean(doc_id)
@@ -123,7 +123,7 @@ fn test_controller_mark_clean_forgets_edits_without_writing() {
 }
 
 fn test_controller_unknown_document_reads_clean() {
-	mut c := Controller2{}
+	mut c := Controller{}
 	assert !c.is_dirty('no-such-document')
 }
 
@@ -140,7 +140,7 @@ fn test_controller_close_unreferenced_drops_only_documents_not_named() {
 		}
 	}
 
-	mut c := Controller2{}
+	mut c := Controller{}
 	a := c.open_document(paths[0])!
 	b := c.open_document(paths[1])!
 	cc := c.open_document(paths[2])!
@@ -162,7 +162,7 @@ fn test_controller_close_unreferenced_drops_the_dirty_flag_with_the_document() {
 	defer { os.rm(file_path) or { println('failed to delete ${file_path}: ${err}') } }
 	os.write_file(file_path, 'hello')!
 
-	mut c := Controller2{}
+	mut c := Controller{}
 	doc_id := c.open_document(file_path)!
 	c.insert(doc_id, u8(`>`))
 	assert c.is_dirty(doc_id)
@@ -180,7 +180,7 @@ fn test_controller_reopening_an_open_path_reuses_the_document() {
 	defer { os.rm(file_path) or { println('failed to delete ${file_path}: ${err}') } }
 	os.write_file(file_path, 'hello')!
 
-	mut c := Controller2{}
+	mut c := Controller{}
 	first := c.open_document(file_path)!
 	c.insert(first, u8(`>`))
 	second := c.open_document(file_path)!

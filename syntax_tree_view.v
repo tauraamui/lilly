@@ -38,7 +38,7 @@ struct SyntaxTreeModel {
 	source_id      nanoid.ID
 	doc_id         nanoid.ID
 	file_path      string
-	doc_controller &documents.Controller2
+	doc_controller &documents.Controller
 	config         EditorWorkspaceConfig
 mut:
 	lang_syn      syntax.Syntax
@@ -64,7 +64,7 @@ mut:
 	top_row  int
 }
 
-fn SyntaxTreeModel.new(id nanoid.ID, source EditorModel2) SyntaxTreeModel {
+fn SyntaxTreeModel.new(id nanoid.ID, source EditorModel) SyntaxTreeModel {
 	syn, _ := resolve_syntax(source.file_path)
 	mut m := SyntaxTreeModel{
 		id:             id
@@ -90,7 +90,7 @@ fn (mut m SyntaxTreeModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m.key_update(msg.key_msg)
 			}
 		}
-		EditorModel2Msg {
+		EditorModelMsg {
 			inner := msg.msg
 			match inner {
 				tea.FocusedMsg {
@@ -107,9 +107,9 @@ fn (mut m SyntaxTreeModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.width = inner.window_width
 					m.height = inner.window_height
 				}
-				QueryEditorData2Msg {
+				QueryEditorDataMsg {
 					if msg.active_id == m.id {
-						return m.clone(), editor_data2(m.data())
+						return m.clone(), editor_data(m.data())
 					}
 				}
 				else {}
@@ -154,7 +154,7 @@ fn (mut m SyntaxTreeModel) key_update(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			}
 		}
 		'q' {
-			return m.clone(), close_editor2(m.id)
+			return m.clone(), close_editor(m.id)
 		}
 		else {}
 	}
@@ -379,9 +379,9 @@ fn span_range_label(span syntax.Span) string {
 	return '${start} - …'
 }
 
-fn (m SyntaxTreeModel) data() EditorData2 {
+fn (m SyntaxTreeModel) data() EditorData {
 	cursor_line, cursor_x := m.doc_controller.cursor_line_and_x(m.doc_id)
-	return EditorData2{
+	return EditorData{
 		id:         m.id
 		file_path:  m.file_path
 		cursor_row: int(cursor_line)

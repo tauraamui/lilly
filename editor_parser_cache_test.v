@@ -31,9 +31,9 @@ fn make_parser_cache_test_file(content string) string {
 	return path
 }
 
-fn new_parser_cache_test_editor(c &documents.Controller2, doc_id nanoid.ID) EditorModel2 {
+fn new_parser_cache_test_editor(c &documents.Controller, doc_id nanoid.ID) EditorModel {
 	v_syntax := syntax.resolve_from_extension('main.v') or { panic(err) }
-	mut m := EditorModel2{
+	mut m := EditorModel{
 		config:         EditorWorkspaceConfig.new(cfg.default_config)
 		doc_id:         doc_id
 		doc_controller: c
@@ -45,13 +45,13 @@ fn new_parser_cache_test_editor(c &documents.Controller2, doc_id nanoid.ID) Edit
 
 // state_names describes an editor's cached line states by their context
 // stacks, which unlike the states themselves compare between editors
-fn state_names(m EditorModel2) []string {
+fn state_names(m EditorModel) []string {
 	return m.parser_line_states.map(m.token_parser.state_name(it))
 }
 
 // expected_parser_states is what lexing the whole document from scratch
 // gives, as it stands
-fn expected_parser_states(c &documents.Controller2, doc_id nanoid.ID) []string {
+fn expected_parser_states(c &documents.Controller, doc_id nanoid.ID) []string {
 	mut fresh := new_parser_cache_test_editor(c, doc_id)
 	fresh.ensure_parser_states(int(c.line_count(doc_id)) - 1)
 	return state_names(fresh)
@@ -59,14 +59,14 @@ fn expected_parser_states(c &documents.Controller2, doc_id nanoid.ID) []string {
 
 // view_down_to extends an editor's states as far as a viewport whose top is
 // at a random line would, and checks the states it holds against `expected`
-fn view_down_to(mut rng rand.PRNG, mut m EditorModel2, expected []string, label string) {
+fn view_down_to(mut rng rand.PRNG, mut m EditorModel, expected []string, label string) {
 	m.ensure_parser_states(rng.intn(expected.len + 1) or { 0 })
 	held := state_names(m)
 	assert held.len <= expected.len, label
 	assert held == expected[..held.len], label
 }
 
-fn random_parser_cache_edit(mut rng rand.PRNG, mut c documents.Controller2, doc_id nanoid.ID) {
+fn random_parser_cache_edit(mut rng rand.PRNG, mut c documents.Controller, doc_id nanoid.ID) {
 	line_count := int(c.line_count(doc_id))
 	c.jump_cursor_to_line(doc_id, u64(rng.intn(line_count) or { 0 }))
 	for _ in 0 .. rng.intn(6) or { 0 } {
@@ -114,7 +114,7 @@ fn test_parser_state_cache_matches_full_rebuild_across_random_edits() {
 	// reseeds that from the file's path (its ID is nanoid.simple_with_seed),
 	// and the temp path holds a timestamp, so the edits differed every run
 	mut rng := rand.new_default(seed_: [u32(750), 1])
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 
 	// one editor syncs after every edit, the other (a split on the same
@@ -161,7 +161,7 @@ fn test_parser_state_cache_trimmed_past_the_view_matches_full_rebuild() {
 	defer { os.rm(file_path) or {} }
 
 	mut rng := rand.new_default(seed_: [u32(739), 5])
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut m := new_parser_cache_test_editor(&c, doc_id)
 	m.viewport_height = 10
@@ -196,7 +196,7 @@ fn test_parser_state_cache_relexes_one_line_for_a_plain_edit() {
 	file_path := make_parser_cache_test_file(parser_cache_sample)
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut m := new_parser_cache_test_editor(&c, doc_id)
 	m.sync_parser_state_cache()
@@ -222,7 +222,7 @@ fn test_parser_state_cache_opening_a_block_comment_reaches_lines_below() {
 	file_path := make_parser_cache_test_file('a\nb\nc\nd\n')
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut m := new_parser_cache_test_editor(&c, doc_id)
 	m.sync_parser_state_cache()
@@ -240,7 +240,7 @@ fn test_parser_states_are_only_lexed_down_to_the_line_asked_for() {
 	file_path := make_parser_cache_test_file('a\n'.repeat(1000))
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut m := new_parser_cache_test_editor(&c, doc_id)
 	m.sync_parser_state_cache()
@@ -270,7 +270,7 @@ fn test_syntax_tree_matches_a_fresh_tree_across_random_edits() {
 	defer { os.rm(file_path) or {} }
 
 	mut rng := rand.new_default(seed_: [u32(737), 3])
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut m := new_parser_cache_test_editor(&c, doc_id)
 
@@ -299,7 +299,7 @@ fn test_syntax_find_finds_calls_by_scope() {
 	file_path := make_parser_cache_test_file(parser_cache_sample)
 	defer { os.rm(file_path) or {} }
 
-	mut c := documents.Controller2{}
+	mut c := documents.Controller{}
 	doc_id := c.open_document(file_path) or { panic('failed to open temp document: ${err}') }
 	mut m := new_parser_cache_test_editor(&c, doc_id)
 	last := int(c.line_count(doc_id)) - 1

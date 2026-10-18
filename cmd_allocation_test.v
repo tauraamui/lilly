@@ -39,28 +39,15 @@ fn test_workspace_command_constructors_carry_messages() {
 	assert_carries_msg('open_file', open_file('/tmp/a.txt'))
 	assert_carries_msg('open_editor_workspace', open_editor_workspace('/tmp/a.txt'))
 	assert_carries_msg('switch_mode', switch_mode(.insert))
-	assert_carries_msg('run_command', run_command('w'))
-	assert_carries_msg('focus_editor', focus_editor(1))
-	assert_carries_msg('unfocus_editor', unfocus_editor(1))
-	assert_carries_msg('switch_active_split', switch_active_split(.left))
 }
 
 fn test_editor_command_constructors_carry_messages() {
-	assert_carries_msg('open_editor', open_editor('/tmp/a.txt'))
-	assert_carries_msg('query_editor_data', query_editor_data(1))
+	assert_carries_msg('query_editor_data', query_editor_data('editor-1'))
 	assert_carries_msg('editor_data', editor_data(EditorData{}))
-	assert_carries_msg('write_to_disk', write_to_disk(1))
-	assert_carries_msg('goto_line', goto_line(1, 12))
-	assert_carries_msg('load_syntax', load_syntax(1, '/tmp/a.v'))
-}
-
-fn test_editor2_command_constructors_carry_messages() {
-	assert_carries_msg('query_editor_data2', query_editor_data2('editor-1'))
-	assert_carries_msg('editor_data2', editor_data2(EditorData2{}))
-	assert_carries_msg('write_to_disk2', write_to_disk2('editor-1'))
-	assert_carries_msg('load_syntax2', load_syntax2('editor-1', '/tmp/a.v'))
-	assert_carries_msg('close_editor2', close_editor2('editor-1'))
-	assert_carries_msg('focus_editor2', focus_editor2('editor-1'))
+	assert_carries_msg('write_editor_to_disk_cmd', write_editor_to_disk_cmd('editor-1'))
+	assert_carries_msg('load_syntax', load_syntax('editor-1', '/tmp/a.v'))
+	assert_carries_msg('close_editor', close_editor('editor-1'))
+	assert_carries_msg('focus_editor', focus_editor('editor-1'))
 	assert_carries_msg('display_message', display_message(.normal, 'saved'))
 	assert_carries_msg('git_branch_query_result', git_branch_query_result('master'))
 	assert_carries_msg('resolve_unsaved_changes', resolve_unsaved_changes('editor-1', true,
@@ -92,7 +79,7 @@ fn test_cursor_blink_rearms_without_a_closure() {
 // tea.batch and tea.sequence used to build a closure over their command array,
 // so every batched update pinned the array and its members.
 fn test_batch_and_sequence_do_not_build_closures() {
-	pair := tea.batch(open_file('/tmp/a.txt'), write_to_disk(1))
+	pair := tea.batch(open_file('/tmp/a.txt'), write_editor_to_disk_cmd('editor-1'))
 	assert pair !is tea.CmdFn
 	assert pair is tea.BatchCmd
 

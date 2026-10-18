@@ -131,7 +131,6 @@ struct SplashScreenOptions {
 	config            cfg.Config
 	version           string
 	doc_controller    &documents.Controller
-	doc_controller2   &documents.Controller2
 	cb                &clipboard.Manager
 	initial_file_path ?string
 }
@@ -141,7 +140,6 @@ struct SplashScreenModel {
 	version           string
 	logo              SplashLogo
 	doc_controller    &documents.Controller
-	doc_controller2   &documents.Controller2
 	cb                &clipboard.Manager
 	initial_file_path ?string
 mut:
@@ -159,7 +157,6 @@ fn SplashScreenModel.new(opts SplashScreenOptions) SplashScreenModel {
 		version:           opts.version
 		logo:              SplashLogo.parse(logo_contents.to_string())
 		doc_controller:    opts.doc_controller
-		doc_controller2:   opts.doc_controller2
 		cb:                opts.cb
 		initial_file_path: opts.initial_file_path
 	}
@@ -275,21 +272,8 @@ fn (mut m SplashScreenModel) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds << open_editor_workspace(msg.file_path)
 		}
 		OpenEditorWorkspaceMsg {
-			mut workspace := EditorWorkspaceModel2.new(EditorWorkspaceConfig.new(m.config),
-				m.doc_controller2)
-			/*
-			workspace := EditorWorkspaceModel.new(
-				version:           m.version
-				ttheme:            m.theme
-				leader_key:        m.leader_key
-				initial_file_path: msg.initial_file_path
-				doc_controller:    m.doc_controller
-				doc_controller2:   m.doc_controller2
-				clip_manager:      m.cb
-				expand_tabs:       m.expand_tabs
-				tab_width:         m.tab_width
-			)
-			*/
+			mut workspace := EditorWorkspaceModel.new(EditorWorkspaceConfig.new(m.config),
+				m.doc_controller)
 			cmds << swap_active_screen(workspace)
 			cmds << open_file(msg.initial_file_path)
 			return m.clone(), tea.sequence(...cmds)

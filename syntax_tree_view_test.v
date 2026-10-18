@@ -26,16 +26,16 @@ fn tree_view_key(s string) tea.KeyMsg {
 	}
 }
 
-fn tree_view_workspace(path string) (EditorWorkspaceModel2, &documents.Controller2) {
-	mut c := &documents.Controller2{}
-	mut w := EditorWorkspaceModel2.new(EditorWorkspaceConfig.new(cfg.default_config), c)
+fn tree_view_workspace(path string) (EditorWorkspaceModel, &documents.Controller) {
+	mut c := &documents.Controller{}
+	mut w := EditorWorkspaceModel.new(EditorWorkspaceConfig.new(cfg.default_config), c)
 	w.open_file_update(OpenFileMsg{
 		file_path: path
 	})
 	return w, c
 }
 
-fn tree_view_of(w EditorWorkspaceModel2, editor_id string) ?SyntaxTreeModel {
+fn tree_view_of(w EditorWorkspaceModel, editor_id string) ?SyntaxTreeModel {
 	for id in w.syntax_trees_of(editor_id) {
 		view := w.editors[id] or { continue }
 		if view is SyntaxTreeModel {
@@ -59,7 +59,7 @@ fn test_inspect_tree_toggles_a_view_beside_the_editor() {
 	assert w.editors.len == 2
 	assert w.active_editor_id == editor_id, 'the editor keeps focus'
 	view := tree_view_of(w, editor_id) or { panic('no view opened') }
-	assert view.doc_id == (w.editors[editor_id] or { panic('no editor') } as EditorModel2).doc_id
+	assert view.doc_id == (w.editors[editor_id] or { panic('no editor') } as EditorModel).doc_id
 
 	w.toggle_syntax_tree_update(ToggleSyntaxTreeMsg{editor_id})
 	assert w.editors.len == 1
@@ -90,7 +90,7 @@ fn test_closing_an_editor_closes_its_view() {
 	w.toggle_syntax_tree_update(ToggleSyntaxTreeMsg{second_id})
 	assert w.editors.len == 3
 
-	w.close_editor_update(CloseEditor2Msg{
+	w.close_editor_update(CloseEditorMsg{
 		active_editor_id:   second_id
 		editor_id_to_close: second_id
 	})
@@ -111,7 +111,7 @@ fn test_closing_an_editor_beside_a_view_focuses_an_editor() {
 	w.toggle_syntax_tree_update(ToggleSyntaxTreeMsg{first_id})
 	w.active_editor_id = second_id
 
-	w.close_editor_update(CloseEditor2Msg{
+	w.close_editor_update(CloseEditorMsg{
 		active_editor_id:   second_id
 		editor_id_to_close: second_id
 	})
@@ -160,7 +160,7 @@ fn test_the_view_moves_the_cursor_to_the_node_picked() {
 
 	// focusing the view picks the node the cursor is in: the block comment
 	c.jump_cursor_to_line(view.doc_id, 2)
-	view.update(EditorModel2Msg{
+	view.update(EditorModelMsg{
 		active_id: view.id
 		msg:       tea.FocusedMsg{}
 	})
@@ -252,9 +252,9 @@ fn test_labels_keep_up_with_many_definitions() {
 
 // tree_view_workspace_update updates `w` as the app does, keeping the model
 // it gives
-fn tree_view_workspace_update(mut w EditorWorkspaceModel2, msg tea.Msg) (EditorWorkspaceModel2, tea.Cmd) {
+fn tree_view_workspace_update(mut w EditorWorkspaceModel, msg tea.Msg) (EditorWorkspaceModel, tea.Cmd) {
 	model, cmd := w.update(msg)
-	if model is EditorWorkspaceModel2 {
+	if model is EditorWorkspaceModel {
 		return model, cmd
 	}
 	panic('not a workspace')
@@ -279,14 +279,14 @@ fn test_picking_a_node_out_of_the_editors_view_scrolls_it_there() {
 	mut view := tree_view_of(w, editor_id) or { panic('no view opened') }
 	view.height = 50
 	editor := w.editors[editor_id] or { panic('no editor') }
-	mut e := editor as EditorModel2
+	mut e := editor as EditorModel
 	c.jump_cursor_to_line(e.doc_id, 250)
 	e.scroll_to_cursor()
 	w.editors[editor_id] = e
 	assert e.top_line > 0
 
 	// the function's row, at the top of the file
-	view.update(EditorModel2Msg{
+	view.update(EditorModelMsg{
 		active_id: view.id
 		msg:       tea.FocusedMsg{}
 	})
@@ -302,5 +302,5 @@ fn test_picking_a_node_out_of_the_editors_view_scrolls_it_there() {
 	line, _ := c.cursor_line_and_x(e.doc_id)
 	assert line == 0
 	after := w.editors[editor_id] or { panic('no editor') }
-	assert (after as EditorModel2).top_line == 0, 'the editor scrolled to its cursor'
+	assert (after as EditorModel).top_line == 0, 'the editor scrolled to its cursor'
 }
