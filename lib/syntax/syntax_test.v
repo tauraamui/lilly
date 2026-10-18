@@ -103,9 +103,9 @@ fn test_resolve_from_extension_resolves_perl_syntax() {
 @[assert_continues]
 fn test_loads_builtin_syntax() {
 	names := load_builtin_syntaxes().map(it.name)
-	assert names.len == 11
+	assert names.len == 12
 	for name in ['V', 'Go', 'C', 'Rust', 'JavaScript', 'TypeScript', 'Python', 'Perl', 'Zig', 'Gleam',
-		'Markdown'] {
+		'Markdown', 'HTML'] {
 		assert name in names
 	}
 }
@@ -133,4 +133,9 @@ fn test_resolve_from_extension_resolves_gleam_syntax() {
 fn test_resolve_from_extension_resolves_markdown_syntax() {
 	assert resolve_from_extension('README.md')!.name == 'Markdown'
 	assert resolve_from_extension('notes.markdown')!.lang == .markdown
+}
+
+fn test_resolve_from_extension_resolves_html_syntax() {
+	assert resolve_from_extension('index.html')!.name == 'HTML'
+	assert resolve_from_extension('page.htm')!.lang == .html
 }

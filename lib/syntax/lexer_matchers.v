@@ -139,6 +139,19 @@ fn lex_m_05bc6592(r []rune, start int) int {
 }
 
 @[direct_array_access]
+fn lex_m_072e838d(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(!(r[p] == ` ` || r[p] == rune(9) || r[p] == `"` || r[p] == `'` || r[p] == `<` || r[p] == `>` || r[p] == `/` || r[p] == `=`)) {
+		return -1
+	}
+	p++
+	for p < r.len && (!(r[p] == ` ` || r[p] == rune(9) || r[p] == `"` || r[p] == `'` || r[p] == `<` || r[p] == `>` || r[p] == `/` || r[p] == `=`)) {
+		p++
+	}
+	return p
+}
+
+@[direct_array_access]
 fn lex_m_082d049a(r []rune, start int) int {
 	mut p := start
 	if p >= r.len || !(r[p] == `"`) {
@@ -225,6 +238,21 @@ fn lex_m_09149e3f(r []rune, start int) int {
 fn lex_m_09e5985a(r []rune, start int) int {
 	mut p := start
 	if p >= r.len || !(r[p] == `"`) {
+		return -1
+	}
+	p++
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_0aba4bf7(r []rune, start int) int {
+	mut p := start
+	mut n1 := 0
+	for p < r.len && n1 < 1 && r[p] == `/` {
+		p++
+		n1++
+	}
+	if p >= r.len || !(r[p] == `>`) {
 		return -1
 	}
 	p++
@@ -360,6 +388,43 @@ fn lex_m_0df60a33(r []rune, start int) int {
 }
 
 @[direct_array_access]
+fn lex_m_0f0a1756(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `/`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `s` || r[p] == `S`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `c` || r[p] == `C`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `r` || r[p] == `R`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `i` || r[p] == `I`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `p` || r[p] == `P`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `t` || r[p] == `T`) {
+		return -1
+	}
+	p++
+	if lex_m_633494c6(r, p) >= 0 {
+		return -1
+	}
+	return p
+}
+
+@[direct_array_access]
 fn lex_m_11da7a76(r []rune, start int) int {
 	mut p := start
 	if p >= r.len || !(r[p] == `v`) {
@@ -469,6 +534,20 @@ fn lex_m_16d7fcc3(r []rune, start int) int {
 }
 
 @[direct_array_access]
+fn lex_m_1733d7a9(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `/`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `>`) {
+		return -1
+	}
+	p++
+	return p
+}
+
+@[direct_array_access]
 fn lex_m_1746687e(r []rune, start int) int {
 	mut p := start
 	if p >= r.len || !(r[p] == rune(96)) {
@@ -476,6 +555,19 @@ fn lex_m_1746687e(r []rune, start int) int {
 	}
 	p++
 	if lex_m_953bb9c6(r, p) >= 0 {
+		return -1
+	}
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_1809ccfd(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `<`) {
+		return -1
+	}
+	p++
+	if lex_m_a044ab09(r, p) < 0 {
 		return -1
 	}
 	return p
@@ -638,6 +730,20 @@ fn lex_m_1a7896c8(r []rune, start int) int {
 	for p < r.len && !(r[p] == rune(96)) {
 		p++
 	}
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_1b10111b(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `<`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `!`) {
+		return -1
+	}
+	p++
 	return p
 }
 
@@ -1158,6 +1264,23 @@ fn lex_m_36e1dbb5(r []rune, start int) int {
 }
 
 @[direct_array_access]
+fn lex_m_3830b674(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `<`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `/`) {
+		return -1
+	}
+	p++
+	if lex_m_62fa4ad1(r, p) < 0 {
+		return -1
+	}
+	return p
+}
+
+@[direct_array_access]
 fn lex_m_3b783e66(r []rune, start int) int {
 	mut p := start
 	mut q1 := lex_m_66e866ba(r, p)
@@ -1302,6 +1425,16 @@ fn lex_m_41c2752d(r []rune, start int) int {
 		n1++
 	}
 	if p >= r.len || !(r[p] == `(`) {
+		return -1
+	}
+	p++
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_42039225(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `=`) {
 		return -1
 	}
 	p++
@@ -1557,6 +1690,19 @@ fn lex_m_558fc09c(r []rune, start int) int {
 }
 
 @[direct_array_access]
+fn lex_m_562fc98a(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `<`) {
+		return -1
+	}
+	p++
+	if lex_m_0f0a1756(r, p) < 0 {
+		return -1
+	}
+	return p
+}
+
+@[direct_array_access]
 fn lex_m_58d3dc85(r []rune, start int) int {
 	mut p := start
 	if p >= r.len || !(r[p] == `u`) {
@@ -1564,6 +1710,36 @@ fn lex_m_58d3dc85(r []rune, start int) int {
 	}
 	p++
 	if p >= r.len || !(r[p] == `8`) {
+		return -1
+	}
+	p++
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_58d59dc0(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `s` || r[p] == `S`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `c` || r[p] == `C`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `r` || r[p] == `R`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `i` || r[p] == `I`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `p` || r[p] == `P`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `t` || r[p] == `T`) {
 		return -1
 	}
 	p++
@@ -1635,6 +1811,45 @@ fn lex_m_5ed48fd5(r []rune, start int) int {
 		return -1
 	}
 	p = q1
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_62fa4ad1(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `s` || r[p] == `S`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `t` || r[p] == `T`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `y` || r[p] == `Y`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `l` || r[p] == `L`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `e` || r[p] == `E`) {
+		return -1
+	}
+	p++
+	if lex_m_633494c6(r, p) >= 0 {
+		return -1
+	}
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_633494c6(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_` || r[p] == `-` || r[p] == `:` || r[p] == `.`) {
+		return -1
+	}
+	p++
 	return p
 }
 
@@ -1765,6 +1980,16 @@ fn lex_m_66ebbc7f(r []rune, start int) int {
 		p++
 		n1++
 	}
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_67b40dde(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !((r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `a` && r[p] <= `z`)) {
+		return -1
+	}
+	p++
 	return p
 }
 
@@ -1909,6 +2134,32 @@ fn lex_m_73938ba1(r []rune, start int) int {
 	for p < r.len && ((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_`) {
 		p++
 	}
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_756a49c8(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `s` || r[p] == `S`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `t` || r[p] == `T`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `y` || r[p] == `Y`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `l` || r[p] == `L`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `e` || r[p] == `E`) {
+		return -1
+	}
+	p++
 	return p
 }
 
@@ -2075,6 +2326,19 @@ fn lex_m_819de15f(r []rune, start int) int {
 }
 
 @[direct_array_access]
+fn lex_m_84c044c5(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `<`) {
+		return -1
+	}
+	p++
+	if lex_m_62fa4ad1(r, p) < 0 {
+		return -1
+	}
+	return p
+}
+
+@[direct_array_access]
 fn lex_m_84f6a8e9(r []rune, start int) int {
 	mut p := start
 	if p >= r.len || !(r[p] == `.`) {
@@ -2152,6 +2416,20 @@ fn lex_m_8a3ec543(r []rune, start int) int {
 	}
 	p++
 	if p >= r.len || !(r[p] == `s`) {
+		return -1
+	}
+	p++
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_8a6d3159(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `<`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `?`) {
 		return -1
 	}
 	p++
@@ -2426,6 +2704,40 @@ fn lex_m_8f2fb4db(r []rune, start int) int {
 }
 
 @[direct_array_access]
+fn lex_m_9031410d(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `[`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `C`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `D`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `A`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `T`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `A`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `[`) {
+		return -1
+	}
+	p++
+	return p
+}
+
+@[direct_array_access]
 fn lex_m_919d987c(r []rune, start int) int {
 	mut p := start
 	if p >= r.len || !(r[p] == `/`) {
@@ -2687,6 +2999,57 @@ fn lex_m_9d4099a1(r []rune, start int) int {
 }
 
 @[direct_array_access]
+fn lex_m_a044ab09(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `s` || r[p] == `S`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `c` || r[p] == `C`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `r` || r[p] == `R`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `i` || r[p] == `I`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `p` || r[p] == `P`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `t` || r[p] == `T`) {
+		return -1
+	}
+	p++
+	if lex_m_633494c6(r, p) >= 0 {
+		return -1
+	}
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_a269e550(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `]`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `]`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `>`) {
+		return -1
+	}
+	p++
+	return p
+}
+
+@[direct_array_access]
 fn lex_m_a4a6c5ad(r []rune, start int) int {
 	mut p := start
 	if p >= r.len || !(r[p] == `$`) {
@@ -2771,6 +3134,27 @@ fn lex_m_ade64dc3(r []rune, start int) int {
 		return -1
 	}
 	p++
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_af1dfc20(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `#`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `x` || r[p] == `X`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !((r[p] >= `0` && r[p] <= `9`) || (r[p] >= `a` && r[p] <= `f`) || (r[p] >= `A` && r[p] <= `F`)) {
+		return -1
+	}
+	p++
+	for p < r.len && ((r[p] >= `0` && r[p] <= `9`) || (r[p] >= `a` && r[p] <= `f`) || (r[p] >= `A` && r[p] <= `F`)) {
+		p++
+	}
 	return p
 }
 
@@ -2906,6 +3290,20 @@ fn lex_m_b3f9456c(r []rune, start int) int {
 		n1++
 	}
 	if p >= r.len || !(r[p] == `"`) {
+		return -1
+	}
+	p++
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_b400c2ac(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `-`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `-`) {
 		return -1
 	}
 	p++
@@ -3402,6 +3800,20 @@ fn lex_m_ce8d8d2e(r []rune, start int) int {
 }
 
 @[direct_array_access]
+fn lex_m_d1fbca59(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `?`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `>`) {
+		return -1
+	}
+	p++
+	return p
+}
+
+@[direct_array_access]
 fn lex_m_d243ec0e(r []rune, start int) int {
 	mut p := start
 	if p >= r.len || !(r[p] == `u`) {
@@ -3424,6 +3836,23 @@ fn lex_m_d243ec0e(r []rune, start int) int {
 		return -1
 	}
 	p++
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_d614e947(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `#`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] >= `0` && r[p] <= `9`) {
+		return -1
+	}
+	p++
+	for p < r.len && r[p] >= `0` && r[p] <= `9` {
+		p++
+	}
 	return p
 }
 
@@ -3622,6 +4051,16 @@ fn lex_m_e091c009(r []rune, start int) int {
 }
 
 @[direct_array_access]
+fn lex_m_e111cc0e(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `>`) {
+		return -1
+	}
+	p++
+	return p
+}
+
+@[direct_array_access]
 fn lex_m_e33fb31c(r []rune, start int) int {
 	mut p := start
 	if p >= r.len || !(r[p] == `/`) {
@@ -3704,6 +4143,19 @@ fn lex_m_e46e643f(r []rune, start int) int {
 }
 
 @[direct_array_access]
+fn lex_m_e4fac2f1(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !((r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `a` && r[p] <= `z`)) {
+		return -1
+	}
+	p++
+	for p < r.len && ((r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `a` && r[p] <= `z`) || (r[p] >= `0` && r[p] <= `9`)) {
+		p++
+	}
+	return p
+}
+
+@[direct_array_access]
 fn lex_m_e7b75405(r []rune, start int) int {
 	mut p := start
 	if lex_m_190d76c2(r, p) >= 0 {
@@ -3731,6 +4183,15 @@ fn lex_m_e8186821(r []rune, start int) int {
 	p++
 	for p < r.len && ((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_`) {
 		p++
+	}
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_e8c1a22f(r []rune, start int) int {
+	p := start
+	if lex_m_0aba4bf7(r, p) < 0 {
+		return -1
 	}
 	return p
 }
@@ -3893,6 +4354,44 @@ fn lex_m_ef7e1f37(r []rune, start int) int {
 }
 
 @[direct_array_access]
+fn lex_m_f138359d(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !((r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `a` && r[p] <= `z`)) {
+		return -1
+	}
+	p++
+	for p < r.len && ((r[p] >= `a` && r[p] <= `z`) || (r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `0` && r[p] <= `9`) || r[p] == `_` || r[p] == `-` || r[p] == `:` || r[p] == `.`) {
+		p++
+	}
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_f17e7442(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `&`) {
+		return -1
+	}
+	p++
+	mut q1 := lex_m_d614e947(r, p)
+	if q1 < 0 {
+		q1 = lex_m_af1dfc20(r, p)
+	}
+	if q1 < 0 {
+		q1 = lex_m_e4fac2f1(r, p)
+	}
+	if q1 < 0 {
+		return -1
+	}
+	p = q1
+	if p >= r.len || !(r[p] == `;`) {
+		return -1
+	}
+	p++
+	return p
+}
+
+@[direct_array_access]
 fn lex_m_f1e25607(r []rune, start int) int {
 	mut p := start
 	if p >= r.len || !((r[p] >= `A` && r[p] <= `Z`) || (r[p] >= `a` && r[p] <= `z`) || r[p] == `_` || r[p] == `$`) {
@@ -3993,6 +4492,19 @@ fn lex_m_f75ea0af(r []rune, start int) int {
 		return -1
 	}
 	p++
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_f7f901d5(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(!(r[p] == ` ` || r[p] == rune(9) || r[p] == `"` || r[p] == `'` || r[p] == `<` || r[p] == `>` || r[p] == `=` || r[p] == rune(96))) {
+		return -1
+	}
+	p++
+	for p < r.len && (!(r[p] == ` ` || r[p] == rune(9) || r[p] == `"` || r[p] == `'` || r[p] == `<` || r[p] == `>` || r[p] == `=` || r[p] == rune(96))) {
+		p++
+	}
 	return p
 }
 
@@ -4239,6 +4751,23 @@ fn lex_m_fbfe149d(r []rune, start int) int {
 }
 
 @[direct_array_access]
+fn lex_m_fc53976b(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `<`) {
+		return -1
+	}
+	p++
+	if p >= r.len || !(r[p] == `/`) {
+		return -1
+	}
+	p++
+	if lex_m_67b40dde(r, p) < 0 {
+		return -1
+	}
+	return p
+}
+
+@[direct_array_access]
 fn lex_m_fcd3f7f4(r []rune, start int) int {
 	mut p := start
 	if p >= r.len || !(r[p] == `(`) {
@@ -4255,5 +4784,18 @@ fn lex_m_fe44fa3f(r []rune, start int) int {
 		return -1
 	}
 	p++
+	return p
+}
+
+@[direct_array_access]
+fn lex_m_fe4cd206(r []rune, start int) int {
+	mut p := start
+	if p >= r.len || !(r[p] == `<`) {
+		return -1
+	}
+	p++
+	if lex_m_67b40dde(r, p) < 0 {
+		return -1
+	}
 	return p
 }

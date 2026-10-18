@@ -509,3 +509,49 @@ fn test_a_set_at_the_root_records_no_node() {
 		'true:${block}',
 	]
 }
+
+fn test_html_highlights_tags_attributes_and_entities() {
+	assert lex('a.html', '<!DOCTYPE html>\n<a href="/x?a=1&amp;b" class=nav disabled>Tom &amp; Jerry</a>\n<br/> <!-- note -->') == [
+		['<!DOCTYPE html>:keyword_directive'],
+		['<:punctuation', 'a:keyword', 'href:attribute', '=:operator', '"/x?a=1:string',
+			'&amp;:string_escape', 'b":string', 'class:attribute', '=:operator', 'nav:string',
+			'disabled:attribute', '>:punctuation', '&amp;:string_escape', '</:punctuation', 'a:keyword',
+			'>:punctuation'],
+		['<:punctuation', 'br:keyword', '/>:punctuation', '<!-- note -->:comment'],
+	]
+}
+
+fn test_html_tags_and_quoted_values_can_span_lines() {
+	code := '<div\n  title="a\n  b">\n</div>'
+	assert end_states('a.html', code) == ['main > tag', 'main > tag > double', 'main', 'main']
+	// an unquoted value ends at the tag's close
+	assert end_states('a.html', '<input value=x/>')[0] == 'main'
+	assert end_states('a.html', '<input value=>')[0] == 'main'
+}
+
+fn test_html_lexes_a_script_as_javascript() {
+	code := '<SCRIPT type="module">\nconst s = "</b>"\n</script>\n<p>'
+	assert lex('a.html', code) == [
+		['<:punctuation', 'SCRIPT:keyword', 'type:attribute', '=:operator', '"module":string',
+			'>:punctuation'],
+		['const:keyword', 's:variable', '"</b>":string'],
+		['</:punctuation', 'script:keyword', '>:punctuation'],
+		['<:punctuation', 'p:keyword', '>:punctuation'],
+	]
+	assert end_states('a.html', code) == ['main > script > javascript', 'main > script > javascript',
+		'main', 'main']
+	// the end tag closes whatever the script left open, like a string
+	assert end_states('a.html', '<script>let s = `unclosed</script>') == ['main']
+}
+
+fn test_html_style_is_plain_text_up_to_its_end_tag() {
+	assert lex('a.html', '<style>p { color: red }</Style>') == [
+		['<:punctuation', 'style:keyword', '>:punctuation', '</:punctuation', 'Style:keyword',
+			'>:punctuation'],
+	]
+	assert end_states('a.html', '<style media="x">\n<p>\n</style>') == [
+		'main > style_body',
+		'main > style_body',
+		'main',
+	]
+}

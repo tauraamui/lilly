@@ -19,7 +19,7 @@ import os
 // every extension lilly has a lexer for, plus some it does not, so a file's
 // content is also lexed by grammars it was never written for
 const extensions = ['.v', '.py', '.c', '.h', '.go', '.rs', '.js', '.ts', '.zig', '.pl', '.gleam',
-	'.md', '.txt', '', '.json', '.toml']
+	'.md', '.html', '.txt', '', '.json', '.toml']
 
 struct CorpusFile {
 	name string

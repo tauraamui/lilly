@@ -1,0 +1,101 @@
+// HTML. The code in a <script> element is lexed by the JavaScript grammar,
+// embedded until its end tag. A <style> element's CSS is plain text, as
+// lilly has no CSS grammar.
+name "HTML"
+extensions ".html" ".htm" ".xhtml"
+
+context "main" {
+    rule "<!--" scope="comment" push="comment"
+    rule #"<!\[CDATA\["# scope="punctuation" push="cdata"
+    rule #"<!"# scope="keyword.directive" push="declaration"
+    rule #"<\?"# scope="keyword.directive" push="processing_instruction"
+    // tag names are matched without regard to case
+    rule #"<(?=[sS][cC][rR][iI][pP][tT](?![\w\-:.]))"# scope="punctuation" push="script"
+    rule #"<(?=[sS][tT][yY][lL][eE](?![\w\-:.]))"# scope="punctuation" push="style"
+    rule #"<(?=[A-Za-z])"# scope="punctuation" push="tag_name"
+    rule #"</(?=[A-Za-z])"# scope="punctuation" push="end_tag"
+    include "entity"
+}
+
+context "entity" {
+    rule #"&(#\d+|#[xX]\h+|[A-Za-z][A-Za-z0-9]*);"# scope="string.escape"
+}
+
+// a start tag's name, after its `<`. The rest of the tag is its attributes.
+context "tag_name" {
+    rule #"[A-Za-z][\w\-:.]*"# scope="keyword" set="tag"
+}
+
+context "tag" {
+    rule #"/?>"# scope="punctuation" pop=#true
+    include "attributes"
+}
+
+context "attributes" {
+    rule #"[^\s"'<>/=]+"# scope="attribute"
+    rule "=" scope="operator" push="value"
+}
+
+// an attribute's value, after its `=`
+context "value" {
+    rule #"(?=/?>)"# pop=#true
+    rule "\"" scope="string" set="double"
+    rule "'" scope="string" set="single"
+    rule #"[^\s"'<>=`]+"# scope="string" pop=#true
+}
+
+context "double" scope="string" {
+    include "entity"
+    rule "\"" pop=#true
+}
+
+context "single" scope="string" {
+    include "entity"
+    rule "'" pop=#true
+}
+
+context "end_tag" {
+    rule #"[A-Za-z][\w\-:.]*"# scope="keyword"
+    rule ">" scope="punctuation" pop=#true
+}
+
+// a <script> start tag. Its `>` starts the JavaScript, which runs until the
+// `<` of </script>, leaving the lexer back here to set the end tag going.
+// Like the Markdown fences, a JavaScript token runs on over the end tag, so a
+// line comment hides one on its line, where HTML would end the script.
+context "script" {
+    rule #"[sS][cC][rR][iI][pP][tT]"# scope="keyword"
+    rule "/>" scope="punctuation" pop=#true
+    rule ">" scope="punctuation" embed="javascript" escape=#"<(?=/[sS][cC][rR][iI][pP][tT](?![\w\-:.]))"#
+    rule "/" scope="punctuation" set="end_tag"
+    include "attributes"
+}
+
+// a <style> start tag
+context "style" {
+    rule #"[sS][tT][yY][lL][eE]"# scope="keyword"
+    rule "/>" scope="punctuation" pop=#true
+    rule ">" scope="punctuation" set="style_body"
+    include "attributes"
+}
+
+context "style_body" {
+    rule #"</(?=[sS][tT][yY][lL][eE](?![\w\-:.]))"# scope="punctuation" set="end_tag"
+}
+
+context "comment" scope="comment" {
+    rule "-->" pop=#true
+}
+
+context "cdata" scope="string" {
+    rule #"\]\]>"# scope="punctuation" pop=#true
+}
+
+// a declaration, like <!DOCTYPE html>
+context "declaration" scope="keyword.directive" {
+    rule ">" pop=#true
+}
+
+context "processing_instruction" scope="keyword.directive" {
+    rule #"\?>"# pop=#true
+}

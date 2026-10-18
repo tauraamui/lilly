@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<!-- HTML syntax stress file. Lexing only. -->
+<html lang="en">
+<head>
+  <meta charset=utf-8>
+  <title>Tom &amp; Jerry &#169; &#x1F600;</title>
+  <link rel="stylesheet" href="/style.css?v=1&amp;x=2">
+  <style media="screen">
+    /* KNOWN GAP: no CSS grammar, so a style element's body is plain text */
+    body { color: #333; font-family: "Fira Code", monospace; }
+  </style>
+  <SCRIPT type="module">
+    // script bodies are lexed as JavaScript
+    import { render } from "./app.js"
+    const html = `<p>${render("</b>")}</p>`
+    /* a block comment
+       across lines */
+    if (document.body) { render(html) }
+  </SCRIPT>
+  <script src="/vendor.js" defer></script>
+  <script>let unclosed = "a string the end tag closes</script>
+</head>
+<body class="home dark" data-id='42' hidden>
+  <div
+    id="multi-line-tag"
+    title="a value
+that spans lines"
+    onclick="go()">
+    <p>Text with <em>inline</em> tags<br/> and a line break.</p>
+    <img src=/logo.png alt=logo />
+    <input type="checkbox" checked disabled value=>
+  </div>
+  <!--
+    a comment
+    across lines <div> not a tag
+  -->
+  <![CDATA[ x < y && <raw> ]]>
+  <svg:rect xml:lang="en" width="10"/>
+  <script>
+    // KNOWN GAP: a line comment hides an end tag on its line: </script>
+  </script>
+  <p>back in markup after the script above</p>
+</body>
+</html>

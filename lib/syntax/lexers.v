@@ -22,6 +22,7 @@ pub enum Lang as u8 {
 	c
 	gleam
 	golang
+	html
 	javascript
 	markdown
 	perl
@@ -32,9 +33,9 @@ pub enum Lang as u8 {
 	zig
 }
 
-const builtin_syntaxes = [lex_c_syntax, lex_gleam_syntax, lex_golang_syntax, lex_javascript_syntax,
-	lex_markdown_syntax, lex_perl_syntax, lex_python_syntax, lex_rust_syntax, lex_typescript_syntax,
-	lex_v_syntax, lex_zig_syntax]
+const builtin_syntaxes = [lex_c_syntax, lex_gleam_syntax, lex_golang_syntax, lex_html_syntax,
+	lex_javascript_syntax, lex_markdown_syntax, lex_perl_syntax, lex_python_syntax, lex_rust_syntax,
+	lex_typescript_syntax, lex_v_syntax, lex_zig_syntax]
 
 fn lang_info(lang Lang) LangInfo {
 	return match lang {
@@ -42,6 +43,7 @@ fn lang_info(lang Lang) LangInfo {
 		.c { lex_c_info }
 		.gleam { lex_gleam_info }
 		.golang { lex_golang_info }
+		.html { lex_html_info }
 		.javascript { lex_javascript_info }
 		.markdown { lex_markdown_info }
 		.perl { lex_perl_info }
@@ -64,6 +66,7 @@ fn lang_step(lang Lang, ctx u8, r []rune, i int, emit bool) Match {
 		.c { lex_c_step(ctx, r, i, emit) }
 		.gleam { lex_gleam_step(ctx, r, i) }
 		.golang { lex_golang_step(ctx, r, i, emit) }
+		.html { lex_html_step(ctx, r, i, emit) }
 		.javascript { lex_javascript_step(ctx, r, i, emit) }
 		.markdown { lex_markdown_step(ctx, r, i, emit) }
 		.perl { lex_perl_step(ctx, r, i) }
