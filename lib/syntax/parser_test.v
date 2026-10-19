@@ -544,14 +544,58 @@ fn test_html_lexes_a_script_as_javascript() {
 	assert end_states('a.html', '<script>let s = `unclosed</script>') == ['main']
 }
 
-fn test_html_style_is_plain_text_up_to_its_end_tag() {
-	assert lex('a.html', '<style>p { color: red }</Style>') == [
-		['<:punctuation', 'style:keyword', '>:punctuation', '</:punctuation', 'Style:keyword',
+fn test_html_lexes_a_style_as_css() {
+	code := '<style media="x">\np { color: red }\n</Style>\n<p>'
+	assert lex('a.html', code) == [
+		['<:punctuation', 'style:keyword', 'media:attribute', '=:operator', '"x":string',
 			'>:punctuation'],
+		['p:keyword', '{:punctuation', 'color:attribute', '::punctuation', '}:punctuation'],
+		['</:punctuation', 'Style:keyword', '>:punctuation'],
+		['<:punctuation', 'p:keyword', '>:punctuation'],
 	]
-	assert end_states('a.html', '<style media="x">\n<p>\n</style>') == [
-		'main > style_body',
-		'main > style_body',
-		'main',
+	assert end_states('a.html', code) == ['main > style > css', 'main > style > css', 'main', 'main']
+	// the end tag closes whatever the CSS left open, like a block
+	assert end_states('a.html', '<style>p { content: "unclosed</style>') == ['main']
+}
+
+fn test_css_highlights_selectors_and_declarations() {
+	code := 'ul > li.item:hover, #main a[href^="http"]::after {\n  --gap: 4px;\n  margin: -1.5em calc(var(--gap) * 2) 10% !important;\n  color: #fff;\n}'
+	assert lex('a.css', code) == [
+		['ul:keyword', '>:operator', 'li:keyword', '.item:storage_type', ':hover:label', ',:punctuation',
+			'#main:variable_special', 'a:keyword', '[:punctuation', 'href:attribute', '^=:operator',
+			'"http":string', ']:punctuation', '::after:label', '{:punctuation'],
+		['--gap:variable_definition', '::punctuation', '4px:number', ';:punctuation'],
+		['margin:attribute', '::punctuation', '-1.5em:number', 'calc:function', 'var:function',
+			'--gap:variable', '2:number', '10%:number', '!important:keyword', ';:punctuation'],
+		['color:attribute', '::punctuation', '#fff:number', ';:punctuation'],
+		['}:punctuation'],
 	]
+}
+
+fn test_css_at_rules_and_nested_rules() {
+	code := '@import url(theme.css);\n@media screen and (min-width: 600px) {\n  .a {\n    color: inherit\n  }\n  &:focus { outline: none }\n}'
+	assert lex('a.css', code) == [
+		['@import:keyword_directive', 'url(:function', 'theme.css:string', '):function', ';:punctuation'],
+		['@media:keyword_directive', 'and:keyword_operator', 'min-width:attribute', '600px:number',
+			'{:punctuation'],
+		['.a:storage_type', '{:punctuation'],
+		['color:attribute', '::punctuation', 'inherit:literal'],
+		['}:punctuation'],
+		['&:keyword_operator', ':focus:label', '{:punctuation', 'outline:attribute', '::punctuation',
+			'}:punctuation'],
+		['}:punctuation'],
+	]
+	assert end_states('a.css', code) == ['main', 'main > block', 'main > block > block',
+		'main > block > block > value', 'main > block', 'main > block', 'main']
+}
+
+fn test_css_comments_and_values_can_span_lines() {
+	code := '/* a\n b */ p {\n  grid-template-areas:\n    "a b";\n}'
+	assert end_states('a.css', code) == ['main > block_comment', 'main > block', 'main > block > value',
+		'main > block', 'main']
+	// a string can't span lines
+	assert end_states('a.css', 'p { content: "a\n}')[1] == 'main'
+	// a nested rule ends a value missing its `;`
+	assert end_states('a.css', 'p {\n  color: red\n  a { b: c }\n}') == ['main > block',
+		'main > block > value', 'main > block', 'main']
 }

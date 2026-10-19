@@ -1,6 +1,5 @@
 // HTML. The code in a <script> element is lexed by the JavaScript grammar,
-// embedded until its end tag. A <style> element's CSS is plain text, as
-// lilly has no CSS grammar.
+// and a <style> element's by the CSS grammar, each embedded until its end tag.
 name "HTML"
 extensions ".html" ".htm" ".xhtml"
 
@@ -71,16 +70,13 @@ context "script" {
     include "attributes"
 }
 
-// a <style> start tag
+// a <style> start tag, which embeds CSS the way a <script> embeds JavaScript
 context "style" {
     rule #"[sS][tT][yY][lL][eE]"# scope="keyword"
     rule "/>" scope="punctuation" pop=#true
-    rule ">" scope="punctuation" set="style_body"
+    rule ">" scope="punctuation" embed="css" escape=#"<(?=/[sS][tT][yY][lL][eE](?![\w\-:.]))"#
+    rule "/" scope="punctuation" set="end_tag"
     include "attributes"
-}
-
-context "style_body" {
-    rule #"</(?=[sS][tT][yY][lL][eE](?![\w\-:.]))"# scope="punctuation" set="end_tag"
 }
 
 context "comment" scope="comment" {

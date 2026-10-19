@@ -20,6 +20,7 @@ module syntax
 pub enum Lang as u8 {
 	plain
 	c
+	css
 	gleam
 	golang
 	html
@@ -33,14 +34,15 @@ pub enum Lang as u8 {
 	zig
 }
 
-const builtin_syntaxes = [lex_c_syntax, lex_gleam_syntax, lex_golang_syntax, lex_html_syntax,
-	lex_javascript_syntax, lex_markdown_syntax, lex_perl_syntax, lex_python_syntax, lex_rust_syntax,
-	lex_typescript_syntax, lex_v_syntax, lex_zig_syntax]
+const builtin_syntaxes = [lex_c_syntax, lex_css_syntax, lex_gleam_syntax, lex_golang_syntax,
+	lex_html_syntax, lex_javascript_syntax, lex_markdown_syntax, lex_perl_syntax, lex_python_syntax,
+	lex_rust_syntax, lex_typescript_syntax, lex_v_syntax, lex_zig_syntax]
 
 fn lang_info(lang Lang) LangInfo {
 	return match lang {
 		.plain { plain_info }
 		.c { lex_c_info }
+		.css { lex_css_info }
 		.gleam { lex_gleam_info }
 		.golang { lex_golang_info }
 		.html { lex_html_info }
@@ -64,6 +66,7 @@ fn lang_step(lang Lang, ctx u8, r []rune, i int, emit bool) Match {
 			}
 		}
 		.c { lex_c_step(ctx, r, i, emit) }
+		.css { lex_css_step(ctx, r, i, emit) }
 		.gleam { lex_gleam_step(ctx, r, i) }
 		.golang { lex_golang_step(ctx, r, i, emit) }
 		.html { lex_html_step(ctx, r, i, emit) }

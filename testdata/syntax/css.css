@@ -1,0 +1,70 @@
+/* CSS syntax stress file. Lexing only.
+   A block comment across lines. */
+@charset "utf-8";
+@import url("theme.css") screen and (orientation: landscape);
+@import url(unquoted/path.css?v=1);
+
+:root {
+  --brand: #ff3366;
+  --gap: 0.5rem;
+  --font: "Fira Code", 'JetBrains Mono', monospace;
+}
+
+html, body { margin: 0; padding: 0 }
+
+ul > li.item:hover + li ~ li, #main a[href^="http"][target=_blank i]::after {
+  content: "\201C quote \"escaped\"";
+  color: var(--brand) !important;
+  margin: -1.5em calc(var(--gap) * 2) 0 10%;
+  background: url(data:image/png;base64,iVBORw0KGgo=) no-repeat, rgb(0 0 0 / 50%);
+  transition: opacity .3s ease-in-out, transform 200ms;
+  font-size: 1e1px;
+}
+
+.card {
+  grid-template-areas:
+    "head head"
+    "side main";
+  border: 1px solid #ccc;
+
+  /* nested rules, told from declarations by the brace on their line */
+  &:focus-within { outline: 2px dashed currentColor }
+  .title { font-weight: 700; }
+  & > p:not(.lead, :first-child) {
+    color: inherit;
+  }
+}
+
+@media screen and (min-width: 600px) and (max-width: 1200px) {
+  .card { padding: var(--gap, 1rem) }
+  @supports (display: grid) {
+    .grid { display: grid; }
+  }
+}
+
+@font-face {
+  font-family: "Brand";
+  src: url("brand.woff2") format("woff2");
+  unicode-range: U+0025-00FF;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg) }
+  50% { transform: rotate(180deg); }
+  to { transform: rotate(360turn) }
+}
+
+/* KNOWN GAP: a nested rule whose selector spans lines reads as declarations
+   until the line with its brace, though its braces still pair up */
+.list {
+  a:hover,
+  a:focus {
+    color: red;
+  }
+}
+
+/* KNOWN GAP: a string can't span lines, so the next line is back in the value */
+.broken { content: "unterminated
+  ; color: blue }
+
+p { color: green }

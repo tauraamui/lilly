@@ -1,0 +1,120 @@
+// CSS. A rule's selector is a "selector" context and its declarations a
+// "block", with each declaration's value a "value", so nested rules and
+// at-rules like @media lex as they do at the top level.
+name "CSS"
+extensions ".css"
+
+// the values every property takes
+words "literal" inherit initial unset revert revert-layer
+words "keyword.operator" and not only or
+
+context "main" {
+    include "comment"
+    include "at_rule"
+    rule #"\{"# scope="punctuation" push="block"
+    rule #"(?=[^\s;{}])"# push="selector"
+}
+
+context "comment" {
+    rule #"/\*"# scope="comment" push="block_comment"
+}
+
+context "block_comment" scope="comment" {
+    rule #"\*/"# pop=#true
+}
+
+context "at_rule" {
+    rule #"@[\w\-]+"# scope="keyword.directive" push="at_rule_prelude"
+}
+
+// what follows an at-rule's name, like @media's query, up to its block or `;`
+context "at_rule_prelude" {
+    rule ";" scope="punctuation" pop=#true
+    rule #"\{"# scope="punctuation" set="block"
+    rule #"(?=\})"# pop=#true
+    rule #"-?-?[A-Za-z_][\w\-]*(?=\s*:)"# scope="attribute"
+    include "values"
+}
+
+// a selector, up to its rule's block
+context "selector" {
+    rule #"\{"# scope="punctuation" set="block"
+    rule #"(?=[;}])"# pop=#true
+    include "comment"
+    rule "&" scope="keyword.operator"
+    rule #"\.-?[A-Za-z_][\w\-]*"# scope="storage.type"
+    rule #"#[\w\-]+"# scope="variable.special"
+    rule #"::?-?[A-Za-z_][\w\-]*"# scope="label"
+    rule #"\["# scope="punctuation" push="attribute_selector"
+    rule #"[>+~*|]"# scope="operator"
+    rule "," scope="punctuation"
+    rule #"-?[A-Za-z_][\w\-]*"# scope="keyword"
+    // a keyframe's selector, like 50%
+    include "number"
+}
+
+context "attribute_selector" {
+    rule #"\]"# scope="punctuation" pop=#true
+    include "strings"
+    rule #"[~|^$*]?="# scope="operator"
+    rule #"-?[A-Za-z_][\w\-]*"# scope="attribute"
+}
+
+// the inside of a rule's braces: its declarations, and any nested rules
+context "block" {
+    rule #"\}"# scope="punctuation" pop=#true
+    include "comment"
+    include "at_rule"
+    // a nested rule, told from a declaration by the brace on its line
+    rule #"(?=[^;{}]*\{)"# push="selector"
+    rule #"--[\w\-]+(?=\s*:)"# scope="variable.definition"
+    rule #"-?[A-Za-z_][\w\-]*(?=\s*:)"# scope="attribute"
+    rule ":" scope="punctuation" push="value"
+    rule ";" scope="punctuation"
+}
+
+// a declaration's value, after its `:`
+context "value" {
+    rule ";" scope="punctuation" pop=#true
+    // a brace ends a value missing its `;`, so the braces still pair up
+    rule #"(?=[{}])"# pop=#true
+    include "values"
+}
+
+context "values" {
+    include "comment"
+    include "strings"
+    rule #"[uU][rR][lL]\("# scope="function" push="url"
+    rule #"!\s*[iI][mM][pP][oO][rR][tT][aA][nN][tT]"# scope="keyword"
+    rule #"--[\w\-]+"# scope="variable"
+    rule #"-?[A-Za-z_][\w\-]*(?=\()"# scope="function"
+    rule #"-?-?[A-Za-z_][\w\-]*"# words=#true
+    rule #"-?-?[A-Za-z_][\w\-]*"#
+    rule #"#\h+(?![\w\-])"# scope="number"
+    include "number"
+}
+
+context "number" {
+    rule #"[+\-]?(\d+(\.\d+)?|\.\d+)([eE][+\-]?\d+)?(%|[A-Za-z]+)?"# scope="number"
+}
+
+context "strings" {
+    rule "\"" scope="string" push="double"
+    rule "'" scope="string" push="single"
+}
+
+// a url(), whose address can go unquoted
+context "url" scope="string" {
+    rule #"\)"# scope="function" pop=#true
+    include "strings"
+}
+
+context "double" scope="string" pop_at_eol=#true {
+    rule #"\\."# scope="string.escape"
+    rule "\"" pop=#true
+}
+
+context "single" scope="string" pop_at_eol=#true {
+    rule #"\\."# scope="string.escape"
+    rule "'" pop=#true
+}

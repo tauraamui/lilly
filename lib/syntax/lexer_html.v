@@ -28,15 +28,21 @@ const lex_html_syntax = Syntax{
 
 const lex_html_info = LangInfo{
 	names:       ['main', 'entity', 'tag_name', 'tag', 'attributes', 'value', 'double', 'single',
-		'end_tag', 'script', 'style', 'style_body', 'comment', 'cdata', 'declaration',
-		'processing_instruction', 'javascript', 'block_comment', 'doc_comment', 'double', 'single',
-		'template', 'interpolation', 'braces']
+		'end_tag', 'script', 'style', 'comment', 'cdata', 'declaration', 'processing_instruction',
+		'javascript', 'block_comment', 'doc_comment', 'double', 'single', 'template', 'interpolation',
+		'braces', 'css', 'comment', 'block_comment', 'at_rule', 'at_rule_prelude', 'selector',
+		'attribute_selector', 'block', 'value', 'values', 'number', 'strings', 'url', 'double',
+		'single']
 	scopes:      [Scope.none, Scope.none, Scope.none, Scope.none, Scope.none, Scope.none, Scope.string,
-		Scope.string, Scope.none, Scope.none, Scope.none, Scope.none, Scope.comment, Scope.string,
+		Scope.string, Scope.none, Scope.none, Scope.none, Scope.comment, Scope.string,
 		Scope.keyword_directive, Scope.keyword_directive, Scope.none, Scope.comment, Scope.comment_doc,
-		Scope.string, Scope.string, Scope.string, Scope.none, Scope.none]
+		Scope.string, Scope.string, Scope.string, Scope.none, Scope.none, Scope.none, Scope.none,
+		Scope.comment, Scope.none, Scope.none, Scope.none, Scope.none, Scope.none, Scope.none,
+		Scope.none, Scope.none, Scope.none, Scope.string, Scope.string, Scope.string]
 	pops_at_eol: [false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, true, true, false, false, false]
+		false, false, false, false, false, false, false, true, true, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, true,
+		true]
 }
 
 fn lex_html_step(ctx u8, r []rune, i int, emit bool) Match {
@@ -52,19 +58,33 @@ fn lex_html_step(ctx u8, r []rune, i int, emit bool) Match {
 		8 { lex_html_ctx_end_tag(r, i) }
 		9 { lex_html_ctx_script(r, i) }
 		10 { lex_html_ctx_style(r, i) }
-		11 { lex_html_ctx_style_body(r, i) }
-		12 { lex_html_ctx_comment(r, i) }
-		13 { lex_html_ctx_cdata(r, i) }
-		14 { lex_html_ctx_declaration(r, i) }
-		15 { lex_html_ctx_processing_instruction(r, i) }
-		16 { lex_html_ctx_e0_javascript(r, i, emit) }
-		17 { lex_html_ctx_e0_block_comment(r, i) }
-		18 { lex_html_ctx_e0_doc_comment(r, i) }
-		19 { lex_html_ctx_e0_double(r, i) }
-		20 { lex_html_ctx_e0_single(r, i) }
-		21 { lex_html_ctx_e0_template(r, i) }
-		22 { lex_html_ctx_e0_interpolation(r, i, emit) }
-		23 { lex_html_ctx_e0_braces(r, i, emit) }
+		11 { lex_html_ctx_comment(r, i) }
+		12 { lex_html_ctx_cdata(r, i) }
+		13 { lex_html_ctx_declaration(r, i) }
+		14 { lex_html_ctx_processing_instruction(r, i) }
+		15 { lex_html_ctx_e0_javascript(r, i, emit) }
+		16 { lex_html_ctx_e0_block_comment(r, i) }
+		17 { lex_html_ctx_e0_doc_comment(r, i) }
+		18 { lex_html_ctx_e0_double(r, i) }
+		19 { lex_html_ctx_e0_single(r, i) }
+		20 { lex_html_ctx_e0_template(r, i) }
+		21 { lex_html_ctx_e0_interpolation(r, i, emit) }
+		22 { lex_html_ctx_e0_braces(r, i, emit) }
+		23 { lex_html_ctx_e1_css(r, i) }
+		24 { lex_html_ctx_e1_comment(r, i) }
+		25 { lex_html_ctx_e1_block_comment(r, i) }
+		26 { lex_html_ctx_e1_at_rule(r, i) }
+		27 { lex_html_ctx_e1_at_rule_prelude(r, i, emit) }
+		28 { lex_html_ctx_e1_selector(r, i) }
+		29 { lex_html_ctx_e1_attribute_selector(r, i) }
+		30 { lex_html_ctx_e1_block(r, i) }
+		31 { lex_html_ctx_e1_value(r, i, emit) }
+		32 { lex_html_ctx_e1_values(r, i, emit) }
+		33 { lex_html_ctx_e1_number(r, i) }
+		34 { lex_html_ctx_e1_strings(r, i) }
+		35 { lex_html_ctx_e1_url(r, i) }
+		36 { lex_html_ctx_e1_double(r, i) }
+		37 { lex_html_ctx_e1_single(r, i) }
 		else {
 			Match{
 				next: i + 1
@@ -90,7 +110,7 @@ fn lex_html_ctx_main(r []rune, i int) Match {
 				end:    e
 				scope:  .comment
 				op:     .push
-				target: 12
+				target: 11
 			}
 		}
 	}
@@ -105,7 +125,7 @@ fn lex_html_ctx_main(r []rune, i int) Match {
 				end:    e
 				scope:  .punctuation
 				op:     .push
-				target: 13
+				target: 12
 			}
 		}
 	}
@@ -117,7 +137,7 @@ fn lex_html_ctx_main(r []rune, i int) Match {
 				end:    e
 				scope:  .keyword_directive
 				op:     .push
-				target: 14
+				target: 13
 			}
 		}
 	}
@@ -129,7 +149,7 @@ fn lex_html_ctx_main(r []rune, i int) Match {
 				end:    e
 				scope:  .keyword_directive
 				op:     .push
-				target: 15
+				target: 14
 			}
 		}
 	}
@@ -558,7 +578,7 @@ fn lex_html_ctx_script(r []rune, i int) Match {
 				end:    e
 				scope:  .punctuation
 				op:     .push
-				target: 16
+				target: 15
 			}
 		}
 	}
@@ -614,6 +634,7 @@ fn lex_html_ctx_script(r []rune, i int) Match {
 fn lex_html_ctx_style(r []rune, i int) Match {
 	c := r[i]
 	f := if c < 128 { lex_html_first_style[c] } else { lex_html_first_wide_style(c) }
+	mut h0 := -2
 	// [sS][tT][yY][lL][eE]
 	if f & 1 != 0 {
 		e := lex_m_756a49c8(r, i)
@@ -626,7 +647,10 @@ fn lex_html_ctx_style(r []rune, i int) Match {
 	}
 	// />
 	if f & 2 != 0 {
-		e := lex_m_1733d7a9(r, i)
+		if h0 == -2 {
+			h0 = lex_m_bdbabb13(r, i)
+		}
+		e := if h0 >= 0 { lex_m_e111cc0e(r, h0) } else { -1 }
 		if e >= 0 {
 			return Match{
 				end:   e
@@ -642,13 +666,25 @@ fn lex_html_ctx_style(r []rune, i int) Match {
 			return Match{
 				end:    e
 				scope:  .punctuation
+				op:     .push
+				target: 23
+			}
+		}
+	}
+	// /
+	if f & 8 != 0 {
+		e := lex_m_bdbabb13(r, i)
+		if e >= 0 {
+			return Match{
+				end:    e
+				scope:  .punctuation
 				op:     .set
-				target: 11
+				target: 8
 			}
 		}
 	}
 	// [^\s"'<>/=]+
-	if f & 8 != 0 {
+	if f & 16 != 0 {
 		e := lex_m_072e838d(r, i)
 		if e >= 0 {
 			return Match{
@@ -658,7 +694,7 @@ fn lex_html_ctx_style(r []rune, i int) Match {
 		}
 	}
 	// =
-	if f & 16 != 0 {
+	if f & 32 != 0 {
 		e := lex_m_42039225(r, i)
 		if e >= 0 {
 			return Match{
@@ -672,36 +708,7 @@ fn lex_html_ctx_style(r []rune, i int) Match {
 	mut j := i + 1
 	for j < r.len {
 		x := r[j]
-		if (if x < 128 { lex_html_first_style[x] } else { lex_html_first_wide_style(x) }) & 31 != 0 {
-			break
-		}
-		j++
-	}
-	return Match{
-		next: j
-	}
-}
-
-// context style_body
-@[direct_array_access]
-fn lex_html_ctx_style_body(r []rune, i int) Match {
-	c := r[i]
-	// </(?=[sS][tT][yY][lL][eE](?![\w\-:.]))
-	if c == `<` {
-		e := lex_m_3830b674(r, i)
-		if e >= 0 {
-			return Match{
-				end:    e
-				scope:  .punctuation
-				op:     .set
-				target: 8
-			}
-		}
-	}
-	mut j := i + 1
-	for j < r.len {
-		x := r[j]
-		if x == `<` {
+		if (if x < 128 { lex_html_first_style[x] } else { lex_html_first_wide_style(x) }) & 63 != 0 {
 			break
 		}
 		j++
@@ -833,7 +840,7 @@ fn lex_html_ctx_e0_javascript(r []rune, i int, emit bool) Match {
 				end:    e
 				scope:  .punctuation
 				op:     .escape
-				target: 16
+				target: 15
 			}
 		}
 	}
@@ -850,7 +857,7 @@ fn lex_html_ctx_e0_javascript(r []rune, i int, emit bool) Match {
 	if m.op == .push || m.op == .set {
 		return Match{
 			...m
-			target: m.target + 16
+			target: m.target + 15
 		}
 	}
 	return m
@@ -866,7 +873,7 @@ fn lex_html_ctx_e0_block_comment(r []rune, i int) Match {
 				end:    e
 				scope:  .punctuation
 				op:     .escape
-				target: 16
+				target: 15
 			}
 		}
 	}
@@ -883,7 +890,7 @@ fn lex_html_ctx_e0_block_comment(r []rune, i int) Match {
 	if m.op == .push || m.op == .set {
 		return Match{
 			...m
-			target: m.target + 16
+			target: m.target + 15
 		}
 	}
 	return m
@@ -899,7 +906,7 @@ fn lex_html_ctx_e0_doc_comment(r []rune, i int) Match {
 				end:    e
 				scope:  .punctuation
 				op:     .escape
-				target: 16
+				target: 15
 			}
 		}
 	}
@@ -916,7 +923,7 @@ fn lex_html_ctx_e0_doc_comment(r []rune, i int) Match {
 	if m.op == .push || m.op == .set {
 		return Match{
 			...m
-			target: m.target + 16
+			target: m.target + 15
 		}
 	}
 	return m
@@ -932,7 +939,7 @@ fn lex_html_ctx_e0_double(r []rune, i int) Match {
 				end:    e
 				scope:  .punctuation
 				op:     .escape
-				target: 16
+				target: 15
 			}
 		}
 	}
@@ -949,7 +956,7 @@ fn lex_html_ctx_e0_double(r []rune, i int) Match {
 	if m.op == .push || m.op == .set {
 		return Match{
 			...m
-			target: m.target + 16
+			target: m.target + 15
 		}
 	}
 	return m
@@ -965,7 +972,7 @@ fn lex_html_ctx_e0_single(r []rune, i int) Match {
 				end:    e
 				scope:  .punctuation
 				op:     .escape
-				target: 16
+				target: 15
 			}
 		}
 	}
@@ -982,7 +989,7 @@ fn lex_html_ctx_e0_single(r []rune, i int) Match {
 	if m.op == .push || m.op == .set {
 		return Match{
 			...m
-			target: m.target + 16
+			target: m.target + 15
 		}
 	}
 	return m
@@ -998,7 +1005,7 @@ fn lex_html_ctx_e0_template(r []rune, i int) Match {
 				end:    e
 				scope:  .punctuation
 				op:     .escape
-				target: 16
+				target: 15
 			}
 		}
 	}
@@ -1015,7 +1022,7 @@ fn lex_html_ctx_e0_template(r []rune, i int) Match {
 	if m.op == .push || m.op == .set {
 		return Match{
 			...m
-			target: m.target + 16
+			target: m.target + 15
 		}
 	}
 	return m
@@ -1031,7 +1038,7 @@ fn lex_html_ctx_e0_interpolation(r []rune, i int, emit bool) Match {
 				end:    e
 				scope:  .punctuation
 				op:     .escape
-				target: 16
+				target: 15
 			}
 		}
 	}
@@ -1048,7 +1055,7 @@ fn lex_html_ctx_e0_interpolation(r []rune, i int, emit bool) Match {
 	if m.op == .push || m.op == .set {
 		return Match{
 			...m
-			target: m.target + 16
+			target: m.target + 15
 		}
 	}
 	return m
@@ -1064,7 +1071,7 @@ fn lex_html_ctx_e0_braces(r []rune, i int, emit bool) Match {
 				end:    e
 				scope:  .punctuation
 				op:     .escape
-				target: 16
+				target: 15
 			}
 		}
 	}
@@ -1081,7 +1088,502 @@ fn lex_html_ctx_e0_braces(r []rune, i int, emit bool) Match {
 	if m.op == .push || m.op == .set {
 		return Match{
 			...m
-			target: m.target + 16
+			target: m.target + 15
+		}
+	}
+	return m
+}
+
+// context css, css embedded until <(?=/[sS][tT][yY][lL][eE](?![\w\-:.]))
+@[direct_array_access]
+fn lex_html_ctx_e1_css(r []rune, i int) Match {
+	if r[i] == `<` {
+		e := lex_m_b7d35e92(r, i)
+		if e >= 0 {
+			return Match{
+				end:    e
+				scope:  .punctuation
+				op:     .escape
+				target: 23
+			}
+		}
+	}
+	m := lex_css_ctx_main(r, i)
+	if m.end < 0 {
+		mut j := i + 1
+		for j < m.next && !(r[j] == `<`) {
+			j++
+		}
+		return Match{
+			next: j
+		}
+	}
+	if m.op == .push || m.op == .set {
+		return Match{
+			...m
+			target: m.target + 23
+		}
+	}
+	return m
+}
+
+// context comment, css embedded until <(?=/[sS][tT][yY][lL][eE](?![\w\-:.]))
+@[direct_array_access]
+fn lex_html_ctx_e1_comment(r []rune, i int) Match {
+	if r[i] == `<` {
+		e := lex_m_b7d35e92(r, i)
+		if e >= 0 {
+			return Match{
+				end:    e
+				scope:  .punctuation
+				op:     .escape
+				target: 23
+			}
+		}
+	}
+	m := lex_css_ctx_comment(r, i)
+	if m.end < 0 {
+		mut j := i + 1
+		for j < m.next && !(r[j] == `<`) {
+			j++
+		}
+		return Match{
+			next: j
+		}
+	}
+	if m.op == .push || m.op == .set {
+		return Match{
+			...m
+			target: m.target + 23
+		}
+	}
+	return m
+}
+
+// context block_comment, css embedded until <(?=/[sS][tT][yY][lL][eE](?![\w\-:.]))
+@[direct_array_access]
+fn lex_html_ctx_e1_block_comment(r []rune, i int) Match {
+	if r[i] == `<` {
+		e := lex_m_b7d35e92(r, i)
+		if e >= 0 {
+			return Match{
+				end:    e
+				scope:  .punctuation
+				op:     .escape
+				target: 23
+			}
+		}
+	}
+	m := lex_css_ctx_block_comment(r, i)
+	if m.end < 0 {
+		mut j := i + 1
+		for j < m.next && !(r[j] == `<`) {
+			j++
+		}
+		return Match{
+			next: j
+		}
+	}
+	if m.op == .push || m.op == .set {
+		return Match{
+			...m
+			target: m.target + 23
+		}
+	}
+	return m
+}
+
+// context at_rule, css embedded until <(?=/[sS][tT][yY][lL][eE](?![\w\-:.]))
+@[direct_array_access]
+fn lex_html_ctx_e1_at_rule(r []rune, i int) Match {
+	if r[i] == `<` {
+		e := lex_m_b7d35e92(r, i)
+		if e >= 0 {
+			return Match{
+				end:    e
+				scope:  .punctuation
+				op:     .escape
+				target: 23
+			}
+		}
+	}
+	m := lex_css_ctx_at_rule(r, i)
+	if m.end < 0 {
+		mut j := i + 1
+		for j < m.next && !(r[j] == `<`) {
+			j++
+		}
+		return Match{
+			next: j
+		}
+	}
+	if m.op == .push || m.op == .set {
+		return Match{
+			...m
+			target: m.target + 23
+		}
+	}
+	return m
+}
+
+// context at_rule_prelude, css embedded until <(?=/[sS][tT][yY][lL][eE](?![\w\-:.]))
+@[direct_array_access]
+fn lex_html_ctx_e1_at_rule_prelude(r []rune, i int, emit bool) Match {
+	if r[i] == `<` {
+		e := lex_m_b7d35e92(r, i)
+		if e >= 0 {
+			return Match{
+				end:    e
+				scope:  .punctuation
+				op:     .escape
+				target: 23
+			}
+		}
+	}
+	m := lex_css_ctx_at_rule_prelude(r, i, emit)
+	if m.end < 0 {
+		mut j := i + 1
+		for j < m.next && !(r[j] == `<`) {
+			j++
+		}
+		return Match{
+			next: j
+		}
+	}
+	if m.op == .push || m.op == .set {
+		return Match{
+			...m
+			target: m.target + 23
+		}
+	}
+	return m
+}
+
+// context selector, css embedded until <(?=/[sS][tT][yY][lL][eE](?![\w\-:.]))
+@[direct_array_access]
+fn lex_html_ctx_e1_selector(r []rune, i int) Match {
+	if r[i] == `<` {
+		e := lex_m_b7d35e92(r, i)
+		if e >= 0 {
+			return Match{
+				end:    e
+				scope:  .punctuation
+				op:     .escape
+				target: 23
+			}
+		}
+	}
+	m := lex_css_ctx_selector(r, i)
+	if m.end < 0 {
+		mut j := i + 1
+		for j < m.next && !(r[j] == `<`) {
+			j++
+		}
+		return Match{
+			next: j
+		}
+	}
+	if m.op == .push || m.op == .set {
+		return Match{
+			...m
+			target: m.target + 23
+		}
+	}
+	return m
+}
+
+// context attribute_selector, css embedded until <(?=/[sS][tT][yY][lL][eE](?![\w\-:.]))
+@[direct_array_access]
+fn lex_html_ctx_e1_attribute_selector(r []rune, i int) Match {
+	if r[i] == `<` {
+		e := lex_m_b7d35e92(r, i)
+		if e >= 0 {
+			return Match{
+				end:    e
+				scope:  .punctuation
+				op:     .escape
+				target: 23
+			}
+		}
+	}
+	m := lex_css_ctx_attribute_selector(r, i)
+	if m.end < 0 {
+		mut j := i + 1
+		for j < m.next && !(r[j] == `<`) {
+			j++
+		}
+		return Match{
+			next: j
+		}
+	}
+	if m.op == .push || m.op == .set {
+		return Match{
+			...m
+			target: m.target + 23
+		}
+	}
+	return m
+}
+
+// context block, css embedded until <(?=/[sS][tT][yY][lL][eE](?![\w\-:.]))
+@[direct_array_access]
+fn lex_html_ctx_e1_block(r []rune, i int) Match {
+	if r[i] == `<` {
+		e := lex_m_b7d35e92(r, i)
+		if e >= 0 {
+			return Match{
+				end:    e
+				scope:  .punctuation
+				op:     .escape
+				target: 23
+			}
+		}
+	}
+	m := lex_css_ctx_block(r, i)
+	if m.end < 0 {
+		mut j := i + 1
+		for j < m.next && !(r[j] == `<`) {
+			j++
+		}
+		return Match{
+			next: j
+		}
+	}
+	if m.op == .push || m.op == .set {
+		return Match{
+			...m
+			target: m.target + 23
+		}
+	}
+	return m
+}
+
+// context value, css embedded until <(?=/[sS][tT][yY][lL][eE](?![\w\-:.]))
+@[direct_array_access]
+fn lex_html_ctx_e1_value(r []rune, i int, emit bool) Match {
+	if r[i] == `<` {
+		e := lex_m_b7d35e92(r, i)
+		if e >= 0 {
+			return Match{
+				end:    e
+				scope:  .punctuation
+				op:     .escape
+				target: 23
+			}
+		}
+	}
+	m := lex_css_ctx_value(r, i, emit)
+	if m.end < 0 {
+		mut j := i + 1
+		for j < m.next && !(r[j] == `<`) {
+			j++
+		}
+		return Match{
+			next: j
+		}
+	}
+	if m.op == .push || m.op == .set {
+		return Match{
+			...m
+			target: m.target + 23
+		}
+	}
+	return m
+}
+
+// context values, css embedded until <(?=/[sS][tT][yY][lL][eE](?![\w\-:.]))
+@[direct_array_access]
+fn lex_html_ctx_e1_values(r []rune, i int, emit bool) Match {
+	if r[i] == `<` {
+		e := lex_m_b7d35e92(r, i)
+		if e >= 0 {
+			return Match{
+				end:    e
+				scope:  .punctuation
+				op:     .escape
+				target: 23
+			}
+		}
+	}
+	m := lex_css_ctx_values(r, i, emit)
+	if m.end < 0 {
+		mut j := i + 1
+		for j < m.next && !(r[j] == `<`) {
+			j++
+		}
+		return Match{
+			next: j
+		}
+	}
+	if m.op == .push || m.op == .set {
+		return Match{
+			...m
+			target: m.target + 23
+		}
+	}
+	return m
+}
+
+// context number, css embedded until <(?=/[sS][tT][yY][lL][eE](?![\w\-:.]))
+@[direct_array_access]
+fn lex_html_ctx_e1_number(r []rune, i int) Match {
+	if r[i] == `<` {
+		e := lex_m_b7d35e92(r, i)
+		if e >= 0 {
+			return Match{
+				end:    e
+				scope:  .punctuation
+				op:     .escape
+				target: 23
+			}
+		}
+	}
+	m := lex_css_ctx_number(r, i)
+	if m.end < 0 {
+		mut j := i + 1
+		for j < m.next && !(r[j] == `<`) {
+			j++
+		}
+		return Match{
+			next: j
+		}
+	}
+	if m.op == .push || m.op == .set {
+		return Match{
+			...m
+			target: m.target + 23
+		}
+	}
+	return m
+}
+
+// context strings, css embedded until <(?=/[sS][tT][yY][lL][eE](?![\w\-:.]))
+@[direct_array_access]
+fn lex_html_ctx_e1_strings(r []rune, i int) Match {
+	if r[i] == `<` {
+		e := lex_m_b7d35e92(r, i)
+		if e >= 0 {
+			return Match{
+				end:    e
+				scope:  .punctuation
+				op:     .escape
+				target: 23
+			}
+		}
+	}
+	m := lex_css_ctx_strings(r, i)
+	if m.end < 0 {
+		mut j := i + 1
+		for j < m.next && !(r[j] == `<`) {
+			j++
+		}
+		return Match{
+			next: j
+		}
+	}
+	if m.op == .push || m.op == .set {
+		return Match{
+			...m
+			target: m.target + 23
+		}
+	}
+	return m
+}
+
+// context url, css embedded until <(?=/[sS][tT][yY][lL][eE](?![\w\-:.]))
+@[direct_array_access]
+fn lex_html_ctx_e1_url(r []rune, i int) Match {
+	if r[i] == `<` {
+		e := lex_m_b7d35e92(r, i)
+		if e >= 0 {
+			return Match{
+				end:    e
+				scope:  .punctuation
+				op:     .escape
+				target: 23
+			}
+		}
+	}
+	m := lex_css_ctx_url(r, i)
+	if m.end < 0 {
+		mut j := i + 1
+		for j < m.next && !(r[j] == `<`) {
+			j++
+		}
+		return Match{
+			next: j
+		}
+	}
+	if m.op == .push || m.op == .set {
+		return Match{
+			...m
+			target: m.target + 23
+		}
+	}
+	return m
+}
+
+// context double, css embedded until <(?=/[sS][tT][yY][lL][eE](?![\w\-:.]))
+@[direct_array_access]
+fn lex_html_ctx_e1_double(r []rune, i int) Match {
+	if r[i] == `<` {
+		e := lex_m_b7d35e92(r, i)
+		if e >= 0 {
+			return Match{
+				end:    e
+				scope:  .punctuation
+				op:     .escape
+				target: 23
+			}
+		}
+	}
+	m := lex_css_ctx_double(r, i)
+	if m.end < 0 {
+		mut j := i + 1
+		for j < m.next && !(r[j] == `<`) {
+			j++
+		}
+		return Match{
+			next: j
+		}
+	}
+	if m.op == .push || m.op == .set {
+		return Match{
+			...m
+			target: m.target + 23
+		}
+	}
+	return m
+}
+
+// context single, css embedded until <(?=/[sS][tT][yY][lL][eE](?![\w\-:.]))
+@[direct_array_access]
+fn lex_html_ctx_e1_single(r []rune, i int) Match {
+	if r[i] == `<` {
+		e := lex_m_b7d35e92(r, i)
+		if e >= 0 {
+			return Match{
+				end:    e
+				scope:  .punctuation
+				op:     .escape
+				target: 23
+			}
+		}
+	}
+	m := lex_css_ctx_single(r, i)
+	if m.end < 0 {
+		mut j := i + 1
+		for j < m.next && !(r[j] == `<`) {
+			j++
+		}
+		return Match{
+			next: j
+		}
+	}
+	if m.op == .push || m.op == .set {
+		return Match{
+			...m
+			target: m.target + 23
 		}
 	}
 	return m
@@ -1163,23 +1665,24 @@ fn lex_html_first_wide_script(c rune) u32 {
 	return f
 }
 
-const lex_html_first_style = [u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8),
-	u32(0), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8),
-	u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(0),
-	u32(8), u32(0), u32(8), u32(8), u32(8), u32(8), u32(0), u32(8), u32(8), u32(8), u32(8), u32(8),
-	u32(8), u32(8), u32(2), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8),
-	u32(8), u32(8), u32(8), u32(0), u32(16), u32(4), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8),
-	u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8),
-	u32(8), u32(8), u32(9), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8),
-	u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8),
-	u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(9), u32(8),
-	u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8), u32(8)]!
+const lex_html_first_style = [u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16),
+	u32(16), u32(0), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16),
+	u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16),
+	u32(16), u32(16), u32(0), u32(16), u32(0), u32(16), u32(16), u32(16), u32(16), u32(0), u32(16),
+	u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(10), u32(16), u32(16), u32(16), u32(16),
+	u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(0), u32(32), u32(4),
+	u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16),
+	u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(17), u32(16),
+	u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16),
+	u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16),
+	u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(17), u32(16), u32(16),
+	u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16), u32(16)]!
 
 @[direct_array_access]
 fn lex_html_first_wide_style(c rune) u32 {
 	mut f := u32(0)
 	if !(c == ` ` || c == rune(9) || c == `"` || c == `'` || c == `<` || c == `>` || c == `/` || c == `=`) {
-		f |= 8
+		f |= 16
 	}
 	return f
 }
